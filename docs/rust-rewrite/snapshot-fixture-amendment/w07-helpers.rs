@@ -128,11 +128,7 @@ const REGISTRY_EDITS: &[(usize, &str, &str)] = &[
         "    \"docs/rust-rewrite/a06/source-amendments/shared-successor.rs\": \"7825c39c9d264b11170e3ab749249b266e5a530450d3cdcdf4ef076e4545a3e2\",\n",
         "    \"docs/rust-rewrite/a06/source-amendments/shared-successor.rs\": \"8a9bb7b1894e84b8de2673c25f5091a61eb4cf8d77d1c0b8f191edf866b2748c\",\n",
     ),
-    (
-        19299,
-        "    \"crates/xtask/src/t06.rs\": \"be30918a7ac4365b2538b58fd1c3c933e6b2bea96d6222d267c4a87d29e413e0\",\n",
-        "    \"crates/xtask/src/t06.rs\": \"00a0a0ba122cd15da453cad72a025750e476db71d7ff327bef5b8646ade4cdd7\",\n",
-    ),
+    t06_receipt_control::W07_REGISTRY_T06_EDIT,
     (
         20567,
         "    \"docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs\": \"2d89ad90459a297bb48196704c334a12103cfd66cc782aa98e91be32176763a6\",\n",

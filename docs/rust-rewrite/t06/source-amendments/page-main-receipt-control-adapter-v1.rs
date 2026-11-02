@@ -352,6 +352,11 @@ const W08_REGISTRY: &str = "docs/rust-rewrite/w07/qualification-completion-v1.js
 const T06_REGISTRAR: &str = "crates/xtask/src/t06.rs";
 const W08_JOIN: &str = "docs/rust-rewrite/snapshot-fixture-amendment/w08-page-join-v1.json";
 const W08_JOIN_SHA: &str = "2201b3d459bc0e386d3fb847a02a23f5f30fcf4b7e82ca85fd056bead5567847";
+pub(crate) const W07_REGISTRY_T06_EDIT: (usize, &str, &str) = (
+    19299,
+    "    \"crates/xtask/src/t06.rs\": \"be30918a7ac4365b2538b58fd1c3c933e6b2bea96d6222d267c4a87d29e413e0\",\n",
+    "    \"crates/xtask/src/t06.rs\": \"00a0a0ba122cd15da453cad72a025750e476db71d7ff327bef5b8646ade4cdd7\",\n",
+);
 pub(crate) fn w07_registry_to_w08(physical: &[u8], mode: u32) -> Result<Vec<u8>> {
     inverse(
         &Row {
@@ -370,9 +375,9 @@ pub(crate) fn w07_registry_to_w08(physical: &[u8], mode: u32) -> Result<Vec<u8>>
                 mode: 0o644,
             },
             edits: vec![Edit {
-                current_offset: 19299,
-                old: "    \"crates/xtask/src/t06.rs\": \"be30918a7ac4365b2538b58fd1c3c933e6b2bea96d6222d267c4a87d29e413e0\",\n".into(),
-                new: "    \"crates/xtask/src/t06.rs\": \"00a0a0ba122cd15da453cad72a025750e476db71d7ff327bef5b8646ade4cdd7\",\n".into(),
+                current_offset: W07_REGISTRY_T06_EDIT.0,
+                old: W07_REGISTRY_T06_EDIT.1.into(),
+                new: W07_REGISTRY_T06_EDIT.2.into(),
             }],
         },
         physical,
