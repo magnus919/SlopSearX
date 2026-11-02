@@ -122,16 +122,19 @@ def test_native_theme_storage_accessibility_and_painted_background() -> None:
 
                 def capture_form_request(route: Any) -> None:
                     intercepted.append(route.request.url)
-                    route.abort()
+                    # Complete the local navigation without dispatching search
+                    # to the fixture. The next step uses browser history to
+                    # restore the form, as it would after viewing results.
+                    route.fulfill(
+                        status=200,
+                        content_type="text/html",
+                        body="<!doctype html><title>fixture result</title>",
+                    )
 
                 context.route(re.compile(r".*/search\?.*"), capture_form_request)
-                with page.expect_event(
-                    "requestfailed",
-                    predicate=lambda request: "/search?" in request.url,
-                ) as aborted:
+                with page.expect_navigation(wait_until="load"):
                     with page.expect_request(lambda request: "/search?" in request.url) as captured:
                         page.locator("[data-search-form]").evaluate("form => form.requestSubmit()")
-                assert aborted.value.url == captured.value.url
                 parameters = parse_qs(urlsplit(captured.value.url).query)
                 assert parameters == {
                     "q": ["climate & change"],
@@ -144,24 +147,22 @@ def test_native_theme_storage_accessibility_and_painted_background() -> None:
                 }
                 assert intercepted == [captured.value.url]
                 # Empty optional fields are omitted from this request without
-                # mutating their controls. A page restored from browser history
-                # must still be able to submit filters entered afterward.
+                # mutating their controls. Restore the form from browser history
+                # before checking that later filter edits can be submitted.
+                page.go_back(wait_until="load")
                 categories = page.get_by_label("Categories")
                 sources = page.get_by_label("Sources")
                 relative = page.get_by_label("Relative time range")
+                assert page.url.rstrip("/") == base_url.rstrip("/")
                 assert sources.get_attribute("name") == "engines"
                 assert categories.get_attribute("name") == "categories"
                 assert relative.get_attribute("name") == "time_range"
                 categories.select_option("science")
-                with page.expect_event(
-                    "requestfailed",
-                    predicate=lambda request: "/search?" in request.url,
-                ) as second_aborted:
+                with page.expect_navigation(wait_until="load"):
                     with page.expect_request(
                         lambda request: "/search?" in request.url
                     ) as second_captured:
                         page.locator("[data-search-form]").evaluate("form => form.requestSubmit()")
-                assert second_aborted.value.url == second_captured.value.url
                 second_parameters = parse_qs(urlsplit(second_captured.value.url).query)
                 assert second_parameters == {
                     "q": ["climate & change"],
