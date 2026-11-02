@@ -362,15 +362,13 @@ pub(crate) fn w07_registry_to_w08(physical: &[u8], mode: u32) -> Result<Vec<u8>>
         &Row {
             path: W08_REGISTRY.into(),
             prior: Material {
-                sha256: "a651a9d36c1d5409edbcb7d79a44ac599468ca493fdd735982bb1d1894e4461d"
-                    .into(),
+                sha256: "a651a9d36c1d5409edbcb7d79a44ac599468ca493fdd735982bb1d1894e4461d".into(),
                 bytes: 21848,
                 mode: 0o644,
             },
             prior_git_blob: "ead390da6eae22e2aa94f66b954efae101342151".into(),
             current: Material {
-                sha256: "4d9cb197718db1d06086ee1557f1eb4953bf53b9938eb4bce41da762f70ad1a7"
-                    .into(),
+                sha256: "4d9cb197718db1d06086ee1557f1eb4953bf53b9938eb4bce41da762f70ad1a7".into(),
                 bytes: 21848,
                 mode: 0o644,
             },
