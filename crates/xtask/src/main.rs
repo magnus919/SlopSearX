@@ -324,10 +324,7 @@ fn source_check(root: &Path, id: &str, records: &mut Vec<Value>) -> Result<()> {
         })
         .map(str::to_string)
         .collect();
-    let retired = id == "F01"
-        && f.sources
-            .iter()
-            .any(|s| s.path == o02_health_retirement::PATH);
+    let retired = id == "F01";
     if retired {
         let indexed = tracked
             .split('\0')
@@ -1026,20 +1023,85 @@ mod tests {
                 .contains("empty fixture")
         );
         command(&root, "git", &["init", "--quiet"], &mut records).unwrap();
-        fs::write(root.join("example.py"), "# real source\n").unwrap();
-        command(&root, "git", &["add", "example.py"], &mut records).unwrap();
-        fs::write(&fixture,serde_json::to_vec(&json!({"schema_version":1,"plan_id":"F01","sources":[{"path":"example.py","git_blob":"0".repeat(40)}]})).unwrap()).unwrap();
+        fs::create_dir_all(root.join("docs/rust-rewrite/architecture")).unwrap();
+        fs::write(
+            root.join("docs/rust-rewrite/architecture/example.json"),
+            "{\"source\":true}\n",
+        )
+        .unwrap();
+        command(
+            &root,
+            "git",
+            &["add", "docs/rust-rewrite/architecture/example.json"],
+            &mut records,
+        )
+        .unwrap();
+        let f02_fixture = root.join("crates/xtask/fixtures/F02.json");
+        fs::write(&f02_fixture,serde_json::to_vec(&json!({"schema_version":1,"plan_id":"F02","sources":[{"path":"docs/rust-rewrite/architecture/example.json","git_blob":"0".repeat(40)}]})).unwrap()).unwrap();
         assert!(
-            source_check(&root, "F01", &mut records)
+            source_check(&root, "F02", &mut records)
                 .unwrap_err()
                 .contains("stale source")
         );
-        fs::write(&fixture,serde_json::to_vec(&json!({"schema_version":1,"plan_id":"F01","sources":[{"path":"other.py","git_blob":"0".repeat(40)}]})).unwrap()).unwrap();
+        fs::write(&f02_fixture,serde_json::to_vec(&json!({"schema_version":1,"plan_id":"F02","sources":[{"path":"other.json","git_blob":"0".repeat(40)}]})).unwrap()).unwrap();
         assert!(
-            source_check(&root, "F01", &mut records)
+            source_check(&root, "F02", &mut records)
                 .unwrap_err()
                 .contains("coverage")
         );
+
+        fs::create_dir_all(root.join("docs/rust-rewrite/inventory")).unwrap();
+        fs::write(root.join("example.py"), "# tracked source\n").unwrap();
+        fs::write(
+            root.join("docs/rust-rewrite/inventory/python-disposition.json"),
+            r#"{"files":[{"path":"example.py","disposition":"retained","classification":"client"}]}"#,
+        )
+        .unwrap();
+        command(
+            &root,
+            "git",
+            &[
+                "add",
+                "example.py",
+                "docs/rust-rewrite/inventory/python-disposition.json",
+            ],
+            &mut records,
+        )
+        .unwrap();
+        let python_blob =
+            command(&root, "git", &["hash-object", "example.py"], &mut records).unwrap();
+        let disposition_blob = command(
+            &root,
+            "git",
+            &[
+                "hash-object",
+                "docs/rust-rewrite/inventory/python-disposition.json",
+            ],
+            &mut records,
+        )
+        .unwrap();
+        fs::write(
+            &fixture,
+            serde_json::to_vec(&json!({
+                "schema_version": 1,
+                "plan_id": "F01",
+                "sources": [
+                    {"path": "example.py", "git_blob": python_blob.trim()},
+                    {
+                        "path": "docs/rust-rewrite/inventory/python-disposition.json",
+                        "git_blob": disposition_blob.trim()
+                    }
+                ]
+            }))
+            .unwrap(),
+        )
+        .unwrap();
+        let error = source_check(&root, "F01", &mut records).unwrap_err();
+        assert!(
+            error.contains("O02 health retirement"),
+            "omitting the retired healthcheck row must still run its authenticated proof: {error}"
+        );
+
         fs::create_dir_all(root.join("docs/rust-rewrite")).unwrap();
         fs::write(
             root.join("docs/rust-rewrite/plan.json"),

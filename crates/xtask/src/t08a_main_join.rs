@@ -203,12 +203,12 @@ fn pre_health_f01(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
         return Ok(physical.to_vec());
     }
     need(
-        physical.len() == 43098
+        physical.len() == 45194
             && digest(physical)
-                == "c9a162caa7986f1ca8e52337da4eb2d1acf441b08d38768cb38b20096c80c7ba",
+                == "7b84b2b3a0adcd82a6a8bf411f9c2d5696f6c24eac258a2d3f2aa732d19ae653",
         "O02 exact current F01 admission main",
     )?;
-    let frames: [(&str, &str); 5] = [
+    let frames: [(&str, &str); 7] = [
         (
             "mod f14;\nmod f15;\nmod o01;\nmod o03;\nmod o06;\nmod replay;\n",
             "mod f14;\nmod f15;\nmod o01;\nmod o02_health_retirement;\nmod o03;\nmod o06;\nmod replay;\n",
@@ -219,7 +219,7 @@ fn pre_health_f01(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
         ),
         (
             "        })\n        .map(str::to_string)\n        .collect();\n    let provided: BTreeSet<_> = f.sources.iter().map(|s| s.path.clone()).collect();\n    if required.is_empty() || required != provided {\n        return Err(\"source fixture coverage is incomplete or unexpected\".into());\n    }\n\n    for s in &f.sources {\n        if id == \"F01\" && snapshot_fixture_amendment::f01(root, &s.path, &s.git_blob)?.is_some() {\n            continue;\n        }\n",
-            "        })\n        .map(str::to_string)\n        .collect();\n    let retired = id == \"F01\"\n        && f.sources\n            .iter()\n            .any(|s| s.path == o02_health_retirement::PATH);\n    if retired {\n        let indexed = tracked\n            .split('\\0')\n            .filter(|p| !p.is_empty())\n            .map(str::to_string)\n            .collect();\n        o02_health_retirement::authenticate(root, &fixture_bytes, &indexed)?;\n    }\n    let mut provided: BTreeSet<_> = f.sources.iter().map(|s| s.path.clone()).collect();\n    if retired {\n        provided.remove(o02_health_retirement::PATH);\n    }\n    if required.is_empty() || required != provided {\n        return Err(\"source fixture coverage is incomplete or unexpected\".into());\n    }\n\n    for s in &f.sources {\n        if retired && s.path == o02_health_retirement::PATH {\n            continue;\n        }\n        if retired && o02_health_retirement::successor(root, &s.path, &s.git_blob)? {\n            continue;\n        }\n        if id == \"F01\" && snapshot_fixture_amendment::f01(root, &s.path, &s.git_blob)?.is_some() {\n            continue;\n        }\n",
+            "        })\n        .map(str::to_string)\n        .collect();\n    let retired = id == \"F01\";\n    if retired {\n        let indexed = tracked\n            .split('\\0')\n            .filter(|p| !p.is_empty())\n            .map(str::to_string)\n            .collect();\n        o02_health_retirement::authenticate(root, &fixture_bytes, &indexed)?;\n    }\n    let mut provided: BTreeSet<_> = f.sources.iter().map(|s| s.path.clone()).collect();\n    if retired {\n        provided.remove(o02_health_retirement::PATH);\n    }\n    if required.is_empty() || required != provided {\n        return Err(\"source fixture coverage is incomplete or unexpected\".into());\n    }\n\n    for s in &f.sources {\n        if retired && s.path == o02_health_retirement::PATH {\n            continue;\n        }\n        if retired && o02_health_retirement::successor(root, &s.path, &s.git_blob)? {\n            continue;\n        }\n        if id == \"F01\" && snapshot_fixture_amendment::f01(root, &s.path, &s.git_blob)?.is_some() {\n            continue;\n        }\n",
         ),
         (
             "            })\n            .map(str::to_string)\n            .collect();\n        if paths.is_empty() || paths != expected {\n            return Err(\"Python source inventory differs from tracked source set\".into());\n        }\n",
@@ -228,6 +228,103 @@ fn pre_health_f01(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
         (
             "    }\n    #[test]\n    fn missing_empty_malformed_stale_and_incomplete_fail() {\n        let root = std::env::temp_dir().join(format!(\"ssx-xtask-negative-{}\", std::process::id()));\n        fs::create_dir_all(root.join(\"crates/xtask/fixtures\")).unwrap();\n        let fixture = root.join(\"crates/xtask/fixtures/F01.json\");\n",
             "    }\n    #[test]\n    fn missing_empty_malformed_stale_and_incomplete_fail() {\n        let current = Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../..\");\n        source_check(&current, \"F01\", &mut vec![]).unwrap();\n        o02_health_retirement::controls(&current).unwrap();\n        let root = std::env::temp_dir().join(format!(\"ssx-xtask-negative-{}\", std::process::id()));\n        fs::create_dir_all(root.join(\"crates/xtask/fixtures\")).unwrap();\n        let fixture = root.join(\"crates/xtask/fixtures/F01.json\");\n",
+        ),
+        (
+            r###"        fs::write(root.join("example.py"), "# real source\n").unwrap();
+        command(&root, "git", &["add", "example.py"], &mut records).unwrap();
+        fs::write(&fixture,serde_json::to_vec(&json!({"schema_version":1,"plan_id":"F01","sources":[{"path":"example.py","git_blob":"0".repeat(40)}]})).unwrap()).unwrap();
+        assert!(
+            source_check(&root, "F01", &mut records)
+                .unwrap_err()
+                .contains("stale source")
+        );"###,
+            r###"        fs::create_dir_all(root.join("docs/rust-rewrite/architecture")).unwrap();
+        fs::write(
+            root.join("docs/rust-rewrite/architecture/example.json"),
+            "{\"source\":true}\n",
+        )
+        .unwrap();
+        command(
+            &root,
+            "git",
+            &["add", "docs/rust-rewrite/architecture/example.json"],
+            &mut records,
+        )
+        .unwrap();
+        let f02_fixture = root.join("crates/xtask/fixtures/F02.json");
+        fs::write(&f02_fixture,serde_json::to_vec(&json!({"schema_version":1,"plan_id":"F02","sources":[{"path":"docs/rust-rewrite/architecture/example.json","git_blob":"0".repeat(40)}]})).unwrap()).unwrap();
+        assert!(
+            source_check(&root, "F02", &mut records)
+                .unwrap_err()
+                .contains("stale source")
+        );"###,
+        ),
+        (
+            r###"        fs::write(&fixture,serde_json::to_vec(&json!({"schema_version":1,"plan_id":"F01","sources":[{"path":"other.py","git_blob":"0".repeat(40)}]})).unwrap()).unwrap();
+        assert!(
+            source_check(&root, "F01", &mut records)
+                .unwrap_err()
+                .contains("coverage")
+        );"###,
+            r###"        fs::write(&f02_fixture,serde_json::to_vec(&json!({"schema_version":1,"plan_id":"F02","sources":[{"path":"other.json","git_blob":"0".repeat(40)}]})).unwrap()).unwrap();
+        assert!(
+            source_check(&root, "F02", &mut records)
+                .unwrap_err()
+                .contains("coverage")
+        );
+
+        fs::create_dir_all(root.join("docs/rust-rewrite/inventory")).unwrap();
+        fs::write(root.join("example.py"), "# tracked source\n").unwrap();
+        fs::write(
+            root.join("docs/rust-rewrite/inventory/python-disposition.json"),
+            r#"{"files":[{"path":"example.py","disposition":"retained","classification":"client"}]}"#,
+        )
+        .unwrap();
+        command(
+            &root,
+            "git",
+            &[
+                "add",
+                "example.py",
+                "docs/rust-rewrite/inventory/python-disposition.json",
+            ],
+            &mut records,
+        )
+        .unwrap();
+        let python_blob =
+            command(&root, "git", &["hash-object", "example.py"], &mut records).unwrap();
+        let disposition_blob = command(
+            &root,
+            "git",
+            &[
+                "hash-object",
+                "docs/rust-rewrite/inventory/python-disposition.json",
+            ],
+            &mut records,
+        )
+        .unwrap();
+        fs::write(
+            &fixture,
+            serde_json::to_vec(&json!({
+                "schema_version": 1,
+                "plan_id": "F01",
+                "sources": [
+                    {"path": "example.py", "git_blob": python_blob.trim()},
+                    {
+                        "path": "docs/rust-rewrite/inventory/python-disposition.json",
+                        "git_blob": disposition_blob.trim()
+                    }
+                ]
+            }))
+            .unwrap(),
+        )
+        .unwrap();
+        let error = source_check(&root, "F01", &mut records).unwrap_err();
+        assert!(
+            error.contains("O02 health retirement"),
+            "omitting the retired healthcheck row must still run its authenticated proof: {error}"
+        );
+"###,
         ),
     ];
     let current = std::str::from_utf8(physical).map_err(|e| e.to_string())?;
