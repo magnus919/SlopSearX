@@ -570,7 +570,7 @@ const PAGE_CAPSULE: &str = "docs/rust-rewrite/t02/source-amendments/lossless-pag
 const PORTAL_HTML_PATH: &str = "crates/ssx-http/src/html.rs";
 const PORTAL_HTML_CAPSULE: &str = "docs/rust-rewrite/t02/source-amendments/portal-html-v1.json";
 const PORTAL_HTML_CAPSULE_SHA: &str =
-    "6711b62241f80273dea6ca31d60a02a28dd899b0a121bc054300ce3405641dc8";
+    "26b26963b8b02af26e0d8756b09b4246f00a878e6bb8bbf035cf603b15651447";
 const PORTAL_HTML_BASE: &str = "44fe104577f1be1da497a6f60611d19b909aedb6";
 const PORTAL_HTML_CAPSULE_SHA256: &str =
     "8825976f55652cb2bf4ab0fe648e88387eced30c2480942da901f11e628099cc";

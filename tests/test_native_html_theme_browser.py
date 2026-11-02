@@ -91,6 +91,7 @@ def test_native_theme_storage_accessibility_and_painted_background() -> None:
                 page.reload(wait_until="load")
                 _check_mode(page, next_theme)
 
+                assert page.locator("form.search-form").is_visible()
                 for label in [
                     "Sources (comma-separated)",
                     "Categories (comma-separated)",

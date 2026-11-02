@@ -117,7 +117,7 @@ fn form(query: &str, request: Option<&SearchRequest>) -> String {
     let language = request.map_or("en", |r| r.language.as_str());
     let safesearch = request.map_or(0, |r| r.safesearch);
     format!(
-        "<form action=\"/search\" method=\"get\" data-search-form><label for=\"q\">Search</label><input id=\"q\" name=\"q\" value=\"{}\" required><label for=\"engines\">Sources (comma-separated)</label><input id=\"engines\" name=\"engines\" value=\"{}\" autocomplete=\"off\"><label for=\"categories\">Categories (comma-separated)</label><input id=\"categories\" name=\"categories\" value=\"{}\" autocomplete=\"off\"><label for=\"time_range\">Relative time range</label><select id=\"time_range\" name=\"time_range\"><option value=\"\">Any time</option>{}</select><label for=\"date_from\">Publication date from</label><input id=\"date_from\" name=\"date_from\" type=\"date\" value=\"{}\"><label for=\"date_to\">Publication date to</label><input id=\"date_to\" name=\"date_to\" type=\"date\" value=\"{}\"><input type=\"hidden\" name=\"language\" value=\"{}\"><input type=\"hidden\" name=\"safesearch\" value=\"{}\"><input type=\"hidden\" name=\"format\" value=\"html\"><button type=\"submit\">Search</button></form>",
+        "<form class=\"search-form\" action=\"/search\" method=\"get\" data-search-form><label for=\"q\">Search</label><input id=\"q\" name=\"q\" value=\"{}\" required><label for=\"engines\">Sources (comma-separated)</label><input id=\"engines\" name=\"engines\" value=\"{}\" autocomplete=\"off\"><label for=\"categories\">Categories (comma-separated)</label><input id=\"categories\" name=\"categories\" value=\"{}\" autocomplete=\"off\"><label for=\"time_range\">Relative time range</label><select id=\"time_range\" name=\"time_range\"><option value=\"\">Any time</option>{}</select><label for=\"date_from\">Publication date from</label><input id=\"date_from\" name=\"date_from\" type=\"date\" value=\"{}\"><label for=\"date_to\">Publication date to</label><input id=\"date_to\" name=\"date_to\" type=\"date\" value=\"{}\"><input type=\"hidden\" name=\"language\" value=\"{}\"><input type=\"hidden\" name=\"safesearch\" value=\"{}\"><input type=\"hidden\" name=\"format\" value=\"html\"><button type=\"submit\">Search</button></form>",
         escape(query),
         escape(&engines),
         escape(&categories),
@@ -309,6 +309,7 @@ mod date_portal_tests {
         let request = SearchRequest {
             query: "climate & change".into(),
             engines: Some(vec!["openalex".into()]),
+            page: ssx_domain::SearchPage::new("2").unwrap(),
             date_from: Some("2024-02-29".into()),
             date_to: Some("2024-02-29".into()),
             ..Default::default()
@@ -325,6 +326,7 @@ mod date_portal_tests {
         let html = PublicHtml::new("dark").search(&response, &meta, &request);
 
         for expected in [
+            "<form class=\"search-form\"",
             "value=\"climate &amp; change\"",
             "name=\"engines\" value=\"openalex\"",
             "name=\"date_from\" type=\"date\" value=\"2024-02-29\"",
@@ -345,6 +347,15 @@ mod date_portal_tests {
             assert!(
                 html.contains(expected),
                 "missing portal output {expected:?}"
+            );
+        }
+        for page in ["pageno=1", "pageno=3"] {
+            let preserved_bounds = format!(
+                "date_from=2024-02-29&amp;date_to=2024-02-29&amp;language=en&amp;safesearch=0&amp;{page}"
+            );
+            assert!(
+                html.contains(&preserved_bounds),
+                "pagination link did not preserve bounds: {page}"
             );
         }
         assert!(!html.contains("format=csv"));
