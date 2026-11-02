@@ -1483,13 +1483,15 @@ mod tests {
     #[test]
     fn source_hash_check_accepts_only_exact_or_authenticated_successors() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-        let current = "scripts/verify_docker_base_digest.py";
-        let prior = "3f43f9bc1f90b4b2cd85381d2a54e54387cfab18";
+        let current = "tests/test_deployment_artifacts.py";
+        let prior = "649650e35656bfff78d7930052085270811343fd";
+        let expected_current = "e595e4bfbec1952a01c466678cc187f2d386e60e";
         let exact = command(&root, "git", &["hash-object", "--", current], &mut vec![])
             .unwrap()
             .trim()
             .to_string();
         assert_ne!(exact, prior);
+        assert_eq!(exact, expected_current);
         assert!(source_hash_matches(&root, current, &exact, &exact).unwrap());
         assert!(source_hash_matches(&root, current, prior, &exact).unwrap());
         assert!(!source_hash_matches(&root, "scripts/other.py", prior, "different").unwrap());
