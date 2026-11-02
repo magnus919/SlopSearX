@@ -118,8 +118,13 @@ def test_native_theme_storage_accessibility_and_painted_background() -> None:
                     route.abort()
 
                 context.route(re.compile(r".*/search\?.*"), capture_form_request)
-                with page.expect_request(lambda request: "/search?" in request.url) as captured:
-                    page.locator("[data-search-form]").evaluate("form => form.requestSubmit()")
+                with page.expect_event(
+                    "requestfailed",
+                    predicate=lambda request: "/search?" in request.url,
+                ) as aborted:
+                    with page.expect_request(lambda request: "/search?" in request.url) as captured:
+                        page.locator("[data-search-form]").evaluate("form => form.requestSubmit()")
+                assert aborted.value.url == captured.value.url
                 parameters = parse_qs(urlsplit(captured.value.url).query)
                 assert parameters == {
                     "q": ["climate & change"],
