@@ -153,8 +153,10 @@ service and private Valkey as the three MCP tests. The neutral test fixture is
 three selector names are unchanged. No production module, dependency manifest,
 lockfile, policy grant or frozen source inventory changes in this increment.
 
-The HTTP target adds three named tests to the T06 gate. Its inventory is listed
-and compared exactly before execution, alongside the unchanged MCP inventory.
+The HTTP target adds four named entries to the T06 exact inventory: three
+behavioral tests and the `science_openalex_fixture_rejects_zero_expected_requests`
+fixture guard. The inventory is compared exactly before execution, alongside the
+unchanged MCP inventory.
 The required Rust CI workflow also runs `cargo test --locked --workspace` and
 strict Clippy over all targets, which includes this HTTP target.
 
