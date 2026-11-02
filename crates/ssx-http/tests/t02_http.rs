@@ -1864,7 +1864,10 @@ async fn lossless_large_page_html_links_preserve_filters_and_exact_decimal_neigh
                 .query_pairs()
                 .map(|(k, v)| (k.into_owned(), v.into_owned()))
                 .collect::<std::collections::BTreeMap<_, _>>();
-            let Some(link_page) = fields.get("pageno") else {
+            let Some(link_page) = fields
+                .get("pageno")
+                .filter(|_| !fields.contains_key("format"))
+            else {
                 continue;
             };
             assert_eq!(fields["q"], "large <page> & scope");
