@@ -41,6 +41,7 @@ mod t05;
 mod t06;
 mod t07;
 mod t07_unit_profile;
+mod t08;
 mod t08a;
 mod t08a_child;
 pub(crate) use a13::a06_source_successor::w07_t02_joint::cli_source_custody;
@@ -502,6 +503,7 @@ fn execute(root: &Path, id: &str, records: &mut Vec<Value>) -> Result<()> {
         "T01" => t01::check(root, records),
         "T02" => t02::check(root, records),
         "T09" => t09::check(root, records),
+        "T08" => t08::check(root, records),
         "T08A" => t08a::check(root, records),
         "T04" => t04::check(root, records),
         "T05" => t05::check(root, records),
@@ -708,7 +710,9 @@ fn main() {
         }
     }
     let a08_scope = a08::report_scope(&records);
-    let scope = if id == "T08A" {
+    let scope = if id == "T08" {
+        "native default/installed CLI against separate production HTTP/service/npm/private-Valkey qualification processes; finite17 integration cases and O04 artifact handoff; no production startup, provider or release/deployment claim"
+    } else if id == "T08A" {
         "standalone native external-HTTP CLI; finite source-bound loopback corpus, X509/proxy/error contract and source installation; native backend integration T08/T02 and production/O04 delivery remain pending"
     } else if id == "A12" {
         "static-source-bound infrastructure security factories and full native outputs/requests, actual private wire and finite ownership; no original execution/provider/full production composition claim"

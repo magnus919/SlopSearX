@@ -24,8 +24,8 @@
     },
     {
       "path": ".github/workflows/rust.yml",
-      "bytes": 77327,
-      "sha256": "a0f55fe4eaaed6039d8829fb3a003fbd5e6ce99dbf141c4e83760fe3d4e7a9bb",
+      "bytes": 80046,
+      "sha256": "d821b5c91ea7f9a5f6bd75eca79823444273859c914765e7a80323707517b5a6",
       "mode": 420,
       "unix_modes": [
         420
@@ -141,8 +141,8 @@
     },
     {
       "path": "crates/ssx-cli/src/main.rs",
-      "bytes": 16544,
-      "sha256": "ffde924b48a81f6d03d18f25d1f3cbadc26e7ee833b2263c8e617bd00b22b1cd",
+      "bytes": 17774,
+      "sha256": "1fef44ecd6eb3c05b977adb5de34287606ab5e20ab45f9c688b03f31db276619",
       "mode": 420,
       "unix_modes": [
         420
@@ -186,8 +186,17 @@
     },
     {
       "path": "crates/ssx-cli/tests/external.rs",
-      "bytes": 56104,
-      "sha256": "f86e6b4968062f49da8538aa8426ce390ba6039c828a3547e73f05808b3e67cc",
+      "bytes": 61247,
+      "sha256": "89e50af0396867428d4b50642bebb2ffb5cc34dba513f6d3b443f7bfa178c444",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/tests/a12_security.rs",
+      "bytes": 63526,
+      "sha256": "485213883050542a5d4d3d388ff0a0cd7a6f08d022f0747c31cbb70ffb1ec499",
       "mode": 420,
       "unix_modes": [
         420
@@ -222,8 +231,17 @@
     },
     {
       "path": "crates/xtask/src/main.rs",
-      "bytes": 42291,
-      "sha256": "cdd3f73ff4833777b5327bf9ea76961ccfa5b39e4a73869e74dc84a7f8b295f6",
+      "bytes": 42609,
+      "sha256": "1b68159fbd2dcda9d0fb1c1da106a69ce505532a67139f5714116e610501284b",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
+      "path": "crates/xtask/src/t02.rs",
+      "bytes": 42100,
+      "sha256": "e00e1833ad82047401394e67c06260c7329c9b6a78ae90735a3eb96758c5caed",
       "mode": 420,
       "unix_modes": [
         420
@@ -231,8 +249,8 @@
     },
     {
       "path": "crates/xtask/src/t08a.rs",
-      "bytes": 35975,
-      "sha256": "5d2e03a11337c1ddc687e32903de82df31e3e58705d20bef3d9d23b9b900870e",
+      "bytes": 36382,
+      "sha256": "e770dbc23b16b06b81e6b25e0082f80fd416e14b8cc94fba243695934651d300",
       "mode": 420,
       "unix_modes": [
         420
@@ -249,8 +267,8 @@
     },
     {
       "path": "crates/xtask/src/t08a_custody.rs",
-      "bytes": 13482,
-      "sha256": "966070dc85fb94903acf2b5c4cfb71293059d5ea9650d1acb04c8a4bbc670816",
+      "bytes": 13490,
+      "sha256": "986245cdab38e85468b12e5e1b9f42150551bc84eeaacc5a180587b5c1da8029",
       "mode": 420,
       "unix_modes": [
         420
@@ -329,6 +347,15 @@
       ]
     },
     {
+      "path": "docs/rust-rewrite/a06/source-amendments/native-search-reader.rs",
+      "bytes": 32315,
+      "sha256": "3d9af2d2d9811382250f4d8e28334ae59c96938184a907931fa36e1b94d6e337",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
       "path": "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
       "bytes": 97765,
       "sha256": "d21595831cc5a2610e5fd28c027e123a8d3f02a57f6cde5c725f12d10d99a1d7",
@@ -347,6 +374,15 @@
       ]
     },
     {
+      "path": "docs/rust-rewrite/a12/readiness-clock-successor-v1.json",
+      "bytes": 9323,
+      "sha256": "a1370bb9517e102f9cba3da06875a45c0a108b2bed3f361b5310be6b0b78dfae",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
       "path": "docs/rust-rewrite/architecture/pins.json",
       "bytes": 7223,
       "sha256": "5bc92cdeef776051043a6a7700c715cdd363f7f8a40e119159d7459b6780386b",
@@ -357,8 +393,8 @@
     },
     {
       "path": "docs/rust-rewrite/ci/gates.json",
-      "bytes": 201343,
-      "sha256": "6ad5f15cc9cacb1aef88459f771f81fc7f65e8017f8bc775edc110c1424b34e2",
+      "bytes": 204330,
+      "sha256": "96ba3617b605ccfb8483a5451b97997f40a688069179e841fd08baf2d43e4008",
       "mode": 420,
       "unix_modes": [
         420
@@ -386,6 +422,24 @@
       "path": "docs/rust-rewrite/snapshot-fixture-amendment/gateway-cli-stacked-join.rs",
       "bytes": 18454,
       "sha256": "7ec42658fcb75fe3ca027d84615b4dea74667db6d916ddf0b89479e563678831",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/snapshot-fixture-amendment/gateway-cli-t07-t08-stacked-join-v1.json",
+      "bytes": 136580,
+      "sha256": "63668294416dfefaccc19bcfa9ee71ffb39a4d329387267a6eadb10679a68f72",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/snapshot-fixture-amendment/gateway-cli-t07-t08-stacked-join.rs",
+      "bytes": 18511,
+      "sha256": "7720f4ce456dc38f02fb5824b296e24f0bfb415d4ace73f49cfeac0c9c982056",
       "mode": 420,
       "unix_modes": [
         420
@@ -431,6 +485,15 @@
       "path": "docs/rust-rewrite/snapshot-fixture-amendment/w07-helpers.rs",
       "bytes": 115024,
       "sha256": "88a68c32def8f459534c2038390d2908c893ffcd5956e6681dcf7b79beedcde2",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/t02/source-amendments/f09-inventory-composition-v1.rs",
+      "bytes": 36690,
+      "sha256": "04bdc46e433dc85083107950c7019529f394e720eabbb460ddd86c73646ab61c",
       "mode": 420,
       "unix_modes": [
         420
@@ -483,8 +546,8 @@
     },
     {
       "path": "docs/rust-rewrite/t08a/README.md",
-      "bytes": 14689,
-      "sha256": "ee7a533bdbb83eed919916899ec23feebd0e3e2bd28aa63339e26cd21787e8b6",
+      "bytes": 15732,
+      "sha256": "bf38cbb12f8682447de84b949c72697aa6b0daa566853d6180df547651a5d4c7",
       "mode": 420,
       "unix_modes": [
         420
@@ -798,8 +861,8 @@
     },
     {
       "path": "docs/rust-rewrite/t08a/intentional-differences.json",
-      "bytes": 2990,
-      "sha256": "9d5349e2e2da8d6899ac1b539712c7a53a7715298a810e3dcbeecb9294487965",
+      "bytes": 3693,
+      "sha256": "27972e0de2f8723d0ab08d13d57fc1eba89d46f1fd7c33366a612547a091aace",
       "mode": 420,
       "unix_modes": [
         420

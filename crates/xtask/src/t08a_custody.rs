@@ -5,7 +5,7 @@ pub(crate) mod accepted_main_join;
     clippy::duplicate_mod,
     reason = "CLI/checker and gateway proof namespaces share one self-contained stateless physical join leaf"
 )]
-#[path = "../../../docs/rust-rewrite/snapshot-fixture-amendment/gateway-cli-stacked-join.rs"]
+#[path = "../../../docs/rust-rewrite/snapshot-fixture-amendment/gateway-cli-t07-t08-stacked-join.rs"]
 pub(crate) mod stacked;
 use serde_json::Value;
 use sha2::{Digest, Sha256};

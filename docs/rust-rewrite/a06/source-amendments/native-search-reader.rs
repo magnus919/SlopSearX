@@ -416,6 +416,161 @@ fn page_payload(row: &Value, physical: &Material) -> Result<Vec<u8>> {
     )?;
     Ok(prior)
 }
+// Test-only readiness successor. Physical source admission precedes the
+// unchanged Page inverse; the two original test identities remain intact.
+const A12_READINESS_PATH: &str = "crates/ssx-infra/tests/a12_security.rs";
+fn a12_readiness_document(root: &Path) -> Result<Value> {
+    let capsule = read(
+        root,
+        "docs/rust-rewrite/a12/readiness-clock-successor-v1.json",
+    )?;
+    need(
+        capsule.mode == 0o644
+            && digest(&capsule.bytes)
+                == "a1370bb9517e102f9cba3da06875a45c0a108b2bed3f361b5310be6b0b78dfae",
+        "A12 readiness capsule identity",
+    )?;
+    serde_json::from_slice(&capsule.bytes).map_err(|e| e.to_string())
+}
+fn a12_readiness_payload(doc: &Value, physical: &Material) -> Result<Material> {
+    need(
+        doc["path"] == A12_READINESS_PATH
+            && doc["before_sha256"]
+                == "8a4a5543bac835042288ace42f7abe1b9be923c21df97fcf267b2f843a096ec9"
+            && doc["after_sha256"]
+                == "485213883050542a5d4d3d388ff0a0cd7a6f08d022f0747c31cbb70ffb1ec499"
+            && doc["before_bytes"] == 60291
+            && doc["after_bytes"] == 63526,
+        "A12 readiness closed source tuple",
+    )?;
+    need(
+        physical.mode == 0o644
+            && physical.bytes.len() == 63526
+            && digest(&physical.bytes)
+                == "485213883050542a5d4d3d388ff0a0cd7a6f08d022f0747c31cbb70ffb1ec499",
+        "A12 readiness current physical identity",
+    )?;
+    let current = std::str::from_utf8(&physical.bytes).map_err(|e| e.to_string())?;
+    let mut prior = current.to_owned();
+    let edits = doc["edits"]
+        .as_array()
+        .ok_or("A12 readiness edits absent")?;
+    need(edits.len() == 2, "A12 readiness exact two test bodies")?;
+    for edit in edits.iter().rev() {
+        let after = edit["after"].as_str().ok_or("A12 readiness after absent")?;
+        let before = edit["before"]
+            .as_str()
+            .ok_or("A12 readiness before absent")?;
+        need(
+            !after.is_empty() && !before.is_empty() && prior.matches(after).count() == 1,
+            "A12 readiness exact successor span",
+        )?;
+        prior = prior.replacen(after, before, 1);
+    }
+    need(
+        prior.len() == 60291
+            && digest(prior.as_bytes())
+                == "8a4a5543bac835042288ace42f7abe1b9be923c21df97fcf267b2f843a096ec9",
+        "A12 readiness exact Page predecessor",
+    )?;
+    let mut forward = prior.clone();
+    for edit in edits {
+        let before = edit["before"]
+            .as_str()
+            .ok_or("A12 readiness before absent")?;
+        let after = edit["after"].as_str().ok_or("A12 readiness after absent")?;
+        need(
+            forward.matches(before).count() == 1,
+            "A12 readiness unique forward span",
+        )?;
+        forward = forward.replacen(before, after, 1);
+    }
+    need(
+        forward.as_bytes() == physical.bytes.as_slice(),
+        "A12 readiness full forward reconstruction",
+    )?;
+    Ok(Material {
+        bytes: prior.into_bytes(),
+        mode: physical.mode,
+    })
+}
+/// One current-admission projection shared by the active A06/A12 and T02 Page readers.
+/// Frozen Page operands are returned only after authenticating actual physical bytes.
+pub(crate) fn a12_readiness_current(root: &Path, path: &str, supplied: &[u8]) -> Result<Vec<u8>> {
+    need(
+        path == A12_READINESS_PATH,
+        "A12 readiness unowned projection path",
+    )?;
+    let actual = read(root, path)?;
+    need(
+        actual.bytes == supplied,
+        "A12 readiness supplied physical identity",
+    )?;
+    Ok(a12_readiness_payload(&a12_readiness_document(root)?, &actual)?.bytes)
+}
+fn a12_readiness_prior(root: &Path, physical: Material) -> Result<Material> {
+    Ok(Material {
+        bytes: a12_readiness_current(root, A12_READINESS_PATH, &physical.bytes)?,
+        mode: physical.mode,
+    })
+}
+fn a12_readiness_controls(root: &Path) -> Result<()> {
+    let doc = a12_readiness_document(root)?;
+    let actual = read(root, A12_READINESS_PATH)?;
+    let prior = a12_readiness_payload(&doc, &actual)?;
+    need(
+        a12_readiness_current(root, A12_READINESS_PATH, &actual.bytes)? == prior.bytes,
+        "A12 readiness actual shared projection",
+    )?;
+    need(
+        a12_readiness_current(root, A12_READINESS_PATH, &prior.bytes).is_err(),
+        "A12 readiness shared projection rejects old supplied bytes",
+    )?;
+    need(
+        a12_readiness_current(root, "Cargo.lock", &actual.bytes).is_err(),
+        "A12 readiness shared projection rejects unowned path",
+    )?;
+    need(
+        a12_readiness_payload(&doc, &prior).is_err(),
+        "A12 readiness old source is not current",
+    )?;
+    for mutation in 0..3 {
+        let mut bad = doc.clone();
+        match mutation {
+            0 => {
+                bad["edits"].as_array_mut().unwrap().pop();
+            }
+            1 => {
+                let edit = bad["edits"][0].clone();
+                bad["edits"].as_array_mut().unwrap().push(edit);
+            }
+            _ => bad["edits"][0]["after"] = json!("changed test body"),
+        }
+        need(
+            a12_readiness_payload(&bad, &actual).is_err(),
+            "A12 readiness missing/duplicate/changed edit accepted",
+        )?;
+    }
+    let after = doc["edits"][0]["after"]
+        .as_str()
+        .ok_or("A12 readiness test body absent")?;
+    let text = std::str::from_utf8(&actual.bytes).map_err(|e| e.to_string())?;
+    for bytes in [
+        text.replacen(after, "", 1).into_bytes(),
+        format!("{text}{after}").into_bytes(),
+        text.replacen(after, "changed body", 1).into_bytes(),
+    ] {
+        let bad = Material {
+            bytes,
+            mode: actual.mode,
+        };
+        need(
+            a12_readiness_payload(&doc, &bad).is_err(),
+            "A12 readiness missing/duplicate/changed source accepted",
+        )?;
+    }
+    Ok(())
+}
 /// Recover only these twenty exact e127 proof operands from authenticated physical
 /// page successors. A supplied buffer is always compared to physical bytes first.
 pub(crate) fn page_prior(
@@ -456,6 +611,8 @@ pub(crate) fn page_prior(
             bytes: super::w07_t02_joint::page_current(root, path, &physical.bytes)?,
             mode: physical.mode,
         }
+    } else if path == "crates/ssx-infra/tests/a12_security.rs" {
+        a12_readiness_prior(root, physical)?
     } else {
         physical
     };
@@ -494,6 +651,7 @@ pub(crate) fn page_prior(
 /// Same existing test identities exercise actual physical/new-to-e127 and legacy
 /// reconstructions separately, including wrong caller/mode/edit/supplied buffers.
 pub(crate) fn page_controls(root: &Path) -> Result<()> {
+    a12_readiness_controls(root)?;
     let doc = page_document(root)?;
     for &(path, pin, len) in PAGE_OPERANDS {
         let expected = json!({"path":path,"sha256":pin,"bytes":len,"mode":"0644"});
@@ -534,6 +692,8 @@ pub(crate) fn page_controls(root: &Path) -> Result<()> {
                 bytes: super::w07_t02_joint::page_current(root, path, &physical.bytes)?,
                 mode: physical.mode,
             }
+        } else if path == A12_READINESS_PATH {
+            a12_readiness_prior(root, physical)?
         } else {
             physical
         };
