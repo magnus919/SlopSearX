@@ -692,21 +692,44 @@ fn portal_html_capsule(root: &Path) -> Result<PortalHtmlCapsule> {
     )?;
     Ok(c)
 }
+fn inverse_source(
+    current: &[u8],
+    after_bytes: usize,
+    after_sha256: &str,
+    inverse: &[Edit],
+    before_bytes: usize,
+    before_sha256: &str,
+    current_reason: &str,
+    prior_reason: &str,
+) -> Result<Vec<u8>> {
+    need(
+        current.len() == after_bytes && sha(current) == after_sha256,
+        current_reason,
+    )?;
+    let before = reconstruct(current, inverse)?;
+    need(
+        before.len() == before_bytes && sha(&before) == before_sha256,
+        prior_reason,
+    )?;
+    Ok(before)
+}
 fn portal_html_inverse(row: &PortalHtmlRow, current: &[u8]) -> Result<Vec<u8>> {
     need(
         row.path == PORTAL_HTML_PATH
             && row.baseline_commit == PORTAL_HTML_BASE
-            && row.mode == 0o644
-            && current.len() == row.after_bytes
-            && sha(current) == row.after_sha256,
+            && row.mode == 0o644,
+        "portal HTML source scope",
+    )?;
+    inverse_source(
+        current,
+        row.after_bytes,
+        &row.after_sha256,
+        &row.inverse,
+        row.before_bytes,
+        &row.before_sha256,
         "portal HTML exact current source",
-    )?;
-    let before = reconstruct(current, &row.inverse)?;
-    need(
-        before.len() == row.before_bytes && sha(&before) == row.before_sha256,
         "portal HTML prior source identity",
-    )?;
-    Ok(before)
+    )
 }
 fn portal_html_original(root: &Path, path: &str, current: &[u8]) -> Result<Vec<u8>> {
     need(path == PORTAL_HTML_PATH, "portal HTML unlisted source")?;
@@ -836,16 +859,17 @@ fn portal_html_controls(root: &Path) -> Result<()> {
 }
 
 fn page_inverse(row: &PageRow, current: &[u8]) -> Result<Vec<u8>> {
-    need(
-        row.mode == 0o644 && current.len() == row.after_bytes && sha(current) == row.after_sha256,
+    need(row.mode == 0o644, "page exact source mode")?;
+    inverse_source(
+        current,
+        row.after_bytes,
+        &row.after_sha256,
+        &row.inverse,
+        row.before_bytes,
+        &row.before_sha256,
         "page exact current whole-file proof",
-    )?;
-    let before = reconstruct(current, &row.inverse)?;
-    need(
-        before.len() == row.before_bytes && sha(&before) == row.before_sha256,
         "page exact prior whole-file inverse",
-    )?;
-    Ok(before)
+    )
 }
 fn page_row(root: &Path, row: &PageRow) -> Result<Vec<u8>> {
     let full = root.join(&row.path);
