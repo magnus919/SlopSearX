@@ -137,6 +137,35 @@ def test_native_theme_storage_accessibility_and_painted_background() -> None:
                     "format": ["html"],
                 }
                 assert intercepted == [captured.value.url]
+                # Empty optional fields are omitted from this request without
+                # mutating their controls. A page restored from browser history
+                # must still be able to submit filters entered afterward.
+                categories = page.get_by_label("Categories (comma-separated)")
+                relative = page.get_by_label("Relative time range")
+                assert categories.get_attribute("name") == "categories"
+                assert relative.get_attribute("name") == "time_range"
+                categories.fill("science")
+                with page.expect_event(
+                    "requestfailed",
+                    predicate=lambda request: "/search?" in request.url,
+                ) as second_aborted:
+                    with page.expect_request(
+                        lambda request: "/search?" in request.url
+                    ) as second_captured:
+                        page.locator("[data-search-form]").evaluate("form => form.requestSubmit()")
+                assert second_aborted.value.url == second_captured.value.url
+                second_parameters = parse_qs(urlsplit(second_captured.value.url).query)
+                assert second_parameters == {
+                    "q": ["climate & change"],
+                    "engines": ["openalex"],
+                    "categories": ["science"],
+                    "date_from": ["2024-02-29"],
+                    "date_to": ["2024-02-29"],
+                    "language": ["en"],
+                    "safesearch": ["0"],
+                    "format": ["html"],
+                }
+                assert intercepted == [captured.value.url, second_captured.value.url]
             finally:
                 context.close()
 

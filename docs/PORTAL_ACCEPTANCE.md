@@ -8,7 +8,9 @@ slow interface.
 
 - The labelled form retains `date_from`, `date_to`, and explicit
   `engines=openalex` while the user refines or resubmits a search. Empty optional
-  controls are omitted from the request rather than serialized as empty dates.
+  controls are omitted from the submitted payload rather than serialized as empty
+  dates; their names remain on the controls so a history-restored form can be
+  edited and resubmitted without losing filters.
 - Rendered date bounds, status, selected source, and layer-qualified provenance
   come from the same canonical proof exposed by JSON/YAML; they are escaped and
   available to assistive technology as text.
