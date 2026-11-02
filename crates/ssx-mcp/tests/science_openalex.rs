@@ -159,6 +159,14 @@ fn assert_result(value: &Value, days: &[&str], expected: &Value, cached: bool) {
     }
 }
 
+fn without_snapshot_identity(value: &Value) -> Value {
+    let mut stable = value.clone();
+    let object = stable.as_object_mut().expect("result card");
+    object.remove("result_id");
+    object.remove("artifact");
+    stable
+}
+
 #[tokio::test]
 async fn authenticated_science_openalex_dates_preserve_wire_proof_and_valkey_cache() {
     let fixture = Fixture::new(Mode::Audited, 200, equal_body(), Some(7)).await;
@@ -302,7 +310,18 @@ async fn authenticated_science_openalex_dates_preserve_wire_proof_and_valkey_cac
         true,
     );
     assert_eq!(
-        view["results"][0], full_view["results"][0],
+        view["results"][0]["result_id"],
+        format!("{}:0", view["meta"]["cursor"].as_str().unwrap()),
+        "the bounded view result ID must belong to its own complete snapshot"
+    );
+    assert_eq!(
+        full_view["results"][0]["result_id"],
+        format!("{}:0", full_view["meta"]["cursor"].as_str().unwrap()),
+        "the unbounded view result ID must belong to its own complete snapshot"
+    );
+    assert_eq!(
+        without_snapshot_identity(&view["results"][0]),
+        without_snapshot_identity(&full_view["results"][0]),
         "max_results=1 must return the first row of the canonical full response"
     );
     assert_eq!(fixture.upstream.lines().len(), 5);
