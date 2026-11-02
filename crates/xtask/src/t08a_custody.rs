@@ -149,8 +149,9 @@ fn inverse(row: &Value, current: &[u8], mode: &str, count: usize) -> Result<Vec<
     Ok(prior)
 }
 // One additive std-only health package; immutable CLI lock capsule stays unchanged.
-const HEALTH_LOCK_SHA: &str = "53fb4619c6e4fd12eae7928073c5062929498d2db29b270e456514a855a5bdd9";
-const HEALTH_LOCK_BYTES: usize = 94250;
+pub(crate) const HEALTH_LOCK_SHA: &str =
+    "53fb4619c6e4fd12eae7928073c5062929498d2db29b270e456514a855a5bdd9";
+pub(crate) const HEALTH_LOCK_BYTES: usize = 94250;
 const HEALTH_LOCK_STANZA: &str = "[[package]]\nname = \"ssx-healthcheck\"\nversion = \"0.1.0\"\n\n";
 fn native_health_lock_prior(physical: &[u8]) -> Result<Vec<u8>> {
     need(

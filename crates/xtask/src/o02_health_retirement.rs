@@ -1,8 +1,11 @@
 //! One authenticated O02 retirement; historical inventory bytes remain unchanged.
+use crate::cli_source_custody::{HEALTH_LOCK_BYTES, HEALTH_LOCK_SHA};
 use sha2::{Digest, Sha256};
 #[cfg(unix)]
 use std::io::Read;
 use std::{collections::BTreeSet, fs, path::Path};
+#[cfg(test)]
+use std::{ffi::OsString, path::PathBuf};
 type Result<T> = std::result::Result<T, String>;
 pub(crate) const PATH: &str = "docker/healthcheck.py";
 const BLOB: &str = "39bcbc736bed7e441531ab00f3e6d540e4b3af65";
@@ -18,6 +21,39 @@ fn digest(raw: &[u8]) -> String {
         .iter()
         .map(|b| format!("{b:02x}"))
         .collect()
+}
+#[cfg(test)]
+fn validate_temp_root(root: &Path) -> Result<PathBuf> {
+    need(
+        root.is_absolute(),
+        "configured test temporary root must be absolute",
+    )?;
+    let metadata = fs::symlink_metadata(root).map_err(|e| e.to_string())?;
+    need(
+        metadata.is_dir() && !metadata.file_type().is_symlink(),
+        "configured test temporary root must be an existing non-symlink directory",
+    )?;
+    let canonical = root.canonicalize().map_err(|e| e.to_string())?;
+    need(
+        canonical.is_absolute(),
+        "configured test temporary root must resolve absolutely",
+    )?;
+    Ok(canonical)
+}
+#[cfg(test)]
+fn configured_temp_root(
+    tmp_dir: Option<OsString>,
+    fixture_root: Option<OsString>,
+) -> Result<PathBuf> {
+    let tmp_dir = tmp_dir.ok_or("TMPDIR must be configured for O02 source controls")?;
+    let fixture_root = fixture_root.ok_or("SLOPSEARX_TEST_TEMP_ROOT must be configured")?;
+    let tmp_dir = validate_temp_root(Path::new(&tmp_dir))?;
+    let fixture_root = validate_temp_root(Path::new(&fixture_root))?;
+    need(
+        tmp_dir == fixture_root,
+        "TMPDIR and SLOPSEARX_TEST_TEMP_ROOT must resolve to the same directory",
+    )?;
+    Ok(tmp_dir)
 }
 #[cfg(unix)]
 fn material(root: &Path, path: &str, size: usize, sha: &str) -> Result<Vec<u8>> {
@@ -175,18 +211,30 @@ pub(crate) fn authenticate(root: &Path, fixture: &[u8], tracked: &BTreeSet<Strin
             2427,
             "05bb1d6087f15b85904283e6cac78582465169f4fa43f2f5f681390a09dc3607",
         ),
-        (
-            "Cargo.lock",
-            94250,
-            "53fb4619c6e4fd12eae7928073c5062929498d2db29b270e456514a855a5bdd9",
-        ),
     ] {
         material(root, path, size, sha)?;
     }
+    material(root, "Cargo.lock", HEALTH_LOCK_BYTES, HEALTH_LOCK_SHA)?;
     Ok(())
 }
 #[cfg(test)]
 pub(crate) fn controls(root: &Path) -> Result<()> {
+    let temp_root = configured_temp_root(
+        std::env::var_os("TMPDIR"),
+        std::env::var_os("SLOPSEARX_TEST_TEMP_ROOT"),
+    )?;
+    need(
+        configured_temp_root(None, std::env::var_os("SLOPSEARX_TEST_TEMP_ROOT")).is_err(),
+        "missing TMPDIR rejected",
+    )?;
+    need(
+        configured_temp_root(std::env::var_os("TMPDIR"), None).is_err(),
+        "missing test temporary root rejected",
+    )?;
+    need(
+        validate_temp_root(Path::new("relative-temp-root")).is_err(),
+        "relative configured temp root rejected",
+    )?;
     let fixture =
         fs::read(root.join("crates/xtask/fixtures/F01.json")).map_err(|e| e.to_string())?;
     let disposition = fs::read(root.join("docs/rust-rewrite/inventory/python-disposition.json"))
@@ -250,7 +298,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
             "wrong historical blob rejected",
         )?;
     }
-    let owned = std::env::temp_dir().join(format!(
+    let owned = temp_root.join(format!(
         "ssx-health-retirement-{}-{}",
         std::process::id(),
         std::time::SystemTime::now()
@@ -260,6 +308,34 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
     ));
     fs::create_dir(&owned).map_err(|e| e.to_string())?;
     let result = (|| -> Result<()> {
+        let alternate_root = owned.join("alternate-temp-root");
+        fs::create_dir(&alternate_root).map_err(|e| e.to_string())?;
+        need(
+            configured_temp_root(
+                std::env::var_os("TMPDIR"),
+                Some(alternate_root.clone().into_os_string()),
+            )
+            .is_err(),
+            "mismatched configured temp roots rejected",
+        )?;
+        fs::remove_dir(&alternate_root).map_err(|e| e.to_string())?;
+        let file_root = owned.join("not-a-directory");
+        fs::write(&file_root, b"file").map_err(|e| e.to_string())?;
+        need(
+            validate_temp_root(&file_root).is_err(),
+            "non-directory configured temp root rejected",
+        )?;
+        fs::remove_file(&file_root).map_err(|e| e.to_string())?;
+        #[cfg(unix)]
+        {
+            let linked_root = owned.join("linked-temp-root");
+            std::os::unix::fs::symlink(&owned, &linked_root).map_err(|e| e.to_string())?;
+            need(
+                validate_temp_root(&linked_root).is_err(),
+                "symlinked configured temp root rejected",
+            )?;
+            fs::remove_file(&linked_root).map_err(|e| e.to_string())?;
+        }
         // Fresh Git checkouts omit the directory after its last tracked file retires.
         absence(&owned, &BTreeSet::new())?;
         need(
@@ -286,6 +362,17 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
                 .map_err(|e| e.to_string())?;
             fs::copy(root.join(path), destination).map_err(|e| e.to_string())?;
         }
+        authenticate(&owned, &fixture, &BTreeSet::new())?;
+        let lock = owned.join("Cargo.lock");
+        let original_lock = fs::read(&lock).map_err(|e| e.to_string())?;
+        let mut changed_lock = original_lock.clone();
+        changed_lock[0] ^= 1;
+        fs::write(&lock, changed_lock).map_err(|e| e.to_string())?;
+        need(
+            authenticate(&owned, &fixture, &BTreeSet::new()).is_err(),
+            "changed shared Cargo.lock identity rejected",
+        )?;
+        fs::write(&lock, &original_lock).map_err(|e| e.to_string())?;
         authenticate(&owned, &fixture, &BTreeSet::new())?;
         let native = owned.join("crates/ssx-healthcheck/src/lib.rs");
         let original = fs::read(&native).map_err(|e| e.to_string())?;
@@ -344,8 +431,18 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         Ok(())
     })();
     let cleanup = fs::remove_dir_all(&owned).map_err(|e| e.to_string());
-    result?;
-    cleanup?;
+    match (result, cleanup) {
+        (Ok(()), Ok(())) => {}
+        (Err(error), Ok(())) => return Err(error),
+        (Ok(()), Err(cleanup)) => {
+            return Err(format!("O02 temporary control cleanup failed: {cleanup}"));
+        }
+        (Err(error), Err(cleanup)) => {
+            return Err(format!(
+                "{error}; O02 temporary control cleanup also failed: {cleanup}"
+            ));
+        }
+    }
     let tracked = BTreeSet::from([PATH.to_string()]);
     need(
         absence(root, &tracked).is_err(),
