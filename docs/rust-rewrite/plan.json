@@ -3,6 +3,25 @@
   "baseline_sha": "2a995f964757df77693747b232aa47738c0c58cc",
   "approved_requirement": "Maintainer requested a complete Rust rewrite plan on 2026-10-15: no backend Python; optional client-only Python permitted; native gateway and ssx included. This publication authorizes planning, not production deployment.",
   "dependency_semantics": "Every depends_on edge is a hard finish-to-start gate: predecessor implementation/decision/evidence must be accepted and merged before dependent implementation starts. Analysis may happen early but cannot claim readiness. Epic hierarchy is not a dependency.",
+  "delivery_cadence": {
+    "purpose": "Make steady, reviewable progress through the Rust Rewrite milestone without weakening its capability, quality, hosted-acceptance, or Python-removal requirements.",
+    "work_in_progress_limit": "Keep at most two implementation PRs actively changing code. Other available capacity should unblock a named blocker, perform an independent review, or prepare a separately mergeable next slice. Do not start work whose hard prerequisites are incomplete.",
+    "slice_definition": "Prefer small independently mergeable slices, each with one observable user or operator outcome, an exact plan item or issue, explicit acceptance commands/evidence, and cleanup obligations. Keep issue dependencies hard finish-to-start; parallelize only independent items or analysis that does not claim implementation readiness.",
+    "integration_rule": "Identify shared-file and shared-interface overlap before expensive builds. Integrate dependent work through its reviewed parent/head, then run the affected acceptance gates against the exact integrated revision. Reuse prior evidence only when its source, fixtures, environment, and required scope are unchanged; hosted required checks must still pass on the exact proposed merge head.",
+    "stuck_work_rule": "After two equivalent failures of the same gate, stop replaying it or increasing timeouts without new evidence. Record the failing revision, preserved output, common-cause hypothesis, owner, next diagnostic action, and a bounded stopping condition; switch to independent ready work while the blocker is investigated.",
+    "progress_reporting": [
+      "accepted and merged issues since the previous report",
+      "capabilities with completed acceptance evidence",
+      "active implementation streams and the oldest blocker with its next action",
+      "work completed versus work waiting on CI, review, integration, or external access",
+      "measured build-footprint changes and cleanup disposition for completed PRs"
+    ],
+    "queue_policy": "Prioritize completing and accepting the oldest ready delivery before expanding implementation. Keep the next user-visible capability queued with prerequisites and an acceptance plan; when a lane is blocked, advance independent ready work without reporting the blocked lane as progress.",
+    "completion_rule": "Each PR's acceptance includes exact-head required checks, review disposition, merge verification, local main synchronization when applicable, and the repository's post-merge artifact and worktree cleanup audit. These delivery practices do not waive any plan acceptance criterion or authorize production activation.",
+    "communication_rule": "Send user-facing updates when requested or when a material state change needs attention. While work is waiting, continue useful independent work and avoid repeating unchanged status.",
+    "authorization_rule": "Apply the user's existing authorization to routine work without asking again. Ask only when a distinct permission or approval is genuinely required, state the exact action and boundary, and do not broaden an earlier bounded authorization.",
+    "superseded_run_policy": "Preserve current-head and main runs. After a PR head advances, cancel only queued pull_request runs whose recorded head SHA is superseded and whose workflow cannot publish, deploy, or cause another external side effect. Never cancel in-progress or current-head required checks. Record every affected run ID. If no queued run meets all criteria, leave it queued and continue independent ready work."
+  },
   "items": [
     {
       "id": "F01",
@@ -636,7 +655,8 @@
       "title": "Ship native MCP gateway and OAuth client",
       "lane": "clients",
       "depends_on": [
-        "T06"
+        "T06",
+        "S01"
       ],
       "problem": "The gateway should install and run without a local Python runtime while preserving existing client configuration.",
       "scope": [
@@ -1234,7 +1254,8 @@
         "T08",
         "O01",
         "O02",
-        "W09"
+        "W09",
+        "T02"
       ],
       "problem": "A usable rewrite must deliver signed/versioned artifacts on supported targets without Python runtime baggage.",
       "scope": [
@@ -1774,6 +1795,81 @@
       "handoff": "Additive native CI/review integrations and a gate-transition plan for O09; no premature Python gate removal."
     },
     {
+      "id": "S01",
+      "title": "Restore upstream advisory coverage for private crate forks",
+      "lane": "security",
+      "depends_on": [
+        "F03",
+        "O06"
+      ],
+      "problem": "Local path forks have no Cargo metadata source, so cargo-deny 0.20.2 can skip their upstream advisory identity. Source provenance alone does not prove current advisory coverage.",
+      "scope": [
+        "Inventory active third-party local/path forks from current Cargo metadata and distinguish them from project-owned workspace crates",
+        "Bind each reviewed mapping to the physical manifest and package identity, upstream name/version, pristine archive checksum, license and patch provenance; reject unknown or stale mappings",
+        "Keep the real physical dependency graph and existing cargo-deny checks unchanged; derive a clearly labeled, source-bound metadata view only for upstream advisory identity matching",
+        "Exercise pinned cargo-deny with deterministic advisory fixtures and a sufficiently fresh database in required CI; retain exact source, tool, database and output provenance",
+        "Document the limits of upstream identity scanning and carry accepted evidence into T07, G02 and final G09 acceptance"
+      ],
+      "acceptance": [
+        "All active non-workspace forks are enumerated; canonical and renamed forks map to reviewed identities and unknown, missing or tampered provenance fails closed",
+        "The original physical metadata/lock and existing advisory, bans, license and source checks remain intact; the derived view cannot be used as resolver, feature, TLS or shipping evidence",
+        "Real-tool fixtures demonstrate the raw local-source omission and the mapped advisory match, asserting the expected advisory ID, package and version; parse/configuration failures are not counted as findings",
+        "Required CI scans the source-bound advisory view with a sufficiently fresh database and records source revision, metadata hashes, mappings, tool/database identity, command, exit and diagnostics",
+        "Exact-head native tests and hosted CI pass; maintenance guidance and source bindings are updated without changing permissions, triggers or historical evidence"
+      ],
+      "sources": [
+        "Cargo.lock",
+        "crates/xtask/src/t08a.rs",
+        "crates/xtask/src/t08a_custody.rs",
+        "crates/xtask/src/t08a_main_join.rs",
+        "docs/rust-rewrite/t08a/hyper-provenance.json",
+        "docs/rust-rewrite/t08a/PRIVATE_HTTP_MAINTENANCE.md",
+        ".github/workflows/rust.yml",
+        "cargo-deny 0.20.2 --metadata-path"
+      ],
+      "handoff": "A source-bound advisory identity adapter and real cargo-deny fixture results alongside the unchanged physical graph scan; no Python helper, fabricated resolver result or production activation."
+    },
+    {
+      "id": "P01",
+      "title": "Port bounded publication-date enforcement and proof from #874",
+      "lane": "search",
+      "depends_on": [
+        "A06",
+        "F14",
+        "T02",
+        "T03",
+        "T06"
+      ],
+      "problem": "The Python HTTP path once dropped date_from/date_to, so bounded searches could return unbounded results as if they were valid. The native rewrite must preserve the corrected date-proof contract across the integrated stack.",
+      "scope": [
+        "Carry inclusive calendar bounds through the actual registered OpenAlex adapter, shared SearchService and disposable Valkey cache",
+        "Enforce explicit audited OpenAlex-only scope and reject malformed, reversed, repeated, unknown, contradictory or unsupported bounded requests before dispatch",
+        "Preserve date proof, engine outcomes, upstream provenance and absolute bounds through native HTTP/form, science MCP, JSON/YAML and portal pagination/format links",
+        "Separate date-bound cache identities and reacquire legacy or mismatching-proof entries; reject bounded CSV/RSS before acquisition while retaining unbounded compatibility",
+        "Map #874 regressions to real Rust HTTP/MCP/adapter/parser coverage or reviewed supersession using deterministic upstream fixtures"
+      ],
+      "acceptance": [
+        "HTTP GET and form POST on / and /search forward exact inclusive bounds to OpenAlex; one-sided, equal-date and leap-day cases pass with actual mocked upstream requests",
+        "Invalid, repeated, unknown, contradictory, implicit, mixed, unsupported or unaudited scopes reject before engine dispatch without changing specialist permissions",
+        "JSON, YAML, science MCP and portal expose truthful matching date proof, audited upstream:openalex provenance, selected engine identity, absolute bounds and preserved acquisition failures",
+        "Cache keys separate bounds; proof and publication dates round-trip; legacy and mismatching proof entries reacquire; bounded CSV/RSS reject before acquisition",
+        "All #874 regressions have exact native evidence or reviewed supersession, and integrated exact-head CI plus portal coverage pass without live provider calls"
+      ],
+      "sources": [
+        "docs/DATE_FILTERS.md",
+        "engines/openalex.py",
+        "slopsearx/service.py",
+        "slopsearx/filters.py",
+        "slopsearx/formatter.py",
+        "slopsearx/mcp/tools.py",
+        "tests/test_server.py",
+        "tests/test_filter_semantics.py",
+        "tests/test_mcp_enforcement.py",
+        "tests/test_mcp_tools.py"
+      ],
+      "handoff": "Integrated native publication-date proof and regression trace bound to the actual OpenAlex adapter, HTTP/forms, science MCP, cache, JSON/YAML and portal artifacts; required by G01 before parity acceptance."
+    },
+    {
       "id": "G01",
       "title": "Prove integrated full-feature and all-adapter parity",
       "lane": "qualification",
@@ -1798,7 +1894,8 @@
         "T08",
         "O01",
         "O04",
-        "O05"
+        "O05",
+        "P01"
       ],
       "problem": "Individually passing slices are insufficient until every public path uses the native services together.",
       "scope": [
@@ -1810,7 +1907,8 @@
         "Zero unclassified contract differences and zero missing capabilities; new upstream additions are explicitly reconciled",
         "All suites execute without Python backend code or stubs; compiled artifact SHA/digest is recorded",
         "A complete traceability report maps each baseline capability/regression to passing evidence; remaining optional client Python is isolated",
-        "Europe PMC remains opt-in and lite-only; both attribution and preprint notices survive deduplication, compact MCP projection and portal rendering."
+        "Europe PMC remains opt-in and lite-only; both attribution and preprint notices survive deduplication, compact MCP projection and portal rendering.",
+        "P01 publication-date proof and regression evidence are included in the integrated artifact traceability report."
       ],
       "sources": [
         "tests",
@@ -1828,7 +1926,8 @@
       "depends_on": [
         "W10",
         "O01",
-        "T05"
+        "T05",
+        "S01"
       ],
       "problem": "Type safety and happy-path tests cannot prove tenant isolation, token use or durable recovery.",
       "scope": [
@@ -2126,7 +2225,8 @@
       "title": "Verify final Rust-only release and close rewrite acceptance",
       "lane": "release",
       "depends_on": [
-        "G08"
+        "G08",
+        "S01"
       ],
       "problem": "Closing the milestone requires observed end-state evidence after cleanup, not just merged implementation tickets.",
       "scope": [
