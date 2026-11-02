@@ -173,14 +173,17 @@ fn form(query: &str, request: Option<&SearchRequest>, controls: PortalControls<'
         .collect::<String>();
     let language = request.map_or("en", |r| r.language.as_str());
     let safesearch = request.map_or(0, |r| r.safesearch);
+    let mut scopes = scope_select("engines", "Sources", &engines, selected_engines);
+    scopes.push_str(&scope_select(
+        "categories",
+        "Categories",
+        &categories,
+        selected_categories,
+    ));
     format!(
         "<form class=\"search-form\" action=\"/search\" method=\"get\" data-search-form><label for=\"q\">Search</label><input id=\"q\" name=\"q\" value=\"{}\" required>{}<label for=\"time_range\">Relative time range</label><select id=\"time_range\" name=\"time_range\"><option value=\"\">Any time</option>{}</select><label for=\"date_from\">Publication date from</label><input id=\"date_from\" name=\"date_from\" type=\"date\" value=\"{}\"><label for=\"date_to\">Publication date to</label><input id=\"date_to\" name=\"date_to\" type=\"date\" value=\"{}\"><input type=\"hidden\" name=\"language\" value=\"{}\"><input type=\"hidden\" name=\"safesearch\" value=\"{}\"><input type=\"hidden\" name=\"format\" value=\"html\"><button type=\"submit\">Search</button></form>",
         escape(query),
-        format!(
-            "{}{}",
-            scope_select("engines", "Sources", &engines, selected_engines),
-            scope_select("categories", "Categories", &categories, selected_categories)
-        ),
+        scopes,
         relative_options,
         escape(date_from),
         escape(date_to),
