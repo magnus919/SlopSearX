@@ -21,6 +21,7 @@ const TESTS: &[&str] = &[
     "optional_routing_timeout_falls_back_and_unavailable_implementation_is_typed",
     "actual_amended_source_date_admission_and_proof",
     "real_valkey_amended_date_proof_cache_admission",
+    "real_registered_openalex_dates_survive_service_valkey_cache_and_reacquisition",
     "actual_source_suggestion_parser_and_key_replay",
     "singleflight_views_fresh_isolation_and_final_waiter_join",
     "simultaneous_views_ids_and_bounded_admission",

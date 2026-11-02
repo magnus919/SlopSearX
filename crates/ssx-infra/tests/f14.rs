@@ -443,6 +443,265 @@ async fn real_valkey_amended_date_proof_cache_admission() {
     );
     service.shutdown().await;
 }
+// #984 core composition: the existing real adapter and private F14 owners,
+// without the still-pending HTTP/portal transport qualification.
+#[tokio::test]
+async fn real_registered_openalex_dates_survive_service_valkey_cache_and_reacquisition() {
+    use base64::Engine as _;
+    use ssx_infra::adapters::{
+        AllowAllAdmission,
+        arxiv_expat::AtomPool,
+        openalex_runtime::{self, OpenAlexConfig},
+    };
+    use std::{num::NonZeroUsize, path::PathBuf};
+
+    fn assert_dates(response: &SearchResponse, days: &[&str], proof: &Value, cached: bool) {
+        assert_eq!(response.cached, cached);
+        assert_eq!(response.scope.selected_engines, ["openalex"]);
+        assert_eq!(response.date_filter.as_ref().unwrap().to_value(), *proof);
+        assert_eq!(response.engine_outcomes.len(), 1);
+        assert_eq!(response.engine_outcomes[0].engine, "openalex");
+        assert_eq!(response.engine_outcomes[0].status, "ok");
+        let mut actual: Vec<_> = response
+            .results
+            .iter()
+            .map(|result| {
+                result
+                    .published_date
+                    .as_deref()
+                    .expect("proven publication day")
+            })
+            .collect();
+        actual.sort_unstable();
+        assert_eq!(actual, days);
+    }
+
+    let corpus: Value = ssx_json::from_str(include_str!(
+        "../../../docs/rust-rewrite/a06/source-openalex-actual-dates.json"
+    ))
+    .unwrap();
+    let row = corpus["records"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|row| row["id"] == "openalex.actual_dates.equal_leap")
+        .unwrap();
+    // The unchanged A06 body includes dates before/on/after the leap day,
+    // missing/malformed dates, and misleading title/year/URL date hints.
+    let body = base64::engine::general_purpose::STANDARD
+        .decode(row["responses"][0]["body_b64"].as_str().unwrap())
+        .unwrap();
+    let upstream =
+        Loopback::start(vec![ssx_json::from_slice(&body).unwrap()], Duration::ZERO).await;
+    let server = PrivateValkey::start().await;
+    let store = Arc::new(Valkey::new(&server.url, Duration::from_millis(250)).unwrap());
+    let http = Arc::new(AdapterHttp::default());
+    let pool = AtomPool::new(
+        PathBuf::from("/nonexistent-984-openalex-helper"),
+        NonZeroUsize::new(1).unwrap(),
+    )
+    .unwrap();
+    let mut registry = ssx_registry::Registry::builtins().unwrap();
+    openalex_runtime::register(
+        &mut registry,
+        http.clone(),
+        Arc::new(AllowAllAdmission),
+        OpenAlexConfig {
+            base_url: Arc::from(upstream.endpoint.strip_suffix("/search").unwrap()),
+            transport: Options {
+                trust_env: false,
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+        pool.clone(),
+    )
+    .unwrap();
+    let engine: Arc<dyn SearchEngine> = Arc::from(registry.instantiate("openalex").unwrap());
+    let descriptor = registry.descriptor("openalex").unwrap();
+    let mut cap = capability("openalex");
+    cap.categories = descriptor.categories.clone();
+    cap.enforced_filters = descriptor.enforced_filters.clone();
+    cap.available = registry.is_available("openalex");
+    let mut deps = dependencies(vec![("openalex", engine)]);
+    deps.policy.catalog = CatalogSnapshot::new(vec![cap]).unwrap();
+    deps.cache = Some(Arc::new(CanonicalCache::new(
+        Arc::new(ValkeyCache::new(store.clone())),
+        CacheTtls::default(),
+    )));
+    deps.owned_http.push(http.clone());
+    deps.owned_stores.push(store.clone());
+    let service =
+        SearchService::new_with_registry(SearchConfig::default(), deps, Arc::new(registry))
+            .unwrap();
+    let mut p = proposal(row["query"].as_str().unwrap());
+    p.request.engines = Some(vec!["openalex".into()]);
+    p.request.date_from = Some("2024-02-29".into());
+    p.request.date_to = Some("2024-02-29".into());
+    let expected = json!({
+        "requested":{"date_from":"2024-02-29","date_to":"2024-02-29","time_range":null},
+        "applied":{"date_from":"2024-02-29","date_to":"2024-02-29"},
+        "status":"enforced",
+        "reason":"Publication dates enforced by the audited OpenAlex adapter.",
+        "enforced_by":["upstream:openalex"],"engines":["openalex"],"warnings":[]
+    });
+    let prepared = service.prepare_scope(&p).await.unwrap();
+    for field in ["date_from", "date_to"] {
+        assert_eq!(
+            prepared.preview().enforcement[field].to_value(),
+            json!({"requested":"2024-02-29","status":"enforced",
+                "reason":format!("{field} is enforced upstream by every selected adapter"),
+                "enforced_by":["upstream:openalex"]})
+        );
+    }
+    assert!(upstream.requests.lock().unwrap().is_empty());
+    let first = service.search(p.clone()).await.unwrap();
+    assert_dates(&first, &["2024-02-29"], &expected, false);
+    assert_eq!(first.results[0].url, "https://openalex.org/1");
+    let equal_path = row["requests"][0]["url"]
+        .as_str()
+        .unwrap()
+        .strip_prefix("https://api.openalex.org")
+        .unwrap();
+    let equal_wire = format!("GET {equal_path} HTTP/1.1");
+    assert_eq!(upstream.requests.lock().unwrap().len(), 1);
+    assert_eq!(
+        upstream.requests.lock().unwrap()[0].lines().next(),
+        Some(equal_wire.as_str())
+    );
+    let equal_keys = server.keys("search:*").await;
+    assert_eq!(equal_keys.len(), 1);
+    let equal_key = &equal_keys[0];
+    let mut conn = redis::Client::open(server.url.as_str())
+        .unwrap()
+        .get_multiplexed_async_connection()
+        .await
+        .unwrap();
+    let original: String = redis::cmd("GET")
+        .arg(equal_key)
+        .query_async(&mut conn)
+        .await
+        .unwrap();
+    let original: Value = ssx_json::from_str(&original).unwrap();
+    assert_eq!(original["date_filter"], expected);
+    let stored = storage::decode_response(original.clone()).unwrap();
+    assert_eq!(stored.results.len(), 1);
+    assert_eq!(stored.date_filter.as_ref().unwrap().to_value(), expected);
+    assert_eq!(
+        stored.results[0].published_date.as_deref(),
+        Some("2024-02-29")
+    );
+    let cached = service.search(p.clone()).await.unwrap();
+    assert_dates(&cached, &["2024-02-29"], &expected, true);
+    assert_eq!(
+        upstream.requests.lock().unwrap().len(),
+        1,
+        "proof hit reacquired OpenAlex"
+    );
+
+    let mut broader = p.clone();
+    broader.request.date_to = Some("2024-03-01".into());
+    broader.request.max_results = Some(1);
+    let mut broad_proof = expected.clone();
+    broad_proof["requested"]["date_to"] = json!("2024-03-01");
+    broad_proof["applied"]["date_to"] = json!("2024-03-01");
+    let bounded_view = service.search(broader.clone()).await.unwrap();
+    assert!(!bounded_view.cached);
+    assert_eq!(bounded_view.results.len(), 1);
+    assert_eq!(
+        bounded_view.date_filter.as_ref().unwrap().to_value(),
+        broad_proof
+    );
+    assert_eq!(
+        upstream.requests.lock().unwrap().len(),
+        2,
+        "changed dates shared a cache identity"
+    );
+    let broad_wire = equal_wire.replace(
+        "to_publication_date%3A2024-02-29",
+        "to_publication_date%3A2024-03-01",
+    );
+    assert_ne!(broad_wire, equal_wire);
+    assert_eq!(
+        upstream.requests.lock().unwrap()[1].lines().next(),
+        Some(broad_wire.as_str())
+    );
+    let broad_keys = server.keys("search:*").await;
+    assert_eq!(broad_keys.len(), 2);
+    assert_eq!(broad_keys.iter().filter(|key| *key == equal_key).count(), 1);
+    broader.request.max_results = None;
+    let broad_cached = service.search(broader).await.unwrap();
+    assert_dates(
+        &broad_cached,
+        &["2024-02-29", "2024-03-01"],
+        &broad_proof,
+        true,
+    );
+    assert_eq!(upstream.requests.lock().unwrap().len(), 2);
+
+    for (index, mutation) in ["missing", "mismatched"].into_iter().enumerate() {
+        let mut corrupted = original.clone();
+        match mutation {
+            "missing" => {
+                corrupted
+                    .as_object_mut()
+                    .unwrap()
+                    .shift_remove("date_filter");
+            }
+            "mismatched" => {
+                // Structurally valid closed proof, but for a different request.
+                corrupted["date_filter"] = PublicationDateProof::openalex(
+                    Some("2024-02-28".into()),
+                    Some("2024-02-28".into()),
+                )
+                .unwrap()
+                .to_value();
+            }
+            _ => unreachable!(),
+        }
+        let _: () = redis::cmd("SET")
+            .arg(equal_key)
+            .arg(ssx_json::to_string(&corrupted).unwrap())
+            .query_async(&mut conn)
+            .await
+            .unwrap();
+        let reacquired = service.search(p.clone()).await.unwrap();
+        assert_dates(&reacquired, &["2024-02-29"], &expected, false);
+        {
+            let requests = upstream.requests.lock().unwrap();
+            assert_eq!(requests.len(), index + 3, "{mutation} proof was trusted");
+            assert_eq!(
+                requests[index + 2].lines().next(),
+                Some(equal_wire.as_str())
+            );
+        }
+        let repaired: String = redis::cmd("GET")
+            .arg(equal_key)
+            .query_async(&mut conn)
+            .await
+            .unwrap();
+        let repaired = storage::decode_response(ssx_json::from_str(&repaired).unwrap()).unwrap();
+        assert_eq!(repaired.results.len(), 1);
+        assert_eq!(repaired.date_filter.as_ref().unwrap().to_value(), expected);
+        assert_eq!(
+            repaired.results[0].published_date.as_deref(),
+            Some("2024-02-29")
+        );
+        assert_eq!(server.keys("search:*").await.len(), 2);
+    }
+    drop(conn);
+    service.shutdown().await;
+    assert!(
+        store.ping().await.is_err(),
+        "shared service did not close its owned Valkey"
+    );
+    assert_eq!(pool.available_slots(), 1);
+    assert_eq!(pool.available_operations(), 1);
+    pool.shutdown().await.unwrap();
+    http.shutdown_and_wait().await;
+    upstream.shutdown().await;
+}
+
 fn dependencies(engines: Vec<(&str, Arc<dyn SearchEngine>)>) -> SearchDependencies {
     SearchDependencies {
         policy: PolicyService {

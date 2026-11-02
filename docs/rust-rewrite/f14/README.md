@@ -44,3 +44,23 @@ Developer reproduction (not a runtime or gate dependency):
 ## Independent review corrections
 
 The first full-source review demonstrated three uncovered defects. Durable native regressions now suspend cooldown admission while another search opens the circuit; the circuit is checked after cooldown and semaphore awaits immediately before engine invocation. An internal engine-task panic remains a visible synthetic error, with a separate internal-failure metric and no upstream origin, health observation, measured latency or circuit charge. Six repeated deliberately contract-violating panics prove that separation. Eight additive actual HTTPX source captures and real Brave/DDG loopback requests prove Python quote_plus bytes, including `*`, `~`, UTF-8, spaces, percent/reserved characters and controls. All historical 48 source objects and 24 bindings remain exact; the date corpus and freshness bridge are unchanged.
+
+## #984 actual OpenAlex core integration
+
+`real_registered_openalex_dates_survive_service_valkey_cache_and_reacquisition`
+in `crates/ssx-infra/tests/f14.rs` joins the registered A06 OpenAlex adapter,
+the shared SearchService, and the existing private F14 HTTP/Valkey owners. It
+reuses the unchanged A06 equal-leap capture: exact outbound filter bytes and
+publication-day defense, audited enforcement and typed date proof, a cache hit
+without another upstream request, distinct date-bound cache identities, full
+canonical results despite a bounded view, and real reacquisition after missing
+or structurally valid but mismatched cached proof.
+
+This is the independent core slice of [#984](https://github.com/magnus919/SlopSearX/issues/984#issuecomment-6379736916),
+corresponding to #874's `test_absolute_date_cache_requires_proof_and_separates_bounds`
+and the shared-service portion of
+`TestAuditedOpenAlexDates::test_science_dates_real_adapter_mixed_scope_and_cache`.
+It does not replace the existing A06 adapter or F14 policy/cache tests. Its
+source is prepared; execution evidence must be recorded separately. It does
+not qualify HTTP GET/form POST, MCP transport, or portal/browser behavior;
+those public-boundary obligations remain open in #984 after accepted T02.
