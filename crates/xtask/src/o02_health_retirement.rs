@@ -29,7 +29,7 @@ fn material(root: &Path, path: &str, size: usize, sha: &str) -> Result<Vec<u8>> 
             && !before.file_type().is_symlink()
             && before.len() == size as u64
             && before.permissions().mode() & 0o7777 == 0o644,
-        "exact regular0644 source leaf",
+        &format!("exact regular0644 source leaf: {path}"),
     )?;
     need(
         full.canonicalize()
@@ -162,13 +162,13 @@ pub(crate) fn authenticate(root: &Path, fixture: &[u8], tracked: &BTreeSet<Strin
         ),
         (
             "crates/ssx-healthcheck/src/lib.rs",
-            5806,
-            "af0d869f50d590cb470e122183a7adcd323017fa44ba0361bbdd7d7e4d20cf27",
+            5985,
+            "8704602c99d4ccb0cf8169dc6e07151b8c5af1015f9cb4ef5c1248016da5859f",
         ),
         (
             "crates/ssx-healthcheck/src/main.rs",
-            407,
-            "87a5f302ea52e8d068cf150675c258ba3a4540016ee2acf360250ba8c8054e95",
+            253,
+            "25afa196c3537ec8c270da8d04982ec9ecd58d33c6ddcd96ddd6ef6a8d9d81c2",
         ),
         (
             "Dockerfile",
