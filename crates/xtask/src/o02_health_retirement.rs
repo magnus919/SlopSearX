@@ -726,7 +726,7 @@ fn o03_inventory_inverse(raw: &[u8]) -> Result<Vec<u8>> {
         raw.len() == O03_INVENTORY_CURRENT_SIZE && digest(raw) == O03_INVENTORY_CURRENT_SHA,
         "exact current O03 inventory bytes",
     )?;
-    let text = std::str::from_utf8(&raw).map_err(|error| error.to_string())?;
+    let text = std::str::from_utf8(raw).map_err(|error| error.to_string())?;
     let marker = "\n  ],\n  \"supporting_paths\": [\n";
     need(
         text.matches(marker).count() == 1,
