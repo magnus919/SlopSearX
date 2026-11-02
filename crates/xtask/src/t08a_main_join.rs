@@ -241,24 +241,7 @@ fn pre_984_w07(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
     });
     inverse(&inverse_row, physical, "0644", 3)
 }
-#[cfg(test)]
-mod tests {
-    use super::*;
 
-    #[test]
-    fn pre_984_w07_reuses_exact_inverse_for_the_registered_projection() {
-        let physical = include_bytes!("w07.rs");
-        let prior = pre_984_w07("crates/xtask/src/w07.rs", physical).unwrap();
-        assert_eq!(prior.len(), 41464);
-        assert_eq!(
-            digest(&prior),
-            "4cc2a95645fa639d0873ea1a8803693d63eef074782f41c54540ea04632e6916"
-        );
-        let mut changed = physical.to_vec();
-        changed.push(b' ');
-        assert!(pre_984_w07("crates/xtask/src/w07.rs", &changed).is_err());
-    }
-}
 fn accepted_current(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
     let w07 = pre_984_w07(path, physical)?;
     pre_t08_registration(path, &w07)
@@ -461,4 +444,23 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         project(root, "unlisted", b"", Parent::Cli).is_err(),
         "unlisted physical source rejected",
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn pre_984_w07_reuses_exact_inverse_for_the_registered_projection() {
+        let physical = include_bytes!("w07.rs");
+        let prior = pre_984_w07("crates/xtask/src/w07.rs", physical).unwrap();
+        assert_eq!(prior.len(), 41464);
+        assert_eq!(
+            digest(&prior),
+            "4cc2a95645fa639d0873ea1a8803693d63eef074782f41c54540ea04632e6916"
+        );
+        let mut changed = physical.to_vec();
+        changed.push(b' ');
+        assert!(pre_984_w07("crates/xtask/src/w07.rs", &changed).is_err());
+    }
 }
