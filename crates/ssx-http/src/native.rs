@@ -27,10 +27,29 @@ use std::{
 
 /// T03 supplies its complete portal writer through this shared request boundary.
 /// A renderer receives only public response data; it cannot dispatch engines.
+#[derive(Clone, Copy)]
+pub struct PortalControls<'a> {
+    /// Startup-frozen, redacted capabilities already exposed by `/config`.
+    pub discovery: &'a Value,
+    /// Formats allowed by the operator for public HTTP responses.
+    pub formats: &'a BTreeSet<String>,
+}
 pub trait HtmlRenderer: Send + Sync {
-    fn landing(&self) -> String;
-    fn error(&self, error: &str, message: &str, field: Option<&str>) -> String;
-    fn search(&self, response: &SearchResponse, meta: &Value, request: &SearchRequest) -> String;
+    fn landing(&self, controls: PortalControls<'_>) -> String;
+    fn error(
+        &self,
+        error: &str,
+        message: &str,
+        field: Option<&str>,
+        controls: PortalControls<'_>,
+    ) -> String;
+    fn search(
+        &self,
+        response: &SearchResponse,
+        meta: &Value,
+        request: &SearchRequest,
+        controls: PortalControls<'_>,
+    ) -> String;
 }
 #[derive(Clone)]
 pub struct HttpState {
@@ -213,7 +232,9 @@ fn error(
         }
     }
     let body = match format {
-        "html" => state.html.error(code, message, field),
+        "html" => state
+            .html
+            .error(code, message, field, portal_controls(state)),
         "csv" => format!("{}{code},{message}\n", formats::csv(&[])),
         "rss" => formats::rss(&[], message),
         "yaml" => payload
@@ -549,7 +570,9 @@ async fn search_impl(state: &HttpState, request: Request) -> Response {
     if root && is_get && query.trim_matches(ssx_json::python_whitespace).is_empty() {
         match select_format(state, param(&pairs, "format"), &accept) {
             Err(response) => return *response,
-            Ok(format) if format == "html" => return reply(200, "html", state.html.landing()),
+            Ok(format) if format == "html" => {
+                return reply(200, "html", state.html.landing(portal_controls(state)));
+            }
             _ => {}
         }
     }
@@ -755,7 +778,9 @@ fn render(
     request: &SearchRequest,
 ) -> Response {
     let body = match format {
-        "html" => state.html.search(response, &meta, request),
+        "html" => state
+            .html
+            .search(response, &meta, request, portal_controls(state)),
         "csv" => formats::csv(&response.results),
         "rss" => formats::rss(&response.results, &response.query),
         "yaml" => formats::yaml_document(response, &meta),
@@ -768,6 +793,12 @@ fn render(
         }
     };
     reply(status, format, body)
+}
+fn portal_controls(state: &HttpState) -> PortalControls<'_> {
+    PortalControls {
+        discovery: &state.discovery,
+        formats: &state.formats,
+    }
 }
 async fn metrics(State(state): State<HttpState>) -> Response {
     (

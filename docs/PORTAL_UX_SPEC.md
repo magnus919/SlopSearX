@@ -112,7 +112,13 @@ workflow cookie.
 - `All sources` means the service's configured automatic scope, not every
   adapter in the repository.
 - Category labels come from the live capability catalog. Engine names are
-  shown only when the operator exposes them to the browser.
+  shown only when the operator exposes them to the browser. When the portal
+  exposes scope controls, render choices from the startup-frozen discovery
+  catalog; do not accept arbitrary category or engine names in free-text fields.
+- Machine-readable format links are shown only for formats available from the
+  HTTP API. YAML remains available by contract; other optional formats follow
+  the operator's enabled-format set. Bounded publication-date searches omit
+  CSV and RSS because they cannot carry the enforcement proof.
 - A filter is labelled `Applied` only when the selected scope enforces it.
   `Passed to some sources` and `Not supported by this scope` are separate
   states. Strict SafeSearch is unavailable when the selected scope cannot

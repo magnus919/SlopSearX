@@ -93,18 +93,24 @@ def test_native_theme_storage_accessibility_and_painted_background() -> None:
 
                 assert page.locator("form.search-form").is_visible()
                 for label in [
-                    "Sources (comma-separated)",
-                    "Categories (comma-separated)",
+                    "Sources",
+                    "Categories",
                     "Relative time range",
                     "Publication date from",
                     "Publication date to",
                 ]:
                     assert page.get_by_label(label).is_visible()
+                assert page.get_by_label("Sources").locator("option").evaluate_all(
+                    "options => options.map(option => option.value)"
+                ) == ["contract"]
+                assert page.get_by_label("Categories").locator("option").evaluate_all(
+                    "options => options.map(option => option.value)"
+                ) == ["general", "science"]
                 assert page.locator("body").evaluate("element => element.scrollWidth <= window.innerWidth"), (
                     "search controls overflow the narrow browser viewport"
                 )
                 page.get_by_label("Search").fill("climate & change")
-                page.get_by_label("Sources (comma-separated)").fill("openalex")
+                page.get_by_label("Sources").select_option("contract")
                 page.get_by_label("Publication date from").fill("2024-02-29")
                 page.get_by_label("Relative time range").select_option("week")
                 assert page.get_by_label("Publication date from").input_value() == ""
@@ -129,7 +135,7 @@ def test_native_theme_storage_accessibility_and_painted_background() -> None:
                 parameters = parse_qs(urlsplit(captured.value.url).query)
                 assert parameters == {
                     "q": ["climate & change"],
-                    "engines": ["openalex"],
+                    "engines": ["contract"],
                     "date_from": ["2024-02-29"],
                     "date_to": ["2024-02-29"],
                     "language": ["en"],
@@ -140,11 +146,13 @@ def test_native_theme_storage_accessibility_and_painted_background() -> None:
                 # Empty optional fields are omitted from this request without
                 # mutating their controls. A page restored from browser history
                 # must still be able to submit filters entered afterward.
-                categories = page.get_by_label("Categories (comma-separated)")
+                categories = page.get_by_label("Categories")
+                sources = page.get_by_label("Sources")
                 relative = page.get_by_label("Relative time range")
+                assert sources.get_attribute("name") == "engines"
                 assert categories.get_attribute("name") == "categories"
                 assert relative.get_attribute("name") == "time_range"
-                categories.fill("science")
+                categories.select_option("science")
                 with page.expect_event(
                     "requestfailed",
                     predicate=lambda request: "/search?" in request.url,
@@ -157,7 +165,7 @@ def test_native_theme_storage_accessibility_and_painted_background() -> None:
                 second_parameters = parse_qs(urlsplit(second_captured.value.url).query)
                 assert second_parameters == {
                     "q": ["climate & change"],
-                    "engines": ["openalex"],
+                    "engines": ["contract"],
                     "categories": ["science"],
                     "date_from": ["2024-02-29"],
                     "date_to": ["2024-02-29"],

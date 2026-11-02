@@ -1,6 +1,6 @@
 //! Functional native HTML wire surface. T03 owns the complete portal visual and
 //! browser journey parity; this renderer keeps navigation and escaping usable.
-use crate::native::HtmlRenderer;
+use crate::native::{HtmlRenderer, PortalControls};
 use ssx_domain::{SearchRequest, SearchResponse};
 use ssx_json::Value;
 /// Startup presentation snapshot; no request handler reads the process environment.
@@ -72,7 +72,7 @@ impl PublicHtml {
             ("Darker mode", "Use darker mode", "false")
         };
         format!(
-            "<!doctype html><html lang=\"en\" data-default-theme=\"{theme}\" data-theme=\"{theme}\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>{}</title><style>:root{{--page-bg:#191a18;--page-fg:#f4f0e8;--muted:#bbb;color-scheme:dark}}:root[data-theme=darker]{{--page-bg:#0b0c0b}}html,body{{background-color:var(--page-bg);color:var(--page-fg)}}body{{max-width:70rem;margin:3rem auto;padding:0 1rem;font:1rem/1.6 system-ui}}a{{color:#e5b567}}form{{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,13rem),1fr));gap:1rem;align-items:end}}form label{{display:block}}form input,form select,form button{{box-sizing:border-box;width:100%;font:inherit;padding:.7rem}}article{{margin:2rem 0;border-top:1px solid #555}}small{{color:var(--muted)}}</style></head><body><header><a href=\"/\">SlopSearX</a> <button type=\"button\" data-theme-toggle aria-label=\"{accessible_name}\" aria-pressed=\"{pressed}\">{label}</button></header><main>{body}</main><script>(()=>{{const root=document.documentElement;const button=document.querySelector('[data-theme-toggle]');const configured=root.dataset.defaultTheme;const valid=theme=>theme==='dark'||theme==='darker';const apply=theme=>{{root.dataset.theme=theme;const darker=theme==='darker';button.textContent=darker?'Dark mode':'Darker mode';button.setAttribute('aria-label',darker?'Use dark mode':'Use darker mode');button.setAttribute('aria-pressed',String(darker))}};let initial=valid(configured)?configured:'dark';try{{const stored=window.localStorage.getItem('slopsearx-theme');if(valid(stored))initial=stored}}catch(_){{}}apply(initial);button.addEventListener('click',()=>{{const next=root.dataset.theme==='darker'?'dark':'darker';apply(next);try{{window.localStorage.setItem('slopsearx-theme',next)}}catch(_){{}}}});for(const form of document.querySelectorAll('[data-search-form]')){{const relative=form.querySelector('[name=time_range]');const absolute=form.querySelectorAll('[name=date_from],[name=date_to]');if(relative)relative.addEventListener('change',()=>{{if(relative.value)absolute.forEach(input=>input.value='')}});absolute.forEach(input=>input.addEventListener('input',()=>{{if(input.value&&relative)relative.value=''}}));form.addEventListener('formdata',event=>{{for(const input of form.querySelectorAll('input:not([type=hidden]):not([name=q]),select'))if(!input.value)event.formData.delete(input.name)}})}}}})();</script></body></html>",
+            "<!doctype html><html lang=\"en\" data-default-theme=\"{theme}\" data-theme=\"{theme}\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>{}</title><style>:root{{--page-bg:#191a18;--page-fg:#f4f0e8;--muted:#bbb;color-scheme:dark}}:root[data-theme=darker]{{--page-bg:#0b0c0b}}html,body{{background-color:var(--page-bg);color:var(--page-fg)}}body{{max-width:70rem;margin:3rem auto;padding:0 1rem;font:1rem/1.6 system-ui}}a{{color:#e5b567}}form{{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,13rem),1fr));gap:1rem;align-items:end}}form label{{display:block}}form input,form select,form button{{box-sizing:border-box;width:100%;font:inherit;padding:.7rem}}article{{margin:2rem 0;border-top:1px solid #555}}small{{color:var(--muted)}}</style></head><body><header><a href=\"/\">SlopSearX</a> <button type=\"button\" data-theme-toggle aria-label=\"{accessible_name}\" aria-pressed=\"{pressed}\">{label}</button></header><main>{body}</main><script>(()=>{{const root=document.documentElement;const button=document.querySelector('[data-theme-toggle]');const configured=root.dataset.defaultTheme;const valid=theme=>theme==='dark'||theme==='darker';const apply=theme=>{{root.dataset.theme=theme;const darker=theme==='darker';button.textContent=darker?'Dark mode':'Darker mode';button.setAttribute('aria-label',darker?'Use dark mode':'Use darker mode');button.setAttribute('aria-pressed',String(darker))}};let initial=valid(configured)?configured:'dark';try{{const stored=window.localStorage.getItem('slopsearx-theme');if(valid(stored))initial=stored}}catch(_){{}}apply(initial);button.addEventListener('click',()=>{{const next=root.dataset.theme==='darker'?'dark':'darker';apply(next);try{{window.localStorage.setItem('slopsearx-theme',next)}}catch(_){{}}}});for(const form of document.querySelectorAll('[data-search-form]')){{const relative=form.querySelector('[name=time_range]');const absolute=form.querySelectorAll('[name=date_from],[name=date_to]');if(relative)relative.addEventListener('change',()=>{{if(relative.value)absolute.forEach(input=>input.value='')}});absolute.forEach(input=>input.addEventListener('input',()=>{{if(input.value&&relative)relative.value=''}}));form.addEventListener('formdata',event=>{{for(const select of form.querySelectorAll('select[multiple][data-comma-values]')){{const values=Array.from(select.selectedOptions,option=>option.value);event.formData.delete(select.name);if(values.length)event.formData.append(select.name,values.join(','))}}for(const input of form.querySelectorAll('input:not([type=hidden]):not([name=q]),select'))if(!input.value)event.formData.delete(input.name)}})}}}})();</script></body></html>",
             escape(title),
             accessible_name = accessible_name,
             pressed = pressed,
@@ -89,14 +89,71 @@ pub fn escape(s: &str) -> String {
         .replace('"', "&quot;")
         .replace('\'', "&#x27;")
 }
-fn form(query: &str, request: Option<&SearchRequest>) -> String {
-    let categories = request
-        .and_then(|r| r.categories.as_ref())
-        .map(|v| v.join(","))
+fn category_choices(discovery: &Value) -> Vec<(String, String)> {
+    discovery
+        .get("categories")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(Value::as_str)
+        .map(|value| (value.to_owned(), value.to_owned()))
+        .collect()
+}
+fn engine_choices(discovery: &Value) -> Vec<(String, String)> {
+    discovery
+        .get("engines")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(|engine| {
+            let name = engine.get("name")?.as_str()?;
+            (engine.get("enabled").and_then(Value::as_bool) == Some(true)).then(|| {
+                let label = engine
+                    .get("display_name")
+                    .and_then(Value::as_str)
+                    .filter(|label| !label.is_empty())
+                    .unwrap_or(name);
+                (name.to_owned(), label.to_owned())
+            })
+        })
+        .collect()
+}
+fn scope_select(
+    name: &str,
+    label: &str,
+    choices: &[(String, String)],
+    selected: &[String],
+) -> String {
+    if choices.is_empty() {
+        return String::new();
+    }
+    let options = choices
+        .iter()
+        .map(|(value, label)| {
+            let selected = if selected.contains(value) {
+                " selected"
+            } else {
+                ""
+            };
+            format!(
+                "<option value=\"{}\"{selected}>{}</option>",
+                escape(value),
+                escape(label)
+            )
+        })
+        .collect::<String>();
+    format!(
+        "<label for=\"{name}\">{label}</label><select id=\"{name}\" name=\"{name}\" multiple size=\"4\" data-comma-values>{options}</select>"
+    )
+}
+fn form(query: &str, request: Option<&SearchRequest>, controls: PortalControls<'_>) -> String {
+    let categories = category_choices(controls.discovery);
+    let engines = engine_choices(controls.discovery);
+    let selected_categories = request
+        .and_then(|r| r.categories.as_deref())
         .unwrap_or_default();
-    let engines = request
-        .and_then(|r| r.engines.as_ref())
-        .map(|v| v.join(","))
+    let selected_engines = request
+        .and_then(|r| r.engines.as_deref())
         .unwrap_or_default();
     let time_range = request
         .and_then(|r| r.time_range.as_deref())
@@ -117,10 +174,13 @@ fn form(query: &str, request: Option<&SearchRequest>) -> String {
     let language = request.map_or("en", |r| r.language.as_str());
     let safesearch = request.map_or(0, |r| r.safesearch);
     format!(
-        "<form class=\"search-form\" action=\"/search\" method=\"get\" data-search-form><label for=\"q\">Search</label><input id=\"q\" name=\"q\" value=\"{}\" required><label for=\"engines\">Sources (comma-separated)</label><input id=\"engines\" name=\"engines\" value=\"{}\" autocomplete=\"off\"><label for=\"categories\">Categories (comma-separated)</label><input id=\"categories\" name=\"categories\" value=\"{}\" autocomplete=\"off\"><label for=\"time_range\">Relative time range</label><select id=\"time_range\" name=\"time_range\"><option value=\"\">Any time</option>{}</select><label for=\"date_from\">Publication date from</label><input id=\"date_from\" name=\"date_from\" type=\"date\" value=\"{}\"><label for=\"date_to\">Publication date to</label><input id=\"date_to\" name=\"date_to\" type=\"date\" value=\"{}\"><input type=\"hidden\" name=\"language\" value=\"{}\"><input type=\"hidden\" name=\"safesearch\" value=\"{}\"><input type=\"hidden\" name=\"format\" value=\"html\"><button type=\"submit\">Search</button></form>",
+        "<form class=\"search-form\" action=\"/search\" method=\"get\" data-search-form><label for=\"q\">Search</label><input id=\"q\" name=\"q\" value=\"{}\" required>{}<label for=\"time_range\">Relative time range</label><select id=\"time_range\" name=\"time_range\"><option value=\"\">Any time</option>{}</select><label for=\"date_from\">Publication date from</label><input id=\"date_from\" name=\"date_from\" type=\"date\" value=\"{}\"><label for=\"date_to\">Publication date to</label><input id=\"date_to\" name=\"date_to\" type=\"date\" value=\"{}\"><input type=\"hidden\" name=\"language\" value=\"{}\"><input type=\"hidden\" name=\"safesearch\" value=\"{}\"><input type=\"hidden\" name=\"format\" value=\"html\"><button type=\"submit\">Search</button></form>",
         escape(query),
-        escape(&engines),
-        escape(&categories),
+        format!(
+            "{}{}",
+            scope_select("engines", "Sources", &engines, selected_engines),
+            scope_select("categories", "Categories", &categories, selected_categories)
+        ),
         relative_options,
         escape(date_from),
         escape(date_to),
@@ -178,13 +238,22 @@ fn machine_link(params: &[(&str, String)], format: &str) -> String {
     escape(&serializer.finish())
 }
 impl HtmlRenderer for PublicHtml {
-    fn landing(&self) -> String {
+    fn landing(&self, controls: PortalControls<'_>) -> String {
         self.document(
             "SlopSearX",
-            &format!("<h1>Search <em>SlopSearX.</em></h1>{}", form("", None)),
+            &format!(
+                "<h1>Search <em>SlopSearX.</em></h1>{}",
+                form("", None, controls)
+            ),
         )
     }
-    fn error(&self, error: &str, message: &str, field: Option<&str>) -> String {
+    fn error(
+        &self,
+        error: &str,
+        message: &str,
+        field: Option<&str>,
+        controls: PortalControls<'_>,
+    ) -> String {
         self.document(
             "Search error",
             &format!(
@@ -194,15 +263,21 @@ impl HtmlRenderer for PublicHtml {
                 field
                     .map(|f| format!("<p>Field: {}</p>", escape(f)))
                     .unwrap_or_default(),
-                form("", None)
+                form("", None, controls)
             ),
         )
     }
-    fn search(&self, response: &SearchResponse, meta: &Value, request: &SearchRequest) -> String {
+    fn search(
+        &self,
+        response: &SearchResponse,
+        meta: &Value,
+        request: &SearchRequest,
+        controls: PortalControls<'_>,
+    ) -> String {
         let mut body = format!(
             "<h1>Search results for {}</h1>{}<p>{} results</p>",
             escape(&response.query),
-            form(&response.query, Some(request)),
+            form(&response.query, Some(request), controls),
             response.results.len()
         );
         if response.all_unresponsive {
@@ -277,19 +352,23 @@ impl HtmlRenderer for PublicHtml {
         body.push_str("</nav>");
         body.push_str("<nav aria-label=\"Machine-readable formats\">");
         for format in ["json", "yaml"] {
-            body.push_str(&format!(
-                "<a href=\"{}\">{}</a> ",
-                machine_link(&params, format),
-                format.to_uppercase()
-            ));
-        }
-        if request.date_from.is_none() && request.date_to.is_none() {
-            for format in ["csv", "rss"] {
+            if format == "yaml" || controls.formats.contains(format) {
                 body.push_str(&format!(
                     "<a href=\"{}\">{}</a> ",
                     machine_link(&params, format),
                     format.to_uppercase()
                 ));
+            }
+        }
+        if request.date_from.is_none() && request.date_to.is_none() {
+            for format in ["csv", "rss"] {
+                if controls.formats.contains(format) {
+                    body.push_str(&format!(
+                        "<a href=\"{}\">{}</a> ",
+                        machine_link(&params, format),
+                        format.to_uppercase()
+                    ));
+                }
             }
         } else {
             body.push_str("<span>CSV and RSS are unavailable for bounded publication-date searches because they cannot carry the enforcement proof.</span>");
@@ -303,6 +382,19 @@ impl HtmlRenderer for PublicHtml {
 mod date_portal_tests {
     use super::*;
     use ssx_domain::PublicationDateProof;
+
+    fn controls<'a>(
+        discovery: &'a Value,
+        formats: &'a std::collections::BTreeSet<String>,
+    ) -> PortalControls<'a> {
+        PortalControls { discovery, formats }
+    }
+    fn full_discovery() -> Value {
+        ssx_json::json!({
+            "categories": ["science", "general"],
+            "engines": [{"name":"openalex", "display_name":"OpenAlex", "enabled":true}]
+        })
+    }
 
     #[test]
     fn bounded_portal_view_preserves_scope_and_displays_machine_proof() {
@@ -323,12 +415,23 @@ mod date_portal_tests {
             ..Default::default()
         };
         let meta = crate::formats::meta(&response, &[]);
-        let html = PublicHtml::new("dark").search(&response, &meta, &request);
+        let discovery = full_discovery();
+        let formats = ["html", "json", "yaml", "csv", "rss"]
+            .into_iter()
+            .map(str::to_owned)
+            .collect();
+        let html = PublicHtml::new("dark").search(
+            &response,
+            &meta,
+            &request,
+            controls(&discovery, &formats),
+        );
 
         for expected in [
             "<form class=\"search-form\"",
             "value=\"climate &amp; change\"",
-            "name=\"engines\" value=\"openalex\"",
+            "<select id=\"engines\" name=\"engines\" multiple",
+            "<option value=\"openalex\" selected>OpenAlex</option>",
             "name=\"date_from\" type=\"date\" value=\"2024-02-29\"",
             "name=\"date_to\" type=\"date\" value=\"2024-02-29\"",
             "aria-label=\"Publication date filter enforcement\"",
@@ -367,7 +470,17 @@ mod date_portal_tests {
         let request = SearchRequest::default();
         let response = SearchResponse::default();
         let meta = crate::formats::meta(&response, &[]);
-        let html = PublicHtml::new("dark").search(&response, &meta, &request);
+        let discovery = full_discovery();
+        let formats = ["html", "json", "yaml", "csv", "rss"]
+            .into_iter()
+            .map(str::to_owned)
+            .collect();
+        let html = PublicHtml::new("dark").search(
+            &response,
+            &meta,
+            &request,
+            controls(&discovery, &formats),
+        );
         for format in ["json", "yaml", "csv", "rss"] {
             assert!(html.contains(&format!("format={format}")));
         }
@@ -380,11 +493,52 @@ mod date_portal_tests {
             time_range: Some("week".into()),
             ..Default::default()
         };
-        let html = form("climate", Some(&request));
+        let discovery = full_discovery();
+        let formats = std::collections::BTreeSet::new();
+        let html = form("climate", Some(&request), controls(&discovery, &formats));
         for range in ["day", "week", "month", "year"] {
             assert!(html.contains(&format!("<option value=\"{range}\"")));
         }
         assert!(html.contains("<option value=\"week\" selected>week</option>"));
+    }
+
+    #[test]
+    fn portal_controls_only_offer_exposed_scopes_and_enabled_formats() {
+        let discovery = ssx_json::json!({
+            "categories": ["science"],
+            "engines": [
+                {"name":"openalex", "display_name":"OpenAlex", "enabled":true},
+                {"name":"disabled-source", "display_name":"Hidden Source", "enabled":false}
+            ]
+        });
+        let formats = ["html", "json", "rss"]
+            .into_iter()
+            .map(str::to_owned)
+            .collect();
+        let request = SearchRequest {
+            query: "climate".into(),
+            categories: Some(vec!["science".into(), "unexposed-category".into()]),
+            engines: Some(vec!["openalex".into(), "unexposed-source".into()]),
+            ..Default::default()
+        };
+        let response = SearchResponse::default();
+        let meta = crate::formats::meta(&response, &[]);
+        let html = PublicHtml::new("dark").search(
+            &response,
+            &meta,
+            &request,
+            controls(&discovery, &formats),
+        );
+
+        assert!(html.contains("<option value=\"science\" selected>science</option>"));
+        assert!(html.contains("<option value=\"openalex\" selected>OpenAlex</option>"));
+        assert!(!html.contains("unexposed-category"));
+        assert!(!html.contains("unexposed-source"));
+        assert!(!html.contains("Hidden Source"));
+        assert!(html.contains("format=json"));
+        assert!(html.contains("format=rss"));
+        assert!(html.contains("format=yaml"));
+        assert!(!html.contains("format=csv"));
     }
 
     #[test]

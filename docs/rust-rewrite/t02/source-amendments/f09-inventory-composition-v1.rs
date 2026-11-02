@@ -570,7 +570,7 @@ const PAGE_CAPSULE: &str = "docs/rust-rewrite/t02/source-amendments/lossless-pag
 const PORTAL_HTML_PATH: &str = "crates/ssx-http/src/html.rs";
 const PORTAL_HTML_CAPSULE: &str = "docs/rust-rewrite/t02/source-amendments/portal-html-v1.json";
 const PORTAL_HTML_CAPSULE_SHA: &str =
-    "26b26963b8b02af26e0d8756b09b4246f00a878e6bb8bbf035cf603b15651447";
+    "bbefeb4e59e1a9e0d2a297e566e43a1e230bbb1c7d947468aebf5e8fb5c8273d";
 const PORTAL_HTML_BASE: &str = "44fe104577f1be1da497a6f60611d19b909aedb6";
 const PORTAL_HTML_CAPSULE_SHA256: &str =
     "8825976f55652cb2bf4ab0fe648e88387eced30c2480942da901f11e628099cc";
@@ -739,6 +739,78 @@ fn portal_html_original(root: &Path, path: &str, current: &[u8]) -> Result<Vec<u
     )?;
     Ok(before)
 }
+const PORTAL_NATIVE_PATH: &str = "crates/ssx-http/src/native.rs";
+const PORTAL_NATIVE_CAPSULE: &str = "docs/rust-rewrite/t02/source-amendments/portal-native-v1.json";
+const PORTAL_NATIVE_CAPSULE_SHA: &str =
+    "5cc836063a606869757ea252202e386451f25e95ada070928012de5b02faadc9";
+const PORTAL_NATIVE_PARENT: &str = "df09fa5f80f724b17fb4cb47f9af7f3fa913bee2";
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PortalNativeTransition {
+    path: String,
+    parent: String,
+    before_sha256: String,
+    before_bytes: usize,
+    before_blob: String,
+    after_sha256: String,
+    after_bytes: usize,
+    after_blob: String,
+    mode: u32,
+    inverse: Vec<Edit>,
+}
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PortalNativeCapsule {
+    schema_version: u64,
+    kind: String,
+    transition: PortalNativeTransition,
+}
+fn portal_native_original(root: &Path, current: &[u8]) -> Result<Vec<u8>> {
+    let capsule = read(root, PORTAL_NATIVE_CAPSULE)?;
+    need(
+        capsule.mode == 0o644 && sha(&capsule.bytes) == PORTAL_NATIVE_CAPSULE_SHA,
+        "portal native capsule exact material",
+    )?;
+    let c: PortalNativeCapsule =
+        serde_json::from_slice(&capsule.bytes).map_err(|e| e.to_string())?;
+    let row = &c.transition;
+    need(
+        c.schema_version == 1
+            && c.kind == "T03_PORTAL_NATIVE_T02_SOURCE_SUCCESSOR"
+            && row.path == PORTAL_NATIVE_PATH
+            && row.parent == PORTAL_NATIVE_PARENT
+            && row.before_sha256
+                == "161258d2a5f96622ae4809366ab1734bd4be5a836c0ac3ef5f91f4dc1937e47e"
+            && row.before_bytes == 33535
+            && row.before_blob == "9055ccb5f0e472678f8239de7ada1be920a5f61c"
+            && row.mode == 0o644
+            && row.inverse.len() == 1
+            && row.inverse[0].offset == 0
+            && current.len() == row.after_bytes
+            && sha(current) == row.after_sha256
+            && git(
+                root,
+                &["hash-object", "--no-filters", "--", PORTAL_NATIVE_PATH],
+            )? == format!("{}\n", row.after_blob).as_bytes(),
+        "portal native transition scope/current identity",
+    )?;
+    let prior = reconstruct(current, &row.inverse)?;
+    need(
+        prior.len() == row.before_bytes
+            && sha(&prior) == row.before_sha256
+            && git(root, &["show", &format!("{}:{}", row.parent, row.path)])? == prior
+            && String::from_utf8(git(
+                root,
+                &["rev-parse", &format!("{}:{}", row.parent, row.path)],
+            )?)
+            .map_err(|e| e.to_string())?
+            .trim()
+                == row.before_blob,
+        "portal native exact parent-source predecessor",
+    )?;
+    Ok(prior)
+}
+
 fn portal_html_controls(root: &Path) -> Result<()> {
     let c = portal_html_capsule(root)?;
     let path = c.transition.path.as_str();
@@ -793,6 +865,8 @@ fn page_row(root: &Path, row: &PageRow) -> Result<Vec<u8>> {
     let current = fs::read(full).map_err(|e| e.to_string())?;
     let current = if row.path == PORTAL_HTML_PATH {
         portal_html_original(root, &row.path, &current)?
+    } else if row.path == PORTAL_NATIVE_PATH {
+        portal_native_original(root, &current)?
     } else if row.path == F09_PATHS[0] {
         f09_parent(root, &current)?
     } else if row.path == "crates/ssx-infra/src/search.rs" {
@@ -842,6 +916,12 @@ fn page_controls(root: &Path) -> Result<()> {
         let current = fs::read(root.join(&row.path)).map_err(|e| e.to_string())?;
         let current = if row.path == PORTAL_HTML_PATH {
             portal_html_original(root, &row.path, &current)?
+        } else if row.path == PORTAL_NATIVE_PATH {
+            need(
+                page_inverse(row, &current).is_err(),
+                "native portal successor is not a frozen Page afterimage",
+            )?;
+            portal_native_original(root, &current)?
         } else if row.path == F09_PATHS[0] {
             f09_parent(root, &current)?
         } else if row.path == "crates/ssx-infra/src/search.rs" {

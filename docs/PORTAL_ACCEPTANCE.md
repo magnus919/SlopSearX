@@ -156,6 +156,12 @@ matrix remains authoritative for the API/MCP suites, while these portal jobs
 own browser-visible regressions and should be updated alongside any baseline
 change.
 
+The native Rust portal renders category and engine selectors only from its
+startup-frozen, redacted `/config` catalog, serializes their multi-selection in
+the HTTP API's comma-list form, and omits machine-format links disabled by the
+operator. Its browser contract checks exposed selector choices and form
+resubmission; Rust renderer coverage checks the enabled-format matrix.
+
 ## Privacy and operations
 
 - No query analytics, third-party tracking, or remote assets by default.
