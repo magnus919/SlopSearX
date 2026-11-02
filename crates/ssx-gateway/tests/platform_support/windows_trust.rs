@@ -376,7 +376,9 @@ async fn attempt_owned(
     let raw = record(ca, slot);
     write_new(&state_path(root, slot, false), &raw)?;
     let report = match payload.create(root, op, ca) {
-        Ok((child, pipes)) => supervise(child, pipes, super::BUDGET, CLEANUP, false).await,
+        Ok((child, pipes)) => {
+            supervise(child, pipes, super::TRUST_STORE_OPERATION_BUDGET, CLEANUP, false).await
+        }
         Err(_) => Report::not_spawned(Failure::Admission),
     };
     eprintln!(

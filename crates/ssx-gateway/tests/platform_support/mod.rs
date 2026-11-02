@@ -12,6 +12,7 @@ use tokio::{
 #[path = "production.rs"]
 mod production;
 pub const BUDGET: Duration = Duration::from_secs(15);
+pub const TRUST_STORE_OPERATION_BUDGET: Duration = Duration::from_secs(60);
 pub fn root(label: &str) -> PathBuf {
     let root = PathBuf::from(
         std::env::var_os("SLOPSEARX_INSTALL_TEST_ROOT")

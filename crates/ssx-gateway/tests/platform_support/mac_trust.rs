@@ -37,7 +37,7 @@ struct Limits {
 impl Default for Limits {
     fn default() -> Self {
         Self {
-            command: Duration::from_secs(15),
+            command: Duration::from_secs(60),
             grace: Duration::from_millis(250),
             reap: Duration::from_secs(1),
             drain: Duration::from_millis(250),

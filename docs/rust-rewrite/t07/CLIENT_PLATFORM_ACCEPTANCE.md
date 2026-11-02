@@ -137,6 +137,18 @@ Unix signal controls remain platform-gated. Windows security cases are compiled
 and executed only on Windows with the nondefault owner fixture feature. A zero
 case count on other platforms is not Windows evidence.
 
+### Bounded trust-store operation time
+
+Hosted run 41306655951 showed that the dedicated Windows trust operation exceeded
+its shared 15-second client interaction budget, while both macOS runners reached
+the 15-second per-command limit during `security add-trusted-cert`. The trust
+mutation-specific Windows operation limit and macOS child-command limit are now
+60 seconds. The independent macOS install/remove ceilings (90/55 seconds), Windows
+cleanup budget, owned-process retirement, exact fixture registration, and
+always-run cleanup remain in force. The general client interaction budget remains
+15 seconds. This allows slow hosted trust-store setup without changing which
+certificate is trusted or relaxing cleanup proof.
+
 ## Integration and remaining evidence
 
 This branch continues the accepted c213 T07 source. The T07 owner integrates the
