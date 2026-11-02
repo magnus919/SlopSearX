@@ -4,7 +4,7 @@
 
 [Case study](CASE_STUDY.md) · [Machine-readable plan](plan.json)
 
-The original publication contained 68 work packages plus the tracking epic. Later changes added T08A/#1062 and the #1080 advisory-coverage task; this current index lists 71 work packages and 181 hard plan edges. Later follow-up issues retain their separate live relationships where they are not plan work packages. T08A implementation starts only after the split decision is reviewed, accepted and normally merged.
+The original publication contained 68 work packages plus the tracking epic. Later changes added T08A/#1062 and the #1080 advisory-coverage task; this current index lists 71 work packages and 186 hard plan edges. Later follow-up issues retain their separate live relationships where they are not plan work packages. T08A implementation starts only after the split decision is reviewed, accepted and normally merged.
 
 Dependencies are hard finish-to-start: accepted/merged predecessor work and its evidence must exist before dependent implementation starts. Parent hierarchy is organizational. Roles and parallel lanes are defined in the case study.
 

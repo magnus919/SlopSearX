@@ -1833,7 +1833,13 @@
       "id": "P01",
       "title": "Port bounded publication-date enforcement and proof from #874",
       "lane": "search",
-      "depends_on": [],
+      "depends_on": [
+        "A06",
+        "F14",
+        "T02",
+        "T03",
+        "T06"
+      ],
       "problem": "The Python HTTP path once dropped date_from/date_to, so bounded searches could return unbounded results as if they were valid. The native rewrite must preserve the corrected date-proof contract across the integrated stack.",
       "scope": [
         "Carry inclusive calendar bounds through the actual registered OpenAlex adapter, shared SearchService and disposable Valkey cache",
