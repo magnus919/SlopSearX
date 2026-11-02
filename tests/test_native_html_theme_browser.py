@@ -166,7 +166,6 @@ def test_native_theme_storage_accessibility_and_painted_background() -> None:
                 second_parameters = parse_qs(urlsplit(second_captured.value.url).query)
                 assert second_parameters == {
                     "q": ["climate & change"],
-                    "engines": ["contract"],
                     "categories": ["science"],
                     "date_from": ["2024-02-29"],
                     "date_to": ["2024-02-29"],
