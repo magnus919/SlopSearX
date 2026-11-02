@@ -34,6 +34,15 @@ pub fn probe(address: SocketAddr, budget: Duration) -> io::Result<()> {
         socket.read_exact(&mut byte)?;
         headers.push(byte[0]);
     }
+    if headers
+        .split_inclusive(|b| *b == b'\n')
+        .any(|line| !line.ends_with(b"\r\n"))
+    {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "health headers require CRLF",
+        ));
+    }
     let line = headers.split(|b| *b == b'\n').next().unwrap_or_default();
     let status = line
         .strip_prefix(b"HTTP/1.1 ")
@@ -100,6 +109,20 @@ mod tests {
             assert!(served(response.into_bytes(), Duration::from_secs(2)).is_err());
         }
         assert!(served(b"not HTTP\r\n\r\n".to_vec(), Duration::from_secs(2)).is_err());
+        assert!(
+            served(
+                b"HTTP/1.1 200 OK\nX: y\r\n\r\n".to_vec(),
+                Duration::from_secs(2)
+            )
+            .is_err()
+        );
+        assert!(
+            served(
+                b"HTTP/1.1 200 OK\r\nX: y\n\r\n".to_vec(),
+                Duration::from_secs(2)
+            )
+            .is_err()
+        );
         assert!(served(b"HTTP/1.1 200\r\n\r\n".to_vec(), Duration::from_secs(2)).is_err());
         assert!(served(b"HTTP/1.1 200 OK\r\n".to_vec(), Duration::from_secs(2)).is_err());
         assert!(served(vec![b'x'; MAX_HEADERS + 1], Duration::from_secs(2)).is_err());
