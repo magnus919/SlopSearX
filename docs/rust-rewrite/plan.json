@@ -1830,6 +1830,40 @@
       "handoff": "A source-bound advisory identity adapter and real cargo-deny fixture results alongside the unchanged physical graph scan; no Python helper, fabricated resolver result or production activation."
     },
     {
+      "id": "P01",
+      "title": "Port bounded publication-date enforcement and proof from #874",
+      "lane": "search",
+      "depends_on": [],
+      "problem": "The Python HTTP path once dropped date_from/date_to, so bounded searches could return unbounded results as if they were valid. The native rewrite must preserve the corrected date-proof contract across the integrated stack.",
+      "scope": [
+        "Carry inclusive calendar bounds through the actual registered OpenAlex adapter, shared SearchService and disposable Valkey cache",
+        "Enforce explicit audited OpenAlex-only scope and reject malformed, reversed, repeated, unknown, contradictory or unsupported bounded requests before dispatch",
+        "Preserve date proof, engine outcomes, upstream provenance and absolute bounds through native HTTP/form, science MCP, JSON/YAML and portal pagination/format links",
+        "Separate date-bound cache identities and reacquire legacy or mismatching-proof entries; reject bounded CSV/RSS before acquisition while retaining unbounded compatibility",
+        "Map #874 regressions to real Rust HTTP/MCP/adapter/parser coverage or reviewed supersession using deterministic upstream fixtures"
+      ],
+      "acceptance": [
+        "HTTP GET and form POST on / and /search forward exact inclusive bounds to OpenAlex; one-sided, equal-date and leap-day cases pass with actual mocked upstream requests",
+        "Invalid, repeated, unknown, contradictory, implicit, mixed, unsupported or unaudited scopes reject before engine dispatch without changing specialist permissions",
+        "JSON, YAML, science MCP and portal expose truthful matching date proof, audited upstream:openalex provenance, selected engine identity, absolute bounds and preserved acquisition failures",
+        "Cache keys separate bounds; proof and publication dates round-trip; legacy and mismatching proof entries reacquire; bounded CSV/RSS reject before acquisition",
+        "All #874 regressions have exact native evidence or reviewed supersession, and integrated exact-head CI plus portal coverage pass without live provider calls"
+      ],
+      "sources": [
+        "docs/DATE_FILTERS.md",
+        "engines/openalex.py",
+        "slopsearx/service.py",
+        "slopsearx/filters.py",
+        "slopsearx/formatter.py",
+        "slopsearx/mcp/tools.py",
+        "tests/test_server.py",
+        "tests/test_filter_semantics.py",
+        "tests/test_mcp_enforcement.py",
+        "tests/test_mcp_tools.py"
+      ],
+      "handoff": "Integrated native publication-date proof and regression trace bound to the actual OpenAlex adapter, HTTP/forms, science MCP, cache, JSON/YAML and portal artifacts; required by G01 before parity acceptance."
+    },
+    {
       "id": "G01",
       "title": "Prove integrated full-feature and all-adapter parity",
       "lane": "qualification",
@@ -1854,21 +1888,21 @@
         "T08",
         "O01",
         "O04",
-        "O05"
+        "O05",
+        "P01"
       ],
       "problem": "Individually passing slices are insufficient until every public path uses the native services together.",
       "scope": [
         "Execute F01 capability matrix across all 51 adapters, HTTP formats, portal journeys, 38 baseline tools and all discovery modes",
         "Test integrated cross-source dedup/provenance/filter claims, sensitive policy, Europe PMC attribution and scholarly evidence",
-        "Run compiled release artifacts with deterministic upstream/IdP fixtures; compare direct/gateway and public/protected surfaces",
-        "Integrate bounded publication-date issue #984 across the real OpenAlex adapter, shared service, HTTP/form, science MCP, JSON/YAML, cache proof and portal paths after their owning slices are accepted; use deterministic upstream fixtures and no live provider calls."
+        "Run compiled release artifacts with deterministic upstream/IdP fixtures; compare direct/gateway and public/protected surfaces"
       ],
       "acceptance": [
         "Zero unclassified contract differences and zero missing capabilities; new upstream additions are explicitly reconciled",
         "All suites execute without Python backend code or stubs; compiled artifact SHA/digest is recorded",
         "A complete traceability report maps each baseline capability/regression to passing evidence; remaining optional client Python is isolated",
         "Europe PMC remains opt-in and lite-only; both attribution and preprint notices survive deduplication, compact MCP projection and portal rendering.",
-        "Issue #984 is fully satisfied at the integrated native artifact: inclusive one-sided/equal/leap-day bounds reach OpenAlex; malformed, contradictory, unsupported or unaudited scopes reject before dispatch; JSON/YAML/MCP/portal preserve truthful date proof, engine outcomes, provenance and absolute bounds; bounded cache identity and legacy-proof reacquisition pass; CSV/RSS reject bounded requests before acquisition; #874 regressions map to native evidence or reviewed supersession."
+        "P01 publication-date proof and regression evidence are included in the integrated artifact traceability report."
       ],
       "sources": [
         "tests",
