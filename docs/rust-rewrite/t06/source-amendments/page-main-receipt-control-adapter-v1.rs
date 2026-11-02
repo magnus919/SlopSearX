@@ -671,6 +671,10 @@ fn current_controls(root: &Path) -> Result<()> {
             let endpoint = match boundary {
                 CurrentBoundary::Main => &row.main,
                 CurrentBoundary::Page => &row.page,
+                CurrentBoundary::Qualification => row
+                    .qualification
+                    .as_ref()
+                    .ok_or("T06 qualification endpoint absent")?,
             };
             let prior = current_frame(root, &row.path, &physical, mode, boundary)?;
             if matches!(boundary, CurrentBoundary::Page) && PATHS[2..].contains(&row.path.as_str())

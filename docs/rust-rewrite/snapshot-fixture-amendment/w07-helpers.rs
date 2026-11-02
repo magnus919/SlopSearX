@@ -130,26 +130,19 @@ fn registry_inverse(
         "exact original caller container frame",
     )?;
     need(edits.len() == 1, "exact one T06 registration edit")?;
-    let (at, before, after) = edits[0];
-    let end = at
-        .checked_add(after.len())
-        .ok_or("registry span overflow")?;
-    need(
-        !before.is_empty()
-            && before.len() == after.len()
-            && current.get(at..end) == Some(after.as_bytes()),
-        "exact T06 registration replacement span",
-    )?;
-    let mut prior = current.to_vec();
-    prior
-        .get_mut(at..end)
-        .ok_or("registry prior span")?
-        .copy_from_slice(before.as_bytes());
-    material(frame, &prior, "0644")?;
-    let mut forward = prior.clone();
-    forward[at..end].copy_from_slice(after.as_bytes());
-    need(forward == current, "registry forward reconstruction")?;
-    Ok(prior)
+    let inverse_row = serde_json::json!({
+        "current": {"sha256": sha(current), "bytes": current.len(), "mode": mode},
+        "prior": frame,
+        "edits": edits
+            .iter()
+            .map(|(at, before, after)| serde_json::json!({
+                "at": at,
+                "remove_utf8": before,
+                "insert_utf8": after,
+            }))
+            .collect::<Vec<_>>(),
+    });
+    inverse(&inverse_row, current, mode)
 }
 fn registry_parent(root: &Path, frame: &Value, supplied: &[u8]) -> Result<Vec<u8>> {
     let physical = regular(root, CONTAINER)?;

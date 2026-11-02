@@ -210,55 +210,54 @@ fn pre_984_w07(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
                 == "55c93c8914529eb5c26df0943068b6fd97200f67c288f63bbafea6033729812c",
         "#984 exact physical W07 verifier",
     )?;
-    let frames: [(&str, &str); 3] = [
-        (
-            "const REGISTRY_SHA: &str = \"4d9cb197718db1d06086ee1557f1eb4953bf53b9938eb4bce41da762f70ad1a7\";",
-            "const REGISTRY_SHA: &str = \"a651a9d36c1d5409edbcb7d79a44ac599468ca493fdd735982bb1d1894e4461d\";",
-        ),
-        (
-            "    // #984 adds exact real-adapter MCP/HTTP suites; all historical W07 suites\n    // and source pins remain unchanged except this reviewed T06 registrar.\n    if expected[\"sources\"][\"crates/xtask/src/t06.rs\"]\n        != \"be30918a7ac4365b2538b58fd1c3c933e6b2bea96d6222d267c4a87d29e413e0\"\n    {\n        return Err(\"W07 original T06 registrar pin changed\".into());\n    }\n    expected[\"sources\"][\"crates/xtask/src/t06.rs\"] =\n        Value::String(\"00a0a0ba122cd15da453cad72a025750e476db71d7ff327bef5b8646ade4cdd7\".into());\n\n",
-            "",
-        ),
-        ("            \"crates/xtask/src/t06.rs\",\n", ""),
-    ];
-    let current = std::str::from_utf8(physical).map_err(|e| e.to_string())?;
-    let mut prior = current.to_owned();
-    let mut inverse_spans = Vec::with_capacity(frames.len());
-    for (after, before) in frames {
-        let mut matches = prior.match_indices(after);
-        let at = matches
-            .next()
-            .map(|(at, _)| at)
-            .ok_or("#984 unique W07 inverse span")?;
-        need(matches.next().is_none(), "#984 unique W07 inverse span")?;
-        let end = at
-            .checked_add(after.len())
-            .ok_or("#984 W07 inverse span overflow")?;
-        inverse_spans.push((at, before, after));
-        prior.replace_range(at..end, before);
+    let inverse_row = serde_json::json!({
+        "current": {
+            "sha256": "55c93c8914529eb5c26df0943068b6fd97200f67c288f63bbafea6033729812c",
+            "bytes": 42023,
+            "mode": "0644",
+        },
+        "prior": {
+            "sha256": "4cc2a95645fa639d0873ea1a8803693d63eef074782f41c54540ea04632e6916",
+            "bytes": 41464,
+            "mode": "0644",
+        },
+        "edits": [
+            {
+                "at": 854,
+                "remove_utf8": "const REGISTRY_SHA: &str = \"a651a9d36c1d5409edbcb7d79a44ac599468ca493fdd735982bb1d1894e4461d\";",
+                "insert_utf8": "const REGISTRY_SHA: &str = \"4d9cb197718db1d06086ee1557f1eb4953bf53b9938eb4bce41da762f70ad1a7\";",
+            },
+            {
+                "at": 10275,
+                "remove_utf8": "",
+                "insert_utf8": "    // #984 adds exact real-adapter MCP/HTTP suites; all historical W07 suites\n    // and source pins remain unchanged except this reviewed T06 registrar.\n    if expected[\"sources\"][\"crates/xtask/src/t06.rs\"]\n        != \"be30918a7ac4365b2538b58fd1c3c933e6b2bea96d6222d267c4a87d29e413e0\"\n    {\n        return Err(\"W07 original T06 registrar pin changed\".into());\n    }\n    expected[\"sources\"][\"crates/xtask/src/t06.rs\"] =\n        Value::String(\"00a0a0ba122cd15da453cad72a025750e476db71d7ff327bef5b8646ade4cdd7\".into());\n\n",
+            },
+            {
+                "at": 39511,
+                "remove_utf8": "",
+                "insert_utf8": "            \"crates/xtask/src/t06.rs\",\n",
+            },
+        ],
+    });
+    inverse(&inverse_row, physical, "0644", 3)
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn pre_984_w07_reuses_exact_inverse_for_the_registered_projection() {
+        let physical = include_bytes!("w07.rs");
+        let prior = pre_984_w07("crates/xtask/src/w07.rs", physical).unwrap();
+        assert_eq!(prior.len(), 41464);
+        assert_eq!(
+            digest(&prior),
+            "4cc2a95645fa639d0873ea1a8803693d63eef074782f41c54540ea04632e6916"
+        );
+        let mut changed = physical.to_vec();
+        changed.push(b' ');
+        assert!(pre_984_w07("crates/xtask/src/w07.rs", &changed).is_err());
     }
-    need(
-        prior.len() == 41464
-            && digest(prior.as_bytes())
-                == "4cc2a95645fa639d0873ea1a8803693d63eef074782f41c54540ea04632e6916",
-        "#984 exact accepted W07 source",
-    )?;
-    let mut forward = prior.clone();
-    for (at, before, after) in inverse_spans.into_iter().rev() {
-        let end = at
-            .checked_add(before.len())
-            .ok_or("#984 W07 forward span overflow")?;
-        need(
-            forward.get(at..end) == Some(before),
-            "#984 unique W07 forward span",
-        )?;
-        forward.replace_range(at..end, after);
-    }
-    need(
-        forward.as_bytes() == physical,
-        "#984 complete W07 forward reconstruction",
-    )?;
-    Ok(prior.into_bytes())
 }
 fn accepted_current(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
     let w07 = pre_984_w07(path, physical)?;
