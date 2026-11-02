@@ -82,6 +82,10 @@ Reconciliation against current main `393599e824b35da1dffb58eb5cd45c83b99eb7a1` f
 
 The T08 integration PR #1081 is already merged. Hosted/release acceptance beyond the T08/F03 gates, O04 release artifacts, signing/promotion and production install/upgrade/uninstall remain in #921. No production activation was performed.
 
+Hosted and release acceptance cannot be inferred from the successful local checks. O04/#921 owns release archives, signing/promotion and production install/upgrade/uninstall. The optional historical root `ssx` Python script remains a standalone client-side wire client (SHA-256 `4c45e876fc79dffc0f7da8ccccc9c6ba67d4f4cc9e0bd9e8194f74184b96c65b`); the native client/backend paths neither invoke nor require it. Portal review found no browser-visible contract change in this integration slice.
+
+Refs #903 and #921. No production activation was performed.
+
 ## Evidence identities
 
 
