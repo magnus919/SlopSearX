@@ -223,12 +223,19 @@ fn pre_984_w07(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
     ];
     let current = std::str::from_utf8(physical).map_err(|e| e.to_string())?;
     let mut prior = current.to_owned();
+    let mut inverse_spans = Vec::with_capacity(frames.len());
     for (after, before) in frames {
-        need(
-            prior.matches(after).count() == 1,
-            "#984 unique W07 inverse span",
-        )?;
-        prior = prior.replacen(after, before, 1);
+        let mut matches = prior.match_indices(after);
+        let at = matches
+            .next()
+            .map(|(at, _)| at)
+            .ok_or("#984 unique W07 inverse span")?;
+        need(matches.next().is_none(), "#984 unique W07 inverse span")?;
+        let end = at
+            .checked_add(after.len())
+            .ok_or("#984 W07 inverse span overflow")?;
+        inverse_spans.push((at, before, after));
+        prior.replace_range(at..end, before);
     }
     need(
         prior.len() == 41464
@@ -237,12 +244,15 @@ fn pre_984_w07(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
         "#984 exact accepted W07 source",
     )?;
     let mut forward = prior.clone();
-    for (after, before) in frames {
+    for (at, before, after) in inverse_spans.into_iter().rev() {
+        let end = at
+            .checked_add(before.len())
+            .ok_or("#984 W07 forward span overflow")?;
         need(
-            forward.matches(before).count() == 1,
+            forward.get(at..end) == Some(before),
             "#984 unique W07 forward span",
         )?;
-        forward = forward.replacen(before, after, 1);
+        forward.replace_range(at..end, after);
     }
     need(
         forward.as_bytes() == physical,
