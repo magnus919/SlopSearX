@@ -294,11 +294,16 @@ async fn authenticated_science_openalex_dates_preserve_wire_proof_and_valkey_cac
     );
     assert_eq!(fixture.keys("search:*").await.len(), 5);
     broad.as_object_mut().unwrap().remove("max_results");
+    let full_view = call(&client, broad).await;
     assert_result(
-        &call(&client, broad).await,
+        &full_view,
         &["2024-02-29", "2024-03-01"],
         &broad_proof,
         true,
+    );
+    assert_eq!(
+        view["results"][0], full_view["results"][0],
+        "max_results=1 must return the first row of the canonical full response"
     );
     assert_eq!(fixture.upstream.lines().len(), 5);
 

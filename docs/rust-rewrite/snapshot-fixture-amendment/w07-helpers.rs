@@ -105,13 +105,40 @@ fn document(root: &Path) -> Result<Value> {
     )?;
     Ok(doc)
 }
-// Only #984's current T06 registration differs from the original caller container.
-// This closed adapter authenticates physical material before the old caller proof.
-const REGISTRY_EDITS: &[(usize, &str, &str)] = &[(
-    19299,
-    "    \"crates/xtask/src/t06.rs\": \"be30918a7ac4365b2538b58fd1c3c933e6b2bea96d6222d267c4a87d29e413e0\",\n",
-    "    \"crates/xtask/src/t06.rs\": \"00a0a0ba122cd15da453cad72a025750e476db71d7ff327bef5b8646ade4cdd7\",\n",
-)];
+// The current branch's main merge advances five additional source pins after the
+// original caller frame. This closed adapter reverses all six exact registry lines.
+const REGISTRY_EDITS: &[(usize, &str, &str)] = &[
+    (
+        14828,
+        "    \"crates/ssx-infra/src/search.rs\": \"b74fc961b64cd2faced084c4894e8b4c5cd481642bc20fd9192ce7a37bcf0bbb\",\n",
+        "    \"crates/ssx-infra/src/search.rs\": \"8aa8ec89a6a45728f5ffd2818d2e9fed9b8d0a881c1e36418c95809d92dcb777\",\n",
+    ),
+    (
+        18748,
+        "    \"docs/rust-rewrite/a06/source-amendments/shared-successor.rs\": \"7825c39c9d264b11170e3ab749249b266e5a530450d3cdcdf4ef076e4545a3e2\",\n",
+        "    \"docs/rust-rewrite/a06/source-amendments/shared-successor.rs\": \"8a9bb7b1894e84b8de2673c25f5091a61eb4cf8d77d1c0b8f191edf866b2748c\",\n",
+    ),
+    (
+        19299,
+        "    \"crates/xtask/src/t06.rs\": \"be30918a7ac4365b2538b58fd1c3c933e6b2bea96d6222d267c4a87d29e413e0\",\n",
+        "    \"crates/xtask/src/t06.rs\": \"00a0a0ba122cd15da453cad72a025750e476db71d7ff327bef5b8646ade4cdd7\",\n",
+    ),
+    (
+        20567,
+        "    \"docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs\": \"2d89ad90459a297bb48196704c334a12103cfd66cc782aa98e91be32176763a6\",\n",
+        "    \"docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs\": \"f5736b78c04437056c5bf12b3637e2fa6b53c9b654b1cb28087fe4de22187a86\",\n",
+    ),
+    (
+        20699,
+        "    \"docs/rust-rewrite/a06/source-amendments/native-search-reader.rs\": \"ab57dc81c307e44392b1299b6153923e700dbb9cef56ae3d8ec1c516226387c4\",\n",
+        "    \"docs/rust-rewrite/a06/source-amendments/native-search-reader.rs\": \"bc678e7fc47ec3ec06d6d55e13e3eed87f963f1c0bee8ef47b84f28641d3257c\",\n",
+    ),
+    (
+        20838,
+        "    \"docs/rust-rewrite/a06/source-amendments/post-a06-generation.rs\": \"6c0c9128694f6d84daa85bc97f18b0137db2b985859502dca367439d924fe80c\",\n",
+        "    \"docs/rust-rewrite/a06/source-amendments/post-a06-generation.rs\": \"8ab186367b6b6e535c296ecf376fa83e9d5325a5a65b8da9fda8ce408d804aa9\",\n",
+    ),
+];
 fn registry_inverse(
     frame: &Value,
     current: &[u8],
@@ -121,7 +148,7 @@ fn registry_inverse(
     need(
         mode == "0644"
             && current.len() == 21848
-            && sha(current) == "99c9a0bad80804a64f6934c4e3e09afb12ae41146c8b7d040cd2c69a8c196883",
+            && sha(current) == "4d9cb197718db1d06086ee1557f1eb4953bf53b9938eb4bce41da762f70ad1a7",
         "exact #984 physical caller container",
     )?;
     need(
@@ -129,7 +156,7 @@ fn registry_inverse(
             == serde_json::json!({"path":CONTAINER,"sha256":CONTAINER_SHA,"bytes":21848,"mode":"0644","git_blob":"f8326efbc96af5f884d0321bd5714923ab036b5e"}),
         "exact original caller container frame",
     )?;
-    need(edits.len() == 1, "exact one T06 registration edit")?;
+    need(edits.len() == 6, "exact six source registry edits")?;
     let inverse_row = serde_json::json!({
         "current": {"sha256": sha(current), "bytes": current.len(), "mode": mode},
         "prior": frame,
@@ -357,9 +384,9 @@ fn registry_controls(root: &Path, frame: &Value) -> Result<()> {
     )?;
     for (commit, expected, blob) in [
         (
-            "0d4fc7dfd6cf0373722d4d27c3407c6d57b86446",
+            "29ba0da",
             physical.as_slice(),
-            "4ca5b76a300562354d4e1556a2295d0f7e62ada9",
+            "38a15d53982ae9b59ce7090f16beddb9f1519951",
         ),
         (
             "30270aaa7c459cec6404f4f015fa17077704c2a0",
@@ -420,6 +447,20 @@ fn registry_controls(root: &Path, frame: &Value) -> Result<()> {
             registry_inverse(frame, &physical, "0644", &edits).is_err(),
             "missing/duplicate/moved/altered registry edit",
         )?;
+    }
+    for index in 0..REGISTRY_EDITS.len() {
+        for field in 0..3 {
+            let mut edits = REGISTRY_EDITS.to_vec();
+            match field {
+                0 => edits[index].0 += 1,
+                1 => edits[index].1 = "changed",
+                _ => edits[index].2 = "changed",
+            }
+            need(
+                registry_inverse(frame, &physical, "0644", &edits).is_err(),
+                "each moved/altered registry edit is rejected",
+            )?;
+        }
     }
     let mut changed = physical.clone();
     changed.push(0);
