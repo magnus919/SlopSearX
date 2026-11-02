@@ -1,7 +1,7 @@
 //! Status-only HTTP readiness over a direct socket, bounded by one deadline.
 use std::{
     io::{self, Read, Write},
-    net::{SocketAddr, TcpStream},
+    net::{Ipv4Addr, SocketAddr, TcpStream},
     time::{Duration, Instant},
 };
 const REQUEST: &[u8] = b"GET /health HTTP/1.1\r\nHost: 127.0.0.1:8080\r\nConnection: close\r\n\r\n";
@@ -12,9 +12,15 @@ fn remaining(deadline: Instant) -> io::Result<Duration> {
         .filter(|v| !v.is_zero())
         .ok_or_else(|| io::Error::new(io::ErrorKind::TimedOut, "health deadline"))
 }
-/// The caller supplies a direct address; no proxy, redirect, TLS, or body decoding.
-/// Production fixes this address to IPv4 loopback:8080 and budget to four seconds.
-pub fn probe(address: SocketAddr, budget: Duration) -> io::Result<()> {
+/// Checks the fixed container health endpoint: IPv4 loopback:8080, with a four-second budget.
+/// Test code uses `probe_at` to exercise the parser against ephemeral loopback listeners.
+pub fn probe() -> io::Result<()> {
+    probe_at(
+        SocketAddr::from((Ipv4Addr::LOCALHOST, 8080)),
+        Duration::from_secs(4),
+    )
+}
+fn probe_at(address: SocketAddr, budget: Duration) -> io::Result<()> {
     let deadline = Instant::now()
         .checked_add(budget)
         .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "health deadline"))?;
@@ -80,7 +86,7 @@ mod tests {
             assert_eq!(request, REQUEST);
             let _ = stream.write_all(&response);
         });
-        let result = probe(address, budget);
+        let result = probe_at(address, budget);
         worker.join().unwrap();
         result
     }
@@ -141,12 +147,12 @@ mod tests {
             }
         });
         let start = Instant::now();
-        assert!(probe(address, Duration::from_millis(80)).is_err());
+        assert!(probe_at(address, Duration::from_millis(80)).is_err());
         assert!(start.elapsed() < Duration::from_secs(2));
         worker.join().unwrap();
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let address = listener.local_addr().unwrap();
         drop(listener);
-        assert!(probe(address, Duration::from_millis(100)).is_err());
+        assert!(probe_at(address, Duration::from_millis(100)).is_err());
     }
 }
