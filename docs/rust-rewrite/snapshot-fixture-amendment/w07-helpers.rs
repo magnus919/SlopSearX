@@ -12,6 +12,10 @@ mod cli_source_custody;
     dead_code,
     reason = "The standalone W07 helper reuses the finite registry projection across test crates"
 )]
+#[allow(
+    clippy::duplicate_mod,
+    reason = "The W07 snapshot helper and T06 source-binding target intentionally use this stateless proof leaf under separate parent contracts"
+)]
 #[path = "../t06/source-amendments/page-main-receipt-control-adapter-v1.rs"]
 mod t06_receipt_control;
 use serde_json::Value;
