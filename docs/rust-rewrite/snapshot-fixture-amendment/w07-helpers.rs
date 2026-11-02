@@ -8,6 +8,12 @@
 )]
 #[path = "../../../crates/xtask/src/t08a_custody.rs"]
 mod cli_source_custody;
+#[expect(
+    dead_code,
+    reason = "The standalone W07 helper reuses the finite registry projection across test crates"
+)]
+#[path = "../t06/source-amendments/page-main-receipt-control-adapter-v1.rs"]
+mod t06_receipt_control;
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::{fs, path::Path};
@@ -1061,6 +1067,9 @@ fn outer_row<'a>(doc: &'a Value, path: &str) -> Result<&'a Value> {
         .ok_or("composition source absent".into())
 }
 fn accepted_main_operand(root: &Path, path: &str, supplied: &[u8]) -> Result<Vec<u8>> {
+    if path == CONTAINER {
+        return t06_receipt_control::w07_registry_to_w08(supplied, 0o644);
+    }
     if cli_source_custody::accepted_main_join::owns(path) {
         cli_source_custody::accepted_main_join::project(
             root,
