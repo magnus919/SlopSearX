@@ -195,6 +195,11 @@ impl FixtureCore {
         body: Vec<u8>,
         expected_requests: Option<usize>,
     ) -> Self {
+        assert_ne!(
+            expected_requests,
+            Some(0),
+            "expected request count must be positive"
+        );
         let upstream = Upstream::start(status, body, expected_requests).await;
         let server = private_valkey::Server::start();
         let store = Arc::new(server.store());

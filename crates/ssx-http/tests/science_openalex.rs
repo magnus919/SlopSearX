@@ -128,6 +128,12 @@ fn assert_http(value: &Value, format: &str, days: &[&str], expected: &Value, cac
 }
 
 #[tokio::test]
+#[should_panic(expected = "expected request count must be positive")]
+async fn science_openalex_fixture_rejects_zero_expected_requests() {
+    let _ = Fixture::new(Mode::Audited, 200, equal_body(), Some(0)).await;
+}
+
+#[tokio::test]
 async fn native_http_real_openalex_routes_bounds_formats_and_cache_reacquisition() {
     // Every URI/method pair acquires each bound through actual OpenAlex. YAML
     // then reads the canonical JSON acquisition; two corrupt proofs reacquire.
@@ -367,8 +373,17 @@ async fn native_http_real_openalex_routes_bounds_formats_and_cache_reacquisition
             let value = decode(&body, format);
             assert!(value["meta"].get("date_filter").is_none());
             assert_eq!(value["results"].as_array().unwrap().len(), 7);
+        } else if format == "csv" {
+            assert!(body.starts_with("title,url,content,engine,publishedDate\n"));
+            assert_eq!(body.matches(",openalex,").count(), 7);
+            assert!(body.ends_with('\n'));
         } else {
-            assert!(body.contains("2024-02-29"));
+            assert!(body.starts_with(
+                "<?xml version='1.0' encoding='utf-8'?>\n<rss version=\"2.0\"><channel>"
+            ));
+            assert!(body.ends_with("</channel></rss>"));
+            assert_eq!(body.matches("<item>").count(), 7);
+            assert_eq!(body.matches("</item>").count(), 7);
         }
     }
     assert_eq!(fixture.upstream.lines().len(), 23);
