@@ -148,6 +148,7 @@ const SCIENCE_OPENALEX: &[&str] = &[
     "science_real_openalex_empty_and_http_failure_remain_distinct",
 ];
 const SCIENCE_HTTP: &[&str] = &[
+    "science_openalex_fixture_rejects_zero_expected_requests",
     "native_http_real_openalex_routes_bounds_formats_and_cache_reacquisition",
     "native_http_date_denials_have_zero_real_acquisition",
     "native_http_real_openalex_failure_and_empty_have_distinct_status_outcomes",

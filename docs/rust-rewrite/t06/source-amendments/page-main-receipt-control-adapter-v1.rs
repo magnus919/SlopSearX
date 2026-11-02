@@ -281,7 +281,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
 // reconstruct the independently accepted main and page boundaries.
 const CURRENT_CAPSULE: &str =
     "docs/rust-rewrite/t06/source-amendments/page-main-receipt-control-composition-v1.json";
-const CURRENT_SHA: &str = "25ba12516be1be8a007a5ef289d38ad6442f326658bb26770b58123d5e38137f";
+const CURRENT_SHA: &str = "1b74f37f78765d1c73fdd7ef598d844f371cacc16a7a5bb2bf6fb784fa4574cb";
 const CURRENT_MAIN: &str = "96f8541f18368e6ef9162b6163644a3ff0b12b73";
 const CURRENT_PAGE: &str = "3f6329f3ecaaa425f9df0c7c2eae54aebe8aec0c";
 const CURRENT_QUALIFICATION: &str = "24db49cb5ba2c00cd15e7acb36242ae297983975";

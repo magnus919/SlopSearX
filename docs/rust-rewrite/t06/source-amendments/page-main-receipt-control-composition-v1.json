@@ -61,18 +61,18 @@
         ]
       },
       "physical": {
-        "sha256": "04d56e5d7fcffee4271146a2fb011b57674d59ca29d38cd902733ae524f0a908",
-        "bytes": 19746,
+        "sha256": "f28475c15f8c25eb159d3239f2ce0d78a523fe86bdea865a8173609af7b04a94",
+        "bytes": 19809,
         "mode": 420
       },
       "physical_to_current": [
         {
           "current_offset": 7457,
           "old": "",
-          "new": "];\nconst SCIENCE_OPENALEX: &[&str] = &[\n    \"authenticated_science_openalex_dates_preserve_wire_proof_and_valkey_cache\",\n    \"science_date_denials_never_reach_real_adapter_or_shared_acquisition\",\n    \"science_real_openalex_empty_and_http_failure_remain_distinct\",\n];\nconst SCIENCE_HTTP: &[&str] = &[\n    \"native_http_real_openalex_routes_bounds_formats_and_cache_reacquisition\",\n    \"native_http_date_denials_have_zero_real_acquisition\",\n    \"native_http_real_openalex_failure_and_empty_have_distinct_status_outcomes\",\n"
+          "new": "];\nconst SCIENCE_OPENALEX: &[&str] = &[\n    \"authenticated_science_openalex_dates_preserve_wire_proof_and_valkey_cache\",\n    \"science_date_denials_never_reach_real_adapter_or_shared_acquisition\",\n    \"science_real_openalex_empty_and_http_failure_remain_distinct\",\n];\nconst SCIENCE_HTTP: &[&str] = &[\n    \"science_openalex_fixture_rejects_zero_expected_requests\",\n    \"native_http_real_openalex_routes_bounds_formats_and_cache_reacquisition\",\n    \"native_http_date_denials_have_zero_real_acquisition\",\n    \"native_http_real_openalex_failure_and_empty_have_distinct_status_outcomes\",\n"
         },
         {
-          "current_offset": 15337,
+          "current_offset": 15400,
           "old": "",
           "new": "    run_suite(\n        root,\n        &[\"--test\", \"science_openalex\"],\n        SCIENCE_OPENALEX,\n        records,\n    )?;\n    run_suite_for(\n        root,\n        \"ssx-http\",\n        &[\"--test\", \"science_openalex\"],\n        SCIENCE_HTTP,\n        records,\n    )?;\n"
         }
@@ -96,12 +96,17 @@
             "new": "    receipt_control_closure::verify(root)?;\n    let prior = receipt_control::parent(\n        root,\n        row[\"file\"].as_str().ok_or(\"T06 native fixture path\")?,\n        expected.as_str().ok_or(\"T06 native fixture hash\")?,\n        bytes,\n    )?;\n    let bytes = prior.as_deref().unwrap_or(bytes);\n"
           },
           {
-            "current_offset": 11861,
+            "current_offset": 7757,
+            "old": "",
+            "new": "    \"science_openalex_fixture_rejects_zero_expected_requests\",\n"
+          },
+          {
+            "current_offset": 11924,
             "old": "",
             "new": "    receipt_control_closure::controls(root)?;\n    receipt_control::controls(root)?;\n"
           },
           {
-            "current_offset": 16836,
+            "current_offset": 16899,
             "old": "",
             "new": "        receipt_control_closure::controls(&root).unwrap();\n        receipt_control::controls(&root).unwrap();\n"
           }
