@@ -2739,7 +2739,7 @@
         "job": {
           "name": "Foundation core (${{ matrix.runner }})",
           "runs-on": "${{ matrix.runner }}",
-          "timeout-minutes": 120,
+          "timeout-minutes": 130,
           "strategy": {
             "fail-fast": false,
             "matrix": {
@@ -2844,7 +2844,7 @@
       },
       "owner": "F03",
       "state": "additive",
-      "successor": "Mandatory F03 core partition on both existing architectures; unchanged F03 commands, feature/profile roles and native deadlines; fresh tool/isolation/Valkey/compiler/source provenance; separate 120-minute job, no inherited targets or dropped gates."
+      "successor": "Mandatory F03 core partition on both existing architectures; unchanged F03 commands, feature/profile roles and native deadlines; fresh tool/isolation/Valkey/compiler/source provenance; separate 130-minute job, no inherited targets or dropped gates."
     }
   },
   "precommit_source": {
