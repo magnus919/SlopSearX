@@ -2,12 +2,93 @@
 use sha2::{Digest, Sha256};
 #[cfg(unix)]
 use std::io::Read;
-use std::{collections::BTreeSet, fs, path::Path};
+use std::{
+    collections::BTreeSet,
+    fs,
+    io::Write,
+    path::Path,
+    process::{Command, Stdio},
+};
 type Result<T> = std::result::Result<T, String>;
 pub(crate) const PATH: &str = "docker/healthcheck.py";
 pub(crate) const VERIFIER: &str = "scripts/verify_docker_base_digest.py";
 const VERIFIER_BLOB: &str = "3f43f9bc1f90b4b2cd85381d2a54e54387cfab18";
 const BLOB: &str = "39bcbc736bed7e441531ab00f3e6d540e4b3af65";
+const O03_INVENTORY: &str = "docs/rust-rewrite/inventory/o03-active-tooling.json";
+const O03_INVENTORY_PRIOR_BLOB: &str = "92416a57a087d5f2e1b13f04c94dfd8cbd5b49e7";
+const O03_INVENTORY_PRIOR_SIZE: usize = 231348;
+const O03_INVENTORY_PRIOR_SHA: &str =
+    "1d24f38e437b149523a069a0f05cbffa89b8d74235b4cb0b14ab4f05df631821";
+const O03_INVENTORY_CURRENT_SIZE: usize = 229161;
+const O03_INVENTORY_CURRENT_SHA: &str =
+    "3b34aa4887389f62a6dc5223c62b5c967b6e5e1276a1d906e93d83b98a11fb4e";
+const O03_INVENTORY_CURRENT_BLOB: &str = "3cbccbf824c3862421bcd89c16da293c4fe849a6";
+const O03_RETIRED_ROW: &str = r###"    {
+      "path": "scripts/verify_docker_base_digest.py",
+      "source_blob": "3f43f9bc1f90b4b2cd85381d2a54e54387cfab18",
+      "current_entrypoint": "python scripts/verify_docker_base_digest.py --dockerfile",
+      "entrypoint_kind": "cli",
+      "entrypoint_functions": [
+        "_urlopen_with_retries",
+        "_pinned_python_base",
+        "registry_digest",
+        "main"
+      ],
+      "api_signatures": [
+        {
+          "name": "_urlopen_with_retries",
+          "async": false,
+          "arguments": [
+            "request",
+            "label"
+          ],
+          "return_annotation": null
+        },
+        {
+          "name": "_pinned_python_base",
+          "async": false,
+          "arguments": [
+            "dockerfile"
+          ],
+          "return_annotation": "tuple[str, str]"
+        },
+        {
+          "name": "registry_digest",
+          "async": false,
+          "arguments": [
+            "repository",
+            "tag"
+          ],
+          "return_annotation": "str"
+        },
+        {
+          "name": "main",
+          "async": false,
+          "arguments": [],
+          "return_annotation": "int"
+        }
+      ],
+      "cli_options": [
+        "--dockerfile"
+      ],
+      "source_summary": "Verify that Dockerfile's pinned Python digest matches Docker Hub.",
+      "inputs": [
+        "command-line options: --dockerfile"
+      ],
+      "outputs": [
+        "stdout and process exit status"
+      ],
+      "source_declared_artifact_names": [],
+      "internal_imports": [],
+      "direct_backend_imports": [],
+      "consumed_by": [],
+      "native_successor": "excluded O02 base-image verification; remains owned by O02 outside O03",
+      "boundary": "Rust native CLI or explicit local wire interface; no Python backend imports, subprocess fallback, provider access, or unregistered side effects",
+      "disposition": "shared_release_tooling_out_of_o03",
+      "owner": "O02",
+      "stage": "release health, upstream and image promotion",
+      "handoff_validation": "cargo xtask check O02 must validate deterministic offline fixtures, command mapping, bounds and failure/unknown classification before retirement"
+    }"###;
 fn need(ok: bool, message: &str) -> Result<()> {
     if ok {
         Ok(())
@@ -251,6 +332,36 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
     need(
         historical(&changed, &disposition).is_err(),
         "changed frozen source rejected",
+    )?;
+    let current_inventory = material(
+        root,
+        O03_INVENTORY,
+        O03_INVENTORY_CURRENT_SIZE,
+        O03_INVENTORY_CURRENT_SHA,
+    )?;
+    let prior_inventory = o03_inventory_prior(root)?;
+    need(
+        prior_inventory.len() == O03_INVENTORY_PRIOR_SIZE
+            && digest(&prior_inventory) == O03_INVENTORY_PRIOR_SHA,
+        "exact O03 inventory prior control",
+    )?;
+    let mut changed_inventory = current_inventory;
+    changed_inventory[0] ^= 1;
+    need(
+        o03_inventory_inverse(&changed_inventory).is_err(),
+        "changed O03 inventory source rejected",
+    )?;
+    need(
+        !successor(
+            root,
+            "docs/rust-rewrite/inventory/other.json",
+            O03_INVENTORY_PRIOR_BLOB,
+        )?,
+        "unlisted O03 inventory successor rejected",
+    )?;
+    need(
+        successor(root, O03_INVENTORY, "wrong").is_err(),
+        "wrong historical O03 inventory blob rejected",
     )?;
     for row in &SUCCESSORS {
         if row.0 == VERIFIER {
@@ -552,12 +663,106 @@ fn prior(row: &Successor, raw: &[u8]) -> Result<Vec<u8>> {
     Ok(old.into_bytes())
 }
 pub(crate) fn successor(root: &Path, path: &str, blob: &str) -> Result<bool> {
+    if path == O03_INVENTORY {
+        need(
+            blob == O03_INVENTORY_PRIOR_BLOB,
+            "historical O03 inventory blob",
+        )?;
+        o03_inventory_prior(root)?;
+        return Ok(true);
+    }
     let Some(row) = SUCCESSORS.iter().find(|row| row.0 == path) else {
         return Ok(false);
     };
     need(row.1 == blob, "historical Python fixture blob")?;
     python_prior(root, row)?;
     Ok(true)
+}
+fn o03_inventory_prior(root: &Path) -> Result<Vec<u8>> {
+    let raw = material(
+        root,
+        O03_INVENTORY,
+        O03_INVENTORY_CURRENT_SIZE,
+        O03_INVENTORY_CURRENT_SHA,
+    )?;
+    need(
+        git_blob(root, &raw)? == O03_INVENTORY_CURRENT_BLOB,
+        "exact current O03 inventory Git blob",
+    )?;
+    let prior = o03_inventory_inverse(&raw)?;
+    need(
+        git_blob(root, &prior)? == O03_INVENTORY_PRIOR_BLOB,
+        "exact reconstructed historical O03 inventory Git blob",
+    )?;
+    Ok(prior)
+}
+fn git_blob(root: &Path, bytes: &[u8]) -> Result<String> {
+    let mut child = Command::new("git")
+        .args(["hash-object", "--stdin"])
+        .current_dir(root)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .spawn()
+        .map_err(|error| error.to_string())?;
+    let write_result = match child.stdin.take() {
+        Some(mut input) => input.write_all(bytes).map_err(|error| error.to_string()),
+        None => Err("Git hash-object stdin missing".into()),
+    };
+    if write_result.is_err() {
+        let _ = child.kill();
+    }
+    let output = child
+        .wait_with_output()
+        .map_err(|error| error.to_string())?;
+    write_result?;
+    need(output.status.success(), "Git hash-object for O03 inventory")?;
+    String::from_utf8(output.stdout)
+        .map(|value| value.trim().to_owned())
+        .map_err(|error| error.to_string())
+}
+fn o03_inventory_inverse(raw: &[u8]) -> Result<Vec<u8>> {
+    need(
+        raw.len() == O03_INVENTORY_CURRENT_SIZE && digest(raw) == O03_INVENTORY_CURRENT_SHA,
+        "exact current O03 inventory bytes",
+    )?;
+    let text = std::str::from_utf8(&raw).map_err(|error| error.to_string())?;
+    let marker = "\n  ],\n  \"supporting_paths\": [\n";
+    need(
+        text.matches(marker).count() == 1,
+        "unique O03 inventory retired-row insertion boundary",
+    )?;
+    let offset = text
+        .find(marker)
+        .ok_or("O03 inventory insertion boundary")?;
+    let mut reconstructed = String::with_capacity(O03_INVENTORY_PRIOR_SIZE);
+    reconstructed.push_str(&text[..offset]);
+    reconstructed.push_str(",\n");
+    reconstructed.push_str(O03_RETIRED_ROW);
+    reconstructed.push_str(&text[offset..]);
+    let prior = reconstructed.into_bytes();
+    need(
+        prior.len() == O03_INVENTORY_PRIOR_SIZE && digest(&prior) == O03_INVENTORY_PRIOR_SHA,
+        "exact one-row O03 inventory inverse SHA and size",
+    )?;
+    let prior_json: serde_json::Value =
+        serde_json::from_slice(&prior).map_err(|error| error.to_string())?;
+    let rows = prior_json["scripts"]
+        .as_array()
+        .ok_or("prior O03 scripts")?;
+    let retired: Vec<_> = rows
+        .iter()
+        .filter(|row| row["path"] == "scripts/verify_docker_base_digest.py")
+        .collect();
+    need(
+        retired.len() == 1
+            && retired[0]["source_blob"] == VERIFIER_BLOB
+            && rows.iter().all(|row| {
+                row["path"] != "scripts/verify_docker_base_digest.py" || row["owner"] == "O02"
+            }),
+        "exact sole retired O03 row and O02 ownership",
+    )?;
+    Ok(prior)
 }
 fn python_prior(root: &Path, row: &Successor) -> Result<Vec<u8>> {
     let raw = python_successor(root, row)?;
