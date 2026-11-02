@@ -46,9 +46,11 @@ return to the same query by copying the URL.
 1. **First search:** open `/`, focus the query field, enter text, press Enter,
    and arrive at `/search?q=...`. Focus returns to the query field after a
    failed submission; it does not jump to a decorative element.
-2. **Refine scope:** open the scope control, select a capability-backed
-   category, apply, and see the selected scope in both the control and URL.
-   Unsupported controls are omitted or disabled with a short reason.
+2. **Refine scope:** choose either capability-backed sources or categories,
+   apply, and see the effective scope in both the control and URL. Selecting a
+   source clears categories, and selecting a category clears sources, because
+   explicit sources take precedence in the shared resolver. Unsupported
+   controls are omitted or disabled with a short reason.
 3. **Inspect provenance:** each result shows title, safe destination, source
    engine(s), category/type, and publication metadata when present. Missing
    metadata is omitted rather than replaced with invented values. A closed

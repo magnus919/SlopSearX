@@ -72,7 +72,7 @@ impl PublicHtml {
             ("Darker mode", "Use darker mode", "false")
         };
         format!(
-            "<!doctype html><html lang=\"en\" data-default-theme=\"{theme}\" data-theme=\"{theme}\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>{}</title><style>:root{{--page-bg:#191a18;--page-fg:#f4f0e8;--muted:#bbb;color-scheme:dark}}:root[data-theme=darker]{{--page-bg:#0b0c0b}}html,body{{background-color:var(--page-bg);color:var(--page-fg)}}body{{max-width:70rem;margin:3rem auto;padding:0 1rem;font:1rem/1.6 system-ui}}a{{color:#e5b567}}form{{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,13rem),1fr));gap:1rem;align-items:end}}form label{{display:block}}form input,form select,form button{{box-sizing:border-box;width:100%;font:inherit;padding:.7rem}}article{{margin:2rem 0;border-top:1px solid #555}}small{{color:var(--muted)}}</style></head><body><header><a href=\"/\">SlopSearX</a> <button type=\"button\" data-theme-toggle aria-label=\"{accessible_name}\" aria-pressed=\"{pressed}\">{label}</button></header><main>{body}</main><script>(()=>{{const root=document.documentElement;const button=document.querySelector('[data-theme-toggle]');const configured=root.dataset.defaultTheme;const valid=theme=>theme==='dark'||theme==='darker';const apply=theme=>{{root.dataset.theme=theme;const darker=theme==='darker';button.textContent=darker?'Dark mode':'Darker mode';button.setAttribute('aria-label',darker?'Use dark mode':'Use darker mode');button.setAttribute('aria-pressed',String(darker))}};let initial=valid(configured)?configured:'dark';try{{const stored=window.localStorage.getItem('slopsearx-theme');if(valid(stored))initial=stored}}catch(_){{}}apply(initial);button.addEventListener('click',()=>{{const next=root.dataset.theme==='darker'?'dark':'darker';apply(next);try{{window.localStorage.setItem('slopsearx-theme',next)}}catch(_){{}}}});for(const form of document.querySelectorAll('[data-search-form]')){{const relative=form.querySelector('[name=time_range]');const absolute=form.querySelectorAll('[name=date_from],[name=date_to]');if(relative)relative.addEventListener('change',()=>{{if(relative.value)absolute.forEach(input=>input.value='')}});absolute.forEach(input=>input.addEventListener('input',()=>{{if(input.value&&relative)relative.value=''}}));form.addEventListener('formdata',event=>{{for(const select of form.querySelectorAll('select[multiple][data-comma-values]')){{const values=Array.from(select.selectedOptions,option=>option.value);event.formData.delete(select.name);if(values.length)event.formData.append(select.name,values.join(','))}}for(const input of form.querySelectorAll('input:not([type=hidden]):not([name=q]),select'))if(!input.value)event.formData.delete(input.name)}})}}}})();</script></body></html>",
+            "<!doctype html><html lang=\"en\" data-default-theme=\"{theme}\" data-theme=\"{theme}\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>{}</title><style>:root{{--page-bg:#191a18;--page-fg:#f4f0e8;--muted:#bbb;color-scheme:dark}}:root[data-theme=darker]{{--page-bg:#0b0c0b}}html,body{{background-color:var(--page-bg);color:var(--page-fg)}}body{{max-width:70rem;margin:3rem auto;padding:0 1rem;font:1rem/1.6 system-ui}}a{{color:#e5b567}}form{{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,13rem),1fr));gap:1rem;align-items:end}}form label{{display:block}}form input,form select,form button{{box-sizing:border-box;width:100%;font:inherit;padding:.7rem}}article{{margin:2rem 0;border-top:1px solid #555}}small{{color:var(--muted)}}</style></head><body><header><a href=\"/\">SlopSearX</a> <button type=\"button\" data-theme-toggle aria-label=\"{accessible_name}\" aria-pressed=\"{pressed}\">{label}</button></header><main>{body}</main><script>(()=>{{const root=document.documentElement;const button=document.querySelector('[data-theme-toggle]');const configured=root.dataset.defaultTheme;const valid=theme=>theme==='dark'||theme==='darker';const apply=theme=>{{root.dataset.theme=theme;const darker=theme==='darker';button.textContent=darker?'Dark mode':'Darker mode';button.setAttribute('aria-label',darker?'Use dark mode':'Use darker mode');button.setAttribute('aria-pressed',String(darker))}};let initial=valid(configured)?configured:'dark';try{{const stored=window.localStorage.getItem('slopsearx-theme');if(valid(stored))initial=stored}}catch(_){{}}apply(initial);button.addEventListener('click',()=>{{const next=root.dataset.theme==='darker'?'dark':'darker';apply(next);try{{window.localStorage.setItem('slopsearx-theme',next)}}catch(_){{}}}});for(const form of document.querySelectorAll('[data-search-form]')){{const relative=form.querySelector('[name=time_range]');const absolute=form.querySelectorAll('[name=date_from],[name=date_to]');const engines=form.querySelector('[name=engines]');const categories=form.querySelector('[name=categories]');for(const [active,other] of [[engines,categories],[categories,engines]])if(active&&other)active.addEventListener('change',()=>{{if(active.selectedOptions.length)for(const option of other.options)option.selected=false}});if(relative)relative.addEventListener('change',()=>{{if(relative.value)absolute.forEach(input=>input.value='')}});absolute.forEach(input=>input.addEventListener('input',()=>{{if(input.value&&relative)relative.value=''}}));form.addEventListener('formdata',event=>{{for(const select of form.querySelectorAll('select[multiple][data-comma-values]')){{const values=Array.from(select.selectedOptions,option=>option.value);event.formData.delete(select.name);if(values.length)event.formData.append(select.name,values.join(','))}}for(const input of form.querySelectorAll('input:not([type=hidden]):not([name=q]),select'))if(!input.value)event.formData.delete(input.name);const timeout=form.querySelector('[name=interactive_timeout_ms]');if(timeout&&!timeout.value)event.formData.delete(timeout.name)}})}}}})();</script></body></html>",
             escape(title),
             accessible_name = accessible_name,
             pressed = pressed,
@@ -149,12 +149,18 @@ fn scope_select(
 fn form(query: &str, request: Option<&SearchRequest>, controls: PortalControls<'_>) -> String {
     let categories = category_choices(controls.discovery);
     let engines = engine_choices(controls.discovery);
-    let selected_categories = request
-        .and_then(|r| r.categories.as_deref())
-        .unwrap_or_default();
     let selected_engines = request
         .and_then(|r| r.engines.as_deref())
         .unwrap_or_default();
+    // Explicit engine scope wins over categories in the shared resolver.
+    // Do not render ignored categories as if they affected this response.
+    let selected_categories = if selected_engines.is_empty() {
+        request
+            .and_then(|r| r.categories.as_deref())
+            .unwrap_or_default()
+    } else {
+        &[]
+    };
     let time_range = request
         .and_then(|r| r.time_range.as_deref())
         .unwrap_or_default();
@@ -173,6 +179,10 @@ fn form(query: &str, request: Option<&SearchRequest>, controls: PortalControls<'
         .collect::<String>();
     let language = request.map_or("en", |r| r.language.as_str());
     let safesearch = request.map_or(0, |r| r.safesearch);
+    let interactive_timeout_ms = request
+        .and_then(|r| r.interactive_timeout_ms)
+        .map(|timeout| timeout.to_string())
+        .unwrap_or_default();
     let mut scopes = scope_select("engines", "Sources", &engines, selected_engines);
     scopes.push_str(&scope_select(
         "categories",
@@ -181,12 +191,13 @@ fn form(query: &str, request: Option<&SearchRequest>, controls: PortalControls<'
         selected_categories,
     ));
     format!(
-        "<form class=\"search-form\" action=\"/search\" method=\"get\" data-search-form><label for=\"q\">Search</label><input id=\"q\" name=\"q\" value=\"{}\" required>{}<label for=\"time_range\">Relative time range</label><select id=\"time_range\" name=\"time_range\"><option value=\"\">Any time</option>{}</select><label for=\"date_from\">Publication date from</label><input id=\"date_from\" name=\"date_from\" type=\"date\" value=\"{}\"><label for=\"date_to\">Publication date to</label><input id=\"date_to\" name=\"date_to\" type=\"date\" value=\"{}\"><input type=\"hidden\" name=\"language\" value=\"{}\"><input type=\"hidden\" name=\"safesearch\" value=\"{}\"><input type=\"hidden\" name=\"format\" value=\"html\"><button type=\"submit\">Search</button></form>",
+        "<form class=\"search-form\" action=\"/search\" method=\"get\" data-search-form><label for=\"q\">Search</label><input id=\"q\" name=\"q\" value=\"{}\" required>{}<label for=\"time_range\">Relative time range</label><select id=\"time_range\" name=\"time_range\"><option value=\"\">Any time</option>{}</select><label for=\"date_from\">Publication date from</label><input id=\"date_from\" name=\"date_from\" type=\"date\" value=\"{}\"><label for=\"date_to\">Publication date to</label><input id=\"date_to\" name=\"date_to\" type=\"date\" value=\"{}\"><input type=\"hidden\" name=\"interactive_timeout_ms\" value=\"{}\"><input type=\"hidden\" name=\"language\" value=\"{}\"><input type=\"hidden\" name=\"safesearch\" value=\"{}\"><input type=\"hidden\" name=\"format\" value=\"html\"><button type=\"submit\">Search</button></form>",
         escape(query),
         scopes,
         relative_options,
         escape(date_from),
         escape(date_to),
+        escape(&interactive_timeout_ms),
         escape(language),
         safesearch
     )
@@ -323,6 +334,9 @@ impl HtmlRenderer for PublicHtml {
             if let Some(v) = v {
                 params.push((k, v.clone()));
             }
+        }
+        if let Some(timeout) = request.interactive_timeout_ms {
+            params.push(("interactive_timeout_ms", timeout.to_string()));
         }
         params.push(("language", request.language.clone()));
         params.push(("safesearch", request.safesearch.to_string()));
