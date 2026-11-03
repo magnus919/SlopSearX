@@ -52,7 +52,7 @@ fn mode(path: &Path) -> Result<String, String> {
             .map_err(|e| e.to_string())?
             .permissions()
             .mode()
-            & 0o777
+            & 0o7777
     ))
 }
 #[cfg(not(unix))]
@@ -97,12 +97,17 @@ fn read_material(root: &Path, row: &Value, stage: &str) -> Result<Vec<u8>, Strin
 }
 
 /// The two composed guards keep physical custody separate from both parent frames.
-fn joint_current_material(root: &Path, path: &str, t02_row: &Value) -> Result<Vec<u8>, String> {
+fn joint_current_material(
+    physical_root: &Path,
+    proof_root: &Path,
+    path: &str,
+    t02_row: &Value,
+) -> Result<Vec<u8>, String> {
     require(
         [XTASK_A13, VALIDATOR].contains(&path) && t02_row["path"] == path,
         "PR1034 exact joint current scope",
     )?;
-    let file = root.join(path);
+    let file = physical_root.join(path);
     let metadata = fs::symlink_metadata(&file).map_err(|e| e.to_string())?;
     require(
         metadata.is_file() && !metadata.file_type().is_symlink(),
@@ -111,7 +116,16 @@ fn joint_current_material(root: &Path, path: &str, t02_row: &Value) -> Result<Ve
     let physical = fs::read(&file).map_err(|e| e.to_string())?;
     let permissions = mode(&file)?;
     use a06_source_successor::w07_t02_joint::{self, Parent};
-    let t02_parent = w07_t02_joint::parent(root, path, &physical, Parent::T02)?;
+    if path == XTASK_A13 {
+        let legacy_capsule =
+            physical_root.join(w07_t02_joint::cli_source_custody::LEGACY_CAPSULE_PATH);
+        let raw = fs::read(legacy_capsule).map_err(|e| e.to_string())?;
+        require(
+            digest(&raw) == "ef0098cb7eb3f33cd7295bb982fe4c34b146a97644a612cf26c21cea48713479",
+            "PR1034 exact owned legacy capsule bytes",
+        )?;
+    }
+    let t02_parent = w07_t02_joint::parent(proof_root, path, &physical, Parent::T02)?;
     check_material(
         t02_row,
         &t02_parent,
@@ -122,9 +136,14 @@ fn joint_current_material(root: &Path, path: &str, t02_row: &Value) -> Result<Ve
     // Select only the existing capsule's predecessor. effective_current seals
     // that document and proves its W07 inverse from the actual physical file.
     let capsule = fs::read(
-        root.join("docs/rust-rewrite/a06/source-amendments/w07-evidence-successor-v3.json"),
+        physical_root
+            .join("docs/rust-rewrite/a06/source-amendments/w07-evidence-successor-v3.json"),
     )
     .map_err(|e| e.to_string())?;
+    require(
+        digest(&capsule) == "f1d1a1360485feba371aeace873cb5ae60090ea99e57e2ba3ade40f0e42a4be5",
+        "PR1034 exact sealed W07 capsule bytes",
+    )?;
     let capsule: Value = serde_json::from_slice(&capsule).map_err(|e| e.to_string())?;
     let rows: Vec<_> = capsule["sources"]
         .as_array()
@@ -137,8 +156,8 @@ fn joint_current_material(root: &Path, path: &str, t02_row: &Value) -> Result<Ve
     prior["path"] = serde_json::json!(path);
     prior["mode"] = serde_json::json!("0644");
     let w07_current =
-        a06_source_successor::w07_evidence_successor::effective_current(root, path, &prior)?;
-    let w07_parent = w07_t02_joint::parent(root, path, &physical, Parent::W07)?;
+        a06_source_successor::w07_evidence_successor::effective_current(proof_root, path, &prior)?;
+    let w07_parent = w07_t02_joint::parent(proof_root, path, &physical, Parent::W07)?;
     check_material(
         &w07_current,
         &w07_parent,
@@ -270,7 +289,7 @@ fn verify_merged_a13(root: &Path, current_row: &Value) -> Result<(), String> {
         next["current"] == accepted_main_row,
         "PR1034 A13 accepted-main predecessor row differs",
     )?;
-    let actual = joint_current_material(root, XTASK_A13, current_row)?;
+    let actual = joint_current_material(root, root, XTASK_A13, current_row)?;
     check_source_transition(
         &next,
         &previous.bytes,
@@ -775,7 +794,7 @@ fn joint_current_controls(root: &Path) -> Result<(), String> {
         fs::set_permissions(&target, fs::Permissions::from_mode(0o644))
             .map_err(|e| e.to_string())?;
         require(
-            joint_current_material(&owned.0, path, &row)? == actual,
+            joint_current_material(&owned.0, root, path, &row)? == actual,
             "joint custody must return physical bytes",
         )?;
         if path == XTASK_A13 {
@@ -785,7 +804,7 @@ fn joint_current_controls(root: &Path) -> Result<(), String> {
             let original_capsule = fs::read(&current_capsule).map_err(|e| e.to_string())?;
             let absent = current_capsule.with_extension("held-for-missing-control");
             fs::rename(&current_capsule, &absent).map_err(|e| e.to_string())?;
-            let missing_rejected = joint_current_material(&owned.0, path, &row).is_err();
+            let missing_rejected = joint_current_material(&owned.0, root, path, &row).is_err();
             fs::rename(&absent, &current_capsule).map_err(|e| e.to_string())?;
             require(
                 missing_rejected,
@@ -794,14 +813,14 @@ fn joint_current_controls(root: &Path) -> Result<(), String> {
             let mut changed_capsule = original_capsule.clone();
             changed_capsule.push(0);
             fs::write(&current_capsule, changed_capsule).map_err(|e| e.to_string())?;
-            let tampered_rejected = joint_current_material(&owned.0, path, &row).is_err();
+            let tampered_rejected = joint_current_material(&owned.0, root, path, &row).is_err();
             fs::write(&current_capsule, &original_capsule).map_err(|e| e.to_string())?;
             require(
                 tampered_rejected,
                 "owned joint proof accepted a tampered current legacy capsule",
             )?;
             require(
-                joint_current_material(&owned.0, path, &row)? == actual,
+                joint_current_material(&owned.0, root, path, &row)? == actual,
                 "owned joint current capsule restoration must preserve the physical positive",
             )?;
         }
@@ -814,19 +833,19 @@ fn joint_current_controls(root: &Path) -> Result<(), String> {
             let mut wrong = row.clone();
             wrong[key] = value;
             require(
-                joint_current_material(&owned.0, path, &wrong).is_err(),
+                joint_current_material(&owned.0, root, path, &wrong).is_err(),
                 "altered declared T02 row accepted",
             )?;
         }
         require(
-            joint_current_material(&owned.0, "unknown.rs", &row).is_err(),
+            joint_current_material(&owned.0, root, "unknown.rs", &row).is_err(),
             "unknown joint current path accepted",
         )?;
         for permissions in [0o600, 0o755, 0o4644] {
             fs::set_permissions(&target, fs::Permissions::from_mode(permissions))
                 .map_err(|e| e.to_string())?;
             require(
-                joint_current_material(&owned.0, path, &row).is_err(),
+                joint_current_material(&owned.0, root, path, &row).is_err(),
                 "altered physical joint mode accepted",
             )?;
         }
@@ -835,18 +854,18 @@ fn joint_current_controls(root: &Path) -> Result<(), String> {
         let backup = target.with_extension("owned-backup");
         fs::rename(&target, &backup).map_err(|e| e.to_string())?;
         require(
-            joint_current_material(&owned.0, path, &row).is_err(),
+            joint_current_material(&owned.0, root, path, &row).is_err(),
             "missing joint source accepted",
         )?;
         symlink(&backup, &target).map_err(|e| e.to_string())?;
         require(
-            joint_current_material(&owned.0, path, &row).is_err(),
+            joint_current_material(&owned.0, root, path, &row).is_err(),
             "symlink joint source accepted",
         )?;
         fs::remove_file(&target).map_err(|e| e.to_string())?;
         fs::create_dir(&target).map_err(|e| e.to_string())?;
         require(
-            joint_current_material(&owned.0, path, &row).is_err(),
+            joint_current_material(&owned.0, root, path, &row).is_err(),
             "nonregular joint source accepted",
         )?;
         fs::remove_dir(&target).map_err(|e| e.to_string())?;
@@ -855,7 +874,7 @@ fn joint_current_controls(root: &Path) -> Result<(), String> {
             let projected = w07_t02_joint::parent(root, path, &actual, parent)?;
             fs::write(&target, projected).map_err(|e| e.to_string())?;
             require(
-                joint_current_material(&owned.0, path, &row).is_err(),
+                joint_current_material(&owned.0, root, path, &row).is_err(),
                 "projected parent accepted as physical joint source",
             )?;
             fs::write(&target, &actual).map_err(|e| e.to_string())?;
@@ -870,7 +889,7 @@ fn joint_current_controls(root: &Path) -> Result<(), String> {
         )
         .map_err(|e| e.to_string())?;
         require(
-            joint_current_material(&owned.0, path, &row).is_err(),
+            joint_current_material(&owned.0, root, path, &row).is_err(),
             "unsealed W07 capsule accepted",
         )?;
         fs::write(capsule_path, sealed).map_err(|e| e.to_string())?;
@@ -879,6 +898,7 @@ fn joint_current_controls(root: &Path) -> Result<(), String> {
 }
 #[cfg(test)]
 pub(crate) fn controls(root: &Path) -> Result<(), String> {
+    t03_a09_manifest_controls(root)?;
     factory_controls(root)?;
     joint_current_controls(root)?;
     let manifest = load(root)?;
@@ -1032,6 +1052,113 @@ pub(crate) fn control_bridge(root: &Path) -> Result<(), String> {
     Ok(())
 }
 
+// T03 already proves this exact dev-dependency insertion. Only A09's frozen
+// caller/manifest tuple may consume its authenticated historical parent.
+const T03_A09_CALLER: &str = "docs/rust-rewrite/a09/coverage.json";
+const T03_A09_CALLER_SHA: &str = "3dfa3fc89150ba579ee377c730fce66134125c502ab07c624dd6a8768662ef89";
+const T03_A09_MANIFEST: &str = "crates/ssx-http/Cargo.toml";
+const T03_A09_MANIFEST_SHA: &str =
+    "f90536f1ed8b9db38035ee7546258a08dfe441013d802d618bb5c65f98a9480e";
+fn verify_t03_a09_manifest_current(
+    root: &Path,
+    container_sha: &str,
+    expected_sha: &str,
+    expected_bytes: Option<usize>,
+) -> Result<(), String> {
+    require(
+        container_sha == T03_A09_CALLER_SHA
+            && expected_sha == T03_A09_MANIFEST_SHA
+            && expected_bytes.is_none(),
+        "T03 A09 manifest caller tuple differs",
+    )?;
+    let caller = a06_source_successor::historical_caller(root, T03_A09_CALLER, container_sha)?;
+    let caller: Value = serde_json::from_slice(&caller).map_err(|e| e.to_string())?;
+    require(
+        caller["artifacts"][87]
+            == serde_json::json!({"path":T03_A09_MANIFEST,"sha256":T03_A09_MANIFEST_SHA}),
+        "T03 A09 immutable manifest pin differs",
+    )?;
+    let physical = fs::read(root.join(T03_A09_MANIFEST)).map_err(|e| e.to_string())?;
+    let prior = a06_source_successor::w07_t02_joint::t03_source_successor::prior(
+        root,
+        T03_A09_MANIFEST,
+        &physical,
+    )?;
+    require(
+        prior.len() == 922 && digest(&prior) == expected_sha,
+        "T03 A09 reconstructed manifest pin differs",
+    )
+}
+#[cfg(test)]
+fn t03_a09_manifest_controls(root: &Path) -> Result<(), String> {
+    a06_source_successor::w07_t02_joint::t03_source_successor::controls(root)?;
+    verify_current(
+        root,
+        T03_A09_CALLER,
+        T03_A09_CALLER_SHA,
+        T03_A09_MANIFEST,
+        T03_A09_MANIFEST_SHA,
+        None,
+    )?;
+    require(
+        super::verify(
+            root,
+            T03_A09_CALLER,
+            T03_A09_CALLER_SHA,
+            T03_A09_MANIFEST,
+            T03_A09_MANIFEST_SHA,
+            None,
+        )
+        .is_err(),
+        "T03 A09 original policy unexpectedly accepts physical successor",
+    )?;
+    for (caller_sha, source_sha, length) in [
+        ("wrong", T03_A09_MANIFEST_SHA, None),
+        (T03_A09_CALLER_SHA, "wrong", None),
+        (T03_A09_CALLER_SHA, T03_A09_MANIFEST_SHA, Some(922)),
+        (T03_A09_CALLER_SHA, T03_A09_MANIFEST_SHA, Some(0)),
+    ] {
+        require(
+            verify_current(
+                root,
+                T03_A09_CALLER,
+                caller_sha,
+                T03_A09_MANIFEST,
+                source_sha,
+                length,
+            )
+            .is_err_and(|error| error == "T03 A09 manifest caller tuple differs"),
+            "T03 A09 changed caller hash, source hash or Some/None length accepted",
+        )?;
+    }
+    for (caller, source) in [
+        ("unlisted-A09-caller.json", T03_A09_MANIFEST),
+        (T03_A09_CALLER, "unlisted-http-manifest.toml"),
+    ] {
+        let original = super::verify(
+            root,
+            caller,
+            T03_A09_CALLER_SHA,
+            source,
+            T03_A09_MANIFEST_SHA,
+            None,
+        );
+        require(
+            original.is_err()
+                && verify_current(
+                    root,
+                    caller,
+                    T03_A09_CALLER_SHA,
+                    source,
+                    T03_A09_MANIFEST_SHA,
+                    None,
+                ) == original,
+            "T03 A09 unlisted caller or source changed original routing",
+        )?;
+    }
+    Ok(())
+}
+
 /// Explicit opt-in routing. The original verifier remains callable with actual
 /// current bytes; all unlisted caller/source pairs retain that exact path.
 pub(crate) fn verify_current(
@@ -1054,6 +1181,9 @@ pub(crate) fn verify_current(
     }
     if factory_selected(container_path, source_path) {
         return verify_factory_current(root, container_sha, expected_sha, expected_bytes);
+    }
+    if container_path == T03_A09_CALLER && source_path == T03_A09_MANIFEST {
+        return verify_t03_a09_manifest_current(root, container_sha, expected_sha, expected_bytes);
     }
     match try_verify(
         root,
@@ -1318,7 +1448,7 @@ fn verify_validator_composition(root: &Path, document: &Value, row: &Value) -> R
         &transition["predecessor_archive"],
         "PR1034 HISTORICAL validator",
     )?;
-    let actual = joint_current_material(root, VALIDATOR, row)?;
+    let actual = joint_current_material(root, root, VALIDATOR, row)?;
     check_source_transition(
         transition,
         &old,

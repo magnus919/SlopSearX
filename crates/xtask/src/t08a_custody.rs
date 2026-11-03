@@ -153,6 +153,48 @@ pub(crate) const HEALTH_LOCK_SHA: &str =
     "53fb4619c6e4fd12eae7928073c5062929498d2db29b270e456514a855a5bdd9";
 pub(crate) const HEALTH_LOCK_BYTES: usize = 94250;
 const HEALTH_LOCK_STANZA: &str = "[[package]]\nname = \"ssx-healthcheck\"\nversion = \"0.1.0\"\n\n";
+// T03 adds only two edges to already-pinned workspace packages. Authenticate
+// physical current first, then reconstruct the immutable accepted health frame.
+pub(crate) const PORTAL_LOCK_SHA: &str =
+    "adbdc6b3b3f3c3f882b806f27f65374ae87167888d7c6120ebd42092f42c079e";
+pub(crate) const PORTAL_LOCK_BYTES: usize = 94288;
+const PORTAL_LOCK_EDITS: [(usize, &[u8]); 2] = [
+    (65174, b" \"unicode-normalization\",\n"),
+    (66903, b" \"scraper\",\n"),
+];
+pub(crate) fn portal_health_lock_frame(physical: &[u8]) -> Result<Vec<u8>> {
+    need(
+        physical.len() == PORTAL_LOCK_BYTES && digest(physical) == PORTAL_LOCK_SHA,
+        "portal exact current lock",
+    )?;
+    let mut health = Vec::with_capacity(HEALTH_LOCK_BYTES);
+    let (mut prior_cursor, mut current_cursor) = (0usize, 0usize);
+    for (at, inserted) in PORTAL_LOCK_EDITS {
+        let end = current_cursor + (at - prior_cursor);
+        health.extend_from_slice(&physical[current_cursor..end]);
+        need(
+            physical.get(end..end + inserted.len()) == Some(inserted),
+            "portal exact dependency insertion",
+        )?;
+        prior_cursor = at;
+        current_cursor = end + inserted.len();
+    }
+    health.extend_from_slice(&physical[current_cursor..]);
+    need(
+        health.len() == HEALTH_LOCK_BYTES && digest(&health) == HEALTH_LOCK_SHA,
+        "portal exact accepted health lock",
+    )?;
+    let mut forward = Vec::with_capacity(PORTAL_LOCK_BYTES);
+    let mut cursor = 0;
+    for (at, inserted) in PORTAL_LOCK_EDITS {
+        forward.extend_from_slice(&health[cursor..at]);
+        forward.extend_from_slice(inserted);
+        cursor = at;
+    }
+    forward.extend_from_slice(&health[cursor..]);
+    need(forward == physical, "portal full forward reconstruction")?;
+    Ok(health)
+}
 fn native_health_lock_prior(physical: &[u8]) -> Result<Vec<u8>> {
     need(
         physical.len() == HEALTH_LOCK_BYTES && digest(physical) == HEALTH_LOCK_SHA,
@@ -183,7 +225,7 @@ fn native_health_lock_prior(physical: &[u8]) -> Result<Vec<u8>> {
 }
 fn cli_logical_input(root: &Path, path: &str, physical: &[u8]) -> Result<Vec<u8>> {
     if path == "Cargo.lock" {
-        return native_health_lock_prior(physical);
+        return native_health_lock_prior(&portal_health_lock_frame(physical)?);
     }
     if accepted_main_join::owns(path) {
         accepted_main_join::project(root, path, physical, accepted_main_join::Parent::Cli)
@@ -383,18 +425,55 @@ pub(crate) fn test_dependency_prior(
 }
 pub(crate) fn controls(root: &Path) -> Result<()> {
     let actual = regular(root, "Cargo.lock")?;
-    let prior_lock = native_health_lock_prior(&actual)?;
+    let health = portal_health_lock_frame(&actual)?;
+    need(
+        portal_health_lock_frame(&health).is_err(),
+        "portal historical health lock is not current",
+    )?;
+    for (at, inserted) in PORTAL_LOCK_EDITS {
+        let shifted = at
+            + PORTAL_LOCK_EDITS
+                .iter()
+                .filter(|edit| edit.0 < at)
+                .map(|edit| edit.1.len())
+                .sum::<usize>();
+        let mut missing = actual.clone();
+        missing.drain(shifted..shifted + inserted.len());
+        need(
+            portal_health_lock_frame(&missing).is_err(),
+            "portal missing dependency edge rejected",
+        )?;
+        let mut duplicate = actual.clone();
+        duplicate.splice(shifted..shifted, inserted.iter().copied());
+        need(
+            portal_health_lock_frame(&duplicate).is_err(),
+            "portal duplicate dependency edge rejected",
+        )?;
+    }
+    let mut unrelated = actual.clone();
+    unrelated[0] ^= 1;
+    need(
+        portal_health_lock_frame(&unrelated).is_err(),
+        "portal unrelated lock mutation rejected",
+    )?;
+    let mut appended = actual.clone();
+    appended.push(b'\n');
+    need(
+        portal_health_lock_frame(&appended).is_err(),
+        "portal appended lock bytes rejected",
+    )?;
+    let prior_lock = native_health_lock_prior(&health)?;
     need(
         native_health_lock_prior(&prior_lock).is_err(),
         "native health old lock is not current",
     )?;
-    let mut duplicate = actual.clone();
+    let mut duplicate = health.clone();
     duplicate.extend_from_slice(HEALTH_LOCK_STANZA.as_bytes());
     need(
         native_health_lock_prior(&duplicate).is_err(),
         "native health duplicate package",
     )?;
-    let mut changed = actual.clone();
+    let mut changed = health.clone();
     let at = changed
         .windows(b"ssx-healthcheck".len())
         .position(|v| v == b"ssx-healthcheck")

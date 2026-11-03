@@ -2,6 +2,13 @@
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::{fs, path::Path, process::Command};
+#[allow(
+    dead_code,
+    clippy::duplicate_mod,
+    reason = "T08A and A13 compile this source under different module roots; each uses the same stateless T03 proof leaf"
+)]
+#[path = "../../../docs/rust-rewrite/t03/source-successor-v1.rs"]
+mod portal_source_successor;
 type Result<T> = std::result::Result<T, String>;
 pub(crate) const CAPSULE_PATH: &str = "docs/rust-rewrite/t08a/accepted-w08-main-join-v1.json";
 const CAPSULE_SHA: &str = "e7206a5a5b3b9f882519c861e85dbcb71771ed48a156c68b96d06edc0d1e4d21";
@@ -401,8 +408,13 @@ fn pre_984_w07(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
     inverse(&inverse_row, physical, "0644", 3)
 }
 
-fn accepted_current(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
-    let health = pre_health_f01(path, physical)?;
+fn accepted_current(root: &Path, path: &str, physical: &[u8]) -> Result<Vec<u8>> {
+    let logical = if portal_source_successor::owns(path) {
+        portal_source_successor::prior(root, path, physical)?
+    } else {
+        physical.to_vec()
+    };
+    let health = pre_health_f01(path, &logical)?;
     let w07 = pre_984_w07(path, &health)?;
     pre_t08_registration(path, &w07)
 }
@@ -463,12 +475,13 @@ fn pre_t08_registration(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
 }
 fn interpret(
     doc: &Value,
+    proof_root: &Path,
     path: &str,
     physical: &[u8],
     mode: &str,
     parent: Parent,
 ) -> Result<Vec<u8>> {
-    let logical = accepted_current(path, physical)?;
+    let logical = accepted_current(proof_root, path, physical)?;
     let physical = logical.as_slice();
     scope(doc)?;
     let index = ROWS
@@ -486,21 +499,38 @@ fn interpret(
 }
 /// Exact physical source admission before any logical parent frame is exposed.
 pub(crate) fn project(root: &Path, path: &str, supplied: &[u8], parent: Parent) -> Result<Vec<u8>> {
+    project_at(root, root, path, supplied, parent)
+}
+/// Validate fixture-owned physical files while keeping historical Git proof at `proof_root`.
+pub(crate) fn project_at(
+    physical_root: &Path,
+    proof_root: &Path,
+    path: &str,
+    supplied: &[u8],
+    parent: Parent,
+) -> Result<Vec<u8>> {
     need(owns(path), "unlisted physical join path")?;
-    let mode = source_mode(root, path)?;
-    let physical = regular(root, path)?;
+    let mode = source_mode(physical_root, path)?;
+    let physical = regular(physical_root, path)?;
     need(
         physical == supplied,
         "join supplied buffer is not physical current",
     )?;
-    interpret(&capsule(root)?, path, &physical, mode, parent)
+    interpret(
+        &capsule(physical_root)?,
+        proof_root,
+        path,
+        &physical,
+        mode,
+        parent,
+    )
 }
 /// Same controls are reached by owning CLI and W08 composition routes.
 pub(crate) fn controls(root: &Path) -> Result<()> {
     let doc = capsule(root)?;
     for (index, (path, cli_count, main_count)) in ROWS.iter().enumerate() {
         let physical = regular(root, path)?;
-        let logical = accepted_current(path, &physical)?;
+        let logical = accepted_current(root, path, &physical)?;
         if *path == "crates/xtask/src/main.rs" {
             let health = pre_health_f01(path, &physical)?;
             need(
@@ -512,7 +542,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
                 "pre-health frame substituted as physical registration",
             )?;
             need(
-                accepted_current(path, &logical).is_err(),
+                accepted_current(root, path, &logical).is_err(),
                 "pre-T08 frame substituted as physical registration",
             )?;
         }
@@ -558,7 +588,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
             )?;
             for mode in ["0600", "0755", "4644"] {
                 need(
-                    interpret(&doc, path, &physical, mode, parent).is_err(),
+                    interpret(&doc, root, path, &physical, mode, parent).is_err(),
                     "outer wrong mode",
                 )?;
             }
@@ -578,14 +608,14 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
                     _ => edits[0]["insert_utf8"] = serde_json::json!("changed"),
                 }
                 need(
-                    interpret(&bad, path, &physical, "0644", parent).is_err(),
+                    interpret(&bad, root, path, &physical, "0644", parent).is_err(),
                     "outer missing/duplicate/moved/changed span",
                 )?;
             }
             let mut unselected = doc.clone();
             unselected["rows"][index][other]["prior"]["sha256"] = serde_json::json!("changed");
             need(
-                interpret(&unselected, path, &physical, "0644", parent).is_err(),
+                interpret(&unselected, root, path, &physical, "0644", parent).is_err(),
                 "unselected endpoint must also authenticate",
             )?;
         }

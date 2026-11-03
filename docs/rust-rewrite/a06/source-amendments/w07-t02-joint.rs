@@ -14,6 +14,8 @@ use std::{fs, path::Path, process::Command};
 #[path = "../../snapshot-fixture-amendment/main-custody.rs"]
 mod snapshot_fixture_main;
 pub(crate) use snapshot_fixture_main::w08_main_join as snapshot_helper_amendment;
+#[path = "../../t03/source-successor-v1.rs"]
+pub(crate) mod t03_source_successor;
 type Result<T> = std::result::Result<T, String>;
 #[derive(Clone, Copy)]
 pub(crate) enum Parent {
@@ -399,9 +401,10 @@ const PAGE_SEARCH: Row = Row {
     },
 };
 fn search_frame(actual: &[u8], mode: u32, page: bool) -> Result<Vec<u8>> {
+    let logical = t03_source_successor::frame(PAGE_SEARCH.path, actual, mode)?;
     inverse(
         &PAGE_SEARCH,
-        actual,
+        &logical,
         mode,
         if page {
             &PAGE_SEARCH.t02
@@ -445,8 +448,10 @@ pub(crate) fn page_current(root: &Path, path: &str, supplied: &[u8]) -> Result<V
     Ok(prior)
 }
 fn page_search_controls(root: &Path) -> Result<()> {
+    t03_source_successor::controls(root)?;
     let (actual, mode) = read(root, &PAGE_SEARCH)?;
-    let w07 = search_frame(&actual, mode, false)?;
+    let logical = t03_source_successor::frame(PAGE_SEARCH.path, &actual, mode)?;
+    let w07 = inverse(&PAGE_SEARCH, &logical, mode, &PAGE_SEARCH.w07)?;
     for old in [&w07, &search_frame(&actual, mode, true)?] {
         need(
             page_current(root, PAGE_SEARCH.path, old).is_err(),
@@ -469,14 +474,14 @@ fn page_search_controls(root: &Path) -> Result<()> {
         "wrong page/search caller",
     )?;
     for p in [&PAGE_SEARCH.w07, &PAGE_SEARCH.t02] {
-        inverse(&PAGE_SEARCH, &actual, mode, p)?;
+        inverse(&PAGE_SEARCH, &logical, mode, p)?;
         for bad_mode in [0o600, 0o755, 0o4644] {
             need(
-                inverse(&PAGE_SEARCH, &actual, bad_mode, p).is_err(),
+                inverse(&PAGE_SEARCH, &logical, bad_mode, p).is_err(),
                 "page/search wrong mode",
             )?;
         }
-        let mut changed = actual.clone();
+        let mut changed = logical.clone();
         changed.push(b' ');
         need(
             inverse(&PAGE_SEARCH, &changed, mode, p).is_err(),
@@ -491,7 +496,7 @@ fn page_search_controls(root: &Path) -> Result<()> {
             moved[i].0 += 1;
             for bad in [omitted, duplicate, moved] {
                 need(
-                    inverse_with_edits(&PAGE_SEARCH, &actual, mode, p, &bad).is_err(),
+                    inverse_with_edits(&PAGE_SEARCH, &logical, mode, p, &bad).is_err(),
                     "page/search missing duplicate moved span",
                 )?;
             }

@@ -29,6 +29,7 @@ tower.workspace = true
 tower-http.workspace = true
 
 [dev-dependencies]
+scraper.workspace = true
 serde-saphyr = { version = "=2.0.0", default-features = false, features = ["deserialize"] }
 base64.workspace = true
 reqwest.workspace = true
