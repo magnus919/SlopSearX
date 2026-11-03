@@ -3,6 +3,7 @@
 mod common;
 use common::owned_loopback_fixture::OwnedLoopback;
 use common::{FixtureCore as Fixture, *};
+use scraper::{Html, Selector};
 use serde_json::{Value, json};
 use ssx_domain::{PublicationDateProof, storage};
 use ssx_http::{HttpState, html::PublicHtml, native_router};
@@ -21,6 +22,9 @@ struct Native {
 }
 impl Native {
     async fn start(fixture: &Fixture) -> Self {
+        Self::start_with_portal(fixture, false).await
+    }
+    async fn start_with_portal(fixture: &Fixture, use_public_portal: bool) -> Self {
         let telemetry = Telemetry::new(
             TelemetryOptions {
                 audit: false,
@@ -31,7 +35,24 @@ impl Native {
             vec!["science".into(), "general".into()],
         )
         .unwrap();
-        let router = native_router(HttpState {
+        let (discovery, health_contexts) = if use_public_portal {
+            let active = ["openalex".to_owned()];
+            let built = ssx_http::discovery::build(
+                &fixture.registry,
+                &ssx_config::Config::default(),
+                &active,
+                &fixture.policy,
+                "offline-openalex-portal",
+            )
+            .unwrap();
+            (built.config, built.health_contexts)
+        } else {
+            (
+                ssx_json::json!({"categories":["science","general"]}),
+                Default::default(),
+            )
+        };
+        let state = HttpState {
             search: fixture.service.clone(),
             policy: fixture.policy.clone(),
             telemetry: telemetry.clone(),
@@ -39,13 +60,19 @@ impl Native {
                 .into_iter()
                 .map(str::to_owned)
                 .collect(),
-            discovery: ssx_json::json!({"categories":["science","general"]}),
-            health_contexts: Default::default(),
+            discovery,
+            health_contexts,
             valkey_connected: Arc::new(|| true),
             valkey_fail_closed: false,
             valkey_quota_configured: false,
             html: Arc::new(PublicHtml::default()),
-        });
+        };
+        let state = if use_public_portal {
+            state.with_public_portal("dark")
+        } else {
+            state
+        };
+        let router = native_router(state);
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
         let address = listener.local_addr().unwrap();
         let (stop, stopping) = tokio::sync::oneshot::channel();
@@ -87,6 +114,15 @@ impl Native {
                 .body(encoded)
         };
         let response = request.send().await.unwrap();
+        (response.status().as_u16(), response.text().await.unwrap())
+    }
+    async fn follow(&self, href: &str) -> (u16, String) {
+        let response = self
+            .client
+            .get(format!("http://{}{href}", self.address))
+            .send()
+            .await
+            .unwrap();
         (response.status().as_u16(), response.text().await.unwrap())
     }
     async fn close(self) {
@@ -393,6 +429,177 @@ async fn native_http_real_openalex_routes_bounds_formats_and_cache_reacquisition
     );
     assert_eq!(fixture.counts.adapter.load(Ordering::SeqCst), 23);
     drop(conn);
+    native.close().await;
+    fixture.close().await;
+    native_portal_real_openalex_preserves_bounds_and_machine_proof().await;
+}
+
+async fn native_portal_real_openalex_preserves_bounds_and_machine_proof() {
+    let fixture = Fixture::new(Mode::Audited, 200, equal_body(), Some(2)).await;
+    let native = Native::start_with_portal(&fixture, true).await;
+    let params = [
+        ("q", "date control / +"),
+        ("engines", "openalex"),
+        ("date_from", "2024-02-29"),
+        ("date_to", "2024-02-29"),
+    ];
+    let (status, html) = native.request("/search", "GET", &params).await;
+    assert_eq!(status, 200, "{html}");
+    assert!(html.contains("data-filter=\"date_from\" data-status=\"enforced\""));
+    assert!(html.contains("data-filter=\"date_to\" data-status=\"enforced\""));
+    assert!(html.contains("2024-02-29"));
+    assert_eq!(fixture.upstream.lines().len(), 1);
+    assert_eq!(
+        fixture.upstream.lines()[0],
+        "GET /works?search=date%20control%20/%20%2B&per_page=10&filter=from_publication_date%3A2024-02-29%2Cto_publication_date%3A2024-02-29 HTTP/1.1"
+    );
+
+    let document = Html::parse_document(&html);
+    let form_selector = Selector::parse("form").unwrap();
+    let input_selector = Selector::parse("input[name]").unwrap();
+    let forms: Vec<_> = document.select(&form_selector).collect();
+    assert_eq!(forms.len(), 2, "both rendered search forms must be present");
+    for form in forms {
+        assert_eq!(form.value().attr("action"), Some("/search"));
+        assert_eq!(form.value().attr("method"), Some("get"));
+        let fields: std::collections::BTreeMap<_, _> = form
+            .select(&input_selector)
+            .filter_map(|input| {
+                Some((
+                    input.value().attr("name")?.to_owned(),
+                    input.value().attr("value").unwrap_or_default().to_owned(),
+                ))
+            })
+            .collect();
+        assert_eq!(
+            fields.get("q").map(String::as_str),
+            Some("date control / +")
+        );
+        assert_eq!(fields.get("engines").map(String::as_str), Some("openalex"));
+        assert_eq!(
+            fields.get("date_from").map(String::as_str),
+            Some("2024-02-29")
+        );
+        assert_eq!(
+            fields.get("date_to").map(String::as_str),
+            Some("2024-02-29")
+        );
+        let pairs: Vec<_> = fields
+            .iter()
+            .map(|(key, value)| (key.as_str(), value.as_str()))
+            .collect();
+        let (resubmitted, _) = native.request("/search", "GET", &pairs).await;
+        assert_eq!(resubmitted, 200);
+        assert_eq!(
+            fixture.upstream.lines().len(),
+            1,
+            "form views should use the same cached acquisition"
+        );
+    }
+
+    let link_selector = Selector::parse("a.rail-link").unwrap();
+    let machine_links: Vec<_> = document
+        .select(&link_selector)
+        .filter_map(|link| {
+            Some((
+                link.text().collect::<String>(),
+                link.value().attr("href")?.to_owned(),
+            ))
+        })
+        .collect();
+    assert_eq!(machine_links.len(), 2);
+    let mut machine_formats = std::collections::BTreeSet::new();
+    for (label, href) in &machine_links {
+        let parsed = url::Url::parse(&format!("http://portal.invalid{href}")).unwrap();
+        let query: std::collections::BTreeMap<_, _> = parsed.query_pairs().into_owned().collect();
+        assert_eq!(query.get("engines").map(String::as_str), Some("openalex"));
+        assert_eq!(
+            query.get("date_from").map(String::as_str),
+            Some("2024-02-29")
+        );
+        assert_eq!(query.get("date_to").map(String::as_str), Some("2024-02-29"));
+        let format = query
+            .get("format")
+            .map(String::as_str)
+            .expect("machine link should name its output format");
+        let expected_label = match format {
+            "json" => "Open JSON view ↗",
+            "yaml" => "Open YAML view ↗",
+            other => panic!("unexpected machine-link format {other:?}"),
+        };
+        assert_eq!(label, expected_label);
+        machine_formats.insert(format.to_owned());
+        let (actual, body) = native.follow(href).await;
+        assert_eq!(actual, 200, "{label}: {body}");
+        assert_http(
+            &decode(&body, format),
+            format,
+            &["2024-02-29"],
+            &proof(Some("2024-02-29"), Some("2024-02-29")),
+            true,
+        );
+        assert_eq!(
+            fixture.upstream.lines().len(),
+            1,
+            "machine links should reuse the HTML acquisition"
+        );
+    }
+    assert_eq!(
+        machine_formats,
+        ["json".to_owned(), "yaml".to_owned()].into()
+    );
+    let pagination = Selector::parse("a[aria-label=\"Try next result page\"]").unwrap();
+    let next = document.select(&pagination).next().expect("next-page link");
+    let next_url = url::Url::parse(&format!(
+        "http://portal.invalid{}",
+        next.value().attr("href").unwrap()
+    ))
+    .unwrap();
+    let next_query: std::collections::BTreeMap<_, _> =
+        next_url.query_pairs().into_owned().collect();
+    assert_eq!(next_query.get("pageno").map(String::as_str), Some("2"));
+    assert_eq!(
+        next_query.get("date_from").map(String::as_str),
+        Some("2024-02-29")
+    );
+    assert_eq!(
+        next_query.get("date_to").map(String::as_str),
+        Some("2024-02-29")
+    );
+
+    let mut conn = fixture.connection().await;
+    let keys = fixture.keys("search:*").await;
+    assert_eq!(keys.len(), 1);
+    let original: String = redis::cmd("GET")
+        .arg(&keys[0])
+        .query_async(&mut conn)
+        .await
+        .unwrap();
+    let mut corrupted: ssx_json::Value = ssx_json::from_str(&original).unwrap();
+    corrupted
+        .as_object_mut()
+        .unwrap()
+        .shift_remove("date_filter");
+    let _: () = redis::cmd("SET")
+        .arg(&keys[0])
+        .arg(ssx_json::to_string(&corrupted).unwrap())
+        .query_async(&mut conn)
+        .await
+        .unwrap();
+    let (actual, body) = native.follow(&machine_links[0].1).await;
+    assert_eq!(actual, 200, "{body}");
+    assert_http(
+        &decode(&body, "json"),
+        "json",
+        &["2024-02-29"],
+        &proof(Some("2024-02-29"), Some("2024-02-29")),
+        false,
+    );
+    assert_eq!(fixture.upstream.lines().len(), 2);
+    assert_eq!(
+        fixture.upstream.lines()[1],
+        "GET /works?search=date%20control%20/%20%2B&per_page=10&filter=from_publication_date%3A2024-02-29%2Cto_publication_date%3A2024-02-29 HTTP/1.1"
+    );
     native.close().await;
     fixture.close().await;
 }

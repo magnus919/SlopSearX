@@ -181,6 +181,8 @@ pub(crate) struct FixtureCore {
     #[allow(dead_code)] // The HTTP surface consumes policy; MCP consumes the same service gate.
     pub(crate) policy: Arc<SearchPolicy>,
     pub(crate) service: SearchService,
+    #[allow(dead_code)] // The HTTP production-portal test shares this exact registry.
+    pub(crate) registry: Arc<ssx_registry::Registry>,
     pub(crate) upstream: Upstream,
     server: private_valkey::Server,
     pub(crate) store: Arc<Valkey>,
@@ -303,6 +305,7 @@ impl FixtureCore {
             },
             ..Default::default()
         };
+        let registry = Arc::new(registry);
         let service = SearchService::new_with_registry(
             SearchConfig::default(),
             SearchDependencies {
@@ -345,12 +348,13 @@ impl FixtureCore {
                 clock: Arc::new(SystemSearchClock),
                 reranker: None,
             },
-            Arc::new(registry),
+            registry.clone(),
         )
         .unwrap();
         Self {
             policy: Arc::new(policy),
             service,
+            registry,
             upstream,
             server,
             store,
