@@ -288,6 +288,184 @@
           "insert_utf8": "        let capture =\n            SearchReadCapture::new(self, canonical, request, scope, query_id, start, false);\n"
         }
       ]
+    },
+    {
+      "path": "crates/xtask/src/w07.rs",
+      "current": {
+        "bytes": 42272,
+        "sha256": "40fea132ea484e6e72947956b6404143916a87edea1725e1aba0a8815900f45b",
+        "mode": "0644"
+      },
+      "prior": {
+        "bytes": 42023,
+        "sha256": "55c93c8914529eb5c26df0943068b6fd97200f67c288f63bbafea6033729812c",
+        "mode": "0644"
+      },
+      "prior_git_blob": "7bbb473cf6beeb64dccf908d03cde4c13e41bdab",
+      "edits": [
+        {
+          "at": 2925,
+          "remove_utf8": "\n        if path == \"crates/ssx-infra/src/search.rs\"\n            && expected == \"8aa8ec89a6a45728f5ffd2818d2e9fed9b8d0a881c1e36418c95809d92dcb777\"\n        {\n            return w07_t02_joint::t03_source_successor::prior(root, path, &bytes);\n        }",
+          "insert_utf8": ""
+        }
+      ]
+    },
+    {
+      "path": "crates/xtask/src/w08/source_successor.rs",
+      "current": {
+        "bytes": 11650,
+        "sha256": "7fa3acc6d1567fbb290162d56e8164714d8809e4d5802c3895a020b268bbb03a",
+        "mode": "0644"
+      },
+      "prior": {
+        "bytes": 11264,
+        "sha256": "489dd9ffc753eff3e9d4207cbc17eb323fd424d7237df94a2c4ceac8c06e419f",
+        "mode": "0644"
+      },
+      "prior_git_blob": "0436da61471d80e05e6df7b3b5732eb1dab5b77b",
+      "edits": [
+        {
+          "at": 6416,
+          "remove_utf8": "if path == \"crates/ssx-application/src/lib.rs\" && super::t03_source_successor::owns(path)\n    {\n        super::t03_source_successor::prior(root, path, &physical)?\n    } else ",
+          "insert_utf8": ""
+        },
+        {
+          "at": 8958,
+          "remove_utf8": "(root, &row.path, &physical)?\n        } else if row.path == \"crates/ssx-application/src/lib.rs\"\n            && super::t03_source_successor::owns(&row.path)\n        {\n            super::t03_source_successor::prior",
+          "insert_utf8": ""
+        }
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+      "current": {
+        "bytes": 46295,
+        "sha256": "3c1dfa0d8e244affb4329a857736ecc18e9378732a5f86899e491096dd771264",
+        "mode": "0644"
+      },
+      "prior": {
+        "bytes": 45982,
+        "sha256": "f99da3fcc2fd084b78f3c261d77b1ab6eff7b8aca0582186ada251d8a68c2451",
+        "mode": "0644"
+      },
+      "prior_git_blob": "10db8cf0f6e0dae9a88466adb586e91c41d191d2",
+      "edits": [
+        {
+          "at": 767,
+          "remove_utf8": ";\n#[path = \"../../t03/source-successor-v1.rs\"]\npub(crate) mod t03_source_successor",
+          "insert_utf8": ""
+        },
+        {
+          "at": 25933,
+          "remove_utf8": "let logical = t03_source_successor::frame(PAGE_SEARCH.path, actual, mode)?;\n    ",
+          "insert_utf8": ""
+        },
+        {
+          "at": 26052,
+          "remove_utf8": "&logi",
+          "insert_utf8": "a"
+        },
+        {
+          "at": 26058,
+          "remove_utf8": "",
+          "insert_utf8": "tu"
+        },
+        {
+          "at": 27437,
+          "remove_utf8": "t03_source_successor::controls(root)?;\n    ",
+          "insert_utf8": ""
+        },
+        {
+          "at": 27536,
+          "remove_utf8": "logical",
+          "insert_utf8": "w07"
+        },
+        {
+          "at": 27546,
+          "remove_utf8": "t03_",
+          "insert_utf8": ""
+        },
+        {
+          "at": 27551,
+          "remove_utf8": "ou",
+          "insert_utf8": "ea"
+        },
+        {
+          "at": 27555,
+          "remove_utf8": "e",
+          "insert_utf8": "h"
+        },
+        {
+          "at": 27557,
+          "remove_utf8": "successor::",
+          "insert_utf8": ""
+        },
+        {
+          "at": 27574,
+          "remove_utf8": "PAGE_SEARCH.path, ",
+          "insert_utf8": ""
+        },
+        {
+          "at": 27605,
+          "remove_utf8": ")?;\n    let w07 = inverse(&PAGE_SEARCH",
+          "insert_utf8": ""
+        },
+        {
+          "at": 27645,
+          "remove_utf8": "&logic",
+          "insert_utf8": "f"
+        },
+        {
+          "at": 27653,
+          "remove_utf8": ", mod",
+          "insert_utf8": "s"
+        },
+        {
+          "at": 27659,
+          "remove_utf8": ", &PAGE_SEARCH.w07",
+          "insert_utf8": ""
+        },
+        {
+          "at": 28530,
+          "remove_utf8": "logi",
+          "insert_utf8": "a"
+        },
+        {
+          "at": 28535,
+          "remove_utf8": "",
+          "insert_utf8": "tu"
+        },
+        {
+          "at": 28656,
+          "remove_utf8": "logi",
+          "insert_utf8": "a"
+        },
+        {
+          "at": 28661,
+          "remove_utf8": "",
+          "insert_utf8": "tu"
+        },
+        {
+          "at": 28782,
+          "remove_utf8": "logi",
+          "insert_utf8": "a"
+        },
+        {
+          "at": 28787,
+          "remove_utf8": "",
+          "insert_utf8": "tu"
+        },
+        {
+          "at": 29373,
+          "remove_utf8": "logi",
+          "insert_utf8": "a"
+        },
+        {
+          "at": 29378,
+          "remove_utf8": "",
+          "insert_utf8": "tu"
+        }
+      ]
     }
   ]
 }
