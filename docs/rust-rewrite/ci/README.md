@@ -1,6 +1,6 @@
 # Native CI and protected review successors (O06)
 
-For the measured AMD64/ARM64 Foundation runtime observation, implemented timeout budget, and qualification rule, see [Foundation CI runtime budget](FOUNDATION_RUNTIME_BUDGET.md).
+For the measured AMD64/ARM64 Foundation runtime observation, implemented timeout budget, and qualification rule, see [Foundation CI runtime budget](FOUNDATION_RUNTIME_BUDGET.md). Foundation rerun artifact identity and the same-run reuse contract are documented in [Foundation workflow reruns](FOUNDATION_RERUNS.md).
 
 O06 prepares additive successors. Existing Python checks, release workflows,
 protected review analysis and publication remain enabled and unchanged. O09
