@@ -1160,6 +1160,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Test Foundation aggregation retry controls
+        run: node --test scripts/validate-rust-foundation-evidence.test.cjs
+
       - name: Download prerequisites partition
         id: download-prerequisites
         if: always()
@@ -1264,7 +1267,7 @@ jobs:
             target/rust-evidence/A08.json
             target/rust-evidence/A09.json
             target/rust-evidence/A10.json
-            target/rust-evidence/A10-linux-control/${{ github.run_id }}-${{ github.run_attempt }}-${{ runner.arch }}.*/
+            target/rust-evidence/A10-linux-control/${{ github.run_id }}-*-${{ runner.arch }}.*/
             target/rust-evidence/A11.json
             target/rust-evidence/A12.json
             target/rust-evidence/A13.json
@@ -1298,17 +1301,7 @@ jobs:
           cmp target/rust-evidence/partitions/prerequisites/source-before.sha256z target/rust-evidence/partitions/core/source-before.sha256z
           cmp target/rust-evidence/partitions/prerequisites/source-before.sha256z target/rust-evidence/partitions/runtime/source-before.sha256z
           cmp target/rust-evidence/partitions/prerequisites/source-before.sha256z target/rust-evidence/partitions/adapters/source-before.sha256z
-          TARGET_TRIPLE="${{ matrix.target }}" node <<'NODE'
-          const fs = require('node:fs');
-          for (const partition of ['prerequisites', 'core', 'runtime', 'adapters']) {
-            const value = JSON.parse(fs.readFileSync(`target/rust-evidence/partitions/${partition}/identity.json`, 'utf8'));
-            if (value.partition !== partition || value.source_revision !== process.env.GITHUB_SHA || value.target !== process.env.TARGET_TRIPLE || value.run_id !== process.env.GITHUB_RUN_ID || value.run_attempt !== process.env.GITHUB_RUN_ATTEMPT) throw Error('partition identity mismatch');
-          }
-          NODE
-          shopt -s nullglob
-          controls=(target/rust-evidence/A10-linux-control/"${{ github.run_id }}-${{ github.run_attempt }}-${{ runner.arch }}".*/control-result.txt)
-          [ "${#controls[@]}" -eq 1 ]
-          grep -Fxq EXPECTED_SEMANTIC_FAILURE_CONFIRMED "${controls[0]}"
+          TARGET_TRIPLE="${{ matrix.target }}" node scripts/validate-rust-foundation-evidence.cjs target/rust-evidence
 
 
   supply-chain:
