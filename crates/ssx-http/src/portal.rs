@@ -127,8 +127,14 @@ impl PublicPortal {
         )
     }
     fn search_form(&self, state: &FormState, landing: bool, invalid: Option<&str>) -> String {
+        let opening = if landing {
+            "<div class=\"search-form\">"
+        } else {
+            "<form class=\"search-form\" action=\"/search\" method=\"get\">"
+        };
+        let closing = if landing { "</div>" } else { "</form>" };
         format!(
-            "<section class=\"search-panel\" aria-label=\"{}\"><form class=\"search-form\" action=\"/search\" method=\"get\"><label class=\"sr-only\" for=\"portal-query\">Search SlopSearX</label><input class=\"search-input\" id=\"portal-query\" name=\"q\" type=\"search\" value=\"{}\" placeholder=\"Search\" autocomplete=\"off\"{}{} required>{}<button class=\"search-button\" type=\"submit\">Search ↗</button></form><span class=\"sr-only\" data-submit-status role=\"status\"></span>{}</section>",
+            "<section class=\"search-panel\" aria-label=\"{}\">{opening}<label class=\"sr-only\" for=\"portal-query\">Search SlopSearX</label><input class=\"search-input\" id=\"portal-query\" name=\"q\" type=\"search\" value=\"{}\" placeholder=\"Search\" autocomplete=\"off\"{}{} required>{}<button class=\"search-button\" type=\"submit\">Search ↗</button>{closing}<span class=\"sr-only\" data-submit-status role=\"status\"></span>{}</section>",
             if landing { "Search" } else { "Refine search" },
             escape(state.get("q")),
             if landing { " autofocus" } else { "" },
@@ -151,7 +157,14 @@ impl PublicPortal {
         response: Option<&SearchResponse>,
         meta: &Value,
         invalid_field: Option<&str>,
+        embedded: bool,
     ) -> String {
+        let opening = if embedded {
+            "<div>"
+        } else {
+            "<form action=\"/search\" method=\"get\">"
+        };
+        let closing = if embedded { "</div>" } else { "</form>" };
         let selected = state.get("categories");
         let mut category_options = option("", "All sources", selected);
         if !selected.is_empty() && !self.categories.iter().any(|c| c == selected) {
@@ -282,7 +295,7 @@ impl PublicPortal {
             }
         }
         format!(
-            "<details class=\"scope-panel\" open><summary><span>Scope and filters</span><span class=\"scope-summary\">{}</span></summary><form action=\"/search\" method=\"get\">{}<div class=\"scope-grid\"><label class=\"scope-field\">Scope<select name=\"categories\"{}>{category_options}</select></label><label class=\"scope-field\">Time range<select name=\"time_range\"{}>{time}</select></label><label class=\"scope-field\">SafeSearch<select name=\"safesearch\" aria-describedby=\"strict-safesearch-note\"{}>{safe}</select></label><label class=\"scope-field\">Published from<input name=\"date_from\" type=\"{}\" value=\"{}\"{}></label><label class=\"scope-field\">Published through<input name=\"date_to\" type=\"{}\" value=\"{}\"{}></label>{correction}<button class=\"scope-apply\" type=\"submit\">Apply filters</button></div>{note}<div class=\"scope-status\" aria-live=\"polite\">{statuses}</div></form></details>",
+            "<details class=\"scope-panel\" open><summary><span>Scope and filters</span><span class=\"scope-summary\">{}</span></summary>{opening}{}<div class=\"scope-grid\"><label class=\"scope-field\">Scope<select name=\"categories\"{}>{category_options}</select></label><label class=\"scope-field\">Time range<select name=\"time_range\"{}>{time}</select></label><label class=\"scope-field\">SafeSearch<select name=\"safesearch\" aria-describedby=\"strict-safesearch-note\"{}>{safe}</select></label><label class=\"scope-field\">Published from<input name=\"date_from\" type=\"{}\" value=\"{}\"{}></label><label class=\"scope-field\">Published through<input name=\"date_to\" type=\"{}\" value=\"{}\"{}></label>{correction}<button class=\"scope-apply\" type=\"submit\">Apply filters</button></div>{note}<div class=\"scope-status\" aria-live=\"polite\">{statuses}</div>{closing}</details>",
             escape(if selected.is_empty() {
                 "All sources"
             } else {
@@ -544,7 +557,7 @@ impl PublicPortal {
                 .unwrap_or_default()
         );
         body.push_str(&self.search_form(state, false, field));
-        body.push_str(&self.scope_panel(state, None, &Value::Null, field));
+        body.push_str(&self.scope_panel(state, None, &Value::Null, field, false));
         body.push_str("<p><a class=\"page-link\" href=\"/\">Return to search</a></p></section>");
         self.document("Search request needs attention", &body, field)
     }
@@ -556,8 +569,10 @@ impl HtmlRenderer for PublicPortal {
             "<section class=\"hero\" aria-labelledby=\"hero-title\"><div><div class=\"eyebrow\">Search</div><h1 id=\"hero-title\">Search <em>SlopSearX.</em></h1><p class=\"hero-copy\">Search across the web and specialist sources configured for this instance.</p></div><aside class=\"hero-note\"><strong>{} configured public sources</strong>Results identify their source. If an engine cannot answer, the page says so.</aside></section>",
             self.public_sources
         );
+        body.push_str("<form action=\"/search\" method=\"get\" id=\"portal-landing-search\">");
         body.push_str(&self.search_form(&state, true, None));
-        body.push_str(&self.scope_panel(&state, None, &Value::Null, None));
+        body.push_str(&self.scope_panel(&state, None, &Value::Null, None, true));
+        body.push_str("</form>");
         self.document("SlopSearX", &body, None)
     }
     fn error(&self, error: &str, message: &str, field: Option<&str>) -> String {
@@ -597,7 +612,7 @@ impl HtmlRenderer for PublicPortal {
             response.scope.selected_engines.len()
         );
         body.push_str(&self.search_form(&state, false, None));
-        body.push_str(&self.scope_panel(&state, Some(response), meta, None));
+        body.push_str(&self.scope_panel(&state, Some(response), meta, None, false));
         let failures = response
             .engine_outcomes
             .iter()

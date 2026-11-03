@@ -375,7 +375,7 @@ pub fn yaml_document(response: &SearchResponse, meta: &Value) -> String {
     ] {
         selected[key] = meta.get(key).cloned().unwrap_or(default);
     }
-    for key in ["date_filter", "advisories", "jev_routing", "enforcement"] {
+    for key in ["date_filter", "advisories", "jev_routing"] {
         if let Some(v) = meta.get(key) {
             selected[key] = v.clone();
         }

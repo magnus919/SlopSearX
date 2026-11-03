@@ -98,7 +98,7 @@ async fn inherited_scope_and_date_journeys_cover_all_16_literal_assertions() {
 }
 
 #[tokio::test]
-async fn machine_enforcement_and_browser_forms_share_one_authority_and_exact_state() {
+async fn browser_enforcement_uses_capture_without_changing_machine_contract() {
     let mut p = Process::start("metadata", "contract");
     let query = "q=climate&engines=openalex&date_from=2024-02-29&date_to=2024-03-01&language=fr&pageno=18446744073709551617&safesearch=1";
     let (status, html) = p.get(&format!("/search?{query}"), "metadata-html").await;
@@ -107,25 +107,18 @@ async fn machine_enforcement_and_browser_forms_share_one_authority_and_exact_sta
         .get(&format!("/search?{query}&format=json"), "metadata-json")
         .await;
     let json: Value = ssx_json::from_str(&body).unwrap();
-    assert_eq!(
-        json["meta"]["enforcement"]["pagination"]["requested"].to_string(),
-        "18446744073709551617"
-    );
+    assert!(json["meta"].get("enforcement").is_none());
     let (_, body) = p
         .get(&format!("/search?{query}&format=yaml"), "metadata-yaml")
         .await;
     let yaml = yaml(&body);
-    assert_eq!(json["meta"]["enforcement"], yaml["meta"]["enforcement"]);
-    assert!(json["meta"]["enforcement"].is_object());
-    for (field, entry) in json["meta"]["enforcement"].as_object().unwrap() {
-        if field == "pagination" {
-            continue;
-        }
-        assert!(html.contains(&format!(
-            "data-filter=\"{field}\" data-status=\"{}\"",
-            entry["status"].as_str().unwrap()
-        )));
-        assert!(html.contains(&ssx_http::html::escape(entry["reason"].as_str().unwrap())));
+    assert!(yaml["meta"].get("enforcement").is_none());
+    for (field, status) in [
+        ("language", "unsupported"),
+        ("date_from", "enforced"),
+        ("date_to", "enforced"),
+    ] {
+        assert!(html.contains(&format!("data-filter=\"{field}\" data-status=\"{status}\"")));
     }
     for literal in [
         "name=\"date_from\" value=\"2024-02-29\"",
@@ -354,4 +347,61 @@ async fn blank_optional_html_bounds_are_absent_and_machine_blanks_stay_rejected(
         }
     }
     p.stop().await;
+}
+
+#[tokio::test]
+async fn landing_native_form_submits_query_and_scope_together_from_both_buttons() {
+    let mut process = Process::start("landing-form", "contract");
+    let (status, body) = process.get("/", "landing-form-source").await;
+    assert_eq!(status, 200);
+    let document = scraper::Html::parse_document(&body);
+    let forms = scraper::Selector::parse("form").unwrap();
+    let form = document.select(&forms).next().unwrap();
+    assert_eq!(document.select(&forms).count(), 1);
+    assert_eq!(form.value().attr("action"), Some("/search"));
+    let controls = scraper::Selector::parse("input[name], select[name]").unwrap();
+    let mut fields = Vec::new();
+    for control in form.select(&controls) {
+        let name = control.value().attr("name").unwrap();
+        let value = match name {
+            "q" => "first scoped query".to_owned(),
+            "categories" => "science".to_owned(),
+            "time_range" => "month".to_owned(),
+            _ if control.value().name() == "select" => {
+                let options = scraper::Selector::parse("option").unwrap();
+                let available: Vec<_> = control
+                    .select(&options)
+                    .filter(|o| o.value().attr("disabled").is_none())
+                    .collect();
+                let option = available
+                    .iter()
+                    .find(|o| o.value().attr("selected").is_some())
+                    .unwrap_or(&available[0]);
+                option.value().attr("value").unwrap_or("").to_owned()
+            }
+            _ => control.value().attr("value").unwrap_or("").to_owned(),
+        };
+        fields.push((name.to_owned(), value));
+    }
+    let buttons = scraper::Selector::parse("button[type=submit]").unwrap();
+    assert_eq!(form.select(&buttons).count(), 2);
+    for (index, _) in form.select(&buttons).enumerate() {
+        let borrowed: Vec<_> = fields
+            .iter()
+            .map(|(k, v)| (k.as_str(), v.as_str()))
+            .collect();
+        let target = format!("/search?{}", params(&borrowed));
+        let before = process.calls();
+        let (status, body) = process
+            .get(&target, &format!("landing-submit-{index}"))
+            .await;
+        assert_eq!(status, 200);
+        assert_eq!(
+            process.calls() - before,
+            1,
+            "science scope dispatches only the fixture OpenAlex"
+        );
+        assert!(body.contains("first scoped query") && body.contains("Past month"));
+    }
+    process.stop().await;
 }

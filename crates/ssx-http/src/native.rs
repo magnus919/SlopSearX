@@ -774,7 +774,17 @@ async fn search_impl(state: &HttpState, request: Request) -> Response {
                 "ssx-{:02x}{:02x}{:02x}{:02x}",
                 random[0], random[1], random[2], random[3]
             );
-            let meta = json!({"response_time_ms":0,"cached":false,"query_id":query_id,"engine_status":{},"advisories":advisories,"enforcement":Value::Object(unavailable.preview.enforcement.iter().map(|(key,entry)|(key.clone(),entry.to_value())).collect())});
+            let mut meta = json!({"response_time_ms":0,"cached":false,"query_id":query_id,"engine_status":{},"advisories":advisories});
+            if format == "html" {
+                meta["enforcement"] = Value::Object(
+                    unavailable
+                        .preview
+                        .enforcement
+                        .iter()
+                        .map(|(key, entry)| (key.clone(), entry.to_value()))
+                        .collect(),
+                );
+            }
             return render(state, &format, &response, meta, 503, true, &portal_request);
         }
         Err(_) => {
@@ -791,12 +801,14 @@ async fn search_impl(state: &HttpState, request: Request) -> Response {
     };
     let response = &view.response;
     let mut meta = formats::meta(response, &view.advisories);
-    meta["enforcement"] = Value::Object(
-        view.enforcement
-            .iter()
-            .map(|(key, entry)| (key.clone(), entry.to_value()))
-            .collect(),
-    );
+    if format == "html" {
+        meta["enforcement"] = Value::Object(
+            view.enforcement
+                .iter()
+                .map(|(key, entry)| (key.clone(), entry.to_value()))
+                .collect(),
+        );
+    }
     if response.cached_error {
         return error(
             state,

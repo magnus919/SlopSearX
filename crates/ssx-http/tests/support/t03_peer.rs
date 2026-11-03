@@ -193,24 +193,7 @@ impl Process {
 pub fn yaml(body: &str) -> Value {
     let header = body.split_once("---\n## Results Summary\n").unwrap().0;
     let value: serde_json::Value = serde_saphyr::from_str(header).unwrap();
-    let mut output: Value = ssx_json::from_str(&value.to_string()).unwrap();
-    // serde-saphyr's untyped visitor falls back to f64 above u64. Preserve this
-    // one typed positive-integer field directly from its exact emitted scalar;
-    // exponent/fraction/clamped output still fails the literal/parity assertions.
-    if let Some((_, pagination)) = header.split_once("    pagination:\n") {
-        let scalar = pagination
-            .lines()
-            .next()
-            .and_then(|line| line.strip_prefix("      requested: "))
-            .expect("pagination requested scalar follows its key");
-        assert!(
-            !scalar.is_empty() && scalar.bytes().all(|b| b.is_ascii_digit()),
-            "pagination wire value must remain a positive decimal integer"
-        );
-        output["meta"]["enforcement"]["pagination"]["requested"] =
-            ssx_json::from_str(scalar).unwrap();
-    }
-    output
+    ssx_json::from_str(&value.to_string()).unwrap()
 }
 pub fn params(pairs: &[(&str, &str)]) -> String {
     let mut s = url::form_urlencoded::Serializer::new(String::new());
