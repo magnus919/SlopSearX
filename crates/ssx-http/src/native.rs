@@ -760,7 +760,14 @@ async fn search_impl(state: &HttpState, request: Request) -> Response {
         Err(SearchError::Unavailable(unavailable)) => {
             let response = SearchResponse {
                 query: query.into(),
-                scope: unavailable.preview.scope.clone(),
+                // The browser page can explain the selected scope before any
+                // engine runs. Machine formats retain their established
+                // unavailable-response summary, which has no captured scope.
+                scope: if format == "html" {
+                    unavailable.preview.scope.clone()
+                } else {
+                    Default::default()
+                },
                 all_unresponsive: true,
                 ..Default::default()
             };

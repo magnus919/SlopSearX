@@ -197,6 +197,63 @@ async fn malicious_optional_empty_partial_and_unavailable_states_are_truthful() 
 }
 
 #[tokio::test]
+async fn unavailable_machine_format_keeps_the_legacy_unknown_scope_summary() {
+    let mut p = Process::start("unavailable-format", "unavailable");
+    let (status, html) = p
+        .get(
+            "/search?q=test&categories=general&format=html",
+            "unavailable-html",
+        )
+        .await;
+    assert_eq!(status, 503);
+    assert!(html.contains("Scope and filters"));
+    assert!(html.contains("0 of 2 sources answered"));
+    assert_eq!(p.calls(), 0);
+
+    let (status, body) = p
+        .get(
+            "/search?q=test&categories=general&format=yaml",
+            "unavailable-yaml",
+        )
+        .await;
+    assert_eq!(status, 503);
+    let normalized = body
+        .lines()
+        .map(|line| {
+            if line.starts_with("  query_id: ") {
+                "  query_id: <opaque>"
+            } else {
+                line
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert_eq!(
+        normalized,
+        concat!(
+            "query: test\n",
+            "meta:\n",
+            "  response_time_ms: 0\n",
+            "  cached: false\n",
+            "  partial: false\n",
+            "  deadline_exceeded: false\n",
+            "  query_id: <opaque>\n",
+            "  advisories: []\n",
+            "  engine_count: 0\n",
+            "  responsive: 0\n",
+            "results: []\n",
+            "---\n",
+            "## Results Summary\n\n",
+            "**? engines responded** of ? active. 0 results returned in 0.0s.\n\n",
+            "For **test**, the top results cover:\n\n",
+            "> all (no engines available)."
+        )
+    );
+    assert_eq!(p.calls(), 0);
+    p.stop().await;
+}
+
+#[tokio::test]
 async fn invalid_and_sensitive_submissions_keep_only_escaped_public_fields_without_dispatch() {
     let mut p = Process::start("denials", "contract");
     for (id, query, status, field) in [

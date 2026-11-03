@@ -130,12 +130,12 @@ impl CacheRepository for NegativeCache {
         Box::pin(async { Ok(()) })
     }
 }
-fn capability(name: &str) -> EngineCapability {
+fn capability(name: &str, available: bool) -> EngineCapability {
     EngineCapability {
         name: name.into(),
         enabled: true,
         active: true,
-        available: true,
+        available,
         categories: vec![
             if name == "openalex" {
                 "science"
@@ -167,7 +167,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let calls_path = args.next().ok_or("owned call log path required")?;
     let theme = args.next().unwrap_or_else(|| "dark".into());
     let scenario = args.next().unwrap_or_else(|| "contract".into());
-    if !["contract", "cached-error", "rate-limited", "html-disabled"].contains(&scenario.as_str()) {
+    if ![
+        "contract",
+        "cached-error",
+        "rate-limited",
+        "html-disabled",
+        "unavailable",
+    ]
+    .contains(&scenario.as_str())
+    {
         return Err("unknown fixture scenario".into());
     }
     let calls = Arc::new(Mutex::new(
@@ -193,7 +201,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         SearchDependencies {
             policy: PolicyService {
                 policy,
-                catalog: CatalogSnapshot::new(names.iter().map(|s| capability(s)).collect())?,
+                catalog: CatalogSnapshot::new(
+                    names
+                        .iter()
+                        .map(|s| capability(s, !(scenario == "unavailable" && *s == "alpha")))
+                        .collect(),
+                )?,
                 resolver: ScopeResolver {
                     catalog_routing: false,
                     ..Default::default()
@@ -248,7 +261,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         },
     )
     .map_err(|e| format!("fixture service: {e:?}"))?;
-    let discovery = json!({"categories":["general","science","sensitive-only"],"category_engines":{"general":["alpha","beta"],"science":["openalex"],"sensitive-only":["hibp"]},"engines":names.iter().map(|name|{let c=capability(name);json!({"name":name,"display_name":if *name=="beta"{"Beta <source>"}else{name},"enabled":true,"sensitive":*name=="hibp","categories":if *name=="hibp"{vec!["sensitive-only".to_string()]}else{c.categories},"enforced_filters":c.enforced_filters})}).collect::<Vec<Value>>()});
+    let discovery = json!({"categories":["general","science","sensitive-only"],"category_engines":{"general":["alpha","beta"],"science":["openalex"],"sensitive-only":["hibp"]},"engines":names.iter().map(|name|{let available = !(scenario == "unavailable" && *name == "alpha");let c=capability(name,available);json!({"name":name,"display_name":if *name=="beta"{"Beta <source>"}else{name},"enabled":true,"available":available,"sensitive":*name=="hibp","categories":if *name=="hibp"{vec!["sensitive-only".to_string()]}else{c.categories},"enforced_filters":c.enforced_filters})}).collect::<Vec<Value>>()});
     let state = HttpState {
         search: service,
         policy: policy_arc,
