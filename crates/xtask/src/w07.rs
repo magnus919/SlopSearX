@@ -19,7 +19,7 @@ const REGISTRY: &str = "docs/rust-rewrite/w07/qualification-completion-v1.json";
 const ORIGINAL_REGISTRY: &str = "docs/rust-rewrite/w07/qualification.json";
 const ORIGINAL_REGISTRY_SHA: &str =
     "6669d06edbe317078e815f103d8172316575183b29fb0b42be4fd240df85a4a7";
-const REGISTRY_SHA: &str = "a651a9d36c1d5409edbcb7d79a44ac599468ca493fdd735982bb1d1894e4461d";
+const REGISTRY_SHA: &str = "4d9cb197718db1d06086ee1557f1eb4953bf53b9938eb4bce41da762f70ad1a7";
 const MAIN_ARCHIVE: &str = "docs/rust-rewrite/w07/source-amendments/pre-d-main.rs";
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -271,6 +271,16 @@ const W08_PAGE_READERS: [(&str, &str, &str); 2] = [
 ];
 fn preserve_registry(original: &Value, current: &Value) -> Result<()> {
     let mut expected = original.clone();
+    // #984 adds exact real-adapter MCP/HTTP suites; all historical W07 suites
+    // and source pins remain unchanged except this reviewed T06 registrar.
+    if expected["sources"]["crates/xtask/src/t06.rs"]
+        != "be30918a7ac4365b2538b58fd1c3c933e6b2bea96d6222d267c4a87d29e413e0"
+    {
+        return Err("W07 original T06 registrar pin changed".into());
+    }
+    expected["sources"]["crates/xtask/src/t06.rs"] =
+        Value::String("00a0a0ba122cd15da453cad72a025750e476db71d7ff327bef5b8646ade4cdd7".into());
+
     expected["suites"][0]["tests"].as_array_mut().ok_or("W07 original suite identity missing")?.extend(serde_json::from_str::<Vec<Value>>("[\"receipts::service::service_contract_tests::receipt_telemetry_preserves_source_branch_order_and_terminal_status\", \"receipts::service::service_contract_tests::receipt_telemetry_never_invents_acceptance_for_refusal_or_unknown_completion\", \"receipts::service::service_contract_tests::receipt_read_expiry_metrics_require_expired_source_and_empty_retained_receipts\"]").map_err(|e|e.to_string())?);
     expected["suites"][1]["tests"].as_array_mut().ok_or("W07 original suite identity missing")?.extend(serde_json::from_str::<Vec<Value>>("[\"lineage::source_cycle_contract::original_cycle_duplicate_edges_and_expired_nodes_are_exact_and_deterministic\"]").map_err(|e|e.to_string())?);
     expected["suites"][6]["tests"].as_array_mut().ok_or("W07 original suite identity missing")?.extend(serde_json::from_str::<Vec<Value>>("[\"retained_snapshot_original_bounds_foreign_legacy_and_source_expiry_contracts\"]").map_err(|e|e.to_string())?);
@@ -886,6 +896,7 @@ mod tests {
         }
         // Every changed raw-artifact implementation pin remains mandatory and exact.
         for source in [
+            "crates/xtask/src/t06.rs",
             "crates/ssx-mcp/src/search_surface/validation.rs",
             "crates/ssx-mcp/src/evidence/tools.rs",
             "crates/ssx-mcp/src/search_surface/mod.rs",

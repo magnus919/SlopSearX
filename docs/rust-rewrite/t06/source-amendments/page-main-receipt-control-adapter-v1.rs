@@ -190,6 +190,16 @@ pub(crate) fn reader_parent(
     if !PATHS[2..].contains(&path) {
         return Ok(None);
     }
+    if path == T06_REGISTRAR {
+        let doc = current_load(root)?;
+        if let Some(row) = doc.rows.iter().find(|row| row.path == path)
+            && let Some(endpoint) = &row.qualification
+            && endpoint.prior.sha256 == expected
+        {
+            return current_frame(root, path, supplied, 0o644, CurrentBoundary::Qualification)
+                .map(Some);
+        }
+    }
     parent(root, path, expected, supplied)
 }
 pub(crate) fn controls(root: &Path) -> Result<()> {
@@ -271,9 +281,10 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
 // reconstruct the independently accepted main and page boundaries.
 const CURRENT_CAPSULE: &str =
     "docs/rust-rewrite/t06/source-amendments/page-main-receipt-control-composition-v1.json";
-const CURRENT_SHA: &str = "06908948e7fba37ac52d68489e8c110c4dede6e96da6e8ee2bd07d740c41df24";
+const CURRENT_SHA: &str = "1b74f37f78765d1c73fdd7ef598d844f371cacc16a7a5bb2bf6fb784fa4574cb";
 const CURRENT_MAIN: &str = "96f8541f18368e6ef9162b6163644a3ff0b12b73";
 const CURRENT_PAGE: &str = "3f6329f3ecaaa425f9df0c7c2eae54aebe8aec0c";
+const CURRENT_QUALIFICATION: &str = "24db49cb5ba2c00cd15e7acb36242ae297983975";
 const CURRENT_PATHS: &[&str] = &[
     "crates/xtask/src/t06.rs",
     "crates/ssx-mcp/tests/t06_source_bindings.rs",
@@ -308,8 +319,14 @@ struct CurrentEndpoint {
 struct CurrentRow {
     path: String,
     current: Material,
+    #[serde(default)]
+    physical: Option<Material>,
+    #[serde(default)]
+    physical_to_current: Vec<Edit>,
     main: CurrentEndpoint,
     page: CurrentEndpoint,
+    #[serde(default)]
+    qualification: Option<CurrentEndpoint>,
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -317,6 +334,7 @@ struct CurrentComposition {
     schema_version: u32,
     main: String,
     page: String,
+    qualification: String,
     paths: Vec<String>,
     rows: Vec<CurrentRow>,
 }
@@ -324,16 +342,68 @@ struct CurrentComposition {
 enum CurrentBoundary {
     Main,
     Page,
+    Qualification,
 }
 
-// Exact W08/Page outer registry projection before the unchanged Page/main proof.
-// Pure byte-span inverse/forward algorithm follows the existing w07-helpers reader;
-// this private route admits only this registry path, actual supplied bytes and
-// the immutable old Page capsule's exact current tuple. No crate-root imports.
+// Exact source projections for the W08/Page registry and the qualified T06
+// registrar feed the unchanged Page/main proof. Each private route admits only
+// its listed path, physical bytes and pinned capsule. No crate-root imports.
 const W08_REGISTRY: &str = "docs/rust-rewrite/w07/qualification-completion-v1.json";
+const T06_REGISTRAR: &str = "crates/xtask/src/t06.rs";
 const W08_JOIN: &str = "docs/rust-rewrite/snapshot-fixture-amendment/w08-page-join-v1.json";
 const W08_JOIN_SHA: &str = "2201b3d459bc0e386d3fb847a02a23f5f30fcf4b7e82ca85fd056bead5567847";
+pub(crate) const W07_REGISTRY_T06_EDIT: (usize, &str, &str) = (
+    19299,
+    "    \"crates/xtask/src/t06.rs\": \"be30918a7ac4365b2538b58fd1c3c933e6b2bea96d6222d267c4a87d29e413e0\",\n",
+    "    \"crates/xtask/src/t06.rs\": \"00a0a0ba122cd15da453cad72a025750e476db71d7ff327bef5b8646ade4cdd7\",\n",
+);
+pub(crate) fn w07_registry_to_w08(physical: &[u8], mode: u32) -> Result<Vec<u8>> {
+    inverse(
+        &Row {
+            path: W08_REGISTRY.into(),
+            prior: Material {
+                sha256: "a651a9d36c1d5409edbcb7d79a44ac599468ca493fdd735982bb1d1894e4461d".into(),
+                bytes: 21848,
+                mode: 0o644,
+            },
+            prior_git_blob: "ead390da6eae22e2aa94f66b954efae101342151".into(),
+            current: Material {
+                sha256: "4d9cb197718db1d06086ee1557f1eb4953bf53b9938eb4bce41da762f70ad1a7".into(),
+                bytes: 21848,
+                mode: 0o644,
+            },
+            edits: vec![Edit {
+                current_offset: W07_REGISTRY_T06_EDIT.0,
+                old: W07_REGISTRY_T06_EDIT.1.into(),
+                new: W07_REGISTRY_T06_EDIT.2.into(),
+            }],
+        },
+        physical,
+        mode,
+    )
+}
 fn current_operand(root: &Path, row: &CurrentRow, supplied: &[u8], mode: u32) -> Result<Vec<u8>> {
+    if row.path == T06_REGISTRAR {
+        let physical = row
+            .physical
+            .as_ref()
+            .ok_or("T06 physical source pin absent")?;
+        need(
+            !row.physical_to_current.is_empty(),
+            "T06 physical projection absent",
+        )?;
+        return inverse(
+            &Row {
+                path: row.path.clone(),
+                prior: row.current.clone(),
+                prior_git_blob: "t06-physical-to-page-main".into(),
+                current: physical.clone(),
+                edits: row.physical_to_current.clone(),
+            },
+            supplied,
+            mode,
+        );
+    }
     if row.path != W08_REGISTRY {
         return Ok(supplied.to_vec());
     }
@@ -348,6 +418,7 @@ fn current_operand(root: &Path, row: &CurrentRow, supplied: &[u8], mode: u32) ->
         mode == 0o644 && actual_mode == mode && physical == supplied,
         "outer receipt registry is not physical current",
     )?;
+    let physical = w07_registry_to_w08(&physical, mode)?;
     let (capsule, capsule_mode) = regular(root, W08_JOIN)?;
     need(
         capsule_mode == 0o644 && digest(&capsule) == W08_JOIN_SHA,
@@ -478,9 +549,10 @@ fn current_load(root: &Path) -> Result<CurrentComposition> {
     )?;
     let doc: CurrentComposition = serde_json::from_slice(&raw).map_err(|e| e.to_string())?;
     need(
-        doc.schema_version == 1
+        doc.schema_version == 2
             && doc.main == CURRENT_MAIN
             && doc.page == CURRENT_PAGE
+            && doc.qualification == CURRENT_QUALIFICATION
             && doc
                 .paths
                 .iter()
@@ -494,7 +566,15 @@ fn current_load(root: &Path) -> Result<CurrentComposition> {
         "combined receipt closed membership/boundaries differ",
     )?;
     for row in &doc.rows {
+        need(
+            row.physical.is_some() == row.qualification.is_some()
+                && row.physical.is_some() == (row.path == T06_REGISTRAR),
+            "combined receipt physical/qualification endpoint membership differs",
+        )?;
         let (physical, mode) = regular(root, &row.path)?;
+        if let Some(pin) = &row.physical {
+            material(pin, &physical, mode)?;
+        }
         let logical = current_operand(root, row, &physical, mode)?;
         material(&row.current, &logical, mode)?;
     }
@@ -506,11 +586,20 @@ fn current_inverse(
     physical: &[u8],
     mode: u32,
 ) -> Result<Vec<u8>> {
+    current_inverse_from(row, endpoint, physical, mode, &row.current)
+}
+fn current_inverse_from(
+    row: &CurrentRow,
+    endpoint: &CurrentEndpoint,
+    physical: &[u8],
+    mode: u32,
+    current: &Material,
+) -> Result<Vec<u8>> {
     need(
         CURRENT_PATHS.contains(&row.path.as_str()),
         "combined receipt unlisted inverse path",
     )?;
-    material(&row.current, physical, mode)?;
+    material(current, physical, mode)?;
     if endpoint.edits.is_empty() {
         // The unchanged page registry is an explicit identity endpoint only.
         material(&endpoint.prior, physical, mode)?;
@@ -521,7 +610,7 @@ fn current_inverse(
             path: row.path.clone(),
             prior: endpoint.prior.clone(),
             prior_git_blob: endpoint.prior_git_blob.clone(),
-            current: row.current.clone(),
+            current: current.clone(),
             edits: endpoint.edits.clone(),
         },
         physical,
@@ -549,12 +638,22 @@ fn current_frame(
         mode == actual_mode && supplied == physical,
         "combined receipt supplied bytes/mode not actual physical generation",
     )?;
-    let (endpoint, revision) = match boundary {
-        CurrentBoundary::Main => (&row.main, CURRENT_MAIN),
-        CurrentBoundary::Page => (&row.page, CURRENT_PAGE),
-    };
     let logical = current_operand(root, row, &physical, mode)?;
-    let prior = current_inverse(row, endpoint, &logical, mode)?;
+    let (endpoint, revision, operand, operand_pin) = match boundary {
+        CurrentBoundary::Main => (&row.main, CURRENT_MAIN, logical.as_slice(), &row.current),
+        CurrentBoundary::Page => (&row.page, CURRENT_PAGE, logical.as_slice(), &row.current),
+        CurrentBoundary::Qualification => (
+            row.qualification
+                .as_ref()
+                .ok_or("T06 qualification endpoint absent")?,
+            CURRENT_QUALIFICATION,
+            physical.as_slice(),
+            row.physical
+                .as_ref()
+                .ok_or("T06 physical source pin absent")?,
+        ),
+    };
+    let prior = current_inverse_from(row, endpoint, operand, mode, operand_pin)?;
     let blob = Command::new("git")
         .args(["cat-file", "blob", &endpoint.prior_git_blob])
         .current_dir(root)
@@ -581,6 +680,19 @@ fn current_controls(root: &Path) -> Result<()> {
         let (physical, mode) = regular(root, &row.path)?;
         let logical = current_operand(root, row, &physical, mode)?;
         if row.path == W08_REGISTRY {
+            let w08_physical = w07_registry_to_w08(&physical, mode)?;
+            need(
+                w08_physical.len() == 21848
+                    && digest(&w08_physical)
+                        == "a651a9d36c1d5409edbcb7d79a44ac599468ca493fdd735982bb1d1894e4461d",
+                "outer registry exact W07 generation projection differs",
+            )?;
+            let mut changed_pin = physical.clone();
+            changed_pin[19299] ^= 1;
+            need(
+                w07_registry_to_w08(&changed_pin, mode).is_err(),
+                "outer registry unreviewed T06 pin generation accepted",
+            )?;
             need(
                 logical != physical,
                 "outer registry projection must be nonvacuous",
@@ -603,6 +715,10 @@ fn current_controls(root: &Path) -> Result<()> {
             let endpoint = match boundary {
                 CurrentBoundary::Main => &row.main,
                 CurrentBoundary::Page => &row.page,
+                CurrentBoundary::Qualification => row
+                    .qualification
+                    .as_ref()
+                    .ok_or("T06 qualification endpoint absent")?,
             };
             let prior = current_frame(root, &row.path, &physical, mode, boundary)?;
             if matches!(boundary, CurrentBoundary::Page) && PATHS[2..].contains(&row.path.as_str())
@@ -683,6 +799,57 @@ fn current_controls(root: &Path) -> Result<()> {
                     "combined receipt relocated inverse accepted",
                 )?;
             }
+        }
+        if let Some(endpoint) = &row.qualification {
+            let prior = current_frame(
+                root,
+                &row.path,
+                &physical,
+                mode,
+                CurrentBoundary::Qualification,
+            )?;
+            need(
+                reader_parent(root, &row.path, &endpoint.prior.sha256, &physical)?
+                    == Some(prior.clone()),
+                "qualification source reader route differs",
+            )?;
+            need(
+                reader_parent(root, &row.path, &"0".repeat(64), &physical)?.is_none(),
+                "qualification wrong caller hash accepted",
+            )?;
+            need(
+                current_frame(
+                    root,
+                    &row.path,
+                    &prior,
+                    mode,
+                    CurrentBoundary::Qualification,
+                )
+                .is_err(),
+                "qualification historical bytes accepted as current physical source",
+            )?;
+            let physical_pin = row
+                .physical
+                .as_ref()
+                .ok_or("qualification physical pin absent")?;
+            let mut missing = endpoint.clone();
+            missing.edits.remove(0);
+            need(
+                current_inverse_from(row, &missing, &physical, mode, physical_pin).is_err(),
+                "qualification missing inverse accepted",
+            )?;
+            let mut duplicate = endpoint.clone();
+            duplicate.edits.insert(0, endpoint.edits[0].clone());
+            need(
+                current_inverse_from(row, &duplicate, &physical, mode, physical_pin).is_err(),
+                "qualification duplicate inverse accepted",
+            )?;
+            let mut moved = endpoint.clone();
+            moved.edits[0].current_offset += 1;
+            need(
+                current_inverse_from(row, &moved, &physical, mode, physical_pin).is_err(),
+                "qualification relocated inverse accepted",
+            )?;
         }
         let other = doc
             .rows
