@@ -385,7 +385,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             "--lib",
             "adapters::html_helper_tests::",
             "--",
-            "--nocapture",
+            "--show-output",
         ],
         records,
     )?;
