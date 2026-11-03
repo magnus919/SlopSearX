@@ -28,6 +28,17 @@ const control = (attempt = '1', overrides = {}) => [{
   result: 'EXPECTED_SEMANTIC_FAILURE_CONFIRMED\n',
   regularFiles: true,
 }];
+test('replaces the stable aggregate artifact on a failed-job-only retry', () => {
+  const workflow = fs.readFileSync(new URL('../../.github/workflows/rust.yml', import.meta.url), 'utf8');
+  const marker = '      - name: Retain source-bound foundation evidence\n';
+  const start = workflow.indexOf(marker);
+  assert.notEqual(start, -1);
+  const end = workflow.indexOf('\n      - name: ', start + marker.length);
+  const step = workflow.slice(start, end === -1 ? undefined : end);
+  assert.match(step, /name: rust-foundation-\$\{\{ matrix\.target \}\}-\$\{\{ github\.sha \}\}/);
+  assert.match(step, /^\s+overwrite: true\s*$/m);
+});
+
 const controlProducerFiles = [
   'archive.sha256', 'control-identity.json', 'control-result.txt', 'copy-before-restore.sha256', 'copy-before.sha256z',
   'copy-restored.sha256', 'copy-restored.sha256z', 'identity.txt', 'live-after.sha256z', 'live-before.sha256z',

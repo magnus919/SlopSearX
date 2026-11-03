@@ -1279,6 +1279,7 @@ jobs:
             target/rust-evidence/partitions/
             target/rust-evidence/foundation-partitions.txt
           if-no-files-found: warn
+          overwrite: true
 
       - name: Foundation aggregation rerun contract tests
         if: always()
