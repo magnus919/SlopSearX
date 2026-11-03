@@ -680,10 +680,21 @@ fn result_index(raw: &str) -> Result<Option<usize>, &'static str> {
     Ok(value)
 }
 fn scope_error(e: SearchError, r: &SearchRequest) -> Value {
-    let dates = matches!(&e,SearchError::Policy(p) if p.message=="selected adapter does not enforce publication dates");
+    let date_reason = match &e {
+        SearchError::Policy(p)
+            if matches!(
+                p.message.as_str(),
+                "selected adapter does not enforce publication dates"
+                    | "audited date scope is unavailable"
+            ) =>
+        {
+            Some(p.message.clone())
+        }
+        _ => None,
+    };
     let mut v = search_error(e);
-    if dates {
-        v["enforcement"] = json!({"engines":{"requested":r.engines,"status":"rejected","reason":"selected adapter does not enforce publication dates","enforced_by":[]}});
+    if let Some(reason) = date_reason {
+        v["enforcement"] = json!({"engines":{"requested":r.engines,"status":"rejected","reason":reason,"enforced_by":[]}});
     }
     v
 }

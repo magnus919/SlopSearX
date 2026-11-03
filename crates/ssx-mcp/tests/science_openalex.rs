@@ -397,7 +397,55 @@ async fn science_date_denials_never_reach_real_adapter_or_shared_acquisition() {
     for (mode, label, changes, code) in [
         (Mode::NoScienceGrant, "grant", json!({}), "tool_disabled"),
         (Mode::Unaudited, "unaudited", json!({}), "invalid_input"),
-        (Mode::Unavailable, "unavailable", json!({}), "invalid_scope"),
+        (Mode::Unavailable, "unavailable", json!({}), "invalid_input"),
+        (
+            Mode::Unavailable,
+            "unavailable_lower",
+            json!({}),
+            "invalid_input",
+        ),
+        (
+            Mode::Unavailable,
+            "unavailable_upper",
+            json!({}),
+            "invalid_input",
+        ),
+        (
+            Mode::Unavailable,
+            "inactive_unbounded",
+            json!({}),
+            "invalid_scope",
+        ),
+        (
+            Mode::Unavailable,
+            "inactive_generic",
+            json!({}),
+            "invalid_scope",
+        ),
+        (
+            Mode::Unavailable,
+            "inactive_targeted",
+            json!({}),
+            "invalid_scope",
+        ),
+        (
+            Mode::Unavailable,
+            "inactive_preview",
+            json!({}),
+            "invalid_scope",
+        ),
+        (
+            Mode::Unavailable,
+            "unknown",
+            json!({"engines":["unknown"]}),
+            "invalid_scope",
+        ),
+        (
+            Mode::Unavailable,
+            "inactive_sensitive",
+            json!({"engines":["openalex","hibp"]}),
+            "tool_disabled",
+        ),
         (
             Mode::Audited,
             "invalid_leap",
@@ -477,12 +525,28 @@ async fn science_date_denials_never_reach_real_adapter_or_shared_acquisition() {
         if label == "implicit" {
             request.as_object_mut().unwrap().remove("engines");
         }
+        if label == "unavailable_lower" {
+            request.as_object_mut().unwrap().remove("date_to");
+        }
+        if label == "unavailable_upper" {
+            request.as_object_mut().unwrap().remove("date_from");
+        }
+        if label.starts_with("inactive_") && label != "inactive_sensitive" {
+            request.as_object_mut().unwrap().remove("date_from");
+            request.as_object_mut().unwrap().remove("date_to");
+        }
+        let tool = match label {
+            "inactive_generic" => "slopsearx_search",
+            "inactive_targeted" => "slopsearx_search_targeted",
+            "inactive_preview" => "slopsearx_explain_search_scope",
+            _ => TOOL,
+        };
         // FastMCP validates declared arguments before the tool body. Science
-        // has no time_range or safesearch parameter: these two are tool errors,
-        // while the ten policy/date denials are structured successful results.
+        // has no time_range or safesearch parameter: these two are tool errors;
+        // policy/date denials are structured successful results.
         let response = client
             .call_tool(
-                CallToolRequestParams::new(TOOL.to_owned())
+                CallToolRequestParams::new(tool.to_owned())
                     .with_arguments(request.as_object().unwrap().clone()),
             )
             .await
@@ -529,8 +593,32 @@ async fn science_date_denials_never_reach_real_adapter_or_shared_acquisition() {
                     "policy structuredContent must equal tool text",
                 );
                 check(result["error"]["code"] == code, "policy error code differs");
-                if label == "unavailable" {
-                    // Existing shared MCP/F09 explicit inactive-engine ordering.
+                if matches!(
+                    label,
+                    "unavailable" | "unavailable_lower" | "unavailable_upper"
+                ) {
+                    check(
+                        result
+                            == json!({
+                                "error":{
+                                    "code":"invalid_input","field":"engines",
+                                    "message":"audited date scope is unavailable"
+                                },
+                                "enforcement":{"engines":{
+                                    "requested":["openalex"],"status":"rejected",
+                                    "reason":"audited date scope is unavailable","enforced_by":[]
+                                }}
+                            }),
+                        "bounded unavailable OpenAlex must match the exact Python date-scope envelope",
+                    );
+                }
+                if matches!(
+                    label,
+                    "inactive_unbounded"
+                        | "inactive_generic"
+                        | "inactive_targeted"
+                        | "inactive_preview"
+                ) {
                     check(
                         result
                             == json!({"error":{
@@ -538,7 +626,18 @@ async fn science_date_denials_never_reach_real_adapter_or_shared_acquisition() {
                                 "message":"unknown or inactive engines: openalex (inactive)",
                                 "valid_alternatives":[]
                             }}),
-                        "inactive OpenAlex must preserve the exact shared policy envelope",
+                        "unbounded requests must preserve the exact shared MCP/F09 inactive-engine envelope",
+                    );
+                }
+                if label == "unknown" {
+                    check(
+                        result
+                            == json!({"error":{
+                                "code":"invalid_scope","field":"engines",
+                                "message":"unknown or inactive engines: unknown (unknown)",
+                                "valid_alternatives":["brave","hibp","openalex"]
+                            }}),
+                        "date bounds must not bypass the shared unknown-engine gate",
                     );
                 }
                 if matches!(label, "mixed" | "unsupported") {
