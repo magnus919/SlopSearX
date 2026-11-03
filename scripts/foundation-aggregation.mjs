@@ -4,6 +4,32 @@ import { pathToFileURL } from 'node:url';
 
 export const REQUIRED_PARTITIONS = Object.freeze(['prerequisites', 'core', 'runtime', 'adapters']);
 const EXPECTED_CONTROL_RESULT = 'EXPECTED_SEMANTIC_FAILURE_CONFIRMED\n';
+const CONTROL_EVIDENCE_FILES = Object.freeze([
+  'archive.sha256',
+  'control-identity.json',
+  'control-result.txt',
+  'copy-before-restore.sha256',
+  'copy-before.sha256z',
+  'copy-restored.sha256',
+  'copy-restored.sha256z',
+  'identity.txt',
+  'live-after.sha256z',
+  'live-before.sha256z',
+  'mutant.command',
+  'mutant.patch',
+  'mutant.session',
+  'mutant.status',
+  'mutant.stderr',
+  'mutant.stdout',
+  'positive.command',
+  'positive.session',
+  'positive.status',
+  'positive.stderr',
+  'positive.stdout',
+  'process-pool.before.rs',
+  'process-pool.mutant.rs',
+  'terminal.txt',
+]);
 
 function requireValue(condition, message) {
   if (!condition) throw new Error(message);
@@ -52,6 +78,8 @@ export function validateControlEvidence(entries, expected, prerequisiteAttempt) 
   requireValue(identity.run_id === expected.runId, 'semantic-control workflow run mismatch');
   requireValue(identity.runner_arch === expected.runnerArch, 'semantic-control runner architecture mismatch');
   requireValue(attemptNumber(identity.run_attempt, 'semantic-control identity run_attempt') === attempt, 'semantic-control path and identity attempt mismatch');
+  const expectedTextIdentity = `head=${expected.sourceRevision}\nrunner_arch=${expected.runnerArch}\nrun_id=${expected.runId}\nrun_attempt=${attempt}\n`;
+  requireValue(typeof entry.identityText === 'string' && entry.identityText.startsWith(expectedTextIdentity), 'semantic-control text identity mismatch');
   requireValue(attempt === prerequisiteAttempt, 'semantic-control attempt differs from its prerequisites partition');
   requireValue(entry.regularFiles === true, 'semantic-control receipt files must be regular files');
   requireValue(entry.result === EXPECTED_CONTROL_RESULT, 'semantic-control result missing, duplicated, or altered');
@@ -74,11 +102,14 @@ export function validateFoundationEvidence(evidenceRoot, expected) {
   const entries = fs.readdirSync(controlRoot, { withFileTypes: true }).map((directory) => {
     requireValue(directory.isDirectory() && !directory.isSymbolicLink(), 'unexpected semantic-control artifact entry');
     const directoryPath = path.join(controlRoot, directory.name);
-    const receiptFiles = fs.readdirSync(directoryPath).sort();
-    requireValue(receiptFiles.length === 2 && receiptFiles[0] === 'control-identity.json' && receiptFiles[1] === 'control-result.txt', 'semantic-control receipt has unexpected or missing files');
+    const receiptEntries = fs.readdirSync(directoryPath, { withFileTypes: true });
+    requireValue(receiptEntries.every((entry) => entry.isFile() && !entry.isSymbolicLink()), 'semantic-control evidence must contain regular files only');
+    const receiptFiles = receiptEntries.map((entry) => entry.name).sort();
+    requireValue(JSON.stringify(receiptFiles) === JSON.stringify([...CONTROL_EVIDENCE_FILES].sort()), 'semantic-control evidence has unexpected or missing files');
     const identity = JSON.parse(readRegularFile(path.join(directoryPath, 'control-identity.json')));
     const result = readRegularFile(path.join(directoryPath, 'control-result.txt'));
-    return { directoryName: directory.name, identity, result, regularFiles: true };
+    const identityText = readRegularFile(path.join(directoryPath, 'identity.txt'));
+    return { directoryName: directory.name, identity, identityText, result, regularFiles: true };
   });
   validateControlEvidence(entries, expected, attempts.get('prerequisites'));
   return attempts;

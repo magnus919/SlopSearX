@@ -24,9 +24,17 @@ const control = (attempt = '1', overrides = {}) => [{
     run_attempt: attempt,
     ...overrides,
   },
+  identityText: `head=${expected.sourceRevision}\nrunner_arch=${expected.runnerArch}\nrun_id=${expected.runId}\nrun_attempt=${attempt}\nLinux fixture x86_64 GNU/Linux\nrustc 1.99.0 (fixture)\n`,
   result: 'EXPECTED_SEMANTIC_FAILURE_CONFIRMED\n',
   regularFiles: true,
 }];
+const controlProducerFiles = [
+  'archive.sha256', 'control-identity.json', 'control-result.txt', 'copy-before-restore.sha256', 'copy-before.sha256z',
+  'copy-restored.sha256', 'copy-restored.sha256z', 'identity.txt', 'live-after.sha256z', 'live-before.sha256z',
+  'mutant.command', 'mutant.patch', 'mutant.session', 'mutant.status', 'mutant.stderr', 'mutant.stdout',
+  'positive.command', 'positive.session', 'positive.status', 'positive.stderr', 'positive.stdout',
+  'process-pool.before.rs', 'process-pool.mutant.rs', 'terminal.txt',
+];
 
 test('accepts a clean first-attempt Foundation run', () => {
   const firstAttempt = { ...expected, runAttempt: 1 };
@@ -58,10 +66,17 @@ test('validates real evidence directories assembled from retained and rerun arti
     fs.mkdirSync(controlDirectory, { recursive: true });
     fs.writeFileSync(path.join(controlDirectory, 'control-identity.json'), `${JSON.stringify(control('1')[0].identity)}\n`);
     fs.writeFileSync(path.join(controlDirectory, 'control-result.txt'), 'EXPECTED_SEMANTIC_FAILURE_CONFIRMED\n');
+    fs.writeFileSync(path.join(controlDirectory, 'identity.txt'), control('1')[0].identityText);
+    for (const name of controlProducerFiles.filter((name) => !['control-identity.json', 'control-result.txt', 'identity.txt'].includes(name))) {
+      fs.writeFileSync(path.join(controlDirectory, name), 'producer evidence fixture\n');
+    }
     const attempts = validateFoundationEvidence(root, expected);
     assert.deepEqual([...attempts.values()], [1, 2, 1, 1]);
 
     fs.symlinkSync(path.join(controlDirectory, 'control-result.txt'), path.join(controlDirectory, 'unexpected-link'));
+    assert.throws(() => validateFoundationEvidence(root, expected), /regular files only/);
+    fs.unlinkSync(path.join(controlDirectory, 'unexpected-link'));
+    fs.writeFileSync(path.join(controlDirectory, 'unexpected.txt'), 'unrecognized evidence\n');
     assert.throws(() => validateFoundationEvidence(root, expected), /unexpected or missing files/);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
@@ -94,6 +109,7 @@ test('rejects missing, duplicate, mismatched, or altered semantic-control eviden
     assert.throws(() => validateControlEvidence(control('1', { [field]: value }), expected, 1), /mismatch|differs/);
   }
   assert.throws(() => validateControlEvidence(control('1').map((entry) => ({ ...entry, result: 'EXPECTED_SEMANTIC_FAILURE_CONFIRMED\nextra\n' })), expected, 1), /altered/);
+  assert.throws(() => validateControlEvidence(control('1').map((entry) => ({ ...entry, identityText: 'head=wrong\n' })), expected, 1), /text identity/);
   assert.throws(() => validateControlEvidence(control('1').map((entry) => ({ ...entry, regularFiles: false })), expected, 1), /regular files/);
   assert.throws(() => validateControlEvidence(control('2'), expected, 1), /differs from its prerequisites/);
 });
@@ -102,4 +118,12 @@ test('workflow downloads semantic-control evidence from any prior attempt of the
   const workflow = fs.readFileSync(new URL('../../.github/workflows/rust.yml', import.meta.url), 'utf8');
   assert.ok(workflow.includes('target/rust-evidence/A10-linux-control/${{ github.run_id }}-*-${{ runner.arch }}.*/'));
   assert.doesNotMatch(workflow, /A10-linux-control\/\$\{\{\s*github\.run_id\s*\}\}-\$\{\{\s*github\.run_attempt\s*\}\}-/);
+  const producer = workflow.split('name: Linux held-writer interpreter mutation control')[1].split('name: Locked workspace build')[0];
+  assert.ok(producer);
+  for (const name of controlProducerFiles) {
+    const producerName = /^(?:positive|mutant)\.(?:command|session|status|stderr|stdout)$/.test(name)
+      ? name.replace(/^(?:positive|mutant)\./, '$label.')
+      : name;
+    assert.ok(producer.includes(producerName), `A10 producer no longer writes ${name}`);
+  }
 });
