@@ -25,6 +25,33 @@ fn hash(bytes: &[u8]) -> String {
         .map(|b| format!("{b:02x}"))
         .collect()
 }
+fn normalization_dependency(dependencies: &[Value]) -> Result<()> {
+    let mut selected = dependencies
+        .iter()
+        .filter(|dependency| dependency["name"] == "unicode-normalization");
+    match (selected.next(), selected.next()) {
+        (Some(dependency), None) if dependency["req"] == "=0.1.24" => Ok(()),
+        _ => Err("F11 normalization dependency must be unique at exact version =0.1.24".into()),
+    }
+}
+fn normalization_dependency_controls(dependencies: &[Value]) -> Result<()> {
+    // Validate the actual dependency first, then duplicate that same record.
+    normalization_dependency(dependencies)?;
+    let actual = dependencies
+        .iter()
+        .find(|dependency| dependency["name"] == "unicode-normalization")
+        .ok_or("F11 normalization positive dependency absent")?;
+    for requirement in ["=0.1.24", "^0.1"] {
+        let mut duplicate = actual.clone();
+        duplicate["req"] = json!(requirement);
+        let mut changed = dependencies.to_vec();
+        changed.push(duplicate);
+        if normalization_dependency(&changed).is_ok() {
+            return Err("F11 duplicate normalization dependency escaped exact boundary".into());
+        }
+    }
+    Ok(())
+}
 fn coverage(cases: &[Value], required: &serde_json::Map<String, Value>) -> Result<()> {
     let mut actual = BTreeMap::new();
     for case in cases {
@@ -181,7 +208,15 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         ("ssx-publication", BTreeSet::from(["ssx-json"])),
         (
             "ssx-application",
-            BTreeSet::from(["ssx-domain", "ssx-json", "ssx-publication", "url", "sha2"]),
+            // NFC entity keys use pure, deterministic in-memory normalization.
+            BTreeSet::from([
+                "ssx-domain",
+                "ssx-json",
+                "ssx-publication",
+                "url",
+                "sha2",
+                "unicode-normalization",
+            ]),
         ),
     ] {
         let p = metadata["packages"]
@@ -190,14 +225,16 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             .iter()
             .find(|p| p["name"] == package)
             .ok_or("missing F11 package")?;
-        let actual = p["dependencies"]
-            .as_array()
-            .ok_or("missing dependencies")?
+        let dependencies = p["dependencies"].as_array().ok_or("missing dependencies")?;
+        let actual = dependencies
             .iter()
             .map(|d| d["name"].as_str().unwrap_or(""))
             .collect::<BTreeSet<_>>();
         if actual != allowed {
             return Err(format!("{package} violates pure F11 dependency boundary"));
+        }
+        if package == "ssx-application" {
+            normalization_dependency_controls(dependencies)?;
         }
     }
     command(

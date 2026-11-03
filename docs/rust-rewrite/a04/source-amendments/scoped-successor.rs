@@ -898,6 +898,7 @@ fn joint_current_controls(root: &Path) -> Result<(), String> {
 }
 #[cfg(test)]
 pub(crate) fn controls(root: &Path) -> Result<(), String> {
+    t03_a09_manifest_controls(root)?;
     factory_controls(root)?;
     joint_current_controls(root)?;
     let manifest = load(root)?;
@@ -1051,6 +1052,113 @@ pub(crate) fn control_bridge(root: &Path) -> Result<(), String> {
     Ok(())
 }
 
+// T03 already proves this exact dev-dependency insertion. Only A09's frozen
+// caller/manifest tuple may consume its authenticated historical parent.
+const T03_A09_CALLER: &str = "docs/rust-rewrite/a09/coverage.json";
+const T03_A09_CALLER_SHA: &str = "3dfa3fc89150ba579ee377c730fce66134125c502ab07c624dd6a8768662ef89";
+const T03_A09_MANIFEST: &str = "crates/ssx-http/Cargo.toml";
+const T03_A09_MANIFEST_SHA: &str =
+    "f90536f1ed8b9db38035ee7546258a08dfe441013d802d618bb5c65f98a9480e";
+fn verify_t03_a09_manifest_current(
+    root: &Path,
+    container_sha: &str,
+    expected_sha: &str,
+    expected_bytes: Option<usize>,
+) -> Result<(), String> {
+    require(
+        container_sha == T03_A09_CALLER_SHA
+            && expected_sha == T03_A09_MANIFEST_SHA
+            && expected_bytes.is_none(),
+        "T03 A09 manifest caller tuple differs",
+    )?;
+    let caller = a06_source_successor::historical_caller(root, T03_A09_CALLER, container_sha)?;
+    let caller: Value = serde_json::from_slice(&caller).map_err(|e| e.to_string())?;
+    require(
+        caller["artifacts"][87]
+            == serde_json::json!({"path":T03_A09_MANIFEST,"sha256":T03_A09_MANIFEST_SHA}),
+        "T03 A09 immutable manifest pin differs",
+    )?;
+    let physical = fs::read(root.join(T03_A09_MANIFEST)).map_err(|e| e.to_string())?;
+    let prior = a06_source_successor::w07_t02_joint::t03_source_successor::prior(
+        root,
+        T03_A09_MANIFEST,
+        &physical,
+    )?;
+    require(
+        prior.len() == 922 && digest(&prior) == expected_sha,
+        "T03 A09 reconstructed manifest pin differs",
+    )
+}
+#[cfg(test)]
+fn t03_a09_manifest_controls(root: &Path) -> Result<(), String> {
+    a06_source_successor::w07_t02_joint::t03_source_successor::controls(root)?;
+    verify_current(
+        root,
+        T03_A09_CALLER,
+        T03_A09_CALLER_SHA,
+        T03_A09_MANIFEST,
+        T03_A09_MANIFEST_SHA,
+        None,
+    )?;
+    require(
+        super::verify(
+            root,
+            T03_A09_CALLER,
+            T03_A09_CALLER_SHA,
+            T03_A09_MANIFEST,
+            T03_A09_MANIFEST_SHA,
+            None,
+        )
+        .is_err(),
+        "T03 A09 original policy unexpectedly accepts physical successor",
+    )?;
+    for (caller_sha, source_sha, length) in [
+        ("wrong", T03_A09_MANIFEST_SHA, None),
+        (T03_A09_CALLER_SHA, "wrong", None),
+        (T03_A09_CALLER_SHA, T03_A09_MANIFEST_SHA, Some(922)),
+        (T03_A09_CALLER_SHA, T03_A09_MANIFEST_SHA, Some(0)),
+    ] {
+        require(
+            verify_current(
+                root,
+                T03_A09_CALLER,
+                caller_sha,
+                T03_A09_MANIFEST,
+                source_sha,
+                length,
+            )
+            .is_err_and(|error| error == "T03 A09 manifest caller tuple differs"),
+            "T03 A09 changed caller hash, source hash or Some/None length accepted",
+        )?;
+    }
+    for (caller, source) in [
+        ("unlisted-A09-caller.json", T03_A09_MANIFEST),
+        (T03_A09_CALLER, "unlisted-http-manifest.toml"),
+    ] {
+        let original = super::verify(
+            root,
+            caller,
+            T03_A09_CALLER_SHA,
+            source,
+            T03_A09_MANIFEST_SHA,
+            None,
+        );
+        require(
+            original.is_err()
+                && verify_current(
+                    root,
+                    caller,
+                    T03_A09_CALLER_SHA,
+                    source,
+                    T03_A09_MANIFEST_SHA,
+                    None,
+                ) == original,
+            "T03 A09 unlisted caller or source changed original routing",
+        )?;
+    }
+    Ok(())
+}
+
 /// Explicit opt-in routing. The original verifier remains callable with actual
 /// current bytes; all unlisted caller/source pairs retain that exact path.
 pub(crate) fn verify_current(
@@ -1073,6 +1181,9 @@ pub(crate) fn verify_current(
     }
     if factory_selected(container_path, source_path) {
         return verify_factory_current(root, container_sha, expected_sha, expected_bytes);
+    }
+    if container_path == T03_A09_CALLER && source_path == T03_A09_MANIFEST {
+        return verify_t03_a09_manifest_current(root, container_sha, expected_sha, expected_bytes);
     }
     match try_verify(
         root,
