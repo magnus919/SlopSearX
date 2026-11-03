@@ -348,6 +348,8 @@ jobs:
           if run_one mutant "$copy"; then mutant_status=0; else mutant_status=$?; fi
           validate_mutant "$mutant_status" "$evidence/mutant.stdout" "$evidence/mutant.stderr"
           printf '%s\n' 'EXPECTED_SEMANTIC_FAILURE_CONFIRMED' > "$evidence/control-result.txt"
+          printf '{\"source_revision\":\"%s\",\"target\":\"%s\",\"runner_arch\":\"%s\",\"run_id\":\"%s\",\"run_attempt\":\"%s\"}\n' \
+            "$GITHUB_SHA" "${{ matrix.target }}" "$RUNNER_ARCH" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" > "$evidence/control-identity.json"
       - name: Locked workspace build
         run: cargo build --locked --workspace --target "${{ matrix.target }}"
 
@@ -379,6 +381,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: rust-foundation-prerequisites-${{ matrix.target }}-${{ github.sha }}
+          overwrite: true
           path: |
             target/rust-evidence/
             target/rust-feature-graph.txt
@@ -573,6 +576,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: rust-foundation-core-${{ matrix.target }}-${{ github.sha }}
+          overwrite: true
           path: |
             target/rust-evidence/
             target/rust-feature-graph.txt
@@ -865,6 +869,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: rust-foundation-runtime-${{ matrix.target }}-${{ github.sha }}
+          overwrite: true
           path: |
             target/rust-evidence/
             target/rust-feature-graph.txt
@@ -1133,6 +1138,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: rust-foundation-adapters-${{ matrix.target }}-${{ github.sha }}
+          overwrite: true
           path: |
             target/rust-evidence/
             target/rust-feature-graph.txt
@@ -1264,7 +1270,7 @@ jobs:
             target/rust-evidence/A08.json
             target/rust-evidence/A09.json
             target/rust-evidence/A10.json
-            target/rust-evidence/A10-linux-control/${{ github.run_id }}-${{ github.run_attempt }}-${{ runner.arch }}.*/
+            target/rust-evidence/A10-linux-control/${{ github.run_id }}-*-${{ runner.arch }}.*/
             target/rust-evidence/A11.json
             target/rust-evidence/A12.json
             target/rust-evidence/A13.json
@@ -1273,6 +1279,11 @@ jobs:
             target/rust-evidence/partitions/
             target/rust-evidence/foundation-partitions.txt
           if-no-files-found: warn
+          overwrite: true
+
+      - name: Foundation aggregation rerun contract tests
+        if: always()
+        run: node --test scripts/tests/foundation-aggregation.test.mjs
 
       - name: Require every partition and the complete original evidence
         if: always()
@@ -1298,17 +1309,8 @@ jobs:
           cmp target/rust-evidence/partitions/prerequisites/source-before.sha256z target/rust-evidence/partitions/core/source-before.sha256z
           cmp target/rust-evidence/partitions/prerequisites/source-before.sha256z target/rust-evidence/partitions/runtime/source-before.sha256z
           cmp target/rust-evidence/partitions/prerequisites/source-before.sha256z target/rust-evidence/partitions/adapters/source-before.sha256z
-          TARGET_TRIPLE="${{ matrix.target }}" node <<'NODE'
-          const fs = require('node:fs');
-          for (const partition of ['prerequisites', 'core', 'runtime', 'adapters']) {
-            const value = JSON.parse(fs.readFileSync(`target/rust-evidence/partitions/${partition}/identity.json`, 'utf8'));
-            if (value.partition !== partition || value.source_revision !== process.env.GITHUB_SHA || value.target !== process.env.TARGET_TRIPLE || value.run_id !== process.env.GITHUB_RUN_ID || value.run_attempt !== process.env.GITHUB_RUN_ATTEMPT) throw Error('partition identity mismatch');
-          }
-          NODE
-          shopt -s nullglob
-          controls=(target/rust-evidence/A10-linux-control/"${{ github.run_id }}-${{ github.run_attempt }}-${{ runner.arch }}".*/control-result.txt)
-          [ "${#controls[@]}" -eq 1 ]
-          grep -Fxq EXPECTED_SEMANTIC_FAILURE_CONFIRMED "${controls[0]}"
+          node scripts/foundation-aggregation.mjs target/rust-evidence \
+            "$GITHUB_SHA" "${{ matrix.target }}" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$RUNNER_ARCH"
 
 
   supply-chain:
