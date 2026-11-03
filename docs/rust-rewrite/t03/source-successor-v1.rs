@@ -11,7 +11,7 @@ use std::{
 type Result<T> = std::result::Result<T, String>;
 pub(crate) const CAPSULE_PATH: &str = "docs/rust-rewrite/t03/source-successor-v1.json";
 const CAPSULE: &[u8] = include_bytes!("source-successor-v1.json");
-const CAPSULE_SHA: &str = "f284e185979a9c87fe2f656bff4324e000487455821c49677bb46244a8552064";
+const CAPSULE_SHA: &str = "a82ce22c82e2c465d565232e281b981d0fe5739f9951cf057c980de8dd8bbd8b";
 const BASE: &str = "d7fc628d1069ab1f0a5fe8ee114796c235615eca";
 const LIMIT: u64 = 1_048_576;
 struct Pin<'a> {

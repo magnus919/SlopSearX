@@ -4,6 +4,7 @@ use sha2::{Digest, Sha256};
 use std::{fs, path::Path, process::Command};
 #[allow(
     dead_code,
+    clippy::duplicate_mod,
     reason = "T08A and A13 compile this source under different module roots; each uses the same stateless T03 proof leaf"
 )]
 #[path = "../../../docs/rust-rewrite/t03/source-successor-v1.rs"]

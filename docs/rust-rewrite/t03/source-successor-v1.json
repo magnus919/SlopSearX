@@ -69,8 +69,8 @@
     {
       "path": "crates/ssx-http/src/native.rs",
       "current": {
-        "bytes": 36451,
-        "sha256": "56e261605ec4f8fc44d12e604a23342979018c5908e5449280168668ce7d3955",
+        "bytes": 36804,
+        "sha256": "1c317ac12408ebb0fbdccb82812bcbdf115b4d80be73107c1c06db87ecf11c17",
         "mode": "0644"
       },
       "prior": {
@@ -182,26 +182,26 @@
         },
         {
           "at": 27667,
-          "remove_utf8": "                scope: unavailable.preview.scope.clone(),\n",
+          "remove_utf8": "                // The browser page can explain the selected scope before any\n                // engine runs. Machine formats retain their established\n                // unavailable-response summary, which has no captured scope.\n                scope: if format == \"html\" {\n                    unavailable.preview.scope.clone()\n                } else {\n                    Default::default()\n                },\n",
           "insert_utf8": ""
         },
         {
-          "at": 28288,
+          "at": 28641,
           "remove_utf8": "            let mut meta = json!({\"response_time_ms\":0,\"cached\":false,\"query_id\":query_id,\"engine_status\":{},\"advisories\":advisories});\n            if format == \"html\" {\n                meta[\"enforcement\"] = Value::Object(\n                    unavailable\n                        .preview\n                        .enforcement\n                        .iter()\n                        .map(|(key, entry)| (key.clone(), entry.to_value()))\n                        .collect(),\n                );\n            }\n",
           "insert_utf8": "            let meta = json!({\"response_time_ms\":0,\"cached\":false,\"query_id\":query_id,\"engine_status\":{},\"advisories\":advisories});\n"
         },
         {
-          "at": 29108,
+          "at": 29461,
           "remove_utf8": "                (None, Some(&html_request)),\n",
           "insert_utf8": "                None,\n"
         },
         {
-          "at": 29220,
+          "at": 29573,
           "remove_utf8": "    let mut meta = formats::meta(response, &view.advisories);\n    if format == \"html\" {\n        meta[\"enforcement\"] = Value::Object(\n            view.enforcement\n                .iter()\n                .map(|(key, entry)| (key.clone(), entry.to_value()))\n                .collect(),\n        );\n    }\n",
           "insert_utf8": "    let meta = formats::meta(response, &view.advisories);\n"
         },
         {
-          "at": 29737,
+          "at": 30090,
           "remove_utf8": "            (\n                Some(\n                    json!({\"meta\":{\"cached\":true,\"query_id\":format!(\"ssx-{}\",response.query_id),\"advisories\":view.advisories}}),\n                ),\n                Some(&html_request),\n",
           "insert_utf8": "            Some(\n                json!({\"meta\":{\"cached\":true,\"query_id\":format!(\"ssx-{}\",response.query_id),\"advisories\":view.advisories}}),\n"
         }
