@@ -30,7 +30,46 @@ use std::{
 pub trait HtmlRenderer: Send + Sync {
     fn landing(&self) -> String;
     fn error(&self, error: &str, message: &str, field: Option<&str>) -> String;
+    fn error_with_request(
+        &self,
+        error: &str,
+        message: &str,
+        field: Option<&str>,
+        _request: &HtmlRequestState,
+    ) -> String {
+        self.error(error, message, field)
+    }
     fn search(&self, response: &SearchResponse, meta: &Value, request: &SearchRequest) -> String;
+}
+/// Last submitted values of public search controls only. Unknown query/form
+/// keys, cookies, authorization headers and configuration never enter this view.
+#[derive(Clone, Default)]
+pub struct HtmlRequestState(BTreeMap<String, String>);
+impl HtmlRequestState {
+    fn from_pairs(pairs: &[(String, String)]) -> Self {
+        const FIELDS: &[&str] = &[
+            "q",
+            "categories",
+            "engines",
+            "language",
+            "time_range",
+            "date_from",
+            "date_to",
+            "safesearch",
+            "pageno",
+            "interactive_timeout_ms",
+        ];
+        Self(
+            pairs
+                .iter()
+                .filter(|(key, _)| FIELDS.contains(&key.as_str()))
+                .cloned()
+                .collect(),
+        )
+    }
+    pub fn parameters(&self) -> &BTreeMap<String, String> {
+        &self.0
+    }
 }
 #[derive(Clone)]
 pub struct HttpState {
@@ -201,8 +240,9 @@ fn error(
     code: &str,
     message: &str,
     field: Option<&str>,
-    extra: Option<Value>,
+    context: (Option<Value>, Option<&HtmlRequestState>),
 ) -> Response {
+    let (extra, request) = context;
     let mut payload = json!({"error":code,"message":message});
     if let Some(field) = field {
         payload["field"] = json!(field);
@@ -213,7 +253,10 @@ fn error(
         }
     }
     let body = match format {
-        "html" => state.html.error(code, message, field),
+        "html" => request.map_or_else(
+            || state.html.error(code, message, field),
+            |request| state.html.error_with_request(code, message, field, request),
+        ),
         "csv" => format!("{}{code},{message}\n", formats::csv(&[])),
         "rss" => formats::rss(&[], message),
         "yaml" => payload
@@ -262,6 +305,7 @@ fn select_format(
     state: &HttpState,
     requested: Option<&str>,
     accept: &str,
+    request: Option<&HtmlRequestState>,
 ) -> Result<String, Box<Response>> {
     let format = requested
         .map(|s| s.trim_matches(ssx_json::python_whitespace).to_lowercase())
@@ -274,7 +318,7 @@ fn select_format(
             "unsupported_format",
             &format!("Unsupported response format: {}", requested.unwrap_or("")),
             Some("format"),
-            None,
+            (None, request),
         )));
     }
     if format != "yaml" && !state.formats.contains(&format) {
@@ -285,7 +329,7 @@ fn select_format(
             "format_disabled",
             &format!("Response format '{format}' is disabled."),
             Some("format"),
-            None,
+            (None, request),
         )));
     }
     Ok(format)
@@ -482,7 +526,7 @@ async fn search_impl(state: &HttpState, request: Request) -> Response {
                     "invalid_request",
                     "Invalid search request.",
                     None,
-                    None,
+                    (None, None),
                 );
             }
         };
@@ -492,12 +536,22 @@ async fn search_impl(state: &HttpState, request: Request) -> Response {
                 .map(|(k, v)| (k.into_owned(), v.into_owned())),
         );
     }
+    let html_request = HtmlRequestState::from_pairs(&pairs);
     let early_error = |field: Option<&str>, message: &str| match select_format(
         state,
         param(&pairs, "format"),
         &accept,
+        Some(&html_request),
     ) {
-        Ok(format) => error(state, &format, 400, "invalid_filter", message, field, None),
+        Ok(format) => error(
+            state,
+            &format,
+            400,
+            "invalid_filter",
+            message,
+            field,
+            (None, Some(&html_request)),
+        ),
         Err(response) => *response,
     };
     let mut seen = BTreeSet::new();
@@ -547,7 +601,7 @@ async fn search_impl(state: &HttpState, request: Request) -> Response {
     }
     let query = param(&pairs, "q").unwrap_or("");
     if root && is_get && query.trim_matches(ssx_json::python_whitespace).is_empty() {
-        match select_format(state, param(&pairs, "format"), &accept) {
+        match select_format(state, param(&pairs, "format"), &accept, Some(&html_request)) {
             Err(response) => return *response,
             Ok(format) if format == "html" => return reply(200, "html", state.html.landing()),
             _ => {}
@@ -592,12 +646,20 @@ async fn search_impl(state: &HttpState, request: Request) -> Response {
             1.,
         );
     }
-    let format = match select_format(state, param(&pairs, "format"), &accept) {
+    let format = match select_format(state, param(&pairs, "format"), &accept, Some(&html_request)) {
         Ok(format) => format,
         Err(response) => return *response,
     };
     let fail = |field: Option<&str>, message: &str| {
-        error(state, &format, 400, "invalid_filter", message, field, None)
+        error(
+            state,
+            &format,
+            400,
+            "invalid_filter",
+            message,
+            field,
+            (None, Some(&html_request)),
+        )
     };
     if (param(&pairs, "date_from").is_some() || param(&pairs, "date_to").is_some())
         && matches!(format.as_str(), "csv" | "rss")
@@ -620,7 +682,7 @@ async fn search_impl(state: &HttpState, request: Request) -> Response {
             "engine_restricted",
             "Explicit selection of one or more sensitive sources requires operator authorization.",
             Some("engines"),
-            Some(json!({"engines":restricted})),
+            (Some(json!({"engines":restricted})), Some(&html_request)),
         );
     }
     let PageInteger::Positive(page) = page else {
@@ -637,8 +699,14 @@ async fn search_impl(state: &HttpState, request: Request) -> Response {
         time_range: param(&pairs, "time_range")
             .filter(|s| !s.is_empty())
             .map(str::to_owned),
-        date_from: param(&pairs, "date_from").map(str::to_owned),
-        date_to: param(&pairs, "date_to").map(str::to_owned),
+        // Empty optional browser controls mean no bound. Explicit machine
+        // values retain the accepted strict calendar-input contract.
+        date_from: param(&pairs, "date_from")
+            .filter(|value| format != "html" || !value.is_empty())
+            .map(str::to_owned),
+        date_to: param(&pairs, "date_to")
+            .filter(|value| format != "html" || !value.is_empty())
+            .map(str::to_owned),
         client_identifier: peer,
         ..Default::default()
     };
@@ -661,7 +729,7 @@ async fn search_impl(state: &HttpState, request: Request) -> Response {
                     "engine_restricted",
                     "Explicit selection of one or more sensitive sources requires operator authorization.",
                     Some("engines"),
-                    Some(*policy.details),
+                    (Some(*policy.details), Some(&html_request)),
                 );
             }
             return if policy.field == "query" {
@@ -672,7 +740,7 @@ async fn search_impl(state: &HttpState, request: Request) -> Response {
                     "query_required",
                     "The 'q' parameter is required.",
                     None,
-                    None,
+                    (None, Some(&html_request)),
                 )
             } else {
                 fail(Some(&policy.field), "Invalid search parameter.")
@@ -686,12 +754,13 @@ async fn search_impl(state: &HttpState, request: Request) -> Response {
                 "rate_limited",
                 "Too many requests. Please slow down.",
                 None,
-                None,
+                (None, Some(&html_request)),
             );
         }
         Err(SearchError::Unavailable(unavailable)) => {
             let response = SearchResponse {
                 query: query.into(),
+                scope: unavailable.preview.scope.clone(),
                 all_unresponsive: true,
                 ..Default::default()
             };
@@ -705,7 +774,7 @@ async fn search_impl(state: &HttpState, request: Request) -> Response {
                 "ssx-{:02x}{:02x}{:02x}{:02x}",
                 random[0], random[1], random[2], random[3]
             );
-            let meta = json!({"response_time_ms":0,"cached":false,"query_id":query_id,"engine_status":{},"advisories":advisories});
+            let meta = json!({"response_time_ms":0,"cached":false,"query_id":query_id,"engine_status":{},"advisories":advisories,"enforcement":Value::Object(unavailable.preview.enforcement.iter().map(|(key,entry)|(key.clone(),entry.to_value())).collect())});
             return render(state, &format, &response, meta, 503, true, &portal_request);
         }
         Err(_) => {
@@ -716,12 +785,18 @@ async fn search_impl(state: &HttpState, request: Request) -> Response {
                 "service_unavailable",
                 "Temporarily unavailable",
                 None,
-                None,
+                (None, Some(&html_request)),
             );
         }
     };
     let response = &view.response;
-    let meta = formats::meta(response, &view.advisories);
+    let mut meta = formats::meta(response, &view.advisories);
+    meta["enforcement"] = Value::Object(
+        view.enforcement
+            .iter()
+            .map(|(key, entry)| (key.clone(), entry.to_value()))
+            .collect(),
+    );
     if response.cached_error {
         return error(
             state,
@@ -730,8 +805,11 @@ async fn search_impl(state: &HttpState, request: Request) -> Response {
             "service_unavailable",
             "Temporarily unavailable (cached error)",
             None,
-            Some(
-                json!({"meta":{"cached":true,"query_id":format!("ssx-{}",response.query_id),"advisories":view.advisories}}),
+            (
+                Some(
+                    json!({"meta":{"cached":true,"query_id":format!("ssx-{}",response.query_id),"advisories":view.advisories}}),
+                ),
+                Some(&html_request),
             ),
         );
     }

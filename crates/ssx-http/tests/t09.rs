@@ -1,4 +1,6 @@
 //! Actual TLS loopback IdP/browser peers and private Valkey only. No provider calls.
+#[path = "support/t03_peer.rs"]
+mod t03_peer;
 use aws_lc_rs::{
     rand::SystemRandom,
     rsa::KeySize,
@@ -545,6 +547,14 @@ async fn actual_oidc_tls_cookie_flow_and_public_search_equivalence() {
     assert!(body.contains("Tenant A"));
     assert_eq!(f.get("/").await.text().await.unwrap(), before);
     assert_eq!(f.get("/search").await.text().await.unwrap(), without);
+    let session_cookie = cookies
+        .iter()
+        .find(|value| value.starts_with("__Host-slopsearx_session="))
+        .unwrap()
+        .split(';')
+        .next()
+        .unwrap();
+    t03_peer::public_cookie_equivalence(session_cookie).await;
     let invalid = f
         .client
         .get(format!("{}/", f.portal.url))

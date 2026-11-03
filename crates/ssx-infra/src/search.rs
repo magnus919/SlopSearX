@@ -359,6 +359,7 @@ pub struct SearchReadCapture {
     canonical: CanonicalResponse,
     request: SearchRequest,
     scope: ScopeDecision,
+    enforcement: BTreeMap<String, ssx_application::filters::EnforcementEntry>,
     query_id: String,
     elapsed_ms: i64,
     cached: bool,
@@ -366,6 +367,9 @@ pub struct SearchReadCapture {
 }
 pub struct SearchReadView {
     pub response: SearchResponse,
+    /// The report from this capture's one validated search authority, including
+    /// cache hits. Presentation never resolves a second scope to recreate it.
+    pub enforcement: BTreeMap<String, ssx_application::filters::EnforcementEntry>,
     /// Read-only notes are deliberately outside canonical cache/snapshot evidence.
     pub advisories: Vec<ssx_json::Value>,
 }
@@ -374,11 +378,15 @@ impl SearchReadCapture {
         service: &SearchService,
         canonical: CanonicalResponse,
         request: SearchRequest,
-        mut scope: ScopeDecision,
+        preview: ScopePreview,
         query_id: String,
         start: Instant,
         cached: bool,
     ) -> Self {
+        let ScopePreview {
+            mut scope,
+            enforcement,
+        } = preview;
         if canonical.response().deadline_exceeded
             && !scope
                 .warnings
@@ -394,6 +402,7 @@ impl SearchReadCapture {
             canonical,
             request,
             scope,
+            enforcement,
             query_id,
             elapsed_ms: i64::try_from(start.elapsed().as_millis()).unwrap_or(i64::MAX),
             cached,
@@ -442,6 +451,7 @@ impl SearchReadCapture {
             service.read_advisories(&self.request, &self.scope, self.full_result_count())?;
         Ok(SearchReadView {
             response: self.present(),
+            enforcement: self.enforcement.clone(),
             advisories,
         })
     }
@@ -1051,7 +1061,16 @@ impl SearchService {
                 };
                 let canonical = entry.view(context).canonical().clone();
                 return Ok(SearchReadCapture::new(
-                    self, canonical, request, scope, query_id, start, true,
+                    self,
+                    canonical,
+                    request,
+                    ScopePreview {
+                        scope,
+                        enforcement: preview.enforcement,
+                    },
+                    query_id,
+                    start,
+                    true,
                 ));
             }
         }
@@ -1164,8 +1183,18 @@ impl SearchService {
                 result = rx.changed() => { result.map_err(|_| SearchError::Cancelled)?; }
             }
         };
-        let capture =
-            SearchReadCapture::new(self, canonical, request, scope, query_id, start, false);
+        let capture = SearchReadCapture::new(
+            self,
+            canonical,
+            request,
+            ScopePreview {
+                scope,
+                enforcement: preview.enforcement,
+            },
+            query_id,
+            start,
+            false,
+        );
         self.0.deps.audit.query_completed(
             &capture.request,
             capture.canonical.response(),
