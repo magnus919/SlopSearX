@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify that Dockerfile's pinned Python digest matches Docker Hub."""
+"""Verify every explicitly supported Docker build/runtime base against Docker Hub."""
 
 import argparse
 import json
@@ -51,15 +51,34 @@ def _urlopen_with_retries(request: str | urllib.request.Request, *, label: str):
     raise RegistryLookupError(f"{label} failed with {detail} after {attempts} attempt(s)") from last_error
 
 
-def _pinned_python_base(dockerfile: str) -> tuple[str, str]:
-    from_lines = list(ALL_FROM_RE.finditer(dockerfile))
-    if len(from_lines) != 1:
-        raise SystemExit("Dockerfile must contain exactly one FROM line for base verification")
+RUST_FROM_RE = re.compile(
+    r"^\s*FROM\s+rust:(?P<tag>1\.99\.0-bookworm)@(?P<digest>sha256:[0-9a-f]{64})\s+AS\s+healthcheck-builder\s*$",
+    re.IGNORECASE,
+)
 
-    match = FROM_RE.fullmatch(from_lines[0].group(0))
-    if match is None:
-        raise SystemExit("Dockerfile must pin python base image by tag and digest")
-    return match.group("tag"), match.group("digest")
+
+def pinned_bases(dockerfile: str) -> list[tuple[str, str, str]]:
+    lines = [match.group(0) for match in ALL_FROM_RE.finditer(dockerfile)]
+    if len(lines) == 1:
+        runtime = FROM_RE.fullmatch(lines[0])
+        if runtime is None:
+            raise SystemExit("Dockerfile must pin python base image by tag and digest")
+        return [("library/python", runtime.group("tag"), runtime.group("digest"))]
+    if len(lines) != 2:
+        raise SystemExit("Dockerfile must contain exactly one runtime FROM or two recognized FROM stages")
+    builder = RUST_FROM_RE.fullmatch(lines[0])
+    runtime = FROM_RE.fullmatch(lines[1])
+    if builder is None or runtime is None or len(lines[1].split()) != 2:
+        raise SystemExit("Dockerfile must pin the recognized native health builder followed by Python runtime")
+    return [
+        ("library/rust", builder.group("tag"), builder.group("digest")),
+        ("library/python", runtime.group("tag"), runtime.group("digest")),
+    ]
+
+
+def _pinned_python_base(dockerfile: str) -> tuple[str, str]:
+    _, tag, digest = pinned_bases(dockerfile)[-1]
+    return tag, digest
 
 
 def registry_digest(repository: str, tag: str) -> str:
@@ -88,7 +107,7 @@ def registry_digest(repository: str, tag: str) -> str:
             ),
         },
     )
-    with _urlopen_with_retries(request, label=f"Docker Hub manifest request for python:{tag}") as response:
+    with _urlopen_with_retries(request, label=f"Docker Hub manifest request for {repository}:{tag}") as response:
         digest = response.headers.get("Docker-Content-Digest", "")
     if not DIGEST_RE.fullmatch(digest):
         raise RegistryLookupError("Docker Hub did not return a valid manifest digest")
@@ -101,8 +120,10 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
-        tag, expected = _pinned_python_base(Path(args.dockerfile).read_text())
-        actual = registry_digest("library/python", tag)
+        bases = pinned_bases(Path(args.dockerfile).read_text())
+        observations = [
+            (repository, tag, expected, registry_digest(repository, tag)) for repository, tag, expected in bases
+        ]
     except OSError as exc:
         print(f"Unable to read Dockerfile: {exc}", file=sys.stderr)
         return 2
@@ -110,8 +131,9 @@ def main() -> int:
         print(f"Docker Hub registry lookup failed: {exc}", file=sys.stderr)
         return 2
 
-    print(f"python:{tag} expected={expected} registry={actual}")
-    if expected != actual:
+    for repository, tag, expected, actual in observations:
+        print(f"{repository}:{tag} expected={expected} registry={actual}")
+    if any(expected != actual for _, _, expected, actual in observations):
         print("Pinned Docker base digest is stale; update tag and digest together.", file=sys.stderr)
         return 1
     return 0

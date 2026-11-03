@@ -710,6 +710,10 @@ fn page_row(root: &Path, row: &PageRow) -> Result<Vec<u8>> {
         f09_parent(root, &current)?
     } else if row.path == "crates/ssx-infra/src/search.rs" {
         crate::a13::a06_source_successor::w07_t02_joint::page_current(root, &row.path, &current)?
+    } else if row.path == "crates/ssx-infra/tests/a10_factories.rs" {
+        crate::a13::a06_source_successor::native_search::a10_clock_current(
+            root, &row.path, &current,
+        )?
     } else if row.path == "crates/ssx-infra/tests/a12_security.rs" {
         crate::a13::a06_source_successor::native_search::a12_readiness_current(
             root, &row.path, &current,
@@ -749,6 +753,7 @@ pub(super) fn page_original(root: &Path, path: &str) -> Result<Option<Vec<u8>>> 
     page_row(root, row).map(Some)
 }
 fn page_controls(root: &Path) -> Result<()> {
+    crate::a13::a06_source_successor::native_search::a10_clock_controls(root)?;
     f09_controls(root)?;
     let c = page_capsule(root)?;
     for row in &c.rows {
@@ -762,6 +767,14 @@ fn page_controls(root: &Path) -> Result<()> {
                 "merged search is not the frozen page afterimage",
             )?;
             crate::a13::a06_source_successor::w07_t02_joint::page_current(
+                root, &row.path, &current,
+            )?
+        } else if row.path == "crates/ssx-infra/tests/a10_factories.rs" {
+            need(
+                page_inverse(row, &current).is_err(),
+                "A10 clock successor is not a frozen Page afterimage",
+            )?;
+            crate::a13::a06_source_successor::native_search::a10_clock_current(
                 root, &row.path, &current,
             )?
         } else if row.path == "crates/ssx-infra/tests/a12_security.rs" {

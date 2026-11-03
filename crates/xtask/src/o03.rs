@@ -289,12 +289,20 @@ fn check_source_hashes(root: &Path, value: &Value, records: &mut Vec<Value>) -> 
     {
         let path = row["path"].as_str().ok_or("O03 row missing path")?;
         let actual = command(root, "git", &["hash-object", "--", path], records)?;
+        let expected = row["source_blob"].as_str().unwrap_or_default();
         ensure(
-            actual.trim() == row["source_blob"].as_str().unwrap_or_default(),
+            source_hash_matches(root, path, expected, actual.trim())?,
             &format!("O03 source drift: {path}; refresh reviewed inventory"),
         )?;
     }
     Ok(())
+}
+
+fn source_hash_matches(root: &Path, path: &str, expected: &str, actual: &str) -> Result<bool> {
+    if actual == expected {
+        return Ok(true);
+    }
+    crate::o02_health_retirement::successor(root, path, expected)
 }
 
 fn check_supporting_paths(root: &Path, value: &Value, records: &mut Vec<Value>) -> Result<()> {
@@ -1472,6 +1480,21 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn source_hash_check_accepts_only_exact_or_authenticated_successors() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let current = "scripts/verify_docker_base_digest.py";
+        let prior = "3f43f9bc1f90b4b2cd85381d2a54e54387cfab18";
+        let exact = command(&root, "git", &["hash-object", "--", current], &mut vec![])
+            .unwrap()
+            .trim()
+            .to_string();
+        assert_ne!(exact, prior);
+        assert!(source_hash_matches(&root, current, &exact, &exact).unwrap());
+        assert!(source_hash_matches(&root, current, prior, &exact).unwrap());
+        assert!(!source_hash_matches(&root, "scripts/other.py", prior, "different").unwrap());
+        assert!(source_hash_matches(&root, current, "wrong", &exact).is_err());
+    }
     fn valid() -> Value {
         serde_json::json!({"schema_version":"1.0.0","inventory_kind":"active_scripts_directory_exact_set","scripts":[{"path":"scripts/a.py","source_blob":"a".repeat(40),"current_entrypoint":"python scripts/a.py","entrypoint_kind":"cli","entrypoint_functions":["main"],"api_signatures":[{"name":"main","arguments":[],"async":false,"return_annotation":"int"}],"cli_options":["--fixture"],"source_summary":"runs a bounded acquisition","inputs":["fixture"],"outputs":["receipt"],"internal_imports":[],"direct_backend_imports":[],"consumed_by":["b"],"native_successor":"ssx experiment acquire --plan <id> --input <path> --output <path>","boundary":"native CLI; no Python backend imports","disposition":"backend_coupled","owner":"O07","stage":"acquisition","handoff_validation":"offline fixtures and bounds"},{"path":"scripts/b.py","source_blob":"b".repeat(40),"current_entrypoint":"programmatic API: scripts.b","entrypoint_kind":"programmatic_module","entrypoint_functions":["verify"],"api_signatures":[{"name":"verify","arguments":["path"],"async":false,"return_annotation":"bool"}],"cli_options":[],"source_summary":"verifies receipts","inputs":["receipt"],"outputs":["result"],"internal_imports":["a"],"direct_backend_imports":["slopsearx.service"],"consumed_by":[],"native_successor":"ssx evidence verify --input <path> --output <path>","boundary":"native CLI; no Python backend imports","disposition":"backend_coupled","owner":"O08","stage":"verification","handoff_validation":"offline fixtures and negative cases"}]})
     }

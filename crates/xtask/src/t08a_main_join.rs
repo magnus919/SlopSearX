@@ -197,6 +197,165 @@ fn inverse(row: &Value, current: &[u8], mode: &str, count: usize) -> Result<Vec<
     need(forward == current, "full forward reconstruction")?;
     Ok(prior)
 }
+// One finite health F01 admission successor before the unchanged T08 main frame.
+fn pre_health_f01(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
+    if path != "crates/xtask/src/main.rs" {
+        return Ok(physical.to_vec());
+    }
+    need(
+        physical.len() == 45194
+            && digest(physical)
+                == "7b84b2b3a0adcd82a6a8bf411f9c2d5696f6c24eac258a2d3f2aa732d19ae653",
+        "O02 exact current F01 admission main",
+    )?;
+    let frames: [(&str, &str); 7] = [
+        (
+            "mod f14;\nmod f15;\nmod o01;\nmod o03;\nmod o06;\nmod replay;\n",
+            "mod f14;\nmod f15;\nmod o01;\nmod o02_health_retirement;\nmod o03;\nmod o06;\nmod replay;\n",
+        ),
+        (
+            "}\nfn source_check(root: &Path, id: &str, records: &mut Vec<Value>) -> Result<()> {\n    let path = root.join(format!(\"crates/xtask/fixtures/{id}.json\"));\n    let f: Fixture = serde_json::from_slice(\n        &fs::read(&path).map_err(|e| format!(\"missing fixture {}: {e}\", path.display()))?,\n    )\n    .map_err(|e| format!(\"malformed fixture: {e}\"))?;\n    validate_fixture(&f, id)?;\n    let tracked = command(root, \"git\", &[\"ls-files\", \"-z\"], records)?;\n    let required: BTreeSet<_> = tracked\n",
+            "}\nfn source_check(root: &Path, id: &str, records: &mut Vec<Value>) -> Result<()> {\n    let path = root.join(format!(\"crates/xtask/fixtures/{id}.json\"));\n    let fixture_bytes =\n        fs::read(&path).map_err(|e| format!(\"missing fixture {}: {e}\", path.display()))?;\n    let f: Fixture =\n        serde_json::from_slice(&fixture_bytes).map_err(|e| format!(\"malformed fixture: {e}\"))?;\n    validate_fixture(&f, id)?;\n    let tracked = command(root, \"git\", &[\"ls-files\", \"-z\"], records)?;\n    let required: BTreeSet<_> = tracked\n",
+        ),
+        (
+            "        })\n        .map(str::to_string)\n        .collect();\n    let provided: BTreeSet<_> = f.sources.iter().map(|s| s.path.clone()).collect();\n    if required.is_empty() || required != provided {\n        return Err(\"source fixture coverage is incomplete or unexpected\".into());\n    }\n\n    for s in &f.sources {\n        if id == \"F01\" && snapshot_fixture_amendment::f01(root, &s.path, &s.git_blob)?.is_some() {\n            continue;\n        }\n",
+            "        })\n        .map(str::to_string)\n        .collect();\n    let retired = id == \"F01\";\n    if retired {\n        let indexed = tracked\n            .split('\\0')\n            .filter(|p| !p.is_empty())\n            .map(str::to_string)\n            .collect();\n        o02_health_retirement::authenticate(root, &fixture_bytes, &indexed)?;\n    }\n    let mut provided: BTreeSet<_> = f.sources.iter().map(|s| s.path.clone()).collect();\n    if retired {\n        provided.remove(o02_health_retirement::PATH);\n    }\n    if required.is_empty() || required != provided {\n        return Err(\"source fixture coverage is incomplete or unexpected\".into());\n    }\n\n    for s in &f.sources {\n        if retired && s.path == o02_health_retirement::PATH {\n            continue;\n        }\n        if retired && o02_health_retirement::successor(root, &s.path, &s.git_blob)? {\n            continue;\n        }\n        if id == \"F01\" && snapshot_fixture_amendment::f01(root, &s.path, &s.git_blob)?.is_some() {\n            continue;\n        }\n",
+        ),
+        (
+            "            })\n            .map(str::to_string)\n            .collect();\n        if paths.is_empty() || paths != expected {\n            return Err(\"Python source inventory differs from tracked source set\".into());\n        }\n",
+            "            })\n            .map(str::to_string)\n            .collect();\n        if retired {\n            paths.remove(o02_health_retirement::PATH);\n        }\n        if paths.is_empty() || paths != expected {\n            return Err(\"Python source inventory differs from tracked source set\".into());\n        }\n",
+        ),
+        (
+            "    }\n    #[test]\n    fn missing_empty_malformed_stale_and_incomplete_fail() {\n        let root = std::env::temp_dir().join(format!(\"ssx-xtask-negative-{}\", std::process::id()));\n        fs::create_dir_all(root.join(\"crates/xtask/fixtures\")).unwrap();\n        let fixture = root.join(\"crates/xtask/fixtures/F01.json\");\n",
+            "    }\n    #[test]\n    fn missing_empty_malformed_stale_and_incomplete_fail() {\n        let current = Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../..\");\n        source_check(&current, \"F01\", &mut vec![]).unwrap();\n        o02_health_retirement::controls(&current).unwrap();\n        let root = std::env::temp_dir().join(format!(\"ssx-xtask-negative-{}\", std::process::id()));\n        fs::create_dir_all(root.join(\"crates/xtask/fixtures\")).unwrap();\n        let fixture = root.join(\"crates/xtask/fixtures/F01.json\");\n",
+        ),
+        (
+            r###"        fs::write(root.join("example.py"), "# real source\n").unwrap();
+        command(&root, "git", &["add", "example.py"], &mut records).unwrap();
+        fs::write(&fixture,serde_json::to_vec(&json!({"schema_version":1,"plan_id":"F01","sources":[{"path":"example.py","git_blob":"0".repeat(40)}]})).unwrap()).unwrap();
+        assert!(
+            source_check(&root, "F01", &mut records)
+                .unwrap_err()
+                .contains("stale source")
+        );"###,
+            r###"        fs::create_dir_all(root.join("docs/rust-rewrite/architecture")).unwrap();
+        fs::write(
+            root.join("docs/rust-rewrite/architecture/example.json"),
+            "{\"source\":true}\n",
+        )
+        .unwrap();
+        command(
+            &root,
+            "git",
+            &["add", "docs/rust-rewrite/architecture/example.json"],
+            &mut records,
+        )
+        .unwrap();
+        let f02_fixture = root.join("crates/xtask/fixtures/F02.json");
+        fs::write(&f02_fixture,serde_json::to_vec(&json!({"schema_version":1,"plan_id":"F02","sources":[{"path":"docs/rust-rewrite/architecture/example.json","git_blob":"0".repeat(40)}]})).unwrap()).unwrap();
+        assert!(
+            source_check(&root, "F02", &mut records)
+                .unwrap_err()
+                .contains("stale source")
+        );"###,
+        ),
+        (
+            r###"        fs::write(&fixture,serde_json::to_vec(&json!({"schema_version":1,"plan_id":"F01","sources":[{"path":"other.py","git_blob":"0".repeat(40)}]})).unwrap()).unwrap();
+        assert!(
+            source_check(&root, "F01", &mut records)
+                .unwrap_err()
+                .contains("coverage")
+        );"###,
+            r###"        fs::write(&f02_fixture,serde_json::to_vec(&json!({"schema_version":1,"plan_id":"F02","sources":[{"path":"other.json","git_blob":"0".repeat(40)}]})).unwrap()).unwrap();
+        assert!(
+            source_check(&root, "F02", &mut records)
+                .unwrap_err()
+                .contains("coverage")
+        );
+
+        fs::create_dir_all(root.join("docs/rust-rewrite/inventory")).unwrap();
+        fs::write(root.join("example.py"), "# tracked source\n").unwrap();
+        fs::write(
+            root.join("docs/rust-rewrite/inventory/python-disposition.json"),
+            r#"{"files":[{"path":"example.py","disposition":"retained","classification":"client"}]}"#,
+        )
+        .unwrap();
+        command(
+            &root,
+            "git",
+            &[
+                "add",
+                "example.py",
+                "docs/rust-rewrite/inventory/python-disposition.json",
+            ],
+            &mut records,
+        )
+        .unwrap();
+        let python_blob =
+            command(&root, "git", &["hash-object", "example.py"], &mut records).unwrap();
+        let disposition_blob = command(
+            &root,
+            "git",
+            &[
+                "hash-object",
+                "docs/rust-rewrite/inventory/python-disposition.json",
+            ],
+            &mut records,
+        )
+        .unwrap();
+        fs::write(
+            &fixture,
+            serde_json::to_vec(&json!({
+                "schema_version": 1,
+                "plan_id": "F01",
+                "sources": [
+                    {"path": "example.py", "git_blob": python_blob.trim()},
+                    {
+                        "path": "docs/rust-rewrite/inventory/python-disposition.json",
+                        "git_blob": disposition_blob.trim()
+                    }
+                ]
+            }))
+            .unwrap(),
+        )
+        .unwrap();
+        let error = source_check(&root, "F01", &mut records).unwrap_err();
+        assert!(
+            error.contains("O02 health retirement"),
+            "omitting the retired healthcheck row must still run its authenticated proof: {error}"
+        );
+"###,
+        ),
+    ];
+    let current = std::str::from_utf8(physical).map_err(|e| e.to_string())?;
+    let mut prior = current.to_owned();
+    for (before, after) in frames {
+        need(
+            prior.matches(after).count() == 1,
+            "O02 unique inverse F01 span",
+        )?;
+        prior = prior.replacen(after, before, 1);
+    }
+    need(
+        prior.len() == 42077
+            && digest(prior.as_bytes())
+                == "dbce267dc183e0f092eb880f9600676d217ca6b4e8f2ccc39bf7baf322080ceb",
+        "O02 exact pre-F01-retirement main",
+    )?;
+    let mut forward = prior.clone();
+    for (before, after) in frames {
+        need(
+            forward.matches(before).count() == 1,
+            "O02 unique forward F01 span",
+        )?;
+        forward = forward.replacen(before, after, 1);
+    }
+    need(
+        forward.as_bytes() == physical,
+        "O02 complete F01 main reconstruction",
+    )?;
+    Ok(prior.into_bytes())
+}
 // The #984 PR changes W07's verifier after the accepted CLI/W08 join was sealed.
 // Bind the exact physical change, then invert its three finite spans before the
 // existing join check so both accepted parents remain independently authentic.
@@ -243,10 +402,10 @@ fn pre_984_w07(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
 }
 
 fn accepted_current(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
-    let w07 = pre_984_w07(path, physical)?;
+    let health = pre_health_f01(path, physical)?;
+    let w07 = pre_984_w07(path, &health)?;
     pre_t08_registration(path, &w07)
 }
-
 // Exact additive T08 registration precedes the unchanged accepted CLI/W08 join.
 // This is a closed three-span current-source amendment, not an alternate root.
 fn pre_t08_registration(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
@@ -343,6 +502,15 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         let physical = regular(root, path)?;
         let logical = accepted_current(path, &physical)?;
         if *path == "crates/xtask/src/main.rs" {
+            let health = pre_health_f01(path, &physical)?;
+            need(
+                pre_t08_registration(path, &health)? == logical,
+                "exact pre-health frame reaches existing registration",
+            )?;
+            need(
+                pre_health_f01(path, &health).is_err(),
+                "pre-health frame substituted as physical registration",
+            )?;
             need(
                 accepted_current(path, &logical).is_err(),
                 "pre-T08 frame substituted as physical registration",
