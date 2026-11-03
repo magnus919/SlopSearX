@@ -97,3 +97,9 @@ test('rejects missing, duplicate, mismatched, or altered semantic-control eviden
   assert.throws(() => validateControlEvidence(control('1').map((entry) => ({ ...entry, regularFiles: false })), expected, 1), /regular files/);
   assert.throws(() => validateControlEvidence(control('2'), expected, 1), /differs from its prerequisites/);
 });
+
+test('workflow downloads semantic-control evidence from any prior attempt of the same run', () => {
+  const workflow = fs.readFileSync(new URL('../../.github/workflows/rust.yml', import.meta.url), 'utf8');
+  assert.ok(workflow.includes('target/rust-evidence/A10-linux-control/${{ github.run_id }}-*-${{ runner.arch }}.*/'));
+  assert.doesNotMatch(workflow, /A10-linux-control\/\$\{\{\s*github\.run_id\s*\}\}-\$\{\{\s*github\.run_attempt\s*\}\}-/);
+});

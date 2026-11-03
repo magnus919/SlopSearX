@@ -1270,7 +1270,7 @@ jobs:
             target/rust-evidence/A08.json
             target/rust-evidence/A09.json
             target/rust-evidence/A10.json
-            target/rust-evidence/A10-linux-control/${{ github.run_id }}-${{ github.run_attempt }}-${{ runner.arch }}.*/
+            target/rust-evidence/A10-linux-control/${{ github.run_id }}-*-${{ runner.arch }}.*/
             target/rust-evidence/A11.json
             target/rust-evidence/A12.json
             target/rust-evidence/A13.json
