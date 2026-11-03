@@ -414,13 +414,22 @@ async fn all_five_closed_admission_and_context_have_zero_http() {
 
     assert_loopback("http://127.0.0.1:1/");
     for name in NAMES {
-        for (admission, status) in [
+        for (admission, status, deadline) in [
             (
                 Arc::new(Denied) as Arc<dyn SearchAdmission>,
                 EngineStatus::RateLimited,
+                Duration::from_secs(1),
             ),
-            (Arc::new(Pending), EngineStatus::Timeout),
-            (Arc::new(Unavailable), EngineStatus::Error),
+            (
+                Arc::new(Pending),
+                EngineStatus::Timeout,
+                Duration::from_millis(20),
+            ),
+            (
+                Arc::new(Unavailable),
+                EngineStatus::Error,
+                Duration::from_secs(1),
+            ),
         ] {
             let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
             let (registry, http, parser) = wired(
@@ -437,7 +446,7 @@ async fn all_five_closed_admission_and_context_have_zero_http() {
                         ..Default::default()
                     },
                     SearchContext {
-                        deadline: Instant::now() + Duration::from_millis(20),
+                        deadline: Instant::now() + deadline,
                     },
                 )
                 .await;

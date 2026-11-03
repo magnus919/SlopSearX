@@ -416,6 +416,203 @@ fn page_payload(row: &Value, physical: &Material) -> Result<Vec<u8>> {
     )?;
     Ok(prior)
 }
+// Test-only closed-admission clock successor. Authenticate the physical source
+// before recovering the unchanged Page afterimage and its historical inverse.
+const A10_CLOCK_PATH: &str = "crates/ssx-infra/tests/a10_factories.rs";
+const A10_CLOCK_CAPSULE: &str = "docs/rust-rewrite/a10/admission-clock-successor-v1.json";
+const A10_CLOCK_SHA: &str = "93cc50f1f3154e45e33ee1245037a6566f339a1cf6d97b01e19638dffcf88702";
+fn a10_clock_decode(raw: &Material) -> Result<Value> {
+    need(
+        raw.mode == 0o644 && raw.bytes.len() == 1514 && digest(&raw.bytes) == A10_CLOCK_SHA,
+        "A10 clock capsule identity/mode",
+    )?;
+    serde_json::from_slice(&raw.bytes).map_err(|e| e.to_string())
+}
+fn a10_clock_document(root: &Path) -> Result<Value> {
+    a10_clock_decode(&read(root, A10_CLOCK_CAPSULE)?)
+}
+fn a10_clock_payload(doc: &Value, physical: &Material) -> Result<Material> {
+    need(
+        doc.as_object().is_some_and(|fields| fields.len() == 10)
+            && doc["schema_version"] == 1
+            && doc["kind"] == "A10_CLOSED_ADMISSION_CLOCK_SOURCE_SUCCESSOR"
+            && doc["baseline"] == "9111f7d5c7a4d243544fd51fa11d34c93a12546e"
+            && doc["path"] == A10_CLOCK_PATH
+            && doc["mode"] == "0644"
+            && doc["before_sha256"]
+                == "8d00e116b3871b1397bdfc5ec4fdd6ba6662fd417b7b394787de80354ddf3335"
+            && doc["after_sha256"]
+                == "efad66ae0085fa4f5ae39b5100eec5fe27a4c8155c17d8f23e9434651d5b8ab5"
+            && doc["before_bytes"] == 24574
+            && doc["after_bytes"] == 24784,
+        "A10 clock closed source tuple",
+    )?;
+    need(
+        physical.mode == 0o644
+            && physical.bytes.len() == 24784
+            && digest(&physical.bytes)
+                == "efad66ae0085fa4f5ae39b5100eec5fe27a4c8155c17d8f23e9434651d5b8ab5",
+        "A10 clock current physical identity",
+    )?;
+    let current = std::str::from_utf8(&physical.bytes).map_err(|e| e.to_string())?;
+    let edits = doc["edits"].as_array().ok_or("A10 clock edits absent")?;
+    need(edits.len() == 2, "A10 clock exact two source spans")?;
+    let mut prior = current.to_owned();
+    for edit in edits.iter().rev() {
+        let before = edit["before"].as_str().ok_or("A10 clock before absent")?;
+        let after = edit["after"].as_str().ok_or("A10 clock after absent")?;
+        need(
+            edit.as_object().is_some_and(|fields| fields.len() == 2)
+                && !before.is_empty()
+                && !after.is_empty()
+                && before != after
+                && prior.matches(after).count() == 1,
+            "A10 clock exact successor span",
+        )?;
+        prior = prior.replacen(after, before, 1);
+    }
+    need(
+        prior.len() == 24574
+            && digest(prior.as_bytes())
+                == "8d00e116b3871b1397bdfc5ec4fdd6ba6662fd417b7b394787de80354ddf3335",
+        "A10 clock exact Page afterimage",
+    )?;
+    let mut forward = prior.clone();
+    for edit in edits {
+        let before = edit["before"].as_str().ok_or("A10 clock before absent")?;
+        let after = edit["after"].as_str().ok_or("A10 clock after absent")?;
+        need(
+            forward.matches(before).count() == 1,
+            "A10 clock unique forward span",
+        )?;
+        forward = forward.replacen(before, after, 1);
+    }
+    need(
+        forward.as_bytes() == physical.bytes.as_slice(),
+        "A10 clock full forward reconstruction",
+    )?;
+    Ok(Material {
+        bytes: prior.into_bytes(),
+        mode: physical.mode,
+    })
+}
+/// Shared A06/T02 projection: supplied bytes must be the actual current source.
+pub(crate) fn a10_clock_current(root: &Path, path: &str, supplied: &[u8]) -> Result<Vec<u8>> {
+    need(path == A10_CLOCK_PATH, "A10 clock unowned projection path")?;
+    let actual = read(root, path)?;
+    need(
+        actual.bytes == supplied,
+        "A10 clock supplied physical identity",
+    )?;
+    Ok(a10_clock_payload(&a10_clock_document(root)?, &actual)?.bytes)
+}
+fn a10_clock_prior(root: &Path, physical: Material) -> Result<Material> {
+    Ok(Material {
+        bytes: a10_clock_current(root, A10_CLOCK_PATH, &physical.bytes)?,
+        mode: physical.mode,
+    })
+}
+pub(crate) fn a10_clock_controls(root: &Path) -> Result<()> {
+    let doc = a10_clock_document(root)?;
+    let actual = read(root, A10_CLOCK_PATH)?;
+    let prior = a10_clock_payload(&doc, &actual)?;
+    need(
+        a10_clock_current(root, A10_CLOCK_PATH, &actual.bytes)? == prior.bytes,
+        "A10 clock actual shared projection",
+    )?;
+    need(
+        a10_clock_current(root, A10_CLOCK_PATH, &prior.bytes).is_err(),
+        "A10 clock rejects old supplied bytes",
+    )?;
+    need(
+        a10_clock_current(root, "Cargo.lock", &actual.bytes).is_err(),
+        "A10 clock rejects unowned path",
+    )?;
+    need(
+        a10_clock_payload(&doc, &prior).is_err(),
+        "A10 clock old source is not current",
+    )?;
+    let capsule = read(root, A10_CLOCK_CAPSULE)?;
+    for mode in [0o600, 0o755, 0o4644] {
+        let mut bad = capsule.clone();
+        bad.mode = mode;
+        need(
+            a10_clock_decode(&bad).is_err(),
+            "A10 clock changed capsule mode accepted",
+        )?;
+    }
+    let mut capsule = capsule;
+    capsule.bytes.push(b' ');
+    need(
+        a10_clock_decode(&capsule).is_err(),
+        "A10 clock changed capsule accepted",
+    )?;
+    for field in [
+        "schema_version",
+        "kind",
+        "baseline",
+        "path",
+        "mode",
+        "before_sha256",
+        "after_sha256",
+        "before_bytes",
+        "after_bytes",
+    ] {
+        let mut bad = doc.clone();
+        bad[field] = json!("wrong");
+        need(
+            a10_clock_payload(&bad, &actual).is_err(),
+            "A10 clock changed tuple accepted",
+        )?;
+    }
+    for mutation in 0..4 {
+        let mut bad = doc.clone();
+        match mutation {
+            0 => {
+                bad["edits"].as_array_mut().unwrap().pop();
+            }
+            1 => {
+                let edit = bad["edits"][0].clone();
+                bad["edits"].as_array_mut().unwrap().push(edit);
+            }
+            2 => bad["edits"][0]["after"] = json!("changed source span"),
+            _ => bad["edits"][0]["before"] = json!("changed predecessor span"),
+        }
+        need(
+            a10_clock_payload(&bad, &actual).is_err(),
+            "A10 clock missing/duplicate/changed edit accepted",
+        )?;
+    }
+    for mode in [0o600, 0o755, 0o4644] {
+        let mut bad = actual.clone();
+        bad.mode = mode;
+        need(
+            a10_clock_payload(&doc, &bad).is_err(),
+            "A10 clock changed source mode accepted",
+        )?;
+    }
+    let current = std::str::from_utf8(&actual.bytes).map_err(|e| e.to_string())?;
+    for edit in doc["edits"].as_array().unwrap() {
+        let after = edit["after"]
+            .as_str()
+            .ok_or("A10 clock control span absent")?;
+        for bytes in [
+            current.replacen(after, "", 1).into_bytes(),
+            format!("{current}{after}").into_bytes(),
+            current.replacen(after, "changed body", 1).into_bytes(),
+        ] {
+            let bad = Material {
+                bytes,
+                mode: actual.mode,
+            };
+            need(
+                a10_clock_payload(&doc, &bad).is_err(),
+                "A10 clock missing/duplicate/changed source accepted",
+            )?;
+        }
+    }
+    Ok(())
+}
 // Test-only readiness successor. Physical source admission precedes the
 // unchanged Page inverse; the two original test identities remain intact.
 const A12_READINESS_PATH: &str = "crates/ssx-infra/tests/a12_security.rs";
@@ -611,6 +808,8 @@ pub(crate) fn page_prior(
             bytes: super::w07_t02_joint::page_current(root, path, &physical.bytes)?,
             mode: physical.mode,
         }
+    } else if path == A10_CLOCK_PATH {
+        a10_clock_prior(root, physical)?
     } else if path == "crates/ssx-infra/tests/a12_security.rs" {
         a12_readiness_prior(root, physical)?
     } else {
@@ -651,6 +850,7 @@ pub(crate) fn page_prior(
 /// Same existing test identities exercise actual physical/new-to-e127 and legacy
 /// reconstructions separately, including wrong caller/mode/edit/supplied buffers.
 pub(crate) fn page_controls(root: &Path) -> Result<()> {
+    a10_clock_controls(root)?;
     a12_readiness_controls(root)?;
     let doc = page_document(root)?;
     for &(path, pin, len) in PAGE_OPERANDS {
@@ -692,6 +892,8 @@ pub(crate) fn page_controls(root: &Path) -> Result<()> {
                 bytes: super::w07_t02_joint::page_current(root, path, &physical.bytes)?,
                 mode: physical.mode,
             }
+        } else if path == A10_CLOCK_PATH {
+            a10_clock_prior(root, physical)?
         } else if path == A12_READINESS_PATH {
             a12_readiness_prior(root, physical)?
         } else {
