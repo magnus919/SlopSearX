@@ -2013,7 +2013,7 @@
         "job": {
           "name": "Foundation prerequisites (${{ matrix.runner }})",
           "runs-on": "${{ matrix.runner }}",
-          "timeout-minutes": 120,
+          "timeout-minutes": 130,
           "strategy": {
             "fail-fast": false,
             "matrix": {
@@ -2117,7 +2117,7 @@
       },
       "owner": "F03",
       "state": "additive",
-      "successor": "Mandatory prerequisites partition on both existing architectures; exact original commands and native deadlines retained; fresh tool/isolation/Valkey/compiler/source provenance; no inherited targets or dropped gates."
+      "successor": "Mandatory prerequisites partition on both existing architectures; exact original commands and native deadlines retained; fresh tool/isolation/Valkey/compiler/source provenance; no inherited targets or dropped gates. Separate 130-minute outer workflow job cap; native command deadlines and all gates remain unchanged."
     },
     "rust.yml:foundation-runtime": {
       "source": {
@@ -2142,7 +2142,7 @@
         "job": {
           "name": "Foundation runtime (${{ matrix.runner }})",
           "runs-on": "${{ matrix.runner }}",
-          "timeout-minutes": 120,
+          "timeout-minutes": 130,
           "strategy": {
             "fail-fast": false,
             "matrix": {
@@ -2372,7 +2372,7 @@
       },
       "owner": "F03",
       "state": "additive",
-      "successor": "Mandatory runtime partition on both existing architectures; exact original commands and native deadlines retained; fresh tool/isolation/Valkey/compiler/source provenance; no inherited targets or dropped gates. Includes explicit T08 default/installed native CLI-to-production-component integration and source/binary O04 handoff; original command bodies and all other owners remain unchanged."
+      "successor": "Mandatory runtime partition on both existing architectures; exact original commands and native deadlines retained; fresh tool/isolation/Valkey/compiler/source provenance; no inherited targets or dropped gates. Includes explicit T08 default/installed native CLI-to-production-component integration and source/binary O04 handoff; original command bodies and all other owners remain unchanged. Separate 130-minute outer workflow job cap; native command deadlines and all gates remain unchanged."
     },
     "rust.yml:foundation-adapters": {
       "source": {
@@ -2397,7 +2397,7 @@
         "job": {
           "name": "Foundation adapters (${{ matrix.runner }})",
           "runs-on": "${{ matrix.runner }}",
-          "timeout-minutes": 120,
+          "timeout-minutes": 130,
           "strategy": {
             "fail-fast": false,
             "matrix": {
@@ -2558,7 +2558,7 @@
       },
       "owner": "F03",
       "state": "additive",
-      "successor": "Mandatory adapters partition on both existing architectures; exact original commands and native deadlines retained; fresh tool/isolation/Valkey/compiler/source provenance; no inherited targets or dropped gates."
+      "successor": "Mandatory adapters partition on both existing architectures; exact original commands and native deadlines retained; fresh tool/isolation/Valkey/compiler/source provenance; no inherited targets or dropped gates. Separate 130-minute outer workflow job cap; native command deadlines and all gates remain unchanged."
     },
     "rust-cli.yml:native-cli": {
       "source": {

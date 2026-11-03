@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "main": "96f8541f18368e6ef9162b6163644a3ff0b12b73",
   "page": "3f6329f3ecaaa425f9df0c7c2eae54aebe8aec0c",
   "paths": [
@@ -55,6 +55,58 @@
           },
           {
             "current_offset": 16055,
+            "old": "",
+            "new": "        receipt_control_closure::controls(&root).unwrap();\n        receipt_control::controls(&root).unwrap();\n"
+          }
+        ]
+      },
+      "physical": {
+        "sha256": "f28475c15f8c25eb159d3239f2ce0d78a523fe86bdea865a8173609af7b04a94",
+        "bytes": 19809,
+        "mode": 420
+      },
+      "physical_to_current": [
+        {
+          "current_offset": 7457,
+          "old": "",
+          "new": "];\nconst SCIENCE_OPENALEX: &[&str] = &[\n    \"authenticated_science_openalex_dates_preserve_wire_proof_and_valkey_cache\",\n    \"science_date_denials_never_reach_real_adapter_or_shared_acquisition\",\n    \"science_real_openalex_empty_and_http_failure_remain_distinct\",\n];\nconst SCIENCE_HTTP: &[&str] = &[\n    \"science_openalex_fixture_rejects_zero_expected_requests\",\n    \"native_http_real_openalex_routes_bounds_formats_and_cache_reacquisition\",\n    \"native_http_date_denials_have_zero_real_acquisition\",\n    \"native_http_real_openalex_failure_and_empty_have_distinct_status_outcomes\",\n"
+        },
+        {
+          "current_offset": 15400,
+          "old": "",
+          "new": "    run_suite(\n        root,\n        &[\"--test\", \"science_openalex\"],\n        SCIENCE_OPENALEX,\n        records,\n    )?;\n    run_suite_for(\n        root,\n        \"ssx-http\",\n        &[\"--test\", \"science_openalex\"],\n        SCIENCE_HTTP,\n        records,\n    )?;\n"
+        }
+      ],
+      "qualification": {
+        "prior": {
+          "sha256": "00a0a0ba122cd15da453cad72a025750e476db71d7ff327bef5b8646ade4cdd7",
+          "bytes": 18993,
+          "mode": 420
+        },
+        "prior_git_blob": "ae27e07de82687b19dbe00f6b621d47a0f4e074c",
+        "edits": [
+          {
+            "current_offset": 302,
+            "old": "",
+            "new": "#[path = \"../../../docs/rust-rewrite/t06/source-amendments/page-main-receipt-control-adapter-v1.rs\"]\npub(crate) mod receipt_control;\n#[path = \"../../../docs/rust-rewrite/t06/source-amendments/receipt-control-closure.rs\"]\npub(crate) mod receipt_control_closure;\n"
+          },
+          {
+            "current_offset": 3542,
+            "old": "",
+            "new": "    receipt_control_closure::verify(root)?;\n    let prior = receipt_control::parent(\n        root,\n        row[\"file\"].as_str().ok_or(\"T06 native fixture path\")?,\n        expected.as_str().ok_or(\"T06 native fixture hash\")?,\n        bytes,\n    )?;\n    let bytes = prior.as_deref().unwrap_or(bytes);\n"
+          },
+          {
+            "current_offset": 7757,
+            "old": "",
+            "new": "    \"science_openalex_fixture_rejects_zero_expected_requests\",\n"
+          },
+          {
+            "current_offset": 11924,
+            "old": "",
+            "new": "    receipt_control_closure::controls(root)?;\n    receipt_control::controls(root)?;\n"
+          },
+          {
+            "current_offset": 16899,
             "old": "",
             "new": "        receipt_control_closure::controls(&root).unwrap();\n        receipt_control::controls(&root).unwrap();\n"
           }
@@ -151,5 +203,6 @@
         "edits": []
       }
     }
-  ]
+  ],
+  "qualification": "24db49cb5ba2c00cd15e7acb36242ae297983975"
 }

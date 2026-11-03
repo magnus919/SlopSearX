@@ -579,6 +579,20 @@ const PAGE_CHAINED: [&str; 2] = [
     "crates/ssx-http/tests/t02_http.rs",
     "crates/ssx-infra/src/search.rs",
 ];
+// #984 adds one source-bound F14 service/cache test. Authenticate that exact
+// current successor, then project only its insertion back to the frozen Page
+// afterimage so the immutable historical inverse remains meaningful.
+const PAGE_F14_PATH: &str = "crates/ssx-infra/tests/f14.rs";
+const PAGE_F14_CURRENT_SHA: &str =
+    "8fa5e5ca8b688cd95f5bc3f5afe0195d4baa1d2190899d7567c473d16efdabb3";
+const PAGE_F14_CURRENT_BYTES: usize = 103478;
+const PAGE_F14_INSERT_OFFSET: usize = 16813;
+const PAGE_F14_INSERT_BYTES: usize = 10188;
+const PAGE_F14_INSERT_SHA: &str =
+    "e0f3b0c96faa1c724b058e44e1cfe8b2480712bf7ca0ed5ab73833781506f76e";
+const PAGE_F14_AFTERIMAGE_SHA: &str =
+    "60ef4b5004492170be2f9ff8328b50fc56eb02ea1e7676548165e8bb8c8198e2";
+const PAGE_F14_AFTERIMAGE_BYTES: usize = 93290;
 #[derive(Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct PageRow {
@@ -645,6 +659,37 @@ fn page_inverse(row: &PageRow, current: &[u8]) -> Result<Vec<u8>> {
     )?;
     Ok(before)
 }
+fn page_f14_current(path: &str, current: &[u8]) -> Result<Vec<u8>> {
+    need(path == PAGE_F14_PATH, "closed page/F14 caller")?;
+    need(
+        current.len() == PAGE_F14_CURRENT_BYTES && sha(current) == PAGE_F14_CURRENT_SHA,
+        "page/F14 exact current OpenAlex source successor",
+    )?;
+    let end = PAGE_F14_INSERT_OFFSET + PAGE_F14_INSERT_BYTES;
+    let inserted = current
+        .get(PAGE_F14_INSERT_OFFSET..end)
+        .ok_or("page/F14 inserted region outside current bytes")?;
+    need(
+        sha(inserted) == PAGE_F14_INSERT_SHA,
+        "page/F14 exact #984 insertion",
+    )?;
+    let mut projected = Vec::with_capacity(PAGE_F14_AFTERIMAGE_BYTES);
+    projected.extend_from_slice(
+        current
+            .get(..PAGE_F14_INSERT_OFFSET)
+            .ok_or("page/F14 prefix outside current bytes")?,
+    );
+    projected.extend_from_slice(
+        current
+            .get(end..)
+            .ok_or("page/F14 suffix outside current bytes")?,
+    );
+    need(
+        projected.len() == PAGE_F14_AFTERIMAGE_BYTES && sha(&projected) == PAGE_F14_AFTERIMAGE_SHA,
+        "page/F14 exact frozen afterimage",
+    )?;
+    Ok(projected)
+}
 fn page_row(root: &Path, row: &PageRow) -> Result<Vec<u8>> {
     let full = root.join(&row.path);
     let meta = fs::symlink_metadata(&full).map_err(|e| e.to_string())?;
@@ -673,6 +718,8 @@ fn page_row(root: &Path, row: &PageRow) -> Result<Vec<u8>> {
         crate::a13::a06_source_successor::native_search::a12_readiness_current(
             root, &row.path, &current,
         )?
+    } else if row.path == PAGE_F14_PATH {
+        page_f14_current(&row.path, &current)?
     } else {
         current
     };
@@ -738,6 +785,19 @@ fn page_controls(root: &Path) -> Result<()> {
             crate::a13::a06_source_successor::native_search::a12_readiness_current(
                 root, &row.path, &current,
             )?
+        } else if row.path == PAGE_F14_PATH {
+            let projected = page_f14_current(&row.path, &current)?;
+            need(
+                page_f14_current(&row.path, &projected).is_err(),
+                "F14 frozen Page afterimage accepted as physical current",
+            )?;
+            let mut changed = current.clone();
+            changed[PAGE_F14_INSERT_OFFSET] ^= 1;
+            need(
+                page_f14_current(&row.path, &changed).is_err(),
+                "F14 unlisted source change accepted",
+            )?;
+            page_f14_current(&row.path, &current)?
         } else {
             current
         };

@@ -356,6 +356,56 @@ fn pre_health_f01(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
     )?;
     Ok(prior.into_bytes())
 }
+// The #984 PR changes W07's verifier after the accepted CLI/W08 join was sealed.
+// Bind the exact physical change, then invert its three finite spans before the
+// existing join check so both accepted parents remain independently authentic.
+fn pre_984_w07(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
+    if path != "crates/xtask/src/w07.rs" {
+        return Ok(physical.to_vec());
+    }
+    need(
+        physical.len() == 42023
+            && digest(physical)
+                == "55c93c8914529eb5c26df0943068b6fd97200f67c288f63bbafea6033729812c",
+        "#984 exact physical W07 verifier",
+    )?;
+    let inverse_row = serde_json::json!({
+        "current": {
+            "sha256": "55c93c8914529eb5c26df0943068b6fd97200f67c288f63bbafea6033729812c",
+            "bytes": 42023,
+            "mode": "0644",
+        },
+        "prior": {
+            "sha256": "4cc2a95645fa639d0873ea1a8803693d63eef074782f41c54540ea04632e6916",
+            "bytes": 41464,
+            "mode": "0644",
+        },
+        "edits": [
+            {
+                "at": 854,
+                "remove_utf8": "const REGISTRY_SHA: &str = \"a651a9d36c1d5409edbcb7d79a44ac599468ca493fdd735982bb1d1894e4461d\";",
+                "insert_utf8": "const REGISTRY_SHA: &str = \"4d9cb197718db1d06086ee1557f1eb4953bf53b9938eb4bce41da762f70ad1a7\";",
+            },
+            {
+                "at": 10275,
+                "remove_utf8": "",
+                "insert_utf8": "    // #984 adds exact real-adapter MCP/HTTP suites; all historical W07 suites\n    // and source pins remain unchanged except this reviewed T06 registrar.\n    if expected[\"sources\"][\"crates/xtask/src/t06.rs\"]\n        != \"be30918a7ac4365b2538b58fd1c3c933e6b2bea96d6222d267c4a87d29e413e0\"\n    {\n        return Err(\"W07 original T06 registrar pin changed\".into());\n    }\n    expected[\"sources\"][\"crates/xtask/src/t06.rs\"] =\n        Value::String(\"00a0a0ba122cd15da453cad72a025750e476db71d7ff327bef5b8646ade4cdd7\".into());\n\n",
+            },
+            {
+                "at": 39511,
+                "remove_utf8": "",
+                "insert_utf8": "            \"crates/xtask/src/t06.rs\",\n",
+            },
+        ],
+    });
+    inverse(&inverse_row, physical, "0644", 3)
+}
+
+fn accepted_current(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
+    let health = pre_health_f01(path, physical)?;
+    let w07 = pre_984_w07(path, &health)?;
+    pre_t08_registration(path, &w07)
+}
 // Exact additive T08 registration precedes the unchanged accepted CLI/W08 join.
 // This is a closed three-span current-source amendment, not an alternate root.
 fn pre_t08_registration(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
@@ -411,10 +461,6 @@ fn pre_t08_registration(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
     )?;
     Ok(prior.into_bytes())
 }
-fn current_main_projection(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
-    let health = pre_health_f01(path, physical)?;
-    pre_t08_registration(path, &health)
-}
 fn interpret(
     doc: &Value,
     path: &str,
@@ -422,7 +468,7 @@ fn interpret(
     mode: &str,
     parent: Parent,
 ) -> Result<Vec<u8>> {
-    let logical = current_main_projection(path, physical)?;
+    let logical = accepted_current(path, physical)?;
     let physical = logical.as_slice();
     scope(doc)?;
     let index = ROWS
@@ -454,7 +500,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
     let doc = capsule(root)?;
     for (index, (path, cli_count, main_count)) in ROWS.iter().enumerate() {
         let physical = regular(root, path)?;
-        let logical = current_main_projection(path, &physical)?;
+        let logical = accepted_current(path, &physical)?;
         if *path == "crates/xtask/src/main.rs" {
             let health = pre_health_f01(path, &physical)?;
             need(
@@ -466,7 +512,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
                 "pre-health frame substituted as physical registration",
             )?;
             need(
-                pre_t08_registration(path, &logical).is_err(),
+                accepted_current(path, &logical).is_err(),
                 "pre-T08 frame substituted as physical registration",
             )?;
         }
