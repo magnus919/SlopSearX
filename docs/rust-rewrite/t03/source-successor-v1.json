@@ -1,0 +1,293 @@
+{
+  "schema": "T03_CLOSED_SOURCE_SUCCESSOR_V1",
+  "baseline": "d7fc628d1069ab1f0a5fe8ee114796c235615eca",
+  "scope": "Source identity reconciliation only; historical qualification evidence remains unchanged and does not certify successor behavior.",
+  "rows": [
+    {
+      "path": "crates/ssx-application/src/lib.rs",
+      "current": {
+        "bytes": 6245,
+        "sha256": "81c10d38d5eee33b7752d31de7dc4b34d541144eb5207e8322833472ebc23e63",
+        "mode": "0644"
+      },
+      "prior": {
+        "bytes": 6218,
+        "sha256": "bbc2e013f952a36f9171df475ba9ec80fb2b378f5a50b871f2de4a30548884d7",
+        "mode": "0644"
+      },
+      "prior_git_blob": "b36eff52ea150fc95581ce5f070d626bb13dc162",
+      "edits": [
+        {
+          "at": 6218,
+          "remove_utf8": "pub mod entity_projection;\n",
+          "insert_utf8": ""
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-http/Cargo.toml",
+      "current": {
+        "bytes": 947,
+        "sha256": "6d30d07cc7414c35cab1993ad39dd9f029082bbe8e6d817546f165bcca3b69f6",
+        "mode": "0644"
+      },
+      "prior": {
+        "bytes": 922,
+        "sha256": "f90536f1ed8b9db38035ee7546258a08dfe441013d802d618bb5c65f98a9480e",
+        "mode": "0644"
+      },
+      "prior_git_blob": "64e4489b48a5e8be45a9b5c47c935978a6615944",
+      "edits": [
+        {
+          "at": 666,
+          "remove_utf8": "scraper.workspace = true\n",
+          "insert_utf8": ""
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-http/src/lib.rs",
+      "current": {
+        "bytes": 3115,
+        "sha256": "1cd6be034058185544c8603973bec8faf57a2886aa70e57517a320d211372a87",
+        "mode": "0644"
+      },
+      "prior": {
+        "bytes": 3099,
+        "sha256": "e883d7354c378fea7c764570c90b91f9c98f7f95112f72fc5af6840e0b09f22a",
+        "mode": "0644"
+      },
+      "prior_git_blob": "5db4a0ebfb49be9c4ab67aa18e4616ef38a28590",
+      "edits": [
+        {
+          "at": 3099,
+          "remove_utf8": "pub mod portal;\n",
+          "insert_utf8": ""
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-http/src/native.rs",
+      "current": {
+        "bytes": 36451,
+        "sha256": "56e261605ec4f8fc44d12e604a23342979018c5908e5449280168668ce7d3955",
+        "mode": "0644"
+      },
+      "prior": {
+        "bytes": 33535,
+        "sha256": "161258d2a5f96622ae4809366ab1734bd4be5a836c0ac3ef5f91f4dc1937e47e",
+        "mode": "0644"
+      },
+      "prior_git_blob": "9055ccb5f0e472678f8239de7ada1be920a5f61c",
+      "edits": [
+        {
+          "at": 1070,
+          "remove_utf8": "    fn error_with_request(\n        &self,\n        error: &str,\n        message: &str,\n        field: Option<&str>,\n        _request: &HtmlRequestState,\n    ) -> String {\n        self.error(error, message, field)\n    }\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 1386,
+          "remove_utf8": "}\n/// Last submitted values of public search controls only. Unknown query/form\n/// keys, cookies, authorization headers and configuration never enter this view.\n#[derive(Clone, Default)]\npub struct HtmlRequestState(BTreeMap<String, String>);\nimpl HtmlRequestState {\n    fn from_pairs(pairs: &[(String, String)]) -> Self {\n        const FIELDS: &[&str] = &[\n            \"q\",\n            \"categories\",\n            \"engines\",\n            \"language\",\n            \"time_range\",\n            \"date_from\",\n            \"date_to\",\n            \"safesearch\",\n            \"pageno\",\n            \"interactive_timeout_ms\",\n        ];\n        Self(\n            pairs\n                .iter()\n                .filter(|(key, _)| FIELDS.contains(&key.as_str()))\n                .cloned()\n                .collect(),\n        )\n    }\n    pub fn parameters(&self) -> &BTreeMap<String, String> {\n        &self.0\n    }\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 9276,
+          "remove_utf8": "    context: (Option<Value>, Option<&HtmlRequestState>),\n",
+          "insert_utf8": "    extra: Option<Value>,\n"
+        },
+        {
+          "at": 9349,
+          "remove_utf8": "    let (extra, request) = context;\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 9689,
+          "remove_utf8": "        \"html\" => request.map_or_else(\n            || state.html.error(code, message, field),\n            |request| state.html.error_with_request(code, message, field, request),\n        ),\n",
+          "insert_utf8": "        \"html\" => state.html.error(code, message, field),\n"
+        },
+        {
+          "at": 11611,
+          "remove_utf8": "    request: Option<&HtmlRequestState>,\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 12163,
+          "remove_utf8": "            (None, request),\n",
+          "insert_utf8": "            None,\n"
+        },
+        {
+          "at": 12489,
+          "remove_utf8": "            (None, request),\n",
+          "insert_utf8": "            None,\n"
+        },
+        {
+          "at": 19227,
+          "remove_utf8": "                    (None, None),\n",
+          "insert_utf8": "                    None,\n"
+        },
+        {
+          "at": 19523,
+          "remove_utf8": "    let html_request = HtmlRequestState::from_pairs(&pairs);\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 19729,
+          "remove_utf8": "        Some(&html_request),\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 19766,
+          "remove_utf8": "        Ok(format) => error(\n            state,\n            &format,\n            400,\n            \"invalid_filter\",\n            message,\n            field,\n            (None, Some(&html_request)),\n        ),\n",
+          "insert_utf8": "        Ok(format) => error(state, &format, 400, \"invalid_filter\", message, field, None),\n"
+        },
+        {
+          "at": 21845,
+          "remove_utf8": "        match select_format(state, param(&pairs, \"format\"), &accept, Some(&html_request)) {\n",
+          "insert_utf8": "        match select_format(state, param(&pairs, \"format\"), &accept) {\n"
+        },
+        {
+          "at": 23444,
+          "remove_utf8": "    let format = match select_format(state, param(&pairs, \"format\"), &accept, Some(&html_request)) {\n",
+          "insert_utf8": "    let format = match select_format(state, param(&pairs, \"format\"), &accept) {\n"
+        },
+        {
+          "at": 23679,
+          "remove_utf8": "        error(\n            state,\n            &format,\n            400,\n            \"invalid_filter\",\n            message,\n            field,\n            (None, Some(&html_request)),\n        )\n",
+          "insert_utf8": "        error(state, &format, 400, \"invalid_filter\", message, field, None)\n"
+        },
+        {
+          "at": 24694,
+          "remove_utf8": "            (Some(json!({\"engines\":restricted})), Some(&html_request)),\n",
+          "insert_utf8": "            Some(json!({\"engines\":restricted})),\n"
+        },
+        {
+          "at": 25369,
+          "remove_utf8": "        // Empty optional browser controls mean no bound. Explicit machine\n        // values retain the accepted strict calendar-input contract.\n        date_from: param(&pairs, \"date_from\")\n            .filter(|value| format != \"html\" || !value.is_empty())\n            .map(str::to_owned),\n        date_to: param(&pairs, \"date_to\")\n            .filter(|value| format != \"html\" || !value.is_empty())\n            .map(str::to_owned),\n",
+          "insert_utf8": "        date_from: param(&pairs, \"date_from\").map(str::to_owned),\n        date_to: param(&pairs, \"date_to\").map(str::to_owned),\n"
+        },
+        {
+          "at": 26657,
+          "remove_utf8": "                    (Some(*policy.details), Some(&html_request)),\n",
+          "insert_utf8": "                    Some(*policy.details),\n"
+        },
+        {
+          "at": 27026,
+          "remove_utf8": "                    (None, Some(&html_request)),\n",
+          "insert_utf8": "                    None,\n"
+        },
+        {
+          "at": 27460,
+          "remove_utf8": "                (None, Some(&html_request)),\n",
+          "insert_utf8": "                None,\n"
+        },
+        {
+          "at": 27667,
+          "remove_utf8": "                scope: unavailable.preview.scope.clone(),\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 28288,
+          "remove_utf8": "            let mut meta = json!({\"response_time_ms\":0,\"cached\":false,\"query_id\":query_id,\"engine_status\":{},\"advisories\":advisories});\n            if format == \"html\" {\n                meta[\"enforcement\"] = Value::Object(\n                    unavailable\n                        .preview\n                        .enforcement\n                        .iter()\n                        .map(|(key, entry)| (key.clone(), entry.to_value()))\n                        .collect(),\n                );\n            }\n",
+          "insert_utf8": "            let meta = json!({\"response_time_ms\":0,\"cached\":false,\"query_id\":query_id,\"engine_status\":{},\"advisories\":advisories});\n"
+        },
+        {
+          "at": 29108,
+          "remove_utf8": "                (None, Some(&html_request)),\n",
+          "insert_utf8": "                None,\n"
+        },
+        {
+          "at": 29220,
+          "remove_utf8": "    let mut meta = formats::meta(response, &view.advisories);\n    if format == \"html\" {\n        meta[\"enforcement\"] = Value::Object(\n            view.enforcement\n                .iter()\n                .map(|(key, entry)| (key.clone(), entry.to_value()))\n                .collect(),\n        );\n    }\n",
+          "insert_utf8": "    let meta = formats::meta(response, &view.advisories);\n"
+        },
+        {
+          "at": 29737,
+          "remove_utf8": "            (\n                Some(\n                    json!({\"meta\":{\"cached\":true,\"query_id\":format!(\"ssx-{}\",response.query_id),\"advisories\":view.advisories}}),\n                ),\n                Some(&html_request),\n",
+          "insert_utf8": "            Some(\n                json!({\"meta\":{\"cached\":true,\"query_id\":format!(\"ssx-{}\",response.query_id),\"advisories\":view.advisories}}),\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-http/tests/t09.rs",
+      "current": {
+        "bytes": 67949,
+        "sha256": "5b8bd731142d37a08f92d93cbea66e0c663a7cbfa16fb5582af8528625313499",
+        "mode": "0644"
+      },
+      "prior": {
+        "bytes": 67648,
+        "sha256": "2b6499ac8ac2b3e7d5f0960210a0b801c0e8930f8ee6b7fcc762a475672d8b48",
+        "mode": "0644"
+      },
+      "prior_git_blob": "3eda8d26398660d860d3fdbab58170400e6e966c",
+      "edits": [
+        {
+          "at": 86,
+          "remove_utf8": "#[path = \"support/t03_peer.rs\"]\nmod t03_peer;\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 18268,
+          "remove_utf8": "    let session_cookie = cookies\n        .iter()\n        .find(|value| value.starts_with(\"__Host-slopsearx_session=\"))\n        .unwrap()\n        .split(';')\n        .next()\n        .unwrap();\n    t03_peer::public_cookie_equivalence(session_cookie).await;\n",
+          "insert_utf8": ""
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/src/search.rs",
+      "current": {
+        "bytes": 91285,
+        "sha256": "35b5a30a1a2a7cfb03e79c0e8ecdf5b85563d6075824ec00a08e84c580d2e7d1",
+        "mode": "0644"
+      },
+      "prior": {
+        "bytes": 90375,
+        "sha256": "8aa8ec89a6a45728f5ffd2818d2e9fed9b8d0a881c1e36418c95809d92dcb777",
+        "mode": "0644"
+      },
+      "prior_git_blob": "8d2e5018016278a346ae32b01bf9bf0ae8f70451",
+      "edits": [
+        {
+          "at": 12693,
+          "remove_utf8": "    enforcement: BTreeMap<String, ssx_application::filters::EnforcementEntry>,\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 12934,
+          "remove_utf8": "    /// The report from this capture's one validated search authority, including\n    /// cache hits. Presentation never resolves a second scope to recreate it.\n    pub enforcement: BTreeMap<String, ssx_application::filters::EnforcementEntry>,\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 13445,
+          "remove_utf8": "        preview: ScopePreview,\n",
+          "insert_utf8": "        mut scope: ScopeDecision,\n"
+        },
+        {
+          "at": 13564,
+          "remove_utf8": "        let ScopePreview {\n            mut scope,\n            enforcement,\n        } = preview;\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 14117,
+          "remove_utf8": "            enforcement,\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 15923,
+          "remove_utf8": "            enforcement: self.enforcement.clone(),\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 42128,
+          "remove_utf8": "                    self,\n                    canonical,\n                    request,\n                    ScopePreview {\n                        scope,\n                        enforcement: preview.enforcement,\n                    },\n                    query_id,\n                    start,\n                    true,\n",
+          "insert_utf8": "                    self, canonical, request, scope, query_id, start, true,\n"
+        },
+        {
+          "at": 47255,
+          "remove_utf8": "        let capture = SearchReadCapture::new(\n            self,\n            canonical,\n            request,\n            ScopePreview {\n                scope,\n                enforcement: preview.enforcement,\n            },\n            query_id,\n            start,\n            false,\n        );\n",
+          "insert_utf8": "        let capture =\n            SearchReadCapture::new(self, canonical, request, scope, query_id, start, false);\n"
+        }
+      ]
+    }
+  ]
+}
