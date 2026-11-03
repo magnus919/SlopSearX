@@ -78,6 +78,11 @@ fn frozen(root: &Path, path: &str, expected: &str) -> Result<Vec<u8>> {
         return proven;
     }
     if sha(&bytes) != expected {
+        if path == "crates/ssx-infra/src/search.rs"
+            && expected == "8aa8ec89a6a45728f5ffd2818d2e9fed9b8d0a881c1e36418c95809d92dcb777"
+        {
+            return w07_t02_joint::t03_source_successor::prior(root, path, &bytes);
+        }
         if let Some(operand) =
             crate::w08::source_successor::frozen_operand(root, path, expected, &bytes)?
         {

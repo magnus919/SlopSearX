@@ -602,6 +602,18 @@ fn source_admission(root: &Path) -> Result<Value> {
             .as_str()
             .ok_or("T02 artifact digest missing")?;
         let page_prior = source_successor::page_original(root, path)?;
+        let portal_prior =
+            if crate::a13::a06_source_successor::w07_t02_joint::t03_source_successor::owns(path) {
+                Some(
+                    crate::a13::a06_source_successor::w07_t02_joint::t03_source_successor::prior(
+                        root,
+                        path,
+                        &fs::read(root.join(path)).map_err(|e| format!("{path}:{e}"))?,
+                    )?,
+                )
+            } else {
+                None
+            };
         if let Some(proof) = source_successor::verify(root, path, pin, COVERAGE_SHA) {
             proof?;
         } else {
@@ -609,7 +621,10 @@ fn source_admission(root: &Path) -> Result<Value> {
                 artifact["sha256"]
                     == digest(&match page_prior {
                         Some(prior) => prior,
-                        None => fs::read(root.join(path)).map_err(|e| format!("{path}:{e}"))?,
+                        None => match portal_prior {
+                            Some(prior) => prior,
+                            None => fs::read(root.join(path)).map_err(|e| format!("{path}:{e}"))?,
+                        },
                     }),
                 &format!("T02 artifact differs:{path}"),
             )?;

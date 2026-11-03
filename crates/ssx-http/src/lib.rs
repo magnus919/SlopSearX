@@ -96,3 +96,4 @@ pub use native::{HtmlRenderer, HttpState, router as native_router, serve as nati
 pub mod discovery;
 
 pub mod html;
+pub mod portal;

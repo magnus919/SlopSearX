@@ -192,6 +192,9 @@ pub(crate) fn parent(root: &Path, path: &str, supplied: &[u8]) -> Result<Vec<u8>
     .contains(&path)
     {
         super::snapshot_helper_amendment::w08_operand(root, path, &physical)?
+    } else if path == "crates/ssx-application/src/lib.rs" && super::t03_source_successor::owns(path)
+    {
+        super::t03_source_successor::prior(root, path, &physical)?
     } else {
         physical.clone()
     };
@@ -261,6 +264,10 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         .contains(&row.path.as_str())
         {
             super::snapshot_helper_amendment::w08_operand(root, &row.path, &physical)?
+        } else if row.path == "crates/ssx-application/src/lib.rs"
+            && super::t03_source_successor::owns(&row.path)
+        {
+            super::t03_source_successor::prior(root, &row.path, &physical)?
         } else {
             physical.clone()
         };

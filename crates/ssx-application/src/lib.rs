@@ -192,3 +192,4 @@ pub mod receipts;
 
 pub mod composition;
 pub mod dependency_dossier;
+pub mod entity_projection;

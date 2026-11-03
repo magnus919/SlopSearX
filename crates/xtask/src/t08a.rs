@@ -194,6 +194,13 @@ fn sources(root: &Path) -> Result<Value> {
     }
     Ok(embedded)
 }
+#[cfg(test)]
+#[test]
+fn portal_lock_source_bindings_and_historical_custody_remain_strict() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    sources(&root).expect("every current T08A source size/hash/mode matches");
+    source_custody::controls(&root).expect("portal, health and original CLI custody controls");
+}
 // Windows completed250 consecutive cases in298s before the old300s suite cap.
 // Full261+4 suites get a fixed900s ceiling; metadata/help retain300s. Each
 // child still has its25s contract, and the whole hosted job remains60minutes.

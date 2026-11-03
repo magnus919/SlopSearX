@@ -331,28 +331,37 @@ pub(crate) fn verify(
     expected: &str,
     supplied: &[u8],
 ) -> Option<Result<Vec<u8>>> {
+    verify_at(root, root, path, expected, supplied)
+}
+fn verify_at(
+    physical_root: &Path,
+    proof_root: &Path,
+    path: &str,
+    expected: &str,
+    supplied: &[u8],
+) -> Option<Result<Vec<u8>>> {
     if !SOURCES.contains(&path) {
         return None;
     }
     Some((|| {
-        let doc = document(root)?;
+        let doc = document(physical_root)?;
         let row = doc["rows"]
             .as_array()
             .ok_or("rows absent")?
             .iter()
             .find(|row| row["prior"]["path"] == path)
             .ok_or("unlisted helper")?;
-        let physical = regular(root, path)?;
+        let physical = regular(physical_root, path)?;
         need(
             physical == supplied,
             "supplied differs from physical current",
         )?;
-        let baseline = common_snapshot(root, path, &physical)?;
-        let outer = outer_document(root)?;
+        let baseline = common_snapshot_at(physical_root, proof_root, path, &physical)?;
+        let outer = outer_document(physical_root)?;
         let current = &outer_row(&outer, path)?["current"];
         if current["sha256"] == expected {
-            let container = regular(root, CONTAINER)?;
-            outer_endpoint(root, CONTAINER, &container, "page")?;
+            let container = regular(physical_root, CONTAINER)?;
+            outer_endpoint_at(physical_root, proof_root, CONTAINER, &container, "page")?;
             let value: Value =
                 serde_json::from_slice(&container).map_err(|error| error.to_string())?;
             let pointer = format!("/sources/{}", path.replace('~', "~0").replace('/', "~1"));
@@ -360,12 +369,13 @@ pub(crate) fn verify(
                 value.pointer(&pointer) == Some(&Value::String(expected.into())),
                 "exact combined current container pointer",
             )?;
-            return accepted_main_operand(root, path, &physical);
+            return accepted_main_operand_at(physical_root, proof_root, path, &physical);
         }
-        let page_doc = page_composition_document(root)?;
+        let page_doc = page_composition_document(physical_root)?;
         if page_composition_row(&page_doc, path)?["current"]["sha256"] == expected {
-            let raw = regular(root, CONTAINER)?;
-            let page_container = outer_endpoint(root, CONTAINER, &raw, "page")?;
+            let raw = regular(physical_root, CONTAINER)?;
+            let page_container =
+                outer_endpoint_at(physical_root, proof_root, CONTAINER, &raw, "page")?;
             material(&page_doc["registry"]["current"], &page_container, "0644")?;
             let value: Value =
                 serde_json::from_slice(&page_container).map_err(|error| error.to_string())?;
@@ -374,9 +384,9 @@ pub(crate) fn verify(
                 value.pointer(&pointer) == Some(&Value::String(expected.into())),
                 "exact accepted Page caller pointer",
             )?;
-            return outer_endpoint(root, path, &physical, "page");
+            return outer_endpoint_at(physical_root, proof_root, path, &physical, "page");
         }
-        caller(root, &doc, row, path, expected)?;
+        caller(physical_root, &doc, row, path, expected)?;
         inverse(row, &baseline, "0644")
     })())
 }
@@ -772,12 +782,12 @@ fn filesystem_controls(root: &Path, doc: &Value) -> Result<()> {
         let expected = text(&row["prior"], "sha256")?;
         let physical = regular(root, path)?;
         let target = owned.0.join(path);
-        verify(&owned.0, path, expected, &physical).ok_or("selected helper absent")??;
+        verify_at(&owned.0, root, path, expected, &physical).ok_or("selected helper absent")??;
         for mode in [0o600, 0o755, 0o4644] {
             fs::set_permissions(&target, fs::Permissions::from_mode(mode))
                 .map_err(|e| e.to_string())?;
             need(
-                verify(&owned.0, path, expected, &physical)
+                verify_at(&owned.0, root, path, expected, &physical)
                     .unwrap()
                     .is_err(),
                 "physical wrong mode",
@@ -788,14 +798,14 @@ fn filesystem_controls(root: &Path, doc: &Value) -> Result<()> {
         let backup = target.with_extension("backup");
         fs::rename(&target, &backup).map_err(|e| e.to_string())?;
         need(
-            verify(&owned.0, path, expected, &physical)
+            verify_at(&owned.0, root, path, expected, &physical)
                 .unwrap()
                 .is_err(),
             "missing source",
         )?;
         symlink(&backup, &target).map_err(|e| e.to_string())?;
         need(
-            verify(&owned.0, path, expected, &physical)
+            verify_at(&owned.0, root, path, expected, &physical)
                 .unwrap()
                 .is_err(),
             "symlink source",
@@ -803,7 +813,7 @@ fn filesystem_controls(root: &Path, doc: &Value) -> Result<()> {
         fs::remove_file(&target).map_err(|e| e.to_string())?;
         fs::create_dir(&target).map_err(|e| e.to_string())?;
         need(
-            verify(&owned.0, path, expected, &physical)
+            verify_at(&owned.0, root, path, expected, &physical)
                 .unwrap()
                 .is_err(),
             "nonregular source",
@@ -811,41 +821,53 @@ fn filesystem_controls(root: &Path, doc: &Value) -> Result<()> {
         fs::remove_dir(&target).map_err(|e| e.to_string())?;
         fs::rename(&backup, &target).map_err(|e| e.to_string())?;
         for page in [true, false] {
-            let operand = outer_endpoint(root, path, &physical, "page")?;
+            fs::write(&target, &physical).map_err(|e| e.to_string())?;
+            let operand = outer_endpoint_at(&owned.0, root, path, &physical, "page")?;
             let parent = page_composition_parent(root, path, &operand, page)?;
             fs::write(&target, &parent).map_err(|e| e.to_string())?;
             need(
-                verify(&owned.0, path, expected, &parent).unwrap().is_err(),
+                verify_at(&owned.0, root, path, expected, &parent)
+                    .unwrap()
+                    .is_err(),
                 "either parent physically substituted",
             )?;
             let joined = outer_document(root)?;
             let current_pin = text(&outer_row(&joined, path)?["current"], "sha256")?;
             need(
-                verify(&owned.0, path, current_pin, &parent)
+                verify_at(&owned.0, root, path, current_pin, &parent)
                     .unwrap()
                     .is_err(),
                 "old parent with current pin",
             )?;
+            fs::write(&target, &physical).map_err(|e| e.to_string())?;
         }
         for endpoint in ["w08", "page"] {
-            let parent = outer_endpoint(root, path, &physical, endpoint)?;
+            fs::write(&target, &physical).map_err(|e| e.to_string())?;
+            let parent = outer_endpoint_at(&owned.0, root, path, &physical, endpoint)?;
             fs::write(&target, &parent).map_err(|error| error.to_string())?;
             need(
-                verify(&owned.0, path, expected, &parent).unwrap().is_err(),
+                verify_at(&owned.0, root, path, expected, &parent)
+                    .unwrap()
+                    .is_err(),
                 "outer endpoint physically substituted",
             )?;
             let outer = outer_document(root)?;
             let pin = text(&outer_row(&outer, path)?["current"], "sha256")?;
             need(
-                verify(&owned.0, path, pin, &parent).unwrap().is_err(),
+                verify_at(&owned.0, root, path, pin, &parent)
+                    .unwrap()
+                    .is_err(),
                 "outer endpoint substituted with current pin",
             )?;
+            fs::write(&target, &physical).map_err(|e| e.to_string())?;
         }
-        let baseline = common_snapshot(root, path, &physical)?;
+        let baseline = common_snapshot_at(&owned.0, root, path, &physical)?;
         let prior = inverse(row, &baseline, "0644")?;
         fs::write(&target, &prior).map_err(|e| e.to_string())?;
         need(
-            verify(&owned.0, path, expected, &prior).unwrap().is_err(),
+            verify_at(&owned.0, root, path, expected, &prior)
+                .unwrap()
+                .is_err(),
             "old physically substituted source",
         )?;
         fs::write(target, physical).map_err(|e| e.to_string())?;
@@ -859,13 +881,15 @@ fn filesystem_controls(root: &Path, doc: &Value) -> Result<()> {
     let container = regular(root, CONTAINER)?;
     let target = owned.0.join(CONTAINER);
     for pin in [original_pin, current_pin] {
-        verify(&owned.0, source, pin, &physical).ok_or("registry positive route")??;
+        verify_at(&owned.0, root, source, pin, &physical).ok_or("registry positive route")??;
         for page in [true, false] {
-            let operand = outer_endpoint(root, CONTAINER, &container, "page")?;
+            let operand = outer_endpoint_at(&owned.0, root, CONTAINER, &container, "page")?;
             let parent = page_composition_parent(root, CONTAINER, &operand, page)?;
             fs::write(&target, &parent).map_err(|e| e.to_string())?;
             need(
-                verify(&owned.0, source, pin, &physical).unwrap().is_err(),
+                verify_at(&owned.0, root, source, pin, &physical)
+                    .unwrap()
+                    .is_err(),
                 "old registry physically substituted",
             )?;
             fs::write(&target, &container).map_err(|e| e.to_string())?;
@@ -874,7 +898,9 @@ fn filesystem_controls(root: &Path, doc: &Value) -> Result<()> {
             fs::set_permissions(&target, fs::Permissions::from_mode(mode))
                 .map_err(|e| e.to_string())?;
             need(
-                verify(&owned.0, source, pin, &physical).unwrap().is_err(),
+                verify_at(&owned.0, root, source, pin, &physical)
+                    .unwrap()
+                    .is_err(),
                 "physical registry wrong mode",
             )?;
         }
@@ -1067,12 +1093,21 @@ fn outer_row<'a>(doc: &'a Value, path: &str) -> Result<&'a Value> {
         .ok_or("composition source absent".into())
 }
 fn accepted_main_operand(root: &Path, path: &str, supplied: &[u8]) -> Result<Vec<u8>> {
+    accepted_main_operand_at(root, root, path, supplied)
+}
+fn accepted_main_operand_at(
+    physical_root: &Path,
+    proof_root: &Path,
+    path: &str,
+    supplied: &[u8],
+) -> Result<Vec<u8>> {
     if path == CONTAINER {
         return t06_receipt_control::w07_registry_to_w08(supplied, 0o644);
     }
     if cli_source_custody::accepted_main_join::owns(path) {
-        cli_source_custody::accepted_main_join::project(
-            root,
+        cli_source_custody::accepted_main_join::project_at(
+            physical_root,
+            proof_root,
             path,
             supplied,
             cli_source_custody::accepted_main_join::Parent::Main,
@@ -1082,14 +1117,23 @@ fn accepted_main_operand(root: &Path, path: &str, supplied: &[u8]) -> Result<Vec
     }
 }
 fn outer_endpoint(root: &Path, path: &str, supplied: &[u8], parent: &str) -> Result<Vec<u8>> {
-    let doc = outer_document(root)?;
+    outer_endpoint_at(root, root, path, supplied, parent)
+}
+fn outer_endpoint_at(
+    physical_root: &Path,
+    proof_root: &Path,
+    path: &str,
+    supplied: &[u8],
+    parent: &str,
+) -> Result<Vec<u8>> {
+    let doc = outer_document(physical_root)?;
     let row = outer_row(&doc, path)?;
-    let physical = regular(root, path)?;
+    let physical = regular(physical_root, path)?;
     need(
         physical == supplied,
         "composition supplied bytes are not physical current",
     )?;
-    let logical = accepted_main_operand(root, path, &physical)?;
+    let logical = accepted_main_operand_at(physical_root, proof_root, path, &physical)?;
     material(&row["current"], &logical, "0644")?;
     // Physical admission above precedes both unchanged accepted-main endpoint inverses.
     let w08 = inverse(&row["w08"], &logical, "0644")?;
@@ -1101,18 +1145,26 @@ fn outer_endpoint(root: &Path, path: &str, supplied: &[u8], parent: &str) -> Res
     }
 }
 fn common_snapshot(root: &Path, path: &str, physical: &[u8]) -> Result<Vec<u8>> {
-    let w08 = outer_endpoint(root, path, physical, "w08")?;
-    let page = outer_endpoint(root, path, physical, "page")?;
+    common_snapshot_at(root, root, path, physical)
+}
+fn common_snapshot_at(
+    physical_root: &Path,
+    proof_root: &Path,
+    path: &str,
+    physical: &[u8],
+) -> Result<Vec<u8>> {
+    let w08 = outer_endpoint_at(physical_root, proof_root, path, physical, "w08")?;
+    let page = outer_endpoint_at(physical_root, proof_root, path, physical, "page")?;
     let a = if path == CONTAINER {
         need(sha(&w08) == CONTAINER_SHA, "exact original W08 registry")?;
         w08
     } else {
-        w08_composition_parent(root, path, &w08, false)?
+        w08_composition_parent(physical_root, path, &w08, false)?
     };
     let b = if path == MAIN {
         page
     } else {
-        page_composition_parent(root, path, &page, false)?
+        page_composition_parent(physical_root, path, &page, false)?
     };
     need(
         a == b,
@@ -1463,8 +1515,10 @@ pub(crate) fn w08_reader_source_operand(
         physical == supplied,
         "W08 reader supplied bytes are not physical current",
     )?;
+    let logical =
+        super::super::t03_source_successor::prior(root, W08_READER_SOURCE_PATH, supplied)?;
     let row = &doc["rows"][0];
-    let prior = inverse(row, supplied, "0644")?;
+    let prior = inverse(row, &logical, "0644")?;
     let git = std::process::Command::new("git")
         .args(["cat-file", "blob", text(&row["prior"], "git_blob")?])
         .current_dir(root)
@@ -1499,6 +1553,8 @@ fn w08_reader_source_controls(root: &Path) -> Result<()> {
     let doc = w08_reader_source_document(root)?;
     let row = &doc["rows"][0];
     let physical = regular(root, W08_READER_SOURCE_PATH)?;
+    let logical =
+        super::super::t03_source_successor::prior(root, W08_READER_SOURCE_PATH, &physical)?;
     let prior = w08_reader_source_operand(
         root,
         W08_READER_SOURCE_PATH,
@@ -1540,7 +1596,7 @@ fn w08_reader_source_controls(root: &Path) -> Result<()> {
     }
     for mode in ["0600", "0755", "4644"] {
         need(
-            inverse(row, &physical, mode).is_err(),
+            inverse(row, &logical, mode).is_err(),
             "changed W08 reader source mode",
         )?;
     }
@@ -1569,7 +1625,7 @@ fn w08_reader_source_controls(root: &Path) -> Result<()> {
     altered["edits"][0]["insert_utf8"] = Value::String("changed".into());
     for bad in [missing, duplicate, moved, altered] {
         need(
-            inverse(&bad, &physical, "0644").is_err(),
+            inverse(&bad, &logical, "0644").is_err(),
             "changed W08 reader inverse spans",
         )?;
     }
