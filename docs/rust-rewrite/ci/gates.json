@@ -2019,7 +2019,7 @@
         "job": {
           "name": "Foundation prerequisites (${{ matrix.runner }})",
           "runs-on": "${{ matrix.runner }}",
-          "timeout-minutes": 130,
+          "timeout-minutes": 160,
           "strategy": {
             "fail-fast": false,
             "matrix": {
