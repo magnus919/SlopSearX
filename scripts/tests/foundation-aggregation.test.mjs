@@ -84,6 +84,16 @@ test('validates real evidence directories assembled from retained and rerun arti
     const attempts = validateFoundationEvidence(root, expected);
     assert.deepEqual([...attempts.values()], [1, 2, 1, 1]);
 
+    const prerequisitesIdentityPath = path.join(partitionRoot, 'prerequisites', 'identity.json');
+    const coreIdentityPath = path.join(partitionRoot, 'core', 'identity.json');
+    const prerequisitesIdentity = fs.readFileSync(prerequisitesIdentityPath, 'utf8');
+    const coreIdentity = fs.readFileSync(coreIdentityPath, 'utf8');
+    fs.writeFileSync(prerequisitesIdentityPath, coreIdentity);
+    fs.writeFileSync(coreIdentityPath, prerequisitesIdentity);
+    assert.throws(() => validateFoundationEvidence(root, expected), /does not match its directory/);
+    fs.writeFileSync(prerequisitesIdentityPath, prerequisitesIdentity);
+    fs.writeFileSync(coreIdentityPath, coreIdentity);
+
     fs.symlinkSync(path.join(controlDirectory, 'control-result.txt'), path.join(controlDirectory, 'unexpected-link'));
     assert.throws(() => validateFoundationEvidence(root, expected), /regular files only/);
     fs.unlinkSync(path.join(controlDirectory, 'unexpected-link'));

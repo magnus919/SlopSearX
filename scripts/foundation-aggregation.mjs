@@ -95,7 +95,9 @@ function readRegularFile(file) {
 export function validateFoundationEvidence(evidenceRoot, expected) {
   const identities = REQUIRED_PARTITIONS.map((partition) => {
     const identityPath = path.join(evidenceRoot, 'partitions', partition, 'identity.json');
-    return JSON.parse(readRegularFile(identityPath));
+    const identity = JSON.parse(readRegularFile(identityPath));
+    requireValue(identity.partition === partition, `partition identity does not match its directory: ${partition}`);
+    return identity;
   });
   const attempts = validatePartitionIdentities(identities, expected);
   const controlRoot = path.join(evidenceRoot, 'A10-linux-control');
