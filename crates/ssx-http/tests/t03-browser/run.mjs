@@ -54,6 +54,7 @@ const handoffSamples = [];
 let browser = null;
 let browserClosed = false;
 let browserInfo = { name: 'chromium', version: '', playwright_version: '' };
+let browserEngine = 'chromium';
 let budgets = {};
 let evidenceDirectory = '';
 let baseUrl = '';
@@ -285,16 +286,22 @@ async function runContract() {
   const page = await context.newPage();
   attachPageEvidence(page);
 
-  const cdp = await context.newCDPSession(page);
-  await cdp.send('Network.enable');
-  await cdp.send('Network.emulateNetworkConditions', {
-    offline: false,
-    latency: 150,
-    downloadThroughput: (1.6 * 1024 * 1024) / 8,
-    uploadThroughput: (750 * 1024) / 8,
-    connectionType: 'cellular3g',
-  });
-  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+  // Chromium profiles the client budgets under CDP Fast 3G and 4x CPU throttling.
+  // Other engines have no CDP; they run the same journeys without throttling and
+  // do not claim the Chromium budget profile.
+  const throttled = browserEngine === 'chromium';
+  if (throttled) {
+    const cdp = await context.newCDPSession(page);
+    await cdp.send('Network.enable');
+    await cdp.send('Network.emulateNetworkConditions', {
+      offline: false,
+      latency: 150,
+      downloadThroughput: (1.6 * 1024 * 1024) / 8,
+      uploadThroughput: (750 * 1024) / 8,
+      connectionType: 'cellular3g',
+    });
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+  }
   await context.addInitScript(`(() => {
     window.__t03Cls = 0;
     new PerformanceObserver((list) => {
@@ -517,7 +524,7 @@ async function runContract() {
 
   assert(landingMetric, 'landing budget sample was not captured');
   assert(resultsMetric, 'results budget sample was not captured');
-  await collectContractBudgets(landingMetric, resultsMetric, page);
+  if (throttled) await collectContractBudgets(landingMetric, resultsMetric, page);
 
   await context.close();
 }
@@ -604,6 +611,7 @@ async function main() {
   const engines = { chromium, firefox };
   assert(Object.hasOwn(engines, engine), `T03_BROWSER_ENGINE must be one of ${Object.keys(engines).join(', ')}`);
   browserInfo.name = engine;
+  browserEngine = engine;
   browser = await engines[engine].launch({ headless: true });
   browserInfo.version = browser.version();
 

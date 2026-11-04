@@ -29,7 +29,9 @@ identities, loopback-only traffic, joined cleanup, and browser budgets. Each of
 the five browser scenarios runs on both Chromium and Firefox from the same
 lock-matched `playwright-core` client; the receipt identity must name the
 requested engine, and the suite inventory rejects missing, duplicated or
-engine-substituted rows. Its
+engine-substituted rows. Only the Chromium contract run carries the
+CDP-throttled performance-budget profile; Firefox executes the same journeys
+without CDP and does not claim those timing budgets. Its
 CLS budget checks both the landing document and populated results document
 after a 250 ms settle interval; it reports the larger value and preserves both
 samples. This is an automation slice, not completion of #898.

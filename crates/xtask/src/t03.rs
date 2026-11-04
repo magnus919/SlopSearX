@@ -683,9 +683,11 @@ fn journey_ids(scenario: &str) -> Result<&'static [&'static str]> {
         _ => Err("T03 unknown browser scenario".into()),
     }
 }
-fn validate_budgets(scenario: &str, budgets: &Value) -> Result<()> {
-    if scenario != "contract" {
-        return exact_keys(budgets, &[], "error-scenario budgets");
+fn validate_budgets(scenario: &str, engine: &str, budgets: &Value) -> Result<()> {
+    if scenario != "contract" || engine != "chromium" {
+        // Only the Chromium contract run carries the CDP-throttled performance
+        // profile. Other engines run the same journeys without claiming it.
+        return exact_keys(budgets, &[], "non-profiled browser budgets");
     }
     exact_keys(
         budgets,
@@ -913,7 +915,7 @@ fn validate_browser(
         }
     }
     need(screenshot, "browser screenshot evidence missing")?;
-    validate_budgets(scenario, &receipt["budgets"])?;
+    validate_budgets(scenario, engine, &receipt["budgets"])?;
     Ok(json!({"completion":completion,"receipt":receipt}))
 }
 
