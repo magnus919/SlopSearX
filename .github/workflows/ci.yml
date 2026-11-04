@@ -299,13 +299,6 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     env:
-      CARGO_TARGET_DIR: ${{ runner.temp }}/slopsearx-t03-target
-      TMPDIR: ${{ runner.temp }}/slopsearx-t03-tmp
-      TMP: ${{ runner.temp }}/slopsearx-t03-tmp
-      TEMP: ${{ runner.temp }}/slopsearx-t03-tmp
-      T03_EVIDENCE_DIR: ${{ runner.temp }}/slopsearx-t03-evidence
-      NPM_CONFIG_CACHE: ${{ runner.temp }}/slopsearx-t03-npm-cache
-      PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/slopsearx-t03-playwright
       T03_BROWSER_DIR: crates/ssx-http/tests/t03-browser
     steps:
       - uses: actions/checkout@v7
@@ -316,7 +309,19 @@ jobs:
           cache: npm
           cache-dependency-path: crates/ssx-http/tests/t03-browser/package-lock.json
       - name: Prepare isolated T03 run directories
-        run: mkdir -p "$CARGO_TARGET_DIR/rust-evidence" "$TMPDIR" "$T03_EVIDENCE_DIR" "$NPM_CONFIG_CACHE" "$PLAYWRIGHT_BROWSERS_PATH"
+        run: |
+          set -euo pipefail
+          run_root="$RUNNER_TEMP/slopsearx-t03"
+          mkdir -p "$run_root/target/rust-evidence" "$run_root/tmp" "$run_root/evidence" "$run_root/npm-cache" "$run_root/playwright"
+          {
+            echo "CARGO_TARGET_DIR=$run_root/target"
+            echo "TMPDIR=$run_root/tmp"
+            echo "TMP=$run_root/tmp"
+            echo "TEMP=$run_root/tmp"
+            echo "T03_EVIDENCE_DIR=$run_root/evidence"
+            echo "NPM_CONFIG_CACHE=$run_root/npm-cache"
+            echo "PLAYWRIGHT_BROWSERS_PATH=$run_root/playwright"
+          } >> "$GITHUB_ENV"
       - name: Install repository-pinned Rust toolchain
         run: |
           toolchain="$(sed -n 's/^channel = "\([^"]*\)"/\1/p' rust-toolchain.toml)"

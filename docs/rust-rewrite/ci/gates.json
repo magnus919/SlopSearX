@@ -2860,14 +2860,7 @@
       "source": {
         "job": {
           "env": {
-            "CARGO_TARGET_DIR": "${{ runner.temp }}/slopsearx-t03-target",
-            "NPM_CONFIG_CACHE": "${{ runner.temp }}/slopsearx-t03-npm-cache",
-            "PLAYWRIGHT_BROWSERS_PATH": "${{ runner.temp }}/slopsearx-t03-playwright",
-            "T03_BROWSER_DIR": "crates/ssx-http/tests/t03-browser",
-            "T03_EVIDENCE_DIR": "${{ runner.temp }}/slopsearx-t03-evidence",
-            "TEMP": "${{ runner.temp }}/slopsearx-t03-tmp",
-            "TMP": "${{ runner.temp }}/slopsearx-t03-tmp",
-            "TMPDIR": "${{ runner.temp }}/slopsearx-t03-tmp"
+            "T03_BROWSER_DIR": "crates/ssx-http/tests/t03-browser"
           },
           "name": "Native T03 browser acceptance",
           "runs-on": "ubuntu-24.04",
@@ -2886,7 +2879,7 @@
             },
             {
               "name": "Prepare isolated T03 run directories",
-              "run": "mkdir -p \"$CARGO_TARGET_DIR/rust-evidence\" \"$TMPDIR\" \"$T03_EVIDENCE_DIR\" \"$NPM_CONFIG_CACHE\" \"$PLAYWRIGHT_BROWSERS_PATH\""
+              "run": "set -euo pipefail\nrun_root=\"$RUNNER_TEMP/slopsearx-t03\"\nmkdir -p \"$run_root/target/rust-evidence\" \"$run_root/tmp\" \"$run_root/evidence\" \"$run_root/npm-cache\" \"$run_root/playwright\"\n{\n  echo \"CARGO_TARGET_DIR=$run_root/target\"\n  echo \"TMPDIR=$run_root/tmp\"\n  echo \"TMP=$run_root/tmp\"\n  echo \"TEMP=$run_root/tmp\"\n  echo \"T03_EVIDENCE_DIR=$run_root/evidence\"\n  echo \"NPM_CONFIG_CACHE=$run_root/npm-cache\"\n  echo \"PLAYWRIGHT_BROWSERS_PATH=$run_root/playwright\"\n} >> \"$GITHUB_ENV\"\n"
             },
             {
               "name": "Install repository-pinned Rust toolchain",
