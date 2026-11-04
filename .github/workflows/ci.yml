@@ -293,6 +293,63 @@ jobs:
           }
           run_theme dark
           run_theme darker
+
+  native-t03-browser:
+    name: Native T03 browser acceptance
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      CARGO_TARGET_DIR: ${{ runner.temp }}/slopsearx-t03-target
+      TMPDIR: ${{ runner.temp }}/slopsearx-t03-tmp
+      TMP: ${{ runner.temp }}/slopsearx-t03-tmp
+      TEMP: ${{ runner.temp }}/slopsearx-t03-tmp
+      T03_EVIDENCE_DIR: ${{ runner.temp }}/slopsearx-t03-evidence
+      NPM_CONFIG_CACHE: ${{ runner.temp }}/slopsearx-t03-npm-cache
+      PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/slopsearx-t03-playwright
+      T03_BROWSER_DIR: crates/ssx-http/tests/t03-browser
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up pinned Node major
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: crates/ssx-http/tests/t03-browser/package-lock.json
+      - name: Prepare isolated T03 run directories
+        run: mkdir -p "$CARGO_TARGET_DIR/rust-evidence" "$TMPDIR" "$T03_EVIDENCE_DIR" "$NPM_CONFIG_CACHE" "$PLAYWRIGHT_BROWSERS_PATH"
+      - name: Install repository-pinned Rust toolchain
+        run: |
+          toolchain="$(sed -n 's/^channel = "\([^"]*\)"/\1/p' rust-toolchain.toml)"
+          test "$toolchain" = "1.99.0"
+          rustup toolchain install "$toolchain" --profile minimal
+      - name: Confirm pinned Rust toolchain
+        run: rustup run 1.99.0 rustc --version --verbose
+      - name: Install locked browser client dependencies
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+        run: npm ci --prefix "$T03_BROWSER_DIR" --no-audit --no-fund
+      - name: Install the lock-matched Chromium runtime
+        run: "$T03_BROWSER_DIR/node_modules/.bin/playwright install --with-deps chromium"
+      - name: Run native Rust portal HTTP and browser acceptance
+        run: |
+          set -euo pipefail
+          cargo xtask check T03 --output "$T03_EVIDENCE_DIR/T03.json"
+          test -s "$T03_EVIDENCE_DIR/T03.json"
+          git diff --exit-code
+          test -z "$(git diff --cached --name-only)"
+      - name: Retain T03 browser and Rust evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: t03-native-browser-${{ github.sha }}
+          path: ${{ runner.temp }}/slopsearx-t03-evidence/
+          if-no-files-found: warn
+      - name: Retire reproducible T03 artifacts
+        if: always()
+        run: |
+          rm -rf "$CARGO_TARGET_DIR" "$TMPDIR" "$T03_EVIDENCE_DIR" "$NPM_CONFIG_CACHE" "$PLAYWRIGHT_BROWSERS_PATH"
+          rm -rf crates/ssx-http/tests/t03-browser/node_modules
+
   test:
     runs-on: ubuntu-latest
     strategy:

@@ -204,6 +204,62 @@ fn inverse(row: &Value, current: &[u8], mode: &str, count: usize) -> Result<Vec<
     need(forward == current, "full forward reconstruction")?;
     Ok(prior)
 }
+// T03's four named registration edits precede the unchanged health/T08 frames.
+// This admits only the new physical dispatcher and reconstructs its exact parent.
+fn pre_t03_registration(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
+    if path != "crates/xtask/src/main.rs" {
+        return Ok(physical.to_vec());
+    }
+    need(
+        physical.len() == 45399
+            && digest(physical)
+                == "8552ffd6647bca01c89cba514bb297d00ccfaca8ce4a656ef505222349012e36",
+        "T03 exact physical main registration",
+    )?;
+    let frames: [(&str, &str); 4] = [
+        ("mod t02;\nmod t04;", "mod t02;\nmod t03;\nmod t04;"),
+        (
+            "        \"T02\" => t02::check(root, records),\n        \"T09\"",
+            "        \"T02\" => t02::check(root, records),\n        \"T03\" => t03::check(root, records),\n        \"T09\"",
+        ),
+        (
+            "    } else if id == \"T06\" {\n",
+            "    } else if id == \"T03\" {\n        \"source-bound real native HTTP and deterministic Chromium browser journeys with measured synthetic budgets; actual Safari, manual visual/assistive technology and 200% zoom acceptance remain separate\"\n    } else if id == \"T06\" {\n",
+        ),
+        (
+            "    fn unknown_and_unimplemented_fail() {\n        let root = Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../..\");\n        assert!(\n            execute(&root, \"T03\", &mut vec![])\n                .unwrap_err()\n                .contains(\"unimplemented\")\n        );\n",
+            "    fn unknown_ids_and_t03_validator_controls_fail_closed() {\n        let root = Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../..\");\n        t03::validator_controls().unwrap();\n",
+        ),
+    ];
+    let current = std::str::from_utf8(physical).map_err(|e| e.to_string())?;
+    let mut prior = current.to_owned();
+    for (before, after) in frames {
+        need(
+            prior.matches(after).count() == 1,
+            "T03 unique inverse registration span",
+        )?;
+        prior = prior.replacen(after, before, 1);
+    }
+    need(
+        prior.len() == 45194
+            && digest(prior.as_bytes())
+                == "7b84b2b3a0adcd82a6a8bf411f9c2d5696f6c24eac258a2d3f2aa732d19ae653",
+        "T03 exact pre-registration main",
+    )?;
+    let mut forward = prior.clone();
+    for (before, after) in frames {
+        need(
+            forward.matches(before).count() == 1,
+            "T03 unique forward registration span",
+        )?;
+        forward = forward.replacen(before, after, 1);
+    }
+    need(
+        forward.as_bytes() == physical,
+        "T03 complete forward registration",
+    )?;
+    Ok(prior.into_bytes())
+}
 // One finite health F01 admission successor before the unchanged T08 main frame.
 fn pre_health_f01(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
     if path != "crates/xtask/src/main.rs" {
@@ -409,10 +465,11 @@ fn pre_984_w07(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
 }
 
 fn accepted_current(root: &Path, path: &str, physical: &[u8]) -> Result<Vec<u8>> {
+    let registered = pre_t03_registration(path, physical)?;
     let logical = if portal_source_successor::owns(path) {
-        portal_source_successor::prior(root, path, physical)?
+        portal_source_successor::prior(root, path, &registered)?
     } else {
-        physical.to_vec()
+        registered
     };
     let health = pre_health_f01(path, &logical)?;
     let w07 = pre_984_w07(path, &health)?;
@@ -532,7 +589,12 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         let physical = regular(root, path)?;
         let logical = accepted_current(root, path, &physical)?;
         if *path == "crates/xtask/src/main.rs" {
-            let health = pre_health_f01(path, &physical)?;
+            let registered = pre_t03_registration(path, &physical)?;
+            let health = pre_health_f01(path, &registered)?;
+            need(
+                pre_t03_registration(path, &registered).is_err(),
+                "pre-T03 frame substituted as physical registration",
+            )?;
             need(
                 pre_t08_registration(path, &health)? == logical,
                 "exact pre-health frame reaches existing registration",
