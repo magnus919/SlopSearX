@@ -1,6 +1,8 @@
 //! Unapplied PR1034 draft. Current identity and historical evidence are distinct.
 #[path = "../../a06/source-amendments/shared-successor.rs"]
 pub(crate) mod a06_source_successor;
+#[path = "issue984-policy-successor.rs"]
+mod issue984_policy_successor;
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::{fs, path::Path};
@@ -898,6 +900,7 @@ fn joint_current_controls(root: &Path) -> Result<(), String> {
 }
 #[cfg(test)]
 pub(crate) fn controls(root: &Path) -> Result<(), String> {
+    issue984_policy_successor::controls(root)?;
     t03_a09_manifest_controls(root)?;
     factory_controls(root)?;
     joint_current_controls(root)?;
@@ -1169,6 +1172,16 @@ pub(crate) fn verify_current(
     expected_sha: &str,
     expected_bytes: Option<usize>,
 ) -> Result<(), String> {
+    if let Some(result) = issue984_policy_successor::try_verify(
+        root,
+        container_path,
+        container_sha,
+        source_path,
+        expected_sha,
+        expected_bytes,
+    ) {
+        return result;
+    }
     if let Some(result) = a06_source_successor::try_verify(
         root,
         container_path,

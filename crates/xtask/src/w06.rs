@@ -267,6 +267,16 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
                 None,
             )
             .map_err(|error| format!("W06 Cargo.lock source provenance: {error}"))?;
+        } else if path == "crates/ssx-application/src/policy.rs" {
+            crate::a13::check_source_pin(
+                root,
+                "docs/rust-rewrite/w06/qualification.json",
+                COVERAGE_SHA,
+                path,
+                expected,
+                None,
+            )
+            .map_err(|error| format!("W06 policy source provenance: {error}"))?;
         } else {
             frozen(root, path, expected)?;
         }

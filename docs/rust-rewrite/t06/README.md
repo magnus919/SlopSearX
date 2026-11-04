@@ -100,13 +100,19 @@ The three source-declared tests require these assertions before completion:
 - Actual successful empty upstream JSON stays empty success, while actual
   HTTP500 stays `all_engines_failed` with the OpenAlex error outcome.
 
-For an explicitly requested inactive OpenAlex adapter, the existing shared
-native MCP policy returns `invalid_scope` on `engines` before date-scope
-resolution. F09 already asserts this fail-closed active-engine ordering; this
-test keeps its zero-admission, zero-I/O and zero-state assertions. Python's
-configured-enabled/missing-adapter path instead reaches its later date-scope
-check and returns `invalid_input`. This records the existing surface difference,
-not whole-#984 parity or a change to policy precedence.
+For date-bounded Science calls only, the shared policy defers its runtime
+activity check until the audited-date resolver. Unknown, disabled and sensitive
+engine authorization still runs first. An enabled but inactive OpenAlex adapter
+then returns Python's exact `invalid_input` envelope on `engines`, with
+`audited date scope is unavailable` and the rejected `enforcement.engines`
+entry. The denial test asserts that complete envelope for lower-only,
+upper-only and two-sided bounds. Separate unbounded Science, generic, targeted
+and preview controls require the unchanged MCP/F09 `invalid_scope` envelope;
+bounded unknown and sensitive controls retain the earlier authorization gate.
+Each case retains zero-admission, zero-I/O, zero-upstream and zero-state guards.
+These are finite regression assertions; exact-head hosted execution is required
+before claiming this error-path parity, and they do not establish whole-#984
+acceptance.
 
 Science's existing six-parameter API is `query`, `source_types`, `date_from`,
 `date_to`, `engines`, and `max_results`. The frozen T06 descriptor and Python
@@ -114,12 +120,13 @@ signature do not declare `time_range` or `safesearch`. Their two negative calls
 must therefore return `isError=true`, one exact FastMCP validation text block
 (`unexpected_keyword_argument`, with the actual field/value), and no
 `structuredContent`. They do not exercise application relative-date or strict
-SafeSearch policy. The other ten cases retain `isError=false`, equal structured
-content and JSON tool text, and exact expected error codes/fields. All twelve
-retain both bearer-token refusals and zero admission, quota, cache I/O, upstream
+SafeSearch policy. The other eighteen cases retain `isError=false`, equal
+structured content and JSON tool text, and exact expected error codes/fields.
+All twenty retain both bearer-token refusals and zero admission, quota, cache
+I/O, upstream
 requests and shared keys. Case-labelled full-envelope diagnostics aggregate
 contract mismatches after each fixture is closed; successful calls retain the
-original strict helper. This changes tests and documentation only.
+original strict helper.
 
 Only the mixed OpenAlex/Brave and unsupported Brave date-scope cases register
 and instantiate the existing real Brave adapter, add its actual engine binding,
@@ -131,12 +138,14 @@ Their exact expected envelope remains `invalid_input` on `engines` with
 including positive OpenAlex calls, do not register Brave. If a regression
 attempts Brave dispatch, the existing admission counter increments and denies
 it before the adapter creates an HTTP session; the zero-acquisition assertion
-then fails. All twelve authentication, I/O, upstream and state guards remain.
+then fails. All twenty authentication, I/O, upstream and state guards remain.
 
 The existing T06 gate runs this separate three-name target in addition to every
 original source binding, fixture and transport test. Frozen JSON, historic test
-identities and policy defaults are unchanged. Portal impact: these are additive
-contract tests, with no production request/response or browser-visible change.
+identities and policy defaults are unchanged. Portal impact: the policy deferral
+is restricted to the Science MCP surface with absolute dates, and the added
+error enforcement entry is at the MCP boundary. HTTP and browser-visible
+behavior remain unchanged; the normal portal CI gate remains required.
 This science MCP composition is extended by the native HTTP slice below.
 T03 portal/date links, gateway and production activation remain separate work.
 Source presence is not qualification: record exact-head native commands/results
