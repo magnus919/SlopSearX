@@ -767,7 +767,7 @@ fn main() {
     } else if id == "T01" {
         "synthetic MCP registry, real stdio/streamable HTTP/legacy SSE and gateway SDK qualification; no production tool parity or OAuth authorization-server claim"
     } else if id == "T03" {
-        "source-bound real native HTTP and deterministic Chromium browser journeys with measured synthetic budgets; actual Safari, manual visual/assistive technology and 200% zoom acceptance remain separate"
+        "source-bound real native HTTP and deterministic Chromium and Firefox browser journeys with measured synthetic budgets; actual Safari, manual visual/assistive technology and 200% zoom acceptance remain separate"
     } else if id == "T06" {
         "source-bound native search/discovery through shared authenticated HTTP, stdio and legacy with real service/snapshot authorities; exactly two accepted outer-params diagnostic differences; production startup T02/W09 separate"
     } else if id == "T05" {

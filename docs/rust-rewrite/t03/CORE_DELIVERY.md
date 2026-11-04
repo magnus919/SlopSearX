@@ -24,8 +24,12 @@ Frozen T02 source captures, comparisons and manifests are unchanged. The initial
 
 The native `cargo xtask check T03` gate is now implemented in
 `crates/xtask/src/t03.rs` and mirrored by the `native-t03-browser` CI job. It
-validates the HTTP and synthetic Chromium receipts, exact source and binary
-identities, loopback-only traffic, joined cleanup, and browser budgets. Its
+validates the HTTP and synthetic browser receipts, exact source and binary
+identities, loopback-only traffic, joined cleanup, and browser budgets. Each of
+the five browser scenarios runs on both Chromium and Firefox from the same
+lock-matched `playwright-core` client; the receipt identity must name the
+requested engine, and the suite inventory rejects missing, duplicated or
+engine-substituted rows. Its
 CLS budget checks both the landing document and populated results document
 after a 250 ms settle interval; it reports the larger value and preserves both
 samples. This is an automation slice, not completion of #898.
@@ -42,6 +46,6 @@ Local raw logs, per-command exits, source inventories and storage measurements a
 
 - Complete source-assertion ownership/evidence reconciliation and review the new CI job against the protected workflow contract.
 - Reconcile reviewed successor source identities for changed shared implementation paths; preserve historical bindings. Any future machine enforcement metadata is a separate compatibility change with narrow comparisons and negative controls.
-- Run real browser journeys in current Chromium, Firefox and Safari at desktop/narrow widths, 320px/200% reflow, focus/history/theme/storage cases, accessibility checks, and retained raw visual artifacts. Record unavailable browser or screen-reader environments as validation gaps.
+- Chromium and Firefox run the full deterministic journey set in the T03 gate. Real Safari/WebKit, 200% browser zoom, manual visual review and screen-reader (VoiceOver/NVDA) execution are not available in the hosted runner and remain recorded validation gaps, not passes.
 - Measure/enforce portal byte, rendering and client performance budgets separately from upstream latency.
 - Complete exact-head hosted CI, portal/image acceptance and required independent review before merge. This core slice is not acceptance evidence for O04 production composition or an upstream engine's live behavior.
