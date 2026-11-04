@@ -1387,6 +1387,15 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
                 .env("T03_BROWSER_BASE_URL", &fixture.base_url)
                 .env("T03_EVIDENCE_DIR", &browser_dir);
             let browser = capture(root, node, Duration::from_secs(600), records);
+            if let Err(error) = &browser {
+                let receipt = browser_dir.join(format!("{scenario}.browser-receipt.json"));
+                if let Ok(bytes) = fs::read(&receipt)
+                    && let Ok(receipt) = serde_json::from_slice::<Value>(&bytes)
+                {
+                    return Err(format!("{error}: browser failures {}", receipt["failures"]));
+                }
+                return Err(error.clone());
+            }
             let terminal = fixture.finish();
             records.push(json!({"plan":"T03","role":"browser-fixture-terminal","scenario":scenario,"terminal":terminal.as_ref().ok(),"error":terminal.as_ref().err()}));
             let terminal = terminal?;

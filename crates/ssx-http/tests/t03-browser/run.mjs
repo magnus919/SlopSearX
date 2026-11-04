@@ -680,7 +680,10 @@ async function main() {
   const receiptBytes = Buffer.from(`${JSON.stringify(receipt, null, 2)}\n`);
   writeFileSync(receiptPath, receiptBytes, { flag: 'wx' });
   process.stdout.write(`T03_BROWSER_COMPLETION ${JSON.stringify({ scenario, receipt: receiptPath, sha256: sha256(receiptBytes) })}\n`);
-  if (failures.length > 0) process.exitCode = 1;
+  if (failures.length > 0) {
+    process.stderr.write(`T03_BROWSER_FAILURES ${JSON.stringify(failures)}\n`);
+    process.exitCode = 1;
+  }
 }
 
 main().catch(async (error) => {
