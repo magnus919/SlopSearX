@@ -9,17 +9,19 @@ establishes whole-issue parity.
 
 Native test abbreviations below:
 
-- **HTTP routes**: `ssx-http/tests/science_openalex.rs::native_http_real_openalex_routes_bounds_formats_and_cache_reacquisition`.
+- **HTTP routes and production portal**: `ssx-http/tests/science_openalex.rs::native_http_real_openalex_routes_bounds_formats_and_cache_reacquisition` includes the `native_portal_real_openalex_preserves_bounds_and_machine_proof` subcase.
 - **HTTP denials**: `ssx-http/tests/science_openalex.rs::native_http_date_denials_have_zero_real_acquisition`.
 - **HTTP outcomes**: `ssx-http/tests/science_openalex.rs::native_http_real_openalex_failure_and_empty_have_distinct_status_outcomes`.
 - **MCP acquisition**: `ssx-mcp/tests/science_openalex.rs::authenticated_science_openalex_dates_preserve_wire_proof_and_valkey_cache`.
 - **MCP denials**: `ssx-mcp/tests/science_openalex.rs::science_date_denials_never_reach_real_adapter_or_shared_acquisition`.
 - **MCP outcomes**: `ssx-mcp/tests/science_openalex.rs::science_real_openalex_empty_and_http_failure_remain_distinct`.
 
-These six tests use the same actual registered OpenAlex/service/private Valkey
-fixture. The HTTP test uses the accepted public router and real peer connection;
-MCP uses authenticated SDK transport. No Python runtime, provider request,
-production startup or new portal implementation participates.
+These six machine-contract tests use the same actual registered
+OpenAlex/service/private Valkey fixture. Its portal subcase uses the
+same runtime registration, descriptor-derived redacted discovery, production
+`with_public_portal` composition, and real loopback HTTP while keeping upstream
+responses deterministic and local. MCP uses authenticated SDK transport. No
+Python runtime, external provider request or production deployment participates.
 
 ## Added and changed reference bodies
 
@@ -31,7 +33,7 @@ production startup or new portal implementation participates.
 | `test_server.py::test_absolute_dates_are_discoverable_in_openapi` | Existing `t02_http::original_assertion_families_use_runtime_policy_config_and_public_discovery` checks GET/POST `/search` date schemas in its `absolute-date-openapi` case. This test was inspected, not rerun in this focused increment. |
 | `test_server.py::test_repeated_date_bounds_reject` | HTTP denials checks repeated `date_from` controls, including the reference bad-first/valid-last ordering, for both methods/routes and a query-plus-form duplicate. |
 | `test_server.py::test_http_dates_reach_real_openalex_and_preserve_publication_dates` | HTTP routes checks the actual adapter/parser, exact inclusive outbound filter bytes and actual publication-day projection. The unchanged A06 corpus includes adjacent days, missing/bad dates, misleading title/year, timestamp and compact-date forms. |
-| `test_server.py::test_portal_keeps_absolute_bounds_in_forms_and_machine_links` | **Open T03 acceptance.** Existing pagination retains dates, but forms lose date/scope on resubmit; truthful enforcement display and machine-format links are absent. No native browser pass is claimed here. |
+| `test_server.py::test_portal_keeps_absolute_bounds_in_forms_and_machine_links` | The new actual-OpenAlex portal integration verifies production-renderer enforcement display, both forms' retained date/scope values, date-aware pagination, JSON/YAML links, cache reuse and missing-proof reacquisition. Full T03 browser, visual, accessibility and performance acceptance remains open. |
 | `test_server.py::test_bounded_formats_without_proof_reject_before_dispatch` | HTTP denials checks CSV/RSS HTTP 400 and refusal text before actual adapter/client/cache/upstream/state acquisition, for both routes and methods. HTTP routes separately preserves ordinary unbounded CSV/RSS compatibility. |
 | `test_filter_semantics.py::TestEnforcementTruthAcrossPaths::test_specialist_date_filters_are_unsupported` (changed to rejection) | MCP denials checks implicit bounded science scope returns `invalid_input` on `engines` before acquisition. |
 | `test_filter_semantics.py::TestAuditedOpenAlexDates::test_science_dates_real_adapter_mixed_scope_and_cache` | MCP acquisition checks real OpenAlex, exact date proof/enforcement/outcomes through cache and changed-bound identity; MCP denials rejects mixed scope atomically. |
@@ -58,10 +60,12 @@ response retains the same three valid URL/day pairs as A06's `both_span` case.
 The positive matrix requires twenty cold acquisitions, twenty cached YAML views,
 two proof-repair acquisitions and one ordinary unbounded acquisition (23 total).
 
-Complete T03 browser acceptance and final integrated/CI qualification before
+Complete full T03 browser acceptance and final integrated/CI qualification before
 closing #984. The exact tested inactive-engine MCP error-order difference remains
 documented in the T06 README. OpenAPI coverage is retained under its existing T02
-owner; this increment adds neither an OpenAPI implementation nor a new portal.
+owner. This integration test exercises the production portal renderer with a
+real registered OpenAlex adapter but does not claim the remaining browser,
+visual, accessibility or release acceptance.
 
 ## Local execution identity
 
