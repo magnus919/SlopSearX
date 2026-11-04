@@ -31,7 +31,9 @@ lock-matched `playwright-core` client; the receipt identity must name the
 requested engine, and the suite inventory rejects missing, duplicated or
 engine-substituted rows. Only the Chromium contract run carries the
 CDP-throttled performance-budget profile; Firefox executes the same journeys
-without CDP and does not claim those timing budgets. Its
+without CDP and does not claim those timing budgets. The CLI's top-level T03
+summary string stays at its custody-frozen historical wording; the authoritative
+engine coverage is the gate's own browser-scenario records and this note. Its
 CLS budget checks both the landing document and populated results document
 after a 250 ms settle interval; it reports the larger value and preserves both
 samples. This is an automation slice, not completion of #898.
