@@ -656,77 +656,6 @@ fn validate_engine_call(line: &str, error: &str) -> Result<()> {
     )
 }
 
-#[cfg(test)]
-mod tests {
-    use super::{validate_engine_call, validate_http_error_evidence};
-    use serde_json::json;
-
-    #[test]
-    fn engine_call_keeps_arbitrary_precision_page_evidence() {
-        let page = "9".repeat(4300);
-        let line = format!(r#"{{"engine":"beta","page":{page}}}"#);
-        assert!(validate_engine_call(&line, "unexpected engine").is_ok());
-    }
-
-    #[test]
-    fn engine_call_still_rejects_unexpected_engine() {
-        assert!(
-            validate_engine_call(r#"{"engine":"untrusted","page":1}"#, "unexpected engine")
-                .is_err()
-        );
-    }
-
-    #[test]
-    fn expected_http_error_statuses_are_explicit_and_loopback_bound() {
-        let receipt = json!({
-            "http_error_responses": [
-                {"status":503,"url":"http://127.0.0.1:4321/search?q=failed"},
-                {"status":400,"url":"http://127.0.0.1:4321/search?q=invalid"},
-                {"status":403,"url":"http://127.0.0.1:4321/search?q=denied"}
-            ],
-            "http_error_console_statuses": [503,400,403]
-        });
-        assert!(
-            validate_http_error_evidence(&receipt, "contract", "http://127.0.0.1:4321").is_ok()
-        );
-
-        let unexpected = json!({
-            "http_error_responses": [
-                {"status":400,"url":"http://127.0.0.1:4321/search?q=invalid"},
-                {"status":403,"url":"http://127.0.0.1:4321/search?q=denied"},
-                {"status":500,"url":"http://127.0.0.1:4321/search?q=unexpected"}
-            ],
-            "http_error_console_statuses": [400,403,500]
-        });
-        assert!(
-            validate_http_error_evidence(&unexpected, "contract", "http://127.0.0.1:4321").is_err()
-        );
-
-        for url in [
-            "http://127.0.0.1:43210/search?q=wrong-port",
-            "http://127.0.0.1:4321@evil.example/search?q=userinfo-host",
-            "http://user@127.0.0.1:4321/search?q=userinfo-loopback",
-        ] {
-            let lookalike_origin = json!({
-                "http_error_responses": [
-                    {"status":400,"url":"http://127.0.0.1:4321/search?q=invalid"},
-                    {"status":403,"url":"http://127.0.0.1:4321/search?q=denied"},
-                    {"status":503,"url":url}
-                ],
-                "http_error_console_statuses": [400,403,503]
-            });
-            assert!(
-                validate_http_error_evidence(
-                    &lookalike_origin,
-                    "contract",
-                    "http://127.0.0.1:4321"
-                )
-                .is_err()
-            );
-        }
-    }
-}
-
 fn journey_ids(scenario: &str) -> Result<&'static [&'static str]> {
     match scenario {
         "contract" => Ok(&[
@@ -795,8 +724,7 @@ fn validate_budgets(scenario: &str, budgets: &Value) -> Result<()> {
             .ok_or("T03 measured budget value missing")?;
         need(
             observed.is_finite()
-                && observed >= 0.0
-                && observed <= limit
+                && (0.0..=limit).contains(&observed)
                 && metric["limit"].as_f64() == Some(limit)
                 && metric["pass"] == true,
             &format!("browser budget failed or changed: {name}"),
@@ -812,7 +740,7 @@ fn validate_budgets(scenario: &str, budgets: &Value) -> Result<()> {
             .as_f64()
             .ok_or("CLS sample missing")?;
         need(
-            value.is_finite() && value >= 0.0 && value <= 0.1,
+            value.is_finite() && (0.0..=0.1).contains(&value),
             "landing or results CLS exceeds portal budget",
         )?;
     }
@@ -822,6 +750,7 @@ fn validate_budgets(scenario: &str, budgets: &Value) -> Result<()> {
     )?;
     Ok(())
 }
+
 fn validate_browser(
     base: &Path,
     stdout: &str,
@@ -1470,4 +1399,75 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     )?;
     records.push(json!({"plan":"T03","role":"native-browser-acceptance","source_inputs":before,"source_sha256":source_sha,"server_binary":{"path":binary,"sha256":binary_sha},"http_tests":HTTP_TESTS,"http_receipts":104,"http_processes":12,"browser_scenarios":browser_rows,"controls":negative,"evidence_directory":run,"scope":"real native HTTP plus Chromium deterministic browser journeys and measured synthetic budgets; actual Safari, manual visual/assistive technology and 200% zoom acceptance remain separate"}));
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{validate_engine_call, validate_http_error_evidence};
+    use serde_json::json;
+
+    #[test]
+    fn engine_call_keeps_arbitrary_precision_page_evidence() {
+        let page = "9".repeat(4300);
+        let line = format!(r#"{{"engine":"beta","page":{page}}}"#);
+        assert!(validate_engine_call(&line, "unexpected engine").is_ok());
+    }
+
+    #[test]
+    fn engine_call_still_rejects_unexpected_engine() {
+        assert!(
+            validate_engine_call(r#"{"engine":"untrusted","page":1}"#, "unexpected engine")
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn expected_http_error_statuses_are_explicit_and_loopback_bound() {
+        let receipt = json!({
+            "http_error_responses": [
+                {"status":503,"url":"http://127.0.0.1:4321/search?q=failed"},
+                {"status":400,"url":"http://127.0.0.1:4321/search?q=invalid"},
+                {"status":403,"url":"http://127.0.0.1:4321/search?q=denied"}
+            ],
+            "http_error_console_statuses": [503,400,403]
+        });
+        assert!(
+            validate_http_error_evidence(&receipt, "contract", "http://127.0.0.1:4321").is_ok()
+        );
+
+        let unexpected = json!({
+            "http_error_responses": [
+                {"status":400,"url":"http://127.0.0.1:4321/search?q=invalid"},
+                {"status":403,"url":"http://127.0.0.1:4321/search?q=denied"},
+                {"status":500,"url":"http://127.0.0.1:4321/search?q=unexpected"}
+            ],
+            "http_error_console_statuses": [400,403,500]
+        });
+        assert!(
+            validate_http_error_evidence(&unexpected, "contract", "http://127.0.0.1:4321").is_err()
+        );
+
+        for url in [
+            "http://127.0.0.1:43210/search?q=wrong-port",
+            "http://127.0.0.1:4321@evil.example/search?q=userinfo-host",
+            "http://user@127.0.0.1:4321/search?q=userinfo-loopback",
+        ] {
+            let lookalike_origin = json!({
+                "http_error_responses": [
+                    {"status":400,"url":"http://127.0.0.1:4321/search?q=invalid"},
+                    {"status":403,"url":"http://127.0.0.1:4321/search?q=denied"},
+                    {"status":503,"url":url}
+                ],
+                "http_error_console_statuses": [400,403,503]
+            });
+            assert!(
+                validate_http_error_evidence(
+                    &lookalike_origin,
+                    "contract",
+                    "http://127.0.0.1:4321"
+                )
+                .is_err()
+            );
+        }
+    }
 }
