@@ -2855,6 +2855,99 @@
       "owner": "F03",
       "state": "additive",
       "successor": "Mandatory F03 core partition on both existing architectures; unchanged F03 commands, feature/profile roles and native deadlines; fresh tool/isolation/Valkey/compiler/source provenance; separate 130-minute job, no inherited targets or dropped gates."
+    },
+    "ci.yml:native-t03-browser": {
+      "source": {
+        "job": {
+          "env": {
+            "CARGO_TARGET_DIR": "${{ runner.temp }}/slopsearx-t03-target",
+            "NPM_CONFIG_CACHE": "${{ runner.temp }}/slopsearx-t03-npm-cache",
+            "PLAYWRIGHT_BROWSERS_PATH": "${{ runner.temp }}/slopsearx-t03-playwright",
+            "T03_BROWSER_DIR": "crates/ssx-http/tests/t03-browser",
+            "T03_EVIDENCE_DIR": "${{ runner.temp }}/slopsearx-t03-evidence",
+            "TEMP": "${{ runner.temp }}/slopsearx-t03-tmp",
+            "TMP": "${{ runner.temp }}/slopsearx-t03-tmp",
+            "TMPDIR": "${{ runner.temp }}/slopsearx-t03-tmp"
+          },
+          "name": "Native T03 browser acceptance",
+          "runs-on": "ubuntu-24.04",
+          "steps": [
+            {
+              "uses": "actions/checkout@v7"
+            },
+            {
+              "name": "Set up pinned Node major",
+              "uses": "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+              "with": {
+                "cache": "npm",
+                "cache-dependency-path": "crates/ssx-http/tests/t03-browser/package-lock.json",
+                "node-version": 22
+              }
+            },
+            {
+              "name": "Prepare isolated T03 run directories",
+              "run": "mkdir -p \"$CARGO_TARGET_DIR/rust-evidence\" \"$TMPDIR\" \"$T03_EVIDENCE_DIR\" \"$NPM_CONFIG_CACHE\" \"$PLAYWRIGHT_BROWSERS_PATH\""
+            },
+            {
+              "name": "Install repository-pinned Rust toolchain",
+              "run": "toolchain=\"$(sed -n 's/^channel = \"\\([^\"]*\\)\"/\\1/p' rust-toolchain.toml)\"\ntest \"$toolchain\" = \"1.99.0\"\nrustup toolchain install \"$toolchain\" --profile minimal\n"
+            },
+            {
+              "name": "Confirm pinned Rust toolchain",
+              "run": "rustup run 1.99.0 rustc --version --verbose"
+            },
+            {
+              "env": {
+                "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD": "1"
+              },
+              "name": "Install locked browser client dependencies",
+              "run": "npm ci --prefix \"$T03_BROWSER_DIR\" --no-audit --no-fund"
+            },
+            {
+              "name": "Install the lock-matched Chromium runtime",
+              "run": "$T03_BROWSER_DIR/node_modules/.bin/playwright-core install --with-deps chromium"
+            },
+            {
+              "name": "Run native Rust portal HTTP and browser acceptance",
+              "run": "set -euo pipefail\ncargo xtask check T03 --output \"$T03_EVIDENCE_DIR/T03.json\"\ntest -s \"$T03_EVIDENCE_DIR/T03.json\"\ngit diff --exit-code\ntest -z \"$(git diff --cached --name-only)\"\n"
+            },
+            {
+              "if": "always()",
+              "name": "Retain T03 browser and Rust evidence",
+              "uses": "actions/upload-artifact@v7",
+              "with": {
+                "if-no-files-found": "warn",
+                "name": "t03-native-browser-${{ github.sha }}",
+                "path": "${{ runner.temp }}/slopsearx-t03-evidence/"
+              }
+            },
+            {
+              "if": "always()",
+              "name": "Retire reproducible T03 artifacts",
+              "run": "rm -rf \"$CARGO_TARGET_DIR\" \"$TMPDIR\" \"$T03_EVIDENCE_DIR\" \"$NPM_CONFIG_CACHE\" \"$PLAYWRIGHT_BROWSERS_PATH\"\nrm -rf crates/ssx-http/tests/t03-browser/node_modules\n"
+            }
+          ],
+          "timeout-minutes": 60
+        },
+        "workflow": {
+          "name": "CI",
+          "on": {
+            "pull_request": {
+              "branches": [
+                "main"
+              ]
+            },
+            "push": {
+              "branches": [
+                "main"
+              ]
+            }
+          }
+        }
+      },
+      "owner": "T03",
+      "state": "additive",
+      "successor": "cargo xtask check T03 validates source-bound real Rust HTTP and synthetic Chromium acceptance, exact 11-test/104-observation/12-process inventories, five browser fixture modes, receipt hashes, no outbound traffic, and joined cleanup; actual Safari, manual visual/accessibility review, and real 200% browser zoom remain required before #898 closure"
     }
   },
   "precommit_source": {

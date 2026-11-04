@@ -153,14 +153,15 @@ pub(crate) const HEALTH_LOCK_SHA: &str =
     "53fb4619c6e4fd12eae7928073c5062929498d2db29b270e456514a855a5bdd9";
 pub(crate) const HEALTH_LOCK_BYTES: usize = 94250;
 const HEALTH_LOCK_STANZA: &str = "[[package]]\nname = \"ssx-healthcheck\"\nversion = \"0.1.0\"\n\n";
-// T03 adds only two edges to already-pinned workspace packages. Authenticate
+// T03 adds three edges to already-pinned workspace packages. Authenticate
 // physical current first, then reconstruct the immutable accepted health frame.
 pub(crate) const PORTAL_LOCK_SHA: &str =
-    "adbdc6b3b3f3c3f882b806f27f65374ae87167888d7c6120ebd42092f42c079e";
-pub(crate) const PORTAL_LOCK_BYTES: usize = 94288;
-const PORTAL_LOCK_EDITS: [(usize, &[u8]); 2] = [
+    "37415fcb0b57ae7ab3f502067485cb39143827aee6e54a8acb2e87b6a7e24549";
+pub(crate) const PORTAL_LOCK_BYTES: usize = 94296;
+const PORTAL_LOCK_EDITS: [(usize, &[u8]); 3] = [
     (65174, b" \"unicode-normalization\",\n"),
     (66903, b" \"scraper\",\n"),
+    (91635, b" \"url\",\n"),
 ];
 pub(crate) fn portal_health_lock_frame(physical: &[u8]) -> Result<Vec<u8>> {
     need(

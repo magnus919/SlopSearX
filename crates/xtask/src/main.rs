@@ -35,6 +35,7 @@ mod replay;
 mod snapshot_fixture_amendment;
 mod t01;
 mod t02;
+mod t03;
 mod t04;
 mod t05;
 mod t06;
@@ -520,6 +521,7 @@ fn execute(root: &Path, id: &str, records: &mut Vec<Value>) -> Result<()> {
         "F04" => replay::check(root, records),
         "T01" => t01::check(root, records),
         "T02" => t02::check(root, records),
+        "T03" => t03::check(root, records),
         "T09" => t09::check(root, records),
         "T08" => t08::check(root, records),
         "T08A" => t08a::check(root, records),
@@ -764,6 +766,8 @@ fn main() {
         "active tooling inventory and prospective evidence contracts only; no experiment, provider call, receipt issuance or historical evidence mutation"
     } else if id == "T01" {
         "synthetic MCP registry, real stdio/streamable HTTP/legacy SSE and gateway SDK qualification; no production tool parity or OAuth authorization-server claim"
+    } else if id == "T03" {
+        "source-bound real native HTTP and deterministic Chromium browser journeys with measured synthetic budgets; actual Safari, manual visual/assistive technology and 200% zoom acceptance remain separate"
     } else if id == "T06" {
         "source-bound native search/discovery through shared authenticated HTTP, stdio and legacy with real service/snapshot authorities; exactly two accepted outer-params diagnostic differences; production startup T02/W09 separate"
     } else if id == "T05" {
@@ -979,13 +983,9 @@ mod tests {
         assert!(serde_json::from_str::<Fixture>("{}").is_err());
     }
     #[test]
-    fn unknown_and_unimplemented_fail() {
+    fn unknown_ids_and_t03_validator_controls_fail_closed() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-        assert!(
-            execute(&root, "T03", &mut vec![])
-                .unwrap_err()
-                .contains("unimplemented")
-        );
+        t03::validator_controls().unwrap();
         assert!(
             execute(&root, "INVALID", &mut vec![])
                 .unwrap_err()

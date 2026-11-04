@@ -22,6 +22,14 @@ Frozen T02 source captures, comparisons and manifests are unchanged. The initial
 
 ## Bounded local evidence
 
+The native `cargo xtask check T03` gate is now implemented in
+`crates/xtask/src/t03.rs` and mirrored by the `native-t03-browser` CI job. It
+validates the HTTP and synthetic Chromium receipts, exact source and binary
+identities, loopback-only traffic, joined cleanup, and browser budgets. Its
+CLS budget checks both the landing document and populated results document
+after a 250 ms settle interval; it reports the larger value and preserves both
+samples. This is an automation slice, not completion of #898.
+
 `crates/ssx-http/tests/t03.rs` runs a real native HTTP child process and saves whole response/status/header/call-count receipts with startup binary identity and joined shutdown receipts. Its ten cases cover the 16 inherited literal portal assertions, captured browser enforcement without machine-wire changes, landing query/scope submission through both native buttons, and exact large-page state, malicious/optional/empty/partial/unavailable/grouped results, invalid and sensitive scope rejection without dispatch, cached error/429/disabled format recovery, the 4300-digit page limit, cookie noninterference and the 18-request blank-date matrix.
 
 The existing T09 OIDC/TLS flow additionally passes its actually issued session cookie to a 60-request public-route matrix: GET/POST × `/`/`/search` × HTML/JSON/YAML/CSV/RSS × absent/valid/invalid cookie, plus landing. Bodies compare with only query ID and measured response time normalized. Cookie bytes are not stored in receipts. The original T09 assertions remain intact.
@@ -32,8 +40,8 @@ Local raw logs, per-command exits, source inventories and storage measurements a
 
 ## Remaining acceptance before T03 completion
 
-- Implement the self-contained `cargo xtask check T03` gate and source-assertion ownership/evidence reconciliation, sequenced after the active shared integration lease.
+- Complete source-assertion ownership/evidence reconciliation and review the new CI job against the protected workflow contract.
 - Reconcile reviewed successor source identities for changed shared implementation paths; preserve historical bindings. Any future machine enforcement metadata is a separate compatibility change with narrow comparisons and negative controls.
-- Run real browser journeys at desktop/narrow widths, 320px/200% reflow, focus/history/theme/storage cases, accessibility checks, available-browser matrix and raw visual artifacts.
+- Run real browser journeys in current Chromium, Firefox and Safari at desktop/narrow widths, 320px/200% reflow, focus/history/theme/storage cases, accessibility checks, and retained raw visual artifacts. Record unavailable browser or screen-reader environments as validation gaps.
 - Measure/enforce portal byte, rendering and client performance budgets separately from upstream latency.
 - Complete exact-head hosted CI, portal/image acceptance and required independent review before merge. This core slice is not acceptance evidence for O04 production composition or an upstream engine's live behavior.
