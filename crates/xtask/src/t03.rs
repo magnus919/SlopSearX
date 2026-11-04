@@ -567,11 +567,7 @@ fn validate_http(base: &Path, stdout: &str, binary: &Path, binary_sha: &str) -> 
             "HTTP raw engine-call count differs",
         )?;
         for line in calls.lines() {
-            let call: Value = serde_json::from_str(line).map_err(|e| e.to_string())?;
-            need(
-                matches!(call["engine"].as_str(), Some("alpha" | "beta" | "openalex")),
-                "HTTP fixture reached an unexpected engine",
-            )?;
+            validate_engine_call(line, "HTTP fixture reached an unexpected engine")?;
         }
     }
     Ok(
@@ -648,6 +644,89 @@ fn exact_keys(value: &Value, expected: &[&str], label: &str) -> Result<()> {
         &format!("{label} fields differ"),
     )
 }
+
+fn validate_engine_call(line: &str, error: &str) -> Result<()> {
+    // Engine-call query parameters are raw request evidence. The T03 page-limit
+    // case intentionally includes a 4,300-digit page token, so parse through the
+    // lossless JSON profile instead of serde_json's bounded integer representation.
+    let call: ssx_json::Value = ssx_json::from_str(line).map_err(|e| e.to_string())?;
+    need(
+        matches!(call["engine"].as_str(), Some("alpha" | "beta" | "openalex")),
+        error,
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{validate_engine_call, validate_http_error_evidence};
+    use serde_json::json;
+
+    #[test]
+    fn engine_call_keeps_arbitrary_precision_page_evidence() {
+        let page = "9".repeat(4300);
+        let line = format!(r#"{{"engine":"beta","page":{page}}}"#);
+        assert!(validate_engine_call(&line, "unexpected engine").is_ok());
+    }
+
+    #[test]
+    fn engine_call_still_rejects_unexpected_engine() {
+        assert!(
+            validate_engine_call(r#"{"engine":"untrusted","page":1}"#, "unexpected engine")
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn expected_http_error_statuses_are_explicit_and_loopback_bound() {
+        let receipt = json!({
+            "http_error_responses": [
+                {"status":503,"url":"http://127.0.0.1:4321/search?q=failed"},
+                {"status":400,"url":"http://127.0.0.1:4321/search?q=invalid"},
+                {"status":403,"url":"http://127.0.0.1:4321/search?q=denied"}
+            ],
+            "http_error_console_statuses": [503,400,403]
+        });
+        assert!(
+            validate_http_error_evidence(&receipt, "contract", "http://127.0.0.1:4321").is_ok()
+        );
+
+        let unexpected = json!({
+            "http_error_responses": [
+                {"status":400,"url":"http://127.0.0.1:4321/search?q=invalid"},
+                {"status":403,"url":"http://127.0.0.1:4321/search?q=denied"},
+                {"status":500,"url":"http://127.0.0.1:4321/search?q=unexpected"}
+            ],
+            "http_error_console_statuses": [400,403,500]
+        });
+        assert!(
+            validate_http_error_evidence(&unexpected, "contract", "http://127.0.0.1:4321").is_err()
+        );
+
+        for url in [
+            "http://127.0.0.1:43210/search?q=wrong-port",
+            "http://127.0.0.1:4321@evil.example/search?q=userinfo-host",
+            "http://user@127.0.0.1:4321/search?q=userinfo-loopback",
+        ] {
+            let lookalike_origin = json!({
+                "http_error_responses": [
+                    {"status":400,"url":"http://127.0.0.1:4321/search?q=invalid"},
+                    {"status":403,"url":"http://127.0.0.1:4321/search?q=denied"},
+                    {"status":503,"url":url}
+                ],
+                "http_error_console_statuses": [400,403,503]
+            });
+            assert!(
+                validate_http_error_evidence(
+                    &lookalike_origin,
+                    "contract",
+                    "http://127.0.0.1:4321"
+                )
+                .is_err()
+            );
+        }
+    }
+}
+
 fn journey_ids(scenario: &str) -> Result<&'static [&'static str]> {
     match scenario {
         "contract" => Ok(&[
@@ -687,6 +766,7 @@ fn validate_budgets(scenario: &str, budgets: &Value) -> Result<()> {
             "css_js_uncompressed_bytes",
             "fcp_ms",
             "cls",
+            "cls_samples",
             "interaction_p95_ms",
             "handoff_p95_ms",
         ],
@@ -722,6 +802,24 @@ fn validate_budgets(scenario: &str, budgets: &Value) -> Result<()> {
             &format!("browser budget failed or changed: {name}"),
         )?;
     }
+    exact_keys(
+        &budgets["cls_samples"],
+        &["landing", "results", "result_settle_ms"],
+        "CLS samples",
+    )?;
+    for sample in ["landing", "results"] {
+        let value = budgets["cls_samples"][sample]
+            .as_f64()
+            .ok_or("CLS sample missing")?;
+        need(
+            value.is_finite() && value >= 0.0 && value <= 0.1,
+            "landing or results CLS exceeds portal budget",
+        )?;
+    }
+    need(
+        budgets["cls_samples"]["result_settle_ms"].as_u64() == Some(250),
+        "results CLS must be measured after the documented settle interval",
+    )?;
     Ok(())
 }
 fn validate_browser(
@@ -768,6 +866,8 @@ fn validate_browser(
             "failures",
             "unexpected_requests",
             "console_errors",
+            "http_error_responses",
+            "http_error_console_statuses",
             "page_errors",
             "browser_closed",
             "artifacts",
@@ -796,7 +896,7 @@ fn validate_browser(
         )?;
     }
     let lock: Value = serde_json::from_slice(SOURCES[10].1).map_err(|e| e.to_string())?;
-    let playwright = lock["packages"]["node_modules/playwright"]["version"]
+    let playwright = lock["packages"]["node_modules/playwright-core"]["version"]
         .as_str()
         .ok_or("T03 locked Playwright version missing")?;
     need(
@@ -815,6 +915,7 @@ fn validate_browser(
             &format!("browser {field} must be empty"),
         )?;
     }
+    validate_http_error_evidence(&receipt, scenario, base_url)?;
     need(
         receipt["browser_closed"] == true,
         "browser process cleanup not completed",
@@ -824,7 +925,10 @@ fn validate_browser(
         .ok_or("T03 browser journey inventory missing")?;
     let completed_ids = completed
         .iter()
-        .map(|id| id.as_str().ok_or("T03 browser journey ID is not text"))
+        .map(|id| {
+            id.as_str()
+                .ok_or_else(|| "T03 browser journey ID is not text".to_string())
+        })
         .collect::<Result<Vec<_>>>()?;
     let expected: BTreeSet<_> = journey_ids(scenario)?.iter().copied().collect();
     need(
@@ -876,6 +980,56 @@ fn validate_browser(
     need(screenshot, "browser screenshot evidence missing")?;
     validate_budgets(scenario, &receipt["budgets"])?;
     Ok(json!({"completion":completion,"receipt":receipt}))
+}
+
+fn validate_http_error_evidence(receipt: &Value, scenario: &str, base_url: &str) -> Result<()> {
+    let expected: &[u64] = match scenario {
+        "contract" => &[400, 403, 503],
+        "cached-error" => &[503],
+        "rate-limited" => &[429],
+        "html-disabled" => &[403],
+        "unavailable" => &[503],
+        _ => return Err("T03 unknown browser scenario for HTTP statuses".into()),
+    };
+    let responses = receipt["http_error_responses"]
+        .as_array()
+        .ok_or("T03 HTTP error response evidence missing")?;
+    let mut statuses = Vec::new();
+    for response in responses {
+        exact_keys(response, &["status", "url"], "HTTP error response")?;
+        let status = response["status"]
+            .as_u64()
+            .ok_or("T03 HTTP error response status missing")?;
+        let url = response["url"]
+            .as_str()
+            .ok_or("T03 HTTP error response URL missing")?;
+        let expected_origin = url::Url::parse(base_url).map_err(|e| e.to_string())?;
+        let observed_url = url::Url::parse(url).map_err(|e| e.to_string())?;
+        need(
+            status >= 400
+                && expected_origin.origin() == observed_url.origin()
+                && observed_url.username().is_empty()
+                && observed_url.password().is_none(),
+            "T03 unexpected or non-loopback HTTP error response",
+        )?;
+        statuses.push(status);
+    }
+    statuses.sort_unstable();
+    let mut console_statuses = receipt["http_error_console_statuses"]
+        .as_array()
+        .ok_or("T03 expected HTTP console status evidence missing")?
+        .iter()
+        .map(|status| {
+            status
+                .as_u64()
+                .ok_or_else(|| "T03 console HTTP status is not an integer".to_owned())
+        })
+        .collect::<Result<Vec<_>>>()?;
+    console_statuses.sort_unstable();
+    need(
+        statuses == expected && console_statuses == expected,
+        "T03 HTTP error responses differ from explicitly asserted scenario statuses",
+    )
 }
 
 struct Fixture {
@@ -1010,7 +1164,7 @@ impl Fixture {
             address.ip().is_loopback() && address.port() != 0,
             "fixture listener must be bound loopback",
         )?;
-        fixture.base_url = format!("http://{address}/");
+        fixture.base_url = format!("http://{address}");
         fixture.startup = json!({"pid":fixture.pid,"binary":binary.to_string_lossy().as_ref(),"binary_sha256":binary_sha,"startup":startup,"base_url":fixture.base_url});
         fs::write(
             fixture.out.join("process-start.json"),
@@ -1298,11 +1452,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             .as_str()
             .ok_or("T03 browser engine-call observations missing")?;
         for line in calls.lines() {
-            let call: Value = serde_json::from_str(line).map_err(|e| e.to_string())?;
-            need(
-                matches!(call["engine"].as_str(), Some("alpha" | "beta" | "openalex")),
-                "browser fixture reached an unexpected engine",
-            )?;
+            validate_engine_call(line, "browser fixture reached an unexpected engine")?;
         }
         let browser = validate_browser(
             &browser_dir,

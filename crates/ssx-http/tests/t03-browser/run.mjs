@@ -44,10 +44,13 @@ const completed = [];
 const failures = [];
 const unexpectedRequests = [];
 const consoleErrors = [];
+const httpErrorResponses = [];
+const httpErrorConsoleStatuses = [];
 const pageErrors = [];
 const requestFailures = [];
 const artifacts = [];
 const interactionSamples = [];
+const handoffSamples = [];
 let browser = null;
 let browserClosed = false;
 let browserInfo = { name: 'chromium', version: '', playwright_version: '' };
@@ -85,7 +88,13 @@ function attachPageEvidence(page) {
   if (page.__t03EvidenceAttached) return;
   page.__t03EvidenceAttached = true;
   page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
+    if (message.type() !== 'error') return;
+    const match = /^Failed to load resource: the server responded with a status of (\d{3}) \(/.exec(message.text());
+    if (match) httpErrorConsoleStatuses.push(Number(match[1]));
+    else consoleErrors.push(message.text());
+  });
+  page.on('response', (response) => {
+    if (response.status() >= 400) httpErrorResponses.push({ status: response.status(), url: response.url() });
   });
   page.on('pageerror', (error) => pageErrors.push(error.message));
   page.on('crash', () => pageErrors.push('Chromium page crashed'));
@@ -168,6 +177,12 @@ async function navigateBy(page, action) {
   await action();
   const response = await navigation;
   assert(response, 'form/link activation did not produce a navigation response');
+  const handoff = await page.evaluate(() => {
+    const entry = performance.getEntriesByType('navigation')[0];
+    if (!entry || !Number.isFinite(entry.domContentLoadedEventEnd) || !Number.isFinite(entry.responseEnd)) return null;
+    return entry.domContentLoadedEventEnd - entry.responseEnd;
+  });
+  handoffSamples.push(handoff);
   return response;
 }
 
@@ -220,6 +235,13 @@ async function pageMetric(page) {
   });
 }
 
+async function settleLayout(page) {
+  await page.evaluate(() => new Promise((resolveFrame) =>
+    requestAnimationFrame(() => requestAnimationFrame(resolveFrame)),
+  ));
+  await page.waitForTimeout(250);
+}
+
 function metric(observed, limit) {
   const valid = Number.isFinite(observed);
   return { observed: valid ? observed : null, limit, pass: valid && observed <= limit };
@@ -231,14 +253,11 @@ function percentile95(values) {
   return ordered[Math.ceil(0.95 * ordered.length) - 1];
 }
 
-async function collectContractBudgets(landingMetric, page) {
+async function collectContractBudgets(landingMetric, resultsMetric, page) {
   const htmlBytes = Buffer.byteLength(landingMetric.html, 'utf8');
   const gzipBytes = gzipSync(Buffer.from(landingMetric.html, 'utf8')).byteLength;
   const cssJsBytes = Buffer.byteLength(landingMetric.style, 'utf8') + Buffer.byteLength(landingMetric.script, 'utf8');
-  const handoff = await pageMetric(page);
-  const handoffMs = Number.isFinite(handoff.dom_content_loaded_ms) && Number.isFinite(handoff.response_end_ms)
-    ? handoff.dom_content_loaded_ms - handoff.response_end_ms
-    : Number.NaN;
+  const handoffP95 = percentile95(handoffSamples);
   const interactionP95 = percentile95(interactionSamples);
   budgets = {
     profile: 'synthetic offline T03 fixture; Chromium; Fast 3G emulation (150 ms, 1.6 Mbit/s down, 750 Kbit/s up); 4x CPU throttle; no browser zoom emulation',
@@ -246,12 +265,17 @@ async function collectContractBudgets(landingMetric, page) {
     html_gzip_bytes: metric(gzipBytes, 15360),
     css_js_uncompressed_bytes: metric(cssJsBytes, 30720),
     fcp_ms: metric(landingMetric.fcp_ms, 1500),
-    cls: metric(landingMetric.cls, 0.1),
+    cls: metric(Math.max(landingMetric.cls, resultsMetric.cls), 0.1),
+    cls_samples: {
+      landing: landingMetric.cls,
+      results: resultsMetric.cls,
+      result_settle_ms: 250,
+    },
     interaction_p95_ms: metric(interactionP95, 100),
-    handoff_p95_ms: metric(handoffMs, 150),
+    handoff_p95_ms: metric(handoffP95, 150),
   };
   for (const [name, result] of Object.entries(budgets)) {
-    if (name === 'profile') continue;
+    if (name === 'profile' || name === 'cls_samples') continue;
     if (!result.pass) addFailure(`budget-${name}`, `observed ${result.observed}, limit ${result.limit}`);
   }
 }
@@ -281,12 +305,14 @@ async function runContract() {
   })();`);
 
   let landingMetric = null;
+  let resultsMetric = null;
   await check('viewport-desktop', async () => {
     await navigate(page, '/');
     await page.waitForFunction(() => performance.getEntriesByName('first-contentful-paint').length > 0, null, { timeout: 2000 });
     assert.equal(await viewportObservation(page, 'desktop-1440x900'), true);
     assert.equal((await page.locator('meta[name="viewport"]').getAttribute('content')), 'width=device-width, initial-scale=1');
     await screenshot(page, 'contract-desktop-landing.png');
+    await settleLayout(page);
     landingMetric = await pageMetric(page);
     assert(landingMetric.fcp_ms !== null, 'FCP observation is unavailable');
   });
@@ -296,8 +322,10 @@ async function runContract() {
     assert.equal(response.status(), 200);
     assert.equal(await page.getByRole('heading', { level: 1 }).innerText(), 'valkey');
     assert(await page.locator('article[data-result-card]').count() > 0);
-    assert.equal(await page.getByLabel('Scope').inputValue(), 'general');
+    assert.equal(await page.locator('details.scope-panel select[name="categories"]').inputValue(), 'general');
     await screenshot(page, 'contract-desktop-results.png');
+    await settleLayout(page);
+    resultsMetric = await pageMetric(page);
   });
 
   await check('optional-metadata', async () => {
@@ -308,8 +336,8 @@ async function runContract() {
       language: 'fr',
     });
     assert.equal(response.status(), 200);
-    assert.equal(await page.locator('input[name="date_from"]').inputValue(), '2024-02-29');
-    assert.equal(await page.locator('input[name="date_to"]').inputValue(), '2024-03-01');
+    assert.equal(await page.locator('input[name="date_from"][type="date"]').inputValue(), '2024-02-29');
+    assert.equal(await page.locator('input[name="date_to"][type="date"]').inputValue(), '2024-03-01');
     assert((await page.locator('a[href*="format=json"]').count()) > 0);
     assert((await page.locator('a[href*="format=yaml"]').count()) > 0);
     const links = await page.locator('a[href*="format=json"],a[href*="format=yaml"]').evaluateAll((els) =>
@@ -488,7 +516,8 @@ async function runContract() {
   });
 
   assert(landingMetric, 'landing budget sample was not captured');
-  await collectContractBudgets(landingMetric, page);
+  assert(resultsMetric, 'results budget sample was not captured');
+  await collectContractBudgets(landingMetric, resultsMetric, page);
 
   await context.close();
 }
@@ -501,8 +530,8 @@ async function runErrorScenario(id, expectedStatus, query) {
     const response = await searchByQuery(page, query, { categories: 'general' });
     assert.equal(response.status(), expectedStatus);
     assert(await page.getByRole('alert').isVisible());
-    assert.equal(await page.locator('input[name="q"]').inputValue(), query);
-    assert.equal(await page.locator('select[name="categories"]').inputValue(), 'general');
+    assert.equal(await page.getByRole('searchbox', { name: 'Search SlopSearX' }).inputValue(), query);
+    assert.equal(await page.locator('details.scope-panel select[name="categories"]').inputValue(), 'general');
     await screenshot(page, `${scenario}-error.png`);
   });
   await context.close();
@@ -514,9 +543,12 @@ async function runUnavailable() {
   attachPageEvidence(page);
   await check('unavailable-source', async () => {
     const response = await searchByQuery(page, 'valkey', { categories: 'general' });
-    assert.equal(response.status(), 200);
-    assert(await page.getByRole('status').getByText('Some sources could not answer this search.').isVisible());
-    assert(await page.locator('article[data-result-card]').count() > 0);
+    assert.equal(response.status(), 503);
+    assert(await page.getByRole('alert').getByText('No configured source returned a result.').isVisible());
+    assert.equal(await page.locator('article[data-result-card]').count(), 0);
+    assert.equal(await page.getByRole('searchbox', { name: 'Search SlopSearX' }).inputValue(), 'valkey');
+    assert.equal(await page.locator('details.scope-panel select[name="categories"]').inputValue(), 'general');
+    assert((await page.locator('body').innerText()).includes('0 of 2 sources answered'));
     await screenshot(page, 'unavailable-source.png');
   });
   await context.close();
@@ -527,6 +559,8 @@ async function writeRuntimeEvidence() {
   const document = {
     unexpected_requests: unexpectedRequests,
     console_errors: consoleErrors,
+    http_error_responses: httpErrorResponses,
+    http_error_console_statuses: httpErrorConsoleStatuses,
     page_errors: pageErrors,
     request_failures: requestFailures,
   };
@@ -583,6 +617,22 @@ async function main() {
   }
   if (unexpectedRequests.length > 0) addFailure('network-policy', 'browser attempted an outbound request');
   if (consoleErrors.length > 0) addFailure('console-errors', 'browser emitted console errors');
+  const expectedHttpErrors = {
+    contract: [400, 403, 503],
+    'cached-error': [503],
+    'rate-limited': [429],
+    'html-disabled': [403],
+    unavailable: [503],
+  }[scenario];
+  const observedHttpStatuses = httpErrorResponses.map((row) => row.status).sort((a, b) => a - b);
+  const observedConsoleStatuses = [...httpErrorConsoleStatuses].sort((a, b) => a - b);
+  const expectedSorted = [...expectedHttpErrors].sort((a, b) => a - b);
+  if (JSON.stringify(observedHttpStatuses) !== JSON.stringify(expectedSorted)) {
+    addFailure('http-status-inventory', `observed ${JSON.stringify(observedHttpStatuses)}; expected ${JSON.stringify(expectedSorted)}`);
+  }
+  if (JSON.stringify(observedConsoleStatuses) !== JSON.stringify(expectedSorted)) {
+    addFailure('http-status-console-parity', `observed ${JSON.stringify(observedConsoleStatuses)}; expected ${JSON.stringify(expectedSorted)}`);
+  }
   if (pageErrors.length > 0) addFailure('page-errors', 'browser emitted uncaught page errors or crashed');
   if (requestFailures.length > 0) addFailure('request-failures', 'browser request failed');
   if (!browserClosed) addFailure('browser-closed', 'browser did not close cleanly');
@@ -608,6 +658,8 @@ async function main() {
     failures,
     unexpected_requests: unexpectedRequests,
     console_errors: consoleErrors,
+    http_error_responses: httpErrorResponses,
+    http_error_console_statuses: httpErrorConsoleStatuses,
     page_errors: pageErrors,
     browser_closed: browserClosed,
     artifacts,
