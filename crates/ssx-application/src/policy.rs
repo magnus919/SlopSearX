@@ -664,8 +664,17 @@ impl PolicyService {
         if r.media_type.is_none() {
             r.media_type = strings(&profile["media_types"]).into_iter().next();
         }
+        // Science's absolute-date contract reports an unavailable audited
+        // scope after date validation. Retain configuration and sensitive
+        // authorization here; defer only runtime activity to that resolver.
+        let bounded_science = proposal.surface == SearchSurface::Science
+            && (r.date_from.is_some() || r.date_to.is_some());
         if r.engines.as_ref().is_some_and(|e| !e.is_empty()) {
-            self.engine_rejection(r.engines.as_ref().unwrap(), "engines")?;
+            self.engine_rejection_with_activity(
+                r.engines.as_ref().unwrap(),
+                "engines",
+                !bounded_science,
+            )?;
         } else if r.categories.as_ref().is_none_or(Vec::is_empty) && proposal.intent != "auto" {
             if profile.is_null() {
                 return Err(PolicyError::new(
@@ -705,7 +714,7 @@ impl PolicyService {
             }
         }
         if let Some(names) = &r.engines {
-            self.engine_rejection(names, "engines")?;
+            self.engine_rejection_with_activity(names, "engines", !bounded_science)?;
         }
         Ok(r)
     }

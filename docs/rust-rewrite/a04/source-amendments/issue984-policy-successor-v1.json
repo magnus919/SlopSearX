@@ -1,0 +1,79 @@
+{
+  "schema": "A04_ISSUE984_POLICY_SUCCESSOR_V1",
+  "source_path": "crates/ssx-application/src/policy.rs",
+  "predecessor": {
+    "archive": "docs/rust-rewrite/a04/source-amendments/policy.rs.4008f0ec.frozen",
+    "git_blob": "4008f0ecfc8694178702264fe08a7c1f73013f86",
+    "sha256": "5aa864100000ce0625540db4771cc5b8d2ce650beff1457b2a6b840277011681",
+    "bytes": 38237,
+    "mode": "0644"
+  },
+  "current": {
+    "sha256": "f33db9d346b462a109fb566029de1d8bd620ef520f14795c232cfa3560b1d932",
+    "bytes": 38727,
+    "mode": "0644"
+  },
+  "callers": [
+    {
+      "container_path": "docs/rust-rewrite/a13/dehashed-source-map-v1.json",
+      "container_sha256": "292c55e50d49bf53a0012d1c7a86ce422b2e58fe26f12bc2606b8f1621cdf18d",
+      "expected_sha256": "5aa864100000ce0625540db4771cc5b8d2ce650beff1457b2a6b840277011681",
+      "expected_bytes": 38237
+    },
+    {
+      "container_path": "docs/rust-rewrite/a13/qualification-v1.json",
+      "container_sha256": "77661b6d69dc2926a2d01d277e68e22932d7fb1aae258fb272ab1192dff18c6e",
+      "expected_sha256": "5aa864100000ce0625540db4771cc5b8d2ce650beff1457b2a6b840277011681",
+      "expected_bytes": 38237
+    },
+    {
+      "container_path": "docs/rust-rewrite/a13/remaining/source-map.json",
+      "container_sha256": "9f75190c18606f2e9416e4db9a99392c7cb9aa0836dc3ff41a56263f05af975f",
+      "expected_sha256": "5aa864100000ce0625540db4771cc5b8d2ce650beff1457b2a6b840277011681",
+      "expected_bytes": 38237
+    },
+    {
+      "container_path": "docs/rust-rewrite/w06/qualification.json",
+      "container_sha256": "2a03778871e35de5319b21db722c8a4679d6f0c8744d393f76ee6f89052ac7fb",
+      "expected_sha256": "5aa864100000ce0625540db4771cc5b8d2ce650beff1457b2a6b840277011681",
+      "expected_bytes": null
+    }
+  ],
+  "edits": [
+    {
+      "at": 24433,
+      "remove_utf8": "",
+      "insert_utf8": "// Science's absolute-date contract reports an unavailable audited\n        // scope after date validation. Retain configuration and sensitive\n        // authorization here; defer only runtime activity to that resolver.\n        let bounded_science = proposal.surface == SearchSurface::Science\n            && (r.date_from.is_some() || r.date_to.is_some());\n        "
+    },
+    {
+      "at": 24521,
+      "remove_utf8": "",
+      "insert_utf8": "_with_activity"
+    },
+    {
+      "at": 24522,
+      "remove_utf8": "",
+      "insert_utf8": "\n                "
+    },
+    {
+      "at": 24550,
+      "remove_utf8": "",
+      "insert_utf8": "\n               "
+    },
+    {
+      "at": 24560,
+      "remove_utf8": "",
+      "insert_utf8": ",\n                !bounded_science,\n            "
+    },
+    {
+      "at": 26171,
+      "remove_utf8": "",
+      "insert_utf8": "_with_activity"
+    },
+    {
+      "at": 26188,
+      "remove_utf8": "",
+      "insert_utf8": ", !bounded_science"
+    }
+  ]
+}
