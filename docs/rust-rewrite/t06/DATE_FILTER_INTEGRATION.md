@@ -61,11 +61,22 @@ The positive matrix requires twenty cold acquisitions, twenty cached YAML views,
 two proof-repair acquisitions and one ordinary unbounded acquisition (23 total).
 
 Complete full T03 browser acceptance and final integrated/CI qualification before
-closing #984. The exact tested inactive-engine MCP error-order difference remains
-documented in the T06 README. OpenAPI coverage is retained under its existing T02
-owner. This integration test exercises the production portal renderer with a
-real registered OpenAlex adapter but does not claim the remaining browser,
-visual, accessibility or release acceptance.
+closing #984. The previously recorded inactive-engine MCP error-order difference
+was resolved by the merged #1094 parity change: bounded Science date calls now
+return Python's `invalid_input` envelope on `engines`, while unbounded Science,
+generic, targeted and preview controls keep `invalid_scope`. The T06 README and
+its denial tests record both envelopes. The portal and proof-link merges #1092
+and #1096 supply the production portal factory and machine-link proof that this
+map's portal row depends on.
+
+The T03 browser gate now executes the same deterministic journeys on Chromium
+and Firefox from one lock-matched client, and it rejects engine substitution or
+a receipt that does not name the requested engine. Real Safari, 200% browser
+zoom, manual visual review and screen-reader execution remain recorded gaps, not
+passes. OpenAPI coverage is retained under its existing T02 owner. This
+integration test exercises the production portal renderer with a real registered
+OpenAlex adapter but does not claim the remaining browser, visual, accessibility
+or release acceptance.
 
 ## Local execution identity
 
