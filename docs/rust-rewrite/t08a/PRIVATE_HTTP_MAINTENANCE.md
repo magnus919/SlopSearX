@@ -13,3 +13,10 @@ Minimal-client production Clippy omits the server-only Encoder kind. The private
 The mutable `private-hyper.patch` uses zero-context unified hunks. From the matching pristine Hyper source root, check with `git apply --check --unidiff-zero /absolute/path/to/private-hyper.patch` and apply with `git apply --unidiff-zero /absolute/path/to/private-hyper.patch`. The flag is required for Git to accept zero-context hunks. This representation avoids whitespace-only context markers; it changes no private source bytes. The T08A source guard authenticates this patch as opaque bound bytes and separately verifies the complete vendor map and pristine archive; it does not parse patch hunks. Exact reconstruction is independently checked during patch maintenance.
 
 The separate mutable `idna-host-api.patch` also uses zero-context unified hunks. From the matching pristine repository root recorded in `provenance.json`, check it with `git apply --check --unidiff-zero /absolute/path/to/idna-host-api.patch` and apply it with `git apply --unidiff-zero /absolute/path/to/idna-host-api.patch`. This representation preserves the exact additive hostname API and all existing codec implementation bytes; it changes no Rust source, fixture, private Hyper file, pristine archive or license. Its full codec inventory is reconstructed and compared during patch maintenance.
+
+Upstream advisory coverage for this private fork is restored by the reviewed
+local-fork advisory gate, not by this guide's manual review alone. See
+`docs/rust-rewrite/t08a/LOCAL_FORK_ADVISORY.md`. That gate proves only that the
+mapped upstream identity is scanned against a fresh advisory database; it is not
+proof that the private patch is safe, and it never replaces the review,
+reconstruction and qualification required above.

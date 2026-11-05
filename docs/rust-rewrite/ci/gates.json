@@ -1792,6 +1792,24 @@
             {
               "name": "Check advisories, licenses, duplicate versions and registry sources",
               "run": "cargo deny --locked --workspace check all"
+            },
+            {
+              "name": "Exercise local-fork advisory fixtures against the pinned checker",
+              "run": "cargo xtask ci-helper local-fork-advisory-fixtures"
+            },
+            {
+              "name": "Check reviewed local-fork upstream advisory identities",
+              "run": "cargo xtask ci-helper local-fork-advisory"
+            },
+            {
+              "if": "always()",
+              "name": "Retain local-fork advisory evidence",
+              "uses": "actions/upload-artifact@v6",
+              "with": {
+                "if-no-files-found": "warn",
+                "name": "local-fork-advisory-evidence",
+                "path": "target/rust-evidence/local-fork-advisory.json\ntarget/rust-evidence/local-fork-advisory-metadata.json\ntarget/rust-evidence/local-fork-advisory-physical-metadata.json\n"
+              }
             }
           ],
           "timeout-minutes": 30
