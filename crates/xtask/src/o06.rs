@@ -12,6 +12,8 @@ use std::{
 
 #[path = "local_fork_advisory.rs"]
 mod local_fork_advisory;
+#[path = "o02_image_pin.rs"]
+mod o02_image_pin;
 const HARNESS: &str = "groktopus/codereview";
 const REVISION: &str = "1c76d40290cdaf9b6603721f899da6c7e8a382b4";
 const PROTECTED_PINS: [(&str, &str); 4] = [
@@ -678,6 +680,7 @@ pub fn helper(root: &Path, args: &[String]) -> Result<()> {
         Some("mirror-config") if args.len()==2 => {println!("{}",serde_json::to_string_pretty(&mirror(&fs::read(&args[1]).map_err(|e|e.to_string())?)?).map_err(|e|e.to_string())?);Ok(())}
         Some("manifest") if args.len()==2 => manifest(&load_json(Path::new(&args[1]))?),
         Some("review-bootstrap-plan") if args.len()==2 => {println!("{}",bootstrap(root,&load_json(&root.join(".github/pr-review-publisher-policy.json"))?,Path::new(&args[1]))?);Ok(())}
+        Some("image-pin-verify-base" | "image-pin-promote") => o02_image_pin::cli(root, args),
         Some("local-fork-advisory") if args.len()==1 => {
             println!("{}", serde_json::to_string_pretty(&local_fork_advisory::run(root)?).map_err(|e| e.to_string())?);
             Ok(())
