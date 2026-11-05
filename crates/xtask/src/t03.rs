@@ -21,6 +21,7 @@ const SCENARIOS: [&str; 5] = [
     "html-disabled",
     "unavailable",
 ];
+const ENGINES: [&str; 2] = ["chromium", "firefox"];
 const HTTP_TESTS: [&str; 11] = [
     "static_assets_and_highlight_boundary_preserve_safe_progressive_rendering",
     "inherited_scope_and_date_journeys_cover_all_16_literal_assertions",
@@ -682,9 +683,11 @@ fn journey_ids(scenario: &str) -> Result<&'static [&'static str]> {
         _ => Err("T03 unknown browser scenario".into()),
     }
 }
-fn validate_budgets(scenario: &str, budgets: &Value) -> Result<()> {
-    if scenario != "contract" {
-        return exact_keys(budgets, &[], "error-scenario budgets");
+fn validate_budgets(scenario: &str, engine: &str, budgets: &Value) -> Result<()> {
+    if scenario != "contract" || engine != "chromium" {
+        // Only the Chromium contract run carries the CDP-throttled performance
+        // profile. Other engines run the same journeys without claiming it.
+        return exact_keys(budgets, &[], "non-profiled browser budgets");
     }
     exact_keys(
         budgets,
@@ -755,6 +758,7 @@ fn validate_browser(
     base: &Path,
     stdout: &str,
     scenario: &str,
+    engine: &str,
     base_url: &str,
     client_sha: &str,
 ) -> Result<Value> {
@@ -797,6 +801,7 @@ fn validate_browser(
             "console_errors",
             "http_error_responses",
             "http_error_console_statuses",
+            "engine_console_parity",
             "page_errors",
             "browser_closed",
             "artifacts",
@@ -824,6 +829,19 @@ fn validate_browser(
             "browser runtime identity missing",
         )?;
     }
+    need(
+        receipt["browser"]["name"] == engine,
+        "browser receipt does not name the requested engine",
+    )?;
+    let expected_console_parity = if engine == "chromium" {
+        "chromium"
+    } else {
+        "not-captured"
+    };
+    need(
+        receipt["engine_console_parity"] == expected_console_parity,
+        "browser console parity claim differs from the engine",
+    )?;
     let lock: Value = serde_json::from_slice(SOURCES[10].1).map_err(|e| e.to_string())?;
     let playwright = lock["packages"]["node_modules/playwright-core"]["version"]
         .as_str()
@@ -844,7 +862,7 @@ fn validate_browser(
             &format!("browser {field} must be empty"),
         )?;
     }
-    validate_http_error_evidence(&receipt, scenario, base_url)?;
+    validate_http_error_evidence(&receipt, scenario, engine, base_url)?;
     need(
         receipt["browser_closed"] == true,
         "browser process cleanup not completed",
@@ -907,11 +925,16 @@ fn validate_browser(
         }
     }
     need(screenshot, "browser screenshot evidence missing")?;
-    validate_budgets(scenario, &receipt["budgets"])?;
+    validate_budgets(scenario, engine, &receipt["budgets"])?;
     Ok(json!({"completion":completion,"receipt":receipt}))
 }
 
-fn validate_http_error_evidence(receipt: &Value, scenario: &str, base_url: &str) -> Result<()> {
+fn validate_http_error_evidence(
+    receipt: &Value,
+    scenario: &str,
+    engine: &str,
+    base_url: &str,
+) -> Result<()> {
     let expected: &[u64] = match scenario {
         "contract" => &[400, 403, 503],
         "cached-error" => &[503],
@@ -955,8 +978,15 @@ fn validate_http_error_evidence(receipt: &Value, scenario: &str, base_url: &str)
         })
         .collect::<Result<Vec<_>>>()?;
     console_statuses.sort_unstable();
+    // Chromium reports the blocked document/subresource status on the console;
+    // Gecko does not, so only the response inventory is cross-engine.
+    let console_expectation = if engine == "chromium" {
+        statuses == expected && console_statuses == expected
+    } else {
+        statuses == expected && console_statuses.is_empty()
+    };
     need(
-        statuses == expected && console_statuses == expected,
+        console_expectation,
         "T03 HTTP error responses differ from explicitly asserted scenario statuses",
     )
 }
@@ -1183,7 +1213,7 @@ fn validate_cleanup(terminal: &Value) -> Result<()> {
 }
 fn suite_inventory(rows: &[Value], source_sha: &str) -> Result<()> {
     need(
-        rows.len() == SCENARIOS.len(),
+        rows.len() == SCENARIOS.len() * ENGINES.len(),
         "browser scenario inventory missing or extra",
     )?;
     let mut names = BTreeSet::new();
@@ -1191,8 +1221,10 @@ fn suite_inventory(rows: &[Value], source_sha: &str) -> Result<()> {
         let name = row["scenario"]
             .as_str()
             .ok_or("T03 scenario name missing")?;
-        need(names.insert(name), "duplicate browser scenario")?;
+        let engine = row["engine"].as_str().ok_or("T03 engine name missing")?;
+        need(names.insert((name, engine)), "duplicate browser scenario")?;
         need(SCENARIOS.contains(&name), "unexpected browser scenario")?;
+        need(ENGINES.contains(&engine), "unexpected browser engine")?;
         need(
             row["source_sha256"] == source_sha,
             "stale browser suite input",
@@ -1200,7 +1232,11 @@ fn suite_inventory(rows: &[Value], source_sha: &str) -> Result<()> {
         validate_cleanup(&row["terminal"])?;
     }
     need(
-        names == SCENARIOS.into_iter().collect(),
+        names
+            == SCENARIOS
+                .into_iter()
+                .flat_map(|scenario| ENGINES.into_iter().map(move |engine| (scenario, engine)))
+                .collect(),
         "browser scenario inventory differs",
     )
 }
@@ -1215,6 +1251,7 @@ fn controls(rows: &[Value], source_sha: &str) -> Result<Value> {
         ("duplicate", "T03 duplicate browser scenario"),
         ("stale-input", "T03 stale browser suite input"),
         ("process-cleanup", "T03 fixture process cleanup incomplete"),
+        ("engine-substitution", "T03 unexpected browser engine"),
     ] {
         let mut mutant = rows.to_vec();
         match id {
@@ -1226,6 +1263,9 @@ fn controls(rows: &[Value], source_sha: &str) -> Result<Value> {
             }
             "stale-input" => {
                 mutant[0]["source_sha256"] = json!("stale");
+            }
+            "engine-substitution" => {
+                mutant[0]["engine"] = json!("safari");
             }
             _ => {
                 mutant[0]["terminal"]["tree_retired"] = json!(false);
@@ -1243,7 +1283,7 @@ fn controls(rows: &[Value], source_sha: &str) -> Result<Value> {
 }
 #[cfg(test)]
 pub(crate) fn validator_controls() -> Result<()> {
-    let rows:Vec<_>=SCENARIOS.into_iter().map(|scenario|json!({"scenario":scenario,"source_sha256":"synthetic-validator-input","terminal":{"stop_sent":true,"child_joined":true,"child_exit_success":true,"tree_retired":true,"stdout_eof":true,"stdout_tail_bytes":0,"stderr_bytes":0}})).collect();
+    let rows:Vec<_>=SCENARIOS.into_iter().flat_map(|scenario|ENGINES.into_iter().map(move |engine|json!({"scenario":scenario,"engine":engine,"source_sha256":"synthetic-validator-input","terminal":{"stop_sent":true,"child_joined":true,"child_exit_success":true,"tree_retired":true,"stdout_eof":true,"stdout_tail_bytes":0,"stderr_bytes":0}}))).collect();
     controls(&rows, "synthetic-validator-input")?;
     need(
         expected_http().len() == 104 && HTTP_TESTS.len() == 11,
@@ -1355,49 +1395,62 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     records.push(json!({"plan":"T03","role":"actual-http-inventory","source_sha256":source_sha,"evidence":http}));
     let client_sha = hash(SOURCES[8].1);
     let mut browser_rows = Vec::new();
-    for scenario in SCENARIOS {
-        let scenario_dir = run.join(format!("browser-{scenario}"));
-        let mut fixture = Fixture::start(&binary, &binary_sha, scenario, scenario_dir)?;
-        records.push(json!({"plan":"T03","role":"browser-fixture-start","scenario":scenario,"startup":fixture.startup}));
-        let browser_dir = fixture.out.join("browser");
-        fs::create_dir(&browser_dir).map_err(|e| e.to_string())?;
-        let mut node = Command::new("node");
-        node.arg(CLIENT)
-            .env("T03_SCENARIO", scenario)
-            .env("T03_BROWSER_BASE_URL", &fixture.base_url)
-            .env("T03_EVIDENCE_DIR", &browser_dir);
-        let browser = capture(root, node, Duration::from_secs(600), records);
-        let terminal = fixture.finish();
-        records.push(json!({"plan":"T03","role":"browser-fixture-terminal","scenario":scenario,"terminal":terminal.as_ref().ok(),"error":terminal.as_ref().err()}));
-        let terminal = terminal?;
-        validate_cleanup(&terminal)?;
-        if scenario != "contract" {
-            need(
-                terminal["engine_calls"] == 0,
-                "browser error scenario dispatched an engine",
+    for engine in ENGINES {
+        for scenario in SCENARIOS {
+            let scenario_dir = run.join(format!("browser-{scenario}-{engine}"));
+            let mut fixture = Fixture::start(&binary, &binary_sha, scenario, scenario_dir)?;
+            records.push(json!({"plan":"T03","role":"browser-fixture-start","scenario":scenario,"engine":engine,"startup":fixture.startup}));
+            let browser_dir = fixture.out.join("browser");
+            fs::create_dir(&browser_dir).map_err(|e| e.to_string())?;
+            let mut node = Command::new("node");
+            node.arg(CLIENT)
+                .env("T03_SCENARIO", scenario)
+                .env("T03_BROWSER_ENGINE", engine)
+                .env("T03_BROWSER_BASE_URL", &fixture.base_url)
+                .env("T03_EVIDENCE_DIR", &browser_dir);
+            let browser = capture(root, node, Duration::from_secs(600), records);
+            if let Err(error) = &browser {
+                let receipt = browser_dir.join(format!("{scenario}.browser-receipt.json"));
+                if let Ok(bytes) = fs::read(&receipt)
+                    && let Ok(receipt) = serde_json::from_slice::<Value>(&bytes)
+                {
+                    return Err(format!("{error}: browser failures {}", receipt["failures"]));
+                }
+                return Err(error.clone());
+            }
+            let terminal = fixture.finish();
+            records.push(json!({"plan":"T03","role":"browser-fixture-terminal","scenario":scenario,"terminal":terminal.as_ref().ok(),"error":terminal.as_ref().err()}));
+            let terminal = terminal?;
+            validate_cleanup(&terminal)?;
+            if scenario != "contract" {
+                need(
+                    terminal["engine_calls"] == 0,
+                    "browser error scenario dispatched an engine",
+                )?;
+            }
+            let calls = terminal["calls_jsonl"]
+                .as_str()
+                .ok_or("T03 browser engine-call observations missing")?;
+            for line in calls.lines() {
+                validate_engine_call(line, "browser fixture reached an unexpected engine")?;
+            }
+            let browser = validate_browser(
+                &browser_dir,
+                &browser?,
+                scenario,
+                engine,
+                &fixture.base_url,
+                &client_sha,
             )?;
+            browser_rows.push(json!({"scenario":scenario,"engine":engine,"source_sha256":source_sha,"startup":fixture.startup,"terminal":terminal,"browser":browser}));
         }
-        let calls = terminal["calls_jsonl"]
-            .as_str()
-            .ok_or("T03 browser engine-call observations missing")?;
-        for line in calls.lines() {
-            validate_engine_call(line, "browser fixture reached an unexpected engine")?;
-        }
-        let browser = validate_browser(
-            &browser_dir,
-            &browser?,
-            scenario,
-            &fixture.base_url,
-            &client_sha,
-        )?;
-        browser_rows.push(json!({"scenario":scenario,"source_sha256":source_sha,"startup":fixture.startup,"terminal":terminal,"browser":browser}));
     }
     let negative = controls(&browser_rows, &source_sha)?;
     need(
         sources(root)? == before && hash(&regular(&binary, 256 * 1024 * 1024)?) == binary_sha,
         "source or executed fixture image changed during gate",
     )?;
-    records.push(json!({"plan":"T03","role":"native-browser-acceptance","source_inputs":before,"source_sha256":source_sha,"server_binary":{"path":binary,"sha256":binary_sha},"http_tests":HTTP_TESTS,"http_receipts":104,"http_processes":12,"browser_scenarios":browser_rows,"controls":negative,"evidence_directory":run,"scope":"real native HTTP plus Chromium deterministic browser journeys and measured synthetic budgets; actual Safari, manual visual/assistive technology and 200% zoom acceptance remain separate"}));
+    records.push(json!({"plan":"T03","role":"native-browser-acceptance","source_inputs":before,"source_sha256":source_sha,"server_binary":{"path":binary,"sha256":binary_sha},"http_tests":HTTP_TESTS,"http_receipts":104,"http_processes":12,"browser_scenarios":browser_rows,"controls":negative,"evidence_directory":run,"scope":"real native HTTP plus deterministic Chromium and Firefox browser journeys and measured synthetic budgets; actual Safari, manual visual/assistive technology and 200% zoom acceptance remain separate"}));
     Ok(())
 }
 
@@ -1432,7 +1485,8 @@ mod tests {
             "http_error_console_statuses": [503,400,403]
         });
         assert!(
-            validate_http_error_evidence(&receipt, "contract", "http://127.0.0.1:4321").is_ok()
+            validate_http_error_evidence(&receipt, "contract", "chromium", "http://127.0.0.1:4321")
+                .is_ok()
         );
 
         let unexpected = json!({
@@ -1444,7 +1498,13 @@ mod tests {
             "http_error_console_statuses": [400,403,500]
         });
         assert!(
-            validate_http_error_evidence(&unexpected, "contract", "http://127.0.0.1:4321").is_err()
+            validate_http_error_evidence(
+                &unexpected,
+                "contract",
+                "chromium",
+                "http://127.0.0.1:4321"
+            )
+            .is_err()
         );
 
         for url in [
@@ -1464,6 +1524,7 @@ mod tests {
                 validate_http_error_evidence(
                     &lookalike_origin,
                     "contract",
+                    "chromium",
                     "http://127.0.0.1:4321"
                 )
                 .is_err()

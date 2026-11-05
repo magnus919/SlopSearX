@@ -4,7 +4,7 @@ import { readFileSync, writeFileSync, lstatSync, existsSync } from 'node:fs';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
-import { chromium } from 'playwright-core';
+import { chromium, firefox } from 'playwright-core';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const sourcePath = fileURLToPath(import.meta.url);
@@ -54,6 +54,8 @@ const handoffSamples = [];
 let browser = null;
 let browserClosed = false;
 let browserInfo = { name: 'chromium', version: '', playwright_version: '' };
+let browserEngine = 'chromium';
+let engineConsoleParity = 'not-captured';
 let budgets = {};
 let evidenceDirectory = '';
 let baseUrl = '';
@@ -285,16 +287,22 @@ async function runContract() {
   const page = await context.newPage();
   attachPageEvidence(page);
 
-  const cdp = await context.newCDPSession(page);
-  await cdp.send('Network.enable');
-  await cdp.send('Network.emulateNetworkConditions', {
-    offline: false,
-    latency: 150,
-    downloadThroughput: (1.6 * 1024 * 1024) / 8,
-    uploadThroughput: (750 * 1024) / 8,
-    connectionType: 'cellular3g',
-  });
-  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+  // Chromium profiles the client budgets under CDP Fast 3G and 4x CPU throttling.
+  // Other engines have no CDP; they run the same journeys without throttling and
+  // do not claim the Chromium budget profile.
+  const throttled = browserEngine === 'chromium';
+  if (throttled) {
+    const cdp = await context.newCDPSession(page);
+    await cdp.send('Network.enable');
+    await cdp.send('Network.emulateNetworkConditions', {
+      offline: false,
+      latency: 150,
+      downloadThroughput: (1.6 * 1024 * 1024) / 8,
+      uploadThroughput: (750 * 1024) / 8,
+      connectionType: 'cellular3g',
+    });
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+  }
   await context.addInitScript(`(() => {
     window.__t03Cls = 0;
     new PerformanceObserver((list) => {
@@ -468,10 +476,11 @@ async function runContract() {
     assert.equal(linkEvidence.target, '_blank');
     assert(linkEvidence.rel.includes('noopener'));
     await page.keyboard.press('Enter');
-    assert.deepEqual(await page.evaluate(() => window.__t03Activation), {
-      href: linkEvidence.href,
-      detail: 0,
-    });
+    const activation = await page.evaluate(() => window.__t03Activation);
+    assert.equal(activation.href, linkEvidence.href);
+    // Keyboard activation must not synthesize a pointer sequence. Gecko reports
+    // click count 1 for Enter on a link; Chromium reports 0.
+    assert([0, 1].includes(activation.detail), `unexpected activation detail ${activation.detail}`);
   });
 
   await check('viewport-narrow', async () => {
@@ -517,7 +526,7 @@ async function runContract() {
 
   assert(landingMetric, 'landing budget sample was not captured');
   assert(resultsMetric, 'results budget sample was not captured');
-  await collectContractBudgets(landingMetric, resultsMetric, page);
+  if (throttled) await collectContractBudgets(landingMetric, resultsMetric, page);
 
   await context.close();
 }
@@ -561,6 +570,7 @@ async function writeRuntimeEvidence() {
     console_errors: consoleErrors,
     http_error_responses: httpErrorResponses,
     http_error_console_statuses: httpErrorConsoleStatuses,
+    engine_console_parity: engineConsoleParity,
     page_errors: pageErrors,
     request_failures: requestFailures,
   };
@@ -600,7 +610,13 @@ async function main() {
 
   const packageData = JSON.parse(readFileSync(packagePath, 'utf8'));
   browserInfo.playwright_version = packageData.devDependencies['playwright-core'];
-  browser = await chromium.launch({ headless: true });
+  const engine = process.env.T03_BROWSER_ENGINE || 'chromium';
+  const engines = { chromium, firefox };
+  assert(Object.hasOwn(engines, engine), `T03_BROWSER_ENGINE must be one of ${Object.keys(engines).join(', ')}`);
+  browserInfo.name = engine;
+  browserEngine = engine;
+  engineConsoleParity = engine === 'chromium' ? 'chromium' : 'not-captured';
+  browser = await engines[engine].launch({ headless: true });
   browserInfo.version = browser.version();
 
   if (scenario === 'contract') await runContract();
@@ -630,7 +646,7 @@ async function main() {
   if (JSON.stringify(observedHttpStatuses) !== JSON.stringify(expectedSorted)) {
     addFailure('http-status-inventory', `observed ${JSON.stringify(observedHttpStatuses)}; expected ${JSON.stringify(expectedSorted)}`);
   }
-  if (JSON.stringify(observedConsoleStatuses) !== JSON.stringify(expectedSorted)) {
+  if (engineConsoleParity === 'chromium' && JSON.stringify(observedConsoleStatuses) !== JSON.stringify(expectedSorted)) {
     addFailure('http-status-console-parity', `observed ${JSON.stringify(observedConsoleStatuses)}; expected ${JSON.stringify(expectedSorted)}`);
   }
   if (pageErrors.length > 0) addFailure('page-errors', 'browser emitted uncaught page errors or crashed');
@@ -660,6 +676,7 @@ async function main() {
     console_errors: consoleErrors,
     http_error_responses: httpErrorResponses,
     http_error_console_statuses: httpErrorConsoleStatuses,
+    engine_console_parity: engineConsoleParity,
     page_errors: pageErrors,
     browser_closed: browserClosed,
     artifacts,
@@ -668,7 +685,10 @@ async function main() {
   const receiptBytes = Buffer.from(`${JSON.stringify(receipt, null, 2)}\n`);
   writeFileSync(receiptPath, receiptBytes, { flag: 'wx' });
   process.stdout.write(`T03_BROWSER_COMPLETION ${JSON.stringify({ scenario, receipt: receiptPath, sha256: sha256(receiptBytes) })}\n`);
-  if (failures.length > 0) process.exitCode = 1;
+  if (failures.length > 0) {
+    process.stderr.write(`T03_BROWSER_FAILURES ${JSON.stringify(failures)}\n`);
+    process.exitCode = 1;
+  }
 }
 
 main().catch(async (error) => {
@@ -701,6 +721,7 @@ main().catch(async (error) => {
         unexpected_requests: unexpectedRequests,
         console_errors: consoleErrors,
         page_errors: pageErrors,
+        engine_console_parity: browserEngine === 'chromium' ? 'chromium' : 'not-captured',
         browser_closed: browserClosed,
         artifacts,
         budgets,
