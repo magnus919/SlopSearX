@@ -55,6 +55,7 @@ let browser = null;
 let browserClosed = false;
 let browserInfo = { name: 'chromium', version: '', playwright_version: '' };
 let browserEngine = 'chromium';
+let engineConsoleParity = 'not-captured';
 let budgets = {};
 let evidenceDirectory = '';
 let baseUrl = '';
@@ -475,10 +476,11 @@ async function runContract() {
     assert.equal(linkEvidence.target, '_blank');
     assert(linkEvidence.rel.includes('noopener'));
     await page.keyboard.press('Enter');
-    assert.deepEqual(await page.evaluate(() => window.__t03Activation), {
-      href: linkEvidence.href,
-      detail: 0,
-    });
+    const activation = await page.evaluate(() => window.__t03Activation);
+    assert.equal(activation.href, linkEvidence.href);
+    // Keyboard activation must not synthesize a pointer sequence. Gecko reports
+    // click count 1 for Enter on a link; Chromium reports 0.
+    assert([0, 1].includes(activation.detail), `unexpected activation detail ${activation.detail}`);
   });
 
   await check('viewport-narrow', async () => {
@@ -568,6 +570,7 @@ async function writeRuntimeEvidence() {
     console_errors: consoleErrors,
     http_error_responses: httpErrorResponses,
     http_error_console_statuses: httpErrorConsoleStatuses,
+    engine_console_parity: engineConsoleParity,
     page_errors: pageErrors,
     request_failures: requestFailures,
   };
@@ -612,6 +615,7 @@ async function main() {
   assert(Object.hasOwn(engines, engine), `T03_BROWSER_ENGINE must be one of ${Object.keys(engines).join(', ')}`);
   browserInfo.name = engine;
   browserEngine = engine;
+  engineConsoleParity = engine === 'chromium' ? 'chromium' : 'not-captured';
   browser = await engines[engine].launch({ headless: true });
   browserInfo.version = browser.version();
 
@@ -642,7 +646,7 @@ async function main() {
   if (JSON.stringify(observedHttpStatuses) !== JSON.stringify(expectedSorted)) {
     addFailure('http-status-inventory', `observed ${JSON.stringify(observedHttpStatuses)}; expected ${JSON.stringify(expectedSorted)}`);
   }
-  if (JSON.stringify(observedConsoleStatuses) !== JSON.stringify(expectedSorted)) {
+  if (engineConsoleParity === 'chromium' && JSON.stringify(observedConsoleStatuses) !== JSON.stringify(expectedSorted)) {
     addFailure('http-status-console-parity', `observed ${JSON.stringify(observedConsoleStatuses)}; expected ${JSON.stringify(expectedSorted)}`);
   }
   if (pageErrors.length > 0) addFailure('page-errors', 'browser emitted uncaught page errors or crashed');
@@ -672,6 +676,7 @@ async function main() {
     console_errors: consoleErrors,
     http_error_responses: httpErrorResponses,
     http_error_console_statuses: httpErrorConsoleStatuses,
+    engine_console_parity: engineConsoleParity,
     page_errors: pageErrors,
     browser_closed: browserClosed,
     artifacts,
@@ -716,6 +721,7 @@ main().catch(async (error) => {
         unexpected_requests: unexpectedRequests,
         console_errors: consoleErrors,
         page_errors: pageErrors,
+        engine_console_parity: browserEngine === 'chromium' ? 'chromium' : 'not-captured',
         browser_closed: browserClosed,
         artifacts,
         budgets,

@@ -801,6 +801,7 @@ fn validate_browser(
             "console_errors",
             "http_error_responses",
             "http_error_console_statuses",
+            "engine_console_parity",
             "page_errors",
             "browser_closed",
             "artifacts",
@@ -832,6 +833,15 @@ fn validate_browser(
         receipt["browser"]["name"] == engine,
         "browser receipt does not name the requested engine",
     )?;
+    let expected_console_parity = if engine == "chromium" {
+        "chromium"
+    } else {
+        "not-captured"
+    };
+    need(
+        receipt["engine_console_parity"] == expected_console_parity,
+        "browser console parity claim differs from the engine",
+    )?;
     let lock: Value = serde_json::from_slice(SOURCES[10].1).map_err(|e| e.to_string())?;
     let playwright = lock["packages"]["node_modules/playwright-core"]["version"]
         .as_str()
@@ -852,7 +862,7 @@ fn validate_browser(
             &format!("browser {field} must be empty"),
         )?;
     }
-    validate_http_error_evidence(&receipt, scenario, base_url)?;
+    validate_http_error_evidence(&receipt, scenario, engine, base_url)?;
     need(
         receipt["browser_closed"] == true,
         "browser process cleanup not completed",
@@ -919,7 +929,12 @@ fn validate_browser(
     Ok(json!({"completion":completion,"receipt":receipt}))
 }
 
-fn validate_http_error_evidence(receipt: &Value, scenario: &str, base_url: &str) -> Result<()> {
+fn validate_http_error_evidence(
+    receipt: &Value,
+    scenario: &str,
+    engine: &str,
+    base_url: &str,
+) -> Result<()> {
     let expected: &[u64] = match scenario {
         "contract" => &[400, 403, 503],
         "cached-error" => &[503],
@@ -963,8 +978,15 @@ fn validate_http_error_evidence(receipt: &Value, scenario: &str, base_url: &str)
         })
         .collect::<Result<Vec<_>>>()?;
     console_statuses.sort_unstable();
+    // Chromium reports the blocked document/subresource status on the console;
+    // Gecko does not, so only the response inventory is cross-engine.
+    let console_expectation = if engine == "chromium" {
+        statuses == expected && console_statuses == expected
+    } else {
+        statuses == expected && console_statuses.is_empty()
+    };
     need(
-        statuses == expected && console_statuses == expected,
+        console_expectation,
         "T03 HTTP error responses differ from explicitly asserted scenario statuses",
     )
 }
@@ -1229,7 +1251,7 @@ fn controls(rows: &[Value], source_sha: &str) -> Result<Value> {
         ("duplicate", "T03 duplicate browser scenario"),
         ("stale-input", "T03 stale browser suite input"),
         ("process-cleanup", "T03 fixture process cleanup incomplete"),
-        ("engine-swap", "T03 duplicate browser scenario"),
+        ("engine-substitution", "T03 unexpected browser engine"),
     ] {
         let mut mutant = rows.to_vec();
         match id {
@@ -1242,8 +1264,8 @@ fn controls(rows: &[Value], source_sha: &str) -> Result<Value> {
             "stale-input" => {
                 mutant[0]["source_sha256"] = json!("stale");
             }
-            "engine-swap" => {
-                mutant[1]["engine"] = mutant[0]["engine"].clone();
+            "engine-substitution" => {
+                mutant[0]["engine"] = json!("safari");
             }
             _ => {
                 mutant[0]["terminal"]["tree_retired"] = json!(false);
@@ -1463,7 +1485,8 @@ mod tests {
             "http_error_console_statuses": [503,400,403]
         });
         assert!(
-            validate_http_error_evidence(&receipt, "contract", "http://127.0.0.1:4321").is_ok()
+            validate_http_error_evidence(&receipt, "contract", "chromium", "http://127.0.0.1:4321")
+                .is_ok()
         );
 
         let unexpected = json!({
@@ -1475,7 +1498,13 @@ mod tests {
             "http_error_console_statuses": [400,403,500]
         });
         assert!(
-            validate_http_error_evidence(&unexpected, "contract", "http://127.0.0.1:4321").is_err()
+            validate_http_error_evidence(
+                &unexpected,
+                "contract",
+                "chromium",
+                "http://127.0.0.1:4321"
+            )
+            .is_err()
         );
 
         for url in [
@@ -1495,6 +1524,7 @@ mod tests {
                 validate_http_error_evidence(
                     &lookalike_origin,
                     "contract",
+                    "chromium",
                     "http://127.0.0.1:4321"
                 )
                 .is_err()
