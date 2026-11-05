@@ -682,7 +682,13 @@ pub fn helper(root: &Path, args: &[String]) -> Result<()> {
             println!("{}", serde_json::to_string_pretty(&local_fork_advisory::run(root)?).map_err(|e| e.to_string())?);
             Ok(())
         }
-        _ => Err("usage: cargo xtask ci-helper {inventory|source-hygiene|mirror-config FILE|manifest FILE|review-bootstrap-plan ABS_DEST|review-bootstrap ABS_DEST|local-fork-advisory}".into())
+        Some("local-fork-advisory-fixtures") if args.len()==1 => {
+            let derived = local_fork_advisory::derive(root)?;
+            println!("{}", serde_json::to_string_pretty(&derived).map_err(|e| e.to_string())?);
+            println!("{}", serde_json::to_string_pretty(&local_fork_advisory::fixtures(root)?).map_err(|e| e.to_string())?);
+            Ok(())
+        }
+        _ => Err("usage: cargo xtask ci-helper {inventory|source-hygiene|mirror-config FILE|manifest FILE|review-bootstrap-plan ABS_DEST|review-bootstrap ABS_DEST|local-fork-advisory|local-fork-advisory-fixtures}".into())
     }
 }
 pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {

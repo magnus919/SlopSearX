@@ -1,47 +1,110 @@
 {
-  "schema": "local-fork-advisory-mappings-v1",
+  "schema": "local-fork-advisory-mappings-v2",
+  "project_owned_roots": [
+    "crates/"
+  ],
   "mappings": [
     {
       "kind": "third_party_fork",
       "local_name": "ssx-cli-hyper",
       "local_version": "1.12.0",
-      "local_path": "vendor/ssx-cli-hyper",
+      "manifest": {
+        "path": "vendor/ssx-cli-hyper/Cargo.toml",
+        "bytes": 7052,
+        "sha256": "602af7bd48b3b7a92c186fe6ac2d3dc25f2d3c424377e693e79257a0e26415d8"
+      },
+      "license": "MIT",
       "upstream_name": "hyper",
       "upstream_version": "1.12.0",
       "upstream_source": "registry+https://github.com/rust-lang/crates.io-index",
-      "archive_sha256": "2c3e324da4c95177d6291d4c8730197c0d1822f8a9766814a4a44fa5ab797c9c",
-      "license": "MIT",
-      "provenance": "docs/rust-rewrite/t08a/hyper-provenance.json"
+      "archive": {
+        "path": "docs/rust-rewrite/t08a/hyper-1.12.0.crate",
+        "bytes": 172269,
+        "sha256": "2c3e324da4c95177d6291d4c8730197c0d1822f8a9766814a4a44fa5ab797c9c"
+      },
+      "provenance": {
+        "path": "docs/rust-rewrite/t08a/hyper-provenance.json",
+        "bytes": 25605,
+        "sha256": "8bc98fa07a75dc64e313b2e6da29e7bd2c61d385f8cd14e274c8867f0e46c41e"
+      },
+      "patch": {
+        "path": "docs/rust-rewrite/t08a/private-hyper.patch",
+        "bytes": 20591,
+        "sha256": "5dbdb52632584cbdc884f33d87a3022f5fda4d892210fc0ede1dcae2e9382fec"
+      },
+      "note": "Renamed private HTTP client fork; the local package name differs from its upstream name."
     },
     {
       "kind": "third_party_fork",
       "local_name": "process-wrap",
       "local_version": "10.0.1",
-      "local_path": "vendor/ssx-cli-process-wrap",
+      "manifest": {
+        "path": "vendor/ssx-cli-process-wrap/Cargo.toml",
+        "bytes": 3399,
+        "sha256": "e76f740495f311001dac33b070136a06ed15662ffcff52b3b2e8cecb8f23bb1e"
+      },
+      "license": "Apache-2.0 OR MIT",
       "upstream_name": "process-wrap",
       "upstream_version": "10.0.1",
       "upstream_source": "registry+https://github.com/rust-lang/crates.io-index",
-      "archive_sha256": "1f21b97672d2dc848e7b25701ab4535618b92f4861c13cc3f7f7bed52ad3c8da",
-      "license": "MIT",
-      "provenance": "docs/rust-rewrite/t08a/process-wrap-provenance.json"
+      "archive": {
+        "path": "docs/rust-rewrite/t08a/process-wrap-10.0.1.crate",
+        "bytes": 201062,
+        "sha256": "1f21b97672d2dc848e7b25701ab4535618b92f4861c13cc3f7f7bed52ad3c8da"
+      },
+      "provenance": {
+        "path": "docs/rust-rewrite/t08a/process-wrap-provenance.json",
+        "bytes": 21045,
+        "sha256": "2f98ad9a3df02859cdb49c59388e4000e12718c2f2f903d5fba3a71352a32261"
+      },
+      "patch": {
+        "path": "docs/rust-rewrite/t08a/process-wrap.patch",
+        "bytes": 10060,
+        "sha256": "00eb7fa31ac03af48142b43f3318002e4c724cc9abafbc167fe4882fbc7b8a6c"
+      },
+      "note": "Canonical-name private Windows job-object fork."
     },
     {
       "kind": "third_party_fork",
       "local_name": "libxml",
       "local_version": "0.3.22",
-      "local_path": "vendor/libxml",
+      "manifest": {
+        "path": "vendor/libxml/Cargo.toml",
+        "bytes": 3737,
+        "sha256": "a5308c71e3d6c5fbb65e070b4570215c59f9cfc9e3c668bc7b8f68963aca2960"
+      },
+      "license": "MIT",
       "upstream_name": "libxml",
       "upstream_version": "0.3.22",
       "upstream_source": "registry+https://github.com/rust-lang/crates.io-index",
-      "license": "MIT",
-      "provenance": "vendor/libxml/.cargo_vcs_info.json"
+      "archive": {
+        "path": "docs/rust-rewrite/t08a/libxml-0.3.22.crate",
+        "bytes": 228515,
+        "sha256": "1157d8bc7a14d07445541827e7a9c80fc5939718b43a973cf7e666d3ab5035fb"
+      },
+      "provenance": {
+        "path": "docs/rust-rewrite/t08a/libxml-provenance.json",
+        "bytes": 22513,
+        "sha256": "126e4650bb2f50fe946eef57f25ff49996851a5a29df5f0b503907d099900cc8"
+      },
+      "patch": {
+        "path": "docs/rust-rewrite/t08a/libxml-0.3.22.patch",
+        "bytes": 73854,
+        "sha256": "eada9bb584d96e3b7912924724a097416f0a3a056d61d3abe9785152be5f2f92"
+      },
+      "note": "Canonical-name private FFI fork of the upstream libxml binding crate."
     },
     {
       "kind": "project_owned",
       "local_name": "ssx-source-xml",
       "local_version": "0.1.0",
-      "local_path": "vendor/expat",
-      "note": "Custom FFI wrapper around expat 2.9.0; project-owned rather than an upstream Rust crate fork."
+      "manifest": {
+        "path": "vendor/expat/Cargo.toml",
+        "bytes": 161,
+        "sha256": "97313b6c3823d75788468ff970a5c0ccdb1648189112cbf0d68cf7eb547e6d86"
+      },
+      "license": "MIT",
+      "note": "Project-owned FFI wrapper around Expat 2.9.0; not an upstream Rust crate fork."
     }
   ]
 }

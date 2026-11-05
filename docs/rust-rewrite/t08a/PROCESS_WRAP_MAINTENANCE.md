@@ -55,3 +55,10 @@ archive/license/advisory identity and the complete fork map; refresh only mutabl
 provenance/bindings and the existing finite root manifest/lock frames after real
 Cargo resolution. Keep frozen predecessor capsules unchanged. Preserve the old
 archive, patches, actual failures and exact command/image evidence in history.
+
+Upstream advisory coverage for this private fork is restored by the reviewed
+local-fork advisory gate, not by this guide's manual review alone. See
+`docs/rust-rewrite/t08a/LOCAL_FORK_ADVISORY.md`. That gate proves only that the
+mapped upstream identity is scanned against a fresh advisory database; it is not
+proof that the private patch is safe, and it never replaces the review,
+reconstruction and qualification required above.
