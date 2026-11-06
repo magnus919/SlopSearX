@@ -347,7 +347,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: t03-native-browser-${{ github.sha }}
-          path: ${{ runner.temp }}/slopsearx-t03-evidence/
+          path: ${{ runner.temp }}/slopsearx-t03/evidence/
           if-no-files-found: warn
       - name: Retire reproducible T03 artifacts
         if: always()
