@@ -1643,27 +1643,13 @@
     },
     "rust.yml:foundation": {
       "source": {
-        "workflow": {
-          "name": "Rust foundation",
-          "on": {
-            "push": {
-              "branches": [
-                "main"
-              ]
-            },
-            "pull_request": {
-              "branches": [
-                "main"
-              ]
-            }
-          },
-          "permissions": {
-            "contents": "read"
-          }
-        },
         "job": {
-          "name": "Foundation (${{ matrix.runner }})",
+          "env": {
+            "CARGO_TERM_COLOR": "always",
+            "RUST_BACKTRACE": 1
+          },
           "if": "${{ always() }}",
+          "name": "Foundation (${{ matrix.runner }})",
           "needs": [
             "foundation-prerequisites",
             "foundation-core",
@@ -1671,7 +1657,86 @@
             "foundation-adapters"
           ],
           "runs-on": "${{ matrix.runner }}",
-          "timeout-minutes": 10,
+          "steps": [
+            {
+              "uses": "actions/checkout@v7",
+              "with": {
+                "fetch-depth": 0
+              }
+            },
+            {
+              "continue-on-error": true,
+              "id": "download-prerequisites",
+              "if": "always()",
+              "name": "Download prerequisites partition",
+              "uses": "actions/download-artifact@v8",
+              "with": {
+                "name": "rust-foundation-prerequisites-${{ matrix.target }}-${{ github.sha }}",
+                "path": "${{ runner.temp }}/foundation-partitions/prerequisites"
+              }
+            },
+            {
+              "continue-on-error": true,
+              "id": "download-core",
+              "if": "always()",
+              "name": "Download core partition",
+              "uses": "actions/download-artifact@v8",
+              "with": {
+                "name": "rust-foundation-core-${{ matrix.target }}-${{ github.sha }}",
+                "path": "${{ runner.temp }}/foundation-partitions/core"
+              }
+            },
+            {
+              "continue-on-error": true,
+              "id": "download-runtime",
+              "if": "always()",
+              "name": "Download runtime partition",
+              "uses": "actions/download-artifact@v8",
+              "with": {
+                "name": "rust-foundation-runtime-${{ matrix.target }}-${{ github.sha }}",
+                "path": "${{ runner.temp }}/foundation-partitions/runtime"
+              }
+            },
+            {
+              "continue-on-error": true,
+              "id": "download-adapters",
+              "if": "always()",
+              "name": "Download adapters partition",
+              "uses": "actions/download-artifact@v8",
+              "with": {
+                "name": "rust-foundation-adapters-${{ matrix.target }}-${{ github.sha }}",
+                "path": "${{ runner.temp }}/foundation-partitions/adapters"
+              }
+            },
+            {
+              "if": "always()",
+              "name": "Merge retained partition artifacts without overwrites",
+              "run": "set -euo pipefail\nmkdir -p target/rust-evidence\nfor partition in prerequisites core runtime adapters; do\n  input=\"$RUNNER_TEMP/foundation-partitions/$partition\"\n  if [ ! -d \"$input\" ]; then continue; fi\n  if find \"$input\" -type l -print -quit | grep -q .; then\n    echo \"Refusing a symlink in retained partition artifacts\" >&2; exit 1\n  fi\n  while IFS= read -r -d '' file; do\n    rel=${file#\"$input/\"}\n    case \"$rel\" in rust-evidence/*|rust-feature-graph.txt) ;; *) echo \"Unexpected artifact path: $rel\" >&2; exit 1;; esac\n    output=\"target/$rel\"\n    if [ -e \"$output\" ]; then cmp \"$file\" \"$output\"; else mkdir -p \"$(dirname \"$output\")\"; cp \"$file\" \"$output\"; fi\n  done < <(find \"$input\" -type f -print0)\ndone\nprintf 'source_revision=%s\\ntarget=%s\\nprerequisites=%s\\ncore=%s\\nruntime=%s\\nadapters=%s\\n' \"$GITHUB_SHA\" \"${{ matrix.target }}\" \"${{ needs.foundation-prerequisites.result }}\" \"${{ needs.foundation-core.result }}\" \"${{ needs.foundation-runtime.result }}\" \"${{ needs.foundation-adapters.result }}\" > target/rust-evidence/foundation-partitions.txt\n",
+              "shell": "bash"
+            },
+            {
+              "if": "always()",
+              "name": "Retain source-bound foundation evidence",
+              "uses": "actions/upload-artifact@v7",
+              "with": {
+                "if-no-files-found": "warn",
+                "name": "rust-foundation-${{ matrix.target }}-${{ github.sha }}",
+                "overwrite": true,
+                "path": "target/rust-evidence/F03.json\ntarget/rust-evidence/F04.json\ntarget/rust-evidence/T01.json\ntarget/rust-evidence/T04.json\ntarget/rust-evidence/T05.json\ntarget/rust-evidence/T06.json\ntarget/rust-evidence/F05.json\ntarget/rust-evidence/F06.json\ntarget/rust-evidence/F09.json\ntarget/rust-evidence/F12.json\ntarget/rust-evidence/F07.json\ntarget/rust-evidence/W00.json\ntarget/rust-evidence/W01.json\ntarget/rust-evidence/W02.json\ntarget/rust-evidence/W03.json\ntarget/rust-evidence/W04.json\ntarget/rust-evidence/W05.json\ntarget/rust-evidence/W11.json\ntarget/rust-evidence/W06.json\ntarget/rust-evidence/W08.json\ntarget/rust-evidence/O03.json\ntarget/rust-evidence/O01.json\ntarget/rust-evidence/F08.json\ntarget/rust-evidence/F10.json\ntarget/rust-evidence/F11.json\ntarget/rust-evidence/F13.json\ntarget/rust-evidence/F14.json\ntarget/rust-evidence/F15.json\ntarget/rust-evidence/T02.json\ntarget/rust-evidence/T08.json\ntarget/rust-evidence/T09.json\ntarget/rust-evidence/A01.json\ntarget/rust-evidence/A02.json\ntarget/rust-evidence/A03.json\ntarget/rust-evidence/A04.json\ntarget/rust-evidence/A06.json\ntarget/rust-evidence/A05.json\ntarget/rust-evidence/A07.json\ntarget/rust-evidence/A08.json\ntarget/rust-evidence/A09.json\ntarget/rust-evidence/A10.json\ntarget/rust-evidence/A10-linux-control/${{ github.run_id }}-*-${{ runner.arch }}.*/\ntarget/rust-evidence/A11.json\ntarget/rust-evidence/A12.json\ntarget/rust-evidence/A13.json\ntarget/rust-evidence/A14.json\ntarget/rust-feature-graph.txt\ntarget/rust-evidence/partitions/\ntarget/rust-evidence/foundation-partitions.txt\n"
+              }
+            },
+            {
+              "if": "always()",
+              "name": "Foundation aggregation rerun contract tests",
+              "run": "node --test scripts/tests/foundation-aggregation.test.mjs"
+            },
+            {
+              "if": "always()",
+              "name": "Require every partition and the complete original evidence",
+              "run": "set -euo pipefail\nrequire_success() {\n  if [ \"$2\" != success ]; then\n    echo \"::error::$1 did not succeed ($2)\"\n    exit 1\n  fi\n}\nrequire_success \"foundation-prerequisites\" \"${{ needs.foundation-prerequisites.result }}\"\nrequire_success \"foundation-core\" \"${{ needs.foundation-core.result }}\"\nrequire_success \"foundation-runtime\" \"${{ needs.foundation-runtime.result }}\"\nrequire_success \"foundation-adapters\" \"${{ needs.foundation-adapters.result }}\"\nrequire_success \"download-prerequisites\" \"${{ steps.download-prerequisites.outcome }}\"\nrequire_success \"download-core\" \"${{ steps.download-core.outcome }}\"\nrequire_success \"download-runtime\" \"${{ steps.download-runtime.outcome }}\"\nrequire_success \"download-adapters\" \"${{ steps.download-adapters.outcome }}\"\nrequire_file() {\n  if [ ! -s \"$1\" ]; then\n    echo \"::error::required evidence is missing or empty: $1\"\n    exit 1\n  fi\n}\nfor plan in F03 F04 T04 T05 T06 T01 F05 F06 F09 F12 F11 F13 F14 F15 T02 F07 W00 W01 W02 W03 W04 W05 W11 W06 W08 O03 O01 F08 F10 T09 A01 A02 A03 A04 A05 A06 A07 A08 A09 A10 A11 A13 A14 A12; do test -s \"target/rust-evidence/$plan.json\"; done\nrequire_file target/rust-feature-graph.txt\nfor partition in prerequisites core runtime adapters; do\n  require_file \"target/rust-evidence/partitions/$partition/workspace.jsonl\"\n  require_file \"target/rust-evidence/partitions/$partition/compiler-images.json\"\n  cmp \"target/rust-evidence/partitions/$partition/source-before.sha256z\" \"target/rust-evidence/partitions/$partition/source-after.sha256z\"\n  cmp \"target/rust-evidence/partitions/$partition/stage-before.z\" \"target/rust-evidence/partitions/$partition/stage-after.z\"\ndone\ncmp target/rust-evidence/partitions/prerequisites/source-before.sha256z target/rust-evidence/partitions/core/source-before.sha256z\ncmp target/rust-evidence/partitions/prerequisites/source-before.sha256z target/rust-evidence/partitions/runtime/source-before.sha256z\ncmp target/rust-evidence/partitions/prerequisites/source-before.sha256z target/rust-evidence/partitions/adapters/source-before.sha256z\nnode scripts/foundation-aggregation.mjs target/rust-evidence \\\n  \"$GITHUB_SHA\" \"${{ matrix.target }}\" \"$GITHUB_RUN_ID\" \"$GITHUB_RUN_ATTEMPT\" \"$RUNNER_ARCH\"\n",
+              "shell": "bash"
+            }
+          ],
           "strategy": {
             "fail-fast": false,
             "matrix": {
@@ -1687,90 +1752,25 @@
               ]
             }
           },
-          "env": {
-            "CARGO_TERM_COLOR": "always",
-            "RUST_BACKTRACE": 1
-          },
-          "steps": [
-            {
-              "uses": "actions/checkout@v7",
-              "with": {
-                "fetch-depth": 0
-              }
+          "timeout-minutes": 10
+        },
+        "workflow": {
+          "name": "Rust foundation",
+          "on": {
+            "pull_request": {
+              "branches": [
+                "main"
+              ]
             },
-            {
-              "name": "Download prerequisites partition",
-              "id": "download-prerequisites",
-              "if": "always()",
-              "continue-on-error": true,
-              "uses": "actions/download-artifact@v8",
-              "with": {
-                "name": "rust-foundation-prerequisites-${{ matrix.target }}-${{ github.sha }}",
-                "path": "${{ runner.temp }}/foundation-partitions/prerequisites"
-              }
-            },
-            {
-              "name": "Download core partition",
-              "id": "download-core",
-              "if": "always()",
-              "continue-on-error": true,
-              "uses": "actions/download-artifact@v8",
-              "with": {
-                "name": "rust-foundation-core-${{ matrix.target }}-${{ github.sha }}",
-                "path": "${{ runner.temp }}/foundation-partitions/core"
-              }
-            },
-            {
-              "name": "Download runtime partition",
-              "id": "download-runtime",
-              "if": "always()",
-              "continue-on-error": true,
-              "uses": "actions/download-artifact@v8",
-              "with": {
-                "name": "rust-foundation-runtime-${{ matrix.target }}-${{ github.sha }}",
-                "path": "${{ runner.temp }}/foundation-partitions/runtime"
-              }
-            },
-            {
-              "name": "Download adapters partition",
-              "id": "download-adapters",
-              "if": "always()",
-              "continue-on-error": true,
-              "uses": "actions/download-artifact@v8",
-              "with": {
-                "name": "rust-foundation-adapters-${{ matrix.target }}-${{ github.sha }}",
-                "path": "${{ runner.temp }}/foundation-partitions/adapters"
-              }
-            },
-            {
-              "name": "Merge retained partition artifacts without overwrites",
-              "if": "always()",
-              "shell": "bash",
-              "run": "set -euo pipefail\nmkdir -p target/rust-evidence\nfor partition in prerequisites core runtime adapters; do\n  input=\"$RUNNER_TEMP/foundation-partitions/$partition\"\n  if [ ! -d \"$input\" ]; then continue; fi\n  if find \"$input\" -type l -print -quit | grep -q .; then\n    echo \"Refusing a symlink in retained partition artifacts\" >&2; exit 1\n  fi\n  while IFS= read -r -d '' file; do\n    rel=${file#\"$input/\"}\n    case \"$rel\" in rust-evidence/*|rust-feature-graph.txt) ;; *) echo \"Unexpected artifact path: $rel\" >&2; exit 1;; esac\n    output=\"target/$rel\"\n    if [ -e \"$output\" ]; then cmp \"$file\" \"$output\"; else mkdir -p \"$(dirname \"$output\")\"; cp \"$file\" \"$output\"; fi\n  done < <(find \"$input\" -type f -print0)\ndone\nprintf 'source_revision=%s\\ntarget=%s\\nprerequisites=%s\\ncore=%s\\nruntime=%s\\nadapters=%s\\n' \"$GITHUB_SHA\" \"${{ matrix.target }}\" \"${{ needs.foundation-prerequisites.result }}\" \"${{ needs.foundation-core.result }}\" \"${{ needs.foundation-runtime.result }}\" \"${{ needs.foundation-adapters.result }}\" > target/rust-evidence/foundation-partitions.txt\n"
-            },
-            {
-              "name": "Retain source-bound foundation evidence",
-              "if": "always()",
-              "uses": "actions/upload-artifact@v7",
-              "with": {
-                "name": "rust-foundation-${{ matrix.target }}-${{ github.sha }}",
-                "path": "target/rust-evidence/F03.json\ntarget/rust-evidence/F04.json\ntarget/rust-evidence/T01.json\ntarget/rust-evidence/T04.json\ntarget/rust-evidence/T05.json\ntarget/rust-evidence/T06.json\ntarget/rust-evidence/F05.json\ntarget/rust-evidence/F06.json\ntarget/rust-evidence/F09.json\ntarget/rust-evidence/F12.json\ntarget/rust-evidence/F07.json\ntarget/rust-evidence/W00.json\ntarget/rust-evidence/W01.json\ntarget/rust-evidence/W02.json\ntarget/rust-evidence/W03.json\ntarget/rust-evidence/W04.json\ntarget/rust-evidence/W05.json\ntarget/rust-evidence/W11.json\ntarget/rust-evidence/W06.json\ntarget/rust-evidence/W08.json\ntarget/rust-evidence/O03.json\ntarget/rust-evidence/O01.json\ntarget/rust-evidence/F08.json\ntarget/rust-evidence/F10.json\ntarget/rust-evidence/F11.json\ntarget/rust-evidence/F13.json\ntarget/rust-evidence/F14.json\ntarget/rust-evidence/F15.json\ntarget/rust-evidence/T02.json\ntarget/rust-evidence/T08.json\ntarget/rust-evidence/T09.json\ntarget/rust-evidence/A01.json\ntarget/rust-evidence/A02.json\ntarget/rust-evidence/A03.json\ntarget/rust-evidence/A04.json\ntarget/rust-evidence/A06.json\ntarget/rust-evidence/A05.json\ntarget/rust-evidence/A07.json\ntarget/rust-evidence/A08.json\ntarget/rust-evidence/A09.json\ntarget/rust-evidence/A10.json\ntarget/rust-evidence/A10-linux-control/${{ github.run_id }}-*-${{ runner.arch }}.*/\ntarget/rust-evidence/A11.json\ntarget/rust-evidence/A12.json\ntarget/rust-evidence/A13.json\ntarget/rust-evidence/A14.json\ntarget/rust-feature-graph.txt\ntarget/rust-evidence/partitions/\ntarget/rust-evidence/foundation-partitions.txt\n",
-                "if-no-files-found": "warn",
-                "overwrite": true
-              }
-            },
-            {
-              "name": "Foundation aggregation rerun contract tests",
-              "if": "always()",
-              "run": "node --test scripts/tests/foundation-aggregation.test.mjs"
-            },
-            {
-              "name": "Require every partition and the complete original evidence",
-              "if": "always()",
-              "shell": "bash",
-              "run": "set -euo pipefail\n[ \"${{ needs.foundation-prerequisites.result }}\" = success ]\n[ \"${{ needs.foundation-core.result }}\" = success ]\n[ \"${{ needs.foundation-runtime.result }}\" = success ]\n[ \"${{ needs.foundation-adapters.result }}\" = success ]\n[ \"${{ steps.download-prerequisites.outcome }}\" = success ]\n[ \"${{ steps.download-core.outcome }}\" = success ]\n[ \"${{ steps.download-runtime.outcome }}\" = success ]\n[ \"${{ steps.download-adapters.outcome }}\" = success ]\nfor plan in F03 F04 T04 T05 T06 T01 F05 F06 F09 F12 F11 F13 F14 F15 T02 F07 W00 W01 W02 W03 W04 W05 W11 W06 W08 O03 O01 F08 F10 T09 A01 A02 A03 A04 A05 A06 A07 A08 A09 A10 A11 A13 A14 A12; do test -s \"target/rust-evidence/$plan.json\"; done\ntest -s target/rust-feature-graph.txt\nfor partition in prerequisites core runtime adapters; do\n  test -s \"target/rust-evidence/partitions/$partition/workspace.jsonl\"\n  test -s \"target/rust-evidence/partitions/$partition/compiler-images.json\"\n  cmp \"target/rust-evidence/partitions/$partition/source-before.sha256z\" \"target/rust-evidence/partitions/$partition/source-after.sha256z\"\n  cmp \"target/rust-evidence/partitions/$partition/stage-before.z\" \"target/rust-evidence/partitions/$partition/stage-after.z\"\ndone\ncmp target/rust-evidence/partitions/prerequisites/source-before.sha256z target/rust-evidence/partitions/core/source-before.sha256z\ncmp target/rust-evidence/partitions/prerequisites/source-before.sha256z target/rust-evidence/partitions/runtime/source-before.sha256z\ncmp target/rust-evidence/partitions/prerequisites/source-before.sha256z target/rust-evidence/partitions/adapters/source-before.sha256z\nnode scripts/foundation-aggregation.mjs target/rust-evidence \\\n  \"$GITHUB_SHA\" \"${{ matrix.target }}\" \"$GITHUB_RUN_ID\" \"$GITHUB_RUN_ATTEMPT\" \"$RUNNER_ARCH\"\n"
+            "push": {
+              "branches": [
+                "main"
+              ]
             }
-          ]
+          },
+          "permissions": {
+            "contents": "read"
+          }
         }
       },
       "owner": "F03",
@@ -2593,28 +2593,66 @@
     },
     "rust-cli.yml:native-cli": {
       "source": {
-        "workflow": {
-          "name": "Native CLI component",
-          "on": {
-            "pull_request": {
-              "branches": [
-                "main"
-              ]
-            },
-            "push": {
-              "branches": [
-                "main"
-              ]
+        "job": {
+          "defaults": {
+            "run": {
+              "shell": "bash"
             }
           },
-          "permissions": {
-            "contents": "read"
-          }
-        },
-        "job": {
+          "env": {
+            "CARGO_BUILD_JOBS": 2,
+            "CARGO_INCREMENTAL": 0,
+            "CARGO_PROFILE_DEV_DEBUG": 0,
+            "CARGO_TERM_COLOR": "always",
+            "EXPECTED_TARGET": "${{ matrix.target }}",
+            "OPENSSL_NO_ASM": "1",
+            "OPENSSL_NO_VENDOR": "0",
+            "OPENSSL_STATIC": "1"
+          },
           "name": "Native CLI (${{ matrix.target }})",
           "runs-on": "${{ matrix.runner }}",
-          "timeout-minutes": 60,
+          "steps": [
+            {
+              "if": "${{ runner.os == 'Windows' }}",
+              "name": "Preserve literal source bytes on Windows",
+              "run": "git config --global core.autocrlf false",
+              "shell": "bash"
+            },
+            {
+              "uses": "actions/checkout@v7",
+              "with": {
+                "fetch-depth": 0,
+                "persist-credentials": false
+              }
+            },
+            {
+              "name": "Confirm native bootstrap and source identity",
+              "run": "set -euo pipefail\nexport CARGO_TARGET_DIR=\"$RUNNER_TEMP/ssx-cli-target\"\nexport TMPDIR=\"$RUNNER_TEMP/ssx-cli-tmp\"\nexport TMP=\"$TMPDIR\" TEMP=\"$TMPDIR\"\n{\n  printf 'CARGO_TARGET_DIR=%s\\n' \"$CARGO_TARGET_DIR\"\n  printf 'TMPDIR=%s\\n' \"$TMPDIR\"\n  printf 'TMP=%s\\n' \"$TMP\"\n  printf 'TEMP=%s\\n' \"$TEMP\"\n} >> \"$GITHUB_ENV\"\nmkdir -p \"$TMPDIR\" \"$CARGO_TARGET_DIR/rust-evidence\"\nrustc --version --verbose | tee \"$CARGO_TARGET_DIR/rust-evidence/rustc.txt\"\ngrep -Fx \"host: $EXPECTED_TARGET\" \"$CARGO_TARGET_DIR/rust-evidence/rustc.txt\"\ncargo --version --verbose | tee \"$CARGO_TARGET_DIR/rust-evidence/cargo.txt\"\nif [ \"$RUNNER_OS\" = Windows ]; then\n  export OPENSSL_SRC_PERL='C:/Strawberry/perl/bin/perl.exe'\n  \"$OPENSSL_SRC_PERL\" -MIPC::Cmd -MLocale::Maketext::Simple -e 'die \"native Windows Perl required\\n\" unless $^O eq \"MSWin32\"; printf \"OpenSSL native Perl: %s (%s)\\n\", $^X, $^V;' | tee \"$CARGO_TARGET_DIR/rust-evidence/perl-selected.txt\"\n  \"$OPENSSL_SRC_PERL\" -V > \"$CARGO_TARGET_DIR/rust-evidence/perl.txt\"\n  printf 'OPENSSL_SRC_PERL=%s\\n' \"$OPENSSL_SRC_PERL\" >> \"$GITHUB_ENV\"\nelse\n  perl -V > \"$CARGO_TARGET_DIR/rust-evidence/perl.txt\"\nfi\ngit rev-parse HEAD > \"$CARGO_TARGET_DIR/rust-evidence/head.txt\"\ngit ls-files --stage > \"$CARGO_TARGET_DIR/rust-evidence/index-before.txt\"\ngit status --porcelain=v1 --untracked-files=all > \"$CARGO_TARGET_DIR/rust-evidence/status-before.txt\"\ntest ! -s \"$CARGO_TARGET_DIR/rust-evidence/status-before.txt\"\n"
+            },
+            {
+              "name": "Locked format and strict standalone client lint",
+              "run": "set -euo pipefail\ncargo fmt --all --check\ncargo clippy --locked -p ssx-cli -p ssx-cli-check -p ssx-cli-openssl-store -p ssx-source-codecs --all-targets -- -D warnings\n"
+            },
+            {
+              "name": "Native external-child corpus and source installation",
+              "run": "set -euo pipefail\nif [ \"$RUNNER_OS\" = Windows ]; then\n  cargo run --locked -p ssx-cli-check -- check T08A --output \"$CARGO_TARGET_DIR/rust-evidence/T08A.json\"\nelse\n  cargo xtask check T08A --output \"$CARGO_TARGET_DIR/rust-evidence/T08A.json\"\nfi\nif [ ! -s \"$CARGO_TARGET_DIR/rust-evidence/T08A.json\" ]; then\n  echo \"::error::T08A gate exited zero without writing $CARGO_TARGET_DIR/rust-evidence/T08A.json\"\n  exit 1\nfi\ngit ls-files --stage > \"$CARGO_TARGET_DIR/rust-evidence/index-after.txt\"\nif ! cmp \"$CARGO_TARGET_DIR/rust-evidence/index-before.txt\" \"$CARGO_TARGET_DIR/rust-evidence/index-after.txt\"; then\n  echo \"::error::T08A gate changed the Git index\"\n  exit 1\nfi\ndirty=\"$(git status --porcelain=v1 --untracked-files=all)\"\nif [ -n \"$dirty\" ]; then\n  echo \"::error::T08A gate left the worktree dirty\"\n  echo \"$dirty\"\n  exit 1\nfi\n"
+            },
+            {
+              "if": "${{ always() }}",
+              "name": "Retain native CLI evidence",
+              "uses": "actions/upload-artifact@v7",
+              "with": {
+                "if-no-files-found": "error",
+                "name": "native-cli-${{ matrix.target }}-${{ github.sha }}",
+                "path": "${{ runner.temp }}/ssx-cli-target/rust-evidence/"
+              }
+            },
+            {
+              "if": "${{ always() }}",
+              "name": "Retire reproducible native artifacts",
+              "run": "set -euo pipefail\nrm -rf \"$CARGO_TARGET_DIR\" \"$TMPDIR\"\n"
+            }
+          ],
           "strategy": {
             "fail-fast": false,
             "matrix": {
@@ -2642,63 +2680,25 @@
               ]
             }
           },
-          "defaults": {
-            "run": {
-              "shell": "bash"
+          "timeout-minutes": 60
+        },
+        "workflow": {
+          "name": "Native CLI component",
+          "on": {
+            "pull_request": {
+              "branches": [
+                "main"
+              ]
+            },
+            "push": {
+              "branches": [
+                "main"
+              ]
             }
           },
-          "env": {
-            "CARGO_TERM_COLOR": "always",
-            "CARGO_BUILD_JOBS": 2,
-            "CARGO_PROFILE_DEV_DEBUG": 0,
-            "CARGO_INCREMENTAL": 0,
-            "OPENSSL_NO_ASM": "1",
-            "OPENSSL_NO_VENDOR": "0",
-            "OPENSSL_STATIC": "1",
-            "EXPECTED_TARGET": "${{ matrix.target }}"
-          },
-          "steps": [
-            {
-              "name": "Preserve literal source bytes on Windows",
-              "if": "${{ runner.os == 'Windows' }}",
-              "shell": "bash",
-              "run": "git config --global core.autocrlf false"
-            },
-            {
-              "uses": "actions/checkout@v7",
-              "with": {
-                "fetch-depth": 0,
-                "persist-credentials": false
-              }
-            },
-            {
-              "name": "Confirm native bootstrap and source identity",
-              "run": "set -euo pipefail\nexport CARGO_TARGET_DIR=\"$RUNNER_TEMP/ssx-cli-target\"\nexport TMPDIR=\"$RUNNER_TEMP/ssx-cli-tmp\"\nexport TMP=\"$TMPDIR\" TEMP=\"$TMPDIR\"\n{\n  printf 'CARGO_TARGET_DIR=%s\\n' \"$CARGO_TARGET_DIR\"\n  printf 'TMPDIR=%s\\n' \"$TMPDIR\"\n  printf 'TMP=%s\\n' \"$TMP\"\n  printf 'TEMP=%s\\n' \"$TEMP\"\n} >> \"$GITHUB_ENV\"\nmkdir -p \"$TMPDIR\" \"$CARGO_TARGET_DIR/rust-evidence\"\nrustc --version --verbose | tee \"$CARGO_TARGET_DIR/rust-evidence/rustc.txt\"\ngrep -Fx \"host: $EXPECTED_TARGET\" \"$CARGO_TARGET_DIR/rust-evidence/rustc.txt\"\ncargo --version --verbose | tee \"$CARGO_TARGET_DIR/rust-evidence/cargo.txt\"\nif [ \"$RUNNER_OS\" = Windows ]; then\n  export OPENSSL_SRC_PERL='C:/Strawberry/perl/bin/perl.exe'\n  \"$OPENSSL_SRC_PERL\" -MIPC::Cmd -MLocale::Maketext::Simple -e 'die \"native Windows Perl required\\n\" unless $^O eq \"MSWin32\"; printf \"OpenSSL native Perl: %s (%s)\\n\", $^X, $^V;' | tee \"$CARGO_TARGET_DIR/rust-evidence/perl-selected.txt\"\n  \"$OPENSSL_SRC_PERL\" -V > \"$CARGO_TARGET_DIR/rust-evidence/perl.txt\"\n  printf 'OPENSSL_SRC_PERL=%s\\n' \"$OPENSSL_SRC_PERL\" >> \"$GITHUB_ENV\"\nelse\n  perl -V > \"$CARGO_TARGET_DIR/rust-evidence/perl.txt\"\nfi\ngit rev-parse HEAD > \"$CARGO_TARGET_DIR/rust-evidence/head.txt\"\ngit ls-files --stage > \"$CARGO_TARGET_DIR/rust-evidence/index-before.txt\"\ngit status --porcelain=v1 --untracked-files=all > \"$CARGO_TARGET_DIR/rust-evidence/status-before.txt\"\ntest ! -s \"$CARGO_TARGET_DIR/rust-evidence/status-before.txt\"\n"
-            },
-            {
-              "name": "Locked format and strict standalone client lint",
-              "run": "set -euo pipefail\ncargo fmt --all --check\ncargo clippy --locked -p ssx-cli -p ssx-cli-check -p ssx-cli-openssl-store -p ssx-source-codecs --all-targets -- -D warnings\n"
-            },
-            {
-              "name": "Native external-child corpus and source installation",
-              "run": "set -euo pipefail\nif [ \"$RUNNER_OS\" = Windows ]; then\n  cargo run --locked -p ssx-cli-check -- check T08A --output \"$CARGO_TARGET_DIR/rust-evidence/T08A.json\"\nelse\n  cargo xtask check T08A --output \"$CARGO_TARGET_DIR/rust-evidence/T08A.json\"\nfi\ntest -s \"$CARGO_TARGET_DIR/rust-evidence/T08A.json\"\ngit ls-files --stage > \"$CARGO_TARGET_DIR/rust-evidence/index-after.txt\"\ncmp \"$CARGO_TARGET_DIR/rust-evidence/index-before.txt\" \"$CARGO_TARGET_DIR/rust-evidence/index-after.txt\"\ntest -z \"$(git status --porcelain=v1 --untracked-files=all)\"\n"
-            },
-            {
-              "name": "Retain native CLI evidence",
-              "if": "${{ always() }}",
-              "uses": "actions/upload-artifact@v7",
-              "with": {
-                "name": "native-cli-${{ matrix.target }}-${{ github.sha }}",
-                "path": "${{ runner.temp }}/ssx-cli-target/rust-evidence/",
-                "if-no-files-found": "error"
-              }
-            },
-            {
-              "name": "Retire reproducible native artifacts",
-              "if": "${{ always() }}",
-              "run": "set -euo pipefail\nrm -rf \"$CARGO_TARGET_DIR\" \"$TMPDIR\"\n"
-            }
-          ]
+          "permissions": {
+            "contents": "read"
+          }
         }
       },
       "owner": "T08A",
@@ -2924,7 +2924,7 @@
             },
             {
               "name": "Run native Rust portal HTTP and browser acceptance",
-              "run": "set -euo pipefail\ncargo xtask check T03 --output \"$T03_EVIDENCE_DIR/T03.json\"\ntest -s \"$T03_EVIDENCE_DIR/T03.json\"\ngit diff --exit-code\ntest -z \"$(git diff --cached --name-only)\"\n"
+              "run": "set -euo pipefail\ncargo xtask check T03 --output \"$T03_EVIDENCE_DIR/T03.json\"\nif [ ! -s \"$T03_EVIDENCE_DIR/T03.json\" ]; then\n  echo \"::error::T03 gate exited zero without writing $T03_EVIDENCE_DIR/T03.json\"\n  exit 1\nfi\nif ! git diff --exit-code; then\n  echo \"::error::T03 gate modified tracked files\"\n  git status --porcelain=v1\n  exit 1\nfi\nstaged=\"$(git diff --cached --name-only)\"\nif [ -n \"$staged\" ]; then\n  echo \"::error::T03 gate left staged changes\"\n  echo \"$staged\"\n  exit 1\nfi\n"
             },
             {
               "if": "always()",

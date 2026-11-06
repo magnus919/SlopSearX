@@ -90,10 +90,21 @@ jobs:
           else
             cargo xtask check T08A --output "$CARGO_TARGET_DIR/rust-evidence/T08A.json"
           fi
-          test -s "$CARGO_TARGET_DIR/rust-evidence/T08A.json"
+          if [ ! -s "$CARGO_TARGET_DIR/rust-evidence/T08A.json" ]; then
+            echo "::error::T08A gate exited zero without writing $CARGO_TARGET_DIR/rust-evidence/T08A.json"
+            exit 1
+          fi
           git ls-files --stage > "$CARGO_TARGET_DIR/rust-evidence/index-after.txt"
-          cmp "$CARGO_TARGET_DIR/rust-evidence/index-before.txt" "$CARGO_TARGET_DIR/rust-evidence/index-after.txt"
-          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+          if ! cmp "$CARGO_TARGET_DIR/rust-evidence/index-before.txt" "$CARGO_TARGET_DIR/rust-evidence/index-after.txt"; then
+            echo "::error::T08A gate changed the Git index"
+            exit 1
+          fi
+          dirty="$(git status --porcelain=v1 --untracked-files=all)"
+          if [ -n "$dirty" ]; then
+            echo "::error::T08A gate left the worktree dirty"
+            echo "$dirty"
+            exit 1
+          fi
       - name: Retain native CLI evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@v7
