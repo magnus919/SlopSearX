@@ -615,7 +615,7 @@ async function main() {
   assert(Object.hasOwn(engines, engine), `T03_BROWSER_ENGINE must be one of ${Object.keys(engines).join(', ')}`);
   browserInfo.name = engine;
   browserEngine = engine;
-  engineConsoleParity = engine === 'chromium' ? 'chromium' : 'not-captured';
+  engineConsoleParity = engine === 'chromium' || engine === 'webkit' ? 'chromium' : 'not-captured';
   browser = await engines[engine].launch({ headless: true });
   browserInfo.version = browser.version();
 
