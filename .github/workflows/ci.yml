@@ -339,9 +339,21 @@ jobs:
         run: |
           set -euo pipefail
           cargo xtask check T03 --output "$T03_EVIDENCE_DIR/T03.json"
-          test -s "$T03_EVIDENCE_DIR/T03.json"
-          git diff --exit-code
-          test -z "$(git diff --cached --name-only)"
+          if [ ! -s "$T03_EVIDENCE_DIR/T03.json" ]; then
+            echo "::error::T03 gate exited zero without writing $T03_EVIDENCE_DIR/T03.json"
+            exit 1
+          fi
+          if ! git diff --exit-code; then
+            echo "::error::T03 gate modified tracked files"
+            git status --porcelain=v1
+            exit 1
+          fi
+          staged="$(git diff --cached --name-only)"
+          if [ -n "$staged" ]; then
+            echo "::error::T03 gate left staged changes"
+            echo "$staged"
+            exit 1
+          fi
       - name: Retain T03 browser and Rust evidence
         if: always()
         uses: actions/upload-artifact@v7

@@ -1290,19 +1290,31 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          [ "${{ needs.foundation-prerequisites.result }}" = success ]
-          [ "${{ needs.foundation-core.result }}" = success ]
-          [ "${{ needs.foundation-runtime.result }}" = success ]
-          [ "${{ needs.foundation-adapters.result }}" = success ]
-          [ "${{ steps.download-prerequisites.outcome }}" = success ]
-          [ "${{ steps.download-core.outcome }}" = success ]
-          [ "${{ steps.download-runtime.outcome }}" = success ]
-          [ "${{ steps.download-adapters.outcome }}" = success ]
+          require_success() {
+            if [ "$2" != success ]; then
+              echo "::error::$1 did not succeed ($2)"
+              exit 1
+            fi
+          }
+          require_success "foundation-prerequisites" "${{ needs.foundation-prerequisites.result }}"
+          require_success "foundation-core" "${{ needs.foundation-core.result }}"
+          require_success "foundation-runtime" "${{ needs.foundation-runtime.result }}"
+          require_success "foundation-adapters" "${{ needs.foundation-adapters.result }}"
+          require_success "download-prerequisites" "${{ steps.download-prerequisites.outcome }}"
+          require_success "download-core" "${{ steps.download-core.outcome }}"
+          require_success "download-runtime" "${{ steps.download-runtime.outcome }}"
+          require_success "download-adapters" "${{ steps.download-adapters.outcome }}"
+          require_file() {
+            if [ ! -s "$1" ]; then
+              echo "::error::required evidence is missing or empty: $1"
+              exit 1
+            fi
+          }
           for plan in F03 F04 T04 T05 T06 T01 F05 F06 F09 F12 F11 F13 F14 F15 T02 F07 W00 W01 W02 W03 W04 W05 W11 W06 W08 O03 O01 F08 F10 T09 A01 A02 A03 A04 A05 A06 A07 A08 A09 A10 A11 A13 A14 A12; do test -s "target/rust-evidence/$plan.json"; done
-          test -s target/rust-feature-graph.txt
+          require_file target/rust-feature-graph.txt
           for partition in prerequisites core runtime adapters; do
-            test -s "target/rust-evidence/partitions/$partition/workspace.jsonl"
-            test -s "target/rust-evidence/partitions/$partition/compiler-images.json"
+            require_file "target/rust-evidence/partitions/$partition/workspace.jsonl"
+            require_file "target/rust-evidence/partitions/$partition/compiler-images.json"
             cmp "target/rust-evidence/partitions/$partition/source-before.sha256z" "target/rust-evidence/partitions/$partition/source-after.sha256z"
             cmp "target/rust-evidence/partitions/$partition/stage-before.z" "target/rust-evidence/partitions/$partition/stage-after.z"
           done
