@@ -109,3 +109,42 @@ If owner or live use is unclear, preserve the artifact until the reference
 audit resolves it, then record the retirement or relocation. Do not delete
 canonical source or unique raw evidence required by the record, or another
 owner's work.
+
+## Running the whole Rust suite locally
+
+The socket guidance above covers targeted browser and HTTP fixtures. Running the
+entire `xtask` suite needs the same temporary base, and three properties of it
+each fail differently when violated:
+
+```sh
+# Registered, short, and outside the checkout — see the socket note above.
+export SLOPSEARX_TEST_TEMP_ROOT=/Volumes/tank01/magnus/rust-builds/slopsearx/tmp
+export TMPDIR="$SLOPSEARX_TEST_TEMP_ROOT"
+cargo test -p xtask
+```
+
+- **`TMPDIR` and `SLOPSEARX_TEST_TEMP_ROOT` must be set and must resolve to the
+  same directory.** The O02 health-retirement fixture compares them and rejects a
+  mismatch with `TMPDIR and SLOPSEARX_TEST_TEMP_ROOT must resolve to the same
+  directory`; unset, the same fixture reports
+  `SLOPSEARX_TEST_TEMP_ROOT must be configured`.
+- **The base must sit outside the checkout.** The bootstrap control asserts it
+  runs from an immutable checkout and does not tolerate a temporary root inside
+  the working tree.
+- **The base must be short.** The socket fixtures build `sockaddr_un`-limited
+  paths beneath it, as the note above explains.
+
+CI sets these per step, so the requirement only affects local runs. Measured on
+`fbf275ab` with them unset: 170 passed, 6 failed. With a short out-of-checkout
+base named in both variables: 171 passed, 5 failed, and the remaining five are
+the macOS `S_ISUID` limitation below.
+
+### Known local-only failures on macOS
+
+Five custody tests fail on macOS for a platform reason, not a configuration one.
+`chmod 4644` drops `S_ISUID` when the file has no execute bit, so a fixture that
+sets `0o4644` as a "must be rejected" mode actually sets the accepted `0644` and
+the negative control never fires. Those files are pinned by sealed amendment
+manifests, so the fix is a reviewed change rather than an edit. Tracked in
+[#1111](https://github.com/magnus919/SlopSearX/issues/1111); those tests pass on
+Linux.
