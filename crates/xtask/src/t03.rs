@@ -730,7 +730,10 @@ fn validate_budgets(scenario: &str, engine: &str, budgets: &Value) -> Result<()>
                 && (0.0..=limit).contains(&observed)
                 && metric["limit"].as_f64() == Some(limit)
                 && metric["pass"] == true,
-            &format!("browser budget failed or changed: {name}"),
+            &format!(
+                "browser budget failed or changed: {name} observed={observed} limit={limit} declared_limit={}",
+                metric["limit"]
+            ),
         )?;
     }
     exact_keys(
@@ -744,7 +747,7 @@ fn validate_budgets(scenario: &str, engine: &str, budgets: &Value) -> Result<()>
             .ok_or("CLS sample missing")?;
         need(
             value.is_finite() && (0.0..=0.1).contains(&value),
-            "landing or results CLS exceeds portal budget",
+            &format!("{sample} CLS exceeds the 0.1 portal budget: observed={value}"),
         )?;
     }
     need(
@@ -1456,8 +1459,48 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::{validate_engine_call, validate_http_error_evidence};
-    use serde_json::json;
+    use super::{validate_budgets, validate_engine_call, validate_http_error_evidence};
+    use serde_json::{Value, json};
+
+    fn passing_budgets() -> Value {
+        json!({
+            "profile": "synthetic offline T03 fixture; Chromium; Fast 3G emulation",
+            "html_uncompressed_bytes": {"observed": 1024.0, "limit": 51200.0, "pass": true},
+            "html_gzip_bytes": {"observed": 256.0, "limit": 15360.0, "pass": true},
+            "css_js_uncompressed_bytes": {"observed": 512.0, "limit": 30720.0, "pass": true},
+            "fcp_ms": {"observed": 900.0, "limit": 1500.0, "pass": true},
+            "cls": {"observed": 0.01, "limit": 0.1, "pass": true},
+            "cls_samples": {"landing": 0.01, "results": 0.02, "result_settle_ms": 250},
+            "interaction_p95_ms": {"observed": 40.0, "limit": 100.0, "pass": true},
+            "handoff_p95_ms": {"observed": 60.0, "limit": 150.0, "pass": true}
+        })
+    }
+
+    #[test]
+    fn budget_failure_names_the_measured_value_and_limit() {
+        let mut budgets = passing_budgets();
+        budgets["fcp_ms"]["observed"] = json!(2000.0);
+        budgets["fcp_ms"]["pass"] = json!(false);
+        let error = validate_budgets("contract", "chromium", &budgets).expect_err("must fail");
+        assert!(error.contains("fcp_ms"), "{error}");
+        assert!(error.contains("observed=2000"), "{error}");
+        assert!(error.contains("limit=1500"), "{error}");
+    }
+
+    #[test]
+    fn cls_sample_failure_names_the_sample_and_value() {
+        let mut budgets = passing_budgets();
+        budgets["cls_samples"]["results"] = json!(0.5);
+        let error = validate_budgets("contract", "chromium", &budgets).expect_err("must fail");
+        assert!(error.contains("results CLS"), "{error}");
+        assert!(error.contains("observed=0.5"), "{error}");
+    }
+
+    #[test]
+    fn passing_budgets_validate() {
+        validate_budgets("contract", "chromium", &passing_budgets()).expect("budgets pass");
+        validate_budgets("contract", "firefox", &json!({})).expect("non-profiled has no budgets");
+    }
 
     #[test]
     fn engine_call_keeps_arbitrary_precision_page_evidence() {

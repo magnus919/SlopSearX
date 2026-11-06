@@ -2707,6 +2707,23 @@
     },
     "rust-cli.yml:native-cli-acceptance": {
       "source": {
+        "job": {
+          "if": "${{ always() }}",
+          "name": "Native CLI component acceptance",
+          "needs": [
+            "native-cli"
+          ],
+          "runs-on": "ubuntu-24.04",
+          "steps": [
+            {
+              "env": {
+                "MATRIX_RESULT": "${{ needs.native-cli.result }}"
+              },
+              "name": "Require every supported native client target",
+              "run": "if [ \"$MATRIX_RESULT\" != success ]; then\n  echo \"::error::native-cli matrix did not succeed ($MATRIX_RESULT)\"\n  exit 1\nfi\n"
+            }
+          ]
+        },
         "workflow": {
           "name": "Native CLI component",
           "on": {
@@ -2724,23 +2741,6 @@
           "permissions": {
             "contents": "read"
           }
-        },
-        "job": {
-          "name": "Native CLI component acceptance",
-          "if": "${{ always() }}",
-          "needs": [
-            "native-cli"
-          ],
-          "runs-on": "ubuntu-24.04",
-          "steps": [
-            {
-              "name": "Require every supported native client target",
-              "env": {
-                "MATRIX_RESULT": "${{ needs.native-cli.result }}"
-              },
-              "run": "test \"$MATRIX_RESULT\" = success"
-            }
-          ]
         }
       },
       "owner": "T08A",

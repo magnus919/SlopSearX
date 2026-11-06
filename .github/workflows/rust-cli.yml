@@ -126,4 +126,8 @@ jobs:
       - name: Require every supported native client target
         env:
           MATRIX_RESULT: ${{ needs.native-cli.result }}
-        run: test "$MATRIX_RESULT" = success
+        run: |
+          if [ "$MATRIX_RESULT" != success ]; then
+            echo "::error::native-cli matrix did not succeed ($MATRIX_RESULT)"
+            exit 1
+          fi

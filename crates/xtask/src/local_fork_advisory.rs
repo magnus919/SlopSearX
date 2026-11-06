@@ -600,6 +600,24 @@ fn advisory_findings(stderr: &str) -> Vec<Value> {
     findings
 }
 
+/// Compact, operator-readable identity for each finding so the job log names the
+/// advisory without requiring an artifact download.
+fn finding_summary(findings: &[Value]) -> String {
+    findings
+        .iter()
+        .map(|finding| {
+            let id = finding["id"].as_str().unwrap_or("?");
+            let package = finding["matched_package"]
+                .as_str()
+                .or_else(|| finding["package"].as_str())
+                .unwrap_or("?");
+            let version = finding["matched_version"].as_str().unwrap_or("?");
+            format!("{id} {package} {version}")
+        })
+        .collect::<Vec<_>>()
+        .join("; ")
+}
+
 fn sort_findings(findings: &mut [Value]) {
     findings.sort_by(|a, b| {
         (a["id"].as_str(), a["matched_span"].as_str())
@@ -643,9 +661,10 @@ pub fn check(root: &Path) -> Result<Value> {
     need(
         run.exit_code == Some(0) && findings.is_empty(),
         &format!(
-            "the derived upstream advisory view reported {} finding(s) with exit {:?}",
+            "the derived upstream advisory view reported {} finding(s) with exit {:?}: {}",
             findings.len(),
-            run.exit_code
+            run.exit_code,
+            finding_summary(&findings)
         ),
     )?;
     Ok(evidence)
@@ -1081,6 +1100,18 @@ mod tests {
             "path+file:///repo/vendor/ssx-cli-hyper#1.12.0"
         );
         assert_eq!(evidence[0]["kind"], "third_party_fork");
+    }
+
+    #[test]
+    fn finding_summary_names_advisory_package_and_version() {
+        let findings = vec![
+            json!({"id": "RUSTSEC-2020-9001", "matched_package": "libxml", "matched_version": "0.3.22"}),
+            json!({"id": "RUSTSEC-2020-9002", "package": "hyper"}),
+        ];
+        assert_eq!(
+            finding_summary(&findings),
+            "RUSTSEC-2020-9001 libxml 0.3.22; RUSTSEC-2020-9002 hyper ?"
+        );
     }
 
     #[test]
