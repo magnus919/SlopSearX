@@ -29,7 +29,7 @@ jobs:
       packages: write
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
 
       - name: Configure hosted-runner Docker Hub cache
         run: python3 scripts/configure_ci_dockerhub_mirror.py

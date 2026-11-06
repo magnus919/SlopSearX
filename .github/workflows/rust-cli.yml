@@ -45,7 +45,7 @@ jobs:
         if: ${{ runner.os == 'Windows' }}
         shell: bash
         run: git config --global core.autocrlf false
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
