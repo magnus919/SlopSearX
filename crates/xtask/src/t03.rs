@@ -21,7 +21,14 @@ const SCENARIOS: [&str; 5] = [
     "html-disabled",
     "unavailable",
 ];
-const ENGINES: [&str; 2] = ["chromium", "firefox"];
+const ENGINES: [&str; 3] = ["chromium", "firefox", "webkit"];
+
+/// Engines that report blocked-document and subresource HTTP statuses on the
+/// console. Measured, not assumed: Chromium and Playwright WebKit both report
+/// them, Gecko does not.
+fn reports_console_status(engine: &str) -> bool {
+    matches!(engine, "chromium" | "webkit")
+}
 const HTTP_TESTS: [&str; 11] = [
     "static_assets_and_highlight_boundary_preserve_safe_progressive_rendering",
     "inherited_scope_and_date_journeys_cover_all_16_literal_assertions",
@@ -836,7 +843,7 @@ fn validate_browser(
         receipt["browser"]["name"] == engine,
         "browser receipt does not name the requested engine",
     )?;
-    let expected_console_parity = if engine == "chromium" {
+    let expected_console_parity = if reports_console_status(engine) {
         "chromium"
     } else {
         "not-captured"
@@ -981,9 +988,10 @@ fn validate_http_error_evidence(
         })
         .collect::<Result<Vec<_>>>()?;
     console_statuses.sort_unstable();
-    // Chromium reports the blocked document/subresource status on the console;
-    // Gecko does not, so only the response inventory is cross-engine.
-    let console_expectation = if engine == "chromium" {
+    // Chromium and Playwright WebKit report the blocked document/subresource
+    // status on the console; Gecko does not, so only the response inventory is
+    // cross-engine for Firefox.
+    let console_expectation = if reports_console_status(engine) {
         statuses == expected && console_statuses == expected
     } else {
         statuses == expected && console_statuses.is_empty()
@@ -1548,6 +1556,39 @@ mod tests {
                 "http://127.0.0.1:4321"
             )
             .is_err()
+        );
+
+        // Measured: Playwright WebKit reports console statuses exactly like
+        // Chromium, so the Chromium expectation applies to it as well.
+        assert!(
+            validate_http_error_evidence(&receipt, "contract", "webkit", "http://127.0.0.1:4321")
+                .is_ok()
+        );
+        let gecko_shaped = json!({
+            "http_error_responses": [
+                {"status":503,"url":"http://127.0.0.1:4321/search?q=failed"},
+                {"status":400,"url":"http://127.0.0.1:4321/search?q=invalid"},
+                {"status":403,"url":"http://127.0.0.1:4321/search?q=denied"}
+            ],
+            "http_error_console_statuses": []
+        });
+        assert!(
+            validate_http_error_evidence(
+                &gecko_shaped,
+                "contract",
+                "webkit",
+                "http://127.0.0.1:4321"
+            )
+            .is_err()
+        );
+        assert!(
+            validate_http_error_evidence(
+                &gecko_shaped,
+                "contract",
+                "firefox",
+                "http://127.0.0.1:4321"
+            )
+            .is_ok()
         );
 
         for url in [

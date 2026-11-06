@@ -334,7 +334,7 @@ jobs:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
         run: npm ci --prefix "$T03_BROWSER_DIR" --no-audit --no-fund
       - name: Install the lock-matched Chromium and Firefox runtimes
-        run: "$T03_BROWSER_DIR/node_modules/.bin/playwright-core install --with-deps chromium firefox"
+        run: "$T03_BROWSER_DIR/node_modules/.bin/playwright-core install --with-deps chromium firefox webkit"
       - name: Run native Rust portal HTTP and browser acceptance
         run: |
           set -euo pipefail
