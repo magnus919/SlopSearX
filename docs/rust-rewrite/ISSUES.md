@@ -4,7 +4,7 @@
 
 [Case study](CASE_STUDY.md) · [Machine-readable plan](plan.json)
 
-The original publication contained 68 work packages plus the tracking epic. Later changes added T08A/#1062 and the #1080 advisory-coverage task; this current index lists 71 work packages and 186 hard plan edges. Later follow-up issues retain their separate live relationships where they are not plan work packages. T08A implementation starts only after the split decision is reviewed, accepted and normally merged.
+The original publication contained 68 work packages plus the tracking epic. Later changes added T08A/#1062 and the #1080 advisory-coverage task; this current index lists 71 work packages and 186 hard plan edges. Later follow-up issues retain their separate live relationships where they are not plan work packages; see "Live follow-up blockers" below. S01/#1080 is complete: the reviewed local-fork advisory identity view and its real-checker fixtures landed through #1101. T08A implementation starts only after the split decision is reviewed, accepted and normally merged.
 
 Dependencies are hard finish-to-start: accepted/merged predecessor work and its evidence must exist before dependent implementation starts. Parent hierarchy is organizational. Roles and parallel lanes are defined in the case study.
 
@@ -81,6 +81,30 @@ Dependencies are hard finish-to-start: accepted/merged predecessor work and its 
 | [#945 — G07](https://github.com/magnus919/SlopSearX/issues/945) | Canary and cut over production to native services | release | [#944 — G06](https://github.com/magnus919/SlopSearX/issues/944) |
 | [#946 — G08](https://github.com/magnus919/SlopSearX/issues/946) | Remove all backend Python source and runtime dependencies | retirement | [#945 — G07](https://github.com/magnus919/SlopSearX/issues/945), [#934 — O05](https://github.com/magnus919/SlopSearX/issues/934), [#935 — O06](https://github.com/magnus919/SlopSearX/issues/935), [#941 — O08](https://github.com/magnus919/SlopSearX/issues/941), [#942 — O09](https://github.com/magnus919/SlopSearX/issues/942) |
 | [#947 — G09](https://github.com/magnus919/SlopSearX/issues/947) | Verify final Rust-only release and close rewrite acceptance | release | [#946 — G08](https://github.com/magnus919/SlopSearX/issues/946), [#1080 — S01](https://github.com/magnus919/SlopSearX/issues/1080) |
+
+## Live follow-up blockers that are not plan work packages
+
+Two follow-up issues gate the critical path and are deliberately not rows in the
+plan table above, because they are qualification subtasks of T07 rather than plan
+work packages:
+
+| Issue | Effect |
+| --- | --- |
+| [#1073 — macOS platform trust](https://github.com/magnus919/SlopSearX/issues/1073) | Native blocker of [#902 — T07](https://github.com/magnus919/SlopSearX/issues/902). |
+| [#1075 — Windows platform trust](https://github.com/magnus919/SlopSearX/issues/1075) | Native blocker of [#902 — T07](https://github.com/magnus919/SlopSearX/issues/902). |
+
+Both require a supported trust establishment *and* removal route. Neither is
+authorised by the routine rewrite mandate, and both name fixture paths
+(`crates/ssx-gateway/tests/platform_support/`, `.github/workflows/rust-client-platforms.yml`)
+that exist only on the unmerged `codex/preview-1056-t07-source-integration-20261027`
+branch. Until they resolve, T07 cannot land and W09, W10, O04, O09 and every
+G-series qualification package behind them cannot start.
+
+Where a native GitHub `blocked_by` edge differs from the plan table, the native
+edge is authoritative for start decisions; this table records plan intent, not
+current blockers. The measured state, the blocker class for every open issue and
+the decisions still required are in
+[MILESTONE_11_ASSESSMENT.md](MILESTONE_11_ASSESSMENT.md).
 
 ## Ready first
 
