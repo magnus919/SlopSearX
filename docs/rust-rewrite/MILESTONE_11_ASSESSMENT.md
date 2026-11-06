@@ -105,7 +105,10 @@ evidence. No combination of automated changes can close any of the 23.
 2. **#902** — decide whether the gateway branch lands once (1) is settled, and
    who owns the rebase of 110 commits across 64 commits of `main` drift.
 3. **#903 / #921** — name the owner of production native server assembly and
-   resolve the sequencing inversion.
+   resolve the sequencing inversion. [ADR 008](../adr/008-native-runtime-roots-and-server-activation.md)
+   proposes the contract, the fail-closed engine-assembly rule and the migration
+   order, and assigns `ssx-infra` the assembler, `ssx-server` the activation,
+   T08 the client integration and O04 the release composition.
 4. **#919** — approve the sealed F01 amendment that retires the superseded
    Python sources.
 5. **#898** — commit human-executed visual, screen-reader and real Safari/WebKit
