@@ -21,7 +21,7 @@ const SCENARIOS: [&str; 5] = [
     "html-disabled",
     "unavailable",
 ];
-const ENGINES: [&str; 2] = ["chromium", "firefox"];
+const ENGINES: [&str; 3] = ["chromium", "firefox", "webkit"];
 const HTTP_TESTS: [&str; 11] = [
     "static_assets_and_highlight_boundary_preserve_safe_progressive_rendering",
     "inherited_scope_and_date_journeys_cover_all_16_literal_assertions",

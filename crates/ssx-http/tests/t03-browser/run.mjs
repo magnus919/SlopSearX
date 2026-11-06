@@ -4,7 +4,7 @@ import { readFileSync, writeFileSync, lstatSync, existsSync } from 'node:fs';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
-import { chromium, firefox } from 'playwright-core';
+import { chromium, firefox, webkit } from 'playwright-core';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const sourcePath = fileURLToPath(import.meta.url);
@@ -611,7 +611,7 @@ async function main() {
   const packageData = JSON.parse(readFileSync(packagePath, 'utf8'));
   browserInfo.playwright_version = packageData.devDependencies['playwright-core'];
   const engine = process.env.T03_BROWSER_ENGINE || 'chromium';
-  const engines = { chromium, firefox };
+  const engines = { chromium, firefox, webkit };
   assert(Object.hasOwn(engines, engine), `T03_BROWSER_ENGINE must be one of ${Object.keys(engines).join(', ')}`);
   browserInfo.name = engine;
   browserEngine = engine;
