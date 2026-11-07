@@ -128,23 +128,30 @@ cargo test -p xtask
   mismatch with `TMPDIR and SLOPSEARX_TEST_TEMP_ROOT must resolve to the same
   directory`; unset, the same fixture reports
   `SLOPSEARX_TEST_TEMP_ROOT must be configured`.
-- **The base must sit outside the checkout.** The bootstrap control asserts it
-  runs from an immutable checkout and does not tolerate a temporary root inside
-  the working tree.
+- **The base must sit outside the checkout.** The review-harness bootstrap test
+  creates its trusted harness destination under the process temporary directory.
+  Its destination validator rejects a parent inside the target source tree
+  (`harness must be outside target source`).
 - **The base must be short.** The socket fixtures build `sockaddr_un`-limited
   paths beneath it, as the note above explains.
 
-CI sets these per step, so the requirement only affects local runs. Measured on
-`fbf275ab` with them unset: 170 passed, 6 failed. With a short out-of-checkout
-base named in both variables: 171 passed, 5 failed, and the remaining five are
-the macOS `S_ISUID` limitation below.
+CI configures temporary paths per step; local whole-suite runs need equivalent
+setup. A recorded run at `fbf275ab` reported 170 passed and 6 failed without the
+fixture-root configuration. With both variables naming a short external base,
+it reported 171 passed and 5 failed. These counts describe that host and revision,
+not an expected failure allowance.
 
-### Known local-only failures on macOS
+### Investigating permission-mode control failures
 
-Five custody tests fail on macOS for a platform reason, not a configuration one.
-`chmod 4644` drops `S_ISUID` when the file has no execute bit, so a fixture that
-sets `0o4644` as a "must be rejected" mode actually sets the accepted `0644` and
-the negative control never fires. Those files are pinned by sealed amendment
-manifests, so the fix is a reviewed change rather than an edit. Tracked in
-[#1111](https://github.com/magnus919/SlopSearX/issues/1111); those tests pass on
-Linux.
+Five custody tests still failed in that local macOS run with permission-mode
+control errors; the corresponding Linux CI checks passed. Local probes requested
+`04644` and `04755` but read back `0644` and `0755`, respectively. Neither result
+retained `S_ISUID`: the evidence does not establish an execute-bit-dependent rule,
+a universal macOS behavior, or a portable replacement mode.
+
+If a negative control expects an altered mode to be rejected, first inspect the
+mode actually retained by the host. An accepted-mode readback means the intended
+negative input was not established; it is not evidence that the validator accepts
+setuid files. The host/filesystem/security-policy cause and a portable fix remain
+unresolved in [#1111](https://github.com/magnus919/SlopSearX/issues/1111). Do not
+weaken custody checks or update sealed source records merely to obtain a pass.
