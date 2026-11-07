@@ -117,11 +117,16 @@ entire `xtask` suite needs the same temporary base, and three properties of it
 each fail differently when violated:
 
 ```sh
-# Existing, owned, absolute, non-symlink base, registered by the bounded runner.
-# Keep it short and outside the checkout — see the socket note above.
-export SLOPSEARX_TEST_TEMP_ROOT=/Volumes/tank01/magnus/rust-builds/slopsearx/tmp
+# The bounded runner registers and prepares these exact, disjoint owned paths
+# before execution; do not invent paths or use mktemp outside the registration.
+: "${SLOPSEARX_BUILD_RUN:?Set the registered absolute run directory}"
+: "${SLOPSEARX_TEST_TEMP_ROOT:?Set the registered existing short temp base}"
+export CARGO_HOME="$SLOPSEARX_BUILD_RUN/cargo-home"
+export CARGO_TARGET_DIR="$SLOPSEARX_BUILD_RUN/target"
 export TMPDIR="$SLOPSEARX_TEST_TEMP_ROOT"
-cargo test -p xtask
+export TMP="$SLOPSEARX_TEST_TEMP_ROOT"
+export TEMP="$SLOPSEARX_TEST_TEMP_ROOT"
+cargo test --locked -p xtask
 ```
 
 - **`TMPDIR` and `SLOPSEARX_TEST_TEMP_ROOT` must be set and must resolve to the
