@@ -117,7 +117,8 @@ entire `xtask` suite needs the same temporary base, and three properties of it
 each fail differently when violated:
 
 ```sh
-# Registered, short, and outside the checkout — see the socket note above.
+# Existing, owned, absolute, non-symlink base, registered by the bounded runner.
+# Keep it short and outside the checkout — see the socket note above.
 export SLOPSEARX_TEST_TEMP_ROOT=/Volumes/tank01/magnus/rust-builds/slopsearx/tmp
 export TMPDIR="$SLOPSEARX_TEST_TEMP_ROOT"
 cargo test -p xtask
