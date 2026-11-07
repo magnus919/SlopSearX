@@ -117,12 +117,13 @@ entire `xtask` suite needs the same temporary base, and three properties of it
 each fail differently when violated:
 
 ```sh
-# The bounded runner registers and prepares these exact, disjoint owned paths
-# before execution; do not invent paths or use mktemp outside the registration.
+# Set these from the bounded run's storage-ledger registration. The runner
+# creates, validates, and owns the disjoint build and temp directories first.
 : "${SLOPSEARX_BUILD_RUN:?Set the registered absolute run directory}"
 : "${SLOPSEARX_TEST_TEMP_ROOT:?Set the registered existing short temp base}"
 export CARGO_HOME="$SLOPSEARX_BUILD_RUN/cargo-home"
 export CARGO_TARGET_DIR="$SLOPSEARX_BUILD_RUN/target"
+export XDG_CACHE_HOME="$SLOPSEARX_BUILD_RUN/xdg-cache"
 export TMPDIR="$SLOPSEARX_TEST_TEMP_ROOT"
 export TMP="$SLOPSEARX_TEST_TEMP_ROOT"
 export TEMP="$SLOPSEARX_TEST_TEMP_ROOT"
@@ -134,10 +135,12 @@ cargo test --locked -p xtask
   mismatch with `TMPDIR and SLOPSEARX_TEST_TEMP_ROOT must resolve to the same
   directory`; unset, the same fixture reports
   `SLOPSEARX_TEST_TEMP_ROOT must be configured`.
-- **The base must sit outside the checkout.** The review-harness bootstrap test
-  creates its trusted harness destination under the process temporary directory.
-  Its destination validator rejects a parent inside the target source tree
-  (`harness must be outside target source`).
+- **The temporary base must be outside the checkout.** The review-harness
+  bootstrap test creates its trusted harness destination beneath the process
+  temporary directory; the destination validator rejects a parent inside the
+  target source tree (`harness must be outside target source`). Keep this
+  harness-destination requirement distinct from the O02 fixture's temp-root
+  equality check above.
 - **The base must be short.** The socket fixtures build `sockaddr_un`-limited
   paths beneath it, as the note above explains.
 
