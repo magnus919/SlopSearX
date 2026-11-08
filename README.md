@@ -1,25 +1,98 @@
 # SlopSearX
 
-**Cloud-native, stateless, AI-agent-first meta search engine.** Drop-in SearXNG replacement for the GroktoCrawl stack.
+**Self-hosted search and research infrastructure for AI agents.**
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Docker](https://github.com/magnus919/SlopSearX/actions/workflows/docker.yml/badge.svg)](https://github.com/magnus919/SlopSearX/actions/workflows/docker.yml)
 
 ---
 
-SlopSearX is a horizontally scalable, stateless meta search engine designed for AI agent consumption. It replaces SearXNG in the GroktoCrawl stack with:
+SlopSearX is a metasearch engine that brings web and specialist sources behind
+one Model Context Protocol (MCP) server, with durable research jobs and recurring searches that
+produce replayable change events. Use it from an AI agent, a browser, or a
+SearXNG-compatible HTTP client. It runs independently of SearXNG and GroktoCrawl.
+
+- **Search across sources:** query the web, developer resources, scientific
+  literature, security data, and other specialist engines through one interface.
+- **Continue research across sessions:** run bounded multi-query jobs, read
+  retained results, and extend or retry work without starting from scratch.
+- **Monitor a subject over time:** save recurring multi-source searches, compare
+  fresh observations against a baseline, and consume ordered change events with
+  durable acknowledgements so a restarted client can resume within configured retention.
+- **Investigate changes with context:** use a retained, comparable monitoring
+  report to start follow-up research or staged search while preserving its origin.
+
+Research and monitoring require Valkey and the corresponding operator grants.
+Monitoring covers bounded first-page search-result windows, not full-page contents
+or exhaustive source inventories. Reports distinguish new results, changed source
+fields, and results not observed in the latest run; incomplete or incompatible
+observations are reported rather than treated as content changes. The client
+chooses when to investigate and delivers any notifications. See
+[saved searches](docs/MCP_SERVER.md#6133-saved-searches-grant-mcp_grant_saved_searches),
+[replayable events](docs/SAVED_SEARCH_EVENTS.md), and
+[workflow composition](docs/WORKFLOW_COMPOSITION.md).
+
+## Quick Start
+
+### Run the search API and browser portal with Docker
+
+With Docker running, start SlopSearX and Valkey:
+
+```bash
+# Pull and run with Valkey for caching and rate limiting
+docker run -d --name valkey valkey/valkey:8-alpine
+docker run -d --name slopsearx -p 8080:8080 \
+  -e VALKEY_URL=redis://valkey:6379/0 \
+  --link valkey \
+  ghcr.io/magnus919/slopsearx:latest
+
+# Try it after the service starts
+curl 'http://localhost:8080/search?q=hello+world&format=json'
+```
+
+Open **http://localhost:8080/** for the browser portal. This starts the HTTP
+service; connect agents through the separate MCP entry point below. The `latest`
+image is convenient for trying the service. For reproducible deployment, use the
+[digest-pinned image guidance](#container-images-and-reproducible-deployments).
+Some engines require API keys or explicit opt-in; inspect the [engine catalog](#engines-51)
+and [VPN/proxy guidance](#vpn-and-proxy-deployments) before relying on a source.
+
+### Connect an AI agent through MCP
+
+For a local stdio server, install from this repository with Python 3.12 or newer:
+
+```bash
+git clone https://github.com/magnus919/SlopSearX.git
+cd SlopSearX
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -e .
+slopsearx-mcp
+```
+
+Configure your MCP client to launch the installed `slopsearx-mcp` executable.
+For remote HTTP, authentication, Valkey, workflow grants, and client-specific
+examples for Claude Desktop, Cursor, Hermes Agent, and other MCP clients, follow
+the [MCP setup guide](docs/MCP_SERVER.md). The Docker HTTP quick start above does
+not automatically connect a separately launched MCP process to Valkey.
+
+## Search and deployment features
 
 - **HTML output by default** — SearXNG-compatible browser responses with JSON/CSV/RSS negotiation
 - **Human search portal** — a responsive, server-rendered landing and results experience with Dark / Darker themes
 - **YAML+Markdown native output** — structured + readable for AI agent contexts via `format=yaml`
-- **SearXNG-compatible API** — drop-in replacement for existing consumers
+- **SearXNG-compatible HTTP API** — the documented request and response contract for existing consumers
 - **Plugin engine adapters** — one file per engine, `@register_engine`, zero orchestrator changes
 - **Category routing** — SearXNG-compatible taxonomy with sub-categories and env-var overrides
-- **Distributed rate limiting** — Valkey-backed sliding windows, correct at 50+ replicas
-- **Response caching** — Valkey-backed, category-aware TTL, 150x speedup on cache hits
+- **Distributed rate limiting** — Valkey-backed sliding windows shared across replicas
+- **Response caching** — Valkey-backed, category-aware TTL for repeated searches
 - **OpenMetrics observability** — `/metrics` endpoint, per-engine counters + latency + status
-- **Stateless, cloud-native** — no local volumes, no persistent DB, all replicas interchangeable
+- **Stateless application replicas** — horizontally scalable services with shared workflow state in Valkey
 - **Hybrid config** — env vars for secrets, optional mounted file for engine tuning
+
+Scholarly results are grouped by [identified work](docs/SCHOLARLY_WORK_GROUPING.md) before reranking, with bounded internal source provenance and optional SearXNG Paper metadata.
+
+Caller-directed query planning previews decomposition, terminology variants and evidence-linked follow-ups without dispatch. See [query planning](docs/QUERY_PLANNING.md).
 
 ## API
 
@@ -243,7 +316,7 @@ Full installation, configuration, client setup (Claude Desktop, Cursor,
 generic MCP clients), and agent usage guidance:
 **[docs/MCP_SERVER.md](docs/MCP_SERVER.md)**.
 
-## Quick Start
+## Deployment and configuration
 
 ### Build from source
 
@@ -291,24 +364,14 @@ warnings rather than failures because a search can legitimately have no matches.
 FEATURE_EMPTY_SCRAPE_DIAGNOSTICS=true
 ```
 
+### Container images and reproducible deployments
+
 Pre-built Docker images are available from GitHub Container Registry for `linux/amd64` and `linux/arm64`. Docker selects the native architecture automatically, including on Apple Silicon. Builds run on every push to `main` (`latest` and a short commit SHA) and on version tags (`X.Y` and `X.Y.Z`, plus a short commit SHA). Each architecture is built on a native runner, Trivy-scanned, and smoke-tested before the combined manifest is published. Pull requests validate both architectures without publishing. Existing deployment digest pins retain their original platforms until promoted to a new multi-platform image digest.
 
 The repository's own deployment surfaces (`docker-compose.yml`, `k8s/deployment.yaml`) pin the image **by digest**, so they always run exactly the artifact that CI built, Trivy-scanned, and smoke-tested. To deploy the same verified artifact as a given commit, resolve its short-SHA tag to the current digest:
 
 ```bash
 docker buildx imagetools inspect ghcr.io/magnus919/slopsearx:<short-sha> --format '{{json .Manifest.Digest}}'
-```
-
-```bash
-# Pull and run with Valkey for caching and rate limiting
-docker run -d --name valkey valkey/valkey:8-alpine
-docker run -d --name slopsearx -p 8080:8080 \
-  -e VALKEY_URL=redis://valkey:6379/0 \
-  --link valkey \
-  ghcr.io/magnus919/slopsearx:latest
-
-# Try it
-curl 'http://localhost:8080/search?q=hello+world&format=json'
 ```
 
 Standard HTML, CSV, JSON, and RSS formats are controlled by `search.formats`
@@ -340,12 +403,22 @@ See [`docs/PORTAL_DEPLOYMENT.md`](docs/PORTAL_DEPLOYMENT.md) for the browser
 URL map, proxy/access modes, digest-pinned deployment, smoke check, rollback,
 and troubleshooting runbook.
 
+## Integrations and scope
+
+SlopSearX provides the SearXNG-compatible search service used by the GroktoCrawl
+stack. It also runs on its own and does not require GroktoCrawl.
+SlopSearX discovers candidate results and returns titles, URLs, snippets, metadata,
+and provenance. A downstream reader such as GroktoCrawl fetches the linked pages;
+SlopSearX does not fetch or verify them. The
+[search-to-retrieval handoff](docs/RETRIEVAL_HANDOFF.md) links downstream captures
+to their originating result and snapshot.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution workflow and
+[PR review operations](docs/code-review.md) for reviewer configuration, recorded
+canary outcomes, limitations, and rollback.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
-
-Scholarly results are grouped by [identified work](docs/SCHOLARLY_WORK_GROUPING.md) before reranking, with bounded internal source provenance and optional SearXNG Paper metadata.
-
-Caller-directed query planning previews decomposition, terminology variants and evidence-linked follow-ups without dispatch. See [query planning](docs/QUERY_PLANNING.md).
-
-The v5 PR review canary uses non-binding `COMMENT` mode and a pinned JavaScript publisher action. Its first publication and same-review replay were confirmed, and containment/re-enable checks succeeded. This configuration enables `COMMENT`, `APPROVE`, and `REQUEST_CHANGES` and disables only Droid Auto Review. It is deployed only when this change is merged after checks and review. Droid Tag and Wiki remain unchanged. Source coverage has been partial and semantic review accuracy is unknown. For run receipts, bounded history, and rollback, see [PR review operations](docs/code-review.md). No workflow automatically merges a pull request.
