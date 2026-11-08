@@ -49,7 +49,7 @@ evidence. No combination of automated changes can close any of the 23.
 | #902 | Ship native MCP gateway and OAuth client | **C** (A transitively) | `crates/ssx-gateway/src/main.rs` is an 11-line stub: `not implemented: native feature work is pending`, exit failure. The implementation is on `codex/preview-1056-t07-source-integration-20261027` — **110 commits ahead / 64 behind** `main`, last commit `884d50f2` on 2026-11-02. PR #1063 ("feat: ship native MCP gateway and OAuth client") was **closed unmerged** on 2026-11-02 with no review comments. #902 is blocked by #1073/#1075. |
 | #903 | Replace `ssx` with a native Rust CLI | **D** | CLI is real (4,508 lines), but acceptance requires integration against "an actual separately launched native HTTP service". `crates/ssx-server/src/main.rs` is a *foundation readiness server*: `search is not implemented`, and it serves `ssx_infra::foundation_runtime()`, whose engine is `FakeEngine`. |
 | #898 | Port public search portal and browser acceptance | **A** (automation complete) | The T03 gate already runs 15 journeys on Chromium and Firefox, including malicious content, keyboard-only, 320 CSS px, reduced motion, theme/storage failure and pagination; budgets are CDP-throttled separately from upstream latency. `docs/rust-rewrite/t03/CORE_DELIVERY.md` records the remaining acceptance as real Safari/WebKit, 200% browser zoom, manual visual review and screen-reader execution — all explicitly unavailable in the hosted runner. The browser client records `actual_browser_zoom_200_percent: false` rather than claiming it. |
-| #919 | Replace Python health, deployment and upstream-contract tools | **B** | The native image-pin tools landed in #1102 and run in the scheduled promotion job. The remainder — wiring `image-pin-verify-base` into `docker.yml`, replacing `portal_release_smoke.py`, `configure_ci_dockerhub_mirror.py`, `upstream_contracts.py`, and deleting the Python twins — needs a new reviewed sealed `snapshot-fixture-amendment` capsule plus coordinated `python-disposition.json` / `python-invocations.json` updates. |
+| #919 | Replace Python health, deployment and upstream-contract tools | **B** | Native image-pin tools landed in #1102. A bounded Docker base-verifier wiring change is implemented in the current candidate for a focused PR; it preserves the frozen F01 fixture, disposition, invocation inventory, and tracked Python sources. Remaining mirror, portal-smoke, upstream-contract tools and issue acceptance criteria are still open. |
 | #915 | Workflow MCP tools, prompts and registry parity | **D** | Blocked by #902. |
 | #916 | Authenticated workflow console and browser mutations | **D** | Blocked by #898, #915. |
 | #921 | Release artifacts, containers and install paths | **D** | Blocked by #902, #903, #919, #915. Also owns the production server composition seam (`HttpState::with_public_portal`), which #903 needs. |
@@ -114,11 +114,13 @@ evidence. No combination of automated changes can close any of the 23.
    proposes the contract, the fail-closed engine-assembly rule and the migration
    order, and assigns `ssx-infra` the assembler, `ssx-server` the activation,
    T08 the client integration and O04 the release composition.
-4. **#919** — approve the sealed F01 amendment that retires the superseded
-   Python sources.
+4. **#919** — complete remaining O02 call-site replacements and separately
+   qualify tracked Python-source retirement; bounded Docker verifier wiring
+   alone does not close the issue.
 5. **#898** — commit human-executed visual, screen-reader and real Safari/WebKit
    evidence, or amend `docs/PORTAL_ACCEPTANCE.md` to the automatable boundary.
 
-None of these is a code defect that further autonomous work can resolve. This
-assessment therefore stops short of claiming completion and leaves milestone 11
-open.
+The trust, server-assembly and human-accessibility decisions remain owner or
+human evidence gates. The bounded O02 Docker migration is autonomous; the current
+issue remains open until its other tools and qualification criteria are complete.
+This assessment leaves milestone 11 open.

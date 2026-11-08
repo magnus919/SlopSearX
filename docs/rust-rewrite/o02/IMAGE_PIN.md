@@ -13,10 +13,10 @@ the release jobs used to run as Python, exposed through the existing reviewed
 
 Behaviour is intentionally identical to the Python originals:
 
-- the same pinned image (`ghcr.io/magnus919/slopsearx`), the same three pin files
-  (`docker-compose.yml`, `k8s/deployment.yaml`, `tests/test_deployment_artifacts.py`),
-  and the same fail-closed rule that the three files must carry exactly one
-  unique pinned digest;
+- registry promotion reads and rewrites the two deployment manifests
+  (`docker-compose.yml`, `k8s/deployment.yaml`). The historical Python promotion
+  script also included the test file as an oracle; native promotion now keeps
+  that fixture-bound source unchanged and tests that it remains untouched.
 - the same allowlisted hosts (`auth.docker.io`, `registry-1.docker.io`,
   `ghcr.io`), the same accepted manifest media types, a 30-second timeout, a
   1 MiB response cap, three attempts and 1s/2s backoff for transport errors and
@@ -28,31 +28,36 @@ Behaviour is intentionally identical to the Python originals:
 
 The transport is `curl`, which the release runners already provide. This is the
 "Rust or portable shell client" path the O02 issue allows; the parsing,
-rewriting, retry classification and exit-code logic are native Rust and covered
-by 12 unit tests, including injected-transport retry, permanent-failure and
-unusable-digest controls.
+rewriting, retry classification and exit-code logic are native Rust. Sixteen unit
+tests include both-base match/drift verification, failure classification and
+non-mutation, injected-transport retry, permanent-failure, unusable-digest,
+workflow ordering, and preservation of the Python test file as a non-rewritten
+historical promotion oracle.
 
 ## Evidence
 
-Local, against the real registries:
+Historical local production checks (from the image-promotion increment, not
+repeated in this bounded wiring slice):
 
 - `image-pin-verify-base` — exit `0`; both `library/rust:1.99.0-bookworm` and
-  `library/python:3.14.7-slim-trixie` reported identical pinned and registry
-  digests.
-- `image-pin-promote --check` — exit `1`, reporting the pinned
-  `sha256:91194d14…` against registry `sha256:5b795849…`; drift detection and
-  the exact/exclusive pin extraction both exercised.
+  `library/python:3.14.7-slim-trixie` matched their recorded registry digests.
+- `image-pin-promote --check` — exit `1` on a recorded mismatch, exercising
+  drift detection and exclusive pin extraction. No credentials or promotion
+  write were used here.
 
-`cargo test -p xtask o02_image_pin` — 12 passed.
-`cargo clippy -p xtask --all-targets -- -D warnings` — clean.
+Current candidate checks are offline/unit-only:
+`cargo test --locked --offline -p xtask o02_image_pin -- --test-threads=8` — 16 passed.
+`cargo clippy --locked --offline -p xtask --all-targets -- -D warnings` — clean.
 
 ## CI wiring and the one behaviour fix
 
 `image-promotion.yml` now runs the native `--check` as a parity cross-check
 before the Python `--write`, so the native implementation is exercised against
-the real registry on every scheduled run. `docker.yml` still invokes the Python
-base-digest verifier; the native command is available and unit-tested but not
-yet wired there (see the blocker below).
+the real registry on every scheduled run. `docker.yml` now invokes `cargo xtask
+ci-helper image-pin-verify-base` after installing and confirming the
+repository-pinned Rust toolchain. The Python verifier and test module remain
+tracked and source-preserved in the historical fixture; this wiring does not
+claim Python-file retirement.
 
 While touching the promotion job we fixed a latent defect: GitHub Actions runs
 `run:` blocks under `bash -e`, so the pre-existing `python3
@@ -74,31 +79,26 @@ authenticated byte-exactly by F01 source custody:
   only amendment source, and hard-codes the exact bytes of
   `python-disposition.json`.
 
-`tests/test_deployment_artifacts.py` also asserts that `docker.yml` contains the
-Python verifier command and that `image-promotion.yml` contains
-`scripts/promote_image_digest.py --write`.
+`tests/test_deployment_artifacts.py` retains the Python base-verifier assertion;
+the native workflow invocation is asserted by an offline xtask source regression
+control. The Python test module and its historical source bytes remain unchanged.
 
-So deleting either script, editing that test, or changing an inventoried
-workflow line is not a routine edit: it needs a new reviewed sealed amendment
-covering the prior/current bytes. That is deliberately out of scope here. Until
-it lands, the Python files stay tracked and the Python writer stays
-authoritative; the native tool is a proven, exercised replacement rather than a
-claim that O02 is complete.
+The current bounded Docker verifier wiring does not delete the Python source or
+the test module. It leaves the historical invocation row in the existing F01
+inventory; this increment does not change the frozen source fixture, disposition,
+or invocation inventory. This is not a claim of G08 source retirement or overall
+O02 completion.
 
 ## Remaining O02 scope
 
-- Wire `image-pin-verify-base` into `docker.yml` and drop the Python verifier.
 - Replace `scripts/portal_release_smoke.py` (two `docker.yml` uses).
 - Replace `scripts/configure_ci_dockerhub_mirror.py` (`ci.yml`, `docker.yml`).
 - Replace `scripts/upstream_contracts.py` (`.github/workflows/upstream-contracts.yml`).
-- Land the sealed F01 amendment that retires the superseded Python sources and
-  updates `python-disposition.json` / `python-invocations.json`, then delete the
-  scripts and their Python unit tests.
+- Complete O02's evidence and ownership criteria; source retirement is a separate
+  G08 concern, and this verifier wiring does not delete tracked Python files.
 
-The two `docker.yml` items are additionally blocked by
-`tests/test_deployment_artifacts.py`, which asserts that the workflow contains
-the Python verifier command and the promotion write command. All four items also
-invalidate `docs/rust-rewrite/inventory/python-invocations.json`, whose exact
-bytes F01 authenticates and which must therefore be updated in the same reviewed
-change. The sealed amendment is consequently the gating dependency for the whole
-remainder, not just for deleting the superseded files.
+The remaining workflow migrations require updating `tests/test_deployment_artifacts.py`,
+`docs/rust-rewrite/inventory/python-invocations.json`, current-source admissions,
+and the executable gate catalog in the same reviewed changes. F01 retains its
+original fixture and inventories the historical Docker command; no source deletion
+or invocation retirement is claimed by this increment.

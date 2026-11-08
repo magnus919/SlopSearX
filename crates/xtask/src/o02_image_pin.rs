@@ -20,12 +20,9 @@ use std::{
 
 /// Digest-pinned application image.
 pub const IMAGE: &str = "ghcr.io/magnus919/slopsearx";
-/// Files whose combined contents must carry exactly one pinned application digest.
-pub const PIN_FILES: [&str; 3] = [
-    "docker-compose.yml",
-    "k8s/deployment.yaml",
-    "tests/test_deployment_artifacts.py",
-];
+/// Deployment artifacts whose combined contents must carry one pinned digest.
+pub const PIN_FILES: [&str; 2] = ["docker-compose.yml", "k8s/deployment.yaml"];
+pub const TEST_PIN_FILE: &str = "tests/test_deployment_artifacts.py";
 pub const DEFAULT_DOCKERFILE: &str = "Dockerfile";
 const MAX_ATTEMPTS: u32 = 3;
 const TIMEOUT_SECONDS: &str = "30";
@@ -77,7 +74,7 @@ fn pinned_references(text: &str) -> Vec<String> {
     found
 }
 
-/// Collects the single pinned application digest across `PIN_FILES`.
+/// Collects the unique digest from release deployment manifests.
 pub fn extract_pinned_digest(root: &Path) -> Result<String> {
     let mut pins = BTreeSet::new();
     for name in PIN_FILES {
@@ -86,6 +83,9 @@ pub fn extract_pinned_digest(root: &Path) -> Result<String> {
             .map_err(|_| format!("O02 image pin: missing expected pin file: {name}"))?;
         pins.extend(pinned_references(&text));
     }
+    let historical_test_pin = fs::read_to_string(root.join(TEST_PIN_FILE))
+        .map_err(|_| format!("O02 image pin: missing expected pin file: {TEST_PIN_FILE}"))?;
+    pins.extend(pinned_references(&historical_test_pin));
     need(
         pins.len() == 1,
         &format!(
@@ -426,7 +426,12 @@ fn flag_value(args: &[String], flag: &str) -> Option<String> {
         .cloned()
 }
 
-fn verify_base(root: &Path, args: &[String]) -> Result<i32> {
+fn verify_base_with(
+    root: &Path,
+    args: &[String],
+    transport: &dyn Transport,
+    sleep: &mut dyn FnMut(u64),
+) -> Result<i32> {
     let dockerfile =
         flag_value(args, "--dockerfile").unwrap_or_else(|| DEFAULT_DOCKERFILE.to_owned());
     let path = if Path::new(&dockerfile).is_absolute() {
@@ -437,11 +442,9 @@ fn verify_base(root: &Path, args: &[String]) -> Result<i32> {
     let text = fs::read_to_string(&path)
         .map_err(|e| format!("O02 image pin: unable to read Dockerfile: {e}"))?;
     let bases = pinned_bases(&text)?;
-    let transport = CurlTransport;
-    let mut sleep = real_sleep;
     let mut observations = Vec::new();
     for (repository, tag, expected) in bases {
-        let actual = registry_digest(&transport, &repository, &tag, &mut sleep)?;
+        let actual = registry_digest(transport, &repository, &tag, sleep)?;
         println!("{repository}:{tag} expected={expected} registry={actual}");
         observations.push((expected, actual));
     }
@@ -453,6 +456,11 @@ fn verify_base(root: &Path, args: &[String]) -> Result<i32> {
         return Ok(1);
     }
     Ok(0)
+}
+
+fn verify_base(root: &Path, args: &[String]) -> Result<i32> {
+    let mut sleep = real_sleep;
+    verify_base_with(root, args, &CurlTransport, &mut sleep)
 }
 
 fn promote(root: &Path, args: &[String]) -> Result<i32> {
@@ -503,6 +511,9 @@ pub fn cli(root: &Path, args: &[String]) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    static FIXTURE_ID: AtomicU64 = AtomicU64::new(0);
 
     struct Fake {
         responses: std::cell::RefCell<
@@ -586,6 +597,104 @@ mod tests {
         assert_eq!(bases[1].2, format!("sha256:{runtime}"));
     }
 
+    fn build_dockerfile(root: &Path) -> std::path::PathBuf {
+        let builder = "b".repeat(64);
+        let runtime = "c".repeat(64);
+        let path = root.join("Dockerfile");
+        fs::write(
+            &path,
+            format!(
+                "FROM rust:1.99.0-bookworm@sha256:{builder} AS healthcheck-builder\nFROM python:3.13-slim-bookworm@sha256:{runtime}\n"
+            ),
+        )
+        .expect("fixture Dockerfile");
+        path
+    }
+
+    #[test]
+    fn docker_workflow_runs_native_base_check_before_multiplatform_image_build() {
+        let workflow = fs::read_to_string(
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.github/workflows/docker.yml"),
+        )
+        .expect("docker workflow");
+        let native = workflow
+            .find("cargo xtask ci-helper image-pin-verify-base")
+            .expect("native verifier invocation");
+        let build = workflow
+            .find("name: Build and load image")
+            .expect("build step");
+        assert!(native < build, "base verifier must run before Docker build");
+        assert!(!workflow.contains("python3 scripts/verify_docker_base_digest.py"));
+        assert!(workflow.contains("rustup toolchain install \"$toolchain\""));
+        assert!(workflow.contains("test \"$toolchain\" = \"1.99.0\""));
+    }
+
+    #[test]
+    fn verify_base_accepts_matching_injected_registry_digests() {
+        let root = fixture_root("verify-base-match");
+        let _dockerfile = build_dockerfile(&root);
+        let builder = format!("sha256:{}", "b".repeat(64));
+        let runtime = format!("sha256:{}", "c".repeat(64));
+        let transport = Fake::new(vec![
+            Ok(response(200, None, r#"{"token":"registry-token"}"#)),
+            Ok(response(200, Some(("Docker-Content-Digest", &builder)), "")),
+            Ok(response(200, None, r#"{"token":"registry-token"}"#)),
+            Ok(response(200, Some(("Docker-Content-Digest", &runtime)), "")),
+        ]);
+        let mut sleeps = Vec::new();
+        let mut sleep = |seconds| sleeps.push(seconds);
+        assert_eq!(
+            verify_base_with(
+                &root,
+                &["--dockerfile".into(), "Dockerfile".into()],
+                &transport,
+                &mut sleep,
+            )
+            .expect("matching registry manifests"),
+            0
+        );
+        assert_eq!(transport.calls.borrow().len(), 4);
+        assert!(sleeps.is_empty());
+    }
+
+    #[test]
+    fn verify_base_reports_digest_drift_without_mutating_sources() {
+        let root = fixture_root("verify-base-drift");
+        let dockerfile = build_dockerfile(&root);
+        let original = fs::read(&dockerfile).expect("read fixture Dockerfile");
+        let builder = format!("sha256:{}", "d".repeat(64));
+        let runtime = format!("sha256:{}", "e".repeat(64));
+        let transport = Fake::new(vec![
+            Ok(response(200, None, r#"{"token":"registry-token"}"#)),
+            Ok(response(200, Some(("Docker-Content-Digest", &builder)), "")),
+            Ok(response(200, None, r#"{"token":"registry-token"}"#)),
+            Ok(response(200, Some(("Docker-Content-Digest", &runtime)), "")),
+        ]);
+        let mut sleep = dismiss;
+        assert_eq!(
+            verify_base_with(&root, &[], &transport, &mut sleep).expect("drift result"),
+            1
+        );
+        assert_eq!(fs::read(dockerfile).expect("source unchanged"), original);
+        assert_eq!(transport.calls.borrow().len(), 4);
+    }
+
+    #[test]
+    fn verify_base_classifies_registry_failure_without_sleeping_or_mutating() {
+        let root = fixture_root("verify-base-error");
+        let dockerfile = build_dockerfile(&root);
+        let original = fs::read(&dockerfile).expect("read fixture Dockerfile");
+        let transport = Fake::new(vec![Ok(response(404, None, ""))]);
+        let mut sleeps = Vec::new();
+        let mut sleep = |seconds| sleeps.push(seconds);
+        let error = verify_base_with(&root, &[], &transport, &mut sleep)
+            .expect_err("registry failure is an error, not digest drift");
+        assert!(error.contains("HTTP 404"), "{error}");
+        assert_eq!(transport.calls.borrow().len(), 1);
+        assert!(sleeps.is_empty());
+        assert_eq!(fs::read(dockerfile).expect("source unchanged"), original);
+    }
+
     #[test]
     fn repository_dockerfile_pins_are_recognized() {
         let dockerfile =
@@ -603,8 +712,10 @@ mod tests {
     fn fixture_root(name: &str) -> std::path::PathBuf {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../target/o02-image-pin")
-            .join(name);
-        let _ = fs::remove_dir_all(&root);
+            .join(format!(
+                "{name}-{}",
+                FIXTURE_ID.fetch_add(1, Ordering::Relaxed)
+            ));
         fs::create_dir_all(&root).expect("fixture root");
         root
     }
@@ -618,6 +729,11 @@ mod tests {
             fs::create_dir_all(path.parent().expect("parent")).expect("dirs");
             fs::write(&path, format!("image: {IMAGE}@sha256:{digest}\n")).expect("write");
         }
+        fs::write(
+            root.join(TEST_PIN_FILE),
+            format!("PIN = \"{IMAGE}@sha256:{digest}\"\n"),
+        )
+        .expect("historical pytest fixture");
         assert_eq!(
             extract_pinned_digest(&root).expect("one pin"),
             format!("sha256:{digest}")
@@ -637,11 +753,13 @@ mod tests {
             fs::create_dir_all(path.parent().expect("parent")).expect("dirs");
             fs::write(&path, "").expect("write");
         }
+        fs::create_dir_all(root.join(TEST_PIN_FILE).parent().expect("test parent"))
+            .expect("test dirs");
         fs::write(
-            root.join(PIN_FILES[1]),
-            format!("{IMAGE}@sha256:{}", "e".repeat(64)),
+            root.join(TEST_PIN_FILE),
+            format!("PIN = \"{IMAGE}@sha256:{}\"\n", "e".repeat(64)),
         )
-        .expect("write");
+        .expect("fixture assertion");
         let error = extract_pinned_digest(&root).expect_err("must reject");
         assert!(
             error.contains("exactly one unique pinned digest"),
@@ -667,8 +785,16 @@ mod tests {
             fs::create_dir_all(path.parent().expect("parent")).expect("dirs");
             fs::write(&path, format!("a {IMAGE}@sha256:{old} b\n")).expect("write");
         }
+        let test_pin = root.join(TEST_PIN_FILE);
+        fs::create_dir_all(test_pin.parent().expect("test parent")).expect("test dirs");
+        fs::write(&test_pin, format!("PIN = \"{IMAGE}@sha256:{old}\"\n")).expect("write");
+        let original_test_pin = fs::read(&test_pin).expect("original test pin");
         let changed = apply_promotion(&root, &new).expect("applies");
         assert_eq!(changed.len(), PIN_FILES.len());
+        assert_eq!(
+            fs::read(&test_pin).expect("historical test pin unchanged"),
+            original_test_pin
+        );
         for name in PIN_FILES {
             let text = fs::read_to_string(root.join(name)).expect("read");
             assert!(text.contains(&format!("{IMAGE}@{new}")));

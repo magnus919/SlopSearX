@@ -16,7 +16,8 @@ def test_dockerfile_uses_a_digest_pinned_python_base() -> None:
     assert re.search(r"^FROM python:[^@\s]+@sha256:[0-9a-f]{64}$", dockerfile, re.MULTILINE)
 
     workflow = (ROOT / ".github/workflows/docker.yml").read_text()
-    assert "python3 scripts/verify_docker_base_digest.py" in workflow
+    assert "cargo xtask ci-helper image-pin-verify-base" in workflow
+    assert "python3 scripts/verify_docker_base_digest.py" not in workflow
 
 
 def test_pinned_base_parser_accepts_generic_python_tag() -> None:
