@@ -109,3 +109,58 @@ If owner or live use is unclear, preserve the artifact until the reference
 audit resolves it, then record the retirement or relocation. Do not delete
 canonical source or unique raw evidence required by the record, or another
 owner's work.
+
+## Running the whole Rust suite locally
+
+The socket guidance above covers targeted browser and HTTP fixtures. Running the
+entire `xtask` suite needs the same temporary base, and three properties of it
+each fail differently when violated:
+
+```sh
+# Set these from the bounded run's storage-ledger registration. The runner
+# creates, validates, and owns the disjoint build and temp directories first.
+: "${SLOPSEARX_BUILD_RUN:?Set the registered absolute run directory}"
+: "${SLOPSEARX_TEST_TEMP_ROOT:?Set the registered existing short temp base}"
+export CARGO_HOME="$SLOPSEARX_BUILD_RUN/cargo-home"
+export CARGO_TARGET_DIR="$SLOPSEARX_BUILD_RUN/target"
+export XDG_CACHE_HOME="$SLOPSEARX_BUILD_RUN/xdg-cache"
+export TMPDIR="$SLOPSEARX_TEST_TEMP_ROOT"
+export TMP="$SLOPSEARX_TEST_TEMP_ROOT"
+export TEMP="$SLOPSEARX_TEST_TEMP_ROOT"
+cargo test --locked -p xtask
+```
+
+- **`TMPDIR` and `SLOPSEARX_TEST_TEMP_ROOT` must be set and must resolve to the
+  same directory.** The O02 health-retirement fixture compares them and rejects a
+  mismatch with `TMPDIR and SLOPSEARX_TEST_TEMP_ROOT must resolve to the same
+  directory`; unset, the same fixture reports
+  `SLOPSEARX_TEST_TEMP_ROOT must be configured`.
+- **The temporary base must be outside the checkout.** The review-harness
+  bootstrap test creates its trusted harness destination beneath the process
+  temporary directory; the destination validator rejects a parent inside the
+  target source tree (`harness must be outside target source`). Keep this
+  harness-destination requirement distinct from the O02 fixture's temp-root
+  equality check above.
+- **The base must be short.** The socket fixtures build `sockaddr_un`-limited
+  paths beneath it, as the note above explains.
+
+CI configures temporary paths per step; local whole-suite runs need equivalent
+setup. A recorded run at `fbf275ab` reported 170 passed and 6 failed without the
+fixture-root configuration. With both variables naming a short external base,
+it reported 171 passed and 5 failed. These counts describe that host and revision,
+not an expected failure allowance.
+
+### Investigating permission-mode control failures
+
+Five custody tests still failed in that local macOS run with permission-mode
+control errors; the corresponding Linux CI checks passed. Local probes requested
+`04644` and `04755` but read back `0644` and `0755`, respectively. Neither result
+retained `S_ISUID`: the evidence does not establish an execute-bit-dependent rule,
+a universal macOS behavior, or a portable replacement mode.
+
+If a negative control expects an altered mode to be rejected, first inspect the
+mode actually retained by the host. An accepted-mode readback means the intended
+negative input was not established; it is not evidence that the validator accepts
+setuid files. The host/filesystem/security-policy cause and a portable fix remain
+unresolved in [#1111](https://github.com/magnus919/SlopSearX/issues/1111). Do not
+weaken custody checks or update sealed source records merely to obtain a pass.
