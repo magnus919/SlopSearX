@@ -21,11 +21,15 @@ F01/W03 source-custody work defines an atomic promotion path; the existing
 image-promotion workflow currently uses the Python writer. Updating its generated
 source successor is outside this bounded Docker-verifier wiring PR.
 
-Base verifier policy remains:
-- the same allowlisted hosts (`auth.docker.io`, `registry-1.docker.io`,
-  `ghcr.io`), the same accepted manifest media types, a 30-second timeout, a
-  1 MiB response cap, three attempts and 1s/2s backoff for transport errors and
-  HTTP 429/500/502/503/504;
+Base verifier policy:
+- retains the allowlisted hosts (`auth.docker.io`, `registry-1.docker.io`,
+  `ghcr.io`), accepted manifest media types, a 30-second timeout, three attempts
+  and 1s/2s backoff for transport errors and HTTP 429/500/502/503/504;
+- requests curl's 1 MiB downloaded-body limit (`--max-filesize`), unlike the
+  Python predecessor. Enforcement for bodies whose size is initially unknown
+  requires curl >=8.4.0; this tool does not check or pin that version. Headers
+  captured with `--dump-header -` are not bounded by the option. This is not a
+  portable total-response or process-memory limit;
 - `--check` uses `0` for current, `1` for drift and `2` for registry/pin errors.
 - only HTTPS targets are permitted; the transport rejects anything else before
   spawning `curl`. The tool never builds, pushes or promotes an image.
@@ -33,15 +37,24 @@ Base verifier policy remains:
 The transport is `curl`, which the release runners already provide. This is the
 "Rust or portable shell client" path the O02 issue allows; parsing, read-only
 verification, registry retry classification and base-check behavior are native
-Rust. Twenty-four unit tests include both-base match/drift verification, failure
+Rust. Thirty active tests cover the sealed source contract; no legacy scanner
+or ignored scanner tests remain. They cover both-base match/drift verification, failure
 classification and non-mutation, injected-transport retry, permanent failure,
 unusable digests, explicit promotion modes, bounded Dockerfile and manifest
-reads, active-field decoys, strict oracle assignment validation, and drift refusal
-without modifying the manifests or test oracle. A same-digest native write is a
-successful no-op; digest transitions stay on the existing Python promotion path
-until source custody is amended.
+reads, active-field decoys, symlinked-parent refusal, and drift refusal without
+modifying manifests or the test oracle. The non-custodied parser accepts only a
+single sealed assignment, not arbitrary Python. The real checkout oracle takes
+a separate exact-byte path authenticated against the F01/W03 custody successor,
+including the expected module pin. Native write remains no-op on current digest;
+digest transitions stay on the existing Python promotion path until source
+custody is amended.
 
 ## Evidence
+
+The CI/release environment must provide a trusted `curl` in PATH and trusted
+curl configuration and environment. The transport inherits HOME/CURL_HOME
+configuration and proxy variables as well as executable lookup; this slice does
+not isolate those caller-controlled settings.
 
 Historical local production checks (from the image-promotion increment, not
 repeated in this bounded wiring slice):
@@ -53,7 +66,7 @@ repeated in this bounded wiring slice):
   write were used here.
 
 Current candidate checks are offline/unit-only:
-`SLOPSEARX_TEST_TEMP_ROOT=$SLOPSEARX_BUILD_RUN/tmp cargo test --locked --offline -p xtask o02_image_pin -- --test-threads=8` — 24 passed, including active-field decoys, bounded inputs, oracle duplicates, missing pins and promotion drift refusal.
+`SLOPSEARX_TEST_TEMP_ROOT=$SLOPSEARX_BUILD_RUN/tmp cargo test --locked --offline -p xtask o02_image_pin -- --test-threads=8` — 30 passed, none ignored. The passing frozen-source path verifies the exact source SHA-256 and unique expected literal, then checks a compiled text fragment for the W03 successor row's path, historical Git blob, current/predecessor byte counts, and SHA-256 values. This source-fragment check does not execute the row's inverse transform or validate its replacement spans, and it does not check Git status. A separate T08A test exercises the W03 inverse control. The registry transport also launches `curl` by PATH lookup and relies on the caller's toolchain PATH; substituting a hostile `curl` is outside the current verifier's trust boundary. The synthetic parser rejects CR/CRLF line endings, backslash escapes, extra statements, and executable suffixes; it accepts only a single double-quoted digest assignment. Full xtask and the scoped T08A source-binding control were rerun after these parser guards.
 `cargo clippy --locked --offline -p xtask --all-targets -- -D warnings` — clean.
 
 ## CI wiring and the one behaviour fix
@@ -75,7 +88,8 @@ guard could run. Both commands are now wrapped in `set +e` / `set -e`.
 ## Why the Python twins remain tracked
 
 Every tracked `.py` file and every file under `docs/rust-rewrite/inventory/` is
-authenticated byte-exactly by F01 source custody:
+authenticated by F01's source inventory. The active deployment-test oracle is
+also listed in the W03/O02 finite current-source successor and historical inverse:
 
 - `crates/xtask/fixtures/F01.json` lists each path with its `git_blob`;
 - `source_check("F01")` requires that set to equal the tracked `.py`/`.pyi`/
@@ -88,7 +102,7 @@ authenticated byte-exactly by F01 source custody:
 
 `tests/test_deployment_artifacts.py` retains the Python base-verifier assertion;
 the native workflow invocation is asserted by an offline xtask source regression
-control. The Python test module and its historical source bytes remain unchanged.
+control. The Python test module and its historical source bytes remain unchanged. The O02 verifier additionally checks the active checkout source SHA-256 against its fixed W03/O02 successor constant and pins its expected digest line; it does not execute the inverse transformation at this runtime boundary. The source-fragment linkage and standalone W03 inverse tests are separate controls.
 
 The current bounded Docker verifier wiring does not delete the Python source or
 the test module. It leaves the historical invocation row in the existing F01

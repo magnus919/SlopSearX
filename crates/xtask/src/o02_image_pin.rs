@@ -11,6 +11,7 @@
 //! it never builds, pushes or promotes an image, and it never touches production
 //! state.
 use crate::Result;
+use sha2::{Digest, Sha256};
 use std::{
     collections::{BTreeMap, BTreeSet},
     fs,
@@ -20,6 +21,13 @@ use std::{
 
 /// Digest-pinned application image.
 pub const IMAGE: &str = "ghcr.io/magnus919/slopsearx";
+/// F01/W03-authenticated deployment test source SHA-256.
+const FROZEN_TEST_PIN_SOURCE_SHA256: &str =
+    "78d9dfccbb97dca38a4149e5f5154ebae18a11589616492234d9817e9d2ea1e2";
+/// Literal pin in the exact authenticated source successor.
+const FROZEN_TEST_PIN_DIGEST: &str =
+    "sha256:91194d146d205b1cf4688c1989da8f5f6b599a9627be23fd1ee7a4e488fda5b7";
+
 /// Deployment artifacts whose combined contents must carry one pinned digest.
 pub const PIN_FILES: [&str; 2] = ["docker-compose.yml", "k8s/deployment.yaml"];
 pub const TEST_PIN_FILE: &str = "tests/test_deployment_artifacts.py";
@@ -106,34 +114,58 @@ const MAX_DOCKERFILE_BYTES: u64 = 4 * 1024 * 1024;
 
 #[cfg(unix)]
 fn bounded_text_with_limit(path: &Path, label: &str, limit: u64) -> Result<String> {
-    use std::os::fd::{AsRawFd, FromRawFd};
-    let parent = path.parent().ok_or("bounded input must have a parent")?;
-    let name = path
-        .file_name()
-        .ok_or("bounded input must have a final name")?;
-    let parent_file = fs::File::open(parent)
-        .map_err(|error| format!("O02 image pin: unable to open {label} parent: {error}"))?;
-    let parent_fd = parent_file.as_raw_fd();
-    let name = std::ffi::CString::new(name.as_encoded_bytes())
-        .map_err(|_| format!("O02 image pin: invalid {label} filename"))?;
-    let fd = unsafe {
-        nix::libc::openat(
-            parent_fd,
-            name.as_ptr(),
-            nix::libc::O_RDONLY
-                | nix::libc::O_NOFOLLOW
-                | nix::libc::O_NONBLOCK
-                | nix::libc::O_CLOEXEC,
-        )
+    use std::os::fd::{AsRawFd, FromRawFd, IntoRawFd, OwnedFd};
+    use std::os::unix::ffi::OsStrExt;
+    let components = path.components().collect::<Vec<_>>();
+    let initial = if path.is_absolute() {
+        fs::File::open("/").map_err(|error| error.to_string())?
+    } else {
+        fs::File::open(".").map_err(|error| error.to_string())?
     };
-    if fd < 0 {
-        return Err(format!(
-            "O02 image pin: unsafe or missing input {label}: {}",
-            std::io::Error::last_os_error()
-        ));
+    let mut directory = unsafe { OwnedFd::from_raw_fd(initial.into_raw_fd()) };
+    let mut file = None;
+    for (index, component) in components.iter().enumerate() {
+        match component {
+            std::path::Component::RootDir | std::path::Component::CurDir => continue,
+            std::path::Component::Normal(name) => {
+                let name = std::ffi::CString::new(name.as_bytes())
+                    .map_err(|error| format!("O02 image pin: {label} path component: {error}"))?;
+                let is_last = components[index + 1..]
+                    .iter()
+                    .all(|part| matches!(part, std::path::Component::CurDir));
+                let flags = if is_last {
+                    nix::libc::O_RDONLY
+                        | nix::libc::O_NOFOLLOW
+                        | nix::libc::O_NONBLOCK
+                        | nix::libc::O_CLOEXEC
+                } else {
+                    nix::libc::O_RDONLY
+                        | nix::libc::O_DIRECTORY
+                        | nix::libc::O_NOFOLLOW
+                        | nix::libc::O_CLOEXEC
+                };
+                let fd = unsafe { nix::libc::openat(directory.as_raw_fd(), name.as_ptr(), flags) };
+                if fd < 0 {
+                    return Err(format!(
+                        "O02 image pin: no-follow open failed for {label}: {}",
+                        std::io::Error::last_os_error()
+                    ));
+                }
+                if is_last {
+                    file = Some(unsafe { OwnedFd::from_raw_fd(fd) });
+                } else {
+                    directory = unsafe { OwnedFd::from_raw_fd(fd) };
+                }
+            }
+            std::path::Component::ParentDir | std::path::Component::Prefix(_) => {
+                return Err(format!(
+                    "O02 image pin: non-normal path rejected for {label}"
+                ));
+            }
+        }
     }
-    // SAFETY: `openat` returned a new owned file descriptor; `OwnedFd` closes it.
-    let mut file = unsafe { fs::File::from_raw_fd(fd) };
+    let file = file.ok_or_else(|| format!("O02 image pin: no final file component for {label}"))?;
+    let mut file = fs::File::from(file);
     let metadata = file
         .metadata()
         .map_err(|error| format!("O02 image pin: unable to stat {label}: {error}"))?;
@@ -162,6 +194,9 @@ fn bounded_text_with_limit(path: &Path, label: &str, limit: u64) -> Result<Strin
 #[cfg(not(unix))]
 fn bounded_text_with_limit(path: &Path, label: &str, limit: u64) -> Result<String> {
     use std::io::Read;
+    if label == TEST_PIN_FILE || label == "Dockerfile" {
+        return Err("O02 image pin: no-follow bounded reads require Unix openat".into());
+    }
     let file = fs::File::open(path)
         .map_err(|error| format!("O02 image pin: unable to open {label}: {error}"))?;
     let metadata = file
@@ -192,77 +227,63 @@ fn bounded_text(path: &Path, label: &str) -> Result<String> {
 }
 
 fn deployment_pin(root: &Path, name: &str) -> Result<String> {
-    let path = root.join(name);
+    let canonical_root = root
+        .canonicalize()
+        .map_err(|error| format!("O02 image pin: selected root is unavailable: {error}"))?;
+    let path = canonical_root.join(name);
     let text = bounded_text(&path, name)?;
     deployment_pin_text(name, &text)
 }
 
 fn oracle_pin_text(text: &str) -> Result<String> {
+    need(
+        !text.contains('\r'),
+        "non-custodied oracle uses unsupported CR/CRLF line endings",
+    )?;
     let mut assignments = Vec::new();
-    let mut in_triple_string = false;
     for line in text.lines() {
-        let trimmed_line = line.trim_start();
-        if in_triple_string {
-            if trimmed_line.starts_with("\"\"\"") || trimmed_line.starts_with("'''") {
-                let delimiter = if trimmed_line.starts_with("\"\"\"") {
-                    "\"\"\""
-                } else {
-                    "'''"
-                };
-                in_triple_string = trimmed_line[3..].find(delimiter).is_none();
-            }
+        let source = line.trim();
+        if source.is_empty() || source.starts_with('#') {
             continue;
         }
-        if trimmed_line.starts_with("#") {
-            continue;
-        }
-        if trimmed_line.starts_with("\"\"\"") || trimmed_line.starts_with("'''") {
-            let delimiter = if trimmed_line.starts_with("\"\"\"") {
-                "\"\"\""
-            } else {
-                "'''"
-            };
-            in_triple_string = trimmed_line[3..].find(delimiter).is_none();
-            continue;
-        }
-        let trimmed = line.trim_start();
-        if let Some(rest) = trimmed.strip_prefix("GHCR_DIGEST_PIN") {
-            if rest
-                .chars()
+        need(
+            !source.ends_with('\\'),
+            "explicit Python line continuation is outside the bounded oracle grammar",
+        )?;
+        let Some(rest) = source.strip_prefix("GHCR_DIGEST_PIN") else {
+            return Err(
+                "O02 image pin: non-custodied oracle must use the sealed literal-only grammar"
+                    .into(),
+            );
+        };
+        need(
+            rest.chars()
                 .next()
-                .is_some_and(|character| character.is_ascii_alphanumeric() || character == '_')
-            {
-                return Err("O02 image pin: dynamic GHCR_DIGEST_PIN use is not permitted".into());
-            }
-            let Some(rest) = rest.trim_start().strip_prefix('=') else {
-                if rest.trim_start().chars().next().is_some_and(|character| {
-                    matches!(
-                        character,
-                        '=' | ',' | ':' | '+' | '-' | '*' | '/' | '%' | '&' | '|'
-                    )
-                }) {
-                    return Err(
-                        "O02 image pin: augmented or malformed GHCR_DIGEST_PIN assignment".into(),
-                    );
-                }
-                continue;
-            };
-            let value = rest.trim();
-            let literal = value
-                .strip_prefix('\"')
-                .and_then(|value| value.split_once('\"'))
-                .map(|(_, after)| after.trim_start().starts_with('#') || after.trim().is_empty());
-            need(
-                literal == Some(true),
-                "GHCR_DIGEST_PIN must be one quoted literal with no executable suffix",
-            )?;
-            let literal = value
-                .strip_prefix('\"')
-                .and_then(|value| value.split_once('\"'))
-                .map(|(literal, _)| literal)
-                .expect("validated literal");
-            assignments.push(digest_reference(literal, "GHCR_DIGEST_PIN")?);
-        }
+                .is_none_or(|character| character.is_ascii_whitespace() || character == '='),
+            "GHCR_DIGEST_PIN must be a simple assignment target",
+        )?;
+        let Some(value) = rest.trim_start().strip_prefix('=') else {
+            return Err(
+                "O02 image pin: non-custodied oracle must use one simple assignment".into(),
+            );
+        };
+        let value = value.trim_start();
+        let quoted = value
+            .strip_prefix('"')
+            .ok_or("GHCR_DIGEST_PIN must use one double-quoted string literal")?;
+        let (literal, trailing) = quoted
+            .split_once('"')
+            .ok_or("GHCR_DIGEST_PIN literal is missing its closing quote")?;
+        need(
+            !literal.contains('\\'),
+            "GHCR_DIGEST_PIN literal escapes are outside the sealed grammar",
+        )?;
+        let trailing = trailing.trim_start();
+        need(
+            trailing.is_empty() || trailing.starts_with('#'),
+            "GHCR_DIGEST_PIN must be exactly one quoted literal with no executable suffix",
+        )?;
+        assignments.push(digest_reference(literal, "GHCR_DIGEST_PIN")?);
     }
     need(
         assignments.len() == 1,
@@ -271,8 +292,63 @@ fn oracle_pin_text(text: &str) -> Result<String> {
     Ok(assignments.pop().expect("one validated assignment"))
 }
 
+fn frozen_oracle_pin_text(text: &str) -> Result<String> {
+    let actual = Sha256::digest(text.as_bytes())
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect::<String>();
+    need(
+        actual == FROZEN_TEST_PIN_SOURCE_SHA256,
+        "fixture-bound Python deployment oracle source hash changed",
+    )?;
+    let expected_invocation = "GHCR_DIGEST_PIN = \"ghcr.io/magnus919/slopsearx@sha256:91194d146d205b1cf4688c1989da8f5f6b599a9627be23fd1ee7a4e488fda5b7\"";
+    let count = text
+        .lines()
+        .filter(|line| line.trim_start() == expected_invocation)
+        .count();
+    need(
+        count == 1,
+        "frozen test oracle contains exactly one literal pin declaration",
+    )?;
+    let source = include_str!("o02_health_retirement.rs");
+    let expected_successor_row = format!(
+        "        \"tests/test_deployment_artifacts.py\",\n        \"649650e35656bfff78d7930052085270811343fd\",\n        12945,\n        \"{FROZEN_TEST_PIN_SOURCE_SHA256}\",\n        12872,\n        \"e7634a07ab53f6409386a9515f46ab65ebccfb0747235d6ad43a07dcf54f431c\","
+    );
+    need(
+        source.contains(&expected_successor_row),
+        "frozen oracle W03/O02 successor metadata fragment matches",
+    )?;
+    let literal_digest = expected_invocation
+        .split_once("@sha256:")
+        .and_then(|(_, suffix)| suffix.strip_suffix('"'))
+        .ok_or("frozen test oracle literal has digest")?;
+    need(
+        FROZEN_TEST_PIN_DIGEST == format!("sha256:{literal_digest}"),
+        "frozen compiled digest matches the exact custody-authenticated source literal",
+    )?;
+    digest_reference(
+        &format!("{IMAGE}@{FROZEN_TEST_PIN_DIGEST}"),
+        "fixture-bound GHCR_DIGEST_PIN",
+    )
+}
+
 fn oracle_pin(root: &Path) -> Result<String> {
-    let text = bounded_text(&root.join(TEST_PIN_FILE), TEST_PIN_FILE)?;
+    let canonical_root = root
+        .canonicalize()
+        .map_err(|error| format!("O02 image pin: selected root is unavailable: {error}"))?;
+    let path = canonical_root.join(TEST_PIN_FILE);
+    let text = bounded_text(&path, TEST_PIN_FILE)?;
+    let repository_oracle = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../tests/test_deployment_artifacts.py")
+        .canonicalize()
+        .map_err(|error| format!("O02 image pin: canonical build oracle: {error}"))?;
+    let build_root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../..")
+        .canonicalize()
+        .map_err(|error| format!("O02 image pin: canonical build root: {error}"))?;
+    if path == repository_oracle && canonical_root == build_root {
+        return frozen_oracle_pin_text(&text);
+    }
     oracle_pin_text(&text)
 }
 
@@ -593,9 +669,10 @@ fn real_sleep(seconds: u64) {
     std::thread::sleep(std::time::Duration::from_secs(seconds));
 }
 
-fn promotion_mode(args: &[String]) -> Result<bool> {
+fn promotion_mode(args: &[String]) -> Result<(bool, Option<String>)> {
     let mut check = false;
     let mut write = false;
+    let mut root = None;
     let mut index = 0;
     while index < args.len() {
         match args[index].as_str() {
@@ -608,11 +685,12 @@ fn promotion_mode(args: &[String]) -> Result<bool> {
                 write = true;
             }
             "--root" => {
-                need(
-                    args.get(index + 1)
-                        .is_some_and(|value| !value.starts_with('-')),
-                    "--root requires a directory value",
-                )?;
+                need(root.is_none(), "duplicate --root flag")?;
+                let value = args
+                    .get(index + 1)
+                    .filter(|value| !value.starts_with('-'))
+                    .ok_or("--root requires a directory value")?;
+                root = Some(value.clone());
                 index += 1;
             }
             other => {
@@ -627,14 +705,7 @@ fn promotion_mode(args: &[String]) -> Result<bool> {
         check ^ write,
         "image-pin-promote requires exactly one of --check or --write",
     )?;
-    Ok(check)
-}
-
-fn flag_value(args: &[String], flag: &str) -> Option<String> {
-    args.iter()
-        .position(|arg| arg == flag)
-        .and_then(|index| args.get(index + 1))
-        .cloned()
+    Ok((check, root))
 }
 
 fn dockerfile_value(args: &[String]) -> Result<String> {
@@ -697,8 +768,7 @@ fn verify_base(root: &Path, args: &[String]) -> Result<i32> {
     verify_base_with(root, args, &CurlTransport, &mut sleep)
 }
 
-fn promote(root: &Path, args: &[String]) -> Result<i32> {
-    let check = promotion_mode(args)?;
+fn promote_with_mode(root: &Path, check: bool) -> Result<i32> {
     let pinned = extract_pinned_digest(root)?;
     let transport = CurlTransport;
     let mut sleep = real_sleep;
@@ -721,18 +791,23 @@ pub fn cli(root: &Path, args: &[String]) -> Result<()> {
     let (command, rest) = args
         .split_first()
         .ok_or("usage: cargo xtask ci-helper image-pin-{verify-base|promote}")?;
-    let effective = flag_value(rest, "--root")
-        .map(std::path::PathBuf::from)
-        .unwrap_or_else(|| root.to_path_buf());
     let code = match command.as_str() {
-        "image-pin-verify-base" => verify_base(&effective, rest)?,
-        "image-pin-promote" => match promote(&effective, rest) {
-            Ok(code) => code,
-            Err(error) => {
-                eprintln!("error: {error}");
-                2
+        "image-pin-verify-base" => {
+            let effective = root.to_path_buf();
+            verify_base(&effective, rest)?
+        }
+        "image-pin-promote" => {
+            let (check, selected_root) = promotion_mode(rest)?;
+            let effective =
+                selected_root.map_or_else(|| root.to_path_buf(), std::path::PathBuf::from);
+            match promote_with_mode(&effective, check) {
+                Ok(code) => code,
+                Err(error) => {
+                    eprintln!("error: {error}");
+                    2
+                }
             }
-        },
+        }
         other => return Err(format!("O02 image pin: unknown command {other}")),
     };
     if code == 0 {
@@ -882,7 +957,7 @@ mod tests {
             }
             let stat = unsafe { stat.assume_init() };
             assert!(
-                stat.st_dev as u64 == root_dev,
+                i128::from(stat.st_dev) == i128::from(root_dev),
                 "fixture cleanup crossed filesystem"
             );
             assert!(
@@ -981,7 +1056,7 @@ mod tests {
         }
         let stat = unsafe { stat.assume_init() };
         assert!(
-            stat.st_dev as u64 == device && stat.st_ino == inode,
+            i128::from(stat.st_dev) == i128::from(device) && stat.st_ino == inode,
             "fixture root identity changed"
         );
         let mut count = 0;
@@ -1223,6 +1298,29 @@ mod tests {
     }
 
     #[test]
+    fn frozen_checkout_oracle_uses_authenticated_fixture_pin() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let source_path = root.join(TEST_PIN_FILE);
+        let original = fs::read(&source_path).expect("authenticated tracked oracle source");
+        assert_eq!(
+            oracle_pin(&root).expect("authenticated tracked oracle"),
+            FROZEN_TEST_PIN_DIGEST
+        );
+
+        let mut mutated = original.clone();
+        mutated.extend_from_slice(b"# mutation\n");
+        assert!(frozen_oracle_pin_text(std::str::from_utf8(&mutated).unwrap()).is_err());
+
+        let fixture = fixture_root("modified-source");
+        write_pin_fixtures(&fixture, FROZEN_TEST_PIN_DIGEST);
+        fs::write(fixture.join(TEST_PIN_FILE), &mutated).expect("modified synthetic source");
+        assert!(
+            oracle_pin(&fixture).is_err(),
+            "modified bytes cannot inherit the source-bound exception"
+        );
+    }
+
+    #[test]
     fn unique_pinned_digest_is_extracted() {
         let root = fixture_root("unique");
         let digest = "d".repeat(64);
@@ -1290,6 +1388,13 @@ mod tests {
         let mut augmented = fs::read_to_string(root.join(TEST_PIN_FILE)).expect("duplicate oracle");
         augmented.push_str("GHCR_DIGEST_PIN += \"x\"\n");
         assert!(oracle_pin_text(&augmented).is_err());
+        assert!(
+            oracle_pin_text(&format!(
+                "{}\nsys._getframe().f_globals[\"GHCR_DIGEST_PIN\"] = \"x\"\n",
+                fs::read_to_string(root.join(TEST_PIN_FILE)).expect("valid pin")
+            ))
+            .is_err()
+        );
     }
 
     #[test]
@@ -1303,20 +1408,129 @@ mod tests {
     }
 
     #[test]
-    fn commented_and_string_mentions_do_not_count_as_assignments() {
-        let root = fixture_root("oracle-nonassignments");
+    fn non_custodied_fstring_reads_are_outside_sealed_grammar() {
+        let root = fixture_root("real-oracle-fstrings");
         write_pin_fixtures(&root, &format!("sha256:{}", "a".repeat(64)));
         let path = root.join(TEST_PIN_FILE);
-        let mut text = fs::read_to_string(&path).expect("oracle fixture");
-        text.push_str("# GHCR_DIGEST_PIN = \"ghcr.io/magnus919/slopsearx@sha256:");
-        text.push_str(&"b".repeat(64));
-        text.push_str(
-            "\"\nnote = \"GHCR_DIGEST_PIN = x\"\n\"\"\"\nGHCR_DIGEST_PIN = ignored\n\"\"\"\n",
+        let mut source = fs::read_to_string(&path).expect("oracle fixture");
+        source.push_str("def reads_pin():\n    return f\"{GHCR_DIGEST_PIN}\"\n");
+        fs::write(&path, source).expect("ordinary f-string read");
+        assert!(
+            oracle_pin(&root).is_err(),
+            "non-custodied function code is rejected"
         );
-        fs::write(&path, text).expect("harmless mentions");
+    }
+
+    #[test]
+    fn f_string_assignment_expressions_are_rejected() {
+        let valid = format!(
+            "GHCR_DIGEST_PIN = \"{}@sha256:{}\"\n",
+            IMAGE,
+            "a".repeat(64)
+        );
+        assert!(
+            oracle_pin_text(&format!(
+                "{valid}GHCR_DIGEST_PIN = \"{}@sha256:{}\" \"suffix\"\n",
+                IMAGE,
+                "b".repeat(64)
+            ))
+            .is_err()
+        );
+        let source = format!(
+            "{valid}f\"{{(GHCR_DIGEST_PIN := '{}@sha256:{}')}}\"\n",
+            IMAGE,
+            "b".repeat(64)
+        );
+        assert!(oracle_pin_text(&source).is_err());
+        let reflective = format!(
+            "{valid}globals[\"GHCR_DIGEST_PIN\"] = \"{}@sha256:{}\"\n",
+            IMAGE,
+            "b".repeat(64)
+        );
+        assert!(oracle_pin_text(&reflective).is_err());
+        assert!(oracle_pin_text(&format!("{valid}exec (\"GHCR_DIGEST_PIN = x\")\n")).is_err());
+        assert!(
+            oracle_pin_text(&format!(
+                "{valid}setattr (object, \"GHCR_DIGEST_PIN\", \"x\")\n"
+            ))
+            .is_err()
+        );
+        assert!(
+            oracle_pin_text(&format!(
+                "{valid}vars () .update({{\"GHCR_DIGEST_PIN\": \"x\"}})\n"
+            ))
+            .is_err()
+        );
+        assert!(oracle_pin_text(&format!("{valid}__import__ (\"os\")\n")).is_err());
+        assert!(
+            oracle_pin_text(&format!(
+                "{valid}globals () .update({{\"GHCR_DIGEST_PIN\": \"x\"}})\n"
+            ))
+            .is_err()
+        );
+        assert!(
+            oracle_pin_text(&format!(
+                "{valid}setattr(sys.modules[__name__], \"GHCR_DIGEST_PIN\", \"x\")\n"
+            ))
+            .is_err()
+        );
+        assert!(
+            oracle_pin_text(&format!(
+                "{valid}locals().update({{\"GHCR_DIGEST_PIN\": \"x\"}})\n"
+            ))
+            .is_err()
+        );
+        assert!(
+            oracle_pin_text(&format!(
+                "{valid}sys.modules[__name__].__dict__[\"GHCR_DIGEST_PIN\"] = \"x\"\n"
+            ))
+            .is_err()
+        );
+        assert!(
+            oracle_pin_text(&format!(
+                "{valid}__builtins__[\"exec\"](\"GHCR_DIGEST_PIN = 'x'\")\n"
+            ))
+            .is_err()
+        );
+        let b = "b".repeat(64);
+        let builtin_exec =
+            format!("{valid}__builtins__[\"exec\"](\"GHCR_DIGEST_PIN = '{IMAGE}@sha256:{b}'\")\n");
+        assert!(oracle_pin_text(&builtin_exec).is_err());
+        let computed_builtin_exec =
+            format!("{valid}__builtins__['ex'+'ec'](\"GHCR_DIGEST_PIN = '{IMAGE}@sha256:{b}'\")\n");
+        assert!(oracle_pin_text(&computed_builtin_exec).is_err());
+        let continued = format!("{valid}GHCR_DIGEST_PIN \\\n    = \"{IMAGE}@sha256:{b}\"\n");
+        assert!(oracle_pin_text(&continued).is_err());
+        assert!(oracle_pin_text(&valid).is_ok());
+        let dynamic_fstring = format!(
+            "{valid}f\"{{__builtins__['ex'+'ec']('GHCR_DIGEST_PIN = ' + chr(39) + '{IMAGE}@sha256:{b}' + chr(39))}}\"\n"
+        );
+        assert!(oracle_pin_text(&dynamic_fstring).is_err());
+    }
+
+    #[test]
+    fn sealed_non_custodied_grammar_rejects_executable_statements() {
+        let digest = "a".repeat(64);
+        let valid = format!("GHCR_DIGEST_PIN = \"{IMAGE}@sha256:{digest}\"\n");
+        for unsupported in [
+            format!("{valid}note = \"GHCR_DIGEST_PIN = x\"\n"),
+            format!("{valid}def reads_pin():\n    return GHCR_DIGEST_PIN\n"),
+            format!("{valid}if False:\n    GHCR_DIGEST_PIN = \"x\"\n"),
+            format!("{valid}sys._getframe().f_globals[\"GHCR_DIGEST_PIN\"] = \"x\"\n"),
+            format!("{valid}__builtins__['ex'+'ec'](\"GHCR_DIGEST_PIN = 'x'\")\n"),
+            format!("{valid}f\"{{'text := ordinary string content'}}\"\n"),
+            format!("{valid}f\"{{GHCR_DIGEST_PIN}}\" # ordinary comment = example\n"),
+            format!("{valid}# ordinary comment\rimport os\n"),
+            format!("{valid}GHCR_DIGEST_PIN = \"{IMAGE}@sha256:{digest}\\\"#decoy\"\n"),
+        ] {
+            assert!(
+                oracle_pin_text(&unsupported).is_err(),
+                "untrusted synthetic source must fail closed: {unsupported:?}"
+            );
+        }
         assert_eq!(
-            oracle_pin(&root).expect("one effective literal"),
-            format!("sha256:{}", "a".repeat(64))
+            oracle_pin_text(&valid).expect("sealed literal"),
+            format!("sha256:{digest}")
         );
     }
 
@@ -1332,6 +1546,80 @@ mod tests {
         let error = verify_base_with(&root, &[], &transport, &mut sleep).expect_err("must reject");
         assert!(error.contains("byte limit"), "{error}");
         assert!(transport.calls.borrow().is_empty());
+    }
+
+    #[test]
+    fn non_custodied_function_code_is_rejected() {
+        let root = fixture_root("indented-python");
+        write_pin_fixtures(&root, &format!("sha256:{}", "a".repeat(64)));
+        let path = root.join(TEST_PIN_FILE);
+        let mut text = fs::read_to_string(&path).expect("oracle fixture");
+        text.push_str("def helper():\n    value = 1\n    return value\n");
+        text.push_str("def reads_pin():\n    return GHCR_DIGEST_PIN\n");
+        fs::write(&path, text).expect("ordinary indented function");
+        assert!(
+            oracle_pin(&root).is_err(),
+            "non-custodied function code is rejected"
+        );
+    }
+
+    #[test]
+    fn nested_oracle_assignment_is_not_a_module_level_pin() {
+        let root = fixture_root("nested-oracle");
+        write_pin_fixtures(&root, &format!("sha256:{}", "a".repeat(64)));
+        let path = root.join(TEST_PIN_FILE);
+        let mut text = fs::read_to_string(&path).expect("oracle fixture");
+        text.push_str("if False:\n    GHCR_DIGEST_PIN = \"ghcr.io/magnus919/slopsearx@sha256:");
+        text.push_str(&"b".repeat(64));
+        text.push_str("\"\n");
+        fs::write(&path, &text).expect("indented nested assignment");
+        assert!(
+            oracle_pin(&root).is_err(),
+            "indented target assignment rejected"
+        );
+        for nested in [
+            format!(
+                "GHCR_DIGEST_PIN = \"{}@sha256:{}\" \"suffix\"",
+                IMAGE,
+                "a".repeat(64)
+            ),
+            format!(
+                "if False: GHCR_DIGEST_PIN = \"{}@sha256:{}\"",
+                IMAGE,
+                "b".repeat(64)
+            ),
+            format!(
+                "x = 1; GHCR_DIGEST_PIN = \"{}@sha256:{}\"",
+                IMAGE,
+                "b".repeat(64)
+            ),
+        ] {
+            let mut inline = fs::read_to_string(&path).expect("reset oracle fixture");
+            inline.push_str(&nested);
+            inline.push('\n');
+            fs::write(&path, inline).expect("inline nested assignment");
+            assert!(
+                oracle_pin(&root).is_err(),
+                "inline target assignment rejected: {nested}"
+            );
+        }
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn symlinked_parent_component_is_rejected() {
+        use std::os::unix::fs::symlink;
+        let root = fixture_root("parent-link");
+        write_pin_fixtures(&root, &format!("sha256:{}", "a".repeat(64)));
+        let k8s = root.join("k8s");
+        let moved = root.join("k8s-real");
+        fs::rename(&k8s, &moved).expect("move owned k8s fixture");
+        symlink(&moved, &k8s).expect("link parent component");
+        let result = deployment_pin(&root, PIN_FILES[1]);
+        fs::remove_file(&k8s).expect("remove owned symlink before fixture drop");
+        fs::rename(&moved, &k8s).expect("restore owned directory before fixture drop");
+        let error = result.expect_err("must refuse parent symlink");
+        assert!(error.contains("no-follow open failed"), "{error}");
     }
 
     #[test]
@@ -1394,9 +1682,19 @@ mod tests {
     fn promotion_requires_exactly_one_explicit_mode() {
         assert!(promotion_mode(&[]).is_err());
         assert!(promotion_mode(&["--check".into(), "--write".into()]).is_err());
-        assert!(promotion_mode(&["--check".into()]).expect("check mode"));
-        assert!(!promotion_mode(&["--write".into()]).expect("write mode"));
+        assert!(promotion_mode(&["--check".into()]).expect("check mode").0);
+        assert!(!promotion_mode(&["--write".into()]).expect("write mode").0);
         assert!(promotion_mode(&["--check".into(), "--surprise".into()]).is_err());
+        assert!(
+            promotion_mode(&[
+                "--check".into(),
+                "--root".into(),
+                "a".into(),
+                "--root".into(),
+                "b".into()
+            ])
+            .is_err()
+        );
     }
 
     #[test]
