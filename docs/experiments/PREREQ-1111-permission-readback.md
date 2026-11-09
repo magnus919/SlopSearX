@@ -15,3 +15,15 @@ Fixed sample: three fresh files per mode for [0644,0600,0755,04644,04755,02644,0
 Guardrails: no production/sealed source modifications; no weakened validator; healthy 0644 readback exact; private owned scratch removed; zero API calls, zero builds. Plan limited to one host, 21 files, no retries or additional modes; stop on any unexpected exception and retain output. Default 45-minute ceiling. Uncertainty is exact finite repeatability, not a population estimate.
 
 Command: execute the Python probe retained verbatim in `evidence/PREREQ-1111/probe.txt` using Python3 via stdin. Evidence: JSON readbacks, Python/platform versions, filesystem identifier and SHA256 of probe. This probes filesystem input readiness only; it does not run the custody validator or establish its passing suite. Supported prerequisite requires the controls above; otherwise blocked. No implementation PR from this probe alone.
+
+## Readout
+
+Outcome: supported **measurement prerequisite only**. Registration commit `1fe7d055`. All 21 planned cases completed, exit0; no exclusions, retries, source changes or extra modes. [Raw observations](evidence/PREREQ-1111/observations.json), [exact inert probe](evidence/PREREQ-1111/probe.txt), [provenance](evidence/PREREQ-1111/provenance.txt).
+
+On this macOS27.0 arm64 host, uid501, Tank device16777252: every requested mode was retained immediately after chmod (21/21). In particular 04644 and 04755 retained S_ISUID in all3 repeats each. After appending data, 04644 became0644, 04755 became0755 and02644 became0644, each3/3. Ordinary0644/0600/0755 and sticky01644 remained unchanged. Accepted and ordinary forbidden controls pass9/9; finite repeatability exact, no cross-host confidence estimate.
+
+This establishes the intended setuid inputs are reachable in this execution context, contrary to treating the earlier mismatch as an immutable host blocker. It also demonstrates operation ordering can remove those bits. **It does not explain the previous Rust-suite failures.** Source inspection of `snapshot-fixture-amendment/w07-helpers.rs` lines726 onward and `a06/source-amendments/w07-t02-joint.rs` lines851 onward shows immediate validator calls after chmod; no intervening write is evident in those caller loops. Do not attribute their failure to this append demonstration without tracing their callees and reproducing the actual failing Rust command.
+
+No validator executed, no Rust suite rebuilt, no portable mode replacement established. All guardrails passed; scratch files removed by probe finally block. Zero provider requests/cost; subscription usage unknown. Elapsed diagnostic process below one second; overall cycle timestamps are in the storage ledger. No product quality, availability, deployment or implementation delivery claim.
+
+Next decisive step: instrument requested/read-back mode at the actual failing custody boundary in an isolated current-source run, preserve the original failure and source/cache provenance, then distinguish input establishment from validation logic. Existing sealed amendments remain unchanged. A wholesale 04644→04755 rewrite remains unjustified.

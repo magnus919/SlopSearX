@@ -320,3 +320,5 @@ EXP-119 readout:not-supported at development. Metadata-conditioned selector nP@5
 - [2026-10-24 exact-head readiness](daily-readiness-2026-10-24.md): #1021 has only analysis/probe records, not complete CI; #1024 requires fresh integration and #1007 has failed checks. No implementation merged or new benefit measured by this cycle.
 
 - [2026-11-08 readiness](daily-readiness-2026-11-08.md): preserves the corrected #1111 evidence boundary and ranks qualification prerequisites; no new trial or product improvement.
+
+- [PREREQ-1111](PREREQ-1111-permission-readback.md), 2026-11-09: finite permission-input diagnostic qualified21/21 immediate readbacks; writes cleared setuid/setgid bits. Actual Rust custody failure remains unproven by this probe; no product uplift or sealed-source change.

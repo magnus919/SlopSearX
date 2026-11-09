@@ -1,0 +1,19 @@
+import os, sys, stat, json, platform
+from pathlib import Path
+scratch=Path('/Volumes/tank01/magnus/rust-builds/slopsearx/daily-20261109/permission-probe')
+scratch.mkdir(mode=0o700)
+rows=[]
+try:
+    for mode in [0o644,0o600,0o755,0o4644,0o4755,0o2644,0o1644]:
+        for repeat in range(3):
+            p=scratch/f'{mode:o}-{repeat}'
+            p.write_text('inert permission probe\n')
+            p.chmod(mode)
+            before=stat.S_IMODE(p.stat().st_mode)
+            with p.open('a') as f: f.write('append\n')
+            after=stat.S_IMODE(p.stat().st_mode)
+            rows.append(dict(requested=oct(mode),repeat=repeat,after_chmod=oct(before),after_append=oct(after)))
+            p.unlink()
+    print(json.dumps(dict(platform=platform.platform(),python=sys.version,uid=os.getuid(),filesystem_device=scratch.stat().st_dev,rows=rows),indent=2))
+finally:
+    scratch.rmdir()
