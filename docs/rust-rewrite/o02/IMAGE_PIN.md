@@ -8,31 +8,38 @@ the release jobs used to run as Python, exposed through the existing reviewed
 
 | command | replaces |
 | --- | --- |
-| `cargo xtask ci-helper image-pin-promote [--check\|--write] [--root DIR]` | `scripts/promote_image_digest.py` |
+| `cargo xtask ci-helper image-pin-promote --check [--root DIR]` | `scripts/promote_image_digest.py --check` |
+| `cargo xtask ci-helper image-pin-promote --write [--root DIR]` | guarded no-op when current; exits `2` rather than partially writing on digest drift |
 | `cargo xtask ci-helper image-pin-verify-base [--dockerfile PATH]` | `scripts/verify_docker_base_digest.py` |
 
-Behaviour is intentionally identical to the Python originals:
+Base verification preserves the prior registry behavior. Promotion checks the
+unique image digest across `docker-compose.yml`, `k8s/deployment.yaml`, and the
+fixture-bound Python test oracle. Native `--write` is fail-closed while that
+oracle's source hash is fixed: on digest drift it refuses the write before
+changing either manifest, preventing a split pin. Until a separately reviewed
+F01/W03 source-custody work defines an atomic promotion path; the existing
+image-promotion workflow currently uses the Python writer. Updating its generated
+source successor is outside this bounded Docker-verifier wiring PR.
 
-- registry promotion reads and rewrites the two deployment manifests
-  (`docker-compose.yml`, `k8s/deployment.yaml`). The historical Python promotion
-  script also included the test file as an oracle; native promotion now keeps
-  that fixture-bound source unchanged and tests that it remains untouched.
+Base verifier policy remains:
 - the same allowlisted hosts (`auth.docker.io`, `registry-1.docker.io`,
   `ghcr.io`), the same accepted manifest media types, a 30-second timeout, a
   1 MiB response cap, three attempts and 1s/2s backoff for transport errors and
   HTTP 429/500/502/503/504;
-- the same exit codes — `0` current, `1` drift under `--check`, `10` pins
-  rewritten, `2` pin-state or registry error;
+- `--check` uses `0` for current, `1` for drift and `2` for registry/pin errors.
 - only HTTPS targets are permitted; the transport rejects anything else before
   spawning `curl`. The tool never builds, pushes or promotes an image.
 
 The transport is `curl`, which the release runners already provide. This is the
-"Rust or portable shell client" path the O02 issue allows; the parsing,
-rewriting, retry classification and exit-code logic are native Rust. Sixteen unit
-tests include both-base match/drift verification, failure classification and
-non-mutation, injected-transport retry, permanent-failure, unusable-digest,
-workflow ordering, and preservation of the Python test file as a non-rewritten
-historical promotion oracle.
+"Rust or portable shell client" path the O02 issue allows; parsing, read-only
+verification, registry retry classification and base-check behavior are native
+Rust. Twenty-four unit tests include both-base match/drift verification, failure
+classification and non-mutation, injected-transport retry, permanent failure,
+unusable digests, explicit promotion modes, bounded Dockerfile and manifest
+reads, active-field decoys, strict oracle assignment validation, and drift refusal
+without modifying the manifests or test oracle. A same-digest native write is a
+successful no-op; digest transitions stay on the existing Python promotion path
+until source custody is amended.
 
 ## Evidence
 
@@ -46,7 +53,7 @@ repeated in this bounded wiring slice):
   write were used here.
 
 Current candidate checks are offline/unit-only:
-`cargo test --locked --offline -p xtask o02_image_pin -- --test-threads=8` — 16 passed.
+`SLOPSEARX_TEST_TEMP_ROOT=$SLOPSEARX_BUILD_RUN/tmp cargo test --locked --offline -p xtask o02_image_pin -- --test-threads=8` — 24 passed, including active-field decoys, bounded inputs, oracle duplicates, missing pins and promotion drift refusal.
 `cargo clippy --locked --offline -p xtask --all-targets -- -D warnings` — clean.
 
 ## CI wiring and the one behaviour fix
