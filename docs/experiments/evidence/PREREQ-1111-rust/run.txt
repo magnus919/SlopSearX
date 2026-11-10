@@ -1,0 +1,13 @@
+exit 0
+requested=644 repeat=0 before=644 after=644 result=Ok([105, 110, 101, 114, 116])
+requested=644 repeat=1 before=644 after=644 result=Ok([105, 110, 101, 114, 116])
+requested=644 repeat=2 before=644 after=644 result=Ok([105, 110, 101, 114, 116])
+requested=600 repeat=0 before=600 after=600 result=Err("regular0644 leaf")
+requested=600 repeat=1 before=600 after=600 result=Err("regular0644 leaf")
+requested=600 repeat=2 before=600 after=600 result=Err("regular0644 leaf")
+requested=4644 repeat=0 before=4644 after=4644 result=Err("regular0644 leaf")
+requested=4644 repeat=1 before=4644 after=4644 result=Err("regular0644 leaf")
+requested=4644 repeat=2 before=4644 after=4644 result=Err("regular0644 leaf")
+requested=4755 repeat=0 before=4755 after=4755 result=Err("regular0644 leaf")
+requested=4755 repeat=1 before=4755 after=4755 result=Err("regular0644 leaf")
+requested=4755 repeat=2 before=4755 after=4755 result=Err("regular0644 leaf")
