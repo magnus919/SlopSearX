@@ -142,6 +142,14 @@ pub(crate) fn parent(
     expected: &str,
     supplied: &[u8],
 ) -> Result<Option<Vec<u8>>> {
+    if path == RMCP_TRANSPORT {
+        let (physical, mode) = regular(root, path)?;
+        need(
+            supplied == physical,
+            "rmcp transport requires actual current source",
+        )?;
+        return rmcp_transport_prior(&physical, mode, expected).map(Some);
+    }
     if !PATHS.contains(&path) {
         return Ok(None);
     }
@@ -203,6 +211,7 @@ pub(crate) fn reader_parent(
     parent(root, path, expected, supplied)
 }
 pub(crate) fn controls(root: &Path) -> Result<()> {
+    rmcp_transport_controls(root)?;
     current_controls(root)?;
     let capsule = load(root)?;
     for frozen in &capsule.frozen_predecessors {
@@ -865,4 +874,82 @@ fn current_controls(root: &Path) -> Result<()> {
         parent(root, "unlisted.rs", "", b"")?.is_none(),
         "combined receipt unlisted caller accepted",
     )
+}
+
+// Exact security-upgrade diagnostic successor; historical captures stay frozen.
+const RMCP_TRANSPORT: &str = "crates/ssx-mcp/tests/t06_transport.rs";
+const RMCP_TRANSPORT_PRIOR: &str =
+    "264983f5bffaba8116c7b92be99c33baa73423d99b118cc181c9729092bd4ceb";
+const RMCP_TRANSPORT_CURRENT: &str =
+    "399eb30c126d94673ec49a3a929acc9947fda63b57700a0154d18e8a3b9736eb";
+const RMCP_TRANSPORT_OLD: &str = r###"                assert_eq!(
+                    response.text().await?,
+                    difference["native_body"].as_str().unwrap()
+                );"###;
+const RMCP_TRANSPORT_NEW: &str = r###"                // Preserve the frozen 3.5.1 observation; 3.9.0 rejects the same
+                // malformed grammar with a new SDK diagnostic (HTTP415).
+                assert_eq!(
+                    difference["native_body"].as_str().unwrap(),
+                    "fail to deserialize request body data did not match any variant of untagged enum JsonRpcMessage"
+                );
+                assert_eq!(
+                    response.text().await?,
+                    "fail to deserialize request body unrecognized JSON-RPC message"
+                );"###;
+fn rmcp_transport_prior(raw: &[u8], mode: u32, expected: &str) -> Result<Vec<u8>> {
+    need(
+        mode == 0o644
+            && raw.len() == 43970
+            && digest(raw) == RMCP_TRANSPORT_CURRENT
+            && expected == RMCP_TRANSPORT_PRIOR,
+        "rmcp transport exact current identity",
+    )?;
+    let text = std::str::from_utf8(raw).map_err(|e| e.to_string())?;
+    need(
+        text.matches(RMCP_TRANSPORT_NEW).count() == 1,
+        "rmcp transport unique diagnostic span",
+    )?;
+    let prior = text.replacen(RMCP_TRANSPORT_NEW, RMCP_TRANSPORT_OLD, 1);
+    need(
+        prior.len() == 43564 && digest(prior.as_bytes()) == RMCP_TRANSPORT_PRIOR,
+        "rmcp transport exact historical identity",
+    )?;
+    need(
+        prior
+            .replacen(RMCP_TRANSPORT_OLD, RMCP_TRANSPORT_NEW, 1)
+            .as_bytes()
+            == raw,
+        "rmcp transport full forward reconstruction",
+    )?;
+    Ok(prior.into_bytes())
+}
+// Shared readers execute these negatives inside the existing closed inventory.
+fn rmcp_transport_controls(root: &Path) -> Result<()> {
+    let (raw, mode) = regular(root, RMCP_TRANSPORT)?;
+    let prior = rmcp_transport_prior(&raw, mode, RMCP_TRANSPORT_PRIOR)?;
+    need(
+        rmcp_transport_prior(&prior, 0o644, RMCP_TRANSPORT_PRIOR).is_err(),
+        "rmcp historical input rejected",
+    )?;
+    need(
+        rmcp_transport_prior(&raw, 0o755, RMCP_TRANSPORT_PRIOR).is_err(),
+        "rmcp altered mode rejected",
+    )?;
+    need(
+        rmcp_transport_prior(&raw, 0o644, RMCP_TRANSPORT_CURRENT).is_err(),
+        "rmcp altered expected identity rejected",
+    )?;
+    let mut changed = raw.clone();
+    changed[0] ^= 1;
+    need(
+        rmcp_transport_prior(&changed, 0o644, RMCP_TRANSPORT_PRIOR).is_err(),
+        "rmcp altered byte rejected",
+    )?;
+    changed = raw.clone();
+    changed.push(b' ');
+    need(
+        rmcp_transport_prior(&changed, 0o644, RMCP_TRANSPORT_PRIOR).is_err(),
+        "rmcp oversized input rejected",
+    )?;
+    Ok(())
 }

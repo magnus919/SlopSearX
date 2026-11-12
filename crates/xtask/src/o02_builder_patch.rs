@@ -3,11 +3,11 @@
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 type Result<T> = std::result::Result<T, String>;
-pub(super) const CAPSULE: &str = "docs/rust-rewrite/o02/builder-patch-v1/capsule.json";
+pub(super) const CAPSULE: &str = "docs/rust-rewrite/o02/builder-patch-v2/capsule.json";
 pub(super) const CAPSULE_SHA: &str =
-    "dfec3598f0142f7d6d4839d2779e42a4923ab0e40b5f6c817e82670f7937011b";
+    "d9ffb0a941993525d0cfd0a9ee7bda73dc0df064cac3be30e3161d0742095738";
 pub(super) const CAPSULE_RAW: &[u8] =
-    include_bytes!("../../../docs/rust-rewrite/o02/builder-patch-v1/capsule.json");
+    include_bytes!("../../../docs/rust-rewrite/o02/builder-patch-v2/capsule.json");
 const ROWS: [(&str, usize); 3] = [
     ("Dockerfile", 1),
     ("scripts/verify_docker_base_digest.py", 1),
@@ -30,8 +30,8 @@ fn capsule(raw: &[u8]) -> Result<Value> {
     need(digest(raw) == CAPSULE_SHA, "compiled capsule identity")?;
     let doc: Value = serde_json::from_slice(raw).map_err(|e| e.to_string())?;
     need(
-        doc["schema"] == "O02_BUILDER_PATCH_1_99_1_V1"
-            && doc["parent"] == "011dbfd7eedc47cf60d7d27569d90cee1587da21"
+        doc["schema"] == "O02_BUILDER_PATCH_1_99_1_V2"
+            && doc["parent"] == "2ec2d4bb50562fb93a22353914d871f6376efcf0"
             && doc.as_object().is_some_and(|r| r.len() == 3)
             && doc["rows"]
                 .as_array()

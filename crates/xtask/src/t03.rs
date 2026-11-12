@@ -42,7 +42,7 @@ const HTTP_TESTS: [&str; 11] = [
     "blank_optional_html_bounds_are_absent_and_machine_blanks_stay_rejected",
     "landing_native_form_submits_query_and_scope_together_from_both_buttons",
 ];
-const SOURCES: [(&str, &[u8]); 12] = [
+const SOURCES: [(&str, &[u8]); 13] = [
     ("crates/xtask/src/t03.rs", include_bytes!("t03.rs")),
     (
         "crates/ssx-http/src/portal.rs",
@@ -83,6 +83,10 @@ const SOURCES: [(&str, &[u8]); 12] = [
     (
         "crates/ssx-http/tests/t03-browser/package-lock.json",
         include_bytes!("../../ssx-http/tests/t03-browser/package-lock.json"),
+    ),
+    (
+        "crates/ssx-http/tests/t03-browser/interaction.mjs",
+        include_bytes!("../../ssx-http/tests/t03-browser/interaction.mjs"),
     ),
     (
         "docs/rust-rewrite/t02/original-bindings.json",
@@ -707,6 +711,7 @@ fn validate_budgets(scenario: &str, engine: &str, budgets: &Value) -> Result<()>
             "cls",
             "cls_samples",
             "interaction_p95_ms",
+            "interaction_evidence",
             "handoff_p95_ms",
         ],
         "budget",
@@ -743,6 +748,86 @@ fn validate_budgets(scenario: &str, engine: &str, budgets: &Value) -> Result<()>
             ),
         )?;
     }
+    let evidence = &budgets["interaction_evidence"];
+    exact_keys(
+        evidence,
+        &["definition", "samples", "controls"],
+        "interaction evidence",
+    )?;
+    need(
+        evidence["definition"] == "trusted-event-timestamp-to-state-and-next-frame-v1",
+        "interaction measurement definition",
+    )?;
+    let samples = evidence["samples"]
+        .as_array()
+        .ok_or("interaction samples missing")?;
+    need(samples.len() == 4, "all four interaction samples required")?;
+    let mut maximum = 0.0_f64;
+    for (sample, (id, event)) in samples.iter().zip([
+        ("theme", "click"),
+        ("theme-storage-blocked", "click"),
+        ("disclosure", "keydown"),
+        ("focus", "keydown"),
+    ]) {
+        exact_keys(
+            sample,
+            &[
+                "id",
+                "event",
+                "trusted",
+                "state_observed",
+                "duration_ms",
+                "driver_ms",
+            ],
+            "interaction sample",
+        )?;
+        let duration = sample["duration_ms"]
+            .as_f64()
+            .ok_or("interaction duration missing")?;
+        let driver = sample["driver_ms"]
+            .as_f64()
+            .ok_or("interaction driver duration missing")?;
+        need(
+            sample["id"] == id
+                && sample["event"] == event
+                && sample["trusted"] == true
+                && sample["state_observed"] == true
+                && duration.is_finite()
+                && duration >= 0.0
+                && driver.is_finite()
+                && driver >= 0.0,
+            "trusted interaction identity/state/timing",
+        )?;
+        maximum = maximum.max(duration);
+    }
+    need(
+        budgets["interaction_p95_ms"]["observed"].as_f64() == Some(maximum),
+        "interaction p95 must derive from all four samples",
+    )?;
+    let controls = &evidence["controls"];
+    exact_keys(
+        controls,
+        &[
+            "fast_ms",
+            "slow_ms",
+            "absent_input_rejected",
+            "absent_state_rejected",
+            "untrusted_input_rejected",
+        ],
+        "interaction controls",
+    )?;
+    need(
+        controls["fast_ms"]
+            .as_f64()
+            .is_some_and(|value| value.is_finite() && (0.0..=100.0).contains(&value))
+            && controls["slow_ms"]
+                .as_f64()
+                .is_some_and(|value| value.is_finite() && value > 100.0)
+            && controls["absent_input_rejected"] == true
+            && controls["absent_state_rejected"] == true
+            && controls["untrusted_input_rejected"] == true,
+        "interaction measurement controls must detect slow/missing/untrusted input",
+    )?;
     exact_keys(
         &budgets["cls_samples"],
         &["landing", "results", "result_settle_ms"],
@@ -1470,7 +1555,7 @@ mod tests {
     use super::{validate_budgets, validate_engine_call, validate_http_error_evidence};
     use serde_json::{Value, json};
 
-    fn passing_budgets() -> Value {
+    pub(super) fn passing_budgets() -> Value {
         json!({
             "profile": "synthetic offline T03 fixture; Chromium; Fast 3G emulation",
             "html_uncompressed_bytes": {"observed": 1024.0, "limit": 51200.0, "pass": true},
@@ -1480,6 +1565,16 @@ mod tests {
             "cls": {"observed": 0.01, "limit": 0.1, "pass": true},
             "cls_samples": {"landing": 0.01, "results": 0.02, "result_settle_ms": 250},
             "interaction_p95_ms": {"observed": 40.0, "limit": 100.0, "pass": true},
+            "interaction_evidence": {
+                "definition": "trusted-event-timestamp-to-state-and-next-frame-v1",
+                "samples": [
+                    {"id":"theme", "event":"click", "trusted":true, "state_observed":true, "duration_ms":40.0, "driver_ms":100.0},
+                    {"id":"theme-storage-blocked", "event":"click", "trusted":true, "state_observed":true, "duration_ms":30.0, "driver_ms":100.0},
+                    {"id":"disclosure", "event":"keydown", "trusted":true, "state_observed":true, "duration_ms":20.0, "driver_ms":100.0},
+                    {"id":"focus", "event":"keydown", "trusted":true, "state_observed":true, "duration_ms":10.0, "driver_ms":100.0}
+                ],
+                "controls": {"fast_ms":20.0,"slow_ms":150.0,"absent_input_rejected":true,"absent_state_rejected":true,"untrusted_input_rejected":true}
+            },
             "handoff_p95_ms": {"observed": 60.0, "limit": 150.0, "pass": true}
         })
     }
@@ -1615,4 +1710,33 @@ mod tests {
             );
         }
     }
+}
+
+#[cfg(test)]
+#[test]
+fn interaction_evidence_rejects_omitted_samples_forged_percentile_and_weak_controls() {
+    let valid = tests::passing_budgets();
+    for pointer in [
+        "/interaction_evidence/samples/0/trusted",
+        "/interaction_evidence/samples/0/state_observed",
+        "/interaction_evidence/controls/absent_input_rejected",
+        "/interaction_evidence/controls/absent_state_rejected",
+        "/interaction_evidence/controls/untrusted_input_rejected",
+    ] {
+        let mut changed = valid.clone();
+        *changed.pointer_mut(pointer).unwrap() = json!(false);
+        assert!(validate_budgets("contract", "chromium", &changed).is_err());
+    }
+    let mut changed = valid.clone();
+    changed["interaction_evidence"]["samples"]
+        .as_array_mut()
+        .unwrap()
+        .pop();
+    assert!(validate_budgets("contract", "chromium", &changed).is_err());
+    let mut changed = valid.clone();
+    changed["interaction_p95_ms"]["observed"] = json!(1.0);
+    assert!(validate_budgets("contract", "chromium", &changed).is_err());
+    let mut changed = valid;
+    changed["interaction_evidence"]["controls"]["slow_ms"] = json!(99.0);
+    assert!(validate_budgets("contract", "chromium", &changed).is_err());
 }

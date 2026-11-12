@@ -1,6 +1,6 @@
 //! One authenticated O02 retirement; historical inventory bytes remain unchanged.
 use crate::cli_source_custody::{
-    HEALTH_LOCK_BYTES, HEALTH_LOCK_SHA, PORTAL_LOCK_BYTES, PORTAL_LOCK_SHA,
+    CURRENT_LOCK_BYTES, CURRENT_LOCK_SHA, HEALTH_LOCK_BYTES, HEALTH_LOCK_SHA,
     portal_health_lock_frame,
 };
 use sha2::{Digest, Sha256};
@@ -235,7 +235,7 @@ pub(crate) fn authenticate(root: &Path, fixture: &[u8], tracked: &BTreeSet<Strin
     ] {
         material(root, path, size, sha)?;
     }
-    let current = material(root, "Cargo.lock", PORTAL_LOCK_BYTES, PORTAL_LOCK_SHA)?;
+    let current = material(root, "Cargo.lock", CURRENT_LOCK_BYTES, CURRENT_LOCK_SHA)?;
     let health = portal_health_lock_frame(&current)?;
     need(
         health.len() == HEALTH_LOCK_BYTES && digest(&health) == HEALTH_LOCK_SHA,
@@ -296,7 +296,10 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         historical(&changed, &disposition).is_err(),
         "changed frozen source rejected",
     )?;
-    for row in &SUCCESSORS {
+    for row in SUCCESSORS
+        .iter()
+        .filter(|row| row.0.starts_with("scripts/"))
+    {
         let raw = material(root, row.0, row.2, row.3)?;
         let old = prior(row, &raw)?;
         need(
@@ -381,7 +384,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
             "crates/ssx-healthcheck/src/lib.rs",
             "crates/ssx-healthcheck/src/main.rs",
             "Dockerfile",
-            "docs/rust-rewrite/o02/builder-patch-v1/capsule.json",
+            "docs/rust-rewrite/o02/builder-patch-v2/capsule.json",
             "Cargo.lock",
         ] {
             let destination = owned.join(path);
@@ -522,24 +525,14 @@ const SUCCESSORS: [Successor; 2] = [
     (
         "tests/test_deployment_artifacts.py",
         "649650e35656bfff78d7930052085270811343fd",
+        12945,
+        "78d9dfccbb97dca38a4149e5f5154ebae18a11589616492234d9817e9d2ea1e2",
         12872,
         "e7634a07ab53f6409386a9515f46ab65ebccfb0747235d6ad43a07dcf54f431c",
-        11133,
-        "ce83065f173b7d05c7790a8aaae55efec4fd8eb18ed69c5e534afcc7934f8a2b",
-        &[
-            (
-                "    digest = \"a\" * 64\n    dockerfile = f\"FROM python:3.12-slim@sha256:{digest}\\nFROM scratch\\n\"\n\n    with pytest.raises(SystemExit, match=\"exactly one FROM\"):\n        verify._pinned_python_base(dockerfile)\n\n\n",
-                "    digest = \"a\" * 64\n    dockerfile = f\"FROM python:3.12-slim@sha256:{digest}\\nFROM scratch\\n\"\n\n    with pytest.raises(SystemExit, match=\"recognized\"):\n        verify._pinned_python_base(dockerfile)\n\n\n",
-            ),
-            (
-                "    digest = \"a\" * 64\n    dockerfile = f\"FROM python:3.12-slim@sha256:{digest}\\n{second_from}\\n\"\n\n    with pytest.raises(SystemExit, match=\"exactly one FROM\"):\n        verify._pinned_python_base(dockerfile)\n\n\n",
-                "    digest = \"a\" * 64\n    dockerfile = f\"FROM python:3.12-slim@sha256:{digest}\\n{second_from}\\n\"\n\n    with pytest.raises(SystemExit, match=\"recognized\"):\n        verify._pinned_python_base(dockerfile)\n\n\n",
-            ),
-            (
-                "    assert \"${GITHUB_SHA::7}-${{ matrix.arch }}\" in tag_command\n    assert \"GITHUB_RUN_ID\" not in tag_command\n    assert \"GITHUB_RUN_ATTEMPT\" not in tag_command\n",
-                "    assert \"${GITHUB_SHA::7}-${{ matrix.arch }}\" in tag_command\n    assert \"GITHUB_RUN_ID\" not in tag_command\n    assert \"GITHUB_RUN_ATTEMPT\" not in tag_command\n\n\ndef test_health_builder_and_runtime_bases_are_both_verified(monkeypatch: pytest.MonkeyPatch) -> None:\n    dockerfile = (ROOT / \"Dockerfile\").read_text()\n    bases = verify.pinned_bases(dockerfile)\n    builder = dockerfile.split(\"# SlopSearX production image\", 1)[0]\n    assert \"COPY . .\" not in builder\n    assert [line for line in builder.splitlines() if line.startswith(\"COPY \")] == [\n        \"COPY Cargo.toml Cargo.lock rust-toolchain.toml ./\",\n        \"COPY crates/ crates/\",\n        \"COPY vendor/ vendor/\",\n    ]\n    assert [repository for repository, _, _ in bases] == [\"library/rust\", \"library/python\"]\n    assert bases[0][1] == \"1.99.0-bookworm\"\n    assert 'CMD [\"/usr/local/bin/ssx-healthcheck\"]' in dockerfile\n    assert \"healthcheck.py\" not in dockerfile\n    assert \"uvicorn\" in dockerfile  # This increment does not claim server retirement.\n    for malformed in [\n        dockerfile + \"\\nFROM scratch\\n\",\n        dockerfile.replace(\" AS healthcheck-builder\", \" AS arbitrary-builder\"),\n        dockerfile.replace(\"rust:1.99.0-bookworm@sha256:\", \"rust:1.99.0-bookworm@bad:\"),\n    ]:\n        with pytest.raises(SystemExit):\n            verify.pinned_bases(malformed)\n    calls: list[str] = []\n\n    def actual(repository: str, tag: str) -> str:\n        calls.append(repository)\n        return next(digest for repo, _, digest in bases if repo == repository)\n\n    monkeypatch.setattr(verify, \"registry_digest\", actual)\n    monkeypatch.setattr(\"sys.argv\", [\"verify_docker_base_digest.py\", \"--dockerfile\", str(ROOT / \"Dockerfile\")])\n    assert verify.main() == 0\n    assert calls == [\"library/rust\", \"library/python\"]\n    monkeypatch.setattr(verify, \"registry_digest\", lambda repository, tag: \"sha256:\" + \"0\" * 64)\n    assert verify.main() == 1\n",
-            ),
-        ],
+        &[(
+            "    workflow = (ROOT / \".github/workflows/docker.yml\").read_text()\n    assert \"python3 scripts/verify_docker_base_digest.py\" in workflow\n",
+            "    workflow = (ROOT / \".github/workflows/docker.yml\").read_text()\n    assert \"cargo xtask ci-helper image-pin-verify-base\" in workflow\n    assert \"python3 scripts/verify_docker_base_digest.py\" not in workflow\n",
+        )],
     ),
 ];
 fn prior(row: &Successor, raw: &[u8]) -> Result<Vec<u8>> {
@@ -579,12 +572,27 @@ pub(crate) fn successor(root: &Path, path: &str, blob: &str) -> Result<bool> {
         return Ok(false);
     };
     need(row.1 == blob, "historical Python fixture blob")?;
-    python_prior(root, row)?;
+    let raw = if path == "tests/test_deployment_artifacts.py" {
+        bounded_current_python_source(root, row)?
+    } else {
+        material(root, row.0, row.2, row.3)?
+    };
+    prior(row, &raw)?;
     Ok(true)
 }
-fn python_prior(root: &Path, row: &Successor) -> Result<Vec<u8>> {
-    let raw = material(root, row.0, row.2, row.3)?;
-    prior(row, &raw)
+/// Authenticate physical current source and return the accepted native-verifier
+/// operand. The original oracle hash and literal checks remain independent.
+pub(crate) fn deployment_source_operand(root: &Path) -> Result<Vec<u8>> {
+    let row = SUCCESSORS
+        .iter()
+        .find(|row| row.0 == "tests/test_deployment_artifacts.py")
+        .ok_or("O02 deployment source tuple")?;
+    bounded_current_python_source(root, row)
+}
+fn bounded_current_python_source(root: &Path, row: &Successor) -> Result<Vec<u8>> {
+    // The successor tuple already fixes the only admissible bytes. Reuse the
+    // descriptor-bound reader so replacement/growth cannot bypass the read cap.
+    material(root, row.0, row.2, row.3)
 }
 /// Current deployment-test source projected through the same strict F01 inverse.
 pub(crate) fn historical_python_source(
@@ -604,11 +612,98 @@ pub(crate) fn historical_python_source(
         .iter()
         .find(|source| source.0 == path)
         .ok_or("O02 source tuple")?;
-    need(
-        row["sha256"].as_str() == Some(source.5),
-        "exact historical Python source SHA",
-    )?;
-    python_prior(root, source).map(Some)
+    if row["sha256"].as_str()
+        == Some("ce83065f173b7d05c7790a8aaae55efec4fd8eb18ed69c5e534afcc7934f8a2b")
+    {
+        need(fields.len() == 2, "closed original W03 Python source pin")?;
+        let output = std::process::Command::new("git")
+            .args([
+                "show",
+                "87af8096d46359241421ac747ed6aa1ad07f38ec:tests/test_deployment_artifacts.py",
+            ])
+            .current_dir(root)
+            .output()
+            .map_err(|error| error.to_string())?;
+        need(
+            output.status.success(),
+            "W03 historical source object is available",
+        )?;
+        need(
+            output.stdout.len() == 11133
+                && digest(&output.stdout)
+                    == "ce83065f173b7d05c7790a8aaae55efec4fd8eb18ed69c5e534afcc7934f8a2b",
+            "W03 historical source bytes match immutable pin",
+        )?;
+        let output_sha = digest(&output.stdout);
+        need(
+            row["sha256"].as_str() == Some(output_sha.as_str()),
+            "W03 historical source row binds returned bytes",
+        )?;
+        return Ok(Some(output.stdout));
+    }
+    if row["sha256"].as_str() != Some(source.5) {
+        return Err(
+            "historical Python source hash is neither the O02 successor nor W03 predecessor".into(),
+        );
+    }
+    let raw = bounded_current_python_source(root, source)?;
+    prior(source, &raw).map(Some)
+}
+
+#[cfg(all(test, unix))]
+mod bounded_source_tests {
+    use super::*;
+    use std::os::unix::fs::{PermissionsExt, symlink};
+
+    #[test]
+    fn current_python_source_requires_authenticated_regular_material() {
+        let base = configured_temp_root(
+            std::env::var_os("TMPDIR"),
+            std::env::var_os("SLOPSEARX_TEST_TEMP_ROOT"),
+        )
+        .unwrap();
+        let root = base.join(format!("ssx-current-source-{}", std::process::id()));
+        fs::create_dir(&root).unwrap();
+        let row = SUCCESSORS
+            .iter()
+            .find(|row| row.0 == "tests/test_deployment_artifacts.py")
+            .unwrap();
+        let source = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../..")
+            .join(row.0);
+        let path = root.join(row.0);
+        fs::create_dir(path.parent().unwrap()).unwrap();
+        fs::copy(&source, &path).unwrap();
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o644)).unwrap();
+        let capsule = root.join(builder_patch::CAPSULE);
+        fs::create_dir_all(capsule.parent().unwrap()).unwrap();
+        fs::write(&capsule, builder_patch::CAPSULE_RAW).unwrap();
+        let expected = fs::read(&source).unwrap();
+        let operand = bounded_current_python_source(&root, row).unwrap();
+        assert_eq!(operand.len(), row.2);
+        assert_eq!(digest(&operand), row.3);
+        assert_ne!(operand, expected, "physical current must be projected");
+
+        let mut corrupt = expected.clone();
+        corrupt[0] ^= 1;
+        fs::write(&path, &corrupt).unwrap();
+        assert!(bounded_current_python_source(&root, row).is_err());
+        fs::write(&path, &expected).unwrap();
+        fs::OpenOptions::new()
+            .write(true)
+            .open(&path)
+            .unwrap()
+            .set_len(131073)
+            .unwrap();
+        assert!(bounded_current_python_source(&root, row).is_err());
+        fs::remove_file(&path).unwrap();
+        symlink(&source, &path).unwrap();
+        assert!(bounded_current_python_source(&root, row).is_err());
+        fs::remove_file(&path).unwrap();
+        fs::create_dir(&path).unwrap();
+        assert!(bounded_current_python_source(&root, row).is_err());
+        fs::remove_dir_all(&root).unwrap();
+    }
 }
 
 #[cfg(all(test, unix))]
