@@ -256,7 +256,7 @@ fn root_graph(root: &Path, metadata: &Value) -> Result<Value> {
             } else {
                 need(
                     parent["name"] == "rmcp"
-                        && parent["version"] == "3.5.1"
+                        && parent["version"] == "3.9.0"
                         && parent["source"] == REGISTRY,
                     "upstream registry consumer changed",
                 )?;

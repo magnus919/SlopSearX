@@ -148,6 +148,47 @@ fn inverse(row: &Value, current: &[u8], mode: &str, count: usize) -> Result<Vec<
     need(forward == current, "full forward reconstruction")?;
     Ok(prior)
 }
+// Security successor is authenticated before entering the unchanged historical chains.
+const RMCP_SECURITY_CAPSULE: &str =
+    include_str!("../../../docs/rust-rewrite/t08a/rmcp-security-successor.json");
+const RMCP_SECURITY_CAPSULE_SHA: &str =
+    "b348258e03bc90feafc68b721d583e5f977d660a90062bff20b8c0f8521aec09";
+pub(crate) const CURRENT_LOCK_SHA: &str =
+    "89545e8f75650c1d83c7aa5a36c92bc878184cf87cf42d3d0e93b2acc0a1ccd7";
+pub(crate) const CURRENT_LOCK_BYTES: usize = 94314;
+const RMCP_ROWS: [(&str, usize); 2] = [("Cargo.toml", 1), ("Cargo.lock", 6)];
+fn rmcp_security_capsule(raw: &str) -> Result<Value> {
+    need(
+        digest(raw.as_bytes()) == RMCP_SECURITY_CAPSULE_SHA,
+        "compiled rmcp security capsule identity",
+    )?;
+    let doc: Value = serde_json::from_str(raw).map_err(|e| e.to_string())?;
+    need(
+        doc["schema"] == "RMCP_SECURITY_SUCCESSOR_V1"
+            && doc["rows"].as_array().is_some_and(|rows| rows.len() == 2),
+        "closed rmcp security capsule",
+    )?;
+    for (index, (path, count)) in RMCP_ROWS.iter().enumerate() {
+        let row = &doc["rows"][index];
+        need(
+            row["path"] == *path
+                && row["edits"]
+                    .as_array()
+                    .is_some_and(|edits| edits.len() == *count),
+            "exact rmcp path and edit count",
+        )?;
+    }
+    Ok(doc)
+}
+fn rmcp_security_prior(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
+    let index = RMCP_ROWS
+        .iter()
+        .position(|row| row.0 == path)
+        .ok_or("unowned rmcp successor path")?;
+    let doc = rmcp_security_capsule(RMCP_SECURITY_CAPSULE)?;
+    inverse(&doc["rows"][index], physical, "0644", RMCP_ROWS[index].1)
+}
+
 // One additive std-only health package; immutable CLI lock capsule stays unchanged.
 pub(crate) const HEALTH_LOCK_SHA: &str =
     "53fb4619c6e4fd12eae7928073c5062929498d2db29b270e456514a855a5bdd9";
@@ -163,7 +204,13 @@ const PORTAL_LOCK_EDITS: [(usize, &[u8]); 3] = [
     (66903, b" \"scraper\",\n"),
     (91635, b" \"url\",\n"),
 ];
-pub(crate) fn portal_health_lock_frame(physical: &[u8]) -> Result<Vec<u8>> {
+pub(crate) fn portal_health_lock_frame(current: &[u8]) -> Result<Vec<u8>> {
+    need(
+        current.len() == CURRENT_LOCK_BYTES && digest(current) == CURRENT_LOCK_SHA,
+        "security exact current lock",
+    )?;
+    let portal = rmcp_security_prior("Cargo.lock", current)?;
+    let physical = portal.as_slice();
     need(
         physical.len() == PORTAL_LOCK_BYTES && digest(physical) == PORTAL_LOCK_SHA,
         "portal exact current lock",
@@ -227,6 +274,9 @@ fn native_health_lock_prior(physical: &[u8]) -> Result<Vec<u8>> {
 fn cli_logical_input(root: &Path, path: &str, physical: &[u8]) -> Result<Vec<u8>> {
     if path == "Cargo.lock" {
         return native_health_lock_prior(&portal_health_lock_frame(physical)?);
+    }
+    if path == "Cargo.toml" {
+        return rmcp_security_prior(path, physical);
     }
     if accepted_main_join::owns(path) {
         accepted_main_join::project(root, path, physical, accepted_main_join::Parent::Cli)
@@ -495,4 +545,54 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         &actual,
     )?;
     Ok(())
+}
+
+#[cfg(test)]
+mod rmcp_security_tests {
+    use super::*;
+    #[test]
+    fn exact_security_successors_preserve_history_and_reject_substitution() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let doc = rmcp_security_capsule(RMCP_SECURITY_CAPSULE).unwrap();
+        assert!(rmcp_security_capsule(&format!("{RMCP_SECURITY_CAPSULE} ")).is_err());
+        for (index, (path, count)) in RMCP_ROWS.iter().enumerate() {
+            let actual = regular(&root, path).unwrap();
+            assert_eq!(source_mode(&root, path).unwrap(), "0644");
+            let prior = rmcp_security_prior(path, &actual).unwrap();
+            let git = Command::new("git")
+                .args([
+                    "show",
+                    &format!("8ee37a22d393ccff7493c5196be268cd872c140f:{path}"),
+                ])
+                .current_dir(&root)
+                .output()
+                .unwrap();
+            assert!(git.status.success());
+            assert_eq!(prior, git.stdout);
+            assert!(rmcp_security_prior(path, &prior).is_err());
+            assert!(rmcp_security_prior("unowned", &actual).is_err());
+            let mut changed = actual.clone();
+            changed[0] ^= 1;
+            assert!(rmcp_security_prior(path, &changed).is_err());
+            for mode in ["0600", "0755", "4644"] {
+                assert!(inverse(&doc["rows"][index], &actual, mode, *count).is_err());
+            }
+            for mutation in 0..3 {
+                let mut row = doc["rows"][index].clone();
+                let edits = row["edits"].as_array_mut().unwrap();
+                match mutation {
+                    0 => {
+                        edits.pop();
+                    }
+                    1 => {
+                        edits.push(edits[0].clone());
+                    }
+                    _ => {
+                        edits[0]["insert_utf8"] = Value::String("wrong".into());
+                    }
+                }
+                assert!(inverse(&row, &actual, "0644", *count).is_err());
+            }
+        }
+    }
 }

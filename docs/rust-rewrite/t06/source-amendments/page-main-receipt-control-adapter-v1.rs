@@ -142,6 +142,14 @@ pub(crate) fn parent(
     expected: &str,
     supplied: &[u8],
 ) -> Result<Option<Vec<u8>>> {
+    if path == RMCP_TRANSPORT {
+        let (physical, mode) = regular(root, path)?;
+        need(
+            supplied == physical,
+            "rmcp transport requires actual current source",
+        )?;
+        return rmcp_transport_prior(&physical, mode, expected).map(Some);
+    }
     if !PATHS.contains(&path) {
         return Ok(None);
     }
@@ -865,4 +873,70 @@ fn current_controls(root: &Path) -> Result<()> {
         parent(root, "unlisted.rs", "", b"")?.is_none(),
         "combined receipt unlisted caller accepted",
     )
+}
+
+// Exact security-upgrade diagnostic successor; historical captures stay frozen.
+const RMCP_TRANSPORT: &str = "crates/ssx-mcp/tests/t06_transport.rs";
+const RMCP_TRANSPORT_PRIOR: &str =
+    "264983f5bffaba8116c7b92be99c33baa73423d99b118cc181c9729092bd4ceb";
+const RMCP_TRANSPORT_CURRENT: &str =
+    "399eb30c126d94673ec49a3a929acc9947fda63b57700a0154d18e8a3b9736eb";
+const RMCP_TRANSPORT_OLD: &str = r###"                assert_eq!(
+                    response.text().await?,
+                    difference["native_body"].as_str().unwrap()
+                );"###;
+const RMCP_TRANSPORT_NEW: &str = r###"                // Preserve the frozen 3.5.1 observation; 3.9.0 rejects the same
+                // malformed grammar with a new SDK diagnostic (HTTP415).
+                assert_eq!(
+                    difference["native_body"].as_str().unwrap(),
+                    "fail to deserialize request body data did not match any variant of untagged enum JsonRpcMessage"
+                );
+                assert_eq!(
+                    response.text().await?,
+                    "fail to deserialize request body unrecognized JSON-RPC message"
+                );"###;
+fn rmcp_transport_prior(raw: &[u8], mode: u32, expected: &str) -> Result<Vec<u8>> {
+    need(
+        mode == 0o644
+            && raw.len() == 43970
+            && digest(raw) == RMCP_TRANSPORT_CURRENT
+            && expected == RMCP_TRANSPORT_PRIOR,
+        "rmcp transport exact current identity",
+    )?;
+    let text = std::str::from_utf8(raw).map_err(|e| e.to_string())?;
+    need(
+        text.matches(RMCP_TRANSPORT_NEW).count() == 1,
+        "rmcp transport unique diagnostic span",
+    )?;
+    let prior = text.replacen(RMCP_TRANSPORT_NEW, RMCP_TRANSPORT_OLD, 1);
+    need(
+        prior.len() == 43564 && digest(prior.as_bytes()) == RMCP_TRANSPORT_PRIOR,
+        "rmcp transport exact historical identity",
+    )?;
+    need(
+        prior
+            .replacen(RMCP_TRANSPORT_OLD, RMCP_TRANSPORT_NEW, 1)
+            .as_bytes()
+            == raw,
+        "rmcp transport full forward reconstruction",
+    )?;
+    Ok(prior.into_bytes())
+}
+#[cfg(test)]
+mod rmcp_transport_tests {
+    use super::*;
+    #[test]
+    fn exact_diagnostic_successor_preserves_capture_and_rejects_substitution() {
+        let raw = include_bytes!("../../../../crates/ssx-mcp/tests/t06_transport.rs");
+        let prior = rmcp_transport_prior(raw, 0o644, RMCP_TRANSPORT_PRIOR).unwrap();
+        assert!(rmcp_transport_prior(&prior, 0o644, RMCP_TRANSPORT_PRIOR).is_err());
+        assert!(rmcp_transport_prior(raw, 0o755, RMCP_TRANSPORT_PRIOR).is_err());
+        assert!(rmcp_transport_prior(raw, 0o644, RMCP_TRANSPORT_CURRENT).is_err());
+        let mut changed = raw.to_vec();
+        changed[0] ^= 1;
+        assert!(rmcp_transport_prior(&changed, 0o644, RMCP_TRANSPORT_PRIOR).is_err());
+        changed = raw.to_vec();
+        changed.push(b' ');
+        assert!(rmcp_transport_prior(&changed, 0o644, RMCP_TRANSPORT_PRIOR).is_err());
+    }
 }

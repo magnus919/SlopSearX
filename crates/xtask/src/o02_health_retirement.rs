@@ -1,6 +1,6 @@
 //! One authenticated O02 retirement; historical inventory bytes remain unchanged.
 use crate::cli_source_custody::{
-    HEALTH_LOCK_BYTES, HEALTH_LOCK_SHA, PORTAL_LOCK_BYTES, PORTAL_LOCK_SHA,
+    CURRENT_LOCK_BYTES, CURRENT_LOCK_SHA, HEALTH_LOCK_BYTES, HEALTH_LOCK_SHA,
     portal_health_lock_frame,
 };
 use sha2::{Digest, Sha256};
@@ -217,7 +217,7 @@ pub(crate) fn authenticate(root: &Path, fixture: &[u8], tracked: &BTreeSet<Strin
     ] {
         material(root, path, size, sha)?;
     }
-    let current = material(root, "Cargo.lock", PORTAL_LOCK_BYTES, PORTAL_LOCK_SHA)?;
+    let current = material(root, "Cargo.lock", CURRENT_LOCK_BYTES, CURRENT_LOCK_SHA)?;
     let health = portal_health_lock_frame(&current)?;
     need(
         health.len() == HEALTH_LOCK_BYTES && digest(&health) == HEALTH_LOCK_SHA,

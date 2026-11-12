@@ -100,9 +100,10 @@ also listed in the W03/O02 finite current-source successor and historical invers
   only amendment source, and hard-codes the exact bytes of
   `python-disposition.json`.
 
-`tests/test_deployment_artifacts.py` retains the Python base-verifier assertion;
-the native workflow invocation is asserted by an offline xtask source regression
-control. The Python test module and its historical source bytes remain unchanged. The O02 verifier additionally checks the active checkout source SHA-256 against its fixed W03/O02 successor constant and pins its expected digest line; it does not execute the inverse transformation at this runtime boundary. The source-fragment linkage and standalone W03 inverse tests are separate controls.
+`tests/test_deployment_artifacts.py` now asserts that the Docker workflow invokes
+the native base verifier and does not invoke the Python verifier. An offline xtask
+source regression control also checks the native invocation and ordering. The test
+module is an authenticated successor of its retained historical source bytes. The O02 verifier additionally checks the active checkout source SHA-256 against its fixed W03/O02 successor constant and pins its expected digest line; it does not execute the inverse transformation at this runtime boundary. The source-fragment linkage and standalone W03 inverse tests are separate controls.
 
 The current bounded Docker verifier wiring does not delete the Python source or
 the test module. It leaves the historical invocation row in the existing F01

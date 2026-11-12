@@ -247,6 +247,10 @@ fn oracle_pin_text(text: &str) -> Result<String> {
             continue;
         }
         need(
+            line == line.trim_start(),
+            "non-custodied oracle assignment must start at column zero",
+        )?;
+        need(
             !source.ends_with('\\'),
             "explicit Python line continuation is outside the bounded oracle grammar",
         )?;
@@ -786,6 +790,17 @@ fn promote_with_mode(root: &Path, check: bool) -> Result<i32> {
     Ok(10)
 }
 
+// Preserve the Python helper contract: drift is 1, malformed input/lookup errors are 2.
+fn command_exit_code(result: Result<i32>) -> i32 {
+    match result {
+        Ok(code) => code,
+        Err(error) => {
+            eprintln!("error: {error}");
+            2
+        }
+    }
+}
+
 /// Dispatches `image-pin-verify-base` and `image-pin-promote`.
 pub fn cli(root: &Path, args: &[String]) -> Result<()> {
     let (command, rest) = args
@@ -794,19 +809,13 @@ pub fn cli(root: &Path, args: &[String]) -> Result<()> {
     let code = match command.as_str() {
         "image-pin-verify-base" => {
             let effective = root.to_path_buf();
-            verify_base(&effective, rest)?
+            command_exit_code(verify_base(&effective, rest))
         }
         "image-pin-promote" => {
             let (check, selected_root) = promotion_mode(rest)?;
             let effective =
                 selected_root.map_or_else(|| root.to_path_buf(), std::path::PathBuf::from);
-            match promote_with_mode(&effective, check) {
-                Ok(code) => code,
-                Err(error) => {
-                    eprintln!("error: {error}");
-                    2
-                }
-            }
+            command_exit_code(promote_with_mode(&effective, check))
         }
         other => return Err(format!("O02 image pin: unknown command {other}")),
     };
@@ -1249,6 +1258,9 @@ mod tests {
         let error = verify_base_with(&root, &[], &transport, &mut sleep)
             .expect_err("registry failure is an error, not digest drift");
         assert!(error.contains("HTTP 404"), "{error}");
+        assert_eq!(command_exit_code(Err(error)), 2);
+        assert_eq!(command_exit_code(Ok(1)), 1);
+        assert_eq!(command_exit_code(Ok(0)), 0);
         assert_eq!(transport.calls.borrow().len(), 1);
         assert!(sleeps.is_empty());
         assert_eq!(fs::read(dockerfile).expect("source unchanged"), original);
@@ -1513,6 +1525,9 @@ mod tests {
         let digest = "a".repeat(64);
         let valid = format!("GHCR_DIGEST_PIN = \"{IMAGE}@sha256:{digest}\"\n");
         for unsupported in [
+            format!("    {valid}"),
+            format!("\t{valid}"),
+            format!(" \t{valid}"),
             format!("{valid}note = \"GHCR_DIGEST_PIN = x\"\n"),
             format!("{valid}def reads_pin():\n    return GHCR_DIGEST_PIN\n"),
             format!("{valid}if False:\n    GHCR_DIGEST_PIN = \"x\"\n"),
