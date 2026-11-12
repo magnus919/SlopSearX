@@ -52,7 +52,7 @@ def _urlopen_with_retries(request: str | urllib.request.Request, *, label: str):
 
 
 RUST_FROM_RE = re.compile(
-    r"^\s*FROM\s+rust:(?P<tag>1\.99\.0-bookworm)@(?P<digest>sha256:[0-9a-f]{64})\s+AS\s+healthcheck-builder\s*$",
+    r"^\s*FROM\s+rust:(?P<tag>1\.99\.[01]-bookworm)@(?P<digest>sha256:[0-9a-f]{64})\s+AS\s+healthcheck-builder\s*$",
     re.IGNORECASE,
 )
 

@@ -287,14 +287,14 @@ def test_health_builder_and_runtime_bases_are_both_verified(monkeypatch: pytest.
         "COPY vendor/ vendor/",
     ]
     assert [repository for repository, _, _ in bases] == ["library/rust", "library/python"]
-    assert bases[0][1] == "1.99.0-bookworm"
+    assert bases[0][1] == "1.99.1-bookworm"
     assert 'CMD ["/usr/local/bin/ssx-healthcheck"]' in dockerfile
     assert "healthcheck.py" not in dockerfile
     assert "uvicorn" in dockerfile  # This increment does not claim server retirement.
     for malformed in [
         dockerfile + "\nFROM scratch\n",
         dockerfile.replace(" AS healthcheck-builder", " AS arbitrary-builder"),
-        dockerfile.replace("rust:1.99.0-bookworm@sha256:", "rust:1.99.0-bookworm@bad:"),
+        dockerfile.replace("@sha256:", "@bad:", 1),
     ]:
         with pytest.raises(SystemExit):
             verify.pinned_bases(malformed)
@@ -310,3 +310,21 @@ def test_health_builder_and_runtime_bases_are_both_verified(monkeypatch: pytest.
     assert calls == ["library/rust", "library/python"]
     monkeypatch.setattr(verify, "registry_digest", lambda repository, tag: "sha256:" + "0" * 64)
     assert verify.main() == 1
+
+
+@pytest.mark.parametrize("tag", ["1.99.0-bookworm", "1.99.1-bookworm"])
+def test_health_builder_accepts_reviewed_patch_tags(tag: str) -> None:
+    digest = "sha256:" + "a" * 64
+    dockerfile = f"FROM rust:{tag}@{digest} AS healthcheck-builder\nFROM python:3.14-slim@{digest}\n"
+    assert verify.pinned_bases(dockerfile) == [
+        ("library/rust", tag, digest),
+        ("library/python", "3.14-slim", digest),
+    ]
+
+
+@pytest.mark.parametrize("tag", ["1.99.2-bookworm", "1.100.0-bookworm", "1.99.1-alpine", "latest"])
+def test_health_builder_rejects_unreviewed_tags(tag: str) -> None:
+    digest = "sha256:" + "a" * 64
+    dockerfile = f"FROM rust:{tag}@{digest} AS healthcheck-builder\nFROM python:3.14-slim@{digest}\n"
+    with pytest.raises(SystemExit, match="recognized"):
+        verify.pinned_bases(dockerfile)
