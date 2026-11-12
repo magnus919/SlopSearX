@@ -183,7 +183,7 @@ pub fn pinned_bases(dockerfile: &str) -> Result<Vec<(String, String, String)>> {
                 && first[2] == "healthcheck-builder")
                 .then(|| image_parts(first[0], "rust"))
                 .flatten()
-                .filter(|(tag, _)| tag.as_str() == "1.99.0-bookworm");
+                .filter(|(tag, _)| matches!(tag.as_str(), "1.99.0-bookworm" | "1.99.1-bookworm"));
             let runtime = (second.len() == 1)
                 .then(|| image_parts(second[0], "python"))
                 .flatten();
@@ -584,6 +584,29 @@ mod tests {
         assert_eq!(bases[0].1, "1.99.0-bookworm");
         assert_eq!(bases[1].0, "library/python");
         assert_eq!(bases[1].2, format!("sha256:{runtime}"));
+    }
+
+    #[test]
+    fn health_builder_patch_tags_remain_explicitly_reviewed() {
+        let digest = "a".repeat(64);
+        for tag in ["1.99.0-bookworm", "1.99.1-bookworm"] {
+            let dockerfile = format!(
+                "FROM rust:{tag}@sha256:{digest} AS healthcheck-builder\nFROM python:3.14-slim@sha256:{digest}\n"
+            );
+            let bases = pinned_bases(&dockerfile).expect("reviewed patch tag");
+            assert_eq!(bases[0].1, tag);
+        }
+        for tag in [
+            "1.99.2-bookworm",
+            "1.100.0-bookworm",
+            "1.99.1-alpine",
+            "latest",
+        ] {
+            let dockerfile = format!(
+                "FROM rust:{tag}@sha256:{digest} AS healthcheck-builder\nFROM python:3.14-slim@sha256:{digest}\n"
+            );
+            assert!(pinned_bases(&dockerfile).is_err(), "unreviewed tag: {tag}");
+        }
     }
 
     #[test]
