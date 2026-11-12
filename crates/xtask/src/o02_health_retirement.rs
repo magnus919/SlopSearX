@@ -5,6 +5,9 @@ use crate::cli_source_custody::{
 };
 use sha2::{Digest, Sha256};
 #[cfg(unix)]
+#[path = "o02_builder_patch.rs"]
+mod builder_patch;
+#[cfg(unix)]
 use std::io::Read;
 use std::{collections::BTreeSet, fs, path::Path};
 #[cfg(test)]
@@ -60,6 +63,21 @@ fn configured_temp_root(
 }
 #[cfg(unix)]
 fn material(root: &Path, path: &str, size: usize, sha: &str) -> Result<Vec<u8>> {
+    if let Some(projection) = builder_patch::projection(path, size, sha)? {
+        exact_material(
+            root,
+            builder_patch::CAPSULE,
+            builder_patch::CAPSULE_RAW.len(),
+            builder_patch::CAPSULE_SHA,
+        )?;
+        let (current_size, current_sha) = projection.current()?;
+        let raw = exact_material(root, path, current_size, current_sha)?;
+        return projection.prior(&raw);
+    }
+    exact_material(root, path, size, sha)
+}
+#[cfg(unix)]
+fn exact_material(root: &Path, path: &str, size: usize, sha: &str) -> Result<Vec<u8>> {
     use std::os::unix::fs::{MetadataExt, OpenOptionsExt, PermissionsExt};
     let full = root.join(path);
     let before = fs::symlink_metadata(&full).map_err(|e| e.to_string())?;
@@ -363,6 +381,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
             "crates/ssx-healthcheck/src/lib.rs",
             "crates/ssx-healthcheck/src/main.rs",
             "Dockerfile",
+            "docs/rust-rewrite/o02/builder-patch-v1/capsule.json",
             "Cargo.lock",
         ] {
             let destination = owned.join(path);
@@ -590,4 +609,66 @@ pub(crate) fn historical_python_source(
         "exact historical Python source SHA",
     )?;
     python_prior(root, source).map(Some)
+}
+
+#[cfg(all(test, unix))]
+mod builder_patch_controls {
+    use super::*;
+    use std::os::unix::fs::{PermissionsExt, symlink};
+
+    #[test]
+    fn actual_reader_rejects_changed_material_capsule_mode_and_links() {
+        let base = PathBuf::from(std::env::var_os("TMPDIR").expect("configured temporary root"));
+        let owned = base.join(format!("o02-builder-patch-{}", std::process::id()));
+        fs::create_dir(&owned).expect("exclusive fixture");
+        let result = (|| -> Result<()> {
+            let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+            let capsule = owned.join(builder_patch::CAPSULE);
+            fs::create_dir_all(capsule.parent().unwrap()).map_err(|e| e.to_string())?;
+            fs::write(&capsule, builder_patch::CAPSULE_RAW).map_err(|e| e.to_string())?;
+            let path = owned.join("Dockerfile");
+            let current = fs::read(root.join("Dockerfile")).map_err(|e| e.to_string())?;
+            fs::write(&path, &current).map_err(|e| e.to_string())?;
+            let prior_sha = "05bb1d6087f15b85904283e6cac78582465169f4fa43f2f5f681390a09dc3607";
+            let read = || material(&owned, "Dockerfile", 2427, prior_sha);
+            need(
+                digest(&read()?) == prior_sha,
+                "actual inverse reader passes first",
+            )?;
+            let mut changed = current.clone();
+            changed[0] ^= 1;
+            fs::write(&path, &changed).map_err(|e| e.to_string())?;
+            need(read().is_err(), "non-pin mutation rejected")?;
+            fs::write(&path, [current.clone(), current.clone()].concat())
+                .map_err(|e| e.to_string())?;
+            need(read().is_err(), "oversized physical leaf rejected")?;
+            fs::write(&path, &current).map_err(|e| e.to_string())?;
+            fs::set_permissions(&path, fs::Permissions::from_mode(0o600))
+                .map_err(|e| e.to_string())?;
+            need(read().is_err(), "wrong mode rejected")?;
+            fs::set_permissions(&path, fs::Permissions::from_mode(0o644))
+                .map_err(|e| e.to_string())?;
+            fs::remove_file(&path).map_err(|e| e.to_string())?;
+            symlink(root.join("Dockerfile"), &path).map_err(|e| e.to_string())?;
+            need(read().is_err(), "source symlink rejected")?;
+            fs::remove_file(&path).map_err(|e| e.to_string())?;
+            fs::write(&path, &current).map_err(|e| e.to_string())?;
+            let mut forged = builder_patch::CAPSULE_RAW.to_vec();
+            forged[0] ^= 1;
+            fs::write(&capsule, &forged).map_err(|e| e.to_string())?;
+            need(read().is_err(), "runtime capsule mutation rejected")?;
+            fs::remove_file(&capsule).map_err(|e| e.to_string())?;
+            need(read().is_err(), "missing runtime capsule rejected")?;
+            symlink(root.join(builder_patch::CAPSULE), &capsule).map_err(|e| e.to_string())?;
+            need(read().is_err(), "runtime capsule symlink rejected")?;
+            fs::remove_file(&capsule).map_err(|e| e.to_string())?;
+            fs::write(&capsule, builder_patch::CAPSULE_RAW).map_err(|e| e.to_string())?;
+            need(
+                digest(&read()?) == prior_sha,
+                "restored actual source passes",
+            )
+        })();
+        fs::remove_dir_all(&owned).expect("retire owned fixture");
+        result.unwrap();
+    }
 }
