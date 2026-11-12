@@ -562,18 +562,9 @@ pub(crate) fn successor(root: &Path, path: &str, blob: &str) -> Result<bool> {
     Ok(true)
 }
 fn bounded_current_python_source(root: &Path, row: &Successor) -> Result<Vec<u8>> {
-    let path = root.join(row.0);
-    let metadata = fs::symlink_metadata(&path).map_err(|error| error.to_string())?;
-    need(
-        metadata.is_file() && !metadata.file_type().is_symlink() && metadata.len() <= 131072,
-        "current deployment test is bounded regular source",
-    )?;
-    let raw = fs::read(&path).map_err(|error| error.to_string())?;
-    need(
-        raw.len() == metadata.len() as usize,
-        "bounded deployment-test read length",
-    )?;
-    Ok(raw)
+    // The successor tuple already fixes the only admissible bytes. Reuse the
+    // descriptor-bound reader so replacement/growth cannot bypass the read cap.
+    material(root, row.0, row.2, row.3)
 }
 /// Current deployment-test source projected through the same strict F01 inverse.
 pub(crate) fn historical_python_source(
@@ -629,4 +620,54 @@ pub(crate) fn historical_python_source(
     }
     let raw = bounded_current_python_source(root, source)?;
     prior(source, &raw).map(Some)
+}
+
+#[cfg(all(test, unix))]
+mod bounded_source_tests {
+    use super::*;
+    use std::os::unix::fs::{PermissionsExt, symlink};
+
+    #[test]
+    fn current_python_source_requires_authenticated_regular_material() {
+        let base = configured_temp_root(
+            std::env::var_os("TMPDIR"),
+            std::env::var_os("SLOPSEARX_TEST_TEMP_ROOT"),
+        )
+        .unwrap();
+        let root = base.join(format!("ssx-current-source-{}", std::process::id()));
+        fs::create_dir(&root).unwrap();
+        let row = SUCCESSORS
+            .iter()
+            .find(|row| row.0 == "tests/test_deployment_artifacts.py")
+            .unwrap();
+        let source = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../..")
+            .join(row.0);
+        let path = root.join(row.0);
+        fs::create_dir(path.parent().unwrap()).unwrap();
+        fs::copy(&source, &path).unwrap();
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o644)).unwrap();
+        let expected = fs::read(&source).unwrap();
+        assert_eq!(bounded_current_python_source(&root, row).unwrap(), expected);
+
+        let mut corrupt = expected.clone();
+        corrupt[0] ^= 1;
+        fs::write(&path, &corrupt).unwrap();
+        assert!(bounded_current_python_source(&root, row).is_err());
+        fs::write(&path, &expected).unwrap();
+        fs::OpenOptions::new()
+            .write(true)
+            .open(&path)
+            .unwrap()
+            .set_len(131073)
+            .unwrap();
+        assert!(bounded_current_python_source(&root, row).is_err());
+        fs::remove_file(&path).unwrap();
+        symlink(&source, &path).unwrap();
+        assert!(bounded_current_python_source(&root, row).is_err());
+        fs::remove_file(&path).unwrap();
+        fs::create_dir(&path).unwrap();
+        assert!(bounded_current_python_source(&root, row).is_err());
+        fs::remove_dir_all(&root).unwrap();
+    }
 }
