@@ -322,3 +322,5 @@ EXP-119 readout:not-supported at development. Metadata-conditioned selector nP@5
 - [2026-11-08 readiness](daily-readiness-2026-11-08.md): preserves the corrected #1111 evidence boundary and ranks qualification prerequisites; no new trial or product improvement.
 
 - [PREREQ-1111](PREREQ-1111-permission-readback.md), 2026-11-09: finite permission-input diagnostic qualified21/21 immediate readbacks; writes cleared setuid/setgid bits. Actual Rust custody failure remains unproven by this probe; no product uplift or sealed-source change.
+
+- [PREREQ-1111 Rust boundary](PREREQ-1111-rust-boundary.md), 2026-11-10: unchanged extracted leaf checker produced12/12 expected permission decisions; full-suite context remains unresolved. Prerequisite only, no implementation change.
