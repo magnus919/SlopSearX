@@ -1189,9 +1189,15 @@ async fn outer_scalar_array_prompt_params_are_rejected_before_dispatch_with_expl
                     u64::from(response.status().as_u16()),
                     difference["native_status"].as_u64().unwrap()
                 );
+                // Preserve the frozen 3.5.1 observation; 3.9.0 rejects the same
+                // malformed grammar with a new SDK diagnostic (HTTP415).
+                assert_eq!(
+                    difference["native_body"].as_str().unwrap(),
+                    "fail to deserialize request body data did not match any variant of untagged enum JsonRpcMessage"
+                );
                 assert_eq!(
                     response.text().await?,
-                    difference["native_body"].as_str().unwrap()
+                    "fail to deserialize request body unrecognized JSON-RPC message"
                 );
             }
             assert_eq!(

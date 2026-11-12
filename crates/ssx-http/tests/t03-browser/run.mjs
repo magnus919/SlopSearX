@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { measureInteraction, timingControls, INTERACTION_DEFINITION } from './interaction.mjs';
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync, lstatSync, existsSync } from 'node:fs';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
@@ -50,6 +51,7 @@ const pageErrors = [];
 const requestFailures = [];
 const artifacts = [];
 const interactionSamples = [];
+let interactionControls = null;
 const handoffSamples = [];
 let browser = null;
 let browserClosed = false;
@@ -193,18 +195,20 @@ async function searchByQuery(page, query, extra = {}) {
   return navigate(page, `/search?${params.toString()}`);
 }
 
-async function clickAndMeasure(page, locator) {
-  const start = performance.now();
-  await locator.click();
-  await page.evaluate(() => new Promise((resolveFrame) => requestAnimationFrame(resolveFrame)));
-  interactionSamples.push(performance.now() - start);
+async function clickAndMeasure(page, locator, id) {
+  const sample = await measureInteraction(page, () => locator.click(), {
+    event: 'click', target: '[data-theme-toggle]', selector: 'html',
+    kind: 'attribute', attribute: 'data-theme', value: 'darker',
+  });
+  interactionSamples.push({ id, ...sample });
 }
 
 async function keyboardAndMeasure(page, key) {
-  const start = performance.now();
-  await page.keyboard.press(key);
-  await page.evaluate(() => new Promise((resolveFrame) => requestAnimationFrame(resolveFrame)));
-  interactionSamples.push(performance.now() - start);
+  const expected = key === 'Enter'
+    ? { event: 'keydown', key, target: 'summary', selector: 'details.result-explanation', kind: 'attribute', attribute: 'open', value: '' }
+    : { event: 'keydown', key, selector: '.result-link', kind: 'focus' };
+  const sample = await measureInteraction(page, () => page.keyboard.press(key), expected);
+  interactionSamples.push({ id: key === 'Enter' ? 'disclosure' : 'focus', ...sample });
 }
 
 async function landingAndSearch(page, query = 'valkey', category = 'general') {
@@ -260,7 +264,7 @@ async function collectContractBudgets(landingMetric, resultsMetric, page) {
   const gzipBytes = gzipSync(Buffer.from(landingMetric.html, 'utf8')).byteLength;
   const cssJsBytes = Buffer.byteLength(landingMetric.style, 'utf8') + Buffer.byteLength(landingMetric.script, 'utf8');
   const handoffP95 = percentile95(handoffSamples);
-  const interactionP95 = percentile95(interactionSamples);
+  const interactionP95 = percentile95(interactionSamples.map((sample) => sample.duration_ms));
   budgets = {
     profile: 'synthetic offline T03 fixture; Chromium; Fast 3G emulation (150 ms, 1.6 Mbit/s down, 750 Kbit/s up); 4x CPU throttle; no browser zoom emulation',
     html_uncompressed_bytes: metric(htmlBytes, 51200),
@@ -274,15 +278,17 @@ async function collectContractBudgets(landingMetric, resultsMetric, page) {
       result_settle_ms: 250,
     },
     interaction_p95_ms: metric(interactionP95, 100),
+    interaction_evidence: { definition: INTERACTION_DEFINITION, samples: interactionSamples, controls: interactionControls },
     handoff_p95_ms: metric(handoffP95, 150),
   };
   for (const [name, result] of Object.entries(budgets)) {
-    if (name === 'profile' || name === 'cls_samples') continue;
+    if (name === 'profile' || name === 'cls_samples' || name === 'interaction_evidence') continue;
     if (!result.pass) addFailure(`budget-${name}`, `observed ${result.observed}, limit ${result.limit}`);
   }
 }
 
 async function runContract() {
+  interactionControls = await timingControls(browser);
   const context = await newContext({ viewport: { width: 1440, height: 900 } });
   const page = await context.newPage();
   attachPageEvidence(page);
@@ -421,7 +427,7 @@ async function runContract() {
   await check('dark-darker-storage', async () => {
     await navigate(page, '/');
     assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark');
-    await clickAndMeasure(page, page.getByRole('button', { name: 'Use darker mode' }));
+    await clickAndMeasure(page, page.getByRole('button', { name: 'Use darker mode' }), 'theme');
     assert.equal(await page.locator('html').getAttribute('data-theme'), 'darker');
     assert.equal(await page.evaluate(() => localStorage.getItem('slopsearx-theme')), 'darker');
     await page.reload({ waitUntil: 'domcontentloaded' });
@@ -435,7 +441,7 @@ async function runContract() {
     attachPageEvidence(blockedPage);
     await navigate(blockedPage, '/');
     assert.equal(await blockedPage.locator('html').getAttribute('data-theme'), 'dark');
-    await clickAndMeasure(blockedPage, blockedPage.getByRole('button', { name: 'Use darker mode' }));
+    await clickAndMeasure(blockedPage, blockedPage.getByRole('button', { name: 'Use darker mode' }), 'theme-storage-blocked');
     assert.equal(await blockedPage.locator('html').getAttribute('data-theme'), 'darker');
     await screenshot(blockedPage, 'contract-blocked-storage.png');
     await blocked.close();

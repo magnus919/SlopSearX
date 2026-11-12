@@ -588,6 +588,14 @@
               "uses": "actions/checkout@v7"
             },
             {
+              "name": "Install repository-pinned Rust toolchain",
+              "run": "set -euo pipefail\ntoolchain=\"$(sed -n 's/^channel = \"\\([^\"\\]*\\)\"/\\1/p' rust-toolchain.toml)\"\ntest \"$toolchain\" = \"1.99.0\"\nrustup toolchain install \"$toolchain\" --profile minimal\n"
+            },
+            {
+              "name": "Confirm pinned Rust toolchain",
+              "run": "rustup run 1.99.0 rustc --version --verbose"
+            },
+            {
               "name": "Configure hosted-runner Docker Hub cache",
               "run": "python3 scripts/configure_ci_dockerhub_mirror.py"
             },
@@ -623,7 +631,7 @@
             },
             {
               "name": "Verify pinned Docker base digest",
-              "run": "python3 scripts/verify_docker_base_digest.py"
+              "run": "cargo xtask ci-helper image-pin-verify-base"
             },
             {
               "name": "Build and load image",
