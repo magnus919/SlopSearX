@@ -475,6 +475,7 @@ pub(crate) fn test_dependency_prior(
     Ok(prior)
 }
 pub(crate) fn controls(root: &Path) -> Result<()> {
+    rmcp_security_controls(root)?;
     let actual = regular(root, "Cargo.lock")?;
     let health = portal_health_lock_frame(&actual)?;
     need(
@@ -547,52 +548,70 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
     Ok(())
 }
 
-#[cfg(test)]
-mod rmcp_security_tests {
-    use super::*;
-    #[test]
-    fn exact_security_successors_preserve_history_and_reject_substitution() {
-        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-        let doc = rmcp_security_capsule(RMCP_SECURITY_CAPSULE).unwrap();
-        assert!(rmcp_security_capsule(&format!("{RMCP_SECURITY_CAPSULE} ")).is_err());
-        for (index, (path, count)) in RMCP_ROWS.iter().enumerate() {
-            let actual = regular(&root, path).unwrap();
-            assert_eq!(source_mode(&root, path).unwrap(), "0644");
-            let prior = rmcp_security_prior(path, &actual).unwrap();
-            let git = Command::new("git")
-                .args([
-                    "show",
-                    &format!("8ee37a22d393ccff7493c5196be268cd872c140f:{path}"),
-                ])
-                .current_dir(&root)
-                .output()
-                .unwrap();
-            assert!(git.status.success());
-            assert_eq!(prior, git.stdout);
-            assert!(rmcp_security_prior(path, &prior).is_err());
-            assert!(rmcp_security_prior("unowned", &actual).is_err());
-            let mut changed = actual.clone();
-            changed[0] ^= 1;
-            assert!(rmcp_security_prior(path, &changed).is_err());
-            for mode in ["0600", "0755", "4644"] {
-                assert!(inverse(&doc["rows"][index], &actual, mode, *count).is_err());
-            }
-            for mutation in 0..3 {
-                let mut row = doc["rows"][index].clone();
-                let edits = row["edits"].as_array_mut().unwrap();
-                match mutation {
-                    0 => {
-                        edits.pop();
-                    }
-                    1 => {
-                        edits.push(edits[0].clone());
-                    }
-                    _ => {
-                        edits[0]["insert_utf8"] = Value::String("wrong".into());
-                    }
+// Run through the existing source-custody gate, preserving its closed test inventory.
+fn rmcp_security_controls(root: &Path) -> Result<()> {
+    let doc = rmcp_security_capsule(RMCP_SECURITY_CAPSULE)?;
+    need(
+        rmcp_security_capsule(&format!("{RMCP_SECURITY_CAPSULE} ")).is_err(),
+        "altered security capsule rejected",
+    )?;
+    for (index, (path, count)) in RMCP_ROWS.iter().enumerate() {
+        let actual = regular(root, path)?;
+        source_mode(root, path)?;
+        let prior = rmcp_security_prior(path, &actual)?;
+        let git = Command::new("git")
+            .args([
+                "show",
+                &format!("8ee37a22d393ccff7493c5196be268cd872c140f:{path}"),
+            ])
+            .current_dir(root)
+            .output()
+            .map_err(|e| e.to_string())?;
+        need(
+            git.status.success() && prior == git.stdout,
+            "security exact Git predecessor",
+        )?;
+        need(
+            rmcp_security_prior(path, &prior).is_err(),
+            "security historical input rejected",
+        )?;
+        need(
+            rmcp_security_prior("unowned", &actual).is_err(),
+            "security unowned path rejected",
+        )?;
+        let mut changed = actual.clone();
+        changed[0] ^= 1;
+        need(
+            rmcp_security_prior(path, &changed).is_err(),
+            "security changed bytes rejected",
+        )?;
+        for mode in ["0600", "0755", "4644"] {
+            need(
+                inverse(&doc["rows"][index], &actual, mode, *count).is_err(),
+                "security changed mode rejected",
+            )?;
+        }
+        for mutation in 0..3 {
+            let mut row = doc["rows"][index].clone();
+            let edits = row["edits"]
+                .as_array_mut()
+                .ok_or("security control edits")?;
+            match mutation {
+                0 => {
+                    edits.pop();
                 }
-                assert!(inverse(&row, &actual, "0644", *count).is_err());
+                1 => {
+                    edits.push(edits[0].clone());
+                }
+                _ => {
+                    edits[0]["insert_utf8"] = Value::String("wrong".into());
+                }
             }
+            need(
+                inverse(&row, &actual, "0644", *count).is_err(),
+                "security altered spans rejected",
+            )?;
         }
     }
+    Ok(())
 }

@@ -211,6 +211,7 @@ pub(crate) fn reader_parent(
     parent(root, path, expected, supplied)
 }
 pub(crate) fn controls(root: &Path) -> Result<()> {
+    rmcp_transport_controls(root)?;
     current_controls(root)?;
     let capsule = load(root)?;
     for frozen in &capsule.frozen_predecessors {
@@ -922,21 +923,33 @@ fn rmcp_transport_prior(raw: &[u8], mode: u32, expected: &str) -> Result<Vec<u8>
     )?;
     Ok(prior.into_bytes())
 }
-#[cfg(test)]
-mod rmcp_transport_tests {
-    use super::*;
-    #[test]
-    fn exact_diagnostic_successor_preserves_capture_and_rejects_substitution() {
-        let raw = include_bytes!("../../../../crates/ssx-mcp/tests/t06_transport.rs");
-        let prior = rmcp_transport_prior(raw, 0o644, RMCP_TRANSPORT_PRIOR).unwrap();
-        assert!(rmcp_transport_prior(&prior, 0o644, RMCP_TRANSPORT_PRIOR).is_err());
-        assert!(rmcp_transport_prior(raw, 0o755, RMCP_TRANSPORT_PRIOR).is_err());
-        assert!(rmcp_transport_prior(raw, 0o644, RMCP_TRANSPORT_CURRENT).is_err());
-        let mut changed = raw.to_vec();
-        changed[0] ^= 1;
-        assert!(rmcp_transport_prior(&changed, 0o644, RMCP_TRANSPORT_PRIOR).is_err());
-        changed = raw.to_vec();
-        changed.push(b' ');
-        assert!(rmcp_transport_prior(&changed, 0o644, RMCP_TRANSPORT_PRIOR).is_err());
-    }
+// Shared readers execute these negatives inside the existing closed inventory.
+fn rmcp_transport_controls(root: &Path) -> Result<()> {
+    let (raw, mode) = regular(root, RMCP_TRANSPORT)?;
+    let prior = rmcp_transport_prior(&raw, mode, RMCP_TRANSPORT_PRIOR)?;
+    need(
+        rmcp_transport_prior(&prior, 0o644, RMCP_TRANSPORT_PRIOR).is_err(),
+        "rmcp historical input rejected",
+    )?;
+    need(
+        rmcp_transport_prior(&raw, 0o755, RMCP_TRANSPORT_PRIOR).is_err(),
+        "rmcp altered mode rejected",
+    )?;
+    need(
+        rmcp_transport_prior(&raw, 0o644, RMCP_TRANSPORT_CURRENT).is_err(),
+        "rmcp altered expected identity rejected",
+    )?;
+    let mut changed = raw.clone();
+    changed[0] ^= 1;
+    need(
+        rmcp_transport_prior(&changed, 0o644, RMCP_TRANSPORT_PRIOR).is_err(),
+        "rmcp altered byte rejected",
+    )?;
+    changed = raw.clone();
+    changed.push(b' ');
+    need(
+        rmcp_transport_prior(&changed, 0o644, RMCP_TRANSPORT_PRIOR).is_err(),
+        "rmcp oversized input rejected",
+    )?;
+    Ok(())
 }
