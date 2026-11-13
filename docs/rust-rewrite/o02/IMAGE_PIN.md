@@ -113,14 +113,15 @@ O02 completion.
 
 ## Remaining O02 scope
 
-- Replace `scripts/portal_release_smoke.py` (two `docker.yml` uses).
+- Retire `scripts/portal_release_smoke.py` and its source-bound Python deployment-test oracle only through the reviewed F01/G08 successor. The Docker jobs now use the native smoke helper; the historical source remains byte-identical until that retirement is accepted.
 - Replace `scripts/configure_ci_dockerhub_mirror.py` (`ci.yml`, `docker.yml`).
 - Replace `scripts/upstream_contracts.py` (`.github/workflows/upstream-contracts.yml`).
 - Complete O02's evidence and ownership criteria; source retirement is a separate
   G08 concern, and this verifier wiring does not delete tracked Python files.
 
-The remaining workflow migrations require updating `tests/test_deployment_artifacts.py`,
-`docs/rust-rewrite/inventory/python-invocations.json`, current-source admissions,
-and the executable gate catalog in the same reviewed changes. F01 retains its
-original fixture and inventories the historical Docker command; no source deletion
-or invocation retirement is claimed by this increment.
+The portal-smoke transition updates the current workflow source and executable
+gate catalog together, and records both current native invocations in
+`PORTAL_SMOKE_TRANSITION.json`. It leaves the F01 invocation, Python-disposition,
+and tooling inventories unchanged because they are historical evidence. The
+Python source and source-bound deployment test remain until a separately
+reviewed G08 retirement amendment. This increment does not complete O02.
