@@ -291,6 +291,8 @@ fn expected_http() -> Vec<HttpExpected> {
         "malicious",
         "missing",
         "empty",
+        "empty-source",
+        "media",
         "partial",
         "all-failed",
         "long",
@@ -353,7 +355,7 @@ fn group_for(path: &Path, groups: &BTreeSet<&str>) -> Result<String> {
 fn validate_http(base: &Path, stdout: &str, binary: &Path, binary_sha: &str) -> Result<Value> {
     let expected = expected_http();
     need(
-        expected.len() == 104,
+        expected.len() == 106,
         "compiled HTTP receipt inventory is incomplete",
     )?;
     let groups: BTreeSet<_> = expected.iter().map(|row| row.group).collect();
@@ -849,6 +851,21 @@ fn validate_budgets(scenario: &str, engine: &str, budgets: &Value) -> Result<()>
     Ok(())
 }
 
+fn validate_synthetic_media_response(response: &Value) -> Result<()> {
+    exact_keys(
+        response,
+        &["url", "status", "content_type", "purpose"],
+        "synthetic fixture response",
+    )?;
+    need(
+        response["url"] == "https://cdn.example.com/thumb.jpg"
+            && response["status"] == 200
+            && response["content_type"] == "image/svg+xml"
+            && response["purpose"] == "offline T03 media thumbnail",
+        "synthetic media response identity differs",
+    )
+}
+
 fn validate_browser(
     base: &Path,
     stdout: &str,
@@ -893,6 +910,7 @@ fn validate_browser(
             "skipped",
             "failures",
             "unexpected_requests",
+            "synthetic_fixture_responses",
             "console_errors",
             "http_error_responses",
             "http_error_console_statuses",
@@ -955,6 +973,21 @@ fn validate_browser(
         need(
             receipt[field].as_array().is_some_and(Vec::is_empty),
             &format!("browser {field} must be empty"),
+        )?;
+    }
+    let fixture_responses = receipt["synthetic_fixture_responses"]
+        .as_array()
+        .ok_or("T03 synthetic fixture response evidence missing")?;
+    if scenario == "contract" {
+        need(
+            fixture_responses.len() == 1,
+            "contract browser must record its single offline media thumbnail response",
+        )?;
+        validate_synthetic_media_response(&fixture_responses[0])?;
+    } else {
+        need(
+            fixture_responses.is_empty(),
+            "non-contract browser scenario reported a synthetic media response",
         )?;
     }
     validate_http_error_evidence(&receipt, scenario, engine, base_url)?;
@@ -1382,7 +1415,7 @@ pub(crate) fn validator_controls() -> Result<()> {
     let rows:Vec<_>=SCENARIOS.into_iter().flat_map(|scenario|ENGINES.into_iter().map(move |engine|json!({"scenario":scenario,"engine":engine,"source_sha256":"synthetic-validator-input","terminal":{"stop_sent":true,"child_joined":true,"child_exit_success":true,"tree_retired":true,"stdout_eof":true,"stdout_tail_bytes":0,"stderr_bytes":0}}))).collect();
     controls(&rows, "synthetic-validator-input")?;
     need(
-        expected_http().len() == 104 && HTTP_TESTS.len() == 11,
+        expected_http().len() == 106 && HTTP_TESTS.len() == 11,
         "closed HTTP inventory",
     )
 }
@@ -1546,13 +1579,16 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         sources(root)? == before && hash(&regular(&binary, 256 * 1024 * 1024)?) == binary_sha,
         "source or executed fixture image changed during gate",
     )?;
-    records.push(json!({"plan":"T03","role":"native-browser-acceptance","source_inputs":before,"source_sha256":source_sha,"server_binary":{"path":binary,"sha256":binary_sha},"http_tests":HTTP_TESTS,"http_receipts":104,"http_processes":12,"browser_scenarios":browser_rows,"controls":negative,"evidence_directory":run,"scope":"real native HTTP plus deterministic Chromium and Firefox browser journeys and measured synthetic budgets; actual Safari, manual visual/assistive technology and 200% zoom acceptance remain separate"}));
+    records.push(json!({"plan":"T03","role":"native-browser-acceptance","source_inputs":before,"source_sha256":source_sha,"server_binary":{"path":binary,"sha256":binary_sha},"http_tests":HTTP_TESTS,"http_receipts":106,"http_processes":12,"browser_scenarios":browser_rows,"controls":negative,"evidence_directory":run,"scope":"real native HTTP plus deterministic Chromium and Firefox browser journeys and measured synthetic budgets; actual Safari, manual visual/assistive technology and 200% zoom acceptance remain separate"}));
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{validate_budgets, validate_engine_call, validate_http_error_evidence};
+    use super::{
+        validate_budgets, validate_engine_call, validate_http_error_evidence,
+        validate_synthetic_media_response,
+    };
     use serde_json::{Value, json};
 
     pub(super) fn passing_budgets() -> Value {
@@ -1577,6 +1613,29 @@ mod tests {
             },
             "handoff_p95_ms": {"observed": 60.0, "limit": 150.0, "pass": true}
         })
+    }
+
+    #[test]
+    fn synthetic_media_response_requires_the_source_parity_fixture_url() {
+        let current = json!({
+            "url": "https://cdn.example.com/thumb.jpg",
+            "status": 200,
+            "content_type": "image/svg+xml",
+            "purpose": "offline T03 media thumbnail"
+        });
+        validate_synthetic_media_response(&current).expect("candidate media URL must validate");
+
+        let obsolete = json!({
+            "url": "https://example.org/image-thumb.jpg",
+            "status": 200,
+            "content_type": "image/svg+xml",
+            "purpose": "offline T03 media thumbnail"
+        });
+        let error = validate_synthetic_media_response(&obsolete).expect_err("old URL must fail");
+        assert!(
+            error.contains("synthetic media response identity differs"),
+            "{error}"
+        );
     }
 
     #[test]

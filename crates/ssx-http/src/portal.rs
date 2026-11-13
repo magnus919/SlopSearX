@@ -406,6 +406,13 @@ impl PublicPortal {
                 escape(payload["type"].as_str().unwrap_or("result"))
             );
         }
+        if let Some(media) = &result.media {
+            let _ = write!(
+                body,
+                "<div class=\"result-special\"><span>{} result</span></div>",
+                escape(&media.media_type)
+            );
+        }
         if let Some(media) = &result.media
             && let Some(thumbnail) = media.thumbnail.as_deref().and_then(safe_url)
         {
@@ -623,8 +630,20 @@ impl HtmlRenderer for PublicPortal {
         let empty = response
             .empty_engines
             .iter()
-            .filter_map(|e| e.first())
-            .map(|e| self.source_label(e))
+            .filter_map(|entry| {
+                let engine = entry.first()?;
+                let label = self.source_label(engine);
+                Some(
+                    match entry
+                        .get(1)
+                        .map(String::as_str)
+                        .filter(|reason| !reason.is_empty())
+                    {
+                        Some(reason) => format!("{label} ({reason})"),
+                        None => label.to_owned(),
+                    },
+                )
+            })
             .collect::<Vec<_>>()
             .join(", ");
         if response.all_unresponsive {
@@ -761,6 +780,27 @@ impl HtmlRenderer for PublicPortal {
                 "<li class=\"rail-source\"><span class=\"rail-source-name\">{}</span><span class=\"rail-source-count\">{count}</span></li>",
                 escape(&self.source_label(&engine))
             );
+        }
+        for outcome in response
+            .engine_outcomes
+            .iter()
+            .filter(|outcome| outcome.status != "ok")
+        {
+            let _ = write!(
+                body,
+                "<li class=\"rail-source rail-source-unavailable\"><span class=\"rail-source-name\">{}</span><span class=\"rail-source-count\">{}</span></li>",
+                escape(&self.source_label(&outcome.engine)),
+                escape(&outcome.status)
+            );
+        }
+        for entry in &response.empty_engines {
+            if let Some(engine) = entry.first() {
+                let _ = write!(
+                    body,
+                    "<li class=\"rail-source rail-source-empty\"><span class=\"rail-source-name\">{}</span><span class=\"rail-source-count\">no results</span></li>",
+                    escape(&self.source_label(engine))
+                );
+            }
         }
         if response.results.is_empty() {
             body.push_str("<li class=\"rail-source\">No responding sources returned results</li>");

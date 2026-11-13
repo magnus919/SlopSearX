@@ -8,7 +8,9 @@ use ssx_application::{
     policy::{PolicyService, SearchPolicy},
     scope::{CatalogSnapshot, EngineCapability, ScopeResolver},
 };
-use ssx_domain::{AdapterResponse, EngineStatus, FiniteF64, SearchRequest, SearchResult};
+use ssx_domain::{
+    AdapterResponse, EngineStatus, FiniteF64, MediaInfo, SearchRequest, SearchResult,
+};
 use ssx_http::{HttpState, html::PublicHtml};
 use ssx_infra::{
     observability::{Options, Telemetry},
@@ -47,6 +49,9 @@ impl SearchEngine for FixtureEngine {
             if request.query == "empty" {
                 return response;
             }
+            if request.query == "empty-source" && self.name == "beta" {
+                return response;
+            }
             let mut result = SearchResult {
                 url: "https://example.org/article?source=fixture".into(),
                 title: "A useful deterministic result".into(),
@@ -82,6 +87,19 @@ impl SearchEngine for FixtureEngine {
                     result.url = format!("https://example.org/{}/vulnerability", self.name);
                     result.payload = Some(
                         json!({"schema_version":1,"domain":"security","type":"vulnerability","data":{"cve_id":"CVE-2026-12345","summary":format!("{} <conflict>",self.name)},"provenance":{"engine":self.name,"adapter_fields":["cve_id","summary"],"inferred_fields":[]}}),
+                    );
+                }
+                "media" if self.name == "alpha" => {
+                    result.url = "https://example.com".into();
+                    result.title = "Vulnerability result".into();
+                    result.media = Some(MediaInfo {
+                        media_type: "image".into(),
+                        thumbnail: Some("https://cdn.example.com/thumb.jpg".into()),
+                        source: Some("https://example.com/source".into()),
+                        ..Default::default()
+                    });
+                    result.payload = Some(
+                        json!({"schema_version":1,"domain":"security","type":"vulnerability","data":{"cve_id":"CVE-2026-0001"},"provenance":{"engine":"nvd","adapter_fields":["cve_id"],"inferred_fields":[]}}),
                     );
                 }
                 _ => {}
@@ -197,7 +215,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         vec!["general".into(), "science".into()],
     )?;
     let service = SearchService::new(
-        SearchConfig::default(),
+        SearchConfig {
+            empty_scrape_diagnostics: true,
+            ..Default::default()
+        },
         SearchDependencies {
             policy: PolicyService {
                 policy,
@@ -224,7 +245,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             }),
                             generation: "t03-synthetic-v1".into(),
                             timeout: Duration::from_secs(2),
-                            scrape: false,
+                            scrape: *name == "beta",
                         },
                     )
                 })

@@ -49,6 +49,7 @@ const httpErrorResponses = [];
 const httpErrorConsoleStatuses = [];
 const pageErrors = [];
 const requestFailures = [];
+const syntheticFixtureResponses = [];
 const artifacts = [];
 const interactionSamples = [];
 let interactionControls = null;
@@ -116,6 +117,21 @@ async function newContext(options = {}) {
   context.on('page', attachPageEvidence);
   await context.route('**/*', async (route) => {
     const requestUrl = route.request().url();
+    if (
+      scenario === 'contract' &&
+      requestUrl === 'https://cdn.example.com/thumb.jpg' &&
+      route.request().method() === 'GET'
+    ) {
+      const body = '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"></svg>';
+      await route.fulfill({ status: 200, contentType: 'image/svg+xml', body });
+      syntheticFixtureResponses.push({
+        url: requestUrl,
+        status: 200,
+        content_type: 'image/svg+xml',
+        purpose: 'offline T03 media thumbnail',
+      });
+      return;
+    }
     let requestOrigin = '';
     try {
       requestOrigin = new URL(requestUrl).origin;
@@ -374,6 +390,33 @@ async function runContract() {
     assert.equal(response.status(), 200);
     assert(await page.getByRole('status').getByText('Some sources could not answer this search.').isVisible());
     assert(await page.locator('article[data-result-card]').count() > 0);
+    assert.equal(await page.locator('.rail-source-unavailable .rail-source-name').innerText(), 'Beta <source>');
+
+    const emptySource = await searchByQuery(page, 'empty-source', { categories: 'general' });
+    assert.equal(emptySource.status(), 200);
+    assert(await page.getByRole('status').getByText('No results from some sources.').isVisible());
+    assert.equal(await page.getByRole('status').getByText('Some sources could not answer this search.').count(), 0);
+    assert.equal(await page.locator('.rail-source-empty .rail-source-name').innerText(), 'Beta <source>');
+    assert.equal(await page.locator('.rail-source-empty .rail-source-count').innerText(), 'no results');
+
+    const media = await searchByQuery(page, 'media', { categories: 'general' });
+    assert.equal(media.status(), 200);
+    const mediaCard = page.locator('article[data-result-card]').filter({ hasText: 'image result' }).first();
+    assert(await mediaCard.locator('.result-special').getByText('image result').isVisible());
+    const thumbnail = mediaCard.locator('img');
+    assert.equal(await thumbnail.getAttribute('src'), 'https://cdn.example.com/thumb.jpg');
+    assert.equal(await thumbnail.getAttribute('alt'), 'Vulnerability result');
+    assert(await mediaCard.locator('.result-special').getByText('security / vulnerability').isVisible());
+    await thumbnail.scrollIntoViewIfNeeded();
+    await thumbnail.evaluate(async (image) => {
+      if (!image.complete) {
+        await new Promise((resolve, reject) => {
+          image.addEventListener('load', resolve, { once: true });
+          image.addEventListener('error', () => reject(new Error('media thumbnail failed to load')), { once: true });
+        });
+      }
+      if (image.naturalWidth <= 0) throw new Error('media thumbnail decoded to no image data');
+    });
   });
 
   await check('all-source-failure', async () => {
@@ -460,16 +503,46 @@ async function runContract() {
   await check('keyboard-only', async () => {
     await navigate(page, '/');
     const input = page.getByRole('searchbox', { name: 'Search SlopSearX' });
-    assert.equal(await input.evaluate((el) => document.activeElement === el), true);
+    const landingFocus = await input.evaluate((expected) => {
+      const active = document.activeElement;
+      return {
+        focused: active === expected,
+        readyState: document.readyState,
+        activeTag: active instanceof Element ? active.tagName.toLowerCase() : null,
+        activeId: active instanceof Element ? active.id : null,
+        activeClasses: active instanceof Element ? [...active.classList] : [],
+      };
+    });
+    assert.equal(landingFocus.focused, true, `landing searchbox autofocus: ${JSON.stringify(landingFocus)}`);
     await page.keyboard.type('keyboard');
     await page.keyboard.press('Tab');
-    assert.equal(await page.evaluate(() => document.activeElement?.classList.contains('search-button')), true);
+    const tabFocus = await page.evaluate(() => {
+      const active = document.activeElement;
+      return {
+        focused: active instanceof Element && active.classList.contains('search-button'),
+        readyState: document.readyState,
+        activeTag: active instanceof Element ? active.tagName.toLowerCase() : null,
+        activeId: active instanceof Element ? active.id : null,
+        activeClasses: active instanceof Element ? [...active.classList] : [],
+      };
+    });
+    assert.equal(tabFocus.focused, true, `Tab should focus the search button: ${JSON.stringify(tabFocus)}`);
     await navigateBy(page, () => page.keyboard.press('Enter'));
     assert.equal(new URL(page.url()).searchParams.get('q'), 'keyboard');
     await page.locator('a.brand').focus();
     await keyboardAndMeasure(page, 'j');
     const activationLink = page.locator('.result-link').first();
-    assert.equal(await activationLink.evaluate((el) => document.activeElement === el), true);
+    const resultFocus = await activationLink.evaluate((expected) => {
+      const active = document.activeElement;
+      return {
+        focused: active === expected,
+        readyState: document.readyState,
+        activeTag: active instanceof Element ? active.tagName.toLowerCase() : null,
+        activeId: active instanceof Element ? active.id : null,
+        activeClasses: active instanceof Element ? [...active.classList] : [],
+      };
+    });
+    assert.equal(resultFocus.focused, true, `j should focus the first result link: ${JSON.stringify(resultFocus)}`);
     const linkEvidence = await activationLink.evaluate((link) => {
       window.__t03Activation = null;
       link.addEventListener('click', (event) => {
@@ -573,6 +646,7 @@ async function writeRuntimeEvidence() {
   const path = pathFor(`${scenario}.browser-runtime-errors.json`);
   const document = {
     unexpected_requests: unexpectedRequests,
+    synthetic_fixture_responses: syntheticFixtureResponses,
     console_errors: consoleErrors,
     http_error_responses: httpErrorResponses,
     http_error_console_statuses: httpErrorConsoleStatuses,
@@ -679,6 +753,7 @@ async function main() {
     skipped: [],
     failures,
     unexpected_requests: unexpectedRequests,
+    synthetic_fixture_responses: syntheticFixtureResponses,
     console_errors: consoleErrors,
     http_error_responses: httpErrorResponses,
     http_error_console_statuses: httpErrorConsoleStatuses,

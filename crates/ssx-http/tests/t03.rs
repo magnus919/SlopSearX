@@ -145,6 +145,8 @@ async fn malicious_optional_empty_partial_and_unavailable_states_are_truthful() 
         ("malicious", 200),
         ("missing", 200),
         ("empty", 200),
+        ("empty-source", 200),
+        ("media", 200),
         ("partial", 200),
         ("all-failed", 503),
         ("long", 200),
@@ -174,10 +176,26 @@ async fn malicious_optional_empty_partial_and_unavailable_states_are_truthful() 
                 assert!(body.contains("No results found") && body.contains("broader query"));
                 assert!(!body.contains("Try next page →"));
             }
-            "partial" => assert!(
-                body.contains("Some sources could not answer")
-                    && body.contains("Beta &lt;source&gt;")
+            "empty-source" => {
+                assert!(body.contains("No results from some sources."));
+                assert!(
+                    body.contains("Beta &lt;source&gt; (successful scrape returned no results)")
+                );
+                assert!(!body.contains("Some sources could not answer this search."));
+                assert!(body.contains("class=\"rail-source rail-source-empty\""));
+                assert!(body.contains("<span class=\"rail-source-count\">no results</span>"));
+            }
+            "media" => assert!(
+                body.contains("image result")
+                    && body.contains("security / vulnerability")
+                    && body.contains("src=\"https://cdn.example.com/thumb.jpg\"")
+                    && body.contains("alt=\"Vulnerability result\"")
             ),
+            "partial" => {
+                assert!(body.contains("Some sources could not answer"));
+                assert!(body.contains("Beta &lt;source&gt;"));
+                assert!(body.contains("class=\"rail-source rail-source-unavailable\""));
+            }
             "all-failed" => {
                 assert!(
                     body.contains("No configured source returned a result")
