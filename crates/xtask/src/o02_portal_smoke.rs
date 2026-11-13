@@ -1,6 +1,8 @@
 use crate::Result;
 use serde_json::Value;
-use std::{collections::BTreeMap, io, net::IpAddr, process::Stdio, time::Duration};
+use std::{
+    collections::BTreeMap, env, ffi::OsString, io, net::IpAddr, process::Stdio, time::Duration,
+};
 use tokio::{
     io::{AsyncBufRead, AsyncBufReadExt, AsyncRead, AsyncReadExt, AsyncWriteExt, BufReader},
     process::{Child, Command},
@@ -99,6 +101,12 @@ struct Probe {
 struct Once {
     probe: Probe,
     redirect: Option<Url>,
+}
+
+#[derive(Default)]
+struct CurlEnvOverrides {
+    http_proxy: Option<OsString>,
+    no_proxy: Option<OsString>,
 }
 
 #[derive(Debug)]
@@ -370,17 +378,66 @@ fn curl_config(url: &Url, accept: &str) -> String {
     )
 }
 
+fn uppercase_http_proxy_fallback(
+    url: &Url,
+    lowercase_proxy: Option<OsString>,
+    uppercase_proxy: Option<OsString>,
+    request_method_is_set: bool,
+) -> Option<OsString> {
+    if url.scheme() != "http"
+        || is_loopback_host(url)
+        || lowercase_proxy.is_some()
+        || request_method_is_set
+    {
+        return None;
+    }
+    uppercase_proxy
+}
+
 async fn request_once(
     url: Url,
     accept: &'static str,
     label: &str,
     remaining: Duration,
 ) -> Result<Once> {
+    let http_proxy_fallback = uppercase_http_proxy_fallback(
+        &url,
+        env::var_os("http_proxy"),
+        env::var_os("HTTP_PROXY"),
+        env::var_os("REQUEST_METHOD").is_some(),
+    );
+    request_once_with_env_overrides(
+        url,
+        accept,
+        label,
+        remaining,
+        CurlEnvOverrides {
+            http_proxy: http_proxy_fallback,
+            no_proxy: None,
+        },
+    )
+    .await
+}
+
+async fn request_once_with_env_overrides(
+    url: Url,
+    accept: &'static str,
+    label: &str,
+    remaining: Duration,
+    env_overrides: CurlEnvOverrides,
+) -> Result<Once> {
     if remaining.is_zero() {
         return Err(format!("portal smoke {label} request timed out"));
     }
     let max_time = format!("{:.6}", remaining.as_secs_f64().max(0.001));
     let mut command = Command::new("curl");
+    if let Some(proxy) = env_overrides.http_proxy {
+        command.env("http_proxy", proxy);
+    }
+    if let Some(no_proxy) = env_overrides.no_proxy {
+        command.env("no_proxy", no_proxy.clone());
+        command.env("NO_PROXY", no_proxy);
+    }
     command
         .arg("--disable")
         .args([
@@ -710,6 +767,53 @@ mod tests {
         assert!(redirect_target(&local, "http://user:secret@example.test/").is_err());
     }
 
+    #[test]
+    fn uppercase_http_proxy_fallback_matches_urllib_precedence() {
+        let http = Url::parse("http://search.example.test/healthz").unwrap();
+        let proxy = OsString::from("http://proxy.example.test:8080");
+        assert_eq!(
+            uppercase_http_proxy_fallback(&http, None, Some(proxy.clone()), false),
+            Some(proxy.clone())
+        );
+        assert_eq!(
+            uppercase_http_proxy_fallback(
+                &http,
+                Some(OsString::from("http://lowercase.example.test:8080")),
+                Some(proxy.clone()),
+                false,
+            ),
+            None
+        );
+        assert_eq!(
+            uppercase_http_proxy_fallback(&http, Some(OsString::new()), Some(proxy.clone()), false),
+            None,
+            "an explicitly empty lowercase variable suppresses uppercase fallback"
+        );
+        assert_eq!(
+            uppercase_http_proxy_fallback(&http, None, Some(proxy.clone()), true),
+            None,
+            "REQUEST_METHOD suppresses uppercase HTTP_PROXY in CGI environments"
+        );
+        assert_eq!(
+            uppercase_http_proxy_fallback(
+                &Url::parse("https://search.example.test/healthz").unwrap(),
+                None,
+                Some(proxy.clone()),
+                false,
+            ),
+            None
+        );
+        assert_eq!(
+            uppercase_http_proxy_fallback(
+                &Url::parse("http://127.0.0.1:8080/healthz").unwrap(),
+                None,
+                Some(proxy),
+                false,
+            ),
+            None
+        );
+    }
+
     #[tokio::test]
     async fn response_headers_accept_opaque_values_but_keep_ascii_names() {
         let (mut sender, receiver) = tokio::io::duplex(256);
@@ -916,6 +1020,55 @@ mod tests {
         let requests = server.await.unwrap();
         assert!(requests[0].starts_with("GET /redirect "));
         assert!(requests[1].starts_with("GET / "));
+    }
+
+    #[tokio::test]
+    async fn uppercase_http_proxy_fallback_is_passed_to_curl_environment() {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let proxy_address = listener.local_addr().unwrap();
+        let proxy = tokio::spawn(async move {
+            let (mut stream, _) = listener.accept().await.unwrap();
+            let mut request = Vec::new();
+            let mut chunk = [0_u8; 1024];
+            loop {
+                let count = stream.read(&mut chunk).await.unwrap();
+                if count == 0 {
+                    break;
+                }
+                request.extend_from_slice(&chunk[..count]);
+                if request.windows(4).any(|window| window == b"\r\n\r\n") {
+                    break;
+                }
+                assert!(request.len() <= 16 * 1024, "proxy request headers bounded");
+            }
+            stream
+                .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nOK")
+                .await
+                .unwrap();
+            stream.shutdown().await.unwrap();
+            String::from_utf8(request).unwrap()
+        });
+        let result = request_once_with_env_overrides(
+            Url::parse("http://portal-smoke-proxy.invalid/healthz").unwrap(),
+            "text/plain",
+            "health",
+            Duration::from_secs(5),
+            CurlEnvOverrides {
+                http_proxy: Some(OsString::from(format!("http://{proxy_address}"))),
+                no_proxy: Some(OsString::new()),
+            },
+        )
+        .await
+        .unwrap();
+        assert_eq!(result.probe.status, 200);
+        assert_eq!(result.probe.body, "OK");
+        assert!(
+            proxy
+                .await
+                .unwrap()
+                .starts_with("GET http://portal-smoke-proxy.invalid/healthz HTTP/1.1"),
+            "curl sent the non-loopback request through the injected lowercase proxy environment"
+        );
     }
 
     #[tokio::test]
