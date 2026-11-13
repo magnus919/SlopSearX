@@ -342,6 +342,59 @@ impl PublicPortal {
             invalid("date_to")
         )
     }
+    fn publication_date_proof(&self, response: &SearchResponse) -> String {
+        // Use the same closed proof serialized by the machine formatters. The
+        // scope enforcement preview alone is not an acquisition/proof record.
+        let Some(proof) = &response.date_filter else {
+            return String::new();
+        };
+        let proof = proof.to_value();
+        let mut body = String::from(
+            "<section class=\"notice\" aria-labelledby=\"publication-date-proof\" data-publication-date-proof><h2 id=\"publication-date-proof\">Publication-date constraints</h2><p>Bounds are inclusive.</p><dl>",
+        );
+        for (key, label) in [
+            ("date_from", "Published from"),
+            ("date_to", "Published through"),
+        ] {
+            if let Some(applied) = proof["applied"][key].as_str() {
+                let _ = write!(
+                    body,
+                    "<dt>{label}</dt><dd data-date-bound=\"{key}\">Requested: <span data-date-requested>{}</span>; applied: <span data-date-applied>{}</span></dd>",
+                    escape(proof["requested"][key].as_str().unwrap_or("")),
+                    escape(applied)
+                );
+            }
+        }
+        let _ = write!(
+            body,
+            "<dt>Enforcement</dt><dd data-date-status>{}</dd><dt>Source</dt><dd data-date-engine>{}</dd><dt>Provenance</dt><dd data-date-provenance>{}</dd></dl>",
+            escape(proof["status"].as_str().unwrap_or("")),
+            escape(proof["engines"][0].as_str().unwrap_or("")),
+            escape(proof["enforced_by"][0].as_str().unwrap_or(""))
+        );
+        // Constraints and source outcomes are independent: a proof remains
+        // present on a classified upstream failure or a valid empty response.
+        let (outcome, message) = match response
+            .engine_outcomes
+            .iter()
+            .find(|outcome| outcome.engine == "openalex")
+        {
+            Some(outcome) if outcome.status != "ok" => (
+                "unavailable",
+                "OpenAlex did not return a usable response. See the source outcome below.",
+            ),
+            Some(outcome) if outcome.result_count == 0 => {
+                ("empty", "OpenAlex responded with no matching results.")
+            }
+            Some(_) => ("results", "OpenAlex returned results for this search."),
+            None => ("unknown", "No OpenAlex acquisition outcome is available."),
+        };
+        let _ = write!(
+            body,
+            "<p data-date-acquisition=\"{outcome}\">{message}</p></section>"
+        );
+        body
+    }
     fn result(
         &self,
         result: &SearchResult,
@@ -632,6 +685,7 @@ impl HtmlRenderer for PublicPortal {
         );
         body.push_str(&self.search_form(&state, false, None));
         body.push_str(&self.scope_panel(&state, Some(response), meta, None, false));
+        body.push_str(&self.publication_date_proof(response));
         let empty_sources = self.empty_sources(response);
         let failures = response
             .engine_outcomes

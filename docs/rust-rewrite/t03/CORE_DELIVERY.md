@@ -55,3 +55,11 @@ Local raw logs, per-command exits, source inventories and storage measurements a
 - Chromium, Firefox and Playwright WebKit run the full deterministic journey set in the T03 gate. Real Apple Safari, 200% browser zoom, manual visual review and screen-reader (VoiceOver/NVDA) execution remain recorded validation gaps, not passes.
 - Measure/enforce portal byte, rendering and client performance budgets separately from upstream latency.
 - Complete exact-head hosted CI, portal/image acceptance and required independent review before merge. This core slice is not acceptance evidence for O04 production composition or an upstream engine's live behavior.
+
+## Bounded publication-date proof presentation (#984)
+
+The selected `PublicPortal` renders the closed `SearchResponse.date_filter` proof used by JSON/YAML. It shows requested and applied inclusive bounds, the selected `openalex` engine and `upstream:openalex` provenance. The request or scope-enforcement preview cannot fabricate that proof. A separate source-outcome message distinguishes returned results, a valid empty response, an unavailable upstream and an unknown acquisition outcome; enforcing constraints does not establish that results were acquired.
+
+`ssx-http/tests/science_openalex.rs` extends the actual registered OpenAlex/shared-service/private-Valkey portal composition with one-sided leap-day and two-sided bounds through GET/form POST on `/` and `/search`. It resubmits both rendered forms, follows JSON/YAML and pagination links, checks exact upstream filter bytes and publication days, and preserves missing-proof reacquisition. Separate actual-upstream controls distinguish HTTP 200/empty from HTTP 503/error. A pure rendering negative control refuses proof inferred only from request or metadata.
+
+This slice changes HTML presentation only. Shared validation, explicit audited OpenAlex-only scope, machine metadata and cache policy remain authoritative. These non-browser checks do not establish real Safari, VoiceOver, visual, performance or production-composition acceptance; current-head hosted portal acceptance and source-binding reconciliation remain required.
