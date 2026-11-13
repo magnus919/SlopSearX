@@ -38,7 +38,11 @@ summary string stays at its custody-frozen historical wording; the authoritative
 engine coverage is the gate's own browser-scenario records and this note. Its
 CLS budget checks both the landing document and populated results document
 after a 250 ms settle interval; it reports the larger value and preserves both
-samples. This is an automation slice, not completion of #898.
+samples. The Chromium interaction budget applies the declared CDP profile to
+every measured page, including the separate storage-blocked context; a guard
+rejects any budget sample from an unprofiled page. Firefox and WebKit journeys
+remain unthrottled and do not claim this budget. This is an automation slice,
+not completion of #898.
 
 `crates/ssx-http/tests/t03.rs` runs a real native HTTP child process and saves whole response/status/header/call-count receipts with startup binary identity and joined shutdown receipts. Its eleven cases cover the 16 inherited literal portal assertions, captured browser enforcement without machine-wire changes, landing query/scope submission through both native buttons, and exact large-page state, malicious/optional/empty/partial/unavailable/grouped results, invalid and sensitive scope rejection without dispatch, cached error/429/disabled format recovery, the 4300-digit page limit, cookie noninterference and the 18-request blank-date matrix.
 
