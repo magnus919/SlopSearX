@@ -1,6 +1,8 @@
 # T08 qualification snapshot
 
-Status: **Historical local T08/T08A and hosted PR #1081 T08/F03 acceptance passed on their recorded source revisions. The full F03 aggregation and T08 runtime also passed on current-main-equivalent source in PR #1090’s final Foundation attempt. The 591 T08A receipts remain historical because T08A source bindings changed afterward. Independent review, O04 owner acceptance, and release/cleanup acceptance remain pending.**
+Status: **The historical local T08/T08A and earlier hosted runs remain bound to their recorded revisions. Current origin/main 64e3c47f315d480507a03f7e2761c49f9ce06384 passed the source-bound T08A corpus on all five supported client targets and the T08 17-case default/installed runtime on x86_64 and ARM64. The selected GitHub Actions artifact ZIP digests and embedded source/report/receipt identities were independently verified; see [the hosted evidence manifest](HOSTED_EVIDENCE-2026-11-13.json). Independent final acceptance, O04 handoff review/owner acceptance, and post-merge cleanup remain pending. No production activation or release/deployment acceptance is claimed.**
+
+The case inventory at docs/rust-rewrite/t08/inventory.json is a frozen T08 gate input: crates/xtask/src/t08.rs embeds its bytes at compile time and compares the working copy byte-for-byte. Its status and pending fields describe the gate-authoring snapshot, not current qualification status. Use this qualification snapshot and HOSTED_EVIDENCE-2026-11-13.json for current status; changing the inventory requires coordinated gate-owner changes.
 
 The actual local run used source `6ac559a01ff6ea8bef047c923c23251837e2b27e` on `aarch64-apple-darwin`, Rust `1.99.0` (`b940084d7eb6a299eb4bfeb8e34901bc051e7ac4`, LLVM `23.1.1`). `Cargo.lock` SHA-256: `7f64930ad5267129bcd5f750de6bba4249c8a3bfde3a3de1753a853b5e1db9d9`.
 
@@ -101,16 +103,28 @@ The T08A standalone compatibility corpus needs a separate qualification statemen
 | `Cargo.lock` | `7f64930ad5267129bcd5f750de6bba4249c8a3bfde3a3de1753a853b5e1db9d9` | `53fb4619c6e4fd12eae7928073c5062929498d2db29b270e456514a855a5bdd9` |
 | `docs/rust-rewrite/plan.json` | `7cd195caaac59e1ac27acb25ae4116ed6154ef19bab442fb83db2d8435a98ed7` | `ebe32895fc44eb46b3a1bf4fb088f1dfb06ddd3a35cbbadf90374798faa6c9ec` |
 
-The F03 workflow and gate-catalog changes are listed above. Therefore the 591 receipts and local T08A report above remain valid historical results for `6ac559a0`; they do not prove T08A acceptance for current `d7fc628` inputs. Re-run the current source-bound T08A gate before treating that part as accepted.
+The F03 workflow and gate-catalog changes are listed above. At the time of this 2026-11-03 snapshot, the 591 receipts and local T08A report above remained historical for `6ac559a0`; they did not prove T08A acceptance for then-current `d7fc628`. The current-main source-bound T08A qualification was later completed on 64e3c47 and is recorded separately below. The earlier artifacts remain attributed only to their original source revisions.
 
 PR #1081 has no submitted review and no review request. Its green hosted checks prove the listed execution gates, not independent review. The O04 handoff hash above is historical evidence; issue #921 remains open, and owner acceptance, release-artifact/signing/install validation, production cutover authorization, and measured post-merge cleanup remain separate work. No production activation is implied.
 
+## Current-main hosted artifact audit (verified 2026-11-13)
+
+The exact current origin/main revision at verification was 64e3c47f315d480507a03f7e2761c49f9ce06384 (tree recorded in the evidence manifest). The successful [Native CLI component run 43314567926](https://github.com/magnus919/SlopSearX/actions/runs/43314567926) and [Rust Foundation run 43314567883](https://github.com/magnus919/SlopSearX/actions/runs/43314567883) both used that source revision.
+
+The Native CLI run passed T08A on Linux x86_64, Linux ARM64, macOS x86_64, macOS ARM64, and Windows x86_64. Each artifact contains a passed T08A report, exact current source identity, and 591 receipts: 296 default-image receipts and 295 separately executed installed-image receipts, with 295 case IDs shared and the default-only negative-mutated-native-response admission control. Embedded source fingerprints match the recorded source tree on all five targets. The tested default and installed binary hashes match on each target. Explicit top-level gate command exit codes are zero; missing exit-code fields are not failures, and expected nonzero result statuses in negative case receipts are part of the accepted corpus.
+
+The Rust Foundation run passed T08 on Linux x86_64 and ARM64. Each target has 17 ordered cases against both the default and source-installed CLI, matching CLI hashes and O04 handoff identities. Both receipts record child/server/Valkey waits, joined upstream fixtures, and private socket retirement. The T08 handoffs set production_activation to false.
+
+All seven selected ZIP archives were SHA-256 checked against GitHub’s artifact API digests before extraction. Artifact IDs, archive sizes/digests, report/handoff/receipt digests, source identities, and case counts are in [the machine-readable evidence manifest](HOSTED_EVIDENCE-2026-11-13.json). These records supersede the earlier T08A-pending statement in the 2026-11-03 reconciliation without changing any historical evidence origin.
+
+This hosted evidence does not establish production startup, package signing, release promotion, installation/upgrade/uninstall, deployment, or cutover. O04/#921 owns those release obligations. No production activation occurred.
+
 ## Remaining acceptance
 
-- **PASSED at current-main-equivalent `edb7851`/`d7fc628` source:** F03 aggregate and T08 runtime acceptance on x86_64 and ARM64 in Foundation run 41620922650, attempt 3.
-- **PENDING:** re-run the T08A source-bound compatibility gate against the current accepted source/bindings; the 591 receipts above are historical evidence only.
-- **PENDING:** independent review, O04 owner acceptance, release artifact/signing/install/upgrade/uninstall acceptance, final authorized production cutover, and measured post-merge cleanup.
+- **PASSED on current origin/main 64e3c47:** source-bound T08A on all five supported CLI targets and T08 on Linux x86_64/ARM64, with exact artifact and receipt provenance recorded above.
+- **PENDING for #903:** independent final acceptance, reviewed O04 handoff/owner acceptance, and measured post-merge cleanup.
+- **REMAINS O04/#921 scope:** release archives, signing/promotion, installation/upgrade/uninstall, deployment and any separately authorized production cutover.
 
-Hosted and release acceptance cannot be inferred from these successful local checks. O04/#921 owns release archives, signing/promotion and production install/upgrade/uninstall. The optional historical root `ssx` Python script remains a standalone client-side wire client (SHA-256 `4c45e876fc79dffc0f7da8ccccc9c6ba67d4f4cc9e0bd9e8194f74184b96c65b`); the native client/backend paths neither invoke nor require it. Portal review found no browser-visible contract change in this integration slice.
+Hosted qualification does not imply release or production acceptance. The optional historical root `ssx` Python script remains a standalone client-side wire client (SHA-256 `4c45e876fc79dffc0f7da8ccccc9c6ba67d4f4cc9e0bd9e8194f74184b96c65b`); the native client/backend paths neither invoke nor require it. Portal review found no browser-visible contract change in this integration slice.
 
 Refs #903 and #921. No production activation was performed.
