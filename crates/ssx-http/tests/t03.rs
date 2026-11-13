@@ -1,9 +1,10 @@
 //! Real-process T03 HTTP acceptance; only fixture inputs are synthetic.
+use sha2::{Digest, Sha256};
 use ssx_http::{
     HtmlRenderer,
     portal::{PublicPortal, SCRIPT, STYLE, content_markup},
 };
-use ssx_json::Value;
+use ssx_json::{Value, json};
 use std::fs;
 #[path = "support/t03_peer.rs"]
 mod peer;
@@ -140,6 +141,78 @@ async fn browser_enforcement_uses_capture_without_changing_machine_contract() {
 
 #[tokio::test]
 async fn malicious_optional_empty_partial_and_unavailable_states_are_truthful() {
+    let mut api_empty = ssx_domain::SearchResponse {
+        query: "climate".into(),
+        results: vec![ssx_domain::SearchResult {
+            url: "https://example.com".into(),
+            title: "A result".into(),
+            engine: "example".into(),
+            ..Default::default()
+        }],
+        scope: ssx_domain::ScopeDecision {
+            selected_engines: vec!["google", "reddit", "duckduckgo", "example"]
+                .into_iter()
+                .map(str::to_owned)
+                .collect(),
+            ..Default::default()
+        },
+        partial: true,
+        engine_outcomes: vec![
+            ssx_domain::EngineOutcome {
+                engine: "google".into(),
+                status: "blocked".into(),
+                result_count: 0,
+                ..Default::default()
+            },
+            ssx_domain::EngineOutcome {
+                engine: "reddit".into(),
+                status: "rate_limited".into(),
+                result_count: 0,
+                ..Default::default()
+            },
+            ssx_domain::EngineOutcome {
+                engine: "example".into(),
+                status: "ok".into(),
+                result_count: 1,
+                ..Default::default()
+            },
+        ],
+        ..Default::default()
+    };
+    let request = ssx_domain::SearchRequest {
+        query: api_empty.query.clone(),
+        ..Default::default()
+    };
+    let renderer = PublicPortal::default();
+    let api_zero_empty = ssx_domain::SearchResponse {
+        query: "climate".into(),
+        partial: true,
+        engine_outcomes: vec![ssx_domain::EngineOutcome {
+            engine: "duckduckgo".into(),
+            status: "ok".into(),
+            result_count: 0,
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    let api_zero_html = renderer.search(&api_zero_empty, &Value::Null, &request);
+    assert!(!api_zero_html.contains("Duckduckgo (no results)"));
+    assert!(!api_zero_html.contains("class=\"rail-source rail-source-empty\""));
+    api_empty
+        .empty_engines
+        .push(vec!["duckduckgo".into(), "no results".into()]);
+    let html = renderer.search(&api_empty, &Value::Null, &request);
+    for literal in [
+        "Some sources could not answer this search.",
+        "Google (blocked)",
+        "Reddit (rate limited)",
+        "Duckduckgo (no results)",
+        "Source status",
+    ] {
+        assert!(html.contains(literal), "missing formatter output {literal}");
+    }
+    assert!(html.matches("Google").count() >= 2);
+
     let mut p = Process::start("states", "contract");
     for (query, wanted) in [
         ("malicious", 200),
@@ -185,12 +258,31 @@ async fn malicious_optional_empty_partial_and_unavailable_states_are_truthful() 
                 assert!(body.contains("class=\"rail-source rail-source-empty\""));
                 assert!(body.contains("<span class=\"rail-source-count\">no results</span>"));
             }
-            "media" => assert!(
-                body.contains("image result")
-                    && body.contains("security / vulnerability")
-                    && body.contains("src=\"https://cdn.example.com/thumb.jpg\"")
-                    && body.contains("alt=\"Vulnerability result\"")
-            ),
+            "media" => {
+                assert!(
+                    body.contains("image result")
+                        && body.contains("security / vulnerability")
+                        && body.contains("src=\"https://cdn.example.com/thumb.jpg\"")
+                        && body.contains("alt=\"Vulnerability result\"")
+                );
+                let card = body
+                    .split("<article")
+                    .find(|part| part.contains("Vulnerability result"))
+                    .expect("mixed media and specialist result card");
+                let card = card.split("</article>").next().unwrap();
+                assert_eq!(card.matches("class=\"result-special\"").count(), 1);
+                let badges = card
+                    .split("<div class=\"result-special\">")
+                    .nth(1)
+                    .unwrap()
+                    .split("</div>")
+                    .next()
+                    .unwrap();
+                assert!(
+                    badges.find("image result").unwrap()
+                        < badges.find("security / vulnerability").unwrap()
+                );
+            }
             "partial" => {
                 assert!(body.contains("Some sources could not answer"));
                 assert!(body.contains("Beta &lt;source&gt;"));
@@ -214,6 +306,50 @@ async fn malicious_optional_empty_partial_and_unavailable_states_are_truthful() 
     p.stop().await;
 
     let mut p = Process::start("source-availability", "source-availability");
+    let formatter_receipt = json!({
+        "schema": "T03_DIRECT_FORMATTER_INPUT_RECEIPT_V1",
+        "renderer": "PublicPortal::search",
+        "source_assertion_ids": ["F:L599", "F:L600", "F:L601", "F:L602", "F:L603"],
+        "input": {
+            "response": {
+                "query": &api_empty.query,
+                "results": api_empty.results.iter().map(|result| json!({
+                    "url": &result.url,
+                    "title": &result.title,
+                    "engine": &result.engine,
+                })).collect::<Vec<_>>(),
+                "selected_engines": &api_empty.scope.selected_engines,
+                "engine_outcomes": api_empty.engine_outcomes.iter().map(|outcome| json!({
+                    "engine": &outcome.engine,
+                    "status": &outcome.status,
+                    "result_count": outcome.result_count,
+                })).collect::<Vec<_>>(),
+                "partial": api_empty.partial,
+                "empty_engines": &api_empty.empty_engines,
+            },
+            "meta": null,
+            "request": {"query": &request.query},
+            "responsive_engine_count": api_empty.engine_outcomes.iter().filter(|outcome| outcome.status == "ok").count(),
+        },
+        "output": {"html": &html},
+    });
+    let formatter_path = p.out.join("formatter-source-availability.json");
+    let formatter_raw = ssx_json::to_string(&formatter_receipt)
+        .unwrap()
+        .into_bytes();
+    fs::write(&formatter_path, &formatter_raw).unwrap();
+    let formatter_sha256 = Sha256::digest(&formatter_raw)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect::<String>();
+    let formatter_completion = json!({
+        "path": formatter_path.canonicalize().unwrap().to_string_lossy(),
+        "sha256": formatter_sha256,
+    });
+    println!(
+        "T03_FORMATTER_RECEIPT {}",
+        ssx_json::to_string(&formatter_completion).unwrap()
+    );
     let (status, body) = p
         .get(
             "/search?q=source-availability&categories=general",
@@ -224,7 +360,7 @@ async fn malicious_optional_empty_partial_and_unavailable_states_are_truthful() 
     assert!(body.contains("Some sources could not answer this search."));
     assert!(body.contains("Google (blocked)"));
     assert!(body.contains("Reddit (rate limited)"));
-    assert!(body.contains("Duckduckgo (no results)"));
+    assert!(body.contains("Duckduckgo (successful scrape returned no results)"));
     assert!(body.contains("Source status"));
     assert!(body.matches("Google").count() >= 2);
     assert!(body.contains("class=\"rail-source rail-source-unavailable\""));

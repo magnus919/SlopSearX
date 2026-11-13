@@ -108,7 +108,7 @@ impl PublicPortal {
             .unwrap_or_else(|| label(name))
     }
     fn empty_sources(&self, response: &SearchResponse) -> Vec<(String, String)> {
-        let mut empty = response
+        response
             .empty_engines
             .iter()
             .filter_map(|entry| {
@@ -116,19 +116,7 @@ impl PublicPortal {
                 let reason = entry.get(1).cloned().unwrap_or_default();
                 Some((engine, reason))
             })
-            .collect::<Vec<_>>();
-        if response.partial {
-            for outcome in response
-                .engine_outcomes
-                .iter()
-                .filter(|outcome| outcome.status == "ok" && outcome.result_count == 0)
-            {
-                if !empty.iter().any(|(engine, _)| engine == &outcome.engine) {
-                    empty.push((outcome.engine.clone(), "no results".into()));
-                }
-            }
-        }
-        empty
+            .collect()
     }
     fn document(&self, title: &str, body: &str, invalid_field: Option<&str>) -> String {
         let darker = self.theme == "darker";
@@ -421,20 +409,21 @@ impl PublicPortal {
             "<p class=\"result-content\">{}</p>",
             content_markup(&result.content)
         );
-        if let Some(payload) = result.payload.as_ref().filter(|p| p.is_object()) {
-            let _ = write!(
-                body,
-                "<div class=\"result-special\"><span>{} / {}</span></div>",
-                escape(payload["domain"].as_str().unwrap_or("specialist")),
-                escape(payload["type"].as_str().unwrap_or("result"))
-            );
-        }
-        if let Some(media) = &result.media {
-            let _ = write!(
-                body,
-                "<div class=\"result-special\"><span>{} result</span></div>",
-                escape(&media.media_type)
-            );
+        let payload = result.payload.as_ref().filter(|p| p.is_object());
+        if result.media.is_some() || payload.is_some() {
+            body.push_str("<div class=\"result-special\">");
+            if let Some(media) = &result.media {
+                let _ = write!(body, "<span>{} result</span>", escape(&media.media_type));
+            }
+            if let Some(payload) = payload {
+                let _ = write!(
+                    body,
+                    "<span>{} / {}</span>",
+                    escape(payload["domain"].as_str().unwrap_or("specialist")),
+                    escape(payload["type"].as_str().unwrap_or("result"))
+                );
+            }
+            body.push_str("</div>");
         }
         if let Some(media) = &result.media
             && let Some(thumbnail) = media.thumbnail.as_deref().and_then(safe_url)

@@ -106,6 +106,59 @@
       "browser_scenario": "source-availability",
       "fixture_substitution": "The original Python fixture supplied explicit empty_engines=[[duckduckgo, no results]]. The native source-availability scenario instead exercises the partial-response fallback with an ok/zero-result DuckDuckGo EngineOutcome; the separate empty-source scenario covers explicit empty_engines reason preservation.",
       "scope": "Candidate source mapping only. The T03 validator evaluates each assertion against the validated HTTP receipt and binds the source manifest bytes. This document does not mark original assertions accepted; exact-head hosted and human T03 acceptance remain outstanding."
+    },
+    "candidate_source_availability_repair_2026_11_13": {
+      "candidate_base_head": "3bcf42113b57ffa11203ca86a0994a5fa2bae14c",
+      "source_assertions": [
+        "F:L599",
+        "F:L600",
+        "F:L601",
+        "F:L602",
+        "F:L603"
+      ],
+      "http_binding_id": "source-availability",
+      "browser_scenario": "source-availability",
+      "fixture_substitution": "The frozen Python formatter fixture supplies one climate result, blocked Google, rate-limited Reddit, partial=true, explicit empty_engines=[[duckduckgo, no results]], and one responsive source. The candidate records an equivalent direct PublicPortal formatter input and HTML receipt. Its separate source-availability HTTP/browser scenario exercises the real service's canonical successful-scrape reason; it does not infer empty diagnostics from partial ok/zero outcomes.",
+      "scope": "Candidate direct formatter-input mapping and separate source-availability HTTP comparison only. Historical candidate_source_availability_2026_11_13 remains unchanged. Original source identities, hashes, predicates and historical receipts are preserved; exact-head hosted validation and human T03 acceptance remain outstanding.",
+      "direct_formatter_input_mapping": {
+        "schema": "T03_DIRECT_FORMATTER_INPUT_RECEIPT_V1",
+        "filename": "formatter-source-availability.json",
+        "renderer": "PublicPortal::search",
+        "test_name": "malicious_optional_empty_partial_and_unavailable_states_are_truthful",
+        "test_output_prefix": "test malicious_optional_empty_partial_and_unavailable_states_are_truthful ... ",
+        "completion_marker": "T03_FORMATTER_RECEIPT",
+        "receipt_field": "output.html",
+        "source_assertions": [
+          "F:L599",
+          "F:L600",
+          "F:L601",
+          "F:L602",
+          "F:L603"
+        ],
+        "input_contract": {
+          "query": "climate",
+          "result_url": "https://example.com",
+          "result_title": "A result",
+          "unresponsive_engines": [
+            [
+              "google",
+              "blocked"
+            ],
+            [
+              "reddit",
+              "rate limited"
+            ]
+          ],
+          "partial": true,
+          "empty_engines": [
+            [
+              "duckduckgo",
+              "no results"
+            ]
+          ],
+          "responsive_engine_count": 1
+        }
+      }
     }
   },
   "preserved_predecessors": {
@@ -1182,18 +1235,20 @@
       "original_assertion_accepted": false,
       "native_evidence": [
         {
-          "kind": "candidate_t03_source_availability_mapping",
-          "scenario": "source-availability",
-          "binding_id": "source-availability",
-          "receipt_field": "observation.body",
+          "kind": "candidate_t03_direct_formatter_input_mapping",
+          "path": "crates/ssx-http/tests/t03.rs",
+          "test_name": "malicious_optional_empty_partial_and_unavailable_states_are_truthful",
+          "receipt_filename": "formatter-source-availability.json",
+          "receipt_field": "output.html",
           "predicate_in_current_gate": true,
-          "browser_scenario": "source-availability",
-          "note": "Maps the frozen Google blocked label predicate to the candidate source-availability HTTP body and browser scenario."
+          "test_output_prefix": "test malicious_optional_empty_partial_and_unavailable_states_are_truthful ... ",
+          "completion_marker": "T03_FORMATTER_RECEIPT",
+          "note": "The source predicate for F:L599 is checked against the direct formatter HTML receipt created from the explicit Python-equivalent input."
         }
       ],
       "unresolved_gap": {
         "kind": "candidate_gate_and_human_acceptance_pending",
-        "detail": "A frozen source-to-receipt mapping and executable T03 comparison now exist in the candidate. This assertion remains unaccepted until exact-head hosted validation and the required human T03 review are complete."
+        "detail": "A source-bound direct formatter-input receipt and executable predicate comparison exist in the candidate. This assertion remains unaccepted until exact-head hosted validation and the required human T03 review are complete."
       },
       "reviewed_intentional_difference": null
     },
@@ -1228,18 +1283,20 @@
       "original_assertion_accepted": false,
       "native_evidence": [
         {
-          "kind": "candidate_t03_source_availability_mapping",
-          "scenario": "source-availability",
-          "binding_id": "source-availability",
-          "receipt_field": "observation.body",
+          "kind": "candidate_t03_direct_formatter_input_mapping",
+          "path": "crates/ssx-http/tests/t03.rs",
+          "test_name": "malicious_optional_empty_partial_and_unavailable_states_are_truthful",
+          "receipt_filename": "formatter-source-availability.json",
+          "receipt_field": "output.html",
           "predicate_in_current_gate": true,
-          "browser_scenario": "source-availability",
-          "note": "Maps the frozen Reddit rate-limited human-readable label predicate to the candidate source-availability HTTP body and browser scenario."
+          "test_output_prefix": "test malicious_optional_empty_partial_and_unavailable_states_are_truthful ... ",
+          "completion_marker": "T03_FORMATTER_RECEIPT",
+          "note": "The source predicate for F:L600 is checked against the direct formatter HTML receipt created from the explicit Python-equivalent input."
         }
       ],
       "unresolved_gap": {
         "kind": "candidate_gate_and_human_acceptance_pending",
-        "detail": "A frozen source-to-receipt mapping and executable T03 comparison now exist in the candidate. This assertion remains unaccepted until exact-head hosted validation and the required human T03 review are complete."
+        "detail": "A source-bound direct formatter-input receipt and executable predicate comparison exist in the candidate. This assertion remains unaccepted until exact-head hosted validation and the required human T03 review are complete."
       },
       "reviewed_intentional_difference": null
     },
@@ -1274,18 +1331,20 @@
       "original_assertion_accepted": false,
       "native_evidence": [
         {
-          "kind": "candidate_t03_source_availability_mapping",
-          "scenario": "source-availability",
-          "binding_id": "source-availability",
-          "receipt_field": "observation.body",
+          "kind": "candidate_t03_direct_formatter_input_mapping",
+          "path": "crates/ssx-http/tests/t03.rs",
+          "test_name": "malicious_optional_empty_partial_and_unavailable_states_are_truthful",
+          "receipt_filename": "formatter-source-availability.json",
+          "receipt_field": "output.html",
           "predicate_in_current_gate": true,
-          "browser_scenario": "source-availability",
-          "note": "Maps Duckduckgo no-results presentation. Fixture substitution is documented in evidence_packet.candidate_source_availability_2026_11_13."
+          "test_output_prefix": "test malicious_optional_empty_partial_and_unavailable_states_are_truthful ... ",
+          "completion_marker": "T03_FORMATTER_RECEIPT",
+          "note": "The source predicate for F:L601 is checked against the direct formatter HTML receipt created from the explicit Python-equivalent input."
         }
       ],
       "unresolved_gap": {
         "kind": "candidate_gate_and_human_acceptance_pending",
-        "detail": "A frozen source-to-receipt mapping and executable T03 comparison now exist in the candidate. This assertion remains unaccepted until exact-head hosted validation and the required human T03 review are complete."
+        "detail": "A source-bound direct formatter-input receipt and executable predicate comparison exist in the candidate. This assertion remains unaccepted until exact-head hosted validation and the required human T03 review are complete."
       },
       "reviewed_intentional_difference": null
     },
@@ -1329,18 +1388,20 @@
           "note": "Exact Source status text is present in state-partial."
         },
         {
-          "kind": "candidate_t03_source_availability_mapping",
-          "scenario": "source-availability",
-          "binding_id": "source-availability",
-          "receipt_field": "observation.body",
+          "kind": "candidate_t03_direct_formatter_input_mapping",
+          "path": "crates/ssx-http/tests/t03.rs",
+          "test_name": "malicious_optional_empty_partial_and_unavailable_states_are_truthful",
+          "receipt_filename": "formatter-source-availability.json",
+          "receipt_field": "output.html",
           "predicate_in_current_gate": true,
-          "browser_scenario": "source-availability",
-          "note": "Maps the frozen Source status label predicate to the candidate source-availability HTTP body and browser scenario."
+          "test_output_prefix": "test malicious_optional_empty_partial_and_unavailable_states_are_truthful ... ",
+          "completion_marker": "T03_FORMATTER_RECEIPT",
+          "note": "The source predicate for F:L602 is checked against the direct formatter HTML receipt created from the explicit Python-equivalent input."
         }
       ],
       "unresolved_gap": {
         "kind": "candidate_gate_and_human_acceptance_pending",
-        "detail": "A frozen source-to-receipt mapping and executable T03 comparison now exist in the candidate. This assertion remains unaccepted until exact-head hosted validation and the required human T03 review are complete."
+        "detail": "A source-bound direct formatter-input receipt and executable predicate comparison exist in the candidate. This assertion remains unaccepted until exact-head hosted validation and the required human T03 review are complete."
       },
       "reviewed_intentional_difference": null
     },
@@ -1375,18 +1436,20 @@
       "original_assertion_accepted": false,
       "native_evidence": [
         {
-          "kind": "candidate_t03_source_availability_mapping",
-          "scenario": "source-availability",
-          "binding_id": "source-availability",
-          "receipt_field": "observation.body",
+          "kind": "candidate_t03_direct_formatter_input_mapping",
+          "path": "crates/ssx-http/tests/t03.rs",
+          "test_name": "malicious_optional_empty_partial_and_unavailable_states_are_truthful",
+          "receipt_filename": "formatter-source-availability.json",
+          "receipt_field": "output.html",
           "predicate_in_current_gate": true,
-          "browser_scenario": "source-availability",
-          "note": "Maps the frozen minimum-two-Google-occurrences predicate to the candidate source-availability HTTP body and browser scenario."
+          "test_output_prefix": "test malicious_optional_empty_partial_and_unavailable_states_are_truthful ... ",
+          "completion_marker": "T03_FORMATTER_RECEIPT",
+          "note": "The source predicate for F:L603 is checked against the direct formatter HTML receipt created from the explicit Python-equivalent input."
         }
       ],
       "unresolved_gap": {
         "kind": "candidate_gate_and_human_acceptance_pending",
-        "detail": "A frozen source-to-receipt mapping and executable T03 comparison now exist in the candidate. This assertion remains unaccepted until exact-head hosted validation and the required human T03 review are complete."
+        "detail": "A source-bound direct formatter-input receipt and executable predicate comparison exist in the candidate. This assertion remains unaccepted until exact-head hosted validation and the required human T03 review are complete."
       },
       "reviewed_intentional_difference": null
     },

@@ -22,6 +22,7 @@ const requiredByScenario = {
   contract: [
     'results-normal',
     'optional-metadata',
+    'empty-date-controls',
     'empty-suggestions',
     'partial-results',
     'all-source-failure',
@@ -378,6 +379,33 @@ async function runContract() {
     assert(links.every((origin) => origin === new URL(baseUrl).origin));
   });
 
+  await check('empty-date-controls', async () => {
+    const response = await searchByQuery(page, 'unbounded', { engines: 'openalex' });
+    assert.equal(response.status(), 200);
+
+    for (const name of ['date_from', 'date_to']) {
+      const control = page.locator(`input[name="${name}"][type="date"]`);
+      assert.equal(await control.inputValue(), '');
+      assert.equal(await control.evaluate((input) => input.defaultValue), '');
+      assert.equal(await control.getAttribute('value'), '');
+    }
+
+    const filtersForm = page.locator('form').filter({ has: page.getByRole('button', { name: 'Apply filters' }) });
+    const dateEntries = await filtersForm.evaluate((form) =>
+      [...new FormData(form).entries()].filter(([name]) => ['date_from', 'date_to'].includes(name)),
+    );
+    assert.deepEqual(dateEntries, [['date_from', ''], ['date_to', '']]);
+    await screenshot(page, 'contract-empty-date-controls.png');
+
+    const submitted = await navigateBy(page, () => page.getByRole('button', { name: 'Apply filters' }).click());
+    assert.equal(submitted.status(), 200);
+    const submittedUrl = new URL(page.url());
+    for (const name of ['date_from', 'date_to']) {
+      const value = submittedUrl.searchParams.get(name);
+      assert(value === null || value === '', `${name} must remain unbounded when untouched`);
+    }
+  });
+
   await check('empty-suggestions', async () => {
     const response = await searchByQuery(page, 'empty', { categories: 'general' });
     assert.equal(response.status(), 200);
@@ -404,7 +432,10 @@ async function runContract() {
     const media = await searchByQuery(page, 'media', { categories: 'general' });
     assert.equal(media.status(), 200);
     const mediaCard = page.locator('article[data-result-card]').filter({ hasText: 'image result' }).first();
-    assert(await mediaCard.locator('.result-special').getByText('image result').isVisible());
+    const special = mediaCard.locator('.result-special');
+    assert.equal(await special.count(), 1);
+    assert.deepEqual(await special.locator('span').allTextContents(), ['image result', 'security / vulnerability']);
+    assert(await special.getByText('image result').isVisible());
     const thumbnail = mediaCard.locator('img');
     assert.equal(await thumbnail.getAttribute('src'), 'https://cdn.example.com/thumb.jpg');
     assert.equal(await thumbnail.getAttribute('alt'), 'Vulnerability result');
@@ -655,7 +686,7 @@ async function runSourceAvailability() {
     const noticeText = await notice.innerText();
     assert(noticeText.includes('Google (blocked)'));
     assert(noticeText.includes('Reddit (rate limited)'));
-    assert(noticeText.includes('Duckduckgo (no results)'));
+    assert(noticeText.includes('Duckduckgo (successful scrape returned no results)'));
     const rail = page.locator('.results-rail');
     assert(await rail.getByText('Source status', { exact: true }).isVisible());
     for (const [name, status] of [

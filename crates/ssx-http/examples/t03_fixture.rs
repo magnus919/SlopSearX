@@ -266,7 +266,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             }),
                             generation: "t03-synthetic-v1".into(),
                             timeout: Duration::from_secs(2),
-                            scrape: *name == "beta",
+                            scrape: *name == "beta"
+                                || (scenario == "source-availability" && *name == "duckduckgo"),
                         },
                     )
                 })
