@@ -394,6 +394,14 @@ fn uppercase_http_proxy_fallback(
     uppercase_proxy
 }
 
+fn effective_no_proxy(
+    lowercase: Option<OsString>,
+    uppercase: Option<OsString>,
+) -> Option<OsString> {
+    // urllib gives an explicitly present lowercase value precedence, even empty.
+    lowercase.or(uppercase)
+}
+
 async fn request_once(
     url: Url,
     accept: &'static str,
@@ -413,7 +421,7 @@ async fn request_once(
         remaining,
         CurlEnvOverrides {
             http_proxy: http_proxy_fallback,
-            no_proxy: None,
+            no_proxy: effective_no_proxy(env::var_os("no_proxy"), env::var_os("NO_PROXY")),
         },
     )
     .await
@@ -435,6 +443,7 @@ async fn request_once_with_env_overrides(
         command.env("http_proxy", proxy);
     }
     if let Some(no_proxy) = env_overrides.no_proxy {
+        // curl otherwise falls back to NO_PROXY when no_proxy is empty.
         command.env("no_proxy", no_proxy.clone());
         command.env("NO_PROXY", no_proxy);
     }
@@ -814,6 +823,25 @@ mod tests {
         );
     }
 
+    #[test]
+    fn no_proxy_precedence_matches_urllib_including_explicit_empty_values() {
+        for (lowercase, uppercase, expected) in [
+            (None, None, None),
+            (None, Some("*"), Some("*")),
+            (None, Some(""), Some("")),
+            (Some("lower.example"), None, Some("lower.example")),
+            (Some("lower.example"), Some("*"), Some("lower.example")),
+            (Some(""), Some("*"), Some("")),
+            (Some(""), None, Some("")),
+        ] {
+            assert_eq!(
+                effective_no_proxy(lowercase.map(OsString::from), uppercase.map(OsString::from)),
+                expected.map(OsString::from),
+                "lowercase={lowercase:?}, uppercase={uppercase:?}"
+            );
+        }
+    }
+
     #[tokio::test]
     async fn response_headers_accept_opaque_values_but_keep_ascii_names() {
         let (mut sender, receiver) = tokio::io::duplex(256);
@@ -1022,8 +1050,7 @@ mod tests {
         assert!(requests[1].starts_with("GET / "));
     }
 
-    #[tokio::test]
-    async fn uppercase_http_proxy_fallback_is_passed_to_curl_environment() {
+    async fn assert_http_proxy_reached(no_proxy: Option<OsString>) {
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let proxy_address = listener.local_addr().unwrap();
         let proxy = tokio::spawn(async move {
@@ -1055,7 +1082,7 @@ mod tests {
             Duration::from_secs(5),
             CurlEnvOverrides {
                 http_proxy: Some(OsString::from(format!("http://{proxy_address}"))),
-                no_proxy: Some(OsString::new()),
+                no_proxy,
             },
         )
         .await
@@ -1069,6 +1096,20 @@ mod tests {
                 .starts_with("GET http://portal-smoke-proxy.invalid/healthz HTTP/1.1"),
             "curl sent the non-loopback request through the injected lowercase proxy environment"
         );
+    }
+
+    #[tokio::test]
+    async fn uppercase_http_proxy_fallback_is_passed_to_curl_environment() {
+        assert_http_proxy_reached(Some(OsString::new())).await;
+    }
+
+    #[tokio::test]
+    async fn empty_lowercase_no_proxy_suppresses_uppercase_wildcard_for_curl() {
+        assert_http_proxy_reached(effective_no_proxy(
+            Some(OsString::new()),
+            Some(OsString::from("*")),
+        ))
+        .await;
     }
 
     #[tokio::test]

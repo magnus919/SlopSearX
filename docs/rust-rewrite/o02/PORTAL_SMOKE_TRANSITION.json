@@ -38,7 +38,8 @@
     "Landing page requires HTTP 200, the search form, exact configured theme, and CSP.",
     "Healthz requires HTTP 200 and trimmed body OK.",
     "Search uses the empty __portal_smoke__ category, accepts HTTP 200 or 503, and requires JSON query preservation and a results array.",
-    "Query parameters are encoded; probe order and Accept headers match the predecessor."
+    "Query parameters are encoded; probe order and Accept headers match the predecessor.",
+    "For non-loopback proxy bypass, explicitly present lowercase no_proxy takes precedence over NO_PROXY even when empty; only absent lowercase falls back to uppercase. The chosen value is passed to both curl child variables so no_proxy=empty with NO_PROXY=* still uses the configured proxy, matching urllib."
   ],
   "intentional_improvements": [
     "Declared bodies over 1 MiB are rejected before reading; unknown-length streams are rejected before body accumulation would exceed 1 MiB.",
@@ -64,7 +65,8 @@
     "Rust 1.99.0: cargo xtask ci-helper inventory and source-hygiene passed; cargo xtask check O06 passed with 15 controls.",
     "The HTTP_PROXY follow-up run02 passed cargo fmt --all -- --check; 16 focused portal-smoke tests passed with inherited NO_PROXY=no_proxy=*; and cargo clippy --locked --offline -p xtask --all-targets -- -D warnings passed under Rust 1.99.0.",
     "The historical Python script's git blob remains bcb6ede74e95dd8c61eb870d3275b93ad191fb1a.",
-    "Before merge, exact-head Docker CI must pass the native smoke on both amd64 and arm64; local tests do not establish container-runtime parity."
+    "Before merge, exact-head Docker CI must pass the native smoke on both amd64 and arm64; local tests do not establish container-runtime parity.",
+    "The no_proxy follow-up run03 on candidate source based on 848467c868c315cf9e4207c096cf4e8a495c437b reproduced both the precedence-unit and HTTP-proxy regression failures before the fix, then passed all 18 focused portal-smoke tests under Rust 1.99.0. Deterministic precedence cases include absent, nonempty, and explicitly empty lowercase/uppercase values; a loopback fake HTTP proxy captured the absolute-form non-loopback request for lowercase no_proxy=empty versus uppercase NO_PROXY=*. Tests inject values without process-global environment mutation. Rust 1.99.0 cargo fmt --all -- --check and scoped xtask Clippy with warnings denied passed."
   ],
   "updated_gate_sources": [
     "docker.yml:build-and-push"
