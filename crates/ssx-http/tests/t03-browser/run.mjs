@@ -354,7 +354,43 @@ async function runContract() {
     const response = await landingAndSearch(page, 'valkey', 'general');
     assert.equal(response.status(), 200);
     assert.equal(await page.getByRole('heading', { level: 1 }).innerText(), 'valkey');
-    assert(await page.locator('article[data-result-card]').count() > 0);
+    const cards = page.locator('article[data-result-card]');
+    assert.equal(await cards.count(), 1);
+    const article = cards.first();
+    const resultLink = article.getByRole('link', {
+      name: 'A useful deterministic result',
+      exact: true,
+    });
+    assert(await resultLink.isVisible());
+    assert.equal(await resultLink.getAttribute('href'), 'https://example.org/article?source=fixture');
+    const consensus = article.locator('.result-pill.consensus');
+    assert(await consensus.isVisible());
+    assert.equal(await consensus.innerText(), 'MATCHED 2 SOURCES');
+    const sourcePills = article.locator('.result-meta .result-pill');
+    assert.deepEqual(await sourcePills.allTextContents(), ['alpha', 'Beta <source>']);
+    assert(await sourcePills.nth(0).isVisible());
+    assert(await sourcePills.nth(1).isVisible());
+    const openResult = article.getByRole('link', { name: 'Open result ↗', exact: true });
+    assert(await openResult.isVisible());
+    assert.equal(await openResult.getAttribute('href'), 'https://example.org/article?source=fixture');
+    const explanation = article.locator('details.result-explanation');
+    await explanation.locator('summary').click();
+    assert.deepEqual(
+      await explanation.locator('.explanation-sources .result-pill').allTextContents(),
+      ['alpha', 'Beta <source>'],
+    );
+    assert(await explanation.getByText('structurally eligible', { exact: true }).isVisible());
+    const summary = page.getByRole('complementary', { name: 'Search summary' });
+    assert(await summary.isVisible());
+    assert(await summary.getByText('Source status', { exact: true }).isVisible());
+    const jsonView = page.getByRole('link', { name: 'Open JSON view ↗', exact: true });
+    assert(await jsonView.isVisible());
+    const machineView = new URL(await jsonView.getAttribute('href'), page.url());
+    assert.equal(machineView.origin, new URL(baseUrl).origin);
+    assert.equal(machineView.pathname, '/search');
+    assert.equal(machineView.searchParams.get('format'), 'json');
+    assert.equal(machineView.searchParams.get('q'), 'valkey');
+    assert.equal(machineView.searchParams.get('categories'), 'general');
     assert.equal(await page.locator('details.scope-panel select[name="categories"]').inputValue(), 'general');
     await screenshot(page, 'contract-desktop-results.png');
     await settleLayout(page);
