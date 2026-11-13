@@ -16,6 +16,7 @@ const supportedScenarios = new Set([
   'rate-limited',
   'html-disabled',
   'unavailable',
+  'source-availability',
 ]);
 const requiredByScenario = {
   contract: [
@@ -39,6 +40,7 @@ const requiredByScenario = {
   'rate-limited': ['rate-limited'],
   'html-disabled': ['disabled-format'],
   unavailable: ['unavailable-source'],
+  'source-availability': ['source-availability'],
 };
 const viewportHistory = [];
 const completed = [];
@@ -642,6 +644,42 @@ async function runUnavailable() {
   await context.close();
 }
 
+async function runSourceAvailability() {
+  const context = await newContext({ viewport: { width: 1440, height: 900 } });
+  const page = await context.newPage();
+  attachPageEvidence(page);
+  await check('source-availability', async () => {
+    const response = await searchByQuery(page, 'source-availability', { categories: 'general' });
+    assert.equal(response.status(), 200);
+    const notice = page.locator('.notice[role="status"]');
+    const noticeText = await notice.innerText();
+    assert(noticeText.includes('Google (blocked)'));
+    assert(noticeText.includes('Reddit (rate limited)'));
+    assert(noticeText.includes('Duckduckgo (no results)'));
+    const rail = page.locator('.results-rail');
+    assert(await rail.getByText('Source status', { exact: true }).isVisible());
+    for (const [name, status] of [
+      ['Google', 'blocked'],
+      ['Reddit', 'rate limited'],
+    ]) {
+      const row = rail
+        .locator('.rail-source-unavailable')
+        .filter({ has: page.getByText(name, { exact: true }) });
+      assert.equal(await row.locator('.rail-source-name').innerText(), name);
+      assert.equal(await row.locator('.rail-source-count').innerText(), status);
+    }
+    const emptyRow = rail
+      .locator('.rail-source-empty')
+      .filter({ has: page.getByText('Duckduckgo', { exact: true }) });
+    assert.equal(await emptyRow.locator('.rail-source-name').innerText(), 'Duckduckgo');
+    assert.equal(await emptyRow.locator('.rail-source-count').innerText(), 'no results');
+    assert((await page.locator('body').innerText()).split('Google').length - 1 >= 2);
+    assert(await page.locator('article[data-result-card]').count() > 0);
+    await screenshot(page, 'source-availability.png');
+  });
+  await context.close();
+}
+
 async function writeRuntimeEvidence() {
   const path = pathFor(`${scenario}.browser-runtime-errors.json`);
   const document = {
@@ -704,6 +742,7 @@ async function main() {
   else if (scenario === 'rate-limited') await runErrorScenario('rate-limited', 429, 'keep-rate-limited');
   else if (scenario === 'html-disabled') await runErrorScenario('disabled-format', 403, 'keep-disabled-format');
   else if (scenario === 'unavailable') await runUnavailable();
+  else if (scenario === 'source-availability') await runSourceAvailability();
 
   try {
     await browser.close();
@@ -719,6 +758,7 @@ async function main() {
     'rate-limited': [429],
     'html-disabled': [403],
     unavailable: [503],
+    'source-availability': [],
   }[scenario];
   const observedHttpStatuses = httpErrorResponses.map((row) => row.status).sort((a, b) => a - b);
   const observedConsoleStatuses = [...httpErrorConsoleStatuses].sort((a, b) => a - b);

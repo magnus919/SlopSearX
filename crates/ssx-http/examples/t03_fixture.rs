@@ -40,6 +40,22 @@ impl SearchEngine for FixtureEngine {
                 latency_ms: FiniteF64::new(1.0).unwrap(),
                 ..Default::default()
             };
+            if request.query == "source-availability" {
+                match self.name.as_str() {
+                    "google" => {
+                        response.status = EngineStatus::Blocked;
+                        response.error_message = Some("blocked".into());
+                        return response;
+                    }
+                    "reddit" => {
+                        response.status = EngineStatus::RateLimited;
+                        response.error_message = Some("rate limited".into());
+                        return response;
+                    }
+                    "duckduckgo" => return response,
+                    _ => {}
+                }
+            }
             if request.query == "all-failed" || (request.query == "partial" && self.name == "beta")
             {
                 response.status = EngineStatus::Error;
@@ -191,6 +207,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "rate-limited",
         "html-disabled",
         "unavailable",
+        "source-availability",
     ]
     .contains(&scenario.as_str())
     {
@@ -202,7 +219,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .create_new(true)
             .open(calls_path)?,
     ));
-    let names = ["alpha", "beta", "openalex", "hibp"];
+    let names: &[&str] = if scenario == "source-availability" {
+        &["google", "reddit", "duckduckgo", "wikipedia"]
+    } else {
+        &["alpha", "beta", "openalex", "hibp"]
+    };
     let policy = SearchPolicy::default();
     let policy_arc = Arc::new(policy.clone());
     let telemetry = Telemetry::new(
@@ -282,7 +303,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         },
     )
     .map_err(|e| format!("fixture service: {e:?}"))?;
-    let discovery = json!({"categories":["general","science","sensitive-only"],"category_engines":{"general":["alpha","beta"],"science":["openalex"],"sensitive-only":["hibp"]},"engines":names.iter().map(|name|{let available = !(scenario == "unavailable" && *name == "alpha");let c=capability(name,available);json!({"name":name,"display_name":if *name=="beta"{"Beta <source>"}else{name},"enabled":true,"available":available,"sensitive":*name=="hibp","categories":if *name=="hibp"{vec!["sensitive-only".to_string()]}else{c.categories},"enforced_filters":c.enforced_filters})}).collect::<Vec<Value>>()});
+    let category_engines = if scenario == "source-availability" {
+        json!({"general":["google","reddit","duckduckgo","wikipedia"],"science":[],"sensitive-only":[]})
+    } else {
+        json!({"general":["alpha","beta"],"science":["openalex"],"sensitive-only":["hibp"]})
+    };
+    let discovery = json!({"categories":["general","science","sensitive-only"],"category_engines":category_engines,"engines":names.iter().map(|name|{let available = !(scenario == "unavailable" && *name == "alpha");let c=capability(name,available);let display_name=match *name{"beta"=>"Beta <source>","google"=>"Google","reddit"=>"Reddit","duckduckgo"=>"Duckduckgo","wikipedia"=>"Wikipedia",_=>*name};json!({"name":name,"display_name":display_name,"enabled":true,"available":available,"sensitive":*name=="hibp","categories":if *name=="hibp"{vec!["sensitive-only".to_string()]}else{c.categories},"enforced_filters":c.enforced_filters})}).collect::<Vec<Value>>()});
     let state = HttpState {
         search: service,
         policy: policy_arc,

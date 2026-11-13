@@ -30,9 +30,9 @@
     "excluded_w10_assertions": 20,
     "reviewed_intentional_differences": 0,
     "classification_counts": {
-      "unresolved_fixture_predicate_or_contract_gap": 51,
-      "existing_counterpart_candidate": 28,
-      "retained_raw_mapping_gap": 19,
+      "unresolved_fixture_predicate_or_contract_gap": 47,
+      "existing_counterpart_candidate": 33,
+      "retained_raw_mapping_gap": 18,
       "reviewed_intentional_difference": 0
     }
   },
@@ -92,6 +92,20 @@
       "graphify_update": "graphify update . exited 0 after the code edit; AST graph refreshed; no LLM labeling.",
       "provenance_boundary": "The HTTP and Chromium receipts remain bound to the original 699d5320... tracked source diff. They were not executed against the 2fd13b22... successor. The successor evidence here validates the receipt-identity helper, not the full T03 gate.",
       "scope_limit": "No full cargo xtask check T03, hosted CI, or additional WebKit run is claimed. Existing two equivalent local WebKit failures remain unresolved."
+    },
+    "candidate_source_availability_2026_11_13": {
+      "candidate_base_head": "64e3c47f315d480507a03f7e2761c49f9ce06384",
+      "source_assertions": [
+        "F:L599",
+        "F:L600",
+        "F:L601",
+        "F:L602",
+        "F:L603"
+      ],
+      "http_binding_id": "source-availability",
+      "browser_scenario": "source-availability",
+      "fixture_substitution": "The original Python fixture supplied explicit empty_engines=[[duckduckgo, no results]]. The native source-availability scenario instead exercises the partial-response fallback with an ok/zero-result DuckDuckGo EngineOutcome; the separate empty-source scenario covers explicit empty_engines reason preservation.",
+      "scope": "Candidate source mapping only. The T03 validator evaluates each assertion against the validated HTTP receipt and binds the source manifest bytes. This document does not mark original assertions accepted; exact-head hosted and human T03 acceptance remain outstanding."
     }
   },
   "preserved_predecessors": {
@@ -1164,12 +1178,22 @@
         "issue": 898,
         "state": "proposed_assertion_owner; not_accepted_parity"
       },
-      "classification": "unresolved_fixture_predicate_or_contract_gap",
+      "classification": "existing_counterpart_candidate",
       "original_assertion_accepted": false,
-      "native_evidence": [],
+      "native_evidence": [
+        {
+          "kind": "candidate_t03_source_availability_mapping",
+          "scenario": "source-availability",
+          "binding_id": "source-availability",
+          "receipt_field": "observation.body",
+          "predicate_in_current_gate": true,
+          "browser_scenario": "source-availability",
+          "note": "Maps the frozen Google blocked label predicate to the candidate source-availability HTTP body and browser scenario."
+        }
+      ],
       "unresolved_gap": {
-        "kind": "missing_fixture",
-        "detail": "Current failed-source fixture is Beta/error. No Google/blocked display comparison exists."
+        "kind": "candidate_gate_and_human_acceptance_pending",
+        "detail": "A frozen source-to-receipt mapping and executable T03 comparison now exist in the candidate. This assertion remains unaccepted until exact-head hosted validation and the required human T03 review are complete."
       },
       "reviewed_intentional_difference": null
     },
@@ -1200,12 +1224,22 @@
         "issue": 898,
         "state": "proposed_assertion_owner; not_accepted_parity"
       },
-      "classification": "unresolved_fixture_predicate_or_contract_gap",
+      "classification": "existing_counterpart_candidate",
       "original_assertion_accepted": false,
-      "native_evidence": [],
+      "native_evidence": [
+        {
+          "kind": "candidate_t03_source_availability_mapping",
+          "scenario": "source-availability",
+          "binding_id": "source-availability",
+          "receipt_field": "observation.body",
+          "predicate_in_current_gate": true,
+          "browser_scenario": "source-availability",
+          "note": "Maps the frozen Reddit rate-limited human-readable label predicate to the candidate source-availability HTTP body and browser scenario."
+        }
+      ],
       "unresolved_gap": {
-        "kind": "missing_fixture",
-        "detail": "No Reddit/rate-limited engine outcome and human-readable rate limited spelling comparison exists."
+        "kind": "candidate_gate_and_human_acceptance_pending",
+        "detail": "A frozen source-to-receipt mapping and executable T03 comparison now exist in the candidate. This assertion remains unaccepted until exact-head hosted validation and the required human T03 review are complete."
       },
       "reviewed_intentional_difference": null
     },
@@ -1236,12 +1270,22 @@
         "issue": 898,
         "state": "proposed_assertion_owner; not_accepted_parity"
       },
-      "classification": "unresolved_fixture_predicate_or_contract_gap",
+      "classification": "existing_counterpart_candidate",
       "original_assertion_accepted": false,
-      "native_evidence": [],
+      "native_evidence": [
+        {
+          "kind": "candidate_t03_source_availability_mapping",
+          "scenario": "source-availability",
+          "binding_id": "source-availability",
+          "receipt_field": "observation.body",
+          "predicate_in_current_gate": true,
+          "browser_scenario": "source-availability",
+          "note": "Maps Duckduckgo no-results presentation. Fixture substitution is documented in evidence_packet.candidate_source_availability_2026_11_13."
+        }
+      ],
       "unresolved_gap": {
-        "kind": "unreviewed_behavior_difference",
-        "detail": "PublicPortal empty-source presentation takes only each empty_engines row first element and drops the reason; the original requires Duckduckgo (no results)."
+        "kind": "candidate_gate_and_human_acceptance_pending",
+        "detail": "A frozen source-to-receipt mapping and executable T03 comparison now exist in the candidate. This assertion remains unaccepted until exact-head hosted validation and the required human T03 review are complete."
       },
       "reviewed_intentional_difference": null
     },
@@ -1272,7 +1316,7 @@
         "issue": 898,
         "state": "proposed_assertion_owner; not_accepted_parity"
       },
-      "classification": "retained_raw_mapping_gap",
+      "classification": "existing_counterpart_candidate",
       "original_assertion_accepted": false,
       "native_evidence": [
         {
@@ -1283,11 +1327,20 @@
           "receipt_field": "commands[role=\"actual-http-inventory\"].evidence.http_receipts[binding.id=\"state-partial\"].observation.body",
           "predicate_in_current_gate": false,
           "note": "Exact Source status text is present in state-partial."
+        },
+        {
+          "kind": "candidate_t03_source_availability_mapping",
+          "scenario": "source-availability",
+          "binding_id": "source-availability",
+          "receipt_field": "observation.body",
+          "predicate_in_current_gate": true,
+          "browser_scenario": "source-availability",
+          "note": "Maps the frozen Source status label predicate to the candidate source-availability HTTP body and browser scenario."
         }
       ],
       "unresolved_gap": {
-        "kind": "retained_observation_without_enforced_source_mapping",
-        "detail": "Exact Source status text is present in state-partial."
+        "kind": "candidate_gate_and_human_acceptance_pending",
+        "detail": "A frozen source-to-receipt mapping and executable T03 comparison now exist in the candidate. This assertion remains unaccepted until exact-head hosted validation and the required human T03 review are complete."
       },
       "reviewed_intentional_difference": null
     },
@@ -1318,12 +1371,22 @@
         "issue": 898,
         "state": "proposed_assertion_owner; not_accepted_parity"
       },
-      "classification": "unresolved_fixture_predicate_or_contract_gap",
+      "classification": "existing_counterpart_candidate",
       "original_assertion_accepted": false,
-      "native_evidence": [],
+      "native_evidence": [
+        {
+          "kind": "candidate_t03_source_availability_mapping",
+          "scenario": "source-availability",
+          "binding_id": "source-availability",
+          "receipt_field": "observation.body",
+          "predicate_in_current_gate": true,
+          "browser_scenario": "source-availability",
+          "note": "Maps the frozen minimum-two-Google-occurrences predicate to the candidate source-availability HTTP body and browser scenario."
+        }
+      ],
       "unresolved_gap": {
-        "kind": "missing_fixture_and_rail_behavior",
-        "detail": "Current failed Beta label appears once in the retained partial body. Native rail enumerates result-contributing sources; original requires failed source presence in notice and rail. Add the original failed-source rail comparison and resolve behavior."
+        "kind": "candidate_gate_and_human_acceptance_pending",
+        "detail": "A frozen source-to-receipt mapping and executable T03 comparison now exist in the candidate. This assertion remains unaccepted until exact-head hosted validation and the required human T03 review are complete."
       },
       "reviewed_intentional_difference": null
     },
@@ -1581,14 +1644,14 @@
         "function_line": 619,
         "line": 645,
         "end_line": 645,
-        "assertion": "assert \"packages \u00b7 1 of 2 sources answered\" in output",
-        "predicate": "\"packages \u00b7 1 of 2 sources answered\" in output",
+        "assertion": "assert \"packages · 1 of 2 sources answered\" in output",
+        "predicate": "\"packages · 1 of 2 sources answered\" in output",
         "assertion_sha256": "50f2be5f4fbdfd12e63bc34bd0eaac351ca86ebdf214569023b1eafd23602182"
       },
       "expectation": {
         "kind": "contains",
         "subject": "output",
-        "value": "packages \u00b7 1 of 2 sources answered"
+        "value": "packages · 1 of 2 sources answered"
       },
       "expected_predicate_result": true,
       "ownership": {
@@ -1926,14 +1989,14 @@
         "function_line": 650,
         "line": 666,
         "end_line": 666,
-        "assertion": "assert \"Open result \u2197\" in output",
-        "predicate": "\"Open result \u2197\" in output",
+        "assertion": "assert \"Open result ↗\" in output",
+        "predicate": "\"Open result ↗\" in output",
         "assertion_sha256": "c0d5915c0606fc6a6a1ee3ac7d703e296fb0ff30744edef4e5d374abe100d748"
       },
       "expectation": {
         "kind": "contains",
         "subject": "output",
-        "value": "Open result \u2197"
+        "value": "Open result ↗"
       },
       "expected_predicate_result": true,
       "ownership": {
@@ -1972,14 +2035,14 @@
         "function_line": 650,
         "line": 667,
         "end_line": 667,
-        "assertion": "assert \"Open JSON view \u2197\" in output",
-        "predicate": "\"Open JSON view \u2197\" in output",
+        "assertion": "assert \"Open JSON view ↗\" in output",
+        "predicate": "\"Open JSON view ↗\" in output",
         "assertion_sha256": "a57bd470fc35dfaa5874339906efe8444a720e17de2076e93f92acd527928226"
       },
       "expectation": {
         "kind": "contains",
         "subject": "output",
-        "value": "Open JSON view \u2197"
+        "value": "Open JSON view ↗"
       },
       "expected_predicate_result": true,
       "ownership": {
@@ -2131,14 +2194,14 @@
         "function_line": 650,
         "line": 670,
         "end_line": 670,
-        "assertion": "assert \"Page 1 \u00b7 more may be available\" in output",
-        "predicate": "\"Page 1 \u00b7 more may be available\" in output",
+        "assertion": "assert \"Page 1 · more may be available\" in output",
+        "predicate": "\"Page 1 · more may be available\" in output",
         "assertion_sha256": "5903605c5efb596055ceff9428598ac1eeffaaa154af43f7bf8d103feb5cb49b"
       },
       "expectation": {
         "kind": "contains",
         "subject": "output",
-        "value": "Page 1 \u00b7 more may be available"
+        "value": "Page 1 · more may be available"
       },
       "expected_predicate_result": true,
       "ownership": {
@@ -2230,14 +2293,14 @@
         "function_line": 650,
         "line": 672,
         "end_line": 672,
-        "assertion": "assert \"Try next page \u2192\" in output",
-        "predicate": "\"Try next page \u2192\" in output",
+        "assertion": "assert \"Try next page →\" in output",
+        "predicate": "\"Try next page →\" in output",
         "assertion_sha256": "7d78c18dc07db055415bd4c84e242937b97b410624816bc3b174840efd87a8c2"
       },
       "expectation": {
         "kind": "contains",
         "subject": "output",
-        "value": "Try next page \u2192"
+        "value": "Try next page →"
       },
       "expected_predicate_result": true,
       "ownership": {
@@ -2335,14 +2398,14 @@
         "function_line": 650,
         "line": 680,
         "end_line": 680,
-        "assertion": "assert \"Try next page \u2192\" not in last_page",
-        "predicate": "\"Try next page \u2192\" not in last_page",
+        "assertion": "assert \"Try next page →\" not in last_page",
+        "predicate": "\"Try next page →\" not in last_page",
         "assertion_sha256": "5940b6b4c12344c19a9e4c9203dc67a4605f8a8d9b9e478a61ef821fddefc895"
       },
       "expectation": {
         "kind": "does_not_contain",
         "subject": "last_page",
-        "value": "Try next page \u2192"
+        "value": "Try next page →"
       },
       "expected_predicate_result": true,
       "ownership": {
@@ -2371,14 +2434,14 @@
         "function_line": 650,
         "line": 681,
         "end_line": 681,
-        "assertion": "assert \"Next page \u2192\" not in last_page",
-        "predicate": "\"Next page \u2192\" not in last_page",
+        "assertion": "assert \"Next page →\" not in last_page",
+        "predicate": "\"Next page →\" not in last_page",
         "assertion_sha256": "5885ce56eb30f758921a06fc0423669f04133a9d3d602ea3d620a1140bff4a11"
       },
       "expectation": {
         "kind": "does_not_contain",
         "subject": "last_page",
-        "value": "Next page \u2192"
+        "value": "Next page →"
       },
       "expected_predicate_result": true,
       "ownership": {
@@ -2407,14 +2470,14 @@
         "function_line": 650,
         "line": 688,
         "end_line": 688,
-        "assertion": "assert \"Next page \u2192\" in known_more",
-        "predicate": "\"Next page \u2192\" in known_more",
+        "assertion": "assert \"Next page →\" in known_more",
+        "predicate": "\"Next page →\" in known_more",
         "assertion_sha256": "6624747bc6353ecdd49de7057466e78ff02d8c534ad5710ba05330067a35444b"
       },
       "expectation": {
         "kind": "contains",
         "subject": "known_more",
-        "value": "Next page \u2192"
+        "value": "Next page →"
       },
       "expected_predicate_result": true,
       "ownership": {
@@ -2479,14 +2542,14 @@
         "function_line": 650,
         "line": 696,
         "end_line": 696,
-        "assertion": "assert \"Open JSON view \u2197\" not in disabled_output",
-        "predicate": "\"Open JSON view \u2197\" not in disabled_output",
+        "assertion": "assert \"Open JSON view ↗\" not in disabled_output",
+        "predicate": "\"Open JSON view ↗\" not in disabled_output",
         "assertion_sha256": "954584f5d388a3e6d3bd61fa66726ea375da0ca3d79a9de534b1fa1873d9e292"
       },
       "expectation": {
         "kind": "does_not_contain",
         "subject": "disabled_output",
-        "value": "Open JSON view \u2197"
+        "value": "Open JSON view ↗"
       },
       "expected_predicate_result": true,
       "ownership": {
@@ -3166,14 +3229,14 @@
         "function_line": 750,
         "line": 778,
         "end_line": 778,
-        "assertion": "assert \"doi \u2014 doi: 10.1000/example\" in output",
-        "predicate": "\"doi \u2014 doi: 10.1000/example\" in output",
+        "assertion": "assert \"doi — doi: 10.1000/example\" in output",
+        "predicate": "\"doi — doi: 10.1000/example\" in output",
         "assertion_sha256": "1613b51d0b84522a713a1678e0b291641927d57b6313689d6e41d05579937254"
       },
       "expectation": {
         "kind": "contains",
         "subject": "output",
-        "value": "doi \u2014 doi: 10.1000/example"
+        "value": "doi — doi: 10.1000/example"
       },
       "expected_predicate_result": true,
       "ownership": {
@@ -3202,14 +3265,14 @@
         "function_line": 750,
         "line": 779,
         "end_line": 779,
-        "assertion": "assert \"pmid \u2014 pmid: 123456\" in output",
-        "predicate": "\"pmid \u2014 pmid: 123456\" in output",
+        "assertion": "assert \"pmid — pmid: 123456\" in output",
+        "predicate": "\"pmid — pmid: 123456\" in output",
         "assertion_sha256": "2564cb898f677fd85fe41a511df2228a75179f8228f2be728ab85a2fd51792b1"
       },
       "expectation": {
         "kind": "contains",
         "subject": "output",
-        "value": "pmid \u2014 pmid: 123456"
+        "value": "pmid — pmid: 123456"
       },
       "expected_predicate_result": true,
       "ownership": {
@@ -4293,13 +4356,13 @@
         "function_line": 64,
         "line": 95,
         "end_line": 95,
-        "assertion": "assert page.get_by_role(\"link\", name=\"Open JSON view \u2197\", exact=True).is_visible()",
-        "predicate": "page.get_by_role(\"link\", name=\"Open JSON view \u2197\", exact=True).is_visible()",
+        "assertion": "assert page.get_by_role(\"link\", name=\"Open JSON view ↗\", exact=True).is_visible()",
+        "predicate": "page.get_by_role(\"link\", name=\"Open JSON view ↗\", exact=True).is_visible()",
         "assertion_sha256": "be75414b687b602f84e322b28c1d41bf5e6fad7c2f056fa03abca3d8aa8495fc"
       },
       "expectation": {
         "kind": "truthy",
-        "expression": "page.get_by_role('link', name='Open JSON view \u2197', exact=True).is_visible()",
+        "expression": "page.get_by_role('link', name='Open JSON view ↗', exact=True).is_visible()",
         "value": true
       },
       "expected_predicate_result": true,

@@ -212,6 +212,35 @@ async fn malicious_optional_empty_partial_and_unavailable_states_are_truthful() 
         }
     }
     p.stop().await;
+
+    let mut p = Process::start("source-availability", "source-availability");
+    let (status, body) = p
+        .get(
+            "/search?q=source-availability&categories=general",
+            "source-availability",
+        )
+        .await;
+    assert_eq!(status, 200);
+    assert!(body.contains("Some sources could not answer this search."));
+    assert!(body.contains("Google (blocked)"));
+    assert!(body.contains("Reddit (rate limited)"));
+    assert!(body.contains("Duckduckgo (no results)"));
+    assert!(body.contains("Source status"));
+    assert!(body.matches("Google").count() >= 2);
+    assert!(body.contains("class=\"rail-source rail-source-unavailable\""));
+    assert!(body.contains("class=\"rail-source rail-source-empty\""));
+    assert!(body.contains(
+        "<li class=\"rail-source rail-source-unavailable\"><span class=\"rail-source-name\">Google</span><span class=\"rail-source-count\">blocked</span></li>"
+    ));
+    assert!(body.contains(
+        "<li class=\"rail-source rail-source-unavailable\"><span class=\"rail-source-name\">Reddit</span><span class=\"rail-source-count\">rate limited</span></li>"
+    ));
+    assert!(body.contains(
+        "<li class=\"rail-source rail-source-empty\"><span class=\"rail-source-name\">Duckduckgo</span><span class=\"rail-source-count\">no results</span></li>"
+    ));
+    assert!(body.contains("Wikipedia"));
+    assert_eq!(p.calls(), 4);
+    p.stop().await;
 }
 
 #[tokio::test]

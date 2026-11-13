@@ -14,12 +14,15 @@ use std::{
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 const CLIENT: &str = "crates/ssx-http/tests/t03-browser/run.mjs";
-const SCENARIOS: [&str; 5] = [
+const SOURCE_ASSERTIONS: &[u8] =
+    include_bytes!("../../../docs/rust-rewrite/t03/source-assertions-v1.json");
+const SCENARIOS: [&str; 6] = [
     "contract",
     "cached-error",
     "rate-limited",
     "html-disabled",
     "unavailable",
+    "source-availability",
 ];
 const ENGINES: [&str; 3] = ["chromium", "firefox", "webkit"];
 
@@ -42,7 +45,7 @@ const HTTP_TESTS: [&str; 11] = [
     "blank_optional_html_bounds_are_absent_and_machine_blanks_stay_rejected",
     "landing_native_form_submits_query_and_scope_together_from_both_buttons",
 ];
-const SOURCES: [(&str, &[u8]); 13] = [
+const SOURCES: [(&str, &[u8]); 14] = [
     ("crates/xtask/src/t03.rs", include_bytes!("t03.rs")),
     (
         "crates/ssx-http/src/portal.rs",
@@ -87,6 +90,10 @@ const SOURCES: [(&str, &[u8]); 13] = [
     (
         "crates/ssx-http/tests/t03-browser/interaction.mjs",
         include_bytes!("../../ssx-http/tests/t03-browser/interaction.mjs"),
+    ),
+    (
+        "docs/rust-rewrite/t03/source-assertions-v1.json",
+        SOURCE_ASSERTIONS,
     ),
     (
         "docs/rust-rewrite/t02/original-bindings.json",
@@ -305,6 +312,7 @@ fn expected_http() -> Vec<HttpExpected> {
             2,
         );
     }
+    add("source-availability", "source-availability", 200, 4);
     for path in ["root", "search"] {
         for method in ["GET", "POST"] {
             for format in ["html", "json", "yaml", "csv", "rss"] {
@@ -355,12 +363,12 @@ fn group_for(path: &Path, groups: &BTreeSet<&str>) -> Result<String> {
 fn validate_http(base: &Path, stdout: &str, binary: &Path, binary_sha: &str) -> Result<Value> {
     let expected = expected_http();
     need(
-        expected.len() == 106,
+        expected.len() == 107,
         "compiled HTTP receipt inventory is incomplete",
     )?;
     let groups: BTreeSet<_> = expected.iter().map(|row| row.group).collect();
     need(
-        groups.len() == 12,
+        groups.len() == 13,
         "compiled HTTP process inventory is incomplete",
     )?;
     let wanted: BTreeMap<_, _> = expected
@@ -535,6 +543,7 @@ fn validate_http(base: &Path, stdout: &str, binary: &Path, binary_sha: &str) -> 
         "original two-node/16-assertion handoff differs",
     )?;
     let assertions = assertion_evidence(&nodes, &wire)?;
+    let source_availability_assertions = source_availability_evidence(SOURCE_ASSERTIONS, &wire)?;
     for (group, directory) in &process_dirs {
         let mut wanted_files: BTreeSet<_> = expected
             .iter()
@@ -581,11 +590,11 @@ fn validate_http(base: &Path, stdout: &str, binary: &Path, binary_sha: &str) -> 
             "HTTP raw engine-call count differs",
         )?;
         for line in calls.lines() {
-            validate_engine_call(line, "HTTP fixture reached an unexpected engine")?;
+            validate_engine_call(line, group, "HTTP fixture reached an unexpected engine")?;
         }
     }
     Ok(
-        json!({"http_receipts":wire,"processes":processes,"source_assertions":assertions,"child_joined":true,"child_exit_success":true}),
+        json!({"http_receipts":wire,"processes":processes,"source_assertions":assertions,"source_availability_assertions":source_availability_assertions,"child_joined":true,"child_exit_success":true}),
     )
 }
 fn assertion_evidence(nodes: &[Value], wire: &[Value]) -> Result<Value> {
@@ -648,6 +657,172 @@ fn assertion_evidence(nodes: &[Value], wire: &[Value]) -> Result<Value> {
     Ok(Value::Array(assertions))
 }
 
+fn source_availability_evidence(source: &[u8], wire: &[Value]) -> Result<Value> {
+    const FIXTURE_SUBSTITUTION: &str = "The original Python fixture supplied explicit empty_engines=[[duckduckgo, no results]]. The native source-availability scenario instead exercises the partial-response fallback with an ok/zero-result DuckDuckGo EngineOutcome; the separate empty-source scenario covers explicit empty_engines reason preservation.";
+    let manifest: Value = serde_json::from_slice(source)
+        .map_err(|error| format!("T03 source-assertion manifest JSON: {error}"))?;
+    need(
+        manifest["schema"] == "T03_SOURCE_ASSERTIONS_V1"
+            && manifest["plan_id"] == "T03"
+            && manifest["issue"] == 898,
+        "source-assertion manifest identity differs",
+    )?;
+    let candidate = &manifest["evidence_packet"]["candidate_source_availability_2026_11_13"];
+    need(
+        candidate["http_binding_id"] == "source-availability"
+            && candidate["browser_scenario"] == "source-availability"
+            && candidate["fixture_substitution"] == FIXTURE_SUBSTITUTION
+            && candidate["source_assertions"]
+                == json!(["F:L599", "F:L600", "F:L601", "F:L602", "F:L603"]),
+        "source-availability candidate mapping differs",
+    )?;
+
+    let matching_receipts: Vec<_> = wire
+        .iter()
+        .filter(|entry| {
+            entry["group"] == "source-availability"
+                && entry["binding"]["id"] == "source-availability"
+        })
+        .collect();
+    need(
+        matching_receipts.len() == 1,
+        "source-availability source assertion receipt missing or duplicated",
+    )?;
+    let receipt = matching_receipts[0];
+    let body = receipt["observation"]["body"]
+        .as_str()
+        .ok_or("T03 source-availability response body missing")?;
+    let rows = manifest["rows"]
+        .as_array()
+        .ok_or("T03 source-assertion rows missing")?;
+    let expected = [
+        (
+            "F:L599",
+            599,
+            "assert \"Google (blocked)\" in output",
+            "5d805a6bad8dae1cbe6d0dfec71323075e4da4b57e492ea3ddff50420a3a99db",
+            "\"Google (blocked)\" in output",
+            "contains",
+            "Google (blocked)",
+        ),
+        (
+            "F:L600",
+            600,
+            "assert \"Reddit (rate limited)\" in output",
+            "bbd24f74d65d7cdad763611d6f1a1f660c72dff0dcb7571fdd26548a23975bb8",
+            "\"Reddit (rate limited)\" in output",
+            "contains",
+            "Reddit (rate limited)",
+        ),
+        (
+            "F:L601",
+            601,
+            "assert \"Duckduckgo (no results)\" in output",
+            "3ab09e5a46ceb890fcd5b890457b2f7c8fba0254c2383b86ada57c0ac8b39f89",
+            "\"Duckduckgo (no results)\" in output",
+            "contains",
+            "Duckduckgo (no results)",
+        ),
+        (
+            "F:L602",
+            602,
+            "assert \"Source status\" in output",
+            "b5b013fef9c3409bee416ef32e146523911e3c358e779b6ebd88a92284c97117",
+            "\"Source status\" in output",
+            "contains",
+            "Source status",
+        ),
+        (
+            "F:L603",
+            603,
+            "assert output.count(\"Google\") >= 2",
+            "8fd4f04ec06cc83fc9e88c01c6507e222910ae5a4c78b5152794d4a7733b20e0",
+            "output.count(\"Google\") >= 2",
+            "minimum",
+            "Google",
+        ),
+    ];
+    let mut evidence = Vec::with_capacity(expected.len());
+    for (id, line, assertion, assertion_sha256, predicate, kind, value) in expected {
+        let matching_rows: Vec<_> = rows.iter().filter(|row| row["id"] == id).collect();
+        need(
+            matching_rows.len() == 1,
+            &format!("source assertion {id} missing or duplicated"),
+        )?;
+        let row = matching_rows[0];
+        need(
+            row["scope"] == "formatter_html"
+                && row["source"]["path"] == "tests/test_formatter.py"
+                && row["source"]["baseline_commit"] == "20109f9083babd014971951e8c02565ae51c2326"
+                && row["source"]["git_blob"] == "012c9365c62fa4523c3cac67081024995975bdc3"
+                && row["source"]["file_sha256"]
+                    == "28de731a81090067f90eabf2d37c28e92c026da38e0d95007d116f9fe60929b6"
+                && row["source"]["function"]
+                    == "TestPortalHtml.test_result_page_names_unavailable_sources_in_notice_and_rail"
+                && row["source"]["function_line"] == 587
+                && row["source"]["line"] == line
+                && row["source"]["end_line"] == line
+                && row["source"]["assertion"] == assertion
+                && row["source"]["assertion_sha256"] == assertion_sha256
+                && row["source"]["predicate"] == predicate
+                && row["expectation"]["kind"] == kind
+                && row["expectation"]["subject"]
+                    == if kind == "minimum" {
+                        "output.count('Google')"
+                    } else {
+                        "output"
+                    }
+                && row["expectation"]["value"]
+                    == if kind == "minimum" {
+                        json!(2)
+                    } else {
+                        json!(value)
+                    }
+                && row["expected_predicate_result"] == true
+                && row["ownership"]["owner_plan_id"] == "T03"
+                && row["ownership"]["issue"] == 898
+                && row["classification"] == "existing_counterpart_candidate"
+                && row["original_assertion_accepted"] == false
+                && row["unresolved_gap"]["kind"] == "candidate_gate_and_human_acceptance_pending",
+            &format!("source assertion {id} identity or acceptance boundary differs"),
+        )?;
+        let comparisons = row["native_evidence"]
+            .as_array()
+            .ok_or_else(|| format!("source assertion {id} mapping missing"))?
+            .iter()
+            .filter(|entry| entry["kind"] == "candidate_t03_source_availability_mapping")
+            .collect::<Vec<_>>();
+        need(
+            comparisons.len() == 1
+                && comparisons[0]["scenario"] == "source-availability"
+                && comparisons[0]["binding_id"] == "source-availability"
+                && comparisons[0]["receipt_field"] == "observation.body"
+                && comparisons[0]["predicate_in_current_gate"] == true
+                && comparisons[0]["browser_scenario"] == "source-availability",
+            &format!("source assertion {id} candidate mapping differs"),
+        )?;
+        let expected_predicate = match kind {
+            "contains" => body.contains(value),
+            "minimum" => body.matches(value).count() >= 2,
+            _ => false,
+        };
+        need(
+            expected_predicate,
+            &format!("source assertion {id} comparison failed"),
+        )?;
+        evidence.push(json!({
+            "source_assertion_id": id,
+            "source_assertion_sha256": assertion_sha256,
+            "scenario": "source-availability",
+            "binding": receipt["binding"],
+            "receipt_sha256": receipt["binding"]["sha256"],
+            "comparison": if kind == "contains" { json!({"body_contains": value}) } else { json!({"body_count_at_least": {"text": value, "count": 2}}) },
+            "passed": true
+        }));
+    }
+    Ok(Value::Array(evidence))
+}
+
 fn exact_keys(value: &Value, expected: &[&str], label: &str) -> Result<()> {
     let actual = value
         .as_object()
@@ -659,15 +834,21 @@ fn exact_keys(value: &Value, expected: &[&str], label: &str) -> Result<()> {
     )
 }
 
-fn validate_engine_call(line: &str, error: &str) -> Result<()> {
+fn validate_engine_call(line: &str, group: &str, error: &str) -> Result<()> {
     // Engine-call query parameters are raw request evidence. The T03 page-limit
     // case intentionally includes a 4,300-digit page token, so parse through the
     // lossless JSON profile instead of serde_json's bounded integer representation.
     let call: ssx_json::Value = ssx_json::from_str(line).map_err(|e| e.to_string())?;
-    need(
-        matches!(call["engine"].as_str(), Some("alpha" | "beta" | "openalex")),
-        error,
-    )
+    let engine = call["engine"].as_str();
+    let allowed = if group == "source-availability" {
+        matches!(
+            engine,
+            Some("google" | "reddit" | "duckduckgo" | "wikipedia")
+        )
+    } else {
+        matches!(engine, Some("alpha" | "beta" | "openalex"))
+    };
+    need(allowed, error)
 }
 
 fn journey_ids(scenario: &str) -> Result<&'static [&'static str]> {
@@ -693,6 +874,7 @@ fn journey_ids(scenario: &str) -> Result<&'static [&'static str]> {
         "rate-limited" => Ok(&["rate-limited"]),
         "html-disabled" => Ok(&["disabled-format"]),
         "unavailable" => Ok(&["unavailable-source"]),
+        "source-availability" => Ok(&["source-availability"]),
         _ => Err("T03 unknown browser scenario".into()),
     }
 }
@@ -1069,6 +1251,7 @@ fn validate_http_error_evidence(
         "rate-limited" => &[429],
         "html-disabled" => &[403],
         "unavailable" => &[503],
+        "source-availability" => &[],
         _ => return Err("T03 unknown browser scenario for HTTP statuses".into()),
     };
     let responses = receipt["http_error_responses"]
@@ -1415,7 +1598,7 @@ pub(crate) fn validator_controls() -> Result<()> {
     let rows:Vec<_>=SCENARIOS.into_iter().flat_map(|scenario|ENGINES.into_iter().map(move |engine|json!({"scenario":scenario,"engine":engine,"source_sha256":"synthetic-validator-input","terminal":{"stop_sent":true,"child_joined":true,"child_exit_success":true,"tree_retired":true,"stdout_eof":true,"stdout_tail_bytes":0,"stderr_bytes":0}}))).collect();
     controls(&rows, "synthetic-validator-input")?;
     need(
-        expected_http().len() == 106 && HTTP_TESTS.len() == 11,
+        expected_http().len() == 107 && HTTP_TESTS.len() == 11,
         "closed HTTP inventory",
     )
 }
@@ -1551,7 +1734,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             records.push(json!({"plan":"T03","role":"browser-fixture-terminal","scenario":scenario,"terminal":terminal.as_ref().ok(),"error":terminal.as_ref().err()}));
             let terminal = terminal?;
             validate_cleanup(&terminal)?;
-            if scenario != "contract" {
+            if !matches!(scenario, "contract" | "source-availability") {
                 need(
                     terminal["engine_calls"] == 0,
                     "browser error scenario dispatched an engine",
@@ -1561,7 +1744,11 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
                 .as_str()
                 .ok_or("T03 browser engine-call observations missing")?;
             for line in calls.lines() {
-                validate_engine_call(line, "browser fixture reached an unexpected engine")?;
+                validate_engine_call(
+                    line,
+                    scenario,
+                    "browser fixture reached an unexpected engine",
+                )?;
             }
             let browser = validate_browser(
                 &browser_dir,
@@ -1579,15 +1766,15 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         sources(root)? == before && hash(&regular(&binary, 256 * 1024 * 1024)?) == binary_sha,
         "source or executed fixture image changed during gate",
     )?;
-    records.push(json!({"plan":"T03","role":"native-browser-acceptance","source_inputs":before,"source_sha256":source_sha,"server_binary":{"path":binary,"sha256":binary_sha},"http_tests":HTTP_TESTS,"http_receipts":106,"http_processes":12,"browser_scenarios":browser_rows,"controls":negative,"evidence_directory":run,"scope":"real native HTTP plus deterministic Chromium and Firefox browser journeys and measured synthetic budgets; actual Safari, manual visual/assistive technology and 200% zoom acceptance remain separate"}));
+    records.push(json!({"plan":"T03","role":"native-browser-acceptance","source_inputs":before,"source_sha256":source_sha,"server_binary":{"path":binary,"sha256":binary_sha},"http_tests":HTTP_TESTS,"http_receipts":107,"http_processes":13,"browser_scenarios":browser_rows,"controls":negative,"evidence_directory":run,"scope":"real native HTTP plus deterministic Chromium and Firefox browser journeys and measured synthetic budgets; actual Safari, manual visual/assistive technology and 200% zoom acceptance remain separate"}));
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use super::{
-        validate_budgets, validate_engine_call, validate_http_error_evidence,
-        validate_synthetic_media_response,
+        SOURCE_ASSERTIONS, source_availability_evidence, validate_budgets, validate_engine_call,
+        validate_http_error_evidence, validate_synthetic_media_response,
     };
     use serde_json::{Value, json};
 
@@ -1668,13 +1855,169 @@ mod tests {
     fn engine_call_keeps_arbitrary_precision_page_evidence() {
         let page = "9".repeat(4300);
         let line = format!(r#"{{"engine":"beta","page":{page}}}"#);
-        assert!(validate_engine_call(&line, "unexpected engine").is_ok());
+        assert!(validate_engine_call(&line, "contract", "unexpected engine").is_ok());
     }
 
     #[test]
     fn engine_call_still_rejects_unexpected_engine() {
         assert!(
-            validate_engine_call(r#"{"engine":"untrusted","page":1}"#, "unexpected engine")
+            validate_engine_call(
+                r#"{"engine":"untrusted","page":1}"#,
+                "contract",
+                "unexpected engine"
+            )
+            .is_err()
+        );
+    }
+
+    #[test]
+    fn source_availability_engine_calls_are_bound_to_its_fixture_sources() {
+        for engine in ["google", "reddit", "duckduckgo", "wikipedia"] {
+            let line = format!(r#"{{"engine":"{engine}","page":1}}"#);
+            assert!(
+                validate_engine_call(&line, "source-availability", "unexpected engine").is_ok()
+            );
+        }
+        assert!(
+            validate_engine_call(
+                r#"{"engine":"alpha","page":1}"#,
+                "source-availability",
+                "unexpected engine"
+            )
+            .is_err()
+        );
+    }
+
+    #[test]
+    fn source_availability_assertions_are_bound_to_exact_source_and_http_evidence() {
+        let body =
+            "Google (blocked) Reddit (rate limited) Duckduckgo (no results) Source status Google";
+        let receipt = |body: &str, id: &str, group: &str| {
+            vec![json!({
+                "group": group,
+                "binding": {"id": id, "sha256": "a".repeat(64)},
+                "observation": {"body": body}
+            })]
+        };
+        let valid = receipt(body, "source-availability", "source-availability");
+        let evidence = source_availability_evidence(SOURCE_ASSERTIONS, &valid)
+            .expect("all frozen source predicates should map to the candidate receipt");
+        assert_eq!(evidence.as_array().map(Vec::len), Some(5));
+
+        let wrong_binding = receipt(body, "contract", "source-availability");
+        assert!(source_availability_evidence(SOURCE_ASSERTIONS, &wrong_binding).is_err());
+        let wrong_group = receipt(body, "source-availability", "contract");
+        assert!(source_availability_evidence(SOURCE_ASSERTIONS, &wrong_group).is_err());
+        let mut duplicated_receipts = valid.clone();
+        duplicated_receipts.push(valid[0].clone());
+        assert!(source_availability_evidence(SOURCE_ASSERTIONS, &duplicated_receipts).is_err());
+
+        let mut missing: Value = serde_json::from_slice(SOURCE_ASSERTIONS).unwrap();
+        missing["rows"]
+            .as_array_mut()
+            .unwrap()
+            .retain(|row| row["id"] != "F:L599");
+        assert!(
+            source_availability_evidence(&serde_json::to_vec(&missing).unwrap(), &valid).is_err()
+        );
+
+        let mut duplicated: Value = serde_json::from_slice(SOURCE_ASSERTIONS).unwrap();
+        let rows = duplicated["rows"].as_array_mut().unwrap();
+        let row = rows
+            .iter()
+            .find(|row| row["id"] == "F:L599")
+            .unwrap()
+            .clone();
+        rows.push(row);
+        assert!(
+            source_availability_evidence(&serde_json::to_vec(&duplicated).unwrap(), &valid)
+                .is_err()
+        );
+
+        let mut missing_candidate_mapping: Value =
+            serde_json::from_slice(SOURCE_ASSERTIONS).unwrap();
+        let first_row = missing_candidate_mapping["rows"]
+            .as_array_mut()
+            .unwrap()
+            .iter_mut()
+            .find(|row| row["id"] == "F:L599")
+            .unwrap();
+        first_row["native_evidence"]
+            .as_array_mut()
+            .unwrap()
+            .retain(|entry| entry["kind"] != "candidate_t03_source_availability_mapping");
+        assert!(
+            source_availability_evidence(
+                &serde_json::to_vec(&missing_candidate_mapping).unwrap(),
+                &valid
+            )
+            .is_err()
+        );
+
+        let mut duplicated_candidate_mapping: Value =
+            serde_json::from_slice(SOURCE_ASSERTIONS).unwrap();
+        let first_row = duplicated_candidate_mapping["rows"]
+            .as_array_mut()
+            .unwrap()
+            .iter_mut()
+            .find(|row| row["id"] == "F:L599")
+            .unwrap();
+        let mapping = first_row["native_evidence"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|entry| entry["kind"] == "candidate_t03_source_availability_mapping")
+            .unwrap()
+            .clone();
+        first_row["native_evidence"]
+            .as_array_mut()
+            .unwrap()
+            .push(mapping);
+        assert!(
+            source_availability_evidence(
+                &serde_json::to_vec(&duplicated_candidate_mapping).unwrap(),
+                &valid
+            )
+            .is_err()
+        );
+
+        let mut altered: Value = serde_json::from_slice(SOURCE_ASSERTIONS).unwrap();
+        let row = altered["rows"]
+            .as_array_mut()
+            .unwrap()
+            .iter_mut()
+            .find(|row| row["id"] == "F:L599")
+            .unwrap();
+        row["expectation"]["value"] = json!("Google blocked");
+        assert!(
+            source_availability_evidence(&serde_json::to_vec(&altered).unwrap(), &valid).is_err()
+        );
+
+        let insufficient_count = receipt(
+            "Google (blocked) Reddit (rate limited) Duckduckgo (no results) Source status",
+            "source-availability",
+            "source-availability",
+        );
+        assert!(source_availability_evidence(SOURCE_ASSERTIONS, &insufficient_count).is_err());
+        let missing_required_literal = receipt(
+            "Google (blocked) Reddit (rate limited) Source status Google",
+            "source-availability",
+            "source-availability",
+        );
+        assert!(
+            source_availability_evidence(SOURCE_ASSERTIONS, &missing_required_literal).is_err()
+        );
+
+        let mut altered_predicate: Value = serde_json::from_slice(SOURCE_ASSERTIONS).unwrap();
+        let row = altered_predicate["rows"]
+            .as_array_mut()
+            .unwrap()
+            .iter_mut()
+            .find(|row| row["id"] == "F:L599")
+            .unwrap();
+        row["source"]["predicate"] = json!("different descriptive predicate");
+        assert!(
+            source_availability_evidence(&serde_json::to_vec(&altered_predicate).unwrap(), &valid)
                 .is_err()
         );
     }

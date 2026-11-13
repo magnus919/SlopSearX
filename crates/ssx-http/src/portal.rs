@@ -107,6 +107,29 @@ impl PublicPortal {
             .cloned()
             .unwrap_or_else(|| label(name))
     }
+    fn empty_sources(&self, response: &SearchResponse) -> Vec<(String, String)> {
+        let mut empty = response
+            .empty_engines
+            .iter()
+            .filter_map(|entry| {
+                let engine = entry.first()?.clone();
+                let reason = entry.get(1).cloned().unwrap_or_default();
+                Some((engine, reason))
+            })
+            .collect::<Vec<_>>();
+        if response.partial {
+            for outcome in response
+                .engine_outcomes
+                .iter()
+                .filter(|outcome| outcome.status == "ok" && outcome.result_count == 0)
+            {
+                if !empty.iter().any(|(engine, _)| engine == &outcome.engine) {
+                    empty.push((outcome.engine.clone(), "no results".into()));
+                }
+            }
+        }
+        empty
+    }
     fn document(&self, title: &str, body: &str, invalid_field: Option<&str>) -> String {
         let darker = self.theme == "darker";
         format!(
@@ -620,29 +643,29 @@ impl HtmlRenderer for PublicPortal {
         );
         body.push_str(&self.search_form(&state, false, None));
         body.push_str(&self.scope_panel(&state, Some(response), meta, None, false));
+        let empty_sources = self.empty_sources(response);
         let failures = response
             .engine_outcomes
             .iter()
             .filter(|o| o.status != "ok")
-            .map(|o| format!("{} ({})", self.source_label(&o.engine), o.status))
+            .map(|o| {
+                format!(
+                    "{} ({})",
+                    self.source_label(&o.engine),
+                    source_status_label(&o.status)
+                )
+            })
             .collect::<Vec<_>>()
             .join(", ");
-        let empty = response
-            .empty_engines
+        let empty = empty_sources
             .iter()
-            .filter_map(|entry| {
-                let engine = entry.first()?;
+            .map(|(engine, reason)| {
                 let label = self.source_label(engine);
-                Some(
-                    match entry
-                        .get(1)
-                        .map(String::as_str)
-                        .filter(|reason| !reason.is_empty())
-                    {
-                        Some(reason) => format!("{label} ({reason})"),
-                        None => label.to_owned(),
-                    },
-                )
+                if reason.is_empty() {
+                    label
+                } else {
+                    format!("{label} ({reason})")
+                }
             })
             .collect::<Vec<_>>()
             .join(", ");
@@ -790,17 +813,15 @@ impl HtmlRenderer for PublicPortal {
                 body,
                 "<li class=\"rail-source rail-source-unavailable\"><span class=\"rail-source-name\">{}</span><span class=\"rail-source-count\">{}</span></li>",
                 escape(&self.source_label(&outcome.engine)),
-                escape(&outcome.status)
+                escape(source_status_label(&outcome.status))
             );
         }
-        for entry in &response.empty_engines {
-            if let Some(engine) = entry.first() {
-                let _ = write!(
-                    body,
-                    "<li class=\"rail-source rail-source-empty\"><span class=\"rail-source-name\">{}</span><span class=\"rail-source-count\">no results</span></li>",
-                    escape(&self.source_label(engine))
-                );
-            }
+        for (engine, _) in &empty_sources {
+            let _ = write!(
+                body,
+                "<li class=\"rail-source rail-source-empty\"><span class=\"rail-source-name\">{}</span><span class=\"rail-source-count\">no results</span></li>",
+                escape(&self.source_label(engine))
+            );
         }
         if response.results.is_empty() {
             body.push_str("<li class=\"rail-source\">No responding sources returned results</li>");
@@ -948,6 +969,12 @@ fn label(s: &str) -> String {
         })
         .collect::<Vec<_>>()
         .join(" ")
+}
+fn source_status_label(status: &str) -> &str {
+    match status {
+        "rate_limited" => "rate limited",
+        other => other,
+    }
 }
 fn sources(result: &SearchResult) -> BTreeSet<String> {
     if result.engines.is_empty() {
