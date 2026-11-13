@@ -65,7 +65,7 @@ struct Provider {
     closed: Arc<AtomicUsize>,
     request_read: Arc<tokio::sync::Semaphore>,
     cancel: tokio_util::sync::CancellationToken,
-    task: tokio::task::JoinHandle<std::result::Result<(), &'static str>>,
+    task: Option<tokio::task::JoinHandle<std::result::Result<(), &'static str>>>,
     failure: Arc<std::sync::Mutex<Option<&'static str>>>,
 }
 impl Provider {
@@ -128,7 +128,7 @@ impl Provider {
             started,
             closed,
             cancel,
-            task,
+            task: Some(task),
             failure,
             request_read,
         })
@@ -159,15 +159,19 @@ impl Provider {
     }
     async fn close(mut self) -> Result<()> {
         self.cancel.cancel();
-        match tokio::time::timeout(Duration::from_secs(2), &mut self.task).await {
+        let mut task = self
+            .task
+            .take()
+            .ok_or("provider task was already retired")?;
+        match tokio::time::timeout(Duration::from_secs(2), &mut task).await {
             Ok(joined) => {
                 joined.map_err(|_| "provider task join failed")??;
                 require_listener_retired(&self.listener_dropped)
             }
             Err(_) => {
-                self.task.abort();
+                task.abort();
                 // Aborting is followed by a join; dropping a JoinHandle detaches it.
-                let disposition = match self.task.await {
+                let disposition = match task.await {
                     Err(e) if e.is_cancelled() => "aborted and joined",
                     Err(_) => "joined after task failure",
                     Ok(Ok(())) => "completed and joined after guard",
@@ -177,6 +181,80 @@ impl Provider {
             }
         }
     }
+}
+
+impl Drop for Provider {
+    fn drop(&mut self) {
+        self.cancel.cancel();
+        if let Some(task) = &self.task {
+            if !task.is_finished() {
+                task.abort();
+            }
+        }
+    }
+}
+
+async fn abort_and_join<T>(
+    task: tokio::task::JoinHandle<T>,
+) -> std::result::Result<T, tokio::task::JoinError> {
+    if !task.is_finished() {
+        task.abort();
+    }
+    task.await
+}
+
+async fn wait_for_provider_close(provider: &Provider, expected: usize) -> bool {
+    tokio::time::timeout(Duration::from_secs(2), async {
+        while provider.closed.load(Ordering::SeqCst) < expected {
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+    })
+    .await
+    .is_ok()
+}
+
+async fn warm_optional_provider(
+    provider: &Provider,
+    router: Arc<JevRouter>,
+    policy: ssx_application::policy::PolicyService,
+) -> Result<()> {
+    // Use the exact router installed in the fixture and consume its private
+    // readiness receipt before the measured ownership interval begins.
+    let warm_router = router.clone();
+    let warm = tokio::spawn(async move { warm_router.route(&preview(), &policy, None).await });
+    let observed = provider.observed().await;
+    let joined = abort_and_join(warm).await;
+    let eof = if observed.is_ok() {
+        wait_for_provider_close(provider, 1).await
+    } else {
+        false
+    };
+    let closed_count = provider.closed.load(Ordering::SeqCst);
+    let started_remaining = provider.started.available_permits();
+    let request_read_chunks = provider.request_read.available_permits();
+
+    // Discard all warm-up-only synchronization evidence before measuring.
+    while let Ok(permit) = provider.started.try_acquire() {
+        permit.forget();
+    }
+    while let Ok(permit) = provider.request_read.try_acquire() {
+        permit.forget();
+    }
+    provider.closed.store(0, Ordering::SeqCst);
+
+    if let Err(error) = observed {
+        return Err(error);
+    }
+    if !matches!(joined, Err(error) if error.is_cancelled()) {
+        return Err("warm-up request was not aborted and joined".into());
+    }
+    if !eof || closed_count != 1 {
+        return Err("warm-up HTTP owner did not reach exactly one EOF".into());
+    }
+    if started_remaining != 0 || request_read_chunks == 0 {
+        return Err("warm-up provider receipt was not fully consumed".into());
+    }
+    Ok(())
 }
 
 /// The fixture accepts only its real Jev POST framing, never partial EOF,
@@ -304,6 +382,7 @@ async fn preview_timeout_drop_busy_and_shutdown_drain_optional_http_ownership() 
     for mode in ["timeout", "drop", "shutdown"] {
         let provider = Provider::new().await.map_err(|e| format!("{e:?}"))?;
         let server = private_valkey::Server::start();
+        let router = provider.router();
         let fixture = fixture::Fixture::with_options(
             server.url(),
             SearchPolicy::default(),
@@ -318,49 +397,142 @@ async fn preview_timeout_drop_busy_and_shutdown_drain_optional_http_ownership() 
                 },
                 ..Default::default()
             },
-            Some(provider.router()),
+            Some(router.clone()),
         )
         .await;
-        let service = fixture.service.clone();
-        let task = tokio::spawn(async move { service.preview_scope(&preview()).await });
-        provider.observed().await.map_err(|e| format!("{e:?}"))?;
-        assert!(matches!(
-            fixture.service.preview_scope(&preview()).await,
-            Err(SearchError::Busy)
-        ));
-        match mode {
-            "timeout" => {
-                let result = tokio::time::timeout(Duration::from_secs(2), task)
-                    .await
-                    .map_err(|e| format!("{e:?}"))??;
-                assert!(result.is_ok());
+
+        let warm_up = warm_optional_provider(&provider, router, fixture.policy.clone()).await;
+        let mut measured_task = None;
+        let mut provider_observed = false;
+        let mut busy = false;
+        let mut timeout_completed = false;
+        let mut timeout_result_ok = false;
+        let mut drop_cancelled_and_joined = false;
+        let mut explicit_preview_after_drop_ok = false;
+        let mut shutdown_returns_closed = false;
+
+        if warm_up.is_ok() {
+            let service = fixture.service.clone();
+            measured_task = Some(tokio::spawn(async move {
+                service.preview_scope(&preview()).await
+            }));
+            provider_observed = provider.observed().await.is_ok();
+            if provider_observed {
+                busy = matches!(
+                    fixture.service.preview_scope(&preview()).await,
+                    Err(SearchError::Busy)
+                );
             }
-            "drop" => {
-                task.abort();
-                assert!(task.await.unwrap_err().is_cancelled());
-                let mut p = preview();
-                p.request.engines = Some(vec!["wikipedia".into()]);
-                assert!(fixture.service.preview_scope(&p).await.is_ok());
+
+            match mode {
+                "timeout" => {
+                    let completion = if let Some(task) = measured_task.as_mut() {
+                        Some(tokio::time::timeout(Duration::from_secs(2), &mut *task).await)
+                    } else {
+                        None
+                    };
+                    match completion {
+                        Some(Ok(Ok(result))) => {
+                            timeout_completed = true;
+                            timeout_result_ok = result.is_ok();
+                            measured_task.take();
+                        }
+                        Some(Ok(Err(_))) => {
+                            timeout_completed = true;
+                            measured_task.take();
+                        }
+                        Some(Err(_)) | None => {}
+                    }
+                }
+                "drop" => {
+                    if let Some(task) = measured_task.take() {
+                        drop_cancelled_and_joined = matches!(abort_and_join(task).await, Err(error) if error.is_cancelled());
+                    }
+                    if provider_observed {
+                        let mut proposal = preview();
+                        proposal.request.engines = Some(vec!["wikipedia".into()]);
+                        explicit_preview_after_drop_ok =
+                            fixture.service.preview_scope(&proposal).await.is_ok();
+                    }
+                }
+                _ => {
+                    fixture.service.shutdown().await;
+                    let completion = if let Some(task) = measured_task.as_mut() {
+                        Some(tokio::time::timeout(Duration::from_secs(5), &mut *task).await)
+                    } else {
+                        None
+                    };
+                    match completion {
+                        Some(Ok(Ok(result))) => {
+                            shutdown_returns_closed = matches!(result, Err(SearchError::Closed));
+                            measured_task.take();
+                        }
+                        Some(Ok(Err(_))) => {
+                            measured_task.take();
+                        }
+                        Some(Err(_)) | None => {}
+                    }
+                }
             }
-            _ => {
-                fixture.service.shutdown().await;
-                assert!(matches!(
-                    task.await.map_err(|e| format!("{e:?}"))?,
-                    Err(SearchError::Closed)
-                ));
-            }
+        }
+
+        // On every timeout or early failure, retire a remaining request before
+        // shutting down the service/provider. Never detach a JoinHandle.
+        if let Some(task) = measured_task.take() {
+            let _ = abort_and_join(task).await;
         }
         fixture.service.shutdown().await;
-        let until = tokio::time::Instant::now() + Duration::from_secs(2);
-        while provider.closed.load(Ordering::SeqCst) == 0 {
-            assert!(
-                tokio::time::Instant::now() < until,
-                "optional HTTP ownership did not close"
-            );
-            tokio::task::yield_now().await;
+        let provider_eof = if provider_observed {
+            wait_for_provider_close(&provider, 1).await
+        } else {
+            false
+        };
+        let closed_count = provider.closed.load(Ordering::SeqCst);
+        let engine_calls = fixture.calls();
+        let provider_retirement = provider.close().await;
+
+        assert!(
+            warm_up.is_ok(),
+            "private provider warm-up failed: {warm_up:?}"
+        );
+        assert!(
+            provider_observed,
+            "measured provider request was not observed"
+        );
+        assert!(busy, "second caller was not rejected as Busy");
+        assert!(provider_eof, "optional HTTP ownership did not close");
+        assert_eq!(
+            closed_count, 1,
+            "measured provider request did not reach exactly one EOF"
+        );
+        assert_eq!(engine_calls, 0, "scope preview dispatched a search engine");
+        match mode {
+            "timeout" => {
+                assert!(
+                    timeout_completed,
+                    "timed preview did not finish within two seconds"
+                );
+                assert!(
+                    timeout_result_ok,
+                    "timed preview did not return its fallback result"
+                );
+            }
+            "drop" => {
+                assert!(
+                    drop_cancelled_and_joined,
+                    "dropped preview was not cancelled and joined"
+                );
+                assert!(
+                    explicit_preview_after_drop_ok,
+                    "service did not accept a later explicit preview"
+                );
+            }
+            _ => assert!(
+                shutdown_returns_closed,
+                "shutdown did not close the in-flight preview"
+            ),
         }
-        assert_eq!(fixture.calls(), 0);
-        provider.close().await.map_err(|e| format!("{e:?}"))?;
+        provider_retirement.map_err(|e| format!("{e:?}"))?;
     }
     Ok(())
 }
