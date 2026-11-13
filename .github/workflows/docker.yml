@@ -107,7 +107,7 @@ jobs:
           docker run -d --name slopsearx-smoke -p 8080:8080 ${{ steps.tag.outputs.ref }}
           sleep 3
           curl -f --retry 5 --retry-delay 2 http://localhost:8080/health
-          python3 scripts/portal_release_smoke.py --base-url http://localhost:8080 --expected-theme dark
+          cargo xtask ci-helper portal-release-smoke --base-url http://localhost:8080 --expected-theme dark
           # Actual shipped probe: direct local health despite hostile proxy environment.
           docker exec -e HTTP_PROXY=http://127.0.0.1:9 -e http_proxy=http://127.0.0.1:9 \
             -e ALL_PROXY=http://127.0.0.1:9 -e NO_PROXY= -e no_proxy= \
@@ -129,7 +129,7 @@ jobs:
             ${{ steps.tag.outputs.ref }}
           sleep 3
           curl -f --retry 5 --retry-delay 2 http://localhost:8081/health
-          python3 scripts/portal_release_smoke.py --base-url http://localhost:8081 --expected-theme darker
+          cargo xtask ci-helper portal-release-smoke --base-url http://localhost:8081 --expected-theme darker
           docker stop slopsearx-smoke-darker
           docker rm slopsearx-smoke-darker
 
