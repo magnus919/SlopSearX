@@ -186,10 +186,10 @@ impl Provider {
 impl Drop for Provider {
     fn drop(&mut self) {
         self.cancel.cancel();
-        if let Some(task) = &self.task {
-            if !task.is_finished() {
-                task.abort();
-            }
+        if let Some(task) = &self.task
+            && !task.is_finished()
+        {
+            task.abort();
         }
     }
 }
@@ -242,9 +242,7 @@ async fn warm_optional_provider(
     }
     provider.closed.store(0, Ordering::SeqCst);
 
-    if let Err(error) = observed {
-        return Err(error);
-    }
+    observed?;
     if !matches!(joined, Err(error) if error.is_cancelled()) {
         return Err("warm-up request was not aborted and joined".into());
     }
