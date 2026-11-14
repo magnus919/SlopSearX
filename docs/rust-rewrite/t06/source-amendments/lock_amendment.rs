@@ -1,4 +1,6 @@
-//! One finite lock successor; historical captures retain their original profile.
+//! Finite lock successors; historical captures retain their original profile.
+#[path = "dnspython-security-current-main-v1.rs"]
+pub mod dnspython_security;
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use std::{collections::BTreeMap, fs, path::Path};
@@ -316,21 +318,10 @@ fn validate_protocol(manifest: &Amendment, packets: [&[u8]; 2], producer: &[u8])
 pub fn verify(root: &Path, path: &str, historical_pin: &str) -> Result<()> {
     require(path == SOURCE_PATH, "wrong source path")?;
     let raw = fs::read(root.join(MANIFEST_PATH)).map_err(|e| e.to_string())?;
-    let source = root.join(SOURCE_PATH);
-    let metadata = fs::symlink_metadata(&source).map_err(|e| e.to_string())?;
-    require(
-        metadata.file_type().is_file(),
-        "current lock must be a regular file",
-    )?;
-    #[cfg(unix)]
-    let mode = {
-        use std::os::unix::fs::PermissionsExt;
-        metadata.permissions().mode() & 0o7777
-    };
-    #[cfg(not(unix))]
-    let mode = 0; // This qualification currently supports Linux and macOS only.
-    let current = fs::read(source).map_err(|e| e.to_string())?;
-    validate_materials(&raw, path, historical_pin, &current, mode)?;
+    let current = dnspython_security::predecessor(root, SOURCE_PATH)?;
+    // The outer reader proved physical current0644, full bytes and exact Git
+    // predecessor. Preserve the unchanged v1 packaging proof on that operand.
+    validate_materials(&raw, path, historical_pin, &current, 0o644)?;
     let manifest: Amendment = serde_json::from_slice(&raw).map_err(|e| e.to_string())?;
     let proof = &manifest.protocol_comparison;
     let read = |row: &serde_json::Value| -> Result<Vec<u8>> {
@@ -356,7 +347,7 @@ pub fn verify_git_pins(path: &str, row: &str, archived: &str, current: &str) -> 
         path == SOURCE_PATH
             && row == HISTORICAL_BLOB
             && archived == HISTORICAL_BLOB
-            && current == CURRENT_BLOB,
+            && current == dnspython_security::current_git_blob(path)?,
         "original row/archive or actual current Git blob differs",
     )
 }
@@ -365,22 +356,33 @@ pub fn verify_git_pins(path: &str, row: &str, archived: &str, current: &str) -> 
 mod tests {
     use super::*;
     const RAW: &[u8] = include_bytes!("current-lock-amendment-v1.json");
-    const LIVE: &[u8] = include_bytes!("../../../../uv.lock");
+    const PHYSICAL: &[u8] = include_bytes!("../../../../uv.lock");
     const OLD_WIRE: &[u8] = include_bytes!("packaging262-wire.json");
     const NEW_WIRE: &[u8] = include_bytes!("packaging263-wire.json");
     const PRODUCER: &[u8] = include_bytes!("packaging-wire-producer.py.txt");
 
     #[test]
     fn exact_security_lock_successor_retains_historical_profile_and_shared_runtime_disclosure() {
-        validate_materials(RAW, SOURCE_PATH, HISTORICAL_SHA256, LIVE, 0o644).unwrap();
-        verify_git_pins(SOURCE_PATH, HISTORICAL_BLOB, HISTORICAL_BLOB, CURRENT_BLOB).unwrap();
+        let predecessor = dnspython_security::frame(SOURCE_PATH, PHYSICAL, 0o644).unwrap();
+        validate_materials(RAW, SOURCE_PATH, HISTORICAL_SHA256, &predecessor, 0o644).unwrap();
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        dnspython_security::controls(&root).unwrap();
+        verify(&root, SOURCE_PATH, HISTORICAL_SHA256).unwrap();
+        let live_git = std::process::Command::new("git")
+            .args(["hash-object", "--", SOURCE_PATH])
+            .current_dir(&root)
+            .output()
+            .unwrap();
+        assert!(live_git.status.success());
+        let live_blob = std::str::from_utf8(&live_git.stdout).unwrap().trim();
+        verify_git_pins(SOURCE_PATH, HISTORICAL_BLOB, HISTORICAL_BLOB, live_blob).unwrap();
         let manifest: Amendment = serde_json::from_slice(RAW).unwrap();
         validate_protocol(&manifest, [OLD_WIRE, NEW_WIRE], PRODUCER).unwrap();
         assert!(validate_protocol(&manifest, [OLD_WIRE, OLD_WIRE], PRODUCER).is_err());
         assert!(validate_protocol(&manifest, [OLD_WIRE, NEW_WIRE], b"changed producer").is_err());
         let old = reconstruct(
             &manifest.inverse_entries,
-            std::str::from_utf8(LIVE).unwrap(),
+            std::str::from_utf8(&predecessor).unwrap(),
         )
         .unwrap();
         assert_eq!(digest(old.as_bytes()), HISTORICAL_SHA256);
@@ -391,7 +393,8 @@ mod tests {
 
     #[test]
     fn changed_entry_sdk_and_unrelated_lock_mutants_cannot_use_the_amendment() {
-        let live = std::str::from_utf8(LIVE).unwrap();
+        let predecessor = dnspython_security::frame(SOURCE_PATH, PHYSICAL, 0o644).unwrap();
+        let live = std::str::from_utf8(&predecessor).unwrap();
         for (before, after) in [
             (
                 "name = \"filelock\"\nversion = \"4.2.1\"",
@@ -434,8 +437,9 @@ mod tests {
 
     #[test]
     fn inverse_scope_rejects_missing_duplicate_extra_and_tampered_package_spans() {
+        let predecessor = dnspython_security::frame(SOURCE_PATH, PHYSICAL, 0o644).unwrap();
         let manifest: Amendment = serde_json::from_slice(RAW).unwrap();
-        let live = std::str::from_utf8(LIVE).unwrap();
+        let live = std::str::from_utf8(&predecessor).unwrap();
         let entries = manifest.inverse_entries;
         let mut wrong = entries.clone();
         wrong.pop();
@@ -471,9 +475,16 @@ mod tests {
 
     #[test]
     fn source_path_row_hash_manifest_git_mode_and_missing_material_controls_fail_closed() {
-        assert!(validate_materials(RAW, "other.lock", HISTORICAL_SHA256, LIVE, 0o644).is_err());
-        assert!(validate_materials(RAW, SOURCE_PATH, &"0".repeat(64), LIVE, 0o644).is_err());
-        assert!(validate_materials(RAW, SOURCE_PATH, HISTORICAL_SHA256, LIVE, 0o755).is_err());
+        let predecessor = dnspython_security::frame(SOURCE_PATH, PHYSICAL, 0o644).unwrap();
+        assert!(
+            validate_materials(RAW, "other.lock", HISTORICAL_SHA256, &predecessor, 0o644).is_err()
+        );
+        assert!(
+            validate_materials(RAW, SOURCE_PATH, &"0".repeat(64), &predecessor, 0o644).is_err()
+        );
+        assert!(
+            validate_materials(RAW, SOURCE_PATH, HISTORICAL_SHA256, &predecessor, 0o755).is_err()
+        );
         assert!(validate_materials(RAW, SOURCE_PATH, HISTORICAL_SHA256, b"", 0o644).is_err());
         let mut tampered: serde_json::Value = serde_json::from_slice(RAW).unwrap();
         tampered["current"]["sha256"] = serde_json::json!(digest(b"tampered"));
@@ -492,6 +503,7 @@ mod tests {
             (SOURCE_PATH, "wrong", HISTORICAL_BLOB, CURRENT_BLOB),
             (SOURCE_PATH, HISTORICAL_BLOB, "wrong", CURRENT_BLOB),
             (SOURCE_PATH, HISTORICAL_BLOB, HISTORICAL_BLOB, "wrong"),
+            (SOURCE_PATH, HISTORICAL_BLOB, HISTORICAL_BLOB, CURRENT_BLOB),
             (
                 SOURCE_PATH,
                 HISTORICAL_BLOB,

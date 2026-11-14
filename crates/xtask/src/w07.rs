@@ -143,13 +143,20 @@ fn frozen(root: &Path, path: &str, expected: &str) -> Result<Vec<u8>> {
             root, path, expected, &current, mode,
         );
     }
-    let metadata = fs::symlink_metadata(root.join(path)).map_err(|e| format!("W07 {path}: {e}"))?;
-    if !metadata.is_file() || metadata.file_type().is_symlink() {
-        return Err(format!(
-            "W07 source leaf must be a regular non-symlink file: {path}"
-        ));
-    }
-    let bytes = fs::read(root.join(path)).map_err(|e| format!("W07 {path}: {e}"))?;
+    let bytes = if let Some(current) =
+        crate::t06::lock_amendment::dnspython_security::current_operand(root, path)?
+    {
+        current
+    } else {
+        let metadata =
+            fs::symlink_metadata(root.join(path)).map_err(|e| format!("W07 {path}: {e}"))?;
+        if !metadata.is_file() || metadata.file_type().is_symlink() {
+            return Err(format!(
+                "W07 source leaf must be a regular non-symlink file: {path}"
+            ));
+        }
+        fs::read(root.join(path)).map_err(|e| format!("W07 {path}: {e}"))?
+    };
     if path == "crates/xtask/src/main.rs" && expected == w07_t02_joint::MAIN_SHA {
         w07_t02_joint::parent(root, path, &bytes, w07_t02_joint::Parent::W07)?;
         return Ok(bytes);
@@ -165,6 +172,11 @@ fn frozen(root: &Path, path: &str, expected: &str) -> Result<Vec<u8>> {
         return proven;
     }
     if sha(&bytes) != expected {
+        if let Some(operand) = crate::t06::lock_amendment::dnspython_security::frozen_operand(
+            root, path, expected, &bytes,
+        )? {
+            return Ok(operand);
+        }
         if path == "crates/ssx-infra/src/search.rs"
             && expected == "8aa8ec89a6a45728f5ffd2818d2e9fed9b8d0a881c1e36418c95809d92dcb777"
         {
