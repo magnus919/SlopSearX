@@ -673,6 +673,7 @@ fn journey_ids(scenario: &str) -> Result<&'static [&'static str]> {
         "contract" => Ok(&[
             "results-normal",
             "optional-metadata",
+            "date-controls-roundtrip",
             "empty-suggestions",
             "partial-results",
             "all-source-failure",
@@ -985,11 +986,39 @@ fn validate_browser(
     let mut paths = BTreeSet::new();
     let mut screenshot = false;
     for artifact in artifacts {
-        exact_keys(
-            artifact,
-            &["path", "sha256", "bytes", "kind", "width", "height"],
-            "browser artifact",
-        )?;
+        let artifact_kind = artifact["kind"]
+            .as_str()
+            .ok_or("T03 browser artifact kind missing")?;
+        if artifact_kind == "date-roundtrip-machine-response" {
+            exact_keys(
+                artifact,
+                &[
+                    "path",
+                    "sha256",
+                    "bytes",
+                    "kind",
+                    "content_type",
+                    "width",
+                    "height",
+                ],
+                "browser machine response artifact",
+            )?;
+            need(
+                artifact["content_type"].as_str().is_some_and(|value| {
+                    !value.is_empty()
+                        && value.len() <= 256
+                        && !value.contains('\r')
+                        && !value.contains('\n')
+                }),
+                "browser machine response content type missing",
+            )?;
+        } else {
+            exact_keys(
+                artifact,
+                &["path", "sha256", "bytes", "kind", "width", "height"],
+                "browser artifact",
+            )?;
+        }
         let (path, raw) = owned_file(
             base,
             artifact["path"]
@@ -1022,6 +1051,698 @@ fn validate_browser(
     need(screenshot, "browser screenshot evidence missing")?;
     validate_budgets(scenario, engine, &receipt["budgets"])?;
     Ok(json!({"completion":completion,"receipt":receipt}))
+}
+
+type DateRoundtripCallKey = (String, u64, Option<String>, Option<String>);
+
+fn roundtrip_query_value(url: &url::Url, name: &str) -> Result<Option<String>> {
+    let values: Vec<_> = url
+        .query_pairs()
+        .filter(|(key, _)| key == name)
+        .map(|(_, value)| value.into_owned())
+        .collect();
+    need(
+        values.len() <= 1,
+        &format!("T03 duplicate date-roundtrip URL field {name}"),
+    )?;
+    Ok(values.into_iter().next().filter(|value| !value.is_empty()))
+}
+
+fn roundtrip_request_key(raw: &str, base_url: &str) -> Result<DateRoundtripCallKey> {
+    let url = url::Url::parse(raw).map_err(|e| e.to_string())?;
+    let base = url::Url::parse(base_url).map_err(|e| e.to_string())?;
+    need(
+        url.origin() == base.origin()
+            && url.path() == "/search"
+            && url.username().is_empty()
+            && url.password().is_none(),
+        "T03 date-roundtrip navigation escaped its loopback search route",
+    )?;
+    let query = roundtrip_query_value(&url, "q")?.ok_or("T03 date-roundtrip query missing")?;
+    need(
+        query.starts_with("t03-roundtrip-")
+            && roundtrip_query_value(&url, "engines")?.as_deref() == Some("openalex"),
+        "T03 date-roundtrip request lost its unique query or explicit OpenAlex scope",
+    )?;
+    let page = roundtrip_query_value(&url, "pageno")?
+        .unwrap_or_else(|| "1".into())
+        .parse::<u64>()
+        .map_err(|e| e.to_string())?;
+    need(page > 0, "T03 date-roundtrip page must be positive")?;
+    Ok((
+        query,
+        page,
+        roundtrip_query_value(&url, "date_from")?,
+        roundtrip_query_value(&url, "date_to")?,
+    ))
+}
+
+fn roundtrip_string<'a>(value: &'a Value, key: &str, label: &str) -> Result<&'a str> {
+    value[key]
+        .as_str()
+        .ok_or_else(|| format!("T03 date-roundtrip {label}.{key} must be text"))
+}
+
+fn roundtrip_form_value(rows: &Value, name: &str, expected: &str) -> Result<()> {
+    let rows = rows
+        .as_array()
+        .ok_or("T03 date-roundtrip FormData must be an array")?;
+    let mut actual = Vec::new();
+    for row in rows {
+        exact_keys(row, &["name", "value"], "date-roundtrip FormData entry")?;
+        if row["name"].as_str() == Some(name) {
+            actual.push(
+                row["value"]
+                    .as_str()
+                    .ok_or("T03 date-roundtrip FormData value must be text")?,
+            );
+        }
+    }
+    need(
+        actual.as_slice() == [expected],
+        &format!("T03 date-roundtrip FormData field {name} differs"),
+    )
+}
+
+fn roundtrip_controls(
+    value: &Value,
+    query: &str,
+    date_from: Option<&str>,
+    date_to: Option<&str>,
+) -> Result<()> {
+    exact_keys(
+        value,
+        &[
+            "query",
+            "date_from",
+            "date_to",
+            "date_from_type",
+            "date_to_type",
+            "date_from_valid",
+            "date_to_valid",
+        ],
+        "date-roundtrip rendered controls",
+    )?;
+    need(
+        roundtrip_string(value, "query", "controls")? == query
+            && roundtrip_string(value, "date_from", "controls")? == date_from.unwrap_or("")
+            && roundtrip_string(value, "date_to", "controls")? == date_to.unwrap_or("")
+            && roundtrip_string(value, "date_from_type", "controls")? == "date"
+            && roundtrip_string(value, "date_to_type", "controls")? == "date"
+            && value["date_from_valid"] == true
+            && value["date_to_valid"] == true,
+        "T03 date-roundtrip visible date controls differ from the request",
+    )
+}
+
+fn roundtrip_html_proof(
+    value: &Value,
+    date_from: Option<&str>,
+    date_to: Option<&str>,
+) -> Result<()> {
+    exact_keys(
+        value,
+        &["date_from", "date_to"],
+        "date-roundtrip HTML proof",
+    )?;
+    for (field, expected) in [("date_from", date_from), ("date_to", date_to)] {
+        let row = &value[field];
+        if let Some(expected) = expected {
+            exact_keys(row, &["status", "text"], "date-roundtrip HTML filter row")?;
+            let status = roundtrip_string(row, "status", "HTML proof")?;
+            let text = roundtrip_string(row, "text", "HTML proof")?;
+            need(
+                status == "enforced" && text.contains(expected),
+                "T03 date-roundtrip HTML proof does not show the requested enforced bound",
+            )?;
+        } else {
+            need(
+                row.is_null(),
+                "T03 date-roundtrip HTML proof retained a row for an absent bound",
+            )?;
+        }
+    }
+    Ok(())
+}
+
+fn roundtrip_machine_document(
+    observation: &Value,
+    format: &str,
+    evidence_dir: &Path,
+    artifacts: &[Value],
+) -> Result<Value> {
+    let content_type = roundtrip_string(observation, "content_type", "machine link")?;
+    let media_type = content_type
+        .split(';')
+        .next()
+        .unwrap_or("")
+        .trim()
+        .to_ascii_lowercase();
+    let expected_media_type = match format {
+        "json" => "application/json",
+        "yaml" => "text/vnd.yaml+markdown",
+        _ => return Err("T03 date-roundtrip machine format is invalid".into()),
+    };
+    need(
+        media_type == expected_media_type,
+        "T03 machine response content type differs from its format",
+    )?;
+    let path = roundtrip_string(observation, "body_path", "machine link")?;
+    let matching: Vec<_> = artifacts
+        .iter()
+        .filter(|artifact| {
+            artifact["kind"] == "date-roundtrip-machine-response"
+                && artifact["path"].as_str() == Some(path)
+        })
+        .collect();
+    need(
+        matching.len() == 1,
+        "T03 machine response is missing from the owned artifact inventory",
+    )?;
+    let (_, raw) = owned_file(evidence_dir, path, 8 * 1024 * 1024)?;
+    let digest = hash(&raw);
+    need(
+        observation["body_sha256"] == digest
+            && observation["body_bytes"].as_u64() == Some(raw.len() as u64)
+            && matching[0]["sha256"] == digest
+            && matching[0]["bytes"].as_u64() == Some(raw.len() as u64)
+            && matching[0]["content_type"] == content_type,
+        "T03 machine response bytes differ from retained evidence",
+    )?;
+    if format == "json" {
+        return serde_json::from_slice(&raw).map_err(|error| error.to_string());
+    }
+    let text = std::str::from_utf8(&raw).map_err(|error| error.to_string())?;
+    let (front_matter, summary) = text
+        .split_once("\n---\n")
+        .ok_or("T03 YAML response summary delimiter is missing")?;
+    need(
+        summary.starts_with("## Results Summary\n"),
+        "T03 YAML response is missing the expected Markdown summary",
+    )?;
+    let options = serde_saphyr::options! {
+        duplicate_keys: serde_saphyr::DuplicateKeyPolicy::Error,
+        budget: serde_saphyr::budget! {
+            max_events: 100_000,
+            max_aliases: 0,
+            max_anchors: 0,
+            flow_nesting_limit: 64,
+        },
+    };
+    serde_saphyr::from_str_with_options(front_matter, options)
+        .map_err(|error| format!("T03 YAML front matter: {error}"))
+}
+
+fn validate_date_roundtrip_machine_proof(proof: &Value) -> Result<()> {
+    need(
+        proof["status"] == "enforced"
+            && proof["requested"]["date_from"] == "2024-02-29"
+            && proof["requested"]["date_to"] == "2024-02-29"
+            && proof["applied"]["date_from"] == "2024-02-29"
+            && proof["applied"]["date_to"] == "2024-02-29"
+            && proof["enforced_by"]
+                .as_array()
+                .is_some_and(|items| items.iter().any(|item| item == "upstream:openalex")),
+        "T03 machine response did not decode to the required date proof",
+    )
+}
+
+fn validate_date_roundtrip_evidence(
+    value: &Value,
+    base_url: &str,
+    evidence_dir: &Path,
+    artifacts: &[Value],
+) -> Result<()> {
+    exact_keys(
+        value,
+        &["schema", "seed", "navigation_requests", "observations"],
+        "date-roundtrip artifact",
+    )?;
+    need(
+        value["schema"] == "T03_DATE_ROUNDTRIP_V1",
+        "T03 date-roundtrip artifact schema differs",
+    )?;
+    let seed = &value["seed"];
+    exact_keys(seed, &["status", "url", "controls"], "date-roundtrip seed")?;
+    need(
+        seed["status"].as_u64() == Some(200),
+        "T03 date-roundtrip seed did not return HTTP 200",
+    )?;
+    roundtrip_controls(&seed["controls"], "t03-roundtrip-browser", None, None)?;
+    let seed_url = roundtrip_string(seed, "url", "seed")?;
+    need(
+        roundtrip_request_key(seed_url, base_url)?
+            == ("t03-roundtrip-browser".into(), 1, None, None),
+        "T03 date-roundtrip seed request differs",
+    )?;
+
+    let observations = value["observations"]
+        .as_array()
+        .ok_or("T03 date-roundtrip observations missing")?;
+    let expected_ids = [
+        "blank-submit",
+        "lower-only",
+        "upper-only",
+        "equal-leap-day",
+        "next-page-before-query-refinement",
+        "query-refinement",
+        "next-page",
+        "scope-refinement",
+        "scope-restoration",
+        "next-page-after-scope",
+        "previous-page",
+        "json-link",
+        "yaml-link",
+        "clear-bounds",
+        "cleared-machine-links",
+    ];
+    need(
+        observations.len() == expected_ids.len(),
+        "T03 date-roundtrip observation count differs",
+    )?;
+    let mut observation_requests = Vec::new();
+    for (observation, expected_id) in observations.iter().zip(expected_ids) {
+        need(
+            observation["id"].as_str() == Some(expected_id),
+            "T03 date-roundtrip observation order or identity differs",
+        )?;
+        match expected_id {
+            "blank-submit" | "lower-only" | "upper-only" | "equal-leap-day"
+            | "query-refinement" | "scope-refinement" | "scope-restoration" | "clear-bounds" => {
+                exact_keys(
+                    observation,
+                    &[
+                        "id",
+                        "kind",
+                        "source_page",
+                        "form_data",
+                        "submitted_url",
+                        "final_url",
+                        "status",
+                        "controls",
+                        "html_proof",
+                    ],
+                    "date-roundtrip form observation",
+                )?;
+                need(
+                    observation["kind"] == "form" && observation["status"].as_u64() == Some(200),
+                    "T03 date-roundtrip form submission did not succeed",
+                )?;
+                let (query, from, to) = match expected_id {
+                    "blank-submit" => ("t03-roundtrip-browser", None, None),
+                    "lower-only" => ("t03-roundtrip-browser", Some("2024-02-29"), None),
+                    "upper-only" => ("t03-roundtrip-browser", None, Some("2024-02-29")),
+                    "equal-leap-day" => (
+                        "t03-roundtrip-browser",
+                        Some("2024-02-29"),
+                        Some("2024-02-29"),
+                    ),
+                    "query-refinement" => (
+                        "t03-roundtrip-refined",
+                        Some("2024-02-29"),
+                        Some("2024-02-29"),
+                    ),
+                    "scope-refinement" => (
+                        "t03-roundtrip-refined",
+                        Some("2024-02-29"),
+                        Some("2024-03-01"),
+                    ),
+                    "scope-restoration" => (
+                        "t03-roundtrip-refined",
+                        Some("2024-02-29"),
+                        Some("2024-02-29"),
+                    ),
+                    _ => ("t03-roundtrip-refined", None, None),
+                };
+                let source_page = if matches!(expected_id, "query-refinement" | "scope-refinement")
+                {
+                    2
+                } else {
+                    1
+                };
+                need(
+                    observation["source_page"].as_u64() == Some(source_page),
+                    "T03 query/scope form was not submitted from its required source page",
+                )?;
+                roundtrip_form_value(&observation["form_data"], "q", query)?;
+                roundtrip_form_value(&observation["form_data"], "engines", "openalex")?;
+                roundtrip_form_value(&observation["form_data"], "date_from", from.unwrap_or(""))?;
+                roundtrip_form_value(&observation["form_data"], "date_to", to.unwrap_or(""))?;
+                roundtrip_controls(&observation["controls"], query, from, to)?;
+                roundtrip_html_proof(&observation["html_proof"], from, to)?;
+                let submitted_url = roundtrip_string(observation, "submitted_url", "form")?;
+                need(
+                    roundtrip_request_key(submitted_url, base_url)?
+                        == (
+                            query.into(),
+                            1,
+                            from.map(str::to_owned),
+                            to.map(str::to_owned),
+                        ),
+                    "T03 date-roundtrip form URL differs from its controls",
+                )?;
+                need(
+                    roundtrip_string(observation, "final_url", "form")? == submitted_url,
+                    "T03 date-roundtrip form redirected unexpectedly",
+                )?;
+                observation_requests.push(submitted_url.to_owned());
+            }
+            "next-page-before-query-refinement"
+            | "next-page"
+            | "next-page-after-scope"
+            | "previous-page"
+            | "json-link"
+            | "yaml-link" => {
+                exact_keys(
+                    observation,
+                    &[
+                        "id",
+                        "kind",
+                        "href",
+                        "request_url",
+                        "final_url",
+                        "status",
+                        "format",
+                        "content_type",
+                        "body_path",
+                        "controls",
+                        "proof",
+                        "body_sha256",
+                        "body_bytes",
+                    ],
+                    "date-roundtrip link observation",
+                )?;
+                need(
+                    observation["kind"] == "link" && observation["status"].as_u64() == Some(200),
+                    "T03 date-roundtrip link did not return HTTP 200",
+                )?;
+                let (format, page, query) = match expected_id {
+                    "next-page-before-query-refinement" => ("html", 2, "t03-roundtrip-browser"),
+                    "next-page" | "next-page-after-scope" => ("html", 2, "t03-roundtrip-refined"),
+                    "previous-page" => ("html", 1, "t03-roundtrip-refined"),
+                    "json-link" => ("json", 1, "t03-roundtrip-refined"),
+                    _ => ("yaml", 1, "t03-roundtrip-refined"),
+                };
+                need(
+                    observation["format"].as_str() == Some(format),
+                    "T03 date-roundtrip link format differs",
+                )?;
+                let request_url = roundtrip_string(observation, "request_url", "link")?;
+                let wanted_format = if format == "html" { None } else { Some(format) };
+                need(
+                    roundtrip_request_key(request_url, base_url)?
+                        == (
+                            query.into(),
+                            page,
+                            Some("2024-02-29".into()),
+                            Some("2024-02-29".into()),
+                        ),
+                    "T03 date-roundtrip link dropped query, page or absolute bounds",
+                )?;
+                let parsed = url::Url::parse(request_url).map_err(|e| e.to_string())?;
+                need(
+                    roundtrip_query_value(&parsed, "format")?.as_deref() == wanted_format,
+                    "T03 date-roundtrip link format query differs",
+                )?;
+                need(
+                    url::Url::parse(roundtrip_string(observation, "href", "link")?)
+                        .map_err(|e| e.to_string())?
+                        == parsed,
+                    "T03 date-roundtrip activated a different URL from its rendered link",
+                )?;
+                need(
+                    roundtrip_string(observation, "final_url", "link")? == request_url,
+                    "T03 date-roundtrip link redirected unexpectedly",
+                )?;
+                let body_hash = roundtrip_string(observation, "body_sha256", "link")?;
+                need(
+                    body_hash.len() == 64
+                        && body_hash.bytes().all(|byte| byte.is_ascii_hexdigit())
+                        && observation["body_bytes"]
+                            .as_u64()
+                            .is_some_and(|bytes| bytes > 0),
+                    "T03 date-roundtrip response body identity is incomplete",
+                )?;
+                if format == "html" {
+                    need(
+                        observation["body_path"].is_null(),
+                        "T03 HTML response unexpectedly references a machine artifact",
+                    )?;
+                    let content_type = roundtrip_string(observation, "content_type", "HTML link")?;
+                    need(
+                        content_type
+                            .split(';')
+                            .next()
+                            .unwrap_or("")
+                            .trim()
+                            .eq_ignore_ascii_case("text/html"),
+                        "T03 HTML link content type differs",
+                    )?;
+                    roundtrip_controls(
+                        &observation["controls"],
+                        query,
+                        Some("2024-02-29"),
+                        Some("2024-02-29"),
+                    )?;
+                    roundtrip_html_proof(
+                        &observation["proof"],
+                        Some("2024-02-29"),
+                        Some("2024-02-29"),
+                    )?;
+                } else {
+                    let document =
+                        roundtrip_machine_document(observation, format, evidence_dir, artifacts)?;
+                    let proof = &document["meta"]["date_filter"];
+                    validate_date_roundtrip_machine_proof(proof)?;
+                    if format == "json" {
+                        need(
+                            observation["proof"] == *proof,
+                            "T03 JavaScript JSON proof differs from retained response bytes",
+                        )?;
+                    } else {
+                        need(
+                            observation["proof"].is_null(),
+                            "T03 YAML proof must be derived from retained response bytes",
+                        )?;
+                    }
+                }
+                observation_requests.push(request_url.to_owned());
+            }
+            "cleared-machine-links" => {
+                exact_keys(
+                    observation,
+                    &["id", "kind", "links"],
+                    "cleared date-roundtrip machine-link inventory",
+                )?;
+                need(
+                    observation["kind"] == "link-inventory",
+                    "T03 cleared machine-link observation kind differs",
+                )?;
+                let links = observation["links"]
+                    .as_array()
+                    .ok_or("T03 cleared machine links missing")?;
+                need(
+                    links.len() == 2,
+                    "T03 cleared JSON/YAML links are incomplete",
+                )?;
+                let mut formats = BTreeSet::new();
+                for link in links {
+                    exact_keys(
+                        link,
+                        &["format", "href", "date_from_present", "date_to_present"],
+                        "cleared date-roundtrip machine link",
+                    )?;
+                    let format = roundtrip_string(link, "format", "cleared link")?;
+                    need(
+                        matches!(format, "json" | "yaml")
+                            && formats.insert(format.to_owned())
+                            && link["date_from_present"] == false
+                            && link["date_to_present"] == false,
+                        "T03 cleared machine link retained an absolute date bound",
+                    )?;
+                    let href = url::Url::parse(roundtrip_string(link, "href", "cleared link")?)
+                        .map_err(|e| e.to_string())?;
+                    need(
+                        roundtrip_request_key(href.as_str(), base_url)?
+                            == ("t03-roundtrip-refined".into(), 1, None, None)
+                            && roundtrip_query_value(&href, "format")?.as_deref() == Some(format),
+                        "T03 cleared machine link changed query or retained date state",
+                    )?;
+                }
+                need(
+                    formats == ["json".to_owned(), "yaml".to_owned()].into(),
+                    "T03 cleared machine link formats differ",
+                )?;
+            }
+            _ => return Err("T03 unexpected date-roundtrip observation ID".into()),
+        }
+    }
+
+    let navigation_requests = value["navigation_requests"]
+        .as_array()
+        .ok_or("T03 date-roundtrip navigation request list missing")?;
+    need(
+        navigation_requests.len() >= 15,
+        "T03 browser did not retain every date-roundtrip navigation request",
+    )?;
+    let mut observed = BTreeMap::<String, usize>::new();
+    for request in navigation_requests {
+        let request = request
+            .as_str()
+            .ok_or("T03 date-roundtrip navigation URL must be text")?;
+        let key = roundtrip_request_key(request, base_url)?;
+        *observed.entry(request.to_owned()).or_default() += 1;
+        need(
+            key.0.starts_with("t03-roundtrip-"),
+            "T03 date-roundtrip captured a non-journey navigation",
+        )?;
+    }
+    for request in std::iter::once(seed_url).chain(observation_requests.iter().map(String::as_str))
+    {
+        need(
+            observed.contains_key(request),
+            "T03 date-roundtrip submitted navigation was not retained",
+        )?;
+    }
+    Ok(())
+}
+
+fn validate_date_roundtrip_call_log(
+    calls_jsonl: &str,
+    evidence: &Value,
+    base_url: &str,
+) -> Result<Value> {
+    let mut expected = BTreeMap::<DateRoundtripCallKey, usize>::new();
+    for request in evidence["navigation_requests"]
+        .as_array()
+        .ok_or("T03 date-roundtrip navigation request list missing")?
+    {
+        let request = request
+            .as_str()
+            .ok_or("T03 date-roundtrip navigation URL must be text")?;
+        *expected
+            .entry(roundtrip_request_key(request, base_url)?)
+            .or_default() += 1;
+    }
+
+    let mut actual = BTreeMap::<DateRoundtripCallKey, usize>::new();
+    for line in calls_jsonl.lines() {
+        let call: ssx_json::Value = ssx_json::from_str(line).map_err(|e| e.to_string())?;
+        let Some(query) = call["query"].as_str() else {
+            continue;
+        };
+        if !query.starts_with("t03-roundtrip-") {
+            continue;
+        }
+        need(
+            call["engine"].as_str() == Some("openalex"),
+            "T03 date-roundtrip reached an engine outside explicit OpenAlex scope",
+        )?;
+        let page_wire = ssx_json::to_string(&call["page"]).map_err(|e| e.to_string())?;
+        let page = page_wire
+            .trim_matches('"')
+            .parse::<u64>()
+            .map_err(|e| e.to_string())?;
+        let date = |key: &str| -> Result<Option<String>> {
+            if call[key].is_null() {
+                Ok(None)
+            } else {
+                call[key]
+                    .as_str()
+                    .map(|value| Some(value.to_owned()))
+                    .ok_or_else(|| {
+                        format!("T03 date-roundtrip engine call {key} is not text or null")
+                    })
+            }
+        };
+        *actual
+            .entry((query.to_owned(), page, date("date_from")?, date("date_to")?))
+            .or_default() += 1;
+    }
+    need(
+        actual == expected,
+        "T03 browser navigation requests differ from the native SearchService call log",
+    )?;
+    for (key, minimum) in [
+        (("t03-roundtrip-browser".into(), 1, None, None), 2),
+        (
+            (
+                "t03-roundtrip-browser".into(),
+                2,
+                Some("2024-02-29".into()),
+                Some("2024-02-29".into()),
+            ),
+            1,
+        ),
+        (
+            (
+                "t03-roundtrip-browser".into(),
+                1,
+                Some("2024-02-29".into()),
+                None,
+            ),
+            1,
+        ),
+        (
+            (
+                "t03-roundtrip-browser".into(),
+                1,
+                None,
+                Some("2024-02-29".into()),
+            ),
+            1,
+        ),
+        (
+            (
+                "t03-roundtrip-browser".into(),
+                1,
+                Some("2024-02-29".into()),
+                Some("2024-02-29".into()),
+            ),
+            1,
+        ),
+        (
+            (
+                "t03-roundtrip-refined".into(),
+                1,
+                Some("2024-02-29".into()),
+                Some("2024-02-29".into()),
+            ),
+            4,
+        ),
+        (
+            (
+                "t03-roundtrip-refined".into(),
+                2,
+                Some("2024-02-29".into()),
+                Some("2024-02-29".into()),
+            ),
+            2,
+        ),
+        (
+            (
+                "t03-roundtrip-refined".into(),
+                1,
+                Some("2024-02-29".into()),
+                Some("2024-03-01".into()),
+            ),
+            1,
+        ),
+        (("t03-roundtrip-refined".into(), 1, None, None), 1),
+    ] {
+        need(
+            actual.get(&key).copied().unwrap_or_default() >= minimum,
+            "T03 date-roundtrip call log is missing a required browser state",
+        )?;
+    }
+    Ok(json!({
+        "navigation_requests":expected.values().sum::<usize>(),
+        "service_calls":actual.values().sum::<usize>(),
+        "query_states":actual.len(),
+        "matched":true,
+        "engine":"openalex",
+        "source":"synthetic T03 fixture SearchService; provider bytes remain covered by science_openalex integration"
+    }))
 }
 
 fn validate_http_error_evidence(
@@ -1530,7 +2251,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             for line in calls.lines() {
                 validate_engine_call(line, "browser fixture reached an unexpected engine")?;
             }
-            let browser = validate_browser(
+            let mut browser = validate_browser(
                 &browser_dir,
                 &browser?,
                 scenario,
@@ -1538,6 +2259,43 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
                 &fixture.base_url,
                 &client_sha,
             )?;
+            if scenario == "contract" {
+                let artifacts = browser["receipt"]["artifacts"]
+                    .as_array()
+                    .ok_or("T03 browser date-roundtrip artifact inventory missing")?;
+                let date_artifacts: Vec<_> = artifacts
+                    .iter()
+                    .filter(|artifact| artifact["kind"] == "date-roundtrip")
+                    .collect();
+                need(
+                    date_artifacts.len() == 1,
+                    "contract browser must retain one date-roundtrip artifact",
+                )?;
+                let (path, raw) = owned_file(
+                    &browser_dir,
+                    date_artifacts[0]["path"]
+                        .as_str()
+                        .ok_or("T03 date-roundtrip artifact path missing")?,
+                    2 * 1024 * 1024,
+                )?;
+                let date_roundtrip: Value =
+                    serde_json::from_slice(&raw).map_err(|e| e.to_string())?;
+                validate_date_roundtrip_evidence(
+                    &date_roundtrip,
+                    &fixture.base_url,
+                    &browser_dir,
+                    artifacts,
+                )?;
+                let call_validation =
+                    validate_date_roundtrip_call_log(calls, &date_roundtrip, &fixture.base_url)?;
+                browser["date_roundtrip_artifact"] = json!({
+                    "path":path,
+                    "sha256":hash(&raw),
+                    "bytes":raw.len(),
+                    "evidence":date_roundtrip,
+                    "call_log":call_validation
+                });
+            }
             browser_rows.push(json!({"scenario":scenario,"engine":engine,"source_sha256":source_sha,"startup":fixture.startup,"terminal":terminal,"browser":browser}));
         }
     }
@@ -1552,8 +2310,128 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::{validate_budgets, validate_engine_call, validate_http_error_evidence};
+    use super::{
+        hash, roundtrip_controls, roundtrip_html_proof, roundtrip_machine_document,
+        roundtrip_request_key, validate_budgets, validate_date_roundtrip_call_log,
+        validate_date_roundtrip_machine_proof, validate_engine_call, validate_http_error_evidence,
+    };
     use serde_json::{Value, json};
+    use std::{
+        fs,
+        path::{Path, PathBuf},
+        time::{SystemTime, UNIX_EPOCH},
+    };
+    use url::Url;
+
+    struct TestEvidenceDir(PathBuf);
+
+    impl TestEvidenceDir {
+        fn new() -> Self {
+            let nonce = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .expect("system clock must be after the Unix epoch")
+                .as_nanos();
+            let path = std::env::temp_dir()
+                .join(format!("ssx-t03-evidence-{}-{nonce}", std::process::id()));
+            fs::create_dir(&path).expect("create owned T03 unit-test directory");
+            Self(path)
+        }
+    }
+
+    impl Drop for TestEvidenceDir {
+        fn drop(&mut self) {
+            fs::remove_dir_all(&self.0).expect("remove owned T03 unit-test directory");
+        }
+    }
+
+    fn roundtrip_url(
+        query: &str,
+        page: u64,
+        date_from: Option<&str>,
+        date_to: Option<&str>,
+    ) -> String {
+        let mut url = Url::parse("http://127.0.0.1:4321/search").expect("fixture URL");
+        {
+            let mut pairs = url.query_pairs_mut();
+            pairs.append_pair("q", query);
+            pairs.append_pair("engines", "openalex");
+            pairs.append_pair("pageno", &page.to_string());
+            if let Some(value) = date_from {
+                pairs.append_pair("date_from", value);
+            }
+            if let Some(value) = date_to {
+                pairs.append_pair("date_to", value);
+            }
+        }
+        url.to_string()
+    }
+
+    fn rendered_controls(query: &str, date_from: Option<&str>, date_to: Option<&str>) -> Value {
+        json!({
+            "query": query,
+            "date_from": date_from.unwrap_or(""),
+            "date_to": date_to.unwrap_or(""),
+            "date_from_type": "date",
+            "date_to_type": "date",
+            "date_from_valid": true,
+            "date_to_valid": true
+        })
+    }
+
+    fn rendered_proof(date_from: Option<&str>, date_to: Option<&str>) -> Value {
+        let row = |name: &str, value: Option<&str>| {
+            value.map_or(
+                Value::Null,
+                |value| json!({"status":"enforced", "text":format!("{name}: {value}")}),
+            )
+        };
+        json!({
+            "date_from": row("date_from", date_from),
+            "date_to": row("date_to", date_to)
+        })
+    }
+
+    fn machine_response_fixture(
+        directory: &Path,
+        relative_path: &str,
+        content_type: &str,
+        bytes: &[u8],
+    ) -> (Value, Vec<Value>) {
+        let absolute_path = directory.join(relative_path).to_string_lossy().into_owned();
+        fs::write(&absolute_path, bytes).expect("write owned machine response");
+        let digest = hash(bytes);
+        let observation = json!({
+            "content_type": content_type,
+            "body_path": absolute_path.clone(),
+            "body_sha256": digest,
+            "body_bytes": bytes.len()
+        });
+        let artifacts = vec![json!({
+            "kind": "date-roundtrip-machine-response",
+            "path": absolute_path,
+            "sha256": digest,
+            "bytes": bytes.len(),
+            "content_type": content_type
+        })];
+        (observation, artifacts)
+    }
+
+    fn call_line(
+        query: &str,
+        engine: &str,
+        page: u64,
+        date_from: Option<&str>,
+        date_to: Option<&str>,
+    ) -> String {
+        json!({
+            "query": query,
+            "engine": engine,
+            "page": page,
+            "date_from": date_from,
+            "date_to": date_to
+        })
+        .to_string()
+    }
 
     pub(super) fn passing_budgets() -> Value {
         json!({
@@ -1603,6 +2481,244 @@ mod tests {
     fn passing_budgets_validate() {
         validate_budgets("contract", "chromium", &passing_budgets()).expect("budgets pass");
         validate_budgets("contract", "firefox", &json!({})).expect("non-profiled has no budgets");
+    }
+
+    #[test]
+    fn date_roundtrip_request_requires_unique_loopback_query_scope_and_bounds() {
+        let base = "http://127.0.0.1:4321";
+        let valid = roundtrip_url(
+            "t03-roundtrip-browser",
+            2,
+            Some("2024-02-29"),
+            Some("2024-03-01"),
+        );
+        assert_eq!(
+            roundtrip_request_key(&valid, base).expect("valid scoped request"),
+            (
+                "t03-roundtrip-browser".into(),
+                2,
+                Some("2024-02-29".into()),
+                Some("2024-03-01".into())
+            )
+        );
+        let blank = format!(
+            "{}&date_from=&date_to=",
+            roundtrip_url("t03-roundtrip-browser", 1, None, None)
+        );
+        assert_eq!(
+            roundtrip_request_key(&blank, base).expect("blank bounds normalize to absent"),
+            ("t03-roundtrip-browser".into(), 1, None, None)
+        );
+        for invalid in [
+            format!("{valid}&date_from=2024-02-29"),
+            format!("{valid}&engines=brave"),
+            format!("{valid}&pageno=0"),
+            roundtrip_url("t03-roundtrip-browser", 0, None, None),
+            valid.replace("127.0.0.1:4321", "127.0.0.1:4322"),
+            valid.replace("t03-roundtrip-browser", "ordinary-query"),
+        ] {
+            assert!(
+                roundtrip_request_key(&invalid, base).is_err(),
+                "accepted {invalid}"
+            );
+        }
+    }
+
+    #[test]
+    fn date_roundtrip_controls_and_optional_html_proof_are_truthful() {
+        for (date_from, date_to) in [
+            (None, None),
+            (Some("2024-02-29"), None),
+            (None, Some("2024-02-29")),
+            (Some("2024-02-29"), Some("2024-02-29")),
+        ] {
+            roundtrip_controls(
+                &rendered_controls("t03-roundtrip-browser", date_from, date_to),
+                "t03-roundtrip-browser",
+                date_from,
+                date_to,
+            )
+            .expect("visible valid controls match the request");
+            roundtrip_html_proof(&rendered_proof(date_from, date_to), date_from, date_to)
+                .expect("proof rows match present bounds and omit absent bounds");
+        }
+
+        let mut wrong_type = rendered_controls("t03-roundtrip-browser", None, None);
+        wrong_type["date_from_type"] = json!("text");
+        assert!(roundtrip_controls(&wrong_type, "t03-roundtrip-browser", None, None).is_err());
+        let mut invalid_control = rendered_controls("t03-roundtrip-browser", None, None);
+        invalid_control["date_to_valid"] = json!(false);
+        assert!(roundtrip_controls(&invalid_control, "t03-roundtrip-browser", None, None).is_err());
+        assert!(
+            roundtrip_html_proof(&rendered_proof(Some("2024-02-29"), None), None, None).is_err()
+        );
+        assert!(
+            roundtrip_html_proof(
+                &rendered_proof(Some("2024-02-28"), None),
+                Some("2024-02-29"),
+                None
+            )
+            .is_err()
+        );
+    }
+
+    #[test]
+    fn date_roundtrip_machine_documents_parse_owned_json_and_yaml_bytes() {
+        let directory = TestEvidenceDir::new();
+        let proof = json!({
+            "status":"enforced",
+            "requested":{"date_from":"2024-02-29","date_to":"2024-02-29"},
+            "applied":{"date_from":"2024-02-29","date_to":"2024-02-29"},
+            "enforced_by":["upstream:openalex"]
+        });
+        let json_body = json!({"meta":{"date_filter":proof}}).to_string();
+        let (json_observation, json_artifacts) = machine_response_fixture(
+            &directory.0,
+            "date-roundtrip.json",
+            "application/json; charset=utf-8",
+            json_body.as_bytes(),
+        );
+        let decoded_json =
+            roundtrip_machine_document(&json_observation, "json", &directory.0, &json_artifacts)
+                .expect("decode the retained JSON response");
+        let decoded_proof = &decoded_json["meta"]["date_filter"];
+        validate_date_roundtrip_machine_proof(decoded_proof)
+            .expect("decoded JSON contains the required bounded-date proof");
+        for (pointer, invalid) in [
+            ("/status", json!("unsupported")),
+            ("/requested/date_from", json!("2024-02-28")),
+            ("/applied/date_to", json!("2024-03-01")),
+            ("/enforced_by", json!(["local:openalex"])),
+        ] {
+            let mut altered = decoded_proof.clone();
+            *altered.pointer_mut(pointer).expect("proof field exists") = invalid;
+            assert!(
+                validate_date_roundtrip_machine_proof(&altered).is_err(),
+                "accepted {pointer}"
+            );
+        }
+
+        let yaml_body = concat!(
+            "---\n",
+            "meta:\n",
+            "  date_filter:\n",
+            "    status: enforced\n",
+            "    requested:\n",
+            "      date_from: \"2024-02-29\"\n",
+            "      date_to: \"2024-02-29\"\n",
+            "    applied:\n",
+            "      date_from: \"2024-02-29\"\n",
+            "      date_to: \"2024-02-29\"\n",
+            "    enforced_by:\n",
+            "      - upstream:openalex\n",
+            "---\n",
+            "## Results Summary\n",
+            "\n",
+            "Two bounded results.\n",
+        )
+        .as_bytes();
+        let (yaml_observation, yaml_artifacts) = machine_response_fixture(
+            &directory.0,
+            "date-roundtrip.yaml.md",
+            "text/vnd.yaml+markdown; charset=utf-8",
+            yaml_body,
+        );
+        let decoded_yaml =
+            roundtrip_machine_document(&yaml_observation, "yaml", &directory.0, &yaml_artifacts)
+                .expect("decode the retained YAML front matter");
+        validate_date_roundtrip_machine_proof(&decoded_yaml["meta"]["date_filter"])
+            .expect("decoded YAML contains the required bounded-date proof");
+
+        let mut mismatched_artifact = json_artifacts.clone();
+        mismatched_artifact[0]["content_type"] = json!("text/plain");
+        assert!(
+            roundtrip_machine_document(
+                &json_observation,
+                "json",
+                &directory.0,
+                &mismatched_artifact
+            )
+            .is_err()
+        );
+        let mut altered_digest = json_observation;
+        altered_digest["body_sha256"] = json!("0".repeat(64));
+        assert!(
+            roundtrip_machine_document(&altered_digest, "json", &directory.0, &json_artifacts)
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn date_roundtrip_call_log_matches_navigation_multiset_and_rejects_drift() {
+        let base = "http://127.0.0.1:4321";
+        let states = [
+            ("t03-roundtrip-browser", 1, None, None, 2),
+            (
+                "t03-roundtrip-browser",
+                2,
+                Some("2024-02-29"),
+                Some("2024-02-29"),
+                1,
+            ),
+            ("t03-roundtrip-browser", 1, Some("2024-02-29"), None, 1),
+            ("t03-roundtrip-browser", 1, None, Some("2024-02-29"), 1),
+            (
+                "t03-roundtrip-browser",
+                1,
+                Some("2024-02-29"),
+                Some("2024-02-29"),
+                1,
+            ),
+            (
+                "t03-roundtrip-refined",
+                1,
+                Some("2024-02-29"),
+                Some("2024-02-29"),
+                4,
+            ),
+            (
+                "t03-roundtrip-refined",
+                2,
+                Some("2024-02-29"),
+                Some("2024-02-29"),
+                2,
+            ),
+            (
+                "t03-roundtrip-refined",
+                1,
+                Some("2024-02-29"),
+                Some("2024-03-01"),
+                1,
+            ),
+            ("t03-roundtrip-refined", 1, None, None, 1),
+        ];
+        let mut requests = Vec::new();
+        let mut calls = Vec::new();
+        for (query, page, date_from, date_to, count) in states {
+            let url = roundtrip_url(query, page, date_from, date_to);
+            for _ in 0..count {
+                requests.push(url.clone());
+                calls.push(call_line(query, "openalex", page, date_from, date_to));
+            }
+        }
+        calls.push(call_line("unrelated-fixture-query", "brave", 1, None, None));
+        let evidence = json!({"navigation_requests":requests});
+        let log = calls.join("\n");
+        let summary = validate_date_roundtrip_call_log(&log, &evidence, base)
+            .expect("all navigation requests match actual OpenAlex service calls");
+        assert_eq!(summary["matched"], true);
+        assert_eq!(summary["navigation_requests"], 14);
+
+        let mut missing_call = calls.clone();
+        missing_call.remove(0);
+        assert!(
+            validate_date_roundtrip_call_log(&missing_call.join("\n"), &evidence, base).is_err()
+        );
+        let mut wrong_engine = calls.clone();
+        wrong_engine[0] = call_line("t03-roundtrip-browser", "brave", 1, None, None);
+        assert!(
+            validate_date_roundtrip_call_log(&wrong_engine.join("\n"), &evidence, base).is_err()
+        );
     }
 
     #[test]
