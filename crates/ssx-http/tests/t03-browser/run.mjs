@@ -51,6 +51,8 @@ const pageErrors = [];
 const requestFailures = [];
 const artifacts = [];
 const interactionSamples = [];
+const profiledBudgetPages = new WeakSet();
+let contractBudgetProfileRequired = false;
 let interactionControls = null;
 const handoffSamples = [];
 let browser = null;
@@ -71,6 +73,20 @@ function addFailure(id, error) {
   const message = error instanceof Error ? error.message : String(error);
   failures.push(`${id}: ${message}`);
 }
+
+function assertBudgetProfiled(page, required, profiledPages = profiledBudgetPages) {
+  if (required) assert(profiledPages.has(page), 'Chromium contract interaction came from an unprofiled page');
+}
+
+function verifyBudgetProfileGuard() {
+  const page = {};
+  const profiledPages = new WeakSet();
+  assert.throws(() => assertBudgetProfiled(page, true, profiledPages), /unprofiled page/);
+  profiledPages.add(page);
+  assert.doesNotThrow(() => assertBudgetProfiled(page, true, profiledPages));
+  assert.doesNotThrow(() => assertBudgetProfiled({}, false, profiledPages));
+}
+verifyBudgetProfileGuard();
 
 async function check(id, body) {
   try {
@@ -196,6 +212,7 @@ async function searchByQuery(page, query, extra = {}) {
 }
 
 async function clickAndMeasure(page, locator, id) {
+  assertBudgetProfiled(page, contractBudgetProfileRequired);
   const sample = await measureInteraction(page, () => locator.click(), {
     event: 'click', target: '[data-theme-toggle]', selector: 'html',
     kind: 'attribute', attribute: 'data-theme', value: 'darker',
@@ -204,11 +221,27 @@ async function clickAndMeasure(page, locator, id) {
 }
 
 async function keyboardAndMeasure(page, key) {
+  assertBudgetProfiled(page, contractBudgetProfileRequired);
   const expected = key === 'Enter'
     ? { event: 'keydown', key, target: 'summary', selector: 'details.result-explanation', kind: 'attribute', attribute: 'open', value: '' }
     : { event: 'keydown', key, selector: '.result-link', kind: 'focus' };
   const sample = await measureInteraction(page, () => page.keyboard.press(key), expected);
   interactionSamples.push({ id: key === 'Enter' ? 'disclosure' : 'focus', ...sample });
+}
+
+async function applyContractProfile(context, page, throttled) {
+  if (!throttled) return;
+  const cdp = await context.newCDPSession(page);
+  await cdp.send('Network.enable');
+  await cdp.send('Network.emulateNetworkConditions', {
+    offline: false,
+    latency: 150,
+    downloadThroughput: (1.6 * 1024 * 1024) / 8,
+    uploadThroughput: (750 * 1024) / 8,
+    connectionType: 'cellular3g',
+  });
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+  profiledBudgetPages.add(page);
 }
 
 async function landingAndSearch(page, query = 'valkey', category = 'general') {
@@ -297,18 +330,8 @@ async function runContract() {
   // Other engines have no CDP; they run the same journeys without throttling and
   // do not claim the Chromium budget profile.
   const throttled = browserEngine === 'chromium';
-  if (throttled) {
-    const cdp = await context.newCDPSession(page);
-    await cdp.send('Network.enable');
-    await cdp.send('Network.emulateNetworkConditions', {
-      offline: false,
-      latency: 150,
-      downloadThroughput: (1.6 * 1024 * 1024) / 8,
-      uploadThroughput: (750 * 1024) / 8,
-      connectionType: 'cellular3g',
-    });
-    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
-  }
+  contractBudgetProfileRequired = throttled;
+  await applyContractProfile(context, page, throttled);
   await context.addInitScript(`(() => {
     window.__t03Cls = 0;
     new PerformanceObserver((list) => {
@@ -439,6 +462,7 @@ async function runContract() {
     });
     const blockedPage = await blocked.newPage();
     attachPageEvidence(blockedPage);
+    await applyContractProfile(blocked, blockedPage, throttled);
     await navigate(blockedPage, '/');
     assert.equal(await blockedPage.locator('html').getAttribute('data-theme'), 'dark');
     await clickAndMeasure(blockedPage, blockedPage.getByRole('button', { name: 'Use darker mode' }), 'theme-storage-blocked');
@@ -535,6 +559,7 @@ async function runContract() {
   if (throttled) await collectContractBudgets(landingMetric, resultsMetric, page);
 
   await context.close();
+  contractBudgetProfileRequired = false;
 }
 
 async function runErrorScenario(id, expectedStatus, query) {
