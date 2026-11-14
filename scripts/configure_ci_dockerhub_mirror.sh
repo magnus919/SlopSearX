@@ -4,6 +4,10 @@ set -euo pipefail
 
 readonly MIRROR='https://mirror.gcr.io'
 readonly DOCKER_RESTART_TIMEOUT='60s'
+readonly DOCKER_READY_ATTEMPTS=20
+readonly DOCKER_READY_PROBE_TIMEOUT='2s'
+readonly DOCKER_READY_KILL_AFTER='1s'
+readonly DOCKER_READY_DELAY_SECONDS=1
 readonly SCRIPT_PATH="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)/$(basename -- "${BASH_SOURCE[0]}")"
 
 hosted_linux_runner() {
@@ -21,6 +25,23 @@ docker_output() {
   # A single oversized command response is a hard failure. This keeps both
   # captured memory and diagnostic input bounded to 4 KiB per invocation.
   timeout 5s docker "$@" 2>/dev/null | head -c 4097
+}
+
+wait_for_docker_ready() {
+  local attempt=0
+  while (( attempt < DOCKER_READY_ATTEMPTS )); do
+    attempt=$((attempt + 1))
+    # Do not capture or print daemon output while startup is transient. Each
+    # probe has a KILL grace, and the total configured budget is 79 seconds.
+    if timeout --kill-after="$DOCKER_READY_KILL_AFTER" "$DOCKER_READY_PROBE_TIMEOUT" \
+      docker info --format '{{.Driver}}' >/dev/null 2>&1; then
+      return 0
+    fi
+    if (( attempt < DOCKER_READY_ATTEMPTS )); then
+      sleep "$DOCKER_READY_DELAY_SECONDS"
+    fi
+  done
+  return 1
 }
 
 if ! hosted_linux_runner; then
@@ -105,14 +126,15 @@ else
     fi
     fail 'Docker restart failed'
   fi
+  wait_for_docker_ready || fail 'Docker daemon readiness timed out'
   printf 'Docker Hub mirror configured.\n'
 fi
 
 # Emit only short allowlisted labels. Raw Docker output and stderr are never
 # surfaced, because they may contain private registry or daemon details.
 server_version="$(docker_output version --format '{{.Server.Version}}')" || fail 'Docker version diagnostics failed'
-storage_driver="$(docker_output info --format '{{.Driver}}')" || fail 'Docker driver diagnostics failed'
-driver_status="$(docker_output info --format '{{json .DriverStatus}}')" || fail 'Docker driver diagnostics failed'
+storage_driver="$(docker_output info --format '{{.Driver}}')" || fail 'Docker storage-driver diagnostics failed'
+driver_status="$(docker_output info --format '{{json .DriverStatus}}')" || fail 'Docker driver-status diagnostics failed'
 mirrors_json="$(docker_output info --format '{{json .RegistryConfig.Mirrors}}')" || fail 'Docker mirror diagnostics failed'
 [[ ${#driver_status} -le 4096 && ${#mirrors_json} -le 4096 ]] || fail 'Docker diagnostics were oversized'
 for label in "$server_version" "$storage_driver"; do

@@ -14,8 +14,22 @@ mkdir -p "$work/bin" "$work/etc/docker"
 cat >"$work/bin/timeout" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
+kill_after_seen=false
+if [[ "${1:-}" == --kill-after=1s ]]; then
+  kill_after_seen=true
+  shift
+elif [[ "${1:-}" == --kill-after=* ]]; then
+  exit 90
+fi
 case "$1" in
-  5s) shift ;;
+  2s)
+    [[ "$kill_after_seen" == true ]] || exit 90
+    shift
+    ;;
+  5s)
+    [[ "$kill_after_seen" == false ]] || exit 90
+    shift
+    ;;
   60s)
     shift
     if [[ "$1" == systemctl && "${SYSTEMCTL_TIMEOUT:-}" == true ]]; then
@@ -37,11 +51,31 @@ case "$*" in
     printf '%s\n' "${DOCKER_CONTAINERS:-}"
     ;;
   'version --format {{.Server.Version}}') printf '%s\n' '28.0.4' ;;
-  'info --format {{.Driver}}') printf '%s\n' 'overlay2' ;;
+  'info --format {{.Driver}}')
+    attempts=0
+    if [[ -n "${DOCKER_INFO_ATTEMPTS_FILE:-}" && -s "$DOCKER_INFO_ATTEMPTS_FILE" ]]; then
+      read -r attempts <"$DOCKER_INFO_ATTEMPTS_FILE"
+    fi
+    attempts=$((attempts + 1))
+    if [[ -n "${DOCKER_INFO_ATTEMPTS_FILE:-}" ]]; then
+      printf '%s\n' "$attempts" >"$DOCKER_INFO_ATTEMPTS_FILE"
+    fi
+    if [[ "${DOCKER_INFO_ALWAYS_FAIL:-}" == true ]] ||
+      (( attempts <= ${DOCKER_INFO_TRANSIENT_FAILURES:-0} )); then
+      printf 'private-daemon-startup-detail\n' >&2
+      exit 12
+    fi
+    printf '%s\n' 'overlay2'
+    ;;
   'info --format {{json .DriverStatus}}') printf '%s\n' "${DOCKER_DRIVER_STATUS:-[[\"driver-type\",\"io.containerd.snapshotter.v1\"]]}" ;;
   'info --format {{json .RegistryConfig.Mirrors}}') printf '%s\n' "${DOCKER_MIRRORS:-[\"https://mirror.gcr.io\"]}" ;;
   *) exit 91 ;;
 esac
+EOF
+cat >"$work/bin/sleep" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+[[ "$#" -eq 1 && "$1" == 1 ]]
 EOF
 cat >"$work/bin/systemctl" <<'EOF'
 #!/usr/bin/env bash
@@ -50,7 +84,7 @@ printf '%s\n' "$*" >>"$SYSTEMCTL_LOG"
 if [[ "${SYSTEMCTL_FAIL:-}" == true ]]; then printf 'private-service-detail\n' >&2; exit 13; fi
 [[ "$*" == 'restart docker' ]]
 EOF
-chmod +x "$work/bin/timeout" "$work/bin/docker" "$work/bin/systemctl"
+chmod +x "$work/bin/timeout" "$work/bin/docker" "$work/bin/sleep" "$work/bin/systemctl"
 export PATH="$work/bin:$PATH"
 export DOCKER_LOG="$work/docker.log" SYSTEMCTL_LOG="$work/systemctl.log"
 export GITHUB_ACTIONS=true RUNNER_ENVIRONMENT=github-hosted RUNNER_OS=Linux
@@ -64,11 +98,13 @@ if GITHUB_ACTIONS=true RUNNER_ENVIRONMENT=self-hosted RUNNER_OS=Linux bash "$hel
 
 printf '{"debug":true,"insecure-registries":["registry.example:5000"],"registry-mirrors":["https://existing.example"]}\n' >"$SLOPSEARX_DOCKER_DAEMON_CONFIG"
 chmod 640 "$SLOPSEARX_DOCKER_DAEMON_CONFIG"
-bash "$helper" --as-root >"$work/configured.out"
+DOCKER_INFO_ATTEMPTS_FILE="$work/docker-info-attempts" \
+  DOCKER_INFO_TRANSIENT_FAILURES=2 bash "$helper" --as-root >"$work/configured.out"
 jq -e '.debug == true and .["insecure-registries"] == ["registry.example:5000"] and .["registry-mirrors"] == ["https://existing.example", "https://mirror.gcr.io"]' "$SLOPSEARX_DOCKER_DAEMON_CONFIG" >/dev/null
 [[ "$(stat -c '%a' "$SLOPSEARX_DOCKER_DAEMON_CONFIG" 2>/dev/null || stat -f '%Lp' "$SLOPSEARX_DOCKER_DAEMON_CONFIG")" == 640 ]]
 [[ "$(cat "$SYSTEMCTL_LOG")" == 'restart docker' ]]
 [[ "$(grep -c '^ps --quiet$' "$DOCKER_LOG")" == 1 ]]
+[[ "$(cat "$work/docker-info-attempts")" == 4 ]]
 grep -q 'containerd_snapshotter=io.containerd.snapshotter.v1 public_mirror=true' "$work/configured.out"
 
 # Idempotence leaves daemon bytes and restart count unchanged.
@@ -130,6 +166,19 @@ if SYSTEMCTL_TIMEOUT=true bash "$helper" --as-root >"$work/restart-timeout.out" 
 grep -q 'Docker restart timed out' "$work/restart-timeout.err"
 ! grep -q 'private-timeout-detail' "$work/restart-timeout.err"
 [[ "$(wc -l <"$SYSTEMCTL_LOG" | tr -d ' ')" == 2 ]]
+
+# A restarted daemon that never answers bounded info probes fails without
+# exposing the daemon's private startup diagnostics.
+printf '{"debug":false}\n' >"$SLOPSEARX_DOCKER_DAEMON_CONFIG"
+if DOCKER_INFO_ALWAYS_FAIL=true \
+  DOCKER_INFO_ATTEMPTS_FILE="$work/docker-info-permanent-attempts" \
+  bash "$helper" --as-root >"$work/readiness-timeout.out" 2>"$work/readiness-timeout.err"; then
+  exit 1
+fi
+[[ "$(cat "$work/docker-info-permanent-attempts")" == 20 ]]
+grep -q 'Docker daemon readiness timed out' "$work/readiness-timeout.err"
+! grep -q 'private-daemon-startup-detail' "$work/readiness-timeout.err"
+! grep -q 'private-daemon-startup-detail' "$work/readiness-timeout.out"
 
 # Diagnostics accept the same safe public endpoint spellings as the old helper
 # and reject credentialed, noncanonical mirrors without exposing their secrets.
