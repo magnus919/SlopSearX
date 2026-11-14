@@ -1,15 +1,79 @@
 import assert from 'node:assert/strict';
 import { measureInteraction, timingControls, INTERACTION_DEFINITION } from './interaction.mjs';
 import { createHash } from 'node:crypto';
-import { readFileSync, writeFileSync, lstatSync, existsSync } from 'node:fs';
-import { dirname, isAbsolute, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { readFileSync, writeFileSync, lstatSync, existsSync, realpathSync, statSync } from 'node:fs';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { gzipSync } from 'node:zlib';
-import { chromium, firefox, webkit } from 'playwright-core';
-
 const here = dirname(fileURLToPath(import.meta.url));
 const sourcePath = fileURLToPath(import.meta.url);
 const packagePath = join(here, 'package.json');
+const packageData = JSON.parse(readFileSync(packagePath, 'utf8'));
+const lockData = JSON.parse(readFileSync(join(here, 'package-lock.json'), 'utf8'));
+const lockedPlaywright = lockData.packages?.['node_modules/playwright-core'];
+const lockedPlaywrightVersion = lockedPlaywright?.version;
+assert.equal(
+  packageData.devDependencies?.['playwright-core'],
+  lockedPlaywrightVersion,
+  'Playwright manifest differs from lockfile',
+);
+assert.equal(typeof lockedPlaywrightVersion, 'string', 'Playwright lockfile version is missing');
+
+const hasPlaywrightOverride = Object.hasOwn(process.env, 'T03_PLAYWRIGHT_CORE_MODULE');
+const playwrightOverride = process.env.T03_PLAYWRIGHT_CORE_MODULE;
+assert(
+  !hasPlaywrightOverride || (typeof playwrightOverride === 'string' && playwrightOverride.length > 0),
+  'T03_PLAYWRIGHT_CORE_MODULE must not be empty',
+);
+assert(!hasPlaywrightOverride || isAbsolute(playwrightOverride), 'T03_PLAYWRIGHT_CORE_MODULE must be absolute');
+const selectedPlaywrightPath = hasPlaywrightOverride
+  ? playwrightOverride
+  : fileURLToPath(import.meta.resolve('playwright-core'));
+const playwrightModulePath = realpathSync(selectedPlaywrightPath);
+assert(statSync(playwrightModulePath).isFile(), 'selected Playwright entrypoint must be a regular file');
+function locatePlaywrightPackage(modulePath) {
+  let directory = dirname(modulePath);
+  while (true) {
+    const manifestPath = join(directory, 'package.json');
+    if (existsSync(manifestPath)) {
+      const metadata = JSON.parse(readFileSync(manifestPath, 'utf8'));
+      if (metadata.name === 'playwright-core') {
+        return { directory, metadata };
+      }
+    }
+    const parent = dirname(directory);
+    if (parent === directory) break;
+    directory = parent;
+  }
+  throw new Error('selected module is not inside the playwright-core package');
+}
+const playwrightPackage = locatePlaywrightPackage(playwrightModulePath);
+assert.equal(playwrightPackage.metadata.version, lockedPlaywrightVersion, 'loaded Playwright package differs from lockfile');
+const playwrightImportEntry = playwrightPackage.metadata.exports?.['.']?.import;
+assert.equal(playwrightImportEntry, './index.mjs', 'playwright-core ESM export differs from the locked release contract');
+assert(!isAbsolute(playwrightImportEntry), 'playwright-core ESM entry must be package-relative');
+const resolvedPlaywrightEntry = resolve(playwrightPackage.directory, playwrightImportEntry);
+const relativePlaywrightEntry = relative(playwrightPackage.directory, resolvedPlaywrightEntry);
+assert(
+  relativePlaywrightEntry && relativePlaywrightEntry !== '..' && !relativePlaywrightEntry.startsWith(`..${sep}`),
+  'playwright-core ESM entry escapes its package directory',
+);
+const canonicalPlaywrightRoot = realpathSync(playwrightPackage.directory);
+const canonicalPlaywrightPath = realpathSync(resolvedPlaywrightEntry);
+const canonicalPlaywrightRelative = relative(canonicalPlaywrightRoot, canonicalPlaywrightPath);
+assert(
+  canonicalPlaywrightRelative &&
+    canonicalPlaywrightRelative !== '..' &&
+    !canonicalPlaywrightRelative.startsWith(`..${sep}`),
+  'playwright-core ESM entrypoint escapes its package root',
+);
+assert(statSync(canonicalPlaywrightPath).isFile(), 'playwright-core ESM entrypoint must be a regular file');
+assert.equal(
+  playwrightModulePath,
+  canonicalPlaywrightPath,
+  'selected module is not the locked playwright-core ESM entrypoint',
+);
+const { chromium, firefox, webkit } = await import(pathToFileURL(canonicalPlaywrightPath).href);
 const supportedScenarios = new Set([
   'contract',
   'cached-error',
@@ -21,6 +85,7 @@ const requiredByScenario = {
   contract: [
     'results-normal',
     'optional-metadata',
+    'date-controls-roundtrip',
     'empty-suggestions',
     'partial-results',
     'all-source-failure',
@@ -64,6 +129,7 @@ let budgets = {};
 let evidenceDirectory = '';
 let baseUrl = '';
 let scenario = '';
+let dateRoundtripEvidence = null;
 
 function sha256(bytes) {
   return createHash('sha256').update(bytes).digest('hex');
@@ -204,6 +270,177 @@ async function navigateBy(page, action) {
   });
   handoffSamples.push(handoff);
   return response;
+}
+
+async function navigateWithoutBudgetSample(page, action) {
+  const navigation = page.waitForNavigation({ waitUntil: 'domcontentloaded' });
+  await action();
+  const response = await navigation;
+  assert(response, 'form or link activation did not produce a navigation response');
+  return response;
+}
+
+function oneFormValue(rows, name) {
+  const values = rows.filter((row) => row.name === name).map((row) => row.value);
+  assert.equal(values.length, 1, 'expected one FormData value for ' + name);
+  return values[0];
+}
+
+async function roundtripControls(page) {
+  return page.evaluate(() => {
+    const dateFrom = document.querySelector('details.scope-panel input[name="date_from"]');
+    const dateTo = document.querySelector('details.scope-panel input[name="date_to"]');
+    return {
+      query: document.querySelector('#portal-query')?.value ?? null,
+      date_from: dateFrom?.value ?? null,
+      date_to: dateTo?.value ?? null,
+      date_from_type: dateFrom?.type ?? null,
+      date_to_type: dateTo?.type ?? null,
+      date_from_valid: dateFrom?.checkValidity() ?? false,
+      date_to_valid: dateTo?.checkValidity() ?? false,
+    };
+  });
+}
+
+async function roundtripHtmlProof(page) {
+  return page.evaluate(() => {
+    const row = (name) => {
+      const element = document.querySelector('[data-filter="' + name + '"]');
+      return element ? { status: element.dataset.status, text: element.innerText } : null;
+    };
+    return { date_from: row('date_from'), date_to: row('date_to') };
+  });
+}
+
+async function recordRoundtripForm(page, id, selector, expected, action) {
+  const sourcePage = Number(new URL(page.url()).searchParams.get('pageno') || '1');
+  assert(Number.isSafeInteger(sourcePage) && sourcePage > 0, id + ' source page is invalid');
+  const form = page.locator(selector);
+  const formData = await form.evaluate((element) =>
+    Array.from(new FormData(element).entries()).map(([name, value]) => ({ name, value: String(value) })),
+  );
+  assert.equal(oneFormValue(formData, 'q'), expected.query);
+  assert.equal(oneFormValue(formData, 'engines'), 'openalex');
+  assert.equal(oneFormValue(formData, 'date_from'), expected.date_from ?? '');
+  assert.equal(oneFormValue(formData, 'date_to'), expected.date_to ?? '');
+
+  const response = await navigateWithoutBudgetSample(page, action);
+  assert.equal(response.status(), 200, id);
+  const requestUrl = response.request().url();
+  const request = new URL(requestUrl);
+  assert.equal(request.pathname, '/search');
+  assert.equal(request.searchParams.get('q'), expected.query);
+  assert.equal(request.searchParams.get('engines'), 'openalex');
+  const dateValue = (name) => {
+    const value = request.searchParams.get(name);
+    return value === '' ? null : value;
+  };
+  assert.equal(dateValue('date_from'), expected.date_from ?? null);
+  assert.equal(dateValue('date_to'), expected.date_to ?? null);
+  assert.equal(Number(request.searchParams.get('pageno') || '1'), 1);
+
+  const controls = await roundtripControls(page);
+  assert.equal(controls.query, expected.query);
+  assert.equal(controls.date_from, expected.date_from ?? '');
+  assert.equal(controls.date_to, expected.date_to ?? '');
+  assert.equal(controls.date_from_type, 'date');
+  assert.equal(controls.date_to_type, 'date');
+  assert.equal(controls.date_from_valid, true);
+  assert.equal(controls.date_to_valid, true);
+  const htmlProof = await roundtripHtmlProof(page);
+  for (const [field, value] of [['date_from', expected.date_from], ['date_to', expected.date_to]]) {
+    if (value) {
+      assert.equal(htmlProof[field]?.status, 'enforced', id + ' proof status for ' + field);
+      assert(htmlProof[field].text.includes(value), id + ' proof value for ' + field);
+    }
+  }
+  return {
+    id,
+    kind: 'form',
+    source_page: sourcePage,
+    form_data: formData,
+    submitted_url: requestUrl,
+    final_url: page.url(),
+    status: response.status(),
+    controls,
+    html_proof: htmlProof,
+  };
+}
+
+async function recordRoundtripLink(page, id, locator, expected) {
+  const href = await locator.getAttribute('href');
+  assert(href, id + ' link href missing');
+  const response = await navigateWithoutBudgetSample(page, () => locator.click());
+  assert.equal(response.status(), 200, id);
+  const requestUrl = response.request().url();
+  const request = new URL(requestUrl);
+  assert.equal(request.pathname, '/search');
+  assert.equal(request.searchParams.get('q'), expected.query);
+  assert.equal(request.searchParams.get('engines'), 'openalex');
+  assert.equal(request.searchParams.get('date_from'), expected.date_from);
+  assert.equal(request.searchParams.get('date_to'), expected.date_to);
+  assert.equal(Number(request.searchParams.get('pageno') || '1'), expected.page);
+  assert.equal(request.searchParams.get('format'), expected.format === 'html' ? null : expected.format);
+  const contentType = response.headers()['content-type'] ?? '';
+  const mediaType = contentType.split(';', 1)[0].trim().toLowerCase();
+  const bodyBytes = Buffer.from(await response.body());
+  let proof = null;
+  let controls = null;
+  let bodyPath = null;
+  if (expected.format === 'json' || expected.format === 'yaml') {
+    bodyPath = pathFor(`contract.${id}.response.${expected.format}`);
+    writeFileSync(bodyPath, bodyBytes, { flag: 'wx' });
+    artifacts.push({
+      path: bodyPath,
+      sha256: sha256(bodyBytes),
+      bytes: bodyBytes.byteLength,
+      kind: 'date-roundtrip-machine-response',
+      content_type: contentType,
+      width: null,
+      height: null,
+    });
+  }
+  if (expected.format === 'json') {
+    assert.equal(mediaType, 'application/json');
+    const document = JSON.parse(bodyBytes.toString('utf8'));
+    proof = document?.meta?.date_filter;
+    assert.equal(proof?.status, 'enforced');
+    assert.equal(proof?.requested?.date_from, expected.date_from);
+    assert.equal(proof?.requested?.date_to, expected.date_to);
+    assert.equal(proof?.applied?.date_from, expected.date_from);
+    assert.equal(proof?.applied?.date_to, expected.date_to);
+    assert(proof?.enforced_by?.includes('upstream:openalex'));
+  } else if (expected.format === 'yaml') {
+    assert.equal(mediaType, 'text/vnd.yaml+markdown');
+  } else {
+    assert.equal(mediaType, 'text/html');
+    controls = await roundtripControls(page);
+    assert.equal(controls.query, expected.query);
+    assert.equal(controls.date_from, expected.date_from);
+    assert.equal(controls.date_to, expected.date_to);
+    assert.equal(controls.date_from_type, 'date');
+    assert.equal(controls.date_to_type, 'date');
+    assert.equal(controls.date_from_valid, true);
+    assert.equal(controls.date_to_valid, true);
+    proof = await roundtripHtmlProof(page);
+    assert.equal(proof.date_from?.status, 'enforced');
+    assert.equal(proof.date_to?.status, 'enforced');
+  }
+  return {
+    id,
+    kind: 'link',
+    href: new URL(href, baseUrl).href,
+    request_url: requestUrl,
+    final_url: page.url(),
+    status: response.status(),
+    format: expected.format,
+    content_type: contentType,
+    body_path: bodyPath,
+    controls,
+    proof,
+    body_sha256: sha256(bodyBytes),
+    body_bytes: bodyBytes.byteLength,
+  };
 }
 
 async function searchByQuery(page, query, extra = {}) {
@@ -381,6 +618,156 @@ async function runContract() {
       els.map((el) => new URL(el.href).origin),
     );
     assert(links.every((origin) => origin === new URL(baseUrl).origin));
+  });
+
+  await check('date-controls-roundtrip', async () => {
+    const observations = [];
+    const navigationRequests = [];
+    const requestListener = (request) => {
+      if (!request.isNavigationRequest()) return;
+      try {
+        const url = new URL(request.url());
+        const query = url.searchParams.get('q') ?? '';
+        if (url.origin === new URL(baseUrl).origin && query.startsWith('t03-roundtrip-')) {
+          navigationRequests.push(request.url());
+        }
+      } catch {
+        unexpectedRequests.push(request.url());
+      }
+    };
+    page.on('request', requestListener);
+    let seed;
+    try {
+      const seedResponse = await searchByQuery(page, 't03-roundtrip-browser', { engines: 'openalex' });
+      assert.equal(seedResponse.status(), 200);
+      const seedControls = await roundtripControls(page);
+      assert.equal(seedControls.query, 't03-roundtrip-browser');
+      assert.equal(seedControls.date_from, '');
+      assert.equal(seedControls.date_to, '');
+      seed = {
+        status: seedResponse.status(),
+        url: seedResponse.request().url(),
+        controls: seedControls,
+      };
+
+      const scopeForm = 'details.scope-panel form';
+      const dateFrom = page.locator('details.scope-panel input[name="date_from"]');
+      const dateTo = page.locator('details.scope-panel input[name="date_to"]');
+      const submitScope = () => page.locator('details.scope-panel button.scope-apply').click();
+
+      observations.push(await recordRoundtripForm(page, 'blank-submit', scopeForm, {
+        query: 't03-roundtrip-browser', date_from: null, date_to: null,
+      }, submitScope));
+
+      await dateFrom.fill('2024-02-29');
+      await dateTo.fill('');
+      observations.push(await recordRoundtripForm(page, 'lower-only', scopeForm, {
+        query: 't03-roundtrip-browser', date_from: '2024-02-29', date_to: null,
+      }, submitScope));
+
+      await dateFrom.fill('');
+      await dateTo.fill('2024-02-29');
+      observations.push(await recordRoundtripForm(page, 'upper-only', scopeForm, {
+        query: 't03-roundtrip-browser', date_from: null, date_to: '2024-02-29',
+      }, submitScope));
+
+      await dateFrom.fill('2024-02-29');
+      await dateTo.fill('2024-02-29');
+      observations.push(await recordRoundtripForm(page, 'equal-leap-day', scopeForm, {
+        query: 't03-roundtrip-browser', date_from: '2024-02-29', date_to: '2024-02-29',
+      }, submitScope));
+
+      observations.push(await recordRoundtripLink(
+        page,
+        'next-page-before-query-refinement',
+        page.locator('a[aria-label="Try next result page"]'),
+        { query: 't03-roundtrip-browser', date_from: '2024-02-29', date_to: '2024-02-29', page: 2, format: 'html' },
+      ));
+
+      const queryInput = page.locator('form.search-form input[name="q"]');
+      await queryInput.fill('t03-roundtrip-refined');
+      observations.push(await recordRoundtripForm(page, 'query-refinement', 'form.search-form', {
+        query: 't03-roundtrip-refined', date_from: '2024-02-29', date_to: '2024-02-29',
+      }, () => page.locator('form.search-form button.search-button').click()));
+
+      observations.push(await recordRoundtripLink(
+        page,
+        'next-page',
+        page.locator('a[aria-label="Try next result page"]'),
+        { query: 't03-roundtrip-refined', date_from: '2024-02-29', date_to: '2024-02-29', page: 2, format: 'html' },
+      ));
+
+      await dateTo.fill('2024-03-01');
+      observations.push(await recordRoundtripForm(page, 'scope-refinement', scopeForm, {
+        query: 't03-roundtrip-refined', date_from: '2024-02-29', date_to: '2024-03-01',
+      }, submitScope));
+      await dateTo.fill('2024-02-29');
+      observations.push(await recordRoundtripForm(page, 'scope-restoration', scopeForm, {
+        query: 't03-roundtrip-refined', date_from: '2024-02-29', date_to: '2024-02-29',
+      }, submitScope));
+
+      observations.push(await recordRoundtripLink(
+        page,
+        'next-page-after-scope',
+        page.locator('a[aria-label="Try next result page"]'),
+        { query: 't03-roundtrip-refined', date_from: '2024-02-29', date_to: '2024-02-29', page: 2, format: 'html' },
+      ));
+      observations.push(await recordRoundtripLink(
+        page,
+        'previous-page',
+        page.locator('a[aria-label="Previous result page"]'),
+        { query: 't03-roundtrip-refined', date_from: '2024-02-29', date_to: '2024-02-29', page: 1, format: 'html' },
+      ));
+
+      observations.push(await recordRoundtripLink(
+        page,
+        'json-link',
+        page.getByRole('link', { name: 'Open JSON view ↗' }),
+        { query: 't03-roundtrip-refined', date_from: '2024-02-29', date_to: '2024-02-29', page: 1, format: 'json' },
+      ));
+      await page.goBack({ waitUntil: 'domcontentloaded' });
+      await page.locator('details.scope-panel').waitFor();
+
+      observations.push(await recordRoundtripLink(
+        page,
+        'yaml-link',
+        page.getByRole('link', { name: 'Open YAML view ↗' }),
+        { query: 't03-roundtrip-refined', date_from: '2024-02-29', date_to: '2024-02-29', page: 1, format: 'yaml' },
+      ));
+      await page.goBack({ waitUntil: 'domcontentloaded' });
+      await page.locator('details.scope-panel').waitFor();
+
+      const clearFrom = page.locator('details.scope-panel input[name="date_from"]');
+      const clearTo = page.locator('details.scope-panel input[name="date_to"]');
+      await clearFrom.fill('');
+      await clearTo.fill('');
+      observations.push(await recordRoundtripForm(page, 'clear-bounds', scopeForm, {
+        query: 't03-roundtrip-refined', date_from: null, date_to: null,
+      }, submitScope));
+
+      const clearedLinks = await page.locator('a.rail-link').evaluateAll((elements) =>
+        elements.map((element) => {
+          const url = new URL(element.href);
+          return {
+            format: url.searchParams.get('format'),
+            href: element.href,
+            date_from_present: url.searchParams.has('date_from'),
+            date_to_present: url.searchParams.has('date_to'),
+          };
+        }),
+      );
+      assert.deepEqual(clearedLinks.map((link) => link.format).sort(), ['json', 'yaml']);
+      assert(clearedLinks.every((link) => !link.date_from_present && !link.date_to_present));
+      observations.push({ id: 'cleared-machine-links', kind: 'link-inventory', links: clearedLinks });
+    } finally {
+      page.off('request', requestListener);
+    }
+    dateRoundtripEvidence = {
+      schema: 'T03_DATE_ROUNDTRIP_V1',
+      seed,
+      navigation_requests: navigationRequests,
+      observations,
+    };
   });
 
   await check('empty-suggestions', async () => {
@@ -619,6 +1006,21 @@ async function writeRuntimeEvidence() {
   artifacts.push({ path: viewportPath, sha256: sha256(viewportBytes), bytes: viewportBytes.byteLength, kind: 'viewport-observations', width: null, height: null });
 }
 
+async function writeDateRoundtripEvidence() {
+  if (scenario !== 'contract' || !dateRoundtripEvidence) return;
+  const path = pathFor(scenario + '.browser-date-roundtrip.json');
+  const bytes = Buffer.from(JSON.stringify(dateRoundtripEvidence, null, 2) + '\n');
+  writeFileSync(path, bytes, { flag: 'wx' });
+  artifacts.push({
+    path,
+    sha256: sha256(bytes),
+    bytes: bytes.byteLength,
+    kind: 'date-roundtrip',
+    width: null,
+    height: null,
+  });
+}
+
 async function main() {
   const scenarioValue = process.env.T03_SCENARIO;
   const baseValue = process.env.T03_BROWSER_BASE_URL;
@@ -639,8 +1041,7 @@ async function main() {
   baseUrl = parsedBase.origin;
   evidenceDirectory = resolve(evidenceValue);
 
-  const packageData = JSON.parse(readFileSync(packagePath, 'utf8'));
-  browserInfo.playwright_version = packageData.devDependencies['playwright-core'];
+  browserInfo.playwright_version = playwrightPackage.metadata.version;
   const engine = process.env.T03_BROWSER_ENGINE || 'chromium';
   const engines = { chromium, firefox, webkit };
   assert(Object.hasOwn(engines, engine), `T03_BROWSER_ENGINE must be one of ${Object.keys(engines).join(', ')}`);
@@ -691,6 +1092,7 @@ async function main() {
   if (unexpected.length > 0) addFailure('scenario-completeness', `unexpected IDs: ${unexpected.join(', ')}`);
   if (completed.length !== required.length) addFailure('scenario-completeness', `expected ${required.length} completed IDs; got ${completed.length}`);
 
+  await writeDateRoundtripEvidence();
   await writeRuntimeEvidence();
   const receiptPath = pathFor(`${scenario}.browser-receipt.json`);
   const clientHash = sha256(readFileSync(sourcePath));
