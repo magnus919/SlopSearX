@@ -86,7 +86,18 @@ jobs:
         run: |
           set -euo pipefail
           if [ "$RUNNER_OS" = Windows ]; then
-            cargo check --locked -p xtask --bin xtask --message-format=short 2>&1 | tee "$CARGO_TARGET_DIR/rust-evidence/xtask-windows-check.log"
+            mkdir -p "$CARGO_TARGET_DIR/w07-windows-compile"
+            rustc \
+              --edition=2024 \
+              --crate-name ssx_w07_windows_reader \
+              --crate-type=lib \
+              --emit=metadata \
+              -D warnings \
+              --target "$EXPECTED_TARGET" \
+              crates/xtask/src/w07_windows_reader.rs \
+              -o "$CARGO_TARGET_DIR/w07-windows-compile/reader.rmeta" \
+              2>&1 | tee "$CARGO_TARGET_DIR/rust-evidence/w07-windows-reader-check.log"
+            test -s "$CARGO_TARGET_DIR/w07-windows-compile/reader.rmeta"
             cargo run --locked -p ssx-cli-check -- check T08A --output "$CARGO_TARGET_DIR/rust-evidence/T08A.json"
           else
             cargo xtask check T08A --output "$CARGO_TARGET_DIR/rust-evidence/T08A.json"

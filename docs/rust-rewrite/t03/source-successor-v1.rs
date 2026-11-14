@@ -13,15 +13,19 @@ pub(crate) const CAPSULE_PATH: &str = "docs/rust-rewrite/t03/source-successor-v1
 const CAPSULE: &[u8] = include_bytes!("source-successor-v1.json");
 const CAPSULE_SHA: &str = "a82ce22c82e2c465d565232e281b981d0fe5739f9951cf057c980de8dd8bbd8b";
 const BASE: &str = "d7fc628d1069ab1f0a5fe8ee114796c235615eca";
-const W07_CAPSULE_PATH: &str = "docs/rust-rewrite/t03/w07-lock-custody-successor-v1.json";
-const W07_CAPSULE: &[u8] = include_bytes!("w07-lock-custody-successor-v1.json");
-const W07_CAPSULE_SHA: &str = "eb1064ff1274a6126edc60207dfff54832720b795c545b9e62445e083b06ceb2";
+const W07_CAPSULE_PATH: &str = "docs/rust-rewrite/t03/w07-lock-custody-successor-v2.json";
+const W07_CAPSULE: &[u8] = include_bytes!("w07-lock-custody-successor-v2.json");
+const W07_CAPSULE_SHA: &str = "5b8575ef5b9c6148c80aae54dfd04c9e3503a42f5243633e00f762d193d536c5";
 const W07_BASE: &str = "5350376a510a7752f90731739e6267db395cd21d";
 const W07_SOURCE: &str = "crates/xtask/src/w07.rs";
 const W07_ACCEPTED_SHA: &str = "40fea132ea484e6e72947956b6404143916a87edea1725e1aba0a8815900f45b";
 const W07_ACCEPTED_BYTES: usize = 42_272;
 const W07_ACCEPTED_BLOB: &str = "3beccfb3ac143d0baf00a6af7e34df85426a0f76";
-const W07_SCOPE: &str = "W07 physical-source reconciliation only; existing T03 and W08 historical evidence remains unchanged.";
+const W07_SCOPE: &str = "W07 physical-source reconciliation plus one finite std-only Windows reader addition; existing T03 and W08 historical evidence remains unchanged.";
+const W07_ADDED_SOURCE: &str = "crates/xtask/src/w07_windows_reader.rs";
+const W07_ADDED_SOURCE_BYTES: usize = 2_732;
+const W07_ADDED_SOURCE_SHA: &str =
+    "cd5b1ee98e68605d5106d2294ebdfc3027cf5dbe73eb3bf42a1c70a8c88ce5f6";
 const W07_MAIN_CAPSULE_PATH: &str = "docs/rust-rewrite/t03/w07-current-source-successor-v1.json";
 const W07_MAIN_CAPSULE: &[u8] = include_bytes!("w07-current-source-successor-v1.json");
 const W07_MAIN_CAPSULE_SHA: &str =
@@ -450,23 +454,42 @@ fn git_prior_at(root: &Path, pin: &Pin<'_>, prior: &[u8], baseline: &str) -> Res
 fn git_prior(root: &Path, pin: &Pin<'_>, prior: &[u8]) -> Result<()> {
     git_prior_at(root, pin, prior, BASE)
 }
-/// Authenticate and invert the current W07 source to the exact frame accepted
-/// by the historical T03 capsule. The historical capsule and pure frame()
-/// proof remain unchanged.
-fn decode_w07(raw: &[u8]) -> Result<Value> {
+/// Authenticate the current W07 source and finite additions before exposing
+/// the exact frame accepted by the historical T03 capsule.
+fn w07_added_source<'a>(doc: &'a Value) -> Result<(&'a str, usize, &'a str)> {
+    let rows = doc["added_sources"]
+        .as_array()
+        .ok_or("T03 W07 added-source inventory missing")?;
+    need(rows.len() == 1, "one exact W07 added-source row")?;
+    let row = &rows[0];
     need(
-        raw == W07_CAPSULE && digest(raw) == W07_CAPSULE_SHA,
-        "W07 source successor capsule bytes/hash",
+        keys(row, &["path", "current", "prior"]) && row["path"] == W07_ADDED_SOURCE,
+        "closed exact W07 added-source path",
     )?;
-    let doc: Value = serde_json::from_slice(raw).map_err(|error| error.to_string())?;
+    let (sha, bytes) = material(&row["current"])?;
     need(
-        keys(&doc, &["schema", "baseline", "scope", "rows"])
-            && doc["schema"] == "T03_W07_LOCK_CUSTODY_SUCCESSOR_V1"
+        bytes == W07_ADDED_SOURCE_BYTES && sha == W07_ADDED_SOURCE_SHA,
+        "exact W07 added-source current identity",
+    )?;
+    need(
+        keys(&row["prior"], &["status", "baseline"])
+            && row["prior"]["status"] == "absent"
+            && row["prior"]["baseline"] == W07_BASE,
+        "W07 added source was absent from the exact baseline",
+    )?;
+    Ok((W07_ADDED_SOURCE, bytes, sha))
+}
+fn validate_w07_document(doc: &Value) -> Result<()> {
+    need(
+        keys(
+            doc,
+            &["schema", "baseline", "scope", "rows", "added_sources"],
+        ) && doc["schema"] == "T03_W07_LOCK_CUSTODY_SUCCESSOR_V2"
             && doc["baseline"] == W07_BASE
             && doc["scope"] == W07_SCOPE,
-        "W07 source successor closed header",
+        "W07 source successor closed v2 header",
     )?;
-    let pins = pins(&doc)?;
+    let pins = pins(doc)?;
     need(
         pins.len() == 1
             && pins[0].path == W07_SOURCE
@@ -475,7 +498,33 @@ fn decode_w07(raw: &[u8]) -> Result<Value> {
             && pins[0].blob == W07_ACCEPTED_BLOB,
         "W07 source successor exact accepted predecessor tuple",
     )?;
+    w07_added_source(doc)?;
+    Ok(())
+}
+fn decode_w07(raw: &[u8]) -> Result<Value> {
+    need(
+        raw == W07_CAPSULE && digest(raw) == W07_CAPSULE_SHA,
+        "W07 source successor capsule bytes/hash",
+    )?;
+    let doc: Value = serde_json::from_slice(raw).map_err(|error| error.to_string())?;
+    validate_w07_document(&doc)?;
     Ok(doc)
+}
+fn verify_w07_added_source_bytes(actual: &[u8]) -> Result<()> {
+    need(
+        actual.len() == W07_ADDED_SOURCE_BYTES && digest(actual) == W07_ADDED_SOURCE_SHA,
+        "exact W07 added-source physical bytes/hash",
+    )
+}
+fn w07_added_source_bytes(root: &Path, doc: &Value) -> Result<Vec<u8>> {
+    let (path, bytes, _) = w07_added_source(doc)?;
+    let physical = regular(root, path, bytes)?;
+    verify_w07_added_source_bytes(&physical)?;
+    need(
+        git(root, &["ls-tree", W07_BASE, "--", path])?.is_empty(),
+        "W07 added-source path was absent from baseline Git tree",
+    )?;
+    Ok(physical)
 }
 fn w07_current_frame(root: &Path) -> Result<(Vec<u8>, Vec<u8>)> {
     let capsule = regular(root, W07_CAPSULE_PATH, W07_CAPSULE.len())?;
@@ -494,6 +543,7 @@ fn w07_current_frame(root: &Path) -> Result<(Vec<u8>, Vec<u8>)> {
             == format!("100644 blob {W07_ACCEPTED_BLOB}\t{W07_SOURCE}\n").as_bytes(),
         "W07 source successor exact parent Git mode/blob",
     )?;
+    w07_added_source_bytes(root, &doc)?;
     Ok((physical, prior))
 }
 fn w07_controls(root: &Path) -> Result<()> {
@@ -505,6 +555,72 @@ fn w07_controls(root: &Path) -> Result<()> {
     )?;
     let capsule = regular(root, W07_CAPSULE_PATH, W07_CAPSULE.len())?;
     let doc = decode_w07(&capsule)?;
+    need(
+        validate_w07_document(&doc).is_ok(),
+        "exact W07 source successor capsule positive",
+    )?;
+    let mut missing_additions = doc.clone();
+    missing_additions
+        .as_object_mut()
+        .ok_or("W07 source successor document object")?
+        .remove("added_sources");
+    need(
+        validate_w07_document(&missing_additions).is_err(),
+        "missing W07 added-source inventory rejected",
+    )?;
+    let mut duplicate_addition = doc.clone();
+    let additions = duplicate_addition["added_sources"]
+        .as_array_mut()
+        .ok_or("W07 added-source inventory")?;
+    let addition = additions[0].clone();
+    additions.push(addition);
+    need(
+        validate_w07_document(&duplicate_addition).is_err(),
+        "duplicate W07 added-source entry rejected",
+    )?;
+    let mut out_of_scope_addition = doc.clone();
+    out_of_scope_addition["added_sources"][0]["path"] = json!("crates/xtask/src/main.rs");
+    need(
+        validate_w07_document(&out_of_scope_addition).is_err(),
+        "out-of-scope W07 added-source path rejected",
+    )?;
+    let mut altered_addition_hash = doc.clone();
+    altered_addition_hash["added_sources"][0]["current"]["sha256"] = json!("0".repeat(64));
+    need(
+        validate_w07_document(&altered_addition_hash).is_err(),
+        "altered W07 added-source hash rejected",
+    )?;
+    let mut altered_addition_mode = doc.clone();
+    altered_addition_mode["added_sources"][0]["current"]["mode"] = json!("0755");
+    need(
+        validate_w07_document(&altered_addition_mode).is_err(),
+        "altered W07 added-source mode rejected",
+    )?;
+    let mut altered_addition_prior = doc.clone();
+    altered_addition_prior["added_sources"][0]["prior"]["baseline"] =
+        json!("287d944d57721d39dd5eb6a2bdec0fbcb5624760");
+    need(
+        validate_w07_document(&altered_addition_prior).is_err(),
+        "altered W07 added-source predecessor rejected",
+    )?;
+    let mut open_addition = doc.clone();
+    open_addition["added_sources"][0]["unexpected"] = json!(true);
+    need(
+        validate_w07_document(&open_addition).is_err(),
+        "open W07 added-source row rejected",
+    )?;
+    let (added_path, added_bytes, _) = w07_added_source(&doc)?;
+    let added = w07_added_source_bytes(root, &doc)?;
+    need(
+        added.len() == added_bytes && added_path == W07_ADDED_SOURCE,
+        "exact W07 added-source physical identity positive",
+    )?;
+    let mut changed_added = added.clone();
+    changed_added[0] ^= 1;
+    need(
+        verify_w07_added_source_bytes(&changed_added).is_err(),
+        "changed W07 added-source physical bytes rejected",
+    )?;
     let w07_pin = pin(&doc, W07_SOURCE)?;
     let row = row(&doc, W07_SOURCE)?;
     let (physical, prior) = w07_current_frame(root)?;

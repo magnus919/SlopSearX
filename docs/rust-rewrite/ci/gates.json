@@ -2647,7 +2647,7 @@
             },
             {
               "name": "Native external-child corpus and source installation",
-              "run": "set -euo pipefail\nif [ \"$RUNNER_OS\" = Windows ]; then\n  cargo check --locked -p xtask --bin xtask --message-format=short 2>&1 | tee \"$CARGO_TARGET_DIR/rust-evidence/xtask-windows-check.log\"\n  cargo run --locked -p ssx-cli-check -- check T08A --output \"$CARGO_TARGET_DIR/rust-evidence/T08A.json\"\nelse\n  cargo xtask check T08A --output \"$CARGO_TARGET_DIR/rust-evidence/T08A.json\"\nfi\nif [ ! -s \"$CARGO_TARGET_DIR/rust-evidence/T08A.json\" ]; then\n  echo \"::error::T08A gate exited zero without writing $CARGO_TARGET_DIR/rust-evidence/T08A.json\"\n  exit 1\nfi\ngit ls-files --stage > \"$CARGO_TARGET_DIR/rust-evidence/index-after.txt\"\nif ! cmp \"$CARGO_TARGET_DIR/rust-evidence/index-before.txt\" \"$CARGO_TARGET_DIR/rust-evidence/index-after.txt\"; then\n  echo \"::error::T08A gate changed the Git index\"\n  exit 1\nfi\ndirty=\"$(git status --porcelain=v1 --untracked-files=all)\"\nif [ -n \"$dirty\" ]; then\n  echo \"::error::T08A gate left the worktree dirty\"\n  echo \"$dirty\"\n  exit 1\nfi\n"
+              "run": "set -euo pipefail\nif [ \"$RUNNER_OS\" = Windows ]; then\n  mkdir -p \"$CARGO_TARGET_DIR/w07-windows-compile\"\n  rustc \\\n    --edition=2024 \\\n    --crate-name ssx_w07_windows_reader \\\n    --crate-type=lib \\\n    --emit=metadata \\\n    -D warnings \\\n    --target \"$EXPECTED_TARGET\" \\\n    crates/xtask/src/w07_windows_reader.rs \\\n    -o \"$CARGO_TARGET_DIR/w07-windows-compile/reader.rmeta\" \\\n    2>&1 | tee \"$CARGO_TARGET_DIR/rust-evidence/w07-windows-reader-check.log\"\n  test -s \"$CARGO_TARGET_DIR/w07-windows-compile/reader.rmeta\"\n  cargo run --locked -p ssx-cli-check -- check T08A --output \"$CARGO_TARGET_DIR/rust-evidence/T08A.json\"\nelse\n  cargo xtask check T08A --output \"$CARGO_TARGET_DIR/rust-evidence/T08A.json\"\nfi\nif [ ! -s \"$CARGO_TARGET_DIR/rust-evidence/T08A.json\" ]; then\n  echo \"::error::T08A gate exited zero without writing $CARGO_TARGET_DIR/rust-evidence/T08A.json\"\n  exit 1\nfi\ngit ls-files --stage > \"$CARGO_TARGET_DIR/rust-evidence/index-after.txt\"\nif ! cmp \"$CARGO_TARGET_DIR/rust-evidence/index-before.txt\" \"$CARGO_TARGET_DIR/rust-evidence/index-after.txt\"; then\n  echo \"::error::T08A gate changed the Git index\"\n  exit 1\nfi\ndirty=\"$(git status --porcelain=v1 --untracked-files=all)\"\nif [ -n \"$dirty\" ]; then\n  echo \"::error::T08A gate left the worktree dirty\"\n  echo \"$dirty\"\n  exit 1\nfi\n"
             },
             {
               "if": "${{ always() }}",
@@ -2715,7 +2715,7 @@
       },
       "owner": "T08A",
       "state": "additive",
-      "successor": "Windows cargo check --locked -p xtask --bin xtask; cargo xtask check T08A; real native external-child CLI/TLS/proxy corpus and source install on five supported client targets; fail closed aggregate, no Python runtime/backend fallback"
+      "successor": "Direct native rustc compilation of the exact std-only W07 Windows reader on the matching Windows host, then T08A and native client evidence on five targets; this does not qualify full xtask or backend execution on Windows."
     },
     "rust-cli.yml:native-cli-acceptance": {
       "source": {

@@ -15,6 +15,9 @@ use crate::a13::a06_source_successor::{
     w07_test_dependency as test_dependency_successor,
 };
 use main_successor::{PRIOR_SHA as MAIN_SHA, reconstruct as reconstruct_main};
+#[cfg(any(windows, test))]
+#[path = "w07_windows_reader.rs"]
+mod w07_windows_reader;
 const REGISTRY: &str = "docs/rust-rewrite/w07/qualification-completion-v1.json";
 const ORIGINAL_REGISTRY: &str = "docs/rust-rewrite/w07/qualification.json";
 const ORIGINAL_REGISTRY_SHA: &str =
@@ -115,57 +118,14 @@ fn physical_current_cargo_lock(root: &Path) -> Result<(Vec<u8>, &'static str)> {
     }
     #[cfg(windows)]
     {
-        use std::io::Read;
-        let full = root.join("Cargo.lock");
-        let root_canonical = root.canonicalize().map_err(|error| error.to_string())?;
-        let before = fs::symlink_metadata(&full).map_err(|error| error.to_string())?;
-        if !before.is_file()
-            || before.file_type().is_symlink()
-            || before.len() != w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES as u64
-            || before.len() > 1_048_576
-            || !full
-                .canonicalize()
-                .map_err(|error| error.to_string())?
-                .starts_with(&root_canonical)
-        {
-            return Err("W07 current Cargo.lock must be the exact regular source".into());
-        }
-        let index = std::process::Command::new("git")
-            .args(["ls-files", "--stage", "--", "Cargo.lock"])
-            .current_dir(root)
-            .output()
-            .map_err(|error| error.to_string())?;
-        let index = String::from_utf8(index.stdout).map_err(|error| error.to_string())?;
-        let index_lines = index.lines().collect::<Vec<_>>();
-        if index_lines.len() != 1
-            || !index_lines[0].starts_with("100644 ")
-            || !index_lines[0].ends_with(" 0\tCargo.lock")
-        {
-            return Err("W07 Cargo.lock requires the stage-zero Git mode 100644".into());
-        }
-        let file = fs::File::open(&full).map_err(|error| error.to_string())?;
-        let opened = file.metadata().map_err(|error| error.to_string())?;
-        if !opened.is_file() || opened.len() != before.len() {
-            return Err("W07 current Cargo.lock descriptor identity changed".into());
-        }
-        let mut bytes = Vec::with_capacity(w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES);
-        (&file)
-            .take(w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES as u64 + 1)
-            .read_to_end(&mut bytes)
-            .map_err(|error| error.to_string())?;
-        let after = file.metadata().map_err(|error| error.to_string())?;
-        let named = fs::symlink_metadata(&full).map_err(|error| error.to_string())?;
-        if !after.is_file()
-            || after.len() != before.len()
-            || !named.is_file()
-            || named.file_type().is_symlink()
-            || named.len() != after.len()
-            || bytes.len() != w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES
-            || sha(&bytes) != w07_t02_joint::cli_source_custody::CURRENT_LOCK_SHA
-        {
+        let (bytes, mode) = w07_windows_reader::physical_current_cargo_lock(
+            root,
+            w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES,
+        )?;
+        if sha(&bytes) != w07_t02_joint::cli_source_custody::CURRENT_LOCK_SHA {
             return Err("W07 current Cargo.lock changed during bounded source read".into());
         }
-        Ok((bytes, "0644"))
+        Ok((bytes, mode))
     }
     #[cfg(not(any(unix, windows)))]
     {
@@ -825,6 +785,16 @@ mod tests {
         assert!(frozen(root, "Cargo.toml", expected).is_err());
 
         let (current, mode) = physical_current_cargo_lock(root).unwrap();
+        let windows_reader = w07_windows_reader::physical_current_cargo_lock(
+            root,
+            w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES,
+        )
+        .unwrap();
+        assert_eq!(windows_reader, (current.clone(), "0644"));
+        assert_eq!(
+            sha(&windows_reader.0),
+            w07_t02_joint::cli_source_custody::CURRENT_LOCK_SHA
+        );
         assert!(
             w07_t02_joint::cli_source_custody::w07_lock_prior_from_physical(
                 root,
