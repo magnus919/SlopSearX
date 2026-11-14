@@ -194,6 +194,15 @@
       ]
     },
     {
+      "path": "crates/ssx-http/tests/t03-browser/interaction.mjs",
+      "bytes": 5282,
+      "sha256": "76ad6fe6864088f3e678e599ca065feffea30cb0086532b292636d1de6210d7e",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
       "path": "crates/ssx-infra/tests/a12_security.rs",
       "bytes": 63526,
       "sha256": "485213883050542a5d4d3d388ff0a0cd7a6f08d022f0747c31cbb70ffb1ec499",
@@ -239,6 +248,15 @@
       ]
     },
     {
+      "path": "crates/xtask/src/o02_builder_patch.rs",
+      "bytes": 7996,
+      "sha256": "bcf40cebc32e7733215b8b81c9ae423f3cfb1deb871220986262f5c890299b57",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
       "path": "crates/xtask/src/o02_health_retirement.rs",
       "bytes": 34776,
       "sha256": "491d8507394464a7e37c9d5cd077bf9dedd147d7f1be4f6192727e2045996097",
@@ -276,8 +294,8 @@
     },
     {
       "path": "crates/xtask/src/t08a_custody.rs",
-      "bytes": 22848,
-      "sha256": "1fcf3c17eca0af71f696ce739c8e69b7c7d4717fe3a43e5a9f7b9ce2ac88fcf2",
+      "bytes": 25106,
+      "sha256": "97809415f3ef7771c0b21591d616704bb1926b975d4bc6ef009370cc3650c2ae",
       "mode": 420,
       "unix_modes": [
         420
@@ -330,8 +348,8 @@
     },
     {
       "path": "crates/xtask/src/w07.rs",
-      "bytes": 42272,
-      "sha256": "40fea132ea484e6e72947956b6404143916a87edea1725e1aba0a8815900f45b",
+      "bytes": 52823,
+      "sha256": "fe32e6a124a481dc52f2fa5436d1807566e9bea6d34f7cb577104d1359162bd0",
       "mode": 420,
       "unix_modes": [
         420
@@ -464,6 +482,24 @@
       ]
     },
     {
+      "path": "docs/rust-rewrite/o02/builder-patch-v1/capsule.json",
+      "bytes": 3442,
+      "sha256": "dfec3598f0142f7d6d4839d2779e42a4923ab0e40b5f6c817e82670f7937011b",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/o02/builder-patch-v2/capsule.json",
+      "bytes": 3442,
+      "sha256": "d9ffb0a941993525d0cfd0a9ee7bda73dc0df064cac3be30e3161d0742095738",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
       "path": "docs/rust-rewrite/plan.json",
       "bytes": 124866,
       "sha256": "ebe32895fc44eb46b3a1bf4fb088f1dfb06ddd3a35cbbadf90374798faa6c9ec",
@@ -523,8 +559,26 @@
       "unix_modes": [
         420
       ],
-      "bytes": 18099,
-      "sha256": "3971c2403d310c747a6c00e48fa720ba614614a6693e7240b71a82520deca077"
+      "bytes": 33385,
+      "sha256": "8e4a4686b21b2565ce44621f71e1983f89d53e50534ea7368268ed70330468e4"
+    },
+    {
+      "path": "docs/rust-rewrite/t03/w07-current-source-successor-v1.json",
+      "bytes": 17542,
+      "sha256": "9bbf67108fd13674b9be68fd8b152f4c4d10cc27c16511e0af5d27a201f0e9ce",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/t03/w07-lock-custody-successor-v1.json",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ],
+      "bytes": 12100,
+      "sha256": "1672140aafb09feaac92d99caf3b3b89abe9bb77e2ab79ca69aa669dcaae7521"
     },
     {
       "path": "docs/rust-rewrite/t06/source-amendments/page-main-receipt-control-adapter-v1.rs",
@@ -1052,6 +1106,15 @@
       "path": "docs/rust-rewrite/t08a/repr-source.json",
       "bytes": 27039,
       "sha256": "6e5da2a0a1e82e37eabcac21afccd30c0b1cff3e4124a79f757e3bd79641a925",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/t08a/rmcp-security-successor.json",
+      "bytes": 2381,
+      "sha256": "b348258e03bc90feafc68b721d583e5f977d660a90062bff20b8c0f8521aec09",
       "mode": 420,
       "unix_modes": [
         420
@@ -2362,51 +2425,6 @@
       ],
       "bytes": 2063,
       "sha256": "86e4fe0cef097d1f8fa3aab9e6b3a900ec4c2aa28c4718bc1b997713e8261e54"
-    },
-    {
-      "path": "docs/rust-rewrite/t08a/rmcp-security-successor.json",
-      "bytes": 2381,
-      "sha256": "b348258e03bc90feafc68b721d583e5f977d660a90062bff20b8c0f8521aec09",
-      "mode": 420,
-      "unix_modes": [
-        420
-      ]
-    },
-    {
-      "path": "crates/ssx-http/tests/t03-browser/interaction.mjs",
-      "bytes": 5282,
-      "sha256": "76ad6fe6864088f3e678e599ca065feffea30cb0086532b292636d1de6210d7e",
-      "mode": 420,
-      "unix_modes": [
-        420
-      ]
-    },
-    {
-      "path": "crates/xtask/src/o02_builder_patch.rs",
-      "bytes": 7996,
-      "sha256": "bcf40cebc32e7733215b8b81c9ae423f3cfb1deb871220986262f5c890299b57",
-      "mode": 420,
-      "unix_modes": [
-        420
-      ]
-    },
-    {
-      "path": "docs/rust-rewrite/o02/builder-patch-v1/capsule.json",
-      "bytes": 3442,
-      "sha256": "dfec3598f0142f7d6d4839d2779e42a4923ab0e40b5f6c817e82670f7937011b",
-      "mode": 420,
-      "unix_modes": [
-        420
-      ]
-    },
-    {
-      "path": "docs/rust-rewrite/o02/builder-patch-v2/capsule.json",
-      "bytes": 3442,
-      "sha256": "d9ffb0a941993525d0cfd0a9ee7bda73dc0df064cac3be30e3161d0742095738",
-      "mode": 420,
-      "unix_modes": [
-        420
-      ]
     }
   ]
 }

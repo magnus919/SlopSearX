@@ -52,9 +52,136 @@ fn sha(bytes: &[u8]) -> String {
         .map(|b| format!("{b:02x}"))
         .collect()
 }
+/// Read the exact current Cargo.lock before W07 can apply a historical hash
+/// shortcut. Unix also binds the opened descriptor identity to the named path.
+fn physical_current_cargo_lock(root: &Path) -> Result<(Vec<u8>, &'static str)> {
+    #[cfg(unix)]
+    {
+        use std::io::Read;
+        use std::os::unix::fs::{MetadataExt, OpenOptionsExt, PermissionsExt};
+        let full = root.join("Cargo.lock");
+        let root_canonical = root.canonicalize().map_err(|error| error.to_string())?;
+        let before = fs::symlink_metadata(&full).map_err(|error| error.to_string())?;
+        if !before.is_file()
+            || before.file_type().is_symlink()
+            || before.len() != w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES as u64
+            || before.len() > 1_048_576
+            || before.permissions().mode() & 0o7777 != 0o644
+            || !full
+                .canonicalize()
+                .map_err(|error| error.to_string())?
+                .starts_with(&root_canonical)
+        {
+            return Err("W07 current Cargo.lock must be the exact regular0644 source".into());
+        }
+        let mut options = fs::OpenOptions::new();
+        options
+            .read(true)
+            .custom_flags(nix::libc::O_NOFOLLOW | nix::libc::O_NONBLOCK);
+        let file = options.open(&full).map_err(|error| error.to_string())?;
+        let opened = file.metadata().map_err(|error| error.to_string())?;
+        if !opened.is_file()
+            || opened.len() != before.len()
+            || opened.permissions().mode() & 0o7777 != 0o644
+            || opened.dev() != before.dev()
+            || opened.ino() != before.ino()
+        {
+            return Err("W07 current Cargo.lock descriptor identity changed".into());
+        }
+        let mut bytes = Vec::with_capacity(w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES);
+        (&file)
+            .take(w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES as u64 + 1)
+            .read_to_end(&mut bytes)
+            .map_err(|error| error.to_string())?;
+        let after = file.metadata().map_err(|error| error.to_string())?;
+        let named = fs::symlink_metadata(&full).map_err(|error| error.to_string())?;
+        if !after.is_file()
+            || after.len() != before.len()
+            || after.permissions().mode() & 0o7777 != 0o644
+            || after.dev() != opened.dev()
+            || after.ino() != opened.ino()
+            || !named.is_file()
+            || named.file_type().is_symlink()
+            || named.len() != after.len()
+            || named.permissions().mode() & 0o7777 != 0o644
+            || named.dev() != after.dev()
+            || named.ino() != after.ino()
+            || bytes.len() != w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES
+            || sha(&bytes) != w07_t02_joint::cli_source_custody::CURRENT_LOCK_SHA
+        {
+            return Err("W07 current Cargo.lock changed during bounded source read".into());
+        }
+        Ok((bytes, "0644"))
+    }
+    #[cfg(windows)]
+    {
+        use std::io::Read;
+        let full = root.join("Cargo.lock");
+        let root_canonical = root.canonicalize().map_err(|error| error.to_string())?;
+        let before = fs::symlink_metadata(&full).map_err(|error| error.to_string())?;
+        if !before.is_file()
+            || before.file_type().is_symlink()
+            || before.len() != w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES as u64
+            || before.len() > 1_048_576
+            || !full
+                .canonicalize()
+                .map_err(|error| error.to_string())?
+                .starts_with(&root_canonical)
+        {
+            return Err("W07 current Cargo.lock must be the exact regular source".into());
+        }
+        let index = Command::new("git")
+            .args(["ls-files", "--stage", "--", "Cargo.lock"])
+            .current_dir(root)
+            .output()
+            .map_err(|error| error.to_string())?;
+        let index = String::from_utf8(index.stdout).map_err(|error| error.to_string())?;
+        let index_lines = index.lines().collect::<Vec<_>>();
+        if index_lines.len() != 1
+            || !index_lines[0].starts_with("100644 ")
+            || !index_lines[0].ends_with(" 0\tCargo.lock")
+        {
+            return Err("W07 Cargo.lock requires the stage-zero Git mode 100644".into());
+        }
+        let file = fs::File::open(&full).map_err(|error| error.to_string())?;
+        let opened = file.metadata().map_err(|error| error.to_string())?;
+        if !opened.is_file() || opened.len() != before.len() {
+            return Err("W07 current Cargo.lock descriptor identity changed".into());
+        }
+        let mut bytes = Vec::with_capacity(w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES);
+        (&file)
+            .take(w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES as u64 + 1)
+            .read_to_end(&mut bytes)
+            .map_err(|error| error.to_string())?;
+        let after = file.metadata().map_err(|error| error.to_string())?;
+        let named = fs::symlink_metadata(&full).map_err(|error| error.to_string())?;
+        if !after.is_file()
+            || after.len() != before.len()
+            || !named.is_file()
+            || named.file_type().is_symlink()
+            || named.len() != after.len()
+            || bytes.len() != w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES
+            || sha(&bytes) != w07_t02_joint::cli_source_custody::CURRENT_LOCK_SHA
+        {
+            return Err("W07 current Cargo.lock changed during bounded source read".into());
+        }
+        Ok((bytes, "0644"))
+    }
+    #[cfg(not(any(unix, windows)))]
+    {
+        let _ = root;
+        Err("W07 physical Cargo.lock source admission requires Unix or Windows".into())
+    }
+}
 fn frozen(root: &Path, path: &str, expected: &str) -> Result<Vec<u8>> {
     if Path::new(path).is_absolute() || path.split('/').any(|s| s == "..") {
         return Err("W07 unsafe source path".into());
+    }
+    if path == "Cargo.lock" && expected == w07_t02_joint::LOCK_SHA {
+        let (current, mode) = physical_current_cargo_lock(root)?;
+        return w07_t02_joint::cli_source_custody::w07_lock_prior_from_physical(
+            root, path, expected, &current, mode,
+        );
     }
     let metadata = fs::symlink_metadata(root.join(path)).map_err(|e| format!("W07 {path}: {e}"))?;
     if !metadata.is_file() || metadata.file_type().is_symlink() {
@@ -80,6 +207,13 @@ fn frozen(root: &Path, path: &str, expected: &str) -> Result<Vec<u8>> {
     if sha(&bytes) != expected {
         if path == "crates/ssx-infra/src/search.rs"
             && expected == "8aa8ec89a6a45728f5ffd2818d2e9fed9b8d0a881c1e36418c95809d92dcb777"
+        {
+            return w07_t02_joint::t03_source_successor::prior(root, path, &bytes);
+        }
+        if (path == "crates/ssx-mcp/src/search_surface/mod.rs"
+            && expected == "1de423862041d7988ce020f801af73abd25db3f9dcdae83a3e362db58428496f")
+            || (path == "docs/rust-rewrite/a06/source-amendments/native-search-reader.rs"
+                && expected == "bc678e7fc47ec3ec06d6d55e13e3eed87f963f1c0bee8ef47b84f28641d3257c")
         {
             return w07_t02_joint::t03_source_successor::prior(root, path, &bytes);
         }
@@ -676,6 +810,108 @@ mod tests {
         fs::create_dir(root.0.join("directory")).unwrap();
         assert!(frozen(&root.0, "directory", &digest).is_err());
     }
+    #[cfg(unix)]
+    fn cargo_lock_source_uses_exact_authenticated_w07_lineage() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap()
+            .parent()
+            .unwrap();
+        let expected = w07_t02_joint::LOCK_SHA;
+        let prior = frozen(root, "Cargo.lock", expected).unwrap();
+        assert_eq!(prior.len(), 87572);
+        assert_eq!(sha(&prior), expected);
+        assert!(frozen(root, "Cargo.lock", &"0".repeat(64)).is_err());
+        assert!(frozen(root, "Cargo.toml", expected).is_err());
+
+        let (current, mode) = physical_current_cargo_lock(root).unwrap();
+        assert!(
+            w07_t02_joint::cli_source_custody::w07_lock_prior_from_physical(
+                root,
+                "Cargo.toml",
+                expected,
+                &current,
+                mode,
+            )
+            .is_err()
+        );
+        assert!(
+            w07_t02_joint::cli_source_custody::w07_lock_prior_from_physical(
+                root,
+                "Cargo.lock",
+                &"0".repeat(64),
+                &current,
+                mode,
+            )
+            .is_err()
+        );
+        assert!(
+            w07_t02_joint::cli_source_custody::w07_lock_prior_from_physical(
+                root,
+                "Cargo.lock",
+                expected,
+                &prior,
+                mode,
+            )
+            .is_err()
+        );
+        assert!(
+            w07_t02_joint::cli_source_custody::w07_lock_prior_from_physical(
+                root,
+                "Cargo.lock",
+                expected,
+                &current,
+                "0600",
+            )
+            .is_err()
+        );
+    }
+    #[cfg(unix)]
+    fn physical_cargo_lock_reader_rejects_linked_nonregular_wrong_mode_and_oversized_files() {
+        use std::os::unix::fs::{PermissionsExt, symlink};
+        struct Owned(std::path::PathBuf);
+        impl Drop for Owned {
+            fn drop(&mut self) {
+                let _ = fs::remove_dir_all(&self.0);
+            }
+        }
+        let suffix = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let root = Owned(
+            std::env::temp_dir().join(format!("w07-lock-identity-{}-{suffix}", std::process::id())),
+        );
+        fs::create_dir(&root.0).unwrap();
+        let project = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap()
+            .parent()
+            .unwrap();
+        symlink(project.join("Cargo.lock"), root.0.join("Cargo.lock")).unwrap();
+        assert!(physical_current_cargo_lock(&root.0).is_err());
+        fs::remove_file(root.0.join("Cargo.lock")).unwrap();
+
+        let (valid_bytes, valid_mode) = physical_current_cargo_lock(project).unwrap();
+        assert_eq!(valid_mode, "0644");
+        fs::write(root.0.join("Cargo.lock"), &valid_bytes).unwrap();
+        let mut permissions = fs::metadata(root.0.join("Cargo.lock"))
+            .unwrap()
+            .permissions();
+        permissions.set_mode(0o644);
+        fs::set_permissions(root.0.join("Cargo.lock"), permissions.clone()).unwrap();
+        assert_eq!(physical_current_cargo_lock(&root.0).unwrap().0, valid_bytes);
+        permissions.set_mode(0o600);
+        fs::set_permissions(root.0.join("Cargo.lock"), permissions).unwrap();
+        assert!(physical_current_cargo_lock(&root.0).is_err());
+        fs::remove_file(root.0.join("Cargo.lock")).unwrap();
+
+        fs::write(root.0.join("Cargo.lock"), vec![0; 1_048_577]).unwrap();
+        assert!(physical_current_cargo_lock(&root.0).is_err());
+        fs::remove_file(root.0.join("Cargo.lock")).unwrap();
+        fs::create_dir(root.0.join("Cargo.lock")).unwrap();
+        assert!(physical_current_cargo_lock(&root.0).is_err());
+    }
     #[test]
     fn test_dependency_successor_requires_exact_lock_manifest_and_modes() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -683,6 +919,11 @@ mod tests {
             .unwrap()
             .parent()
             .unwrap();
+        #[cfg(unix)]
+        {
+            cargo_lock_source_uses_exact_authenticated_w07_lineage();
+            physical_cargo_lock_reader_rejects_linked_nonregular_wrong_mode_and_oversized_files();
+        }
         test_dependency_successor::controls(root).unwrap();
         let path = w07_t02_joint::cli_source_custody::TEST_DEPENDENCY_SOURCE;
         let expected = w07_t02_joint::cli_source_custody::TEST_DEPENDENCY_PRIOR_SHA;

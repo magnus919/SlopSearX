@@ -305,6 +305,66 @@ pub(crate) fn prior(root: &Path, path: &str, supplied: &[u8]) -> Result<Vec<u8>>
         ROWS[index].1,
     )
 }
+/// Reconstruct the retained W07 Cargo.lock frame from bytes already admitted
+/// through the platform-specific bounded physical read. This path deliberately does not
+/// reopen Cargo.lock; only the exact current lock and W07 predecessor tuple is
+/// accepted.
+#[allow(
+    dead_code,
+    reason = "W07-only caller; this shared custody module is also compiled by ssx-cli-check"
+)]
+pub(crate) fn w07_lock_prior_from_physical(
+    root: &Path,
+    path: &str,
+    expected_prior: &str,
+    supplied: &[u8],
+    mode: &str,
+) -> Result<Vec<u8>> {
+    const W07_PRIOR_SHA: &str = "61be734ee8259d76108383154509e8c261e2cf064dc9ebf4def23a9d2a8332dc";
+    const W07_PRIOR_COMMIT: &str = "e763c77397cad717d47de690a0dcbba4d0420aa3";
+    const W07_PRIOR_BLOB: &str = "356b40d5915deaec9113e754deb7a9d8663ab146";
+    need(
+        path == "Cargo.lock" && expected_prior == W07_PRIOR_SHA,
+        "exact W07 lock caller tuple",
+    )?;
+    need(
+        mode == "0644"
+            && supplied.len() == CURRENT_LOCK_BYTES
+            && digest(supplied) == CURRENT_LOCK_SHA,
+        "authenticated physical current lock bytes/mode",
+    )?;
+    let index = ROWS
+        .iter()
+        .position(|row| row.0 == path)
+        .ok_or("unowned W07 Cargo.lock successor path")?;
+    let logical = cli_logical_input(root, path, supplied)?;
+    let doc = capsule(root)?;
+    let prior = inverse(&doc["rows"][index], &logical, mode, ROWS[index].1)?;
+    need(
+        prior.len() == 87572 && digest(&prior) == expected_prior,
+        "exact historical W07 joined lock frame",
+    )?;
+    let git = Command::new("git")
+        .args(["show", &format!("{W07_PRIOR_COMMIT}:{path}")])
+        .current_dir(root)
+        .output()
+        .map_err(|error| error.to_string())?;
+    need(
+        git.status.success() && git.stdout == prior,
+        "historical W07 Cargo.lock Git bytes",
+    )?;
+    let tree = Command::new("git")
+        .args(["ls-tree", W07_PRIOR_COMMIT, "--", path])
+        .current_dir(root)
+        .output()
+        .map_err(|error| error.to_string())?;
+    need(
+        tree.status.success()
+            && tree.stdout == format!("100644 blob {W07_PRIOR_BLOB}\t{path}\n").as_bytes(),
+        "historical W07 Cargo.lock Git mode/blob",
+    )?;
+    Ok(prior)
+}
 /// Portable byte/Git controls. Unix also proves physical permission bits;
 /// Windows proves current Git index mode, without claiming POSIX chmod semantics.
 fn controls_for(

@@ -13,11 +13,32 @@ pub(crate) const CAPSULE_PATH: &str = "docs/rust-rewrite/t03/source-successor-v1
 const CAPSULE: &[u8] = include_bytes!("source-successor-v1.json");
 const CAPSULE_SHA: &str = "a82ce22c82e2c465d565232e281b981d0fe5739f9951cf057c980de8dd8bbd8b";
 const BASE: &str = "d7fc628d1069ab1f0a5fe8ee114796c235615eca";
+const W07_CAPSULE_PATH: &str = "docs/rust-rewrite/t03/w07-lock-custody-successor-v1.json";
+const W07_CAPSULE: &[u8] = include_bytes!("w07-lock-custody-successor-v1.json");
+const W07_CAPSULE_SHA: &str = "1672140aafb09feaac92d99caf3b3b89abe9bb77e2ab79ca69aa669dcaae7521";
+const W07_BASE: &str = "5350376a510a7752f90731739e6267db395cd21d";
+const W07_SOURCE: &str = "crates/xtask/src/w07.rs";
+const W07_ACCEPTED_SHA: &str = "40fea132ea484e6e72947956b6404143916a87edea1725e1aba0a8815900f45b";
+const W07_ACCEPTED_BYTES: usize = 42_272;
+const W07_ACCEPTED_BLOB: &str = "3beccfb3ac143d0baf00a6af7e34df85426a0f76";
+const W07_SCOPE: &str = "W07 physical-source reconciliation only; existing T03 and W08 historical evidence remains unchanged.";
+const W07_MAIN_CAPSULE_PATH: &str = "docs/rust-rewrite/t03/w07-current-source-successor-v1.json";
+const W07_MAIN_CAPSULE: &[u8] = include_bytes!("w07-current-source-successor-v1.json");
+const W07_MAIN_CAPSULE_SHA: &str =
+    "9bbf67108fd13674b9be68fd8b152f4c4d10cc27c16511e0af5d27a201f0e9ce";
+const W07_MAIN_BASE: &str = "5350376a510a7752f90731739e6267db395cd21d";
+const W07_MAIN_PARENT: &str = "287d944d57721d39dd5eb6a2bdec0fbcb5624760";
+const W07_MAIN_SCOPE: &str = "W07 current-source reconciliation only: the exact merged #1094 Science scope reason and #1082 native Rust healthcheck reader; no unrelated source changes or historical evidence mutation.";
+const W07_MAIN_SOURCES: [&str; 2] = [
+    "crates/ssx-mcp/src/search_surface/mod.rs",
+    "docs/rust-rewrite/a06/source-amendments/native-search-reader.rs",
+];
 const LIMIT: u64 = 1_048_576;
 struct Pin<'a> {
     path: &'a str,
     current_sha: &'a str,
     current_bytes: usize,
+    current_blob: Option<&'a str>,
     prior_sha: &'a str,
     prior_bytes: usize,
     blob: &'a str,
@@ -84,11 +105,17 @@ fn pins(doc: &Value) -> Result<Vec<Pin<'_>>> {
     let mut result = Vec::with_capacity(rows.len());
     let mut previous: Option<&str> = None;
     for row in rows {
+        let base_keys = ["path", "current", "prior", "prior_git_blob", "edits"];
+        let current_blob_keys = [
+            "path",
+            "current",
+            "current_git_blob",
+            "prior",
+            "prior_git_blob",
+            "edits",
+        ];
         need(
-            keys(
-                row,
-                &["path", "current", "prior", "prior_git_blob", "edits"],
-            ),
+            keys(row, &base_keys) || keys(row, &current_blob_keys),
             "closed source row shape",
         )?;
         let path = row["path"].as_str().ok_or("T03 source path missing")?;
@@ -97,6 +124,16 @@ fn pins(doc: &Value) -> Result<Vec<Pin<'_>>> {
             "safe unique lexically ordered source paths",
         )?;
         let (current_sha, current_bytes) = material(&row["current"])?;
+        let current_blob = match row.get("current_git_blob") {
+            None => None,
+            Some(value) => {
+                let blob = value
+                    .as_str()
+                    .ok_or("T03 current Git blob must be a string")?;
+                need(hex(blob, 40), "exact lowercase current Git blob")?;
+                Some(blob)
+            }
+        };
         let (prior_sha, prior_bytes) = material(&row["prior"])?;
         let blob = row["prior_git_blob"]
             .as_str()
@@ -122,6 +159,7 @@ fn pins(doc: &Value) -> Result<Vec<Pin<'_>>> {
             path,
             current_sha,
             current_bytes,
+            current_blob,
             prior_sha,
             prior_bytes,
             blob,
@@ -173,13 +211,26 @@ fn inverse(pin: &Pin<'_>, row: &Value, actual: &[u8], mode: u32) -> Result<Vec<u
         mode == 0o644 && actual.len() == pin.current_bytes && digest(actual) == pin.current_sha,
         "exact current bytes/hash/mode",
     )?;
+    let base_keys = ["path", "current", "prior", "prior_git_blob", "edits"];
+    let current_blob_keys = [
+        "path",
+        "current",
+        "current_git_blob",
+        "prior",
+        "prior_git_blob",
+        "edits",
+    ];
     need(
-        row["path"] == pin.path
+        (keys(row, &base_keys) || (pin.current_blob.is_some() && keys(row, &current_blob_keys)))
+            && row["path"] == pin.path
             && row["current"]
                 == json!({"bytes":pin.current_bytes,"sha256":pin.current_sha,"mode":"0644"})
             && row["prior"]
                 == json!({"bytes":pin.prior_bytes,"sha256":pin.prior_sha,"mode":"0644"})
-            && row["prior_git_blob"] == pin.blob,
+            && row["prior_git_blob"] == pin.blob
+            && pin
+                .current_blob
+                .is_none_or(|blob| row["current_git_blob"] == blob),
         "exact inverse caller tuples",
     )?;
     let edits = row["edits"].as_array().ok_or("T03 missing edits")?;
@@ -385,20 +436,338 @@ fn regular(root: &Path, path: &str, expected_bytes: usize) -> Result<Vec<u8>> {
     }
     Ok(bytes)
 }
-fn git_prior(root: &Path, pin: &Pin<'_>, prior: &[u8]) -> Result<()> {
+fn git_prior_at(root: &Path, pin: &Pin<'_>, prior: &[u8], baseline: &str) -> Result<()> {
     need(
-        git(root, &["show", &format!("{BASE}:{}", pin.path)])? == prior,
-        "exact base Git source bytes",
+        git(root, &["show", &format!("{baseline}:{}", pin.path)])? == prior,
+        "exact pinned predecessor Git source bytes",
     )?;
     need(
-        git(root, &["ls-tree", BASE, "--", pin.path])?
+        git(root, &["ls-tree", baseline, "--", pin.path])?
             == format!("100644 blob {}\t{}\n", pin.blob, pin.path).as_bytes(),
-        "exact base Git tree/blob/mode",
+        "exact pinned predecessor Git tree/blob/mode",
     )
+}
+fn git_prior(root: &Path, pin: &Pin<'_>, prior: &[u8]) -> Result<()> {
+    git_prior_at(root, pin, prior, BASE)
+}
+/// Authenticate and invert the current W07 source to the exact frame accepted
+/// by the historical T03 capsule. The historical capsule and pure frame()
+/// proof remain unchanged.
+fn decode_w07(raw: &[u8]) -> Result<Value> {
+    need(
+        raw == W07_CAPSULE && digest(raw) == W07_CAPSULE_SHA,
+        "W07 source successor capsule bytes/hash",
+    )?;
+    let doc: Value = serde_json::from_slice(raw).map_err(|error| error.to_string())?;
+    need(
+        keys(&doc, &["schema", "baseline", "scope", "rows"])
+            && doc["schema"] == "T03_W07_LOCK_CUSTODY_SUCCESSOR_V1"
+            && doc["baseline"] == W07_BASE
+            && doc["scope"] == W07_SCOPE,
+        "W07 source successor closed header",
+    )?;
+    let pins = pins(&doc)?;
+    need(
+        pins.len() == 1
+            && pins[0].path == W07_SOURCE
+            && pins[0].prior_sha == W07_ACCEPTED_SHA
+            && pins[0].prior_bytes == W07_ACCEPTED_BYTES
+            && pins[0].blob == W07_ACCEPTED_BLOB,
+        "W07 source successor exact accepted predecessor tuple",
+    )?;
+    Ok(doc)
+}
+fn w07_current_frame(root: &Path) -> Result<(Vec<u8>, Vec<u8>)> {
+    let capsule = regular(root, W07_CAPSULE_PATH, W07_CAPSULE.len())?;
+    let doc = decode_w07(&capsule)?;
+    let pins = pins(&doc)?;
+    let pin = &pins[0];
+    let row = row(&doc, W07_SOURCE)?;
+    let physical = regular(root, W07_SOURCE, pin.current_bytes)?;
+    let prior = inverse(pin, row, &physical, 0o644)?;
+    need(
+        git(root, &["show", &format!("{W07_BASE}:{W07_SOURCE}")])? == prior,
+        "W07 source successor exact parent Git bytes",
+    )?;
+    need(
+        git(root, &["ls-tree", W07_BASE, "--", W07_SOURCE])?
+            == format!("100644 blob {W07_ACCEPTED_BLOB}\t{W07_SOURCE}\n").as_bytes(),
+        "W07 source successor exact parent Git mode/blob",
+    )?;
+    Ok((physical, prior))
+}
+fn w07_controls(root: &Path) -> Result<()> {
+    let mut changed_capsule = W07_CAPSULE.to_vec();
+    changed_capsule.push(b' ');
+    need(
+        decode_w07(&changed_capsule).is_err(),
+        "changed W07 source successor capsule rejected",
+    )?;
+    let capsule = regular(root, W07_CAPSULE_PATH, W07_CAPSULE.len())?;
+    let doc = decode_w07(&capsule)?;
+    let w07_pin = pin(&doc, W07_SOURCE)?;
+    let row = row(&doc, W07_SOURCE)?;
+    let (physical, prior) = w07_current_frame(root)?;
+    need(
+        inverse(&w07_pin, row, &physical, 0o644)? == prior,
+        "W07 source successor positive exact inverse",
+    )?;
+    need(
+        inverse(&w07_pin, row, &prior, 0o644).is_err(),
+        "historical W07 source is not current",
+    )?;
+    need(
+        pin(&doc, "Cargo.lock").is_err(),
+        "wrong W07 successor caller rejected",
+    )?;
+    for mode in [0o600, 0o755, 0o4644] {
+        need(
+            inverse(&w07_pin, row, &physical, mode).is_err(),
+            "changed W07 successor mode rejected",
+        )?;
+    }
+    let mut changed = physical.clone();
+    changed[0] ^= 1;
+    need(
+        inverse(&w07_pin, row, &changed, 0o644).is_err(),
+        "changed W07 successor current bytes rejected",
+    )?;
+    for mutation in 0..6 {
+        let mut bad = row.clone();
+        let edits = bad["edits"].as_array_mut().ok_or("W07 successor edits")?;
+        match mutation {
+            0 => {
+                edits.pop();
+            }
+            1 => edits.push(edits[0].clone()),
+            2 => edits[0]["at"] = json!(usize::MAX),
+            3 => edits[0]["remove_utf8"] = json!("changed exact current span"),
+            4 => edits[0]["insert_utf8"] = json!("changed exact predecessor span"),
+            _ => edits[0]["extra"] = json!(true),
+        }
+        need(
+            inverse(&w07_pin, &bad, &physical, 0o644).is_err(),
+            "missing duplicate moved malformed or changed W07 span rejected",
+        )?;
+    }
+    let mut reordered = row.clone();
+    reordered["edits"]
+        .as_array_mut()
+        .ok_or("W07 successor edits")?
+        .swap(0, 1);
+    need(
+        inverse(&w07_pin, &reordered, &physical, 0o644).is_err(),
+        "reordered W07 spans rejected",
+    )?;
+    let mut duplicated = row.clone();
+    duplicated["edits"][1] = duplicated["edits"][0].clone();
+    need(
+        inverse(&w07_pin, &duplicated, &physical, 0o644).is_err(),
+        "same-count duplicate W07 spans rejected",
+    )?;
+    Ok(())
+}
+fn decode_w07_main(raw: &[u8]) -> Result<Value> {
+    need(
+        raw == W07_MAIN_CAPSULE && digest(raw) == W07_MAIN_CAPSULE_SHA,
+        "W07 current-source capsule bytes/hash",
+    )?;
+    let doc: Value = serde_json::from_slice(raw).map_err(|error| error.to_string())?;
+    need(
+        keys(
+            &doc,
+            &["schema", "baseline", "prior_baseline", "scope", "rows"],
+        ) && doc["schema"] == "T03_W07_CURRENT_SOURCE_SUCCESSOR_V1"
+            && doc["baseline"] == W07_MAIN_BASE
+            && doc["prior_baseline"] == W07_MAIN_PARENT
+            && doc["scope"] == W07_MAIN_SCOPE,
+        "W07 current-source capsule closed header",
+    )?;
+    let pins = pins(&doc)?;
+    need(
+        pins.len() == W07_MAIN_SOURCES.len()
+            && pins.iter().map(|pin| pin.path).eq(W07_MAIN_SOURCES),
+        "W07 current-source exact sorted path inventory",
+    )?;
+    for (
+        path,
+        current_sha,
+        current_bytes,
+        current_blob,
+        prior_sha,
+        prior_bytes,
+        prior_blob,
+        edit_count,
+    ) in [
+        (
+            W07_MAIN_SOURCES[0],
+            "8e6fa66c8affa33ffcca162e6afd3e6ae114c4f99c0b48d75aef3de363aedb3d",
+            46_532,
+            "c33ba2bd9552dd02b797f67021b0a89f59c63921",
+            "1de423862041d7988ce020f801af73abd25db3f9dcdae83a3e362db58428496f",
+            46_323,
+            "d47bedb47e2098d8135d6b450b23d14febb74052",
+            1,
+        ),
+        (
+            W07_MAIN_SOURCES[1],
+            "61fa2a5aa3037c383691a1a023a17f48c20c05dcda486a02cfd0090c8a25035a",
+            39_955,
+            "b6fcb6d4b0470517a064ca66690241ff7e8a441a",
+            "bc678e7fc47ec3ec06d6d55e13e3eed87f963f1c0bee8ef47b84f28641d3257c",
+            26_158,
+            "b2f177992718c5670164d752028f9564c092d012",
+            4,
+        ),
+    ] {
+        let source = pins
+            .iter()
+            .find(|pin| pin.path == path)
+            .ok_or("W07 source pin missing")?;
+        need(
+            source.current_sha == current_sha
+                && source.current_bytes == current_bytes
+                && source.current_blob == Some(current_blob)
+                && source.prior_sha == prior_sha
+                && source.prior_bytes == prior_bytes
+                && source.blob == prior_blob
+                && source.edits == edit_count,
+            "W07 current-source exact byte/hash/blob/span tuple",
+        )?;
+    }
+    Ok(doc)
+}
+fn w07_main_current_frame(root: &Path, path: &str) -> Result<(Vec<u8>, Vec<u8>)> {
+    let capsule = regular(root, W07_MAIN_CAPSULE_PATH, W07_MAIN_CAPSULE.len())?;
+    let doc = decode_w07_main(&capsule)?;
+    let source = pin(&doc, path)?;
+    let source_row = row(&doc, path)?;
+    let physical = regular(root, path, source.current_bytes)?;
+    let prior = inverse(&source, source_row, &physical, 0o644)?;
+    let current_blob = source.current_blob.ok_or("W07 current Git blob missing")?;
+    need(
+        git(root, &["show", &format!("{W07_MAIN_BASE}:{path}")])? == physical,
+        "W07 exact current baseline Git source bytes",
+    )?;
+    need(
+        git(root, &["ls-tree", W07_MAIN_BASE, "--", path])?
+            == format!("100644 blob {current_blob}\t{path}\n").as_bytes(),
+        "W07 exact current baseline Git tree/blob/mode",
+    )?;
+    git_prior_at(root, &source, &prior, W07_MAIN_PARENT)?;
+    let ancestry = Command::new("git")
+        .args([
+            "merge-base",
+            "--is-ancestor",
+            W07_MAIN_PARENT,
+            W07_MAIN_BASE,
+        ])
+        .current_dir(root)
+        .status()
+        .map_err(|error| error.to_string())?;
+    need(
+        ancestry.success(),
+        "W07 predecessor baseline is an ancestor of current baseline",
+    )?;
+    Ok((physical, prior))
+}
+fn w07_main_controls(root: &Path) -> Result<()> {
+    let mut changed_capsule = W07_MAIN_CAPSULE.to_vec();
+    changed_capsule.push(b' ');
+    need(
+        decode_w07_main(&changed_capsule).is_err(),
+        "changed W07 current-source capsule rejected",
+    )?;
+    let capsule = regular(root, W07_MAIN_CAPSULE_PATH, W07_MAIN_CAPSULE.len())?;
+    let doc = decode_w07_main(&capsule)?;
+    need(
+        pin(&doc, "Cargo.lock").is_err(),
+        "wrong W07 source path rejected",
+    )?;
+    for source in pins(&doc)? {
+        let source_row = row(&doc, source.path)?;
+        let (physical, prior_bytes) = w07_main_current_frame(root, source.path)?;
+        need(
+            inverse(&source, source_row, &physical, 0o644)? == prior_bytes
+                && prior(root, source.path, &physical)? == prior_bytes,
+            "W07 current-source positive exact inverse",
+        )?;
+        need(
+            prior(root, source.path, &prior_bytes).is_err(),
+            "W07 historical source bytes are not physical current",
+        )?;
+        for mode in [0o600, 0o755, 0o4644] {
+            need(
+                inverse(&source, source_row, &physical, mode).is_err(),
+                "changed W07 current-source mode rejected",
+            )?;
+        }
+        let mut changed = physical.clone();
+        changed[0] ^= 1;
+        need(
+            inverse(&source, source_row, &changed, 0o644).is_err()
+                && prior(root, source.path, &changed).is_err(),
+            "changed W07 current-source bytes rejected",
+        )?;
+        for mutation in 0..6 {
+            let mut bad = source_row.clone();
+            let edits = bad["edits"]
+                .as_array_mut()
+                .ok_or("W07 source edit controls")?;
+            match mutation {
+                0 => {
+                    edits.pop();
+                }
+                1 => edits.push(edits[0].clone()),
+                2 => edits[0]["at"] = json!(usize::MAX),
+                3 => edits[0]["remove_utf8"] = json!("changed exact current span"),
+                4 => edits[0]["insert_utf8"] = json!("changed exact predecessor span"),
+                _ => edits[0]["extra"] = json!(true),
+            }
+            need(
+                inverse(&source, &bad, &physical, 0o644).is_err(),
+                "missing, duplicate, moved, malformed, or changed W07 source span rejected",
+            )?;
+        }
+        if source.edits > 1 {
+            let mut reordered = source_row.clone();
+            reordered["edits"]
+                .as_array_mut()
+                .ok_or("W07 source edit controls")?
+                .swap(0, 1);
+            need(
+                inverse(&source, &reordered, &physical, 0o644).is_err(),
+                "reordered W07 current-source spans rejected",
+            )?;
+            let mut duplicate = source_row.clone();
+            duplicate["edits"][1] = duplicate["edits"][0].clone();
+            need(
+                inverse(&source, &duplicate, &physical, 0o644).is_err(),
+                "duplicate W07 current-source spans rejected",
+            )?;
+        }
+    }
+    Ok(())
 }
 /// Full custody: authenticate current physical source and capsule before exposing its parent.
 /// A sealed historical buffer supplied as current is rejected even if its hash is known.
 pub(crate) fn prior(root: &Path, path: &str, supplied: &[u8]) -> Result<Vec<u8>> {
+    if path == W07_SOURCE {
+        let capsule = regular(root, CAPSULE_PATH, CAPSULE.len())?;
+        let doc = decode(&capsule)?;
+        let source = pin(&doc, path)?;
+        let source_row = row(&doc, path)?;
+        let (physical, logical) = w07_current_frame(root)?;
+        need(physical == supplied, "supplied bytes are physical current")?;
+        let predecessor = inverse(&source, source_row, &logical, 0o644)?;
+        git_prior(root, &source, &predecessor)?;
+        return Ok(predecessor);
+    }
+    if W07_MAIN_SOURCES.contains(&path) {
+        let (physical, predecessor) = w07_main_current_frame(root, path)?;
+        need(physical == supplied, "supplied bytes are physical current")?;
+        return Ok(predecessor);
+    }
     let capsule = regular(root, CAPSULE_PATH, CAPSULE.len())?;
     let doc = decode(&capsule)?;
     let pin = pin(&doc, path)?;
@@ -411,6 +780,8 @@ pub(crate) fn prior(root: &Path, path: &str, supplied: &[u8]) -> Result<Vec<u8>>
 /// Additive controls for existing owning test identities. No historical test names change.
 pub(crate) fn controls(root: &Path) -> Result<()> {
     let doc = decode(CAPSULE)?;
+    w07_controls(root)?;
+    w07_main_controls(root)?;
     let mut capsule_mutant = CAPSULE.to_vec();
     capsule_mutant.push(b' ');
     need(decode(&capsule_mutant).is_err(), "changed capsule rejected")?;
@@ -420,15 +791,20 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
     )?;
     let all_pins = pins(&doc)?;
     for pin in &all_pins {
-        let physical = regular(root, pin.path, pin.current_bytes)?;
+        let (physical, logical) = if pin.path == W07_SOURCE {
+            w07_current_frame(root)?
+        } else {
+            let physical = regular(root, pin.path, pin.current_bytes)?;
+            (physical.clone(), physical)
+        };
         let prior_bytes = prior(root, pin.path, &physical)?;
         let source_row = row(&doc, pin.path)?;
         need(
-            inverse(pin, source_row, &physical, 0o644)? == prior_bytes,
+            inverse(pin, source_row, &logical, 0o644)? == prior_bytes,
             "pure positive precedes controls",
         )?;
         need(
-            frame(pin.path, &physical, 0o644)? == prior_bytes,
+            frame(pin.path, &logical, 0o644)? == prior_bytes,
             "same pure frame as full custody",
         )?;
         need(
@@ -436,13 +812,20 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
                 && frame(pin.path, &prior_bytes, 0o644).is_err(),
             "stale parent is not current",
         )?;
+        if pin.path == W07_SOURCE {
+            need(
+                frame(pin.path, &physical, 0o644).is_err()
+                    && prior(root, pin.path, &logical).is_err(),
+                "physical successor is distinct from historical T03 current",
+            )?;
+        }
         for mode in [0o600, 0o755, 0o4644] {
             need(
-                inverse(pin, source_row, &physical, mode).is_err(),
+                inverse(pin, source_row, &logical, mode).is_err(),
                 "changed current mode rejected",
             )?;
         }
-        let mut changed = physical.clone();
+        let mut changed = logical.clone();
         changed[0] ^= 1;
         need(
             frame(pin.path, &changed, 0o644).is_err() && prior(root, pin.path, &changed).is_err(),
@@ -472,7 +855,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
                 }
             }
             need(
-                inverse(pin, &bad, &physical, 0o644).is_err(),
+                inverse(pin, &bad, &logical, 0o644).is_err(),
                 "missing duplicate moved malformed or changed span rejected",
             )?;
         }
@@ -483,13 +866,13 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
                 .ok_or("T03 control edits")?
                 .swap(0, 1);
             need(
-                inverse(pin, &bad, &physical, 0o644).is_err(),
+                inverse(pin, &bad, &logical, 0o644).is_err(),
                 "reordered edits rejected",
             )?;
             let mut bad = source_row.clone();
             bad["edits"][1] = bad["edits"][0].clone();
             need(
-                inverse(pin, &bad, &physical, 0o644).is_err(),
+                inverse(pin, &bad, &logical, 0o644).is_err(),
                 "same-count duplicate span rejected",
             )?;
         }
