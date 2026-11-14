@@ -155,8 +155,12 @@
               "uses": "actions/checkout@v7"
             },
             {
+              "name": "Check native Docker Hub mirror helper",
+              "run": "bash tests/test_ci_dockerhub_mirror_shell.sh"
+            },
+            {
               "name": "Configure hosted-runner Docker Hub cache",
-              "run": "python3 scripts/configure_ci_dockerhub_mirror.py"
+              "run": "bash scripts/configure_ci_dockerhub_mirror.sh"
             },
             {
               "name": "Validate Prometheus rules and firing behavior",
@@ -597,7 +601,7 @@
             },
             {
               "name": "Configure hosted-runner Docker Hub cache",
-              "run": "python3 scripts/configure_ci_dockerhub_mirror.py"
+              "run": "bash scripts/configure_ci_dockerhub_mirror.sh"
             },
             {
               "name": "Set up Docker Buildx",
