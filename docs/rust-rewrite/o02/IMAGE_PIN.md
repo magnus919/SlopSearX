@@ -114,7 +114,18 @@ O02 completion.
 ## Remaining O02 scope
 
 - Retire `scripts/portal_release_smoke.py` and its source-bound Python deployment-test oracle only through the reviewed F01/G08 successor. The Docker jobs now use the native smoke helper; the historical source remains byte-identical until that retirement is accepted.
-- Replace `scripts/configure_ci_dockerhub_mirror.py` (`ci.yml`, `docker.yml`).
+- The CI and Docker workflows now call `scripts/configure_ci_dockerhub_mirror.sh`,
+  with deterministic fake-Docker tests in the O02-owned `monitoring-rules`
+  workflow step and matching CI/F03 workflow catalog entry. This does not add
+  `cargo xtask check O02`; the new test runs through that workflow/catalog gate
+  only. This is a partial O02 mirror-helper slice: the historical Python helper
+  and its test remain byte-identical under F01/W03 custody, and O02 is not
+  complete. After a configuration change, the helper bounds the Docker restart
+  to 60 seconds, then waits for Docker info readiness with at most 20 probes of
+  two seconds each, a one-second KILL grace per probe, and one-second backoff
+  (79 seconds maximum, excluding host scheduling delay). It emits a sanitized
+  readiness error if the daemon never responds and distinguishes storage-driver
+  from driver-status diagnostic failures.
 - Replace `scripts/upstream_contracts.py` (`.github/workflows/upstream-contracts.yml`).
 - Complete O02's evidence and ownership criteria; source retirement is a separate
   G08 concern, and this verifier wiring does not delete tracked Python files.
