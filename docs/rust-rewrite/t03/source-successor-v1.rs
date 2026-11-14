@@ -1,5 +1,12 @@
 //! Closed T03 source-only successor. Historical capsules and qualification stay fixed.
 //! `prior` owns physical/capsule/Git admission; `frame` is a pure byte proof only.
+#[path = "../t06/source-amendments/dnspython-security-current-main-v1.rs"]
+#[allow(
+    dead_code,
+    clippy::duplicate_mod,
+    reason = "Independent qualification roots intentionally compile this stateless T03 proof leaf"
+)]
+mod dnspython_security_outer;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{
@@ -526,14 +533,19 @@ fn w07_added_source_bytes(root: &Path, doc: &Value) -> Result<Vec<u8>> {
     )?;
     Ok(physical)
 }
-fn w07_current_frame(root: &Path) -> Result<(Vec<u8>, Vec<u8>)> {
+fn w07_source_frames(root: &Path, supplied: Option<&[u8]>) -> Result<(Vec<u8>, Vec<u8>, Vec<u8>)> {
     let capsule = regular(root, W07_CAPSULE_PATH, W07_CAPSULE.len())?;
     let doc = decode_w07(&capsule)?;
     let pins = pins(&doc)?;
     let pin = &pins[0];
     let row = row(&doc, W07_SOURCE)?;
-    let physical = regular(root, W07_SOURCE, pin.current_bytes)?;
-    let prior = inverse(pin, row, &physical, 0o644)?;
+    let physical = dnspython_security_outer::current_operand(root, W07_SOURCE)?
+        .ok_or("T03 W07 outer physical operand missing")?;
+    if let Some(supplied) = supplied {
+        need(physical == supplied, "supplied bytes are physical current")?;
+    }
+    let accepted = dnspython_security_outer::prior(root, W07_SOURCE, &physical)?;
+    let prior = inverse(pin, row, &accepted, 0o644)?;
     need(
         git(root, &["show", &format!("{W07_BASE}:{W07_SOURCE}")])? == prior,
         "W07 source successor exact parent Git bytes",
@@ -544,7 +556,52 @@ fn w07_current_frame(root: &Path) -> Result<(Vec<u8>, Vec<u8>)> {
         "W07 source successor exact parent Git mode/blob",
     )?;
     w07_added_source_bytes(root, &doc)?;
+    Ok((physical, accepted, prior))
+}
+// Existing #1131 controls continue to exercise precisely their accepted bytes.
+fn w07_current_frame(root: &Path) -> Result<(Vec<u8>, Vec<u8>)> {
+    let (_, accepted, prior) = w07_source_frames(root, None)?;
+    Ok((accepted, prior))
+}
+fn w07_physical_current_frame(root: &Path) -> Result<(Vec<u8>, Vec<u8>)> {
+    let (physical, _, prior) = w07_source_frames(root, None)?;
     Ok((physical, prior))
+}
+fn w07_outer_controls(root: &Path) -> Result<()> {
+    let (physical, accepted, logical) = w07_source_frames(root, None)?;
+    let doc = decode(CAPSULE)?;
+    let source = pin(&doc, W07_SOURCE)?;
+    let predecessor = inverse(&source, row(&doc, W07_SOURCE)?, &logical, 0o644)?;
+    need(
+        physical != accepted
+            && accepted != logical
+            && dnspython_security_outer::prior(root, W07_SOURCE, &physical)? == accepted
+            && prior(root, W07_SOURCE, &physical)? == predecessor,
+        "W07 outer physical to c2d2b5c to #1131 to T03 composition positive",
+    )?;
+    need(
+        dnspython_security_outer::prior(root, W07_SOURCE, &accepted).is_err()
+            && prior(root, W07_SOURCE, &accepted).is_err()
+            && prior(root, W07_SOURCE, &logical).is_err()
+            && prior(root, W07_SOURCE, &predecessor).is_err(),
+        "W07 reconstructed operands cannot substitute for outer physical source",
+    )?;
+    let mut changed = physical.clone();
+    changed[0] ^= 1;
+    need(
+        dnspython_security_outer::prior(root, W07_SOURCE, &changed).is_err()
+            && prior(root, W07_SOURCE, &changed).is_err(),
+        "changed W07 outer supplied physical bytes rejected",
+    )?;
+    let w07_doc = decode_w07(W07_CAPSULE)?;
+    let w07_pin = pin(&w07_doc, W07_SOURCE)?;
+    need(
+        inverse(&w07_pin, row(&w07_doc, W07_SOURCE)?, &physical, 0o644).is_err()
+            && frame(W07_SOURCE, &accepted, 0o644).is_err()
+            && frame(W07_SOURCE, &physical, 0o644).is_err(),
+        "W07 outer and historical inverse layers cannot be skipped",
+    )?;
+    Ok(())
 }
 fn w07_controls(root: &Path) -> Result<()> {
     let mut changed_capsule = W07_CAPSULE.to_vec();
@@ -873,8 +930,7 @@ pub(crate) fn prior(root: &Path, path: &str, supplied: &[u8]) -> Result<Vec<u8>>
         let doc = decode(&capsule)?;
         let source = pin(&doc, path)?;
         let source_row = row(&doc, path)?;
-        let (physical, logical) = w07_current_frame(root)?;
-        need(physical == supplied, "supplied bytes are physical current")?;
+        let (_, _, logical) = w07_source_frames(root, Some(supplied))?;
         let predecessor = inverse(&source, source_row, &logical, 0o644)?;
         git_prior(root, &source, &predecessor)?;
         return Ok(predecessor);
@@ -898,6 +954,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
     let doc = decode(CAPSULE)?;
     w07_controls(root)?;
     w07_main_controls(root)?;
+    w07_outer_controls(root)?;
     let mut capsule_mutant = CAPSULE.to_vec();
     capsule_mutant.push(b' ');
     need(decode(&capsule_mutant).is_err(), "changed capsule rejected")?;
@@ -908,7 +965,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
     let all_pins = pins(&doc)?;
     for pin in &all_pins {
         let (physical, logical) = if pin.path == W07_SOURCE {
-            w07_current_frame(root)?
+            w07_physical_current_frame(root)?
         } else {
             let physical = regular(root, pin.path, pin.current_bytes)?;
             (physical.clone(), physical)
