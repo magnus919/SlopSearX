@@ -126,7 +126,14 @@ O02 completion.
   (79 seconds maximum, excluding host scheduling delay). It emits a sanitized
   readiness error if the daemon never responds and distinguishes storage-driver
   from driver-status diagnostic failures.
-- Replace `scripts/upstream_contracts.py` (`.github/workflows/upstream-contracts.yml`).
+- `.github/workflows/upstream-contracts.yml` now invokes the native
+  `cargo xtask upstream-contracts --live` runner only when a manual dispatch
+  sets `run_live: true` or the weekly schedule is explicitly enabled with
+  `LIVE_UPSTREAM_CONTRACTS=true`. The command's default local mode is offline
+  fixture replay through the actual Rust adapters. The historical Python
+  script and test remain frozen and byte-identical until separately reviewed
+  G08 source retirement; this completes only the upstream-probe invocation
+  portion of O02.
 - Complete O02's evidence and ownership criteria; source retirement is a separate
   G08 concern, and this verifier wiring does not delete tracked Python files.
 

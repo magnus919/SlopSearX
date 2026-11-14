@@ -1856,24 +1856,23 @@
     "upstream-contracts.yml:live-contracts": {
       "source": {
         "job": {
-          "if": "github.event_name == 'workflow_dispatch' || vars.LIVE_UPSTREAM_CONTRACTS == 'true'",
+          "if": "(github.event_name == 'workflow_dispatch' && inputs.run_live == true) || (github.event_name == 'schedule' && vars.LIVE_UPSTREAM_CONTRACTS == 'true')",
           "runs-on": "ubuntu-latest",
           "steps": [
             {
               "uses": "actions/checkout@v7"
             },
             {
-              "uses": "actions/setup-python@v7",
-              "with": {
-                "python-version": "3.12"
-              }
+              "name": "Install repository-pinned Rust toolchain",
+              "run": "set -euo pipefail\ntoolchain=\"$(sed -n 's/^channel = \"\\([^\"\\]*\\)\"/\\1/p' rust-toolchain.toml)\"\ntest \"$toolchain\" = \"1.99.0\"\nrustup toolchain install \"$toolchain\" --profile minimal\n"
             },
             {
-              "run": "pip install -e ."
+              "name": "Confirm pinned Rust toolchain",
+              "run": "rustup run 1.99.0 rustc --version --verbose"
             },
             {
               "name": "Probe three public upstreams",
-              "run": "python -m scripts.upstream_contracts --output upstream-report.json"
+              "run": "cargo xtask upstream-contracts --live --output upstream-report.json"
             },
             {
               "if": "always()",
@@ -1884,7 +1883,7 @@
               }
             }
           ],
-          "timeout-minutes": 5
+          "timeout-minutes": 15
         },
         "workflow": {
           "name": "Upstream contracts (opt-in)",
@@ -1894,16 +1893,25 @@
                 "cron": "17 8 * * 1"
               }
             ],
-            "workflow_dispatch": null
+            "workflow_dispatch": {
+              "inputs": {
+                "run_live": {
+                  "default": false,
+                  "description": "Run the bounded probes against public upstreams",
+                  "required": false,
+                  "type": "boolean"
+                }
+              }
+            }
           },
           "permissions": {
             "contents": "read"
           }
         }
       },
-      "owner": "O07",
-      "state": "pending-owner",
-      "successor": "cargo xtask check O07; native bounded opt-in probe runner retaining fixture/report classifications and live-call authorization; schedule remains existing until accepted successor"
+      "owner": "O02",
+      "state": "additive",
+      "successor": "Native Rust upstream-contract runner; local default uses frozen offline adapter fixtures; live provider checks require manual run_live=true or the existing explicitly enabled weekly repository variable; retain exact-host/path/query, one-request, timeout, body, no-proxy/no-retry/no-redirect, sanitization, report, and exit contracts. This is only the upstream-probe slice; full O02 acceptance and F01/G08 source retirement remain pending."
     },
     "rust-t02-image.yml:t02-image": {
       "source": {
