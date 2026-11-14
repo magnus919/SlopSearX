@@ -2331,8 +2331,33 @@ mod tests {
                 .duration_since(UNIX_EPOCH)
                 .expect("system clock must be after the Unix epoch")
                 .as_nanos();
-            let path = std::env::temp_dir()
-                .join(format!("ssx-t03-evidence-{}-{nonce}", std::process::id()));
+            let temp_root = PathBuf::from(
+                std::env::var_os("SLOPSEARX_TEST_TEMP_ROOT")
+                    .expect("SLOPSEARX_TEST_TEMP_ROOT must be configured"),
+            );
+            assert!(
+                temp_root.is_absolute(),
+                "configured test temp root must be absolute"
+            );
+            let temp_root = temp_root
+                .canonicalize()
+                .expect("configured test temp root must exist");
+            let process_temp_root = std::env::temp_dir()
+                .canonicalize()
+                .expect("process temp root must exist");
+            assert_eq!(
+                temp_root, process_temp_root,
+                "TMPDIR and SLOPSEARX_TEST_TEMP_ROOT must resolve to the same directory"
+            );
+            let workspace = Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../..")
+                .canonicalize()
+                .expect("workspace root must exist");
+            assert!(
+                !temp_root.starts_with(&workspace),
+                "test temp root must be outside the source checkout"
+            );
+            let path = temp_root.join(format!("ssx-t03-evidence-{}-{nonce}", std::process::id()));
             fs::create_dir(&path).expect("create owned T03 unit-test directory");
             Self(path)
         }
