@@ -111,5 +111,18 @@
     "state": "additive",
     "actual_inventory_sha256": "15e3676d2a3b9d40171aa9e936c405e9f2895c1052c26057f137c66a8a5fa2dd",
     "o06_check": "passed"
+  },
+  "source_custody_successor": {
+    "capsule": "docs/rust-rewrite/o02/UPSTREAM_CONTRACTS_SOURCE_SUCCESSOR.json",
+    "sha256": "7c2a0024e2d1d3abe37ab6e49337e9fcfd989c406c3bf154c6a7b44e29ed534b",
+    "proof_leaf": "docs/rust-rewrite/o02/upstream-contracts-source-successor-v1.rs",
+    "baseline": "661af83a1b95a3e7873cfda99c05d0fb6a02fe0a",
+    "scope": "Exact two-path main/lock O02 outer source admission before unchanged RMCP, T03, health, CLI and W07 historical frames; current integrated qualification remains required.",
+    "catalog_capsule": {
+      "path": "docs/rust-rewrite/o02/UPSTREAM_CONTRACTS_GATES_SUCCESSOR.json",
+      "sha256": "007d933a6e2d4b758a83078d35c4650035ff1a8433ccb2ac5519fa4301a2f58a",
+      "scope": "Seven exact spans only in upstream-contracts.yml:live-contracts; authenticates newest physical gates.json before unchanged DNSpython historical inverse."
+    },
+    "physical_read": "Exact-size no-follow open; descriptor read bounded to expected size plus one; before/opened/after/path metadata and mode checks; no symlink ancestors. Unix device/inode/timestamps and0644; Windows stage-zero100644, no reparse points, deny concurrent write/delete sharing."
   }
 }

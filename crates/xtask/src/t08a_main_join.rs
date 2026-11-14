@@ -465,7 +465,12 @@ fn pre_984_w07(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
 }
 
 fn accepted_current(root: &Path, path: &str, physical: &[u8]) -> Result<Vec<u8>> {
-    let registered = pre_t03_registration(path, physical)?;
+    let upstream = if path == "crates/xtask/src/main.rs" {
+        super::upstream_contracts_successor::frame(path, physical, 0o644)?
+    } else {
+        physical.to_vec()
+    };
+    let registered = pre_t03_registration(path, &upstream)?;
     let logical = if portal_source_successor::owns(path) {
         portal_source_successor::prior(root, path, &registered)?
     } else {
@@ -589,7 +594,8 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         let physical = regular(root, path)?;
         let logical = accepted_current(root, path, &physical)?;
         if *path == "crates/xtask/src/main.rs" {
-            let registered = pre_t03_registration(path, &physical)?;
+            let upstream = super::upstream_contracts_successor::frame(path, &physical, 0o644)?;
+            let registered = pre_t03_registration(path, &upstream)?;
             let health = pre_health_f01(path, &registered)?;
             need(
                 pre_t03_registration(path, &registered).is_err(),

@@ -1,5 +1,12 @@
 //! Exact #1128 dependency and CI source successor. Historical evidence stays fixed.
 //! Physical custody precedes the pure inverse and immutable Git predecessor proof.
+#[allow(
+    dead_code,
+    clippy::duplicate_mod,
+    reason = "Independent DNSpython and T08A roots share this stateless O02 source proof; each exercises its owned paths"
+)]
+#[path = "../../o02/upstream-contracts-source-successor-v1.rs"]
+mod o02_upstream_outer;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{
@@ -62,6 +69,26 @@ fn owns(path: &str) -> bool {
 pub(crate) fn current_operand(root: &Path, path: &str) -> Result<Option<Vec<u8>>> {
     current_at(root, root, path)
 }
+// Authenticate the newest catalog before exposing the unchanged DNSpython frame.
+fn physical_operand(
+    physical_root: &Path,
+    proof_root: &Path,
+    path: &str,
+    expected_bytes: usize,
+) -> Result<Vec<u8>> {
+    if path == o02_upstream_outer::GATES_PATH {
+        o02_upstream_outer::gates_current_at(physical_root, proof_root)
+    } else {
+        regular(physical_root, path, expected_bytes)
+    }
+}
+fn logical_operand(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
+    if path == o02_upstream_outer::GATES_PATH {
+        o02_upstream_outer::gates_frame(physical, 0o644)
+    } else {
+        Ok(physical.to_vec())
+    }
+}
 fn current_at(physical_root: &Path, proof_root: &Path, path: &str) -> Result<Option<Vec<u8>>> {
     if !owns(path) {
         return Ok(None);
@@ -69,8 +96,9 @@ fn current_at(physical_root: &Path, proof_root: &Path, path: &str) -> Result<Opt
     let capsule = regular(physical_root, CAPSULE_PATH, CAPSULE.len())?;
     let doc = decode(&capsule)?;
     let selected = pin(&doc, path)?;
-    let physical = regular(physical_root, path, selected.current_bytes)?;
-    let prior = inverse(&selected, row(&doc, path)?, &physical, 0o644)?;
+    let physical = physical_operand(physical_root, proof_root, path, selected.current_bytes)?;
+    let logical = logical_operand(path, &physical)?;
+    let prior = inverse(&selected, row(&doc, path)?, &logical, 0o644)?;
     git_prior(proof_root, &selected, &prior)?;
     Ok(Some(physical))
 }
@@ -329,7 +357,12 @@ fn inverse(pin: &Pin<'_>, row: &Value, actual: &[u8], mode: u32) -> Result<Vec<u
 pub(crate) fn frame(path: &str, physical: &[u8], mode: u32) -> Result<Vec<u8>> {
     let doc = decode(CAPSULE)?;
     let pin = pin(&doc, path)?;
-    inverse(&pin, row(&doc, path)?, physical, mode)
+    if path == o02_upstream_outer::GATES_PATH {
+        let logical = o02_upstream_outer::gates_frame(physical, mode)?;
+        inverse(&pin, row(&doc, path)?, &logical, mode)
+    } else {
+        inverse(&pin, row(&doc, path)?, physical, mode)
+    }
 }
 fn confined(root: &Path, path: &str) -> Result<std::path::PathBuf> {
     need(!Path::new(path).is_absolute(), "relative material path")?;
@@ -496,18 +529,20 @@ fn prior_at(
     let capsule = regular(physical_root, CAPSULE_PATH, CAPSULE.len())?;
     let doc = decode(&capsule)?;
     let pin = pin(&doc, path)?;
-    let physical = regular(physical_root, path, pin.current_bytes)?;
+    let physical = physical_operand(physical_root, proof_root, path, pin.current_bytes)?;
     need(
         supplied.is_none_or(|bytes| physical == bytes),
         "supplied bytes are physical current",
     )?;
-    let prior = inverse(&pin, row(&doc, path)?, &physical, 0o644)?;
+    let logical = logical_operand(path, &physical)?;
+    let prior = inverse(&pin, row(&doc, path)?, &logical, 0o644)?;
     git_prior(proof_root, &pin, &prior)?;
     Ok(prior)
 }
 /// Additive controls for existing owning test identities. No historical test names change.
 #[cfg(test)]
 pub(crate) fn controls(root: &Path) -> Result<()> {
+    o02_upstream_outer::gates_controls(root)?;
     let doc = decode(CAPSULE)?;
     let mut capsule_mutant = CAPSULE.to_vec();
     capsule_mutant.push(b' ');
@@ -526,7 +561,8 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
     )?;
     let all_pins = pins(&doc)?;
     for pin in &all_pins {
-        let physical = regular(root, pin.path, pin.current_bytes)?;
+        let physical = physical_operand(root, root, pin.path, pin.current_bytes)?;
+        let logical = logical_operand(pin.path, &physical)?;
         let prior_bytes = prior(root, pin.path, &physical)?;
         need(
             current_operand(root, pin.path)? == Some(physical.clone()),
@@ -542,7 +578,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         )?;
         let source_row = row(&doc, pin.path)?;
         need(
-            inverse(pin, source_row, &physical, 0o644)? == prior_bytes,
+            inverse(pin, source_row, &logical, 0o644)? == prior_bytes,
             "pure positive precedes controls",
         )?;
         need(
@@ -556,7 +592,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         )?;
         for mode in [0o600, 0o755, 0o4644] {
             need(
-                inverse(pin, source_row, &physical, mode).is_err(),
+                inverse(pin, source_row, &logical, mode).is_err(),
                 "changed current mode rejected",
             )?;
         }
@@ -592,7 +628,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
                 }
             }
             need(
-                inverse(pin, &bad, &physical, 0o644).is_err(),
+                inverse(pin, &bad, &logical, 0o644).is_err(),
                 "missing duplicate moved malformed or changed span rejected",
             )?;
         }
@@ -603,13 +639,13 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
                 .ok_or("dnspython security control edits")?
                 .swap(0, 1);
             need(
-                inverse(pin, &bad, &physical, 0o644).is_err(),
+                inverse(pin, &bad, &logical, 0o644).is_err(),
                 "reordered edits rejected",
             )?;
             let mut bad = source_row.clone();
             bad["edits"][1] = bad["edits"][0].clone();
             need(
-                inverse(pin, &bad, &physical, 0o644).is_err(),
+                inverse(pin, &bad, &logical, 0o644).is_err(),
                 "same-count duplicate span rejected",
             )?;
         }
