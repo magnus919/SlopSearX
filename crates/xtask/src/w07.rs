@@ -130,7 +130,7 @@ fn physical_current_cargo_lock(root: &Path) -> Result<(Vec<u8>, &'static str)> {
         {
             return Err("W07 current Cargo.lock must be the exact regular source".into());
         }
-        let index = Command::new("git")
+        let index = std::process::Command::new("git")
             .args(["ls-files", "--stage", "--", "Cargo.lock"])
             .current_dir(root)
             .output()

@@ -86,6 +86,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ "$RUNNER_OS" = Windows ]; then
+            cargo check --locked -p xtask --bin xtask --message-format=short 2>&1 | tee "$CARGO_TARGET_DIR/rust-evidence/xtask-windows-check.log"
             cargo run --locked -p ssx-cli-check -- check T08A --output "$CARGO_TARGET_DIR/rust-evidence/T08A.json"
           else
             cargo xtask check T08A --output "$CARGO_TARGET_DIR/rust-evidence/T08A.json"
