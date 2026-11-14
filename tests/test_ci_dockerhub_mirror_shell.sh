@@ -14,8 +14,17 @@ mkdir -p "$work/bin" "$work/etc/docker"
 cat >"$work/bin/timeout" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
-[[ "$1" == 5s ]] || exit 90
-shift
+case "$1" in
+  5s) shift ;;
+  60s)
+    shift
+    if [[ "$1" == systemctl && "${SYSTEMCTL_TIMEOUT:-}" == true ]]; then
+      printf 'private-timeout-detail\n' >&2
+      exit 124
+    fi
+    ;;
+  *) exit 90 ;;
+esac
 exec "$@"
 EOF
 cat >"$work/bin/docker" <<'EOF'
@@ -113,6 +122,13 @@ if SYSTEMCTL_FAIL=true bash "$helper" --as-root >"$work/restart-failure.out" 2>"
 jq -e '.["registry-mirrors"] == ["https://mirror.gcr.io"]' "$SLOPSEARX_DOCKER_DAEMON_CONFIG" >/dev/null
 grep -q 'Docker restart failed' "$work/restart-failure.err"
 ! grep -q 'private-service-detail' "$work/restart-failure.err"
+[[ "$(wc -l <"$SYSTEMCTL_LOG" | tr -d ' ')" == 2 ]]
+
+# A timed-out restart has a distinct safe error; its raw stderr is suppressed.
+printf '{"debug":false}\n' >"$SLOPSEARX_DOCKER_DAEMON_CONFIG"
+if SYSTEMCTL_TIMEOUT=true bash "$helper" --as-root >"$work/restart-timeout.out" 2>"$work/restart-timeout.err"; then exit 1; fi
+grep -q 'Docker restart timed out' "$work/restart-timeout.err"
+! grep -q 'private-timeout-detail' "$work/restart-timeout.err"
 [[ "$(wc -l <"$SYSTEMCTL_LOG" | tr -d ' ')" == 2 ]]
 
 # Diagnostics accept the same safe public endpoint spellings as the old helper

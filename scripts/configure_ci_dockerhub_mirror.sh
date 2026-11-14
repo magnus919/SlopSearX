@@ -3,6 +3,7 @@
 set -euo pipefail
 
 readonly MIRROR='https://mirror.gcr.io'
+readonly DOCKER_RESTART_TIMEOUT='60s'
 readonly SCRIPT_PATH="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)/$(basename -- "${BASH_SOURCE[0]}")"
 
 hosted_linux_runner() {
@@ -94,7 +95,16 @@ else
   chmod "$config_mode" "$updated_file" || fail 'cannot preserve Docker configuration mode'
   mv -f -- "$updated_file" "$config_path" || fail 'cannot atomically replace Docker configuration'
   updated_file=''
-  timeout 5s systemctl restart docker >/dev/null 2>&1 || fail 'Docker restart failed'
+  # Docker daemon restarts can exceed the five-second diagnostic command bound, especially on ARM runners.
+  if timeout "$DOCKER_RESTART_TIMEOUT" systemctl restart docker >/dev/null 2>&1; then
+    :
+  else
+    restart_status=$?
+    if [[ "$restart_status" -eq 124 ]]; then
+      fail 'Docker restart timed out'
+    fi
+    fail 'Docker restart failed'
+  fi
   printf 'Docker Hub mirror configured.\n'
 fi
 
