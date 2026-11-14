@@ -456,7 +456,7 @@ fn git_prior(root: &Path, pin: &Pin<'_>, prior: &[u8]) -> Result<()> {
 }
 /// Authenticate the current W07 source and finite additions before exposing
 /// the exact frame accepted by the historical T03 capsule.
-fn w07_added_source<'a>(doc: &'a Value) -> Result<(&'a str, usize, &'a str)> {
+fn w07_added_source(doc: &Value) -> Result<(&str, usize, &str)> {
     let rows = doc["added_sources"]
         .as_array()
         .ok_or("T03 W07 added-source inventory missing")?;
