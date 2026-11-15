@@ -1,5 +1,5 @@
 //! Finite lock successors; historical captures retain their original profile.
-#[path = "dnspython-security-current-main-v1.rs"]
+#[path = "python-dependency-audit-source-reader-v1.rs"]
 pub mod dnspython_security;
 use serde::Deserialize;
 use sha2::{Digest, Sha256};

@@ -14,6 +14,24 @@
       ]
     },
     {
+      "path": ".github/workflows/ci.yml",
+      "bytes": 21764,
+      "sha256": "9a861241b353c3123087609946db5ed870a939a1af1b00128c7fccc839278292",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
+      "path": ".github/workflows/nightly.yml",
+      "bytes": 3042,
+      "sha256": "cee5366b669ee688ac16f0732517fa0a8dcde9e984ddaada5a5ca778bd51bb30",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
       "path": ".github/workflows/rust-cli.yml",
       "bytes": 5960,
       "sha256": "af4850315d0222d0ec60a93ab790906c9fd24046597b678f71d7f8ec23eed362",
@@ -275,6 +293,15 @@
       ]
     },
     {
+      "path": "crates/xtask/src/o02_upstream_contracts.rs",
+      "bytes": 53620,
+      "sha256": "7e91e12e0addbe92f673c1de8793d5e87a98c013af269453ad51d53338c350a2",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
       "path": "crates/xtask/src/t02.rs",
       "bytes": 42727,
       "sha256": "856938170d1e155b7471d40362ccc82fcc9cd7a929777172d5fd9e026dced69f",
@@ -492,8 +519,26 @@
     },
     {
       "path": "docs/rust-rewrite/ci/gates.json",
-      "bytes": 177321,
-      "sha256": "4fe646332b6291b68f9423dffd4cfb5939c07cbf5988895c0577c20170fe6708",
+      "bytes": 181677,
+      "sha256": "9bf6b0a3ac823b90fae1f545417cb0f130a567130d0ed32ba41bfb06b9d6bdea",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/o02/UPSTREAM_CONTRACTS_GATES_SUCCESSOR.json",
+      "bytes": 3838,
+      "sha256": "007d933a6e2d4b758a83078d35c4650035ff1a8433ccb2ac5519fa4301a2f58a",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/o02/UPSTREAM_CONTRACTS_SOURCE_SUCCESSOR.json",
+      "bytes": 2072,
+      "sha256": "7c2a0024e2d1d3abe37ab6e49337e9fcfd989c406c3bf154c6a7b44e29ed534b",
       "mode": 420,
       "unix_modes": [
         420
@@ -512,6 +557,24 @@
       "path": "docs/rust-rewrite/o02/builder-patch-v2/capsule.json",
       "bytes": 3442,
       "sha256": "d9ffb0a941993525d0cfd0a9ee7bda73dc0df064cac3be30e3161d0742095738",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/o02/python-dependency-audit-gates-reader-v1.rs",
+      "bytes": 36381,
+      "sha256": "2b0c484ab152f55f48122f02d7944226cd9c67e1e2d7fb3d9cb2c78d3dad45d4",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/o02/upstream-contracts-source-successor-v1.rs",
+      "bytes": 35756,
+      "sha256": "d9c7774d7016031bd520fc84191b1f2dfb5b0bf366be16f15fe2bcdf4ea1d5b0",
       "mode": 420,
       "unix_modes": [
         420
@@ -599,9 +662,63 @@
       ]
     },
     {
+      "path": "docs/rust-rewrite/t06/source-amendments/dnspython-security-current-main-v1.rs",
+      "bytes": 30095,
+      "sha256": "8b93ed8debbd14b1c45b7b6c80b211e9b0ac1b84d8a7ee7401e1ab124191e387",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/t06/source-amendments/dnspython-security-current-main-v1/capsule.json",
+      "bytes": 20102,
+      "sha256": "0bdaa870eb2b9090472d8de35c0fe3b24854581b47dba7e9dfd387fdf3ab185d",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/t06/source-amendments/lock_amendment.rs",
+      "bytes": 20896,
+      "sha256": "4fcd684b1de8ff0ad2d9f6743c00e626c75489cfb0f1a9ff2df40e66083d2c3e",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
       "path": "docs/rust-rewrite/t06/source-amendments/page-main-receipt-control-adapter-v1.rs",
       "bytes": 35716,
       "sha256": "42f0913ef8045695260d18d55373ac868388fd4b28499d036989b926ca9ced28",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/t06/source-amendments/python-dependency-audit-current-main-v1.rs",
+      "bytes": 33304,
+      "sha256": "601db89119579110deed38d3b76c1128b9756019d8933926c57b0a2226144ca4",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/t06/source-amendments/python-dependency-audit-current-main-v1/capsule.json",
+      "bytes": 52181,
+      "sha256": "04bbd43240f0d0663ec4e8fd993ddf7c616aeabcfa64e04df429751027b2b4e0",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/t06/source-amendments/python-dependency-audit-source-reader-v1.rs",
+      "bytes": 31817,
+      "sha256": "e66d91525c9b50a26d1fabd1eb2bf137d83e2fc9ed8c7cbe5a6e71dda8edfca9",
       "mode": 420,
       "unix_modes": [
         420
@@ -1545,6 +1662,15 @@
       ]
     },
     {
+      "path": "pyproject.toml",
+      "bytes": 5828,
+      "sha256": "da2a8787b2a186f914b77f24f646415d99049e50bced9a2c7fdd1117a8c64316",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
       "path": "rust-toolchain.toml",
       "bytes": 86,
       "sha256": "72f7dd8c9fdf9c1fcd8eb8bf9326d4bc66833e4ebf4bc2932636e2b85efcb7af",
@@ -1578,6 +1704,15 @@
       "mode": 493,
       "unix_modes": [
         493
+      ]
+    },
+    {
+      "path": "uv.lock",
+      "bytes": 471652,
+      "sha256": "5b305fbd0fe7cd339dd6c638006d0fe10138208cebfd33e2256956ac679e5ee8",
+      "mode": 420,
+      "unix_modes": [
+        420
       ]
     },
     {
@@ -2443,105 +2578,6 @@
       ],
       "bytes": 2063,
       "sha256": "86e4fe0cef097d1f8fa3aab9e6b3a900ec4c2aa28c4718bc1b997713e8261e54"
-    },
-    {
-      "path": ".github/workflows/ci.yml",
-      "bytes": 16840,
-      "sha256": "5c1ad02869e6dfb15c2e612cca3a41c12f2efc2d81db0c09613137102f8c517d",
-      "mode": 420,
-      "unix_modes": [
-        420
-      ]
-    },
-    {
-      "path": ".github/workflows/nightly.yml",
-      "bytes": 3229,
-      "sha256": "87874379f14e781c543bc1a413cf03b59e470ee541536de27182b2f292ade8e3",
-      "mode": 420,
-      "unix_modes": [
-        420
-      ]
-    },
-    {
-      "path": "docs/rust-rewrite/t06/source-amendments/dnspython-security-current-main-v1.rs",
-      "bytes": 30095,
-      "sha256": "8b93ed8debbd14b1c45b7b6c80b211e9b0ac1b84d8a7ee7401e1ab124191e387",
-      "mode": 420,
-      "unix_modes": [
-        420
-      ]
-    },
-    {
-      "path": "docs/rust-rewrite/t06/source-amendments/dnspython-security-current-main-v1/capsule.json",
-      "bytes": 20102,
-      "sha256": "0bdaa870eb2b9090472d8de35c0fe3b24854581b47dba7e9dfd387fdf3ab185d",
-      "mode": 420,
-      "unix_modes": [
-        420
-      ]
-    },
-    {
-      "path": "docs/rust-rewrite/t06/source-amendments/lock_amendment.rs",
-      "bytes": 20890,
-      "sha256": "ab59c665b7b681ce1db4f329357392bae493711974979309aadaa1029ef43a69",
-      "mode": 420,
-      "unix_modes": [
-        420
-      ]
-    },
-    {
-      "path": "pyproject.toml",
-      "bytes": 5425,
-      "sha256": "d8b7a42dfcaf4963bc22e072f044bafe676cd90cba6f0194fbc8b87c32a187a0",
-      "mode": 420,
-      "unix_modes": [
-        420
-      ]
-    },
-    {
-      "path": "uv.lock",
-      "bytes": 470840,
-      "sha256": "b56c01276cfe649d85f40827388b43789672854f3fb5af3c408650748abc01a6",
-      "mode": 420,
-      "unix_modes": [
-        420
-      ]
-    },
-    {
-      "path": "crates/xtask/src/o02_upstream_contracts.rs",
-      "bytes": 53620,
-      "sha256": "7e91e12e0addbe92f673c1de8793d5e87a98c013af269453ad51d53338c350a2",
-      "mode": 420,
-      "unix_modes": [
-        420
-      ]
-    },
-    {
-      "path": "docs/rust-rewrite/o02/UPSTREAM_CONTRACTS_SOURCE_SUCCESSOR.json",
-      "bytes": 2072,
-      "sha256": "7c2a0024e2d1d3abe37ab6e49337e9fcfd989c406c3bf154c6a7b44e29ed534b",
-      "mode": 420,
-      "unix_modes": [
-        420
-      ]
-    },
-    {
-      "path": "docs/rust-rewrite/o02/upstream-contracts-source-successor-v1.rs",
-      "bytes": 35756,
-      "sha256": "d9c7774d7016031bd520fc84191b1f2dfb5b0bf366be16f15fe2bcdf4ea1d5b0",
-      "mode": 420,
-      "unix_modes": [
-        420
-      ]
-    },
-    {
-      "path": "docs/rust-rewrite/o02/UPSTREAM_CONTRACTS_GATES_SUCCESSOR.json",
-      "bytes": 3838,
-      "sha256": "007d933a6e2d4b758a83078d35c4650035ff1a8433ccb2ac5519fa4301a2f58a",
-      "mode": 420,
-      "unix_modes": [
-        420
-      ]
     }
   ]
 }
