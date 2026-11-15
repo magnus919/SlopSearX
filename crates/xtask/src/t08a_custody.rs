@@ -1,6 +1,13 @@
 //! Two-path CLI successor. Physical current bytes precede historical interpretation.
 #[path = "t08a_main_join.rs"]
 pub(crate) mod accepted_main_join;
+#[allow(
+    dead_code,
+    clippy::duplicate_mod,
+    reason = "Independent T08A and DNSpython roots share this stateless source proof; each exercises its owned paths"
+)]
+#[path = "../../../docs/rust-rewrite/o02/upstream-contracts-source-successor-v1.rs"]
+pub(crate) mod upstream_contracts_successor;
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::{fs, path::Path, process::Command};
@@ -153,9 +160,8 @@ const RMCP_SECURITY_CAPSULE: &str =
     include_str!("../../../docs/rust-rewrite/t08a/rmcp-security-successor.json");
 const RMCP_SECURITY_CAPSULE_SHA: &str =
     "b348258e03bc90feafc68b721d583e5f977d660a90062bff20b8c0f8521aec09";
-pub(crate) const CURRENT_LOCK_SHA: &str =
-    "89545e8f75650c1d83c7aa5a36c92bc878184cf87cf42d3d0e93b2acc0a1ccd7";
-pub(crate) const CURRENT_LOCK_BYTES: usize = 94314;
+pub(crate) const CURRENT_LOCK_SHA: &str = upstream_contracts_successor::LOCK_SHA;
+pub(crate) const CURRENT_LOCK_BYTES: usize = upstream_contracts_successor::LOCK_BYTES;
 const RMCP_ROWS: [(&str, usize); 2] = [("Cargo.toml", 1), ("Cargo.lock", 6)];
 fn rmcp_security_capsule(raw: &str) -> Result<Value> {
     need(
@@ -209,7 +215,8 @@ pub(crate) fn portal_health_lock_frame(current: &[u8]) -> Result<Vec<u8>> {
         current.len() == CURRENT_LOCK_BYTES && digest(current) == CURRENT_LOCK_SHA,
         "security exact current lock",
     )?;
-    let portal = rmcp_security_prior("Cargo.lock", current)?;
+    let security = upstream_contracts_successor::frame("Cargo.lock", current, 0o644)?;
+    let portal = rmcp_security_prior("Cargo.lock", &security)?;
     let physical = portal.as_slice();
     need(
         physical.len() == PORTAL_LOCK_BYTES && digest(physical) == PORTAL_LOCK_SHA,
@@ -535,6 +542,7 @@ pub(crate) fn test_dependency_prior(
     Ok(prior)
 }
 pub(crate) fn controls(root: &Path) -> Result<()> {
+    upstream_contracts_successor::controls(root)?;
     rmcp_security_controls(root)?;
     let actual = regular(root, "Cargo.lock")?;
     let health = portal_health_lock_frame(&actual)?;
@@ -616,8 +624,13 @@ fn rmcp_security_controls(root: &Path) -> Result<()> {
         "altered security capsule rejected",
     )?;
     for (index, (path, count)) in RMCP_ROWS.iter().enumerate() {
-        let actual = regular(root, path)?;
+        let physical = regular(root, path)?;
         source_mode(root, path)?;
+        let actual = if *path == "Cargo.lock" {
+            upstream_contracts_successor::frame(path, &physical, 0o644)?
+        } else {
+            physical
+        };
         let prior = rmcp_security_prior(path, &actual)?;
         let git = Command::new("git")
             .args([

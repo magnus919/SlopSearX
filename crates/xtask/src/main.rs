@@ -28,6 +28,7 @@ mod f14;
 mod f15;
 mod o01;
 mod o02_health_retirement;
+mod o02_upstream_contracts;
 mod o03;
 mod o06;
 mod replay;
@@ -630,6 +631,15 @@ fn main() {
         .expect("wall clock after epoch")
         .as_millis();
     let args: Vec<_> = std::env::args().skip(1).collect();
+    if args.first().is_some_and(|a| a == "upstream-contracts") {
+        match o02_upstream_contracts::cli(&args[1..]) {
+            Ok(code) => std::process::exit(code),
+            Err(error) => {
+                eprintln!("{error}");
+                std::process::exit(1);
+            }
+        }
+    }
     if args.len() == 2 && args[0] == "a06-source-cases" {
         if let Err(error) = a06::check_source_log(&root, Path::new(&args[1])) {
             eprintln!("{error}");
