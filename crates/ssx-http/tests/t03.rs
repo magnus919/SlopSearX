@@ -2,7 +2,7 @@
 use sha2::{Digest, Sha256};
 use ssx_http::{
     HtmlRenderer,
-    portal::{PublicPortal, SCRIPT, STYLE, content_markup},
+    portal::{PortalRenderContext, PublicPortal, SCRIPT, STYLE, content_markup},
 };
 use ssx_json::{Value, json};
 use std::fs;
@@ -11,6 +11,7 @@ mod peer;
 use peer::{Process, params, yaml};
 #[test]
 fn static_assets_and_highlight_boundary_preserve_safe_progressive_rendering() {
+    renderer_pagination_context_preserves_original_three_state_contract();
     let html = PublicPortal::default().landing();
     assert!(html.len() <= 50 * 1024);
     assert!(STYLE.len() + SCRIPT.len() <= 30 * 1024);
@@ -30,6 +31,138 @@ fn static_assets_and_highlight_boundary_preserve_safe_progressive_rendering() {
         content_markup("<strong>unclosed <em>safe</em>"),
         "&lt;strong&gt;unclosed <em>safe</em>"
     );
+}
+
+// Keep the established top-level HTTP inventory; execute the pure formatter
+// pagination cases from its existing static-assets/formatter boundary test.
+fn renderer_pagination_context_preserves_original_three_state_contract() {
+    let portal = PublicPortal::default();
+    let links = scraper::Selector::parse("nav.pagination a").unwrap();
+    for (page, previous, next) in [
+        ("1", None, "2"),
+        ("2", Some("1"), "3"),
+        (
+            "18446744073709551617",
+            Some("18446744073709551616"),
+            "18446744073709551618",
+        ),
+    ] {
+        let request = ssx_domain::SearchRequest {
+            query: "query & + / <snow> ☃".into(),
+            categories: Some(vec!["general".into(), "science".into()]),
+            engines: Some(vec!["openalex".into()]),
+            language: "fr".into(),
+            time_range: Some("month".into()),
+            date_from: Some("2024-02-29".into()),
+            date_to: Some("2024-03-01".into()),
+            safesearch: 1,
+            page: ssx_domain::SearchPage::new(page).unwrap(),
+            interactive_timeout_ms: Some(1200),
+            ..Default::default()
+        };
+        let expected_href = |page: &str| {
+            let mut url = url::form_urlencoded::Serializer::new("/search?".to_owned());
+            url.extend_pairs([
+                ("categories", "general,science"),
+                ("date_from", "2024-02-29"),
+                ("date_to", "2024-03-01"),
+                ("engines", "openalex"),
+                ("interactive_timeout_ms", "1200"),
+                ("language", "fr"),
+                ("pageno", page),
+                ("q", "query & + / <snow> ☃"),
+                ("safesearch", "1"),
+                ("time_range", "month"),
+            ]);
+            url.finish()
+        };
+        for populated in [false, true] {
+            let response = ssx_domain::SearchResponse {
+                query: request.query.clone(),
+                results: if populated {
+                    vec![ssx_domain::SearchResult {
+                        url: "https://docs.example.com/guide".into(),
+                        title: "A useful guide".into(),
+                        ..Default::default()
+                    }]
+                } else {
+                    vec![]
+                },
+                ..Default::default()
+            };
+            // This untyped metadata is not a source of pagination authority.
+            let meta = json!({"has_more": false});
+            let wire_before = ssx_http::formats::json_document(&response, meta.clone());
+            let default_html = portal.search(&response, &meta, &request);
+            for has_more in [None, Some(false), Some(true)] {
+                let output = portal.search_with_context(
+                    &response,
+                    &meta,
+                    &request,
+                    PortalRenderContext { has_more },
+                );
+                if has_more.is_none() {
+                    assert_eq!(output, default_html);
+                }
+                let next_available = match has_more {
+                    None => populated,
+                    Some(value) => value,
+                };
+                let document = scraper::Html::parse_document(&output);
+                let actual = document
+                    .select(&links)
+                    .map(|link| {
+                        (
+                            link.value().attr("aria-label").unwrap().to_owned(),
+                            link.value().attr("href").unwrap().to_owned(),
+                            link.text().collect::<String>(),
+                        )
+                    })
+                    .collect::<Vec<_>>();
+                let mut expected = Vec::new();
+                if let Some(previous) = previous {
+                    expected.push((
+                        "Previous result page".into(),
+                        expected_href(previous),
+                        "← Previous".into(),
+                    ));
+                }
+                if next_available {
+                    expected.push((
+                        if has_more.is_none() {
+                            "Try next result page"
+                        } else {
+                            "Next result page"
+                        }
+                        .into(),
+                        expected_href(next),
+                        if has_more.is_none() {
+                            "Try next page →"
+                        } else {
+                            "Next page →"
+                        }
+                        .into(),
+                    ));
+                }
+                assert_eq!(
+                    actual, expected,
+                    "page={page} populated={populated} has_more={has_more:?}"
+                );
+                assert_eq!(
+                    output.contains(" · more may be available"),
+                    has_more.is_none() && populated,
+                );
+                assert_eq!(
+                    output.contains("<nav class=\"pagination\""),
+                    previous.is_some() || next_available
+                );
+                assert_eq!(
+                    ssx_http::formats::json_document(&response, meta.clone()),
+                    wire_before
+                );
+            }
+        }
+    }
 }
 
 #[tokio::test]

@@ -76,3 +76,20 @@ parity claims. These checks establish inventory consistency only; the source
 assertions still require their original acceptance evidence. Current-main date
 roundtrip and profiling controls remain alongside the empty-date-control journey
 and source/media evidence in this candidate.
+
+## Formatter pagination context
+
+`PublicPortal::search_with_context` accepts a typed `PortalRenderContext` with
+optional `has_more`. It preserves the frozen Python formatter contract: unknown
+availability offers “Try next page” only for nonempty results; explicit false
+omits next navigation; explicit true offers “Next page” with its definite
+accessible name, including when the current result list is empty. Previous-page
+and exact query/filter/page serialization remain independent of this option.
+
+The native HTTP `HtmlRenderer::search` path always uses the default unknown
+context. Neither `SearchResponse` nor the HTTP server supplies an authoritative
+upstream `has_more`; no availability is inferred from query parameters, response
+metadata, result count, or snapshot remainder. Machine formats and their schemas
+are unchanged. Pure renderer cases execute within the existing static formatter
+test; they remain candidate evidence for F:L680/L681/L688/L689 and do not establish
+HTTP upstream availability, hosted browser, human, or full T03 acceptance.

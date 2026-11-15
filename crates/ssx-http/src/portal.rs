@@ -17,6 +17,15 @@ use std::{
 pub const STYLE: &str = include_str!("portal/style.css");
 pub const SCRIPT: &str = include_str!("portal/behavior.js");
 
+/// Optional facts supplied by a formatter caller, separate from search/wire data.
+///
+/// `None` means next-page availability is unknown. The native HTTP composition
+/// currently supplies no authoritative availability and always uses the default.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct PortalRenderContext {
+    pub has_more: Option<bool>,
+}
+
 /// A presentation snapshot built only from already-redacted HTTP discovery.
 pub struct PublicPortal {
     theme: &'static str,
@@ -665,6 +674,19 @@ impl HtmlRenderer for PublicPortal {
         )
     }
     fn search(&self, response: &SearchResponse, meta: &Value, request: &SearchRequest) -> String {
+        self.search_with_context(response, meta, request, PortalRenderContext::default())
+    }
+}
+impl PublicPortal {
+    /// Render a caller's explicit pagination fact without adding it to the wire
+    /// response or inferring it from results, request parameters, or snapshots.
+    pub fn search_with_context(
+        &self,
+        response: &SearchResponse,
+        meta: &Value,
+        request: &SearchRequest,
+        context: PortalRenderContext,
+    ) -> String {
         let state = FormState::from_request(request);
         let responsive = response
             .engine_outcomes
@@ -795,7 +817,8 @@ impl HtmlRenderer for PublicPortal {
             body.push_str("</div>");
         }
         body.push_str("</div>");
-        if request.page.previous_page().is_some() || !response.results.is_empty() {
+        let next_available = context.has_more.unwrap_or(!response.results.is_empty());
+        if request.page.previous_page().is_some() || next_available {
             body.push_str("<nav class=\"pagination\" aria-label=\"Search pages\">");
             if let Some(previous) = request.page.previous_page() {
                 let _ = write!(
@@ -810,13 +833,13 @@ impl HtmlRenderer for PublicPortal {
                 body,
                 "<span class=\"page-current\" aria-current=\"page\">Page {}{}</span>",
                 request.page,
-                if response.results.is_empty() {
-                    ""
-                } else {
+                if context.has_more.is_none() && next_available {
                     " · more may be available"
+                } else {
+                    ""
                 }
             );
-            if !response.results.is_empty() {
+            if next_available {
                 if let Some(next) = request
                     .page
                     .next_page()
@@ -824,8 +847,18 @@ impl HtmlRenderer for PublicPortal {
                 {
                     let _ = write!(
                         body,
-                        "<a class=\"page-link\" aria-label=\"Try next result page\" href=\"{}\">Try next page →</a>",
-                        escape(&state.url(None, Some(&next)))
+                        "<a class=\"page-link\" aria-label=\"{}\" href=\"{}\">{}</a>",
+                        if context.has_more.is_none() {
+                            "Try next result page"
+                        } else {
+                            "Next result page"
+                        },
+                        escape(&state.url(None, Some(&next))),
+                        if context.has_more.is_none() {
+                            "Try next page →"
+                        } else {
+                            "Next page →"
+                        }
                     );
                 } else {
                     body.push_str("<span class=\"page-link\" role=\"link\" aria-disabled=\"true\">Next page unavailable (page number limit)</span>");

@@ -159,6 +159,19 @@
           "responsive_engine_count": 1
         }
       }
+    },
+    "candidate_formatter_pagination_context_2026_11_15": {
+      "candidate_base_head": "32af10d35fb24b70b85e9767044a72b61188fddc",
+      "source_assertions": [
+        "F:L680",
+        "F:L681",
+        "F:L688",
+        "F:L689"
+      ],
+      "path": "crates/ssx-http/tests/t03.rs",
+      "registered_test": "static_assets_and_highlight_boundary_preserve_safe_progressive_rendering",
+      "helper": "renderer_pagination_context_preserves_original_three_state_contract",
+      "scope": "Candidate pure renderer context only. HTTP supplies unknown availability; no authoritative upstream true/false producer exists. Classifications and original assertions remain unaccepted pending required source mapping and issue acceptance."
     }
   },
   "preserved_predecessors": {
@@ -2478,10 +2491,20 @@
       },
       "classification": "unresolved_fixture_predicate_or_contract_gap",
       "original_assertion_accepted": false,
-      "native_evidence": [],
+      "native_evidence": [
+        {
+          "kind": "candidate_pure_renderer_context",
+          "path": "crates/ssx-http/tests/t03.rs",
+          "registered_test": "static_assets_and_highlight_boundary_preserve_safe_progressive_rendering",
+          "helper": "renderer_pagination_context_preserves_original_three_state_contract",
+          "candidate_base_head": "32af10d35fb24b70b85e9767044a72b61188fddc",
+          "predicate_in_current_gate": false,
+          "note": "Explicit typed formatter caller context supplies None/false/true; native HTTP remains None. Execution and accepted source mapping remain pending; no accepted-parity claim."
+        }
+      ],
       "unresolved_gap": {
-        "kind": "unreviewed_input_contract_difference",
-        "detail": "PublicPortal/SearchResponse has no known has_more=false input and offers speculative next navigation for every nonempty result set. Resolve known-end behavior."
+        "kind": "candidate_formatter_context_acceptance_pending",
+        "detail": "Candidate typed pure renderer context implements the original unknown/false/true formatter branches. Exact native HTTP upstream availability has no producer; full source mapping and issue acceptance remain outstanding."
       },
       "reviewed_intentional_difference": null
     },
@@ -2514,10 +2537,20 @@
       },
       "classification": "unresolved_fixture_predicate_or_contract_gap",
       "original_assertion_accepted": false,
-      "native_evidence": [],
+      "native_evidence": [
+        {
+          "kind": "candidate_pure_renderer_context",
+          "path": "crates/ssx-http/tests/t03.rs",
+          "registered_test": "static_assets_and_highlight_boundary_preserve_safe_progressive_rendering",
+          "helper": "renderer_pagination_context_preserves_original_three_state_contract",
+          "candidate_base_head": "32af10d35fb24b70b85e9767044a72b61188fddc",
+          "predicate_in_current_gate": false,
+          "note": "Explicit typed formatter caller context supplies None/false/true; native HTTP remains None. Execution and accepted source mapping remain pending; no accepted-parity claim."
+        }
+      ],
       "unresolved_gap": {
-        "kind": "unreviewed_input_contract_difference",
-        "detail": "Same missing known has_more=false state as F:L680; the original nonempty last-page condition is not represented."
+        "kind": "candidate_formatter_context_acceptance_pending",
+        "detail": "Candidate typed pure renderer context implements the original unknown/false/true formatter branches. Exact native HTTP upstream availability has no producer; full source mapping and issue acceptance remain outstanding."
       },
       "reviewed_intentional_difference": null
     },
@@ -2550,10 +2583,20 @@
       },
       "classification": "unresolved_fixture_predicate_or_contract_gap",
       "original_assertion_accepted": false,
-      "native_evidence": [],
+      "native_evidence": [
+        {
+          "kind": "candidate_pure_renderer_context",
+          "path": "crates/ssx-http/tests/t03.rs",
+          "registered_test": "static_assets_and_highlight_boundary_preserve_safe_progressive_rendering",
+          "helper": "renderer_pagination_context_preserves_original_three_state_contract",
+          "candidate_base_head": "32af10d35fb24b70b85e9767044a72b61188fddc",
+          "predicate_in_current_gate": false,
+          "note": "Explicit typed formatter caller context supplies None/false/true; native HTTP remains None. Execution and accepted source mapping remain pending; no accepted-parity claim."
+        }
+      ],
       "unresolved_gap": {
-        "kind": "unreviewed_input_contract_difference",
-        "detail": "No known has_more=true branch. Native output uses Try next page rather than the original known-more Next page label."
+        "kind": "candidate_formatter_context_acceptance_pending",
+        "detail": "Candidate typed pure renderer context implements the original unknown/false/true formatter branches. Exact native HTTP upstream availability has no producer; full source mapping and issue acceptance remain outstanding."
       },
       "reviewed_intentional_difference": null
     },
@@ -2586,10 +2629,20 @@
       },
       "classification": "unresolved_fixture_predicate_or_contract_gap",
       "original_assertion_accepted": false,
-      "native_evidence": [],
+      "native_evidence": [
+        {
+          "kind": "candidate_pure_renderer_context",
+          "path": "crates/ssx-http/tests/t03.rs",
+          "registered_test": "static_assets_and_highlight_boundary_preserve_safe_progressive_rendering",
+          "helper": "renderer_pagination_context_preserves_original_three_state_contract",
+          "candidate_base_head": "32af10d35fb24b70b85e9767044a72b61188fddc",
+          "predicate_in_current_gate": false,
+          "note": "Explicit typed formatter caller context supplies None/false/true; native HTTP remains None. Execution and accepted source mapping remain pending; no accepted-parity claim."
+        }
+      ],
       "unresolved_gap": {
-        "kind": "unreviewed_input_contract_difference",
-        "detail": "No known-more Next result page accessible-name branch exists."
+        "kind": "candidate_formatter_context_acceptance_pending",
+        "detail": "Candidate typed pure renderer context implements the original unknown/false/true formatter branches. Exact native HTTP upstream availability has no producer; full source mapping and issue acceptance remain outstanding."
       },
       "reviewed_intentional_difference": null
     },
