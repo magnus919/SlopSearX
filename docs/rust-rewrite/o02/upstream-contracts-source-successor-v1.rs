@@ -816,13 +816,47 @@ fn gates_physical_controls(proof_root: &Path) -> Result<()> {
                 let _ = fs::remove_dir_all(&self.0);
             }
         }
-        let temp = std::env::var_os("SLOPSEARX_TEST_TEMP_ROOT")
+        let (temp, from_runner_temp) = match std::env::var_os("SLOPSEARX_TEST_TEMP_ROOT")
             .or_else(|| std::env::var_os("TMPDIR"))
-            .ok_or("O02 physical controls require an explicitly configured temporary root")?;
+        {
+            Some(temp) => (temp, false),
+            None if std::env::var_os("GITHUB_ACTIONS").as_deref()
+                == Some(std::ffi::OsStr::new("true")) =>
+            {
+                (
+                    std::env::var_os("RUNNER_TEMP")
+                        .ok_or("GitHub Actions physical controls require RUNNER_TEMP")?,
+                    true,
+                )
+            }
+            None => {
+                return Err(
+                    "O02 physical controls require an explicitly configured temporary root".into(),
+                );
+            }
+        };
+        let temp_root = Path::new(&temp);
         need(
-            Path::new(&temp).is_absolute(),
+            temp_root.is_absolute(),
             "absolute configured temporary root",
         )?;
+        if from_runner_temp {
+            let metadata = fs::symlink_metadata(temp_root).map_err(|e| e.to_string())?;
+            need(
+                metadata.file_type().is_dir() && !metadata.file_type().is_symlink(),
+                "GitHub Actions RUNNER_TEMP is an existing non-symlink directory",
+            )?;
+            let resolved = fs::canonicalize(temp_root).map_err(|e| e.to_string())?;
+            need(
+                resolved == temp_root,
+                "GitHub Actions RUNNER_TEMP canonical path",
+            )?;
+            let checkout = fs::canonicalize(proof_root).map_err(|e| e.to_string())?;
+            need(
+                !resolved.starts_with(checkout),
+                "GitHub Actions RUNNER_TEMP outside checkout",
+            )?;
+        }
         let suffix = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .map_err(|e| e.to_string())?
