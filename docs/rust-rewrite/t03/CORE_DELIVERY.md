@@ -59,3 +59,37 @@ Local raw logs, per-command exits, source inventories and storage measurements a
 - Chromium, Firefox and Playwright WebKit run the full deterministic journey set in the T03 gate. Real Apple Safari, 200% browser zoom, manual visual review and screen-reader (VoiceOver/NVDA) execution remain recorded validation gaps, not passes.
 - Measure/enforce portal byte, rendering and client performance budgets separately from upstream latency.
 - Complete exact-head hosted CI, portal/image acceptance and required independent review before merge. This core slice is not acceptance evidence for O04 production composition or an upstream engine's live behavior.
+
+## Bounded publication-date proof presentation (#984)
+
+The selected `PublicPortal` renders the closed `SearchResponse.date_filter` proof used by JSON/YAML. It shows requested and applied inclusive bounds, the selected `openalex` engine and `upstream:openalex` provenance. The request or scope-enforcement preview cannot fabricate that proof. A separate source-outcome message distinguishes returned results, a valid empty response, an unavailable upstream and an unknown acquisition outcome; enforcing constraints does not establish that results were acquired.
+
+`ssx-http/tests/science_openalex.rs` extends the actual registered OpenAlex/shared-service/private-Valkey portal composition with one-sided leap-day and two-sided bounds through GET/form POST on `/` and `/search`. It resubmits both rendered forms, follows JSON/YAML and pagination links, checks exact upstream filter bytes and publication days, and preserves missing-proof reacquisition. Separate actual-upstream controls distinguish HTTP 200/empty from HTTP 503/error. A pure rendering negative control refuses proof inferred only from request or metadata.
+
+This slice changes HTML presentation only. Shared validation, explicit audited OpenAlex-only scope, machine metadata and cache policy remain authoritative. These non-browser checks do not establish real Safari, VoiceOver, visual, performance or production-composition acceptance; current-head hosted portal acceptance and source-binding reconciliation remain required.
+
+The source assertion inventory now derives its classification totals from all 98
+rows and requires both summary count declarations to agree (47 unresolved,
+33 candidate counterparts, 18 retained raw mapping gaps). The T03 gate also
+rejects duplicate or missing row identities, unknown classifications and accepted
+parity claims. These checks establish inventory consistency only; the source
+assertions still require their original acceptance evidence. Current-main date
+roundtrip and profiling controls remain alongside the empty-date-control journey
+and source/media evidence in this candidate.
+
+## Formatter pagination context
+
+`PublicPortal::search_with_context` accepts a typed `PortalRenderContext` with
+optional `has_more`. It preserves the frozen Python formatter contract: unknown
+availability offers “Try next page” only for nonempty results; explicit false
+omits next navigation; explicit true offers “Next page” with its definite
+accessible name, including when the current result list is empty. Previous-page
+and exact query/filter/page serialization remain independent of this option.
+
+The native HTTP `HtmlRenderer::search` path always uses the default unknown
+context. Neither `SearchResponse` nor the HTTP server supplies an authoritative
+upstream `has_more`; no availability is inferred from query parameters, response
+metadata, result count, or snapshot remainder. Machine formats and their schemas
+are unchanged. Pure renderer cases execute within the existing static formatter
+test; they remain candidate evidence for F:L680/L681/L688/L689 and do not establish
+HTTP upstream availability, hosted browser, human, or full T03 acceptance.

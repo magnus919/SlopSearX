@@ -80,11 +80,13 @@ const supportedScenarios = new Set([
   'rate-limited',
   'html-disabled',
   'unavailable',
+  'source-availability',
 ]);
 const requiredByScenario = {
   contract: [
     'results-normal',
     'optional-metadata',
+    'empty-date-controls',
     'date-controls-roundtrip',
     'empty-suggestions',
     'partial-results',
@@ -104,6 +106,7 @@ const requiredByScenario = {
   'rate-limited': ['rate-limited'],
   'html-disabled': ['disabled-format'],
   unavailable: ['unavailable-source'],
+  'source-availability': ['source-availability'],
 };
 const viewportHistory = [];
 const completed = [];
@@ -114,6 +117,7 @@ const httpErrorResponses = [];
 const httpErrorConsoleStatuses = [];
 const pageErrors = [];
 const requestFailures = [];
+const syntheticFixtureResponses = [];
 const artifacts = [];
 const interactionSamples = [];
 const profiledBudgetPages = new WeakSet();
@@ -198,6 +202,21 @@ async function newContext(options = {}) {
   context.on('page', attachPageEvidence);
   await context.route('**/*', async (route) => {
     const requestUrl = route.request().url();
+    if (
+      scenario === 'contract' &&
+      requestUrl === 'https://cdn.example.com/thumb.jpg' &&
+      route.request().method() === 'GET'
+    ) {
+      const body = '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"></svg>';
+      await route.fulfill({ status: 200, contentType: 'image/svg+xml', body });
+      syntheticFixtureResponses.push({
+        url: requestUrl,
+        status: 200,
+        content_type: 'image/svg+xml',
+        purpose: 'offline T03 media thumbnail',
+      });
+      return;
+    }
     let requestOrigin = '';
     try {
       requestOrigin = new URL(requestUrl).origin;
@@ -595,7 +614,43 @@ async function runContract() {
     const response = await landingAndSearch(page, 'valkey', 'general');
     assert.equal(response.status(), 200);
     assert.equal(await page.getByRole('heading', { level: 1 }).innerText(), 'valkey');
-    assert(await page.locator('article[data-result-card]').count() > 0);
+    const cards = page.locator('article[data-result-card]');
+    assert.equal(await cards.count(), 1);
+    const article = cards.first();
+    const resultLink = article.getByRole('link', {
+      name: 'A useful deterministic result',
+      exact: true,
+    });
+    assert(await resultLink.isVisible());
+    assert.equal(await resultLink.getAttribute('href'), 'https://example.org/article?source=fixture');
+    const consensus = article.locator('.result-pill.consensus');
+    assert(await consensus.isVisible());
+    assert.equal(await consensus.innerText(), 'MATCHED 2 SOURCES');
+    const sourcePills = article.locator('.result-meta .result-pill');
+    assert.deepEqual(await sourcePills.allTextContents(), ['alpha', 'Beta <source>']);
+    assert(await sourcePills.nth(0).isVisible());
+    assert(await sourcePills.nth(1).isVisible());
+    const openResult = article.getByRole('link', { name: 'Open result ↗', exact: true });
+    assert(await openResult.isVisible());
+    assert.equal(await openResult.getAttribute('href'), 'https://example.org/article?source=fixture');
+    const explanation = article.locator('details.result-explanation');
+    await explanation.locator('summary').click();
+    assert.deepEqual(
+      await explanation.locator('.explanation-sources .result-pill').allTextContents(),
+      ['alpha', 'Beta <source>'],
+    );
+    assert(await explanation.getByText('structurally eligible', { exact: true }).isVisible());
+    const summary = page.getByRole('complementary', { name: 'Search summary' });
+    assert(await summary.isVisible());
+    assert(await summary.getByText('Source status', { exact: true }).isVisible());
+    const jsonView = page.getByRole('link', { name: 'Open JSON view ↗', exact: true });
+    assert(await jsonView.isVisible());
+    const machineView = new URL(await jsonView.getAttribute('href'), page.url());
+    assert.equal(machineView.origin, new URL(baseUrl).origin);
+    assert.equal(machineView.pathname, '/search');
+    assert.equal(machineView.searchParams.get('format'), 'json');
+    assert.equal(machineView.searchParams.get('q'), 'valkey');
+    assert.equal(machineView.searchParams.get('categories'), 'general');
     assert.equal(await page.locator('details.scope-panel select[name="categories"]').inputValue(), 'general');
     await screenshot(page, 'contract-desktop-results.png');
     await settleLayout(page);
@@ -618,6 +673,33 @@ async function runContract() {
       els.map((el) => new URL(el.href).origin),
     );
     assert(links.every((origin) => origin === new URL(baseUrl).origin));
+  });
+
+  await check('empty-date-controls', async () => {
+    const response = await searchByQuery(page, 'unbounded', { engines: 'openalex' });
+    assert.equal(response.status(), 200);
+
+    for (const name of ['date_from', 'date_to']) {
+      const control = page.locator(`input[name="${name}"][type="date"]`);
+      assert.equal(await control.inputValue(), '');
+      assert.equal(await control.evaluate((input) => input.defaultValue), '');
+      assert.equal(await control.getAttribute('value'), '');
+    }
+
+    const filtersForm = page.locator('form').filter({ has: page.getByRole('button', { name: 'Apply filters' }) });
+    const dateEntries = await filtersForm.evaluate((form) =>
+      [...new FormData(form).entries()].filter(([name]) => ['date_from', 'date_to'].includes(name)),
+    );
+    assert.deepEqual(dateEntries, [['date_from', ''], ['date_to', '']]);
+    await screenshot(page, 'contract-empty-date-controls.png');
+
+    const submitted = await navigateBy(page, () => page.getByRole('button', { name: 'Apply filters' }).click());
+    assert.equal(submitted.status(), 200);
+    const submittedUrl = new URL(page.url());
+    for (const name of ['date_from', 'date_to']) {
+      const value = submittedUrl.searchParams.get(name);
+      assert(value === null || value === '', `${name} must remain unbounded when untouched`);
+    }
   });
 
   await check('date-controls-roundtrip', async () => {
@@ -784,6 +866,36 @@ async function runContract() {
     assert.equal(response.status(), 200);
     assert(await page.getByRole('status').getByText('Some sources could not answer this search.').isVisible());
     assert(await page.locator('article[data-result-card]').count() > 0);
+    assert.equal(await page.locator('.rail-source-unavailable .rail-source-name').innerText(), 'Beta <source>');
+
+    const emptySource = await searchByQuery(page, 'empty-source', { categories: 'general' });
+    assert.equal(emptySource.status(), 200);
+    assert(await page.getByRole('status').getByText('No results from some sources.').isVisible());
+    assert.equal(await page.getByRole('status').getByText('Some sources could not answer this search.').count(), 0);
+    assert.equal(await page.locator('.rail-source-empty .rail-source-name').innerText(), 'Beta <source>');
+    assert.equal(await page.locator('.rail-source-empty .rail-source-count').innerText(), 'no results');
+
+    const media = await searchByQuery(page, 'media', { categories: 'general' });
+    assert.equal(media.status(), 200);
+    const mediaCard = page.locator('article[data-result-card]').filter({ hasText: 'image result' }).first();
+    const special = mediaCard.locator('.result-special');
+    assert.equal(await special.count(), 1);
+    assert.deepEqual(await special.locator('span').allTextContents(), ['image result', 'security / vulnerability']);
+    assert(await special.getByText('image result').isVisible());
+    const thumbnail = mediaCard.locator('img');
+    assert.equal(await thumbnail.getAttribute('src'), 'https://cdn.example.com/thumb.jpg');
+    assert.equal(await thumbnail.getAttribute('alt'), 'Vulnerability result');
+    assert(await mediaCard.locator('.result-special').getByText('security / vulnerability').isVisible());
+    await thumbnail.scrollIntoViewIfNeeded();
+    await thumbnail.evaluate(async (image) => {
+      if (!image.complete) {
+        await new Promise((resolve, reject) => {
+          image.addEventListener('load', resolve, { once: true });
+          image.addEventListener('error', () => reject(new Error('media thumbnail failed to load')), { once: true });
+        });
+      }
+      if (image.naturalWidth <= 0) throw new Error('media thumbnail decoded to no image data');
+    });
   });
 
   await check('all-source-failure', async () => {
@@ -871,16 +983,46 @@ async function runContract() {
   await check('keyboard-only', async () => {
     await navigate(page, '/');
     const input = page.getByRole('searchbox', { name: 'Search SlopSearX' });
-    assert.equal(await input.evaluate((el) => document.activeElement === el), true);
+    const landingFocus = await input.evaluate((expected) => {
+      const active = document.activeElement;
+      return {
+        focused: active === expected,
+        readyState: document.readyState,
+        activeTag: active instanceof Element ? active.tagName.toLowerCase() : null,
+        activeId: active instanceof Element ? active.id : null,
+        activeClasses: active instanceof Element ? [...active.classList] : [],
+      };
+    });
+    assert.equal(landingFocus.focused, true, `landing searchbox autofocus: ${JSON.stringify(landingFocus)}`);
     await page.keyboard.type('keyboard');
     await page.keyboard.press('Tab');
-    assert.equal(await page.evaluate(() => document.activeElement?.classList.contains('search-button')), true);
+    const tabFocus = await page.evaluate(() => {
+      const active = document.activeElement;
+      return {
+        focused: active instanceof Element && active.classList.contains('search-button'),
+        readyState: document.readyState,
+        activeTag: active instanceof Element ? active.tagName.toLowerCase() : null,
+        activeId: active instanceof Element ? active.id : null,
+        activeClasses: active instanceof Element ? [...active.classList] : [],
+      };
+    });
+    assert.equal(tabFocus.focused, true, `Tab should focus the search button: ${JSON.stringify(tabFocus)}`);
     await navigateBy(page, () => page.keyboard.press('Enter'));
     assert.equal(new URL(page.url()).searchParams.get('q'), 'keyboard');
     await page.locator('a.brand').focus();
     await keyboardAndMeasure(page, 'j');
     const activationLink = page.locator('.result-link').first();
-    assert.equal(await activationLink.evaluate((el) => document.activeElement === el), true);
+    const resultFocus = await activationLink.evaluate((expected) => {
+      const active = document.activeElement;
+      return {
+        focused: active === expected,
+        readyState: document.readyState,
+        activeTag: active instanceof Element ? active.tagName.toLowerCase() : null,
+        activeId: active instanceof Element ? active.id : null,
+        activeClasses: active instanceof Element ? [...active.classList] : [],
+      };
+    });
+    assert.equal(resultFocus.focused, true, `j should focus the first result link: ${JSON.stringify(resultFocus)}`);
     const linkEvidence = await activationLink.evaluate((link) => {
       window.__t03Activation = null;
       link.addEventListener('click', (event) => {
@@ -981,10 +1123,47 @@ async function runUnavailable() {
   await context.close();
 }
 
+async function runSourceAvailability() {
+  const context = await newContext({ viewport: { width: 1440, height: 900 } });
+  const page = await context.newPage();
+  attachPageEvidence(page);
+  await check('source-availability', async () => {
+    const response = await searchByQuery(page, 'source-availability', { categories: 'general' });
+    assert.equal(response.status(), 200);
+    const notice = page.locator('.notice[role="status"]');
+    const noticeText = await notice.innerText();
+    assert(noticeText.includes('Google (blocked)'));
+    assert(noticeText.includes('Reddit (rate limited)'));
+    assert(noticeText.includes('Duckduckgo (successful scrape returned no results)'));
+    const rail = page.locator('.results-rail');
+    assert(await rail.getByText('Source status', { exact: true }).isVisible());
+    for (const [name, status] of [
+      ['Google', 'blocked'],
+      ['Reddit', 'rate limited'],
+    ]) {
+      const row = rail
+        .locator('.rail-source-unavailable')
+        .filter({ has: page.getByText(name, { exact: true }) });
+      assert.equal(await row.locator('.rail-source-name').innerText(), name);
+      assert.equal(await row.locator('.rail-source-count').innerText(), status);
+    }
+    const emptyRow = rail
+      .locator('.rail-source-empty')
+      .filter({ has: page.getByText('Duckduckgo', { exact: true }) });
+    assert.equal(await emptyRow.locator('.rail-source-name').innerText(), 'Duckduckgo');
+    assert.equal(await emptyRow.locator('.rail-source-count').innerText(), 'no results');
+    assert((await page.locator('body').innerText()).split('Google').length - 1 >= 2);
+    assert(await page.locator('article[data-result-card]').count() > 0);
+    await screenshot(page, 'source-availability.png');
+  });
+  await context.close();
+}
+
 async function writeRuntimeEvidence() {
   const path = pathFor(`${scenario}.browser-runtime-errors.json`);
   const document = {
     unexpected_requests: unexpectedRequests,
+    synthetic_fixture_responses: syntheticFixtureResponses,
     console_errors: consoleErrors,
     http_error_responses: httpErrorResponses,
     http_error_console_statuses: httpErrorConsoleStatuses,
@@ -1056,6 +1235,7 @@ async function main() {
   else if (scenario === 'rate-limited') await runErrorScenario('rate-limited', 429, 'keep-rate-limited');
   else if (scenario === 'html-disabled') await runErrorScenario('disabled-format', 403, 'keep-disabled-format');
   else if (scenario === 'unavailable') await runUnavailable();
+  else if (scenario === 'source-availability') await runSourceAvailability();
 
   try {
     await browser.close();
@@ -1071,6 +1251,7 @@ async function main() {
     'rate-limited': [429],
     'html-disabled': [403],
     unavailable: [503],
+    'source-availability': [],
   }[scenario];
   const observedHttpStatuses = httpErrorResponses.map((row) => row.status).sort((a, b) => a - b);
   const observedConsoleStatuses = [...httpErrorConsoleStatuses].sort((a, b) => a - b);
@@ -1106,6 +1287,7 @@ async function main() {
     skipped: [],
     failures,
     unexpected_requests: unexpectedRequests,
+    synthetic_fixture_responses: syntheticFixtureResponses,
     console_errors: consoleErrors,
     http_error_responses: httpErrorResponses,
     http_error_console_statuses: httpErrorConsoleStatuses,
