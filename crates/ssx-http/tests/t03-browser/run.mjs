@@ -1170,6 +1170,7 @@ async function writeRuntimeEvidence() {
     engine_console_parity: engineConsoleParity,
     page_errors: pageErrors,
     request_failures: requestFailures,
+    timing_control_evidence: interactionControls,
   };
   const bytes = Buffer.from(`${JSON.stringify(document, null, 2)}\n`);
   writeFileSync(path, bytes, { flag: 'wx' });
@@ -1307,6 +1308,8 @@ async function main() {
 }
 
 main().catch(async (error) => {
+  const timingControlEvidence = error?.timingControlsEvidence ?? error?.cause?.timingControlsEvidence;
+  if (timingControlEvidence) interactionControls = timingControlEvidence;
   if (browser) {
     try {
       await browser.close();
