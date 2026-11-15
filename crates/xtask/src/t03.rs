@@ -14,12 +14,15 @@ use std::{
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 const CLIENT: &str = "crates/ssx-http/tests/t03-browser/run.mjs";
-const SCENARIOS: [&str; 5] = [
+const SOURCE_ASSERTIONS: &[u8] =
+    include_bytes!("../../../docs/rust-rewrite/t03/source-assertions-v1.json");
+const SCENARIOS: [&str; 6] = [
     "contract",
     "cached-error",
     "rate-limited",
     "html-disabled",
     "unavailable",
+    "source-availability",
 ];
 const ENGINES: [&str; 3] = ["chromium", "firefox", "webkit"];
 
@@ -42,7 +45,7 @@ const HTTP_TESTS: [&str; 11] = [
     "blank_optional_html_bounds_are_absent_and_machine_blanks_stay_rejected",
     "landing_native_form_submits_query_and_scope_together_from_both_buttons",
 ];
-const SOURCES: [(&str, &[u8]); 13] = [
+const SOURCES: [(&str, &[u8]); 14] = [
     ("crates/xtask/src/t03.rs", include_bytes!("t03.rs")),
     (
         "crates/ssx-http/src/portal.rs",
@@ -89,6 +92,10 @@ const SOURCES: [(&str, &[u8]); 13] = [
         include_bytes!("../../ssx-http/tests/t03-browser/interaction.mjs"),
     ),
     (
+        "docs/rust-rewrite/t03/source-assertions-v1.json",
+        SOURCE_ASSERTIONS,
+    ),
+    (
         "docs/rust-rewrite/t02/original-bindings.json",
         include_bytes!("../../../docs/rust-rewrite/t02/original-bindings.json"),
     ),
@@ -113,6 +120,79 @@ fn regular(path: &Path, limit: u64) -> Result<Vec<u8>> {
         "regular bounded artifact required",
     )?;
     fs::read(path).map_err(|e| format!("{}: {e}", path.display()))
+}
+/// Inventory totals describe unresolved source parity; they never admit acceptance.
+fn validate_source_assertion_inventory(manifest: &Value) -> Result<()> {
+    need(
+        manifest["schema"] == "T03_SOURCE_ASSERTIONS_V1"
+            && manifest["plan_id"] == "T03"
+            && manifest["issue"] == 898,
+        "source-assertion manifest identity differs",
+    )?;
+    let rows = manifest["rows"]
+        .as_array()
+        .ok_or("T03 source-assertion inventory rows missing")?;
+    let inventory = &manifest["inventory_assertions"];
+    need(
+        !rows.is_empty()
+            && manifest["totals"]["assertion_rows"].as_u64() == Some(rows.len() as u64)
+            && inventory["expected_total_rows"].as_u64() == Some(rows.len() as u64),
+        "source-assertion inventory row totals differ",
+    )?;
+    let mut ids = BTreeSet::new();
+    let mut counts = BTreeMap::from([
+        ("unresolved_fixture_predicate_or_contract_gap", 0u64),
+        ("existing_counterpart_candidate", 0),
+        ("retained_raw_mapping_gap", 0),
+        ("reviewed_intentional_difference", 0),
+    ]);
+    need(
+        inventory["require_no_accepted_parity_claims"] == true,
+        "source-assertion inventory must require no accepted parity claims",
+    )?;
+    for row in rows {
+        let id = row["id"]
+            .as_str()
+            .ok_or("T03 source-assertion inventory row ID missing")?;
+        need(
+            !id.is_empty() && ids.insert(id),
+            "source-assertion inventory row IDs must be nonempty and unique",
+        )?;
+        let classification = row["classification"]
+            .as_str()
+            .ok_or("T03 source-assertion inventory classification missing")?;
+        let count = counts
+            .get_mut(classification)
+            .ok_or("T03 source-assertion inventory classification unknown")?;
+        *count += 1;
+        need(
+            row["original_assertion_accepted"] == false,
+            "source-assertion inventory cannot establish accepted parity",
+        )?;
+    }
+    need(
+        inventory["expected_unique_row_ids"].as_u64() == Some(ids.len() as u64),
+        "source-assertion inventory unique ID total differs",
+    )?;
+    let observed = serde_json::to_value(&counts).map_err(|error| error.to_string())?;
+    for (name, declared) in [
+        (
+            "totals.classification_counts",
+            &manifest["totals"]["classification_counts"],
+        ),
+        (
+            "inventory_assertions.expected_classification_counts",
+            &inventory["expected_classification_counts"],
+        ),
+    ] {
+        need(
+            declared == &observed,
+            &format!(
+                "source-assertion inventory {name} differs: declared={declared}, observed={observed}"
+            ),
+        )?;
+    }
+    Ok(())
 }
 fn sources(root: &Path) -> Result<Value> {
     let mut rows = Vec::new();
@@ -176,6 +256,31 @@ fn read_completion(
     )?;
     let value = serde_json::from_slice(&raw).map_err(|e| format!("T03 receipt JSON: {e}"))?;
     Ok((path, value))
+}
+fn formatter_completion(base: &Path, process_dir: &Path, stdout: &str) -> Result<(Value, String)> {
+    let markers = completion_lines(stdout, "T03_FORMATTER_RECEIPT ")?;
+    need(
+        markers.len() == 1,
+        "direct formatter receipt completion marker missing or duplicated",
+    )?;
+    exact_keys(
+        &markers[0],
+        &["path", "sha256"],
+        "direct formatter receipt completion marker",
+    )?;
+    let (path, receipt) = read_completion(base, &markers[0], "path", "sha256")?;
+    let expected_dir = process_dir.canonicalize().map_err(|e| e.to_string())?;
+    need(
+        path.parent() == Some(expected_dir.as_path())
+            && path.file_name().and_then(|name| name.to_str())
+                == Some("formatter-source-availability.json"),
+        "direct formatter receipt escaped its source-availability process directory",
+    )?;
+    let digest = markers[0]["sha256"]
+        .as_str()
+        .ok_or("direct formatter receipt completion digest missing")?
+        .to_owned();
+    Ok((receipt, digest))
 }
 fn completion_lines(stdout: &str, marker: &str) -> Result<Vec<Value>> {
     stdout
@@ -291,6 +396,8 @@ fn expected_http() -> Vec<HttpExpected> {
         "malicious",
         "missing",
         "empty",
+        "empty-source",
+        "media",
         "partial",
         "all-failed",
         "long",
@@ -303,6 +410,7 @@ fn expected_http() -> Vec<HttpExpected> {
             2,
         );
     }
+    add("source-availability", "source-availability", 200, 4);
     for path in ["root", "search"] {
         for method in ["GET", "POST"] {
             for format in ["html", "json", "yaml", "csv", "rss"] {
@@ -353,12 +461,12 @@ fn group_for(path: &Path, groups: &BTreeSet<&str>) -> Result<String> {
 fn validate_http(base: &Path, stdout: &str, binary: &Path, binary_sha: &str) -> Result<Value> {
     let expected = expected_http();
     need(
-        expected.len() == 104,
+        expected.len() == 107,
         "compiled HTTP receipt inventory is incomplete",
     )?;
     let groups: BTreeSet<_> = expected.iter().map(|row| row.group).collect();
     need(
-        groups.len() == 12,
+        groups.len() == 13,
         "compiled HTTP process inventory is incomplete",
     )?;
     let wanted: BTreeMap<_, _> = expected
@@ -533,6 +641,17 @@ fn validate_http(base: &Path, stdout: &str, binary: &Path, binary_sha: &str) -> 
         "original two-node/16-assertion handoff differs",
     )?;
     let assertions = assertion_evidence(&nodes, &wire)?;
+    let formatter_dir = process_dirs
+        .get("source-availability")
+        .ok_or("T03 source-availability process directory missing")?;
+    let (formatter_receipt, formatter_sha256) = formatter_completion(base, formatter_dir, stdout)?;
+    let source_availability_assertions = source_availability_evidence(
+        SOURCE_ASSERTIONS,
+        &wire,
+        &formatter_receipt,
+        &formatter_sha256,
+        stdout,
+    )?;
     for (group, directory) in &process_dirs {
         let mut wanted_files: BTreeSet<_> = expected
             .iter()
@@ -549,6 +668,9 @@ fn validate_http(base: &Path, stdout: &str, binary: &Path, binary_sha: &str) -> 
         }
         if group == "inherited" {
             wanted_files.insert("source-assertions.json".into());
+        }
+        if group == "source-availability" {
+            wanted_files.insert("formatter-source-availability.json".into());
         }
         let mut actual_files = BTreeSet::new();
         for entry in fs::read_dir(directory).map_err(|e| e.to_string())? {
@@ -579,11 +701,11 @@ fn validate_http(base: &Path, stdout: &str, binary: &Path, binary_sha: &str) -> 
             "HTTP raw engine-call count differs",
         )?;
         for line in calls.lines() {
-            validate_engine_call(line, "HTTP fixture reached an unexpected engine")?;
+            validate_engine_call(line, group, "HTTP fixture reached an unexpected engine")?;
         }
     }
     Ok(
-        json!({"http_receipts":wire,"processes":processes,"source_assertions":assertions,"child_joined":true,"child_exit_success":true}),
+        json!({"http_receipts":wire,"processes":processes,"source_assertions":assertions,"source_availability_assertions":source_availability_assertions,"child_joined":true,"child_exit_success":true}),
     )
 }
 fn assertion_evidence(nodes: &[Value], wire: &[Value]) -> Result<Value> {
@@ -646,6 +768,306 @@ fn assertion_evidence(nodes: &[Value], wire: &[Value]) -> Result<Value> {
     Ok(Value::Array(assertions))
 }
 
+fn source_availability_evidence(
+    source: &[u8],
+    wire: &[Value],
+    formatter: &Value,
+    formatter_sha256: &str,
+    test_stdout: &str,
+) -> Result<Value> {
+    const FIXTURE_SUBSTITUTION: &str = "The frozen Python formatter fixture supplies one climate result, blocked Google, rate-limited Reddit, partial=true, explicit empty_engines=[[duckduckgo, no results]], and one responsive source. The candidate records an equivalent direct PublicPortal formatter input and HTML receipt. Its separate source-availability HTTP/browser scenario exercises the real service's canonical successful-scrape reason; it does not infer empty diagnostics from partial ok/zero outcomes.";
+    const CANDIDATE_SCOPE: &str = "Candidate direct formatter-input mapping and separate source-availability HTTP comparison only. Historical candidate_source_availability_2026_11_13 remains unchanged. Original source identities, hashes, predicates and historical receipts are preserved; exact-head hosted validation and human T03 acceptance remain outstanding.";
+    const FORMATTER_TEST: &str =
+        "malicious_optional_empty_partial_and_unavailable_states_are_truthful";
+    const FORMATTER_TEST_OUTPUT_PREFIX: &str =
+        "test malicious_optional_empty_partial_and_unavailable_states_are_truthful ... ";
+    const FORMATTER_COMPLETION_MARKER: &str = "T03_FORMATTER_RECEIPT";
+    const RECEIPT_FILENAME: &str = "formatter-source-availability.json";
+
+    let manifest: Value = serde_json::from_slice(source)
+        .map_err(|error| format!("T03 source-assertion manifest JSON: {error}"))?;
+    validate_source_assertion_inventory(&manifest)?;
+    let candidate = &manifest["evidence_packet"]["candidate_source_availability_repair_2026_11_13"];
+    need(
+        candidate["http_binding_id"] == "source-availability"
+            && candidate["browser_scenario"] == "source-availability"
+            && candidate["fixture_substitution"] == FIXTURE_SUBSTITUTION
+            && candidate["scope"] == CANDIDATE_SCOPE
+            && candidate["source_assertions"]
+                == json!(["F:L599", "F:L600", "F:L601", "F:L602", "F:L603"])
+            && candidate["direct_formatter_input_mapping"]
+                == json!({
+                    "schema":"T03_DIRECT_FORMATTER_INPUT_RECEIPT_V1",
+                    "filename":RECEIPT_FILENAME,
+                    "renderer":"PublicPortal::search",
+                    "test_name":FORMATTER_TEST,
+                    "test_output_prefix":FORMATTER_TEST_OUTPUT_PREFIX,
+                    "completion_marker":FORMATTER_COMPLETION_MARKER,
+                    "receipt_field":"output.html",
+                    "source_assertions":["F:L599", "F:L600", "F:L601", "F:L602", "F:L603"],
+                    "input_contract":{
+                        "query":"climate",
+                        "result_url":"https://example.com",
+                        "result_title":"A result",
+                        "unresponsive_engines":[["google", "blocked"], ["reddit", "rate limited"]],
+                        "partial":true,
+                        "empty_engines":[["duckduckgo", "no results"]],
+                        "responsive_engine_count":1
+                    }
+                }),
+        "source-availability candidate mapping differs",
+    )?;
+    need(
+        HTTP_TESTS.contains(&FORMATTER_TEST)
+            && test_stdout
+                .lines()
+                .filter(|line| line.starts_with(FORMATTER_TEST_OUTPUT_PREFIX))
+                .count()
+                == 1,
+        "direct formatter source-availability test did not execute exactly once",
+    )?;
+    need(
+        formatter_sha256.len() == 64
+            && formatter_sha256
+                .bytes()
+                .all(|byte| byte.is_ascii_hexdigit()),
+        "direct formatter receipt digest is invalid",
+    )?;
+    exact_keys(
+        formatter,
+        &[
+            "schema",
+            "renderer",
+            "source_assertion_ids",
+            "input",
+            "output",
+        ],
+        "direct formatter receipt",
+    )?;
+    exact_keys(
+        &formatter["input"],
+        &["response", "meta", "request", "responsive_engine_count"],
+        "direct formatter input",
+    )?;
+    exact_keys(
+        &formatter["input"]["response"],
+        &[
+            "query",
+            "results",
+            "selected_engines",
+            "engine_outcomes",
+            "partial",
+            "empty_engines",
+        ],
+        "direct formatter response",
+    )?;
+    exact_keys(&formatter["output"], &["html"], "direct formatter output")?;
+    need(
+        formatter["schema"] == "T03_DIRECT_FORMATTER_INPUT_RECEIPT_V1"
+            && formatter["renderer"] == "PublicPortal::search"
+            && formatter["source_assertion_ids"]
+                == json!(["F:L599", "F:L600", "F:L601", "F:L602", "F:L603"])
+            && formatter["input"]["response"]["query"] == "climate"
+            && formatter["input"]["response"]["results"]
+                == json!([{"url":"https://example.com", "title":"A result", "engine":"example"}])
+            && formatter["input"]["response"]["selected_engines"]
+                == json!(["google", "reddit", "duckduckgo", "example"])
+            && formatter["input"]["response"]["engine_outcomes"]
+                == json!([
+                    {"engine":"google", "status":"blocked", "result_count":0},
+                    {"engine":"reddit", "status":"rate_limited", "result_count":0},
+                    {"engine":"example", "status":"ok", "result_count":1}
+                ])
+            && formatter["input"]["response"]["partial"] == true
+            && formatter["input"]["response"]["empty_engines"]
+                == json!([["duckduckgo", "no results"]])
+            && formatter["input"]["meta"].is_null()
+            && formatter["input"]["request"]["query"] == "climate"
+            && formatter["input"]["responsive_engine_count"] == 1,
+        "direct formatter input differs from the frozen Python fixture contract",
+    )?;
+    let formatter_html = formatter["output"]["html"]
+        .as_str()
+        .ok_or("T03 direct formatter HTML missing")?;
+
+    let matching_receipts: Vec<_> = wire
+        .iter()
+        .filter(|entry| {
+            entry["group"] == "source-availability"
+                && entry["binding"]["id"] == "source-availability"
+        })
+        .collect();
+    need(
+        matching_receipts.len() == 1,
+        "source-availability HTTP receipt missing or duplicated",
+    )?;
+    let receipt = matching_receipts[0];
+    let http_body = receipt["observation"]["body"]
+        .as_str()
+        .ok_or("T03 source-availability HTTP response body missing")?;
+    need(
+        http_body.contains("Duckduckgo (successful scrape returned no results)")
+            && !http_body.contains("Duckduckgo (no results)"),
+        "source-availability HTTP body lost its canonical scrape diagnostic",
+    )?;
+
+    let rows = manifest["rows"]
+        .as_array()
+        .ok_or("T03 source-assertion rows missing")?;
+    let expected = [
+        (
+            "F:L599",
+            599,
+            "assert \"Google (blocked)\" in output",
+            "5d805a6bad8dae1cbe6d0dfec71323075e4da4b57e492ea3ddff50420a3a99db",
+            "\"Google (blocked)\" in output",
+            "contains",
+            "Google (blocked)",
+            "Google (blocked)",
+        ),
+        (
+            "F:L600",
+            600,
+            "assert \"Reddit (rate limited)\" in output",
+            "bbd24f74d65d7cdad763611d6f1a1f660c72dff0dcb7571fdd26548a23975bb8",
+            "\"Reddit (rate limited)\" in output",
+            "contains",
+            "Reddit (rate limited)",
+            "Reddit (rate limited)",
+        ),
+        (
+            "F:L601",
+            601,
+            "assert \"Duckduckgo (no results)\" in output",
+            "3ab09e5a46ceb890fcd5b890457b2f7c8fba0254c2383b86ada57c0ac8b39f89",
+            "\"Duckduckgo (no results)\" in output",
+            "contains",
+            "Duckduckgo (no results)",
+            "Duckduckgo (successful scrape returned no results)",
+        ),
+        (
+            "F:L602",
+            602,
+            "assert \"Source status\" in output",
+            "b5b013fef9c3409bee416ef32e146523911e3c358e779b6ebd88a92284c97117",
+            "\"Source status\" in output",
+            "contains",
+            "Source status",
+            "Source status",
+        ),
+        (
+            "F:L603",
+            603,
+            "assert output.count(\"Google\") >= 2",
+            "8fd4f04ec06cc83fc9e88c01c6507e222910ae5a4c78b5152794d4a7733b20e0",
+            "output.count(\"Google\") >= 2",
+            "minimum",
+            "Google",
+            "Google",
+        ),
+    ];
+    let mut evidence = Vec::with_capacity(expected.len());
+    for (id, line, assertion, assertion_sha256, predicate, kind, frozen_value, http_value) in
+        expected
+    {
+        let matching_rows: Vec<_> = rows.iter().filter(|row| row["id"] == id).collect();
+        need(
+            matching_rows.len() == 1,
+            &format!("source assertion {id} missing or duplicated"),
+        )?;
+        let row = matching_rows[0];
+        need(
+            row["scope"] == "formatter_html"
+                && row["source"]["path"] == "tests/test_formatter.py"
+                && row["source"]["baseline_commit"] == "20109f9083babd014971951e8c02565ae51c2326"
+                && row["source"]["git_blob"] == "012c9365c62fa4523c3cac67081024995975bdc3"
+                && row["source"]["file_sha256"]
+                    == "28de731a81090067f90eabf2d37c28e92c026da38e0d95007d116f9fe60929b6"
+                && row["source"]["function"]
+                    == "TestPortalHtml.test_result_page_names_unavailable_sources_in_notice_and_rail"
+                && row["source"]["function_line"] == 587
+                && row["source"]["line"] == line
+                && row["source"]["end_line"] == line
+                && row["source"]["assertion"] == assertion
+                && row["source"]["assertion_sha256"] == assertion_sha256
+                && row["source"]["predicate"] == predicate
+                && row["expectation"]["kind"] == kind
+                && row["expectation"]["subject"]
+                    == if kind == "minimum" {
+                        "output.count('Google')"
+                    } else {
+                        "output"
+                    }
+                && row["expectation"]["value"]
+                    == if kind == "minimum" {
+                        json!(2)
+                    } else {
+                        json!(frozen_value)
+                    }
+                && row["expected_predicate_result"] == true
+                && row["ownership"]["owner_plan_id"] == "T03"
+                && row["ownership"]["issue"] == 898
+                && row["classification"] == "existing_counterpart_candidate"
+                && row["original_assertion_accepted"] == false
+                && row["unresolved_gap"]["kind"] == "candidate_gate_and_human_acceptance_pending",
+            &format!("source assertion {id} identity or acceptance boundary differs"),
+        )?;
+        let comparisons = row["native_evidence"]
+            .as_array()
+            .ok_or_else(|| format!("source assertion {id} mapping missing"))?
+            .iter()
+            .filter(|entry| entry["kind"] == "candidate_t03_direct_formatter_input_mapping")
+            .collect::<Vec<_>>();
+        need(
+            comparisons.len() == 1
+                && comparisons[0]["path"] == "crates/ssx-http/tests/t03.rs"
+                && comparisons[0]["test_name"] == FORMATTER_TEST
+                && comparisons[0]["receipt_filename"] == RECEIPT_FILENAME
+                && comparisons[0]["receipt_field"] == "output.html"
+                && comparisons[0]["predicate_in_current_gate"] == true
+                && comparisons[0]["test_output_prefix"] == FORMATTER_TEST_OUTPUT_PREFIX
+                && comparisons[0]["completion_marker"] == FORMATTER_COMPLETION_MARKER,
+            &format!("source assertion {id} direct formatter mapping differs"),
+        )?;
+        let source_predicate_observed = match kind {
+            "contains" => formatter_html.contains(frozen_value),
+            "minimum" => formatter_html.matches(frozen_value).count() >= 2,
+            _ => false,
+        };
+        let http_comparison_observed = match kind {
+            "contains" => http_body.contains(http_value),
+            "minimum" => http_body.matches(http_value).count() >= 2,
+            _ => false,
+        };
+        need(
+            source_predicate_observed && http_comparison_observed,
+            &format!("source assertion {id} formatter or HTTP comparison failed"),
+        )?;
+        evidence.push(json!({
+            "source_assertion_id": id,
+            "source_assertion_sha256": assertion_sha256,
+            "scenario": "source-availability",
+            "formatter_receipt": {
+                "filename": RECEIPT_FILENAME,
+                "sha256": formatter_sha256,
+                "field": "output.html"
+            },
+            "source_predicate": {
+                "kind": kind,
+                "frozen_value": frozen_value,
+                "observed": source_predicate_observed
+            },
+            "candidate_http_comparison": {
+                "value": http_value,
+                "receipt_sha256": receipt["binding"]["sha256"],
+                "observed": http_comparison_observed
+            },
+            "original_assertion_accepted": row["original_assertion_accepted"],
+            "status": "candidate_predicate_observed_pending_acceptance"
+        }));
+    }
+    Ok(Value::Array(evidence))
+}
 fn exact_keys(value: &Value, expected: &[&str], label: &str) -> Result<()> {
     let actual = value
         .as_object()
@@ -657,15 +1079,21 @@ fn exact_keys(value: &Value, expected: &[&str], label: &str) -> Result<()> {
     )
 }
 
-fn validate_engine_call(line: &str, error: &str) -> Result<()> {
+fn validate_engine_call(line: &str, group: &str, error: &str) -> Result<()> {
     // Engine-call query parameters are raw request evidence. The T03 page-limit
     // case intentionally includes a 4,300-digit page token, so parse through the
     // lossless JSON profile instead of serde_json's bounded integer representation.
     let call: ssx_json::Value = ssx_json::from_str(line).map_err(|e| e.to_string())?;
-    need(
-        matches!(call["engine"].as_str(), Some("alpha" | "beta" | "openalex")),
-        error,
-    )
+    let engine = call["engine"].as_str();
+    let allowed = if group == "source-availability" {
+        matches!(
+            engine,
+            Some("google" | "reddit" | "duckduckgo" | "wikipedia")
+        )
+    } else {
+        matches!(engine, Some("alpha" | "beta" | "openalex"))
+    };
+    need(allowed, error)
 }
 
 fn journey_ids(scenario: &str) -> Result<&'static [&'static str]> {
@@ -673,6 +1101,7 @@ fn journey_ids(scenario: &str) -> Result<&'static [&'static str]> {
         "contract" => Ok(&[
             "results-normal",
             "optional-metadata",
+            "empty-date-controls",
             "date-controls-roundtrip",
             "empty-suggestions",
             "partial-results",
@@ -692,6 +1121,7 @@ fn journey_ids(scenario: &str) -> Result<&'static [&'static str]> {
         "rate-limited" => Ok(&["rate-limited"]),
         "html-disabled" => Ok(&["disabled-format"]),
         "unavailable" => Ok(&["unavailable-source"]),
+        "source-availability" => Ok(&["source-availability"]),
         _ => Err("T03 unknown browser scenario".into()),
     }
 }
@@ -850,6 +1280,21 @@ fn validate_budgets(scenario: &str, engine: &str, budgets: &Value) -> Result<()>
     Ok(())
 }
 
+fn validate_synthetic_media_response(response: &Value) -> Result<()> {
+    exact_keys(
+        response,
+        &["url", "status", "content_type", "purpose"],
+        "synthetic fixture response",
+    )?;
+    need(
+        response["url"] == "https://cdn.example.com/thumb.jpg"
+            && response["status"] == 200
+            && response["content_type"] == "image/svg+xml"
+            && response["purpose"] == "offline T03 media thumbnail",
+        "synthetic media response identity differs",
+    )
+}
+
 fn validate_browser(
     base: &Path,
     stdout: &str,
@@ -894,6 +1339,7 @@ fn validate_browser(
             "skipped",
             "failures",
             "unexpected_requests",
+            "synthetic_fixture_responses",
             "console_errors",
             "http_error_responses",
             "http_error_console_statuses",
@@ -956,6 +1402,21 @@ fn validate_browser(
         need(
             receipt[field].as_array().is_some_and(Vec::is_empty),
             &format!("browser {field} must be empty"),
+        )?;
+    }
+    let fixture_responses = receipt["synthetic_fixture_responses"]
+        .as_array()
+        .ok_or("T03 synthetic fixture response evidence missing")?;
+    if scenario == "contract" {
+        need(
+            fixture_responses.len() == 1,
+            "contract browser must record its single offline media thumbnail response",
+        )?;
+        validate_synthetic_media_response(&fixture_responses[0])?;
+    } else {
+        need(
+            fixture_responses.is_empty(),
+            "non-contract browser scenario reported a synthetic media response",
         )?;
     }
     validate_http_error_evidence(&receipt, scenario, engine, base_url)?;
@@ -1757,6 +2218,7 @@ fn validate_http_error_evidence(
         "rate-limited" => &[429],
         "html-disabled" => &[403],
         "unavailable" => &[503],
+        "source-availability" => &[],
         _ => return Err("T03 unknown browser scenario for HTTP statuses".into()),
     };
     let responses = receipt["http_error_responses"]
@@ -2103,11 +2565,14 @@ pub(crate) fn validator_controls() -> Result<()> {
     let rows:Vec<_>=SCENARIOS.into_iter().flat_map(|scenario|ENGINES.into_iter().map(move |engine|json!({"scenario":scenario,"engine":engine,"source_sha256":"synthetic-validator-input","terminal":{"stop_sent":true,"child_joined":true,"child_exit_success":true,"tree_retired":true,"stdout_eof":true,"stdout_tail_bytes":0,"stderr_bytes":0}}))).collect();
     controls(&rows, "synthetic-validator-input")?;
     need(
-        expected_http().len() == 104 && HTTP_TESTS.len() == 11,
+        expected_http().len() == 107 && HTTP_TESTS.len() == 11,
         "closed HTTP inventory",
     )
 }
 pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
+    let manifest: Value = serde_json::from_slice(SOURCE_ASSERTIONS)
+        .map_err(|error| format!("T03 source-assertion manifest JSON: {error}"))?;
+    validate_source_assertion_inventory(&manifest)?;
     let before = sources(root)?;
     let source_sha = hash(&serde_json::to_vec(&before).map_err(|e| e.to_string())?);
     let base = PathBuf::from(
@@ -2239,7 +2704,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             records.push(json!({"plan":"T03","role":"browser-fixture-terminal","scenario":scenario,"terminal":terminal.as_ref().ok(),"error":terminal.as_ref().err()}));
             let terminal = terminal?;
             validate_cleanup(&terminal)?;
-            if scenario != "contract" {
+            if !matches!(scenario, "contract" | "source-availability") {
                 need(
                     terminal["engine_calls"] == 0,
                     "browser error scenario dispatched an engine",
@@ -2249,7 +2714,11 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
                 .as_str()
                 .ok_or("T03 browser engine-call observations missing")?;
             for line in calls.lines() {
-                validate_engine_call(line, "browser fixture reached an unexpected engine")?;
+                validate_engine_call(
+                    line,
+                    scenario,
+                    "browser fixture reached an unexpected engine",
+                )?;
             }
             let mut browser = validate_browser(
                 &browser_dir,
@@ -2304,16 +2773,18 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         sources(root)? == before && hash(&regular(&binary, 256 * 1024 * 1024)?) == binary_sha,
         "source or executed fixture image changed during gate",
     )?;
-    records.push(json!({"plan":"T03","role":"native-browser-acceptance","source_inputs":before,"source_sha256":source_sha,"server_binary":{"path":binary,"sha256":binary_sha},"http_tests":HTTP_TESTS,"http_receipts":104,"http_processes":12,"browser_scenarios":browser_rows,"controls":negative,"evidence_directory":run,"scope":"real native HTTP plus deterministic Chromium and Firefox browser journeys and measured synthetic budgets; actual Safari, manual visual/assistive technology and 200% zoom acceptance remain separate"}));
+    records.push(json!({"plan":"T03","role":"native-browser-acceptance","source_inputs":before,"source_sha256":source_sha,"server_binary":{"path":binary,"sha256":binary_sha},"http_tests":HTTP_TESTS,"http_receipts":107,"http_processes":13,"browser_scenarios":browser_rows,"controls":negative,"evidence_directory":run,"scope":"real native HTTP plus deterministic Chromium and Firefox browser journeys and measured synthetic budgets; actual Safari, manual visual/assistive technology and 200% zoom acceptance remain separate"}));
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use super::{
-        hash, roundtrip_controls, roundtrip_html_proof, roundtrip_machine_document,
-        roundtrip_request_key, validate_budgets, validate_date_roundtrip_call_log,
-        validate_date_roundtrip_machine_proof, validate_engine_call, validate_http_error_evidence,
+        SOURCE_ASSERTIONS, formatter_completion, hash, roundtrip_controls, roundtrip_html_proof,
+        roundtrip_machine_document, roundtrip_request_key, source_availability_evidence,
+        validate_budgets, validate_date_roundtrip_call_log, validate_date_roundtrip_machine_proof,
+        validate_engine_call, validate_http_error_evidence, validate_source_assertion_inventory,
+        validate_synthetic_media_response,
     };
     use serde_json::{Value, json};
     use std::{
@@ -2322,6 +2793,68 @@ mod tests {
         time::{SystemTime, UNIX_EPOCH},
     };
     use url::Url;
+
+    #[test]
+    fn source_assertion_inventory_counts_every_row_without_claiming_acceptance() {
+        let manifest: Value = serde_json::from_slice(SOURCE_ASSERTIONS).unwrap();
+        validate_source_assertion_inventory(&manifest)
+            .expect("current source inventory is consistent");
+        assert_eq!(manifest["rows"].as_array().unwrap().len(), 98);
+        assert_eq!(
+            manifest["totals"]["classification_counts"],
+            json!({
+                "unresolved_fixture_predicate_or_contract_gap": 47,
+                "existing_counterpart_candidate": 33,
+                "retained_raw_mapping_gap": 18,
+                "reviewed_intentional_difference": 0
+            })
+        );
+    }
+
+    #[test]
+    fn source_assertion_inventory_rejects_stale_totals_and_false_acceptance() {
+        let manifest: Value = serde_json::from_slice(SOURCE_ASSERTIONS).unwrap();
+        for pointer in [
+            "/totals/assertion_rows",
+            "/inventory_assertions/expected_total_rows",
+            "/inventory_assertions/expected_unique_row_ids",
+            "/totals/classification_counts/existing_counterpart_candidate",
+            "/inventory_assertions/expected_classification_counts/existing_counterpart_candidate",
+        ] {
+            let mut mutant = manifest.clone();
+            *mutant.pointer_mut(pointer).unwrap() = json!(999);
+            assert!(
+                validate_source_assertion_inventory(&mutant).is_err(),
+                "{pointer}"
+            );
+        }
+        for (pointer, value) in [
+            ("/rows/0/classification", json!("unknown")),
+            ("/rows/0/id", json!("")),
+            ("/rows/0/original_assertion_accepted", json!(true)),
+            ("/rows/0/original_assertion_accepted", Value::Null),
+            (
+                "/inventory_assertions/require_no_accepted_parity_claims",
+                json!(false),
+            ),
+        ] {
+            let mut mutant = manifest.clone();
+            *mutant.pointer_mut(pointer).unwrap() = value;
+            assert!(
+                validate_source_assertion_inventory(&mutant).is_err(),
+                "{pointer}"
+            );
+        }
+        let mut duplicate = manifest.clone();
+        duplicate["rows"][1]["id"] = duplicate["rows"][0]["id"].clone();
+        assert!(validate_source_assertion_inventory(&duplicate).is_err());
+        let mut missing_count = manifest.clone();
+        missing_count["totals"]["classification_counts"]
+            .as_object_mut()
+            .unwrap()
+            .remove("reviewed_intentional_difference");
+        assert!(validate_source_assertion_inventory(&missing_count).is_err());
+    }
 
     struct TestEvidenceDir(PathBuf);
 
@@ -2367,6 +2900,46 @@ mod tests {
         fn drop(&mut self) {
             fs::remove_dir_all(&self.0).expect("remove owned T03 unit-test directory");
         }
+    }
+
+    #[test]
+    fn formatter_completion_authenticates_the_owned_process_receipt() {
+        let directory = TestEvidenceDir::new();
+        let base = &directory.0;
+        let process_dir = base.join("t03-source-availability-1-2");
+        fs::create_dir_all(&process_dir).unwrap();
+        let receipt_path = process_dir.join("formatter-source-availability.json");
+        let receipt = json!({"schema":"T03_DIRECT_FORMATTER_INPUT_RECEIPT_V1"});
+        let raw = serde_json::to_vec(&receipt).unwrap();
+        fs::write(&receipt_path, &raw).unwrap();
+        let marker = json!({"path":receipt_path,"sha256":hash(&raw)});
+        let line = format!(
+            "test malicious_optional_empty_partial_and_unavailable_states_are_truthful ... T03_FORMATTER_RECEIPT {}\n",
+            serde_json::to_string(&marker).unwrap()
+        );
+        let (observed, digest) = formatter_completion(base, &process_dir, &line).unwrap();
+        assert_eq!(observed, receipt);
+        assert_eq!(digest, hash(&raw));
+        assert!(formatter_completion(base, &process_dir, &format!("{line}{line}")).is_err());
+
+        let mut wrong_digest = marker.clone();
+        wrong_digest["sha256"] = json!("0".repeat(64));
+        let wrong_digest_output = format!(
+            "T03_FORMATTER_RECEIPT {}\n",
+            serde_json::to_string(&wrong_digest).unwrap()
+        );
+        assert!(formatter_completion(base, &process_dir, &wrong_digest_output).is_err());
+
+        let other_dir = base.join("t03-other-process-1-2");
+        fs::create_dir_all(&other_dir).unwrap();
+        let escaped_path = other_dir.join("formatter-source-availability.json");
+        fs::write(&escaped_path, &raw).unwrap();
+        let escaped_marker = json!({"path":escaped_path,"sha256":hash(&raw)});
+        let escaped_output = format!(
+            "T03_FORMATTER_RECEIPT {}\n",
+            serde_json::to_string(&escaped_marker).unwrap()
+        );
+        assert!(formatter_completion(base, &process_dir, &escaped_output).is_err());
     }
 
     fn roundtrip_url(
@@ -2480,6 +3053,29 @@ mod tests {
             },
             "handoff_p95_ms": {"observed": 60.0, "limit": 150.0, "pass": true}
         })
+    }
+
+    #[test]
+    fn synthetic_media_response_requires_the_source_parity_fixture_url() {
+        let current = json!({
+            "url": "https://cdn.example.com/thumb.jpg",
+            "status": 200,
+            "content_type": "image/svg+xml",
+            "purpose": "offline T03 media thumbnail"
+        });
+        validate_synthetic_media_response(&current).expect("candidate media URL must validate");
+
+        let obsolete = json!({
+            "url": "https://example.org/image-thumb.jpg",
+            "status": 200,
+            "content_type": "image/svg+xml",
+            "purpose": "offline T03 media thumbnail"
+        });
+        let error = validate_synthetic_media_response(&obsolete).expect_err("old URL must fail");
+        assert!(
+            error.contains("synthetic media response identity differs"),
+            "{error}"
+        );
     }
 
     #[test]
@@ -2750,14 +3346,408 @@ mod tests {
     fn engine_call_keeps_arbitrary_precision_page_evidence() {
         let page = "9".repeat(4300);
         let line = format!(r#"{{"engine":"beta","page":{page}}}"#);
-        assert!(validate_engine_call(&line, "unexpected engine").is_ok());
+        assert!(validate_engine_call(&line, "contract", "unexpected engine").is_ok());
     }
 
     #[test]
     fn engine_call_still_rejects_unexpected_engine() {
         assert!(
-            validate_engine_call(r#"{"engine":"untrusted","page":1}"#, "unexpected engine")
+            validate_engine_call(
+                r#"{"engine":"untrusted","page":1}"#,
+                "contract",
+                "unexpected engine"
+            )
+            .is_err()
+        );
+    }
+
+    #[test]
+    fn source_availability_engine_calls_are_bound_to_its_fixture_sources() {
+        for engine in ["google", "reddit", "duckduckgo", "wikipedia"] {
+            let line = format!(r#"{{"engine":"{engine}","page":1}}"#);
+            assert!(
+                validate_engine_call(&line, "source-availability", "unexpected engine").is_ok()
+            );
+        }
+        assert!(
+            validate_engine_call(
+                r#"{"engine":"alpha","page":1}"#,
+                "source-availability",
+                "unexpected engine"
+            )
+            .is_err()
+        );
+    }
+
+    #[test]
+    fn source_availability_assertions_are_bound_to_exact_source_and_http_evidence() {
+        let http_body = "Google (blocked) Reddit (rate limited) Duckduckgo (successful scrape returned no results) Source status Google Google";
+        let http_receipt = |body: &str, id: &str, group: &str| {
+            vec![json!({
+                "group": group,
+                "binding": {"id": id, "sha256": "a".repeat(64)},
+                "observation": {"body": body}
+            })]
+        };
+        let direct_html = "Some sources could not answer this search. Google (blocked) Reddit (rate limited) Duckduckgo (no results) Source status Google Google";
+        let formatter_receipt = |html: &str| {
+            json!({
+                "schema": "T03_DIRECT_FORMATTER_INPUT_RECEIPT_V1",
+                "renderer": "PublicPortal::search",
+                "source_assertion_ids": ["F:L599", "F:L600", "F:L601", "F:L602", "F:L603"],
+                "input": {
+                    "response": {
+                        "query": "climate",
+                        "results": [{"url":"https://example.com", "title":"A result", "engine":"example"}],
+                        "selected_engines": ["google", "reddit", "duckduckgo", "example"],
+                        "engine_outcomes": [
+                            {"engine":"google", "status":"blocked", "result_count":0},
+                            {"engine":"reddit", "status":"rate_limited", "result_count":0},
+                            {"engine":"example", "status":"ok", "result_count":1}
+                        ],
+                        "partial": true,
+                        "empty_engines": [["duckduckgo", "no results"]]
+                    },
+                    "meta": null,
+                    "request": {"query":"climate"},
+                    "responsive_engine_count": 1
+                },
+                "output": {"html": html}
+            })
+        };
+        let direct = formatter_receipt(direct_html);
+        let direct_sha256 = "b".repeat(64);
+        let test_output =
+            "test malicious_optional_empty_partial_and_unavailable_states_are_truthful ... ok\n";
+        let nocapture_output = "test malicious_optional_empty_partial_and_unavailable_states_are_truthful ... T03_FORMATTER_RECEIPT {\"path\":\"/task/source-availability/formatter-source-availability.json\",\"sha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}\n";
+        let valid = http_receipt(http_body, "source-availability", "source-availability");
+        let evidence = source_availability_evidence(
+            SOURCE_ASSERTIONS,
+            &valid,
+            &direct,
+            &direct_sha256,
+            test_output,
+        )
+        .expect("the direct formatter input and independent HTTP comparison should map");
+        let evidence = evidence.as_array().expect("candidate evidence is an array");
+        assert_eq!(evidence.len(), 5);
+        for row in evidence {
+            assert_eq!(row["source_predicate"]["observed"], true);
+            assert_eq!(
+                row["formatter_receipt"]["filename"],
+                "formatter-source-availability.json"
+            );
+            assert_eq!(row["formatter_receipt"]["sha256"], direct_sha256);
+            assert_eq!(row["original_assertion_accepted"], false);
+            assert_eq!(
+                row["status"],
+                "candidate_predicate_observed_pending_acceptance"
+            );
+        }
+        assert_eq!(
+            evidence[2]["source_predicate"]["frozen_value"],
+            "Duckduckgo (no results)"
+        );
+        assert_eq!(
+            evidence[2]["candidate_http_comparison"]["value"],
+            "Duckduckgo (successful scrape returned no results)"
+        );
+        assert_eq!(evidence[2]["candidate_http_comparison"]["observed"], true);
+        assert!(
+            source_availability_evidence(
+                SOURCE_ASSERTIONS,
+                &valid,
+                &direct,
+                &direct_sha256,
+                nocapture_output,
+            )
+            .is_ok(),
+            "the test harness may print the receipt marker after its output prefix"
+        );
+
+        let wrong_binding = http_receipt(http_body, "contract", "source-availability");
+        assert!(
+            source_availability_evidence(
+                SOURCE_ASSERTIONS,
+                &wrong_binding,
+                &direct,
+                &direct_sha256,
+                test_output
+            )
+            .is_err()
+        );
+        let wrong_group = http_receipt(http_body, "source-availability", "contract");
+        assert!(
+            source_availability_evidence(
+                SOURCE_ASSERTIONS,
+                &wrong_group,
+                &direct,
+                &direct_sha256,
+                test_output
+            )
+            .is_err()
+        );
+        let mut duplicated_receipts = valid.clone();
+        duplicated_receipts.push(valid[0].clone());
+        assert!(
+            source_availability_evidence(
+                SOURCE_ASSERTIONS,
+                &duplicated_receipts,
+                &direct,
+                &direct_sha256,
+                test_output
+            )
+            .is_err()
+        );
+
+        let mut missing: Value = serde_json::from_slice(SOURCE_ASSERTIONS).unwrap();
+        missing["rows"]
+            .as_array_mut()
+            .unwrap()
+            .retain(|row| row["id"] != "F:L599");
+        assert!(
+            source_availability_evidence(
+                &serde_json::to_vec(&missing).unwrap(),
+                &valid,
+                &direct,
+                &direct_sha256,
+                test_output
+            )
+            .is_err()
+        );
+        let mut duplicated: Value = serde_json::from_slice(SOURCE_ASSERTIONS).unwrap();
+        let rows = duplicated["rows"].as_array_mut().unwrap();
+        let row = rows
+            .iter()
+            .find(|row| row["id"] == "F:L599")
+            .unwrap()
+            .clone();
+        rows.push(row);
+        assert!(
+            source_availability_evidence(
+                &serde_json::to_vec(&duplicated).unwrap(),
+                &valid,
+                &direct,
+                &direct_sha256,
+                test_output
+            )
+            .is_err()
+        );
+
+        let mut missing_mapping: Value = serde_json::from_slice(SOURCE_ASSERTIONS).unwrap();
+        let row = missing_mapping["rows"]
+            .as_array_mut()
+            .unwrap()
+            .iter_mut()
+            .find(|row| row["id"] == "F:L601")
+            .unwrap();
+        row["native_evidence"]
+            .as_array_mut()
+            .unwrap()
+            .retain(|entry| entry["kind"] != "candidate_t03_direct_formatter_input_mapping");
+        assert!(
+            source_availability_evidence(
+                &serde_json::to_vec(&missing_mapping).unwrap(),
+                &valid,
+                &direct,
+                &direct_sha256,
+                test_output
+            )
+            .is_err()
+        );
+        let mut duplicated_mapping: Value = serde_json::from_slice(SOURCE_ASSERTIONS).unwrap();
+        let row = duplicated_mapping["rows"]
+            .as_array_mut()
+            .unwrap()
+            .iter_mut()
+            .find(|row| row["id"] == "F:L601")
+            .unwrap();
+        let mapping = row["native_evidence"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|entry| entry["kind"] == "candidate_t03_direct_formatter_input_mapping")
+            .unwrap()
+            .clone();
+        row["native_evidence"].as_array_mut().unwrap().push(mapping);
+        assert!(
+            source_availability_evidence(
+                &serde_json::to_vec(&duplicated_mapping).unwrap(),
+                &valid,
+                &direct,
+                &direct_sha256,
+                test_output
+            )
+            .is_err()
+        );
+
+        let mut altered_source: Value = serde_json::from_slice(SOURCE_ASSERTIONS).unwrap();
+        let row = altered_source["rows"]
+            .as_array_mut()
+            .unwrap()
+            .iter_mut()
+            .find(|row| row["id"] == "F:L601")
+            .unwrap();
+        row["expectation"]["value"] = json!("Duckduckgo (successful scrape returned no results)");
+        assert!(
+            source_availability_evidence(
+                &serde_json::to_vec(&altered_source).unwrap(),
+                &valid,
+                &direct,
+                &direct_sha256,
+                test_output
+            )
+            .is_err()
+        );
+        let mut altered_predicate: Value = serde_json::from_slice(SOURCE_ASSERTIONS).unwrap();
+        let row = altered_predicate["rows"]
+            .as_array_mut()
+            .unwrap()
+            .iter_mut()
+            .find(|row| row["id"] == "F:L599")
+            .unwrap();
+        row["source"]["predicate"] = json!("different descriptive predicate");
+        assert!(
+            source_availability_evidence(
+                &serde_json::to_vec(&altered_predicate).unwrap(),
+                &valid,
+                &direct,
+                &direct_sha256,
+                test_output
+            )
+            .is_err()
+        );
+        let mut false_acceptance: Value = serde_json::from_slice(SOURCE_ASSERTIONS).unwrap();
+        let row = false_acceptance["rows"]
+            .as_array_mut()
+            .unwrap()
+            .iter_mut()
+            .find(|row| row["id"] == "F:L601")
+            .unwrap();
+        row["original_assertion_accepted"] = json!(true);
+        assert!(
+            source_availability_evidence(
+                &serde_json::to_vec(&false_acceptance).unwrap(),
+                &valid,
+                &direct,
+                &direct_sha256,
+                test_output
+            )
+            .is_err()
+        );
+
+        let mut wrong_input = direct.clone();
+        wrong_input["input"]["response"]["empty_engines"] = json!([]);
+        assert!(
+            source_availability_evidence(
+                SOURCE_ASSERTIONS,
+                &valid,
+                &wrong_input,
+                &direct_sha256,
+                test_output
+            )
+            .is_err()
+        );
+        let mut changed_reason = direct.clone();
+        changed_reason["input"]["response"]["empty_engines"] =
+            json!([["duckduckgo", "successful scrape returned no results"]]);
+        assert!(
+            source_availability_evidence(
+                SOURCE_ASSERTIONS,
+                &valid,
+                &changed_reason,
+                &direct_sha256,
+                test_output
+            )
+            .is_err()
+        );
+        let mut swapped_output = direct.clone();
+        swapped_output["output"]["html"] = json!(http_body);
+        assert!(
+            source_availability_evidence(
+                SOURCE_ASSERTIONS,
+                &valid,
+                &swapped_output,
+                &direct_sha256,
+                test_output
+            )
+            .is_err()
+        );
+        assert!(
+            source_availability_evidence(SOURCE_ASSERTIONS, &valid, &direct, &direct_sha256, "")
                 .is_err()
+        );
+        let invalid_sha = "g".repeat(64);
+        assert!(
+            source_availability_evidence(
+                SOURCE_ASSERTIONS,
+                &valid,
+                &direct,
+                &invalid_sha,
+                test_output
+            )
+            .is_err()
+        );
+
+        let short_only_http = http_receipt(
+            "Google (blocked) Reddit (rate limited) Duckduckgo (no results) Source status Google Google",
+            "source-availability",
+            "source-availability",
+        );
+        assert!(
+            source_availability_evidence(
+                SOURCE_ASSERTIONS,
+                &short_only_http,
+                &direct,
+                &direct_sha256,
+                test_output
+            )
+            .is_err()
+        );
+        let both_reasons_http = http_receipt(
+            "Google (blocked) Reddit (rate limited) Duckduckgo (no results) Duckduckgo (successful scrape returned no results) Source status Google Google",
+            "source-availability",
+            "source-availability",
+        );
+        assert!(
+            source_availability_evidence(
+                SOURCE_ASSERTIONS,
+                &both_reasons_http,
+                &direct,
+                &direct_sha256,
+                test_output
+            )
+            .is_err()
+        );
+        let missing_canonical_http = http_receipt(
+            "Google (blocked) Reddit (rate limited) Source status Google Google",
+            "source-availability",
+            "source-availability",
+        );
+        assert!(
+            source_availability_evidence(
+                SOURCE_ASSERTIONS,
+                &missing_canonical_http,
+                &direct,
+                &direct_sha256,
+                test_output
+            )
+            .is_err()
+        );
+        let insufficient_count_http = http_receipt(
+            "Google (blocked) Reddit (rate limited) Duckduckgo (successful scrape returned no results) Source status",
+            "source-availability",
+            "source-availability",
+        );
+        assert!(
+            source_availability_evidence(
+                SOURCE_ASSERTIONS,
+                &insufficient_count_http,
+                &direct,
+                &direct_sha256,
+                test_output
+            )
+            .is_err()
         );
     }
 

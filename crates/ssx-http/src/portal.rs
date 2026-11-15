@@ -17,6 +17,15 @@ use std::{
 pub const STYLE: &str = include_str!("portal/style.css");
 pub const SCRIPT: &str = include_str!("portal/behavior.js");
 
+/// Optional facts supplied by a formatter caller, separate from search/wire data.
+///
+/// `None` means next-page availability is unknown. The native HTTP composition
+/// currently supplies no authoritative availability and always uses the default.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct PortalRenderContext {
+    pub has_more: Option<bool>,
+}
+
 /// A presentation snapshot built only from already-redacted HTTP discovery.
 pub struct PublicPortal {
     theme: &'static str,
@@ -106,6 +115,17 @@ impl PublicPortal {
             .get(name)
             .cloned()
             .unwrap_or_else(|| label(name))
+    }
+    fn empty_sources(&self, response: &SearchResponse) -> Vec<(String, String)> {
+        response
+            .empty_engines
+            .iter()
+            .filter_map(|entry| {
+                let engine = entry.first()?.clone();
+                let reason = entry.get(1).cloned().unwrap_or_default();
+                Some((engine, reason))
+            })
+            .collect()
     }
     fn document(&self, title: &str, body: &str, invalid_field: Option<&str>) -> String {
         let darker = self.theme == "darker";
@@ -331,6 +351,59 @@ impl PublicPortal {
             invalid("date_to")
         )
     }
+    fn publication_date_proof(&self, response: &SearchResponse) -> String {
+        // Use the same closed proof serialized by the machine formatters. The
+        // scope enforcement preview alone is not an acquisition/proof record.
+        let Some(proof) = &response.date_filter else {
+            return String::new();
+        };
+        let proof = proof.to_value();
+        let mut body = String::from(
+            "<section class=\"notice\" aria-labelledby=\"publication-date-proof\" data-publication-date-proof><h2 id=\"publication-date-proof\">Publication-date constraints</h2><p>Bounds are inclusive.</p><dl>",
+        );
+        for (key, label) in [
+            ("date_from", "Published from"),
+            ("date_to", "Published through"),
+        ] {
+            if let Some(applied) = proof["applied"][key].as_str() {
+                let _ = write!(
+                    body,
+                    "<dt>{label}</dt><dd data-date-bound=\"{key}\">Requested: <span data-date-requested>{}</span>; applied: <span data-date-applied>{}</span></dd>",
+                    escape(proof["requested"][key].as_str().unwrap_or("")),
+                    escape(applied)
+                );
+            }
+        }
+        let _ = write!(
+            body,
+            "<dt>Enforcement</dt><dd data-date-status>{}</dd><dt>Source</dt><dd data-date-engine>{}</dd><dt>Provenance</dt><dd data-date-provenance>{}</dd></dl>",
+            escape(proof["status"].as_str().unwrap_or("")),
+            escape(proof["engines"][0].as_str().unwrap_or("")),
+            escape(proof["enforced_by"][0].as_str().unwrap_or(""))
+        );
+        // Constraints and source outcomes are independent: a proof remains
+        // present on a classified upstream failure or a valid empty response.
+        let (outcome, message) = match response
+            .engine_outcomes
+            .iter()
+            .find(|outcome| outcome.engine == "openalex")
+        {
+            Some(outcome) if outcome.status != "ok" => (
+                "unavailable",
+                "OpenAlex did not return a usable response. See the source outcome below.",
+            ),
+            Some(outcome) if outcome.result_count == 0 => {
+                ("empty", "OpenAlex responded with no matching results.")
+            }
+            Some(_) => ("results", "OpenAlex returned results for this search."),
+            None => ("unknown", "No OpenAlex acquisition outcome is available."),
+        };
+        let _ = write!(
+            body,
+            "<p data-date-acquisition=\"{outcome}\">{message}</p></section>"
+        );
+        body
+    }
     fn result(
         &self,
         result: &SearchResult,
@@ -398,13 +471,21 @@ impl PublicPortal {
             "<p class=\"result-content\">{}</p>",
             content_markup(&result.content)
         );
-        if let Some(payload) = result.payload.as_ref().filter(|p| p.is_object()) {
-            let _ = write!(
-                body,
-                "<div class=\"result-special\"><span>{} / {}</span></div>",
-                escape(payload["domain"].as_str().unwrap_or("specialist")),
-                escape(payload["type"].as_str().unwrap_or("result"))
-            );
+        let payload = result.payload.as_ref().filter(|p| p.is_object());
+        if result.media.is_some() || payload.is_some() {
+            body.push_str("<div class=\"result-special\">");
+            if let Some(media) = &result.media {
+                let _ = write!(body, "<span>{} result</span>", escape(&media.media_type));
+            }
+            if let Some(payload) = payload {
+                let _ = write!(
+                    body,
+                    "<span>{} / {}</span>",
+                    escape(payload["domain"].as_str().unwrap_or("specialist")),
+                    escape(payload["type"].as_str().unwrap_or("result"))
+                );
+            }
+            body.push_str("</div>");
         }
         if let Some(media) = &result.media
             && let Some(thumbnail) = media.thumbnail.as_deref().and_then(safe_url)
@@ -593,6 +674,19 @@ impl HtmlRenderer for PublicPortal {
         )
     }
     fn search(&self, response: &SearchResponse, meta: &Value, request: &SearchRequest) -> String {
+        self.search_with_context(response, meta, request, PortalRenderContext::default())
+    }
+}
+impl PublicPortal {
+    /// Render a caller's explicit pagination fact without adding it to the wire
+    /// response or inferring it from results, request parameters, or snapshots.
+    pub fn search_with_context(
+        &self,
+        response: &SearchResponse,
+        meta: &Value,
+        request: &SearchRequest,
+        context: PortalRenderContext,
+    ) -> String {
         let state = FormState::from_request(request);
         let responsive = response
             .engine_outcomes
@@ -613,18 +707,31 @@ impl HtmlRenderer for PublicPortal {
         );
         body.push_str(&self.search_form(&state, false, None));
         body.push_str(&self.scope_panel(&state, Some(response), meta, None, false));
+        body.push_str(&self.publication_date_proof(response));
+        let empty_sources = self.empty_sources(response);
         let failures = response
             .engine_outcomes
             .iter()
             .filter(|o| o.status != "ok")
-            .map(|o| format!("{} ({})", self.source_label(&o.engine), o.status))
+            .map(|o| {
+                format!(
+                    "{} ({})",
+                    self.source_label(&o.engine),
+                    source_status_label(&o.status)
+                )
+            })
             .collect::<Vec<_>>()
             .join(", ");
-        let empty = response
-            .empty_engines
+        let empty = empty_sources
             .iter()
-            .filter_map(|e| e.first())
-            .map(|e| self.source_label(e))
+            .map(|(engine, reason)| {
+                let label = self.source_label(engine);
+                if reason.is_empty() {
+                    label
+                } else {
+                    format!("{label} ({reason})")
+                }
+            })
             .collect::<Vec<_>>()
             .join(", ");
         if response.all_unresponsive {
@@ -710,7 +817,8 @@ impl HtmlRenderer for PublicPortal {
             body.push_str("</div>");
         }
         body.push_str("</div>");
-        if request.page.previous_page().is_some() || !response.results.is_empty() {
+        let next_available = context.has_more.unwrap_or(!response.results.is_empty());
+        if request.page.previous_page().is_some() || next_available {
             body.push_str("<nav class=\"pagination\" aria-label=\"Search pages\">");
             if let Some(previous) = request.page.previous_page() {
                 let _ = write!(
@@ -725,13 +833,13 @@ impl HtmlRenderer for PublicPortal {
                 body,
                 "<span class=\"page-current\" aria-current=\"page\">Page {}{}</span>",
                 request.page,
-                if response.results.is_empty() {
-                    ""
-                } else {
+                if context.has_more.is_none() && next_available {
                     " · more may be available"
+                } else {
+                    ""
                 }
             );
-            if !response.results.is_empty() {
+            if next_available {
                 if let Some(next) = request
                     .page
                     .next_page()
@@ -739,8 +847,18 @@ impl HtmlRenderer for PublicPortal {
                 {
                     let _ = write!(
                         body,
-                        "<a class=\"page-link\" aria-label=\"Try next result page\" href=\"{}\">Try next page →</a>",
-                        escape(&state.url(None, Some(&next)))
+                        "<a class=\"page-link\" aria-label=\"{}\" href=\"{}\">{}</a>",
+                        if context.has_more.is_none() {
+                            "Try next result page"
+                        } else {
+                            "Next result page"
+                        },
+                        escape(&state.url(None, Some(&next))),
+                        if context.has_more.is_none() {
+                            "Try next page →"
+                        } else {
+                            "Next page →"
+                        }
                     );
                 } else {
                     body.push_str("<span class=\"page-link\" role=\"link\" aria-disabled=\"true\">Next page unavailable (page number limit)</span>");
@@ -760,6 +878,25 @@ impl HtmlRenderer for PublicPortal {
                 body,
                 "<li class=\"rail-source\"><span class=\"rail-source-name\">{}</span><span class=\"rail-source-count\">{count}</span></li>",
                 escape(&self.source_label(&engine))
+            );
+        }
+        for outcome in response
+            .engine_outcomes
+            .iter()
+            .filter(|outcome| outcome.status != "ok")
+        {
+            let _ = write!(
+                body,
+                "<li class=\"rail-source rail-source-unavailable\"><span class=\"rail-source-name\">{}</span><span class=\"rail-source-count\">{}</span></li>",
+                escape(&self.source_label(&outcome.engine)),
+                escape(source_status_label(&outcome.status))
+            );
+        }
+        for (engine, _) in &empty_sources {
+            let _ = write!(
+                body,
+                "<li class=\"rail-source rail-source-empty\"><span class=\"rail-source-name\">{}</span><span class=\"rail-source-count\">no results</span></li>",
+                escape(&self.source_label(engine))
             );
         }
         if response.results.is_empty() {
@@ -908,6 +1045,12 @@ fn label(s: &str) -> String {
         })
         .collect::<Vec<_>>()
         .join(" ")
+}
+fn source_status_label(status: &str) -> &str {
+    match status {
+        "rate_limited" => "rate limited",
+        other => other,
+    }
 }
 fn sources(result: &SearchResult) -> BTreeSet<String> {
     if result.engines.is_empty() {

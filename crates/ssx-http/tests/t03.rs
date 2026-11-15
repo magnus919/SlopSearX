@@ -1,15 +1,17 @@
 //! Real-process T03 HTTP acceptance; only fixture inputs are synthetic.
+use sha2::{Digest, Sha256};
 use ssx_http::{
     HtmlRenderer,
-    portal::{PublicPortal, SCRIPT, STYLE, content_markup},
+    portal::{PortalRenderContext, PublicPortal, SCRIPT, STYLE, content_markup},
 };
-use ssx_json::Value;
+use ssx_json::{Value, json};
 use std::fs;
 #[path = "support/t03_peer.rs"]
 mod peer;
 use peer::{Process, params, yaml};
 #[test]
 fn static_assets_and_highlight_boundary_preserve_safe_progressive_rendering() {
+    renderer_pagination_context_preserves_original_three_state_contract();
     let html = PublicPortal::default().landing();
     assert!(html.len() <= 50 * 1024);
     assert!(STYLE.len() + SCRIPT.len() <= 30 * 1024);
@@ -29,6 +31,138 @@ fn static_assets_and_highlight_boundary_preserve_safe_progressive_rendering() {
         content_markup("<strong>unclosed <em>safe</em>"),
         "&lt;strong&gt;unclosed <em>safe</em>"
     );
+}
+
+// Keep the established top-level HTTP inventory; execute the pure formatter
+// pagination cases from its existing static-assets/formatter boundary test.
+fn renderer_pagination_context_preserves_original_three_state_contract() {
+    let portal = PublicPortal::default();
+    let links = scraper::Selector::parse("nav.pagination a").unwrap();
+    for (page, previous, next) in [
+        ("1", None, "2"),
+        ("2", Some("1"), "3"),
+        (
+            "18446744073709551617",
+            Some("18446744073709551616"),
+            "18446744073709551618",
+        ),
+    ] {
+        let request = ssx_domain::SearchRequest {
+            query: "query & + / <snow> ☃".into(),
+            categories: Some(vec!["general".into(), "science".into()]),
+            engines: Some(vec!["openalex".into()]),
+            language: "fr".into(),
+            time_range: Some("month".into()),
+            date_from: Some("2024-02-29".into()),
+            date_to: Some("2024-03-01".into()),
+            safesearch: 1,
+            page: ssx_domain::SearchPage::new(page).unwrap(),
+            interactive_timeout_ms: Some(1200),
+            ..Default::default()
+        };
+        let expected_href = |page: &str| {
+            let mut url = url::form_urlencoded::Serializer::new("/search?".to_owned());
+            url.extend_pairs([
+                ("categories", "general,science"),
+                ("date_from", "2024-02-29"),
+                ("date_to", "2024-03-01"),
+                ("engines", "openalex"),
+                ("interactive_timeout_ms", "1200"),
+                ("language", "fr"),
+                ("pageno", page),
+                ("q", "query & + / <snow> ☃"),
+                ("safesearch", "1"),
+                ("time_range", "month"),
+            ]);
+            url.finish()
+        };
+        for populated in [false, true] {
+            let response = ssx_domain::SearchResponse {
+                query: request.query.clone(),
+                results: if populated {
+                    vec![ssx_domain::SearchResult {
+                        url: "https://docs.example.com/guide".into(),
+                        title: "A useful guide".into(),
+                        ..Default::default()
+                    }]
+                } else {
+                    vec![]
+                },
+                ..Default::default()
+            };
+            // This untyped metadata is not a source of pagination authority.
+            let meta = json!({"has_more": false});
+            let wire_before = ssx_http::formats::json_document(&response, meta.clone());
+            let default_html = portal.search(&response, &meta, &request);
+            for has_more in [None, Some(false), Some(true)] {
+                let output = portal.search_with_context(
+                    &response,
+                    &meta,
+                    &request,
+                    PortalRenderContext { has_more },
+                );
+                if has_more.is_none() {
+                    assert_eq!(output, default_html);
+                }
+                let next_available = match has_more {
+                    None => populated,
+                    Some(value) => value,
+                };
+                let document = scraper::Html::parse_document(&output);
+                let actual = document
+                    .select(&links)
+                    .map(|link| {
+                        (
+                            link.value().attr("aria-label").unwrap().to_owned(),
+                            link.value().attr("href").unwrap().to_owned(),
+                            link.text().collect::<String>(),
+                        )
+                    })
+                    .collect::<Vec<_>>();
+                let mut expected = Vec::new();
+                if let Some(previous) = previous {
+                    expected.push((
+                        "Previous result page".into(),
+                        expected_href(previous),
+                        "← Previous".into(),
+                    ));
+                }
+                if next_available {
+                    expected.push((
+                        if has_more.is_none() {
+                            "Try next result page"
+                        } else {
+                            "Next result page"
+                        }
+                        .into(),
+                        expected_href(next),
+                        if has_more.is_none() {
+                            "Try next page →"
+                        } else {
+                            "Next page →"
+                        }
+                        .into(),
+                    ));
+                }
+                assert_eq!(
+                    actual, expected,
+                    "page={page} populated={populated} has_more={has_more:?}"
+                );
+                assert_eq!(
+                    output.contains(" · more may be available"),
+                    has_more.is_none() && populated,
+                );
+                assert_eq!(
+                    output.contains("<nav class=\"pagination\""),
+                    previous.is_some() || next_available
+                );
+                assert_eq!(
+                    ssx_http::formats::json_document(&response, meta.clone()),
+                    wire_before
+                );
+            }
+        }
+    }
 }
 
 #[tokio::test]
@@ -140,11 +274,85 @@ async fn browser_enforcement_uses_capture_without_changing_machine_contract() {
 
 #[tokio::test]
 async fn malicious_optional_empty_partial_and_unavailable_states_are_truthful() {
+    let mut api_empty = ssx_domain::SearchResponse {
+        query: "climate".into(),
+        results: vec![ssx_domain::SearchResult {
+            url: "https://example.com".into(),
+            title: "A result".into(),
+            engine: "example".into(),
+            ..Default::default()
+        }],
+        scope: ssx_domain::ScopeDecision {
+            selected_engines: vec!["google", "reddit", "duckduckgo", "example"]
+                .into_iter()
+                .map(str::to_owned)
+                .collect(),
+            ..Default::default()
+        },
+        partial: true,
+        engine_outcomes: vec![
+            ssx_domain::EngineOutcome {
+                engine: "google".into(),
+                status: "blocked".into(),
+                result_count: 0,
+                ..Default::default()
+            },
+            ssx_domain::EngineOutcome {
+                engine: "reddit".into(),
+                status: "rate_limited".into(),
+                result_count: 0,
+                ..Default::default()
+            },
+            ssx_domain::EngineOutcome {
+                engine: "example".into(),
+                status: "ok".into(),
+                result_count: 1,
+                ..Default::default()
+            },
+        ],
+        ..Default::default()
+    };
+    let request = ssx_domain::SearchRequest {
+        query: api_empty.query.clone(),
+        ..Default::default()
+    };
+    let renderer = PublicPortal::default();
+    let api_zero_empty = ssx_domain::SearchResponse {
+        query: "climate".into(),
+        partial: true,
+        engine_outcomes: vec![ssx_domain::EngineOutcome {
+            engine: "duckduckgo".into(),
+            status: "ok".into(),
+            result_count: 0,
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    let api_zero_html = renderer.search(&api_zero_empty, &Value::Null, &request);
+    assert!(!api_zero_html.contains("Duckduckgo (no results)"));
+    assert!(!api_zero_html.contains("class=\"rail-source rail-source-empty\""));
+    api_empty
+        .empty_engines
+        .push(vec!["duckduckgo".into(), "no results".into()]);
+    let html = renderer.search(&api_empty, &Value::Null, &request);
+    for literal in [
+        "Some sources could not answer this search.",
+        "Google (blocked)",
+        "Reddit (rate limited)",
+        "Duckduckgo (no results)",
+        "Source status",
+    ] {
+        assert!(html.contains(literal), "missing formatter output {literal}");
+    }
+    assert!(html.matches("Google").count() >= 2);
+
     let mut p = Process::start("states", "contract");
     for (query, wanted) in [
         ("malicious", 200),
         ("missing", 200),
         ("empty", 200),
+        ("empty-source", 200),
+        ("media", 200),
         ("partial", 200),
         ("all-failed", 503),
         ("long", 200),
@@ -174,10 +382,45 @@ async fn malicious_optional_empty_partial_and_unavailable_states_are_truthful() 
                 assert!(body.contains("No results found") && body.contains("broader query"));
                 assert!(!body.contains("Try next page →"));
             }
-            "partial" => assert!(
-                body.contains("Some sources could not answer")
-                    && body.contains("Beta &lt;source&gt;")
-            ),
+            "empty-source" => {
+                assert!(body.contains("No results from some sources."));
+                assert!(
+                    body.contains("Beta &lt;source&gt; (successful scrape returned no results)")
+                );
+                assert!(!body.contains("Some sources could not answer this search."));
+                assert!(body.contains("class=\"rail-source rail-source-empty\""));
+                assert!(body.contains("<span class=\"rail-source-count\">no results</span>"));
+            }
+            "media" => {
+                assert!(
+                    body.contains("image result")
+                        && body.contains("security / vulnerability")
+                        && body.contains("src=\"https://cdn.example.com/thumb.jpg\"")
+                        && body.contains("alt=\"Vulnerability result\"")
+                );
+                let card = body
+                    .split("<article")
+                    .find(|part| part.contains("Vulnerability result"))
+                    .expect("mixed media and specialist result card");
+                let card = card.split("</article>").next().unwrap();
+                assert_eq!(card.matches("class=\"result-special\"").count(), 1);
+                let badges = card
+                    .split("<div class=\"result-special\">")
+                    .nth(1)
+                    .unwrap()
+                    .split("</div>")
+                    .next()
+                    .unwrap();
+                assert!(
+                    badges.find("image result").unwrap()
+                        < badges.find("security / vulnerability").unwrap()
+                );
+            }
+            "partial" => {
+                assert!(body.contains("Some sources could not answer"));
+                assert!(body.contains("Beta &lt;source&gt;"));
+                assert!(body.contains("class=\"rail-source rail-source-unavailable\""));
+            }
             "all-failed" => {
                 assert!(
                     body.contains("No configured source returned a result")
@@ -193,6 +436,79 @@ async fn malicious_optional_empty_partial_and_unavailable_states_are_truthful() 
             _ => {}
         }
     }
+    p.stop().await;
+
+    let mut p = Process::start("source-availability", "source-availability");
+    let formatter_receipt = json!({
+        "schema": "T03_DIRECT_FORMATTER_INPUT_RECEIPT_V1",
+        "renderer": "PublicPortal::search",
+        "source_assertion_ids": ["F:L599", "F:L600", "F:L601", "F:L602", "F:L603"],
+        "input": {
+            "response": {
+                "query": &api_empty.query,
+                "results": api_empty.results.iter().map(|result| json!({
+                    "url": &result.url,
+                    "title": &result.title,
+                    "engine": &result.engine,
+                })).collect::<Vec<_>>(),
+                "selected_engines": &api_empty.scope.selected_engines,
+                "engine_outcomes": api_empty.engine_outcomes.iter().map(|outcome| json!({
+                    "engine": &outcome.engine,
+                    "status": &outcome.status,
+                    "result_count": outcome.result_count,
+                })).collect::<Vec<_>>(),
+                "partial": api_empty.partial,
+                "empty_engines": &api_empty.empty_engines,
+            },
+            "meta": null,
+            "request": {"query": &request.query},
+            "responsive_engine_count": api_empty.engine_outcomes.iter().filter(|outcome| outcome.status == "ok").count(),
+        },
+        "output": {"html": &html},
+    });
+    let formatter_path = p.out.join("formatter-source-availability.json");
+    let formatter_raw = ssx_json::to_string(&formatter_receipt)
+        .unwrap()
+        .into_bytes();
+    fs::write(&formatter_path, &formatter_raw).unwrap();
+    let formatter_sha256 = Sha256::digest(&formatter_raw)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect::<String>();
+    let formatter_completion = json!({
+        "path": formatter_path.canonicalize().unwrap().to_string_lossy(),
+        "sha256": formatter_sha256,
+    });
+    println!(
+        "T03_FORMATTER_RECEIPT {}",
+        ssx_json::to_string(&formatter_completion).unwrap()
+    );
+    let (status, body) = p
+        .get(
+            "/search?q=source-availability&categories=general",
+            "source-availability",
+        )
+        .await;
+    assert_eq!(status, 200);
+    assert!(body.contains("Some sources could not answer this search."));
+    assert!(body.contains("Google (blocked)"));
+    assert!(body.contains("Reddit (rate limited)"));
+    assert!(body.contains("Duckduckgo (successful scrape returned no results)"));
+    assert!(body.contains("Source status"));
+    assert!(body.matches("Google").count() >= 2);
+    assert!(body.contains("class=\"rail-source rail-source-unavailable\""));
+    assert!(body.contains("class=\"rail-source rail-source-empty\""));
+    assert!(body.contains(
+        "<li class=\"rail-source rail-source-unavailable\"><span class=\"rail-source-name\">Google</span><span class=\"rail-source-count\">blocked</span></li>"
+    ));
+    assert!(body.contains(
+        "<li class=\"rail-source rail-source-unavailable\"><span class=\"rail-source-name\">Reddit</span><span class=\"rail-source-count\">rate limited</span></li>"
+    ));
+    assert!(body.contains(
+        "<li class=\"rail-source rail-source-empty\"><span class=\"rail-source-name\">Duckduckgo</span><span class=\"rail-source-count\">no results</span></li>"
+    ));
+    assert!(body.contains("Wikipedia"));
+    assert_eq!(p.calls(), 4);
     p.stop().await;
 }
 

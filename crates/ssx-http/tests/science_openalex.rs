@@ -431,7 +431,12 @@ async fn native_http_real_openalex_routes_bounds_formats_and_cache_reacquisition
     drop(conn);
     native.close().await;
     fixture.close().await;
+    // Keep the sealed T06 top-level inventory while extending this actual
+    // adapter/service/Valkey/HTTP qualification with portal-owned subcases.
     native_portal_real_openalex_preserves_bounds_and_machine_proof().await;
+    native_portal_real_openalex_inclusive_bound_matrix_preserves_forms_and_views().await;
+    native_portal_date_constraints_keep_empty_and_failed_acquisition_distinct().await;
+    portal_does_not_invent_proof_from_request_or_enforcement_preview();
 }
 
 async fn native_portal_real_openalex_preserves_bounds_and_machine_proof() {
@@ -448,6 +453,7 @@ async fn native_portal_real_openalex_preserves_bounds_and_machine_proof() {
     assert!(html.contains("data-filter=\"date_from\" data-status=\"enforced\""));
     assert!(html.contains("data-filter=\"date_to\" data-status=\"enforced\""));
     assert!(html.contains("2024-02-29"));
+    assert_portal_proof(&html, Some("2024-02-29"), Some("2024-02-29"), "results");
     assert_eq!(fixture.upstream.lines().len(), 1);
     assert_eq!(
         fixture.upstream.lines()[0],
@@ -826,5 +832,278 @@ async fn native_http_real_openalex_failure_and_empty_have_distinct_status_outcom
             native.close().await;
             fixture.close().await;
         }
+    }
+}
+
+fn assert_portal_proof(html: &str, from: Option<&str>, to: Option<&str>, outcome: &str) {
+    let document = Html::parse_document(html);
+    let selector = Selector::parse("[data-publication-date-proof]").unwrap();
+    let sections: Vec<_> = document.select(&selector).collect();
+    assert_eq!(
+        sections.len(),
+        1,
+        "one canonical proof, not a scope preview"
+    );
+    let section = sections[0];
+    assert!(
+        section
+            .text()
+            .collect::<String>()
+            .contains("Bounds are inclusive.")
+    );
+    for (key, bound) in [("date_from", from), ("date_to", to)] {
+        let selector = Selector::parse(&format!("[data-date-bound=\"{key}\"]")).unwrap();
+        let nodes: Vec<_> = section.select(&selector).collect();
+        assert_eq!(nodes.len(), usize::from(bound.is_some()));
+        if let Some(bound) = bound {
+            for field in ["data-date-requested", "data-date-applied"] {
+                let selector = Selector::parse(&format!("[{field}]")).unwrap();
+                assert_eq!(
+                    nodes[0]
+                        .select(&selector)
+                        .next()
+                        .unwrap()
+                        .text()
+                        .collect::<String>(),
+                    bound
+                );
+            }
+        }
+    }
+    for (field, expected) in [
+        ("data-date-status", "enforced"),
+        ("data-date-engine", "openalex"),
+        ("data-date-provenance", "upstream:openalex"),
+    ] {
+        let selector = Selector::parse(&format!("[{field}]")).unwrap();
+        assert_eq!(
+            section
+                .select(&selector)
+                .next()
+                .unwrap()
+                .text()
+                .collect::<String>(),
+            expected
+        );
+    }
+    let selector = Selector::parse("[data-date-acquisition]").unwrap();
+    let acquired = section.select(&selector).next().unwrap();
+    assert_eq!(
+        acquired.value().attr("data-date-acquisition"),
+        Some(outcome)
+    );
+    let expected = match outcome {
+        "results" => "OpenAlex returned results for this search.",
+        "empty" => "OpenAlex responded with no matching results.",
+        "unavailable" => "OpenAlex did not return a usable response. See the source outcome below.",
+        _ => panic!("unexpected tested acquisition outcome"),
+    };
+    assert_eq!(acquired.text().collect::<String>(), expected);
+}
+
+fn portal_does_not_invent_proof_from_request_or_enforcement_preview() {
+    use ssx_http::native::HtmlRenderer;
+    let request = ssx_domain::SearchRequest {
+        query: "no canonical proof".into(),
+        engines: Some(vec!["openalex".into()]),
+        date_from: Some("2024-02-29".into()),
+        ..Default::default()
+    };
+    let response = ssx_domain::SearchResponse::default();
+    let meta = ssx_json::json!({
+        "enforcement":{"date_from":{"requested":"2024-02-29","status":"enforced"}},
+        "date_filter": proof(Some("2024-02-29"), None)
+    });
+    let html = ssx_http::portal::PublicPortal::default().search(&response, &meta, &request);
+    assert!(!html.contains("data-publication-date-proof"));
+    assert!(!html.contains("upstream:openalex"));
+    assert!(!html.contains("data-date-acquisition"));
+}
+
+async fn native_portal_real_openalex_inclusive_bound_matrix_preserves_forms_and_views() {
+    for (suffix, from, to, days) in [
+        (
+            "lower_leap",
+            Some("2024-02-29"),
+            None,
+            vec!["2024-02-29", "2024-03-01"],
+        ),
+        (
+            "upper_leap",
+            None,
+            Some("2024-02-29"),
+            vec!["2024-02-28", "2024-02-29"],
+        ),
+        (
+            "both_span",
+            Some("2024-02-28"),
+            Some("2024-03-01"),
+            vec!["2024-02-28", "2024-02-29", "2024-03-01"],
+        ),
+    ] {
+        let corpus = corpus();
+        let row = corpus["records"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|row| row["id"].as_str().unwrap().ends_with(suffix))
+            .unwrap();
+        let wire = format!(
+            "GET {} HTTP/1.1",
+            row["requests"][0]["url"]
+                .as_str()
+                .unwrap()
+                .strip_prefix("https://api.openalex.org")
+                .unwrap()
+        );
+        for path in ["/", "/search"] {
+            for method in ["GET", "POST"] {
+                let fixture = Fixture::new(Mode::Audited, 200, equal_body(), Some(2)).await;
+                let native = Native::start_with_portal(&fixture, true).await;
+                let mut params = vec![("q", "date control / +"), ("engines", "openalex")];
+                for (key, bound) in [("date_from", from), ("date_to", to)] {
+                    if let Some(bound) = bound {
+                        params.push((key, bound));
+                    }
+                }
+                let (status, html) = native.request(path, method, &params).await;
+                assert_eq!(status, 200, "{suffix} {path} {method}: {html}");
+                assert_portal_proof(&html, from, to, "results");
+                assert_eq!(fixture.upstream.lines(), vec![wire.clone()]);
+                let document = Html::parse_document(&html);
+                let forms = Selector::parse("form").unwrap();
+                let controls = Selector::parse("input[name], select[name]").unwrap();
+                assert_eq!(document.select(&forms).count(), 2);
+                for form in document.select(&forms) {
+                    let fields: Vec<_> = form
+                        .select(&controls)
+                        .filter_map(|control| {
+                            let name = control.value().attr("name")?;
+                            let value = if control.value().name() == "select" {
+                                control
+                                    .select(&Selector::parse("option[selected]").unwrap())
+                                    .next()?
+                                    .value()
+                                    .attr("value")
+                                    .unwrap_or("")
+                            } else {
+                                control.value().attr("value").unwrap_or("")
+                            };
+                            Some((name.to_owned(), value.to_owned()))
+                        })
+                        .collect();
+                    for (key, bound) in [("date_from", from), ("date_to", to)] {
+                        let values: Vec<_> = fields
+                            .iter()
+                            .filter(|(name, _)| name == key)
+                            .map(|(_, value)| value.as_str())
+                            .collect();
+                        if let Some(bound) = bound {
+                            assert_eq!(values, vec![bound]);
+                        } else {
+                            assert!(
+                                values.is_empty() || values == [""],
+                                "missing bound stays absent/blank"
+                            );
+                        }
+                    }
+                    assert!(
+                        fields
+                            .iter()
+                            .any(|(key, value)| key == "engines" && value == "openalex")
+                    );
+                    let pairs: Vec<_> = fields
+                        .iter()
+                        .map(|(key, value)| (key.as_str(), value.as_str()))
+                        .collect();
+                    let (status, body) = native.request("/search", "GET", &pairs).await;
+                    assert_eq!(status, 200, "{body}");
+                    assert_portal_proof(&body, from, to, "results");
+                    assert_eq!(
+                        fixture.upstream.lines().len(),
+                        1,
+                        "resubmit reuses canonical acquisition"
+                    );
+                }
+                let links = Selector::parse("a.rail-link").unwrap();
+                assert_eq!(document.select(&links).count(), 2);
+                for link in document.select(&links) {
+                    let href = link.value().attr("href").unwrap();
+                    let url = url::Url::parse(&format!("http://portal.invalid{href}")).unwrap();
+                    let query: std::collections::BTreeMap<_, _> =
+                        url.query_pairs().into_owned().collect();
+                    assert_eq!(query.get("engines").map(String::as_str), Some("openalex"));
+                    for (key, bound) in [("date_from", from), ("date_to", to)] {
+                        assert_eq!(query.get(key).map(String::as_str), bound);
+                    }
+                    let format = query["format"].as_str();
+                    assert!(matches!(format, "json" | "yaml"));
+                    let (status, body) = native.follow(href).await;
+                    assert_eq!(status, 200);
+                    assert_http(
+                        &decode(&body, format),
+                        format,
+                        &days,
+                        &proof(from, to),
+                        true,
+                    );
+                    assert_eq!(fixture.upstream.lines().len(), 1);
+                }
+                let next = Selector::parse("a[aria-label=\"Try next result page\"]").unwrap();
+                let href = document
+                    .select(&next)
+                    .next()
+                    .unwrap()
+                    .value()
+                    .attr("href")
+                    .unwrap();
+                let (status, body) = native.follow(href).await;
+                assert_eq!(status, 200);
+                assert_portal_proof(&body, from, to, "results");
+                assert_eq!(
+                    fixture.upstream.lines(),
+                    vec![wire.clone(), wire.clone()],
+                    "page identity reacquires with the same inclusive upstream filter"
+                );
+                native.close().await;
+                fixture.close().await;
+            }
+        }
+    }
+}
+
+async fn native_portal_date_constraints_keep_empty_and_failed_acquisition_distinct() {
+    for (upstream, status, outcome) in [(200, 200, "empty"), (500, 503, "unavailable")] {
+        let fixture = Fixture::new(
+            Mode::Audited,
+            upstream,
+            br#"{"results":[]}"#.to_vec(),
+            Some(1),
+        )
+        .await;
+        let native = Native::start_with_portal(&fixture, true).await;
+        let (actual, html) = native
+            .request(
+                "/search",
+                "GET",
+                &[
+                    ("q", "date outcomes"),
+                    ("engines", "openalex"),
+                    ("date_from", "2024-02-29"),
+                    ("date_to", "2024-02-29"),
+                ],
+            )
+            .await;
+        assert_eq!(actual, status);
+        assert_portal_proof(&html, Some("2024-02-29"), Some("2024-02-29"), outcome);
+        assert!(!html.contains("OpenAlex returned results for this search."));
+        if upstream == 500 {
+            assert!(html.contains("No configured source returned a result."));
+        } else {
+            assert!(html.contains("No results found"));
+        }
+        assert_eq!(fixture.upstream.lines().len(), 1);
+        native.close().await;
+        fixture.close().await;
     }
 }
