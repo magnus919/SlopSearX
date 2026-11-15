@@ -83,13 +83,18 @@ without dispatching input, and snapshots taken before and during two sampled bro
 animation frames confirm bounds within 0.5 CSS pixels of the initial sample,
 visibility and hit testing. A controlled one-frame move-and-return must be rejected.
 This is bounded sampling, not proof of continuous stability or physical paint.
-Preparation measurements stay separate from the interaction samples. The 100 ms
-interaction budget, 1500 ms missing-input/state guard and slow, absent and untrusted
-negative controls remain unchanged. The
-trusted click itself is also bounded by the 1500 ms guard. A failed control
-retains its partial readiness and click-duration evidence in the runtime receipt;
-a page-close failure is recorded separately and cannot replace the original
-measurement error.
+Preparation measurements stay separate from the interaction samples. Ordinary
+readiness has a 16,000 ms aggregate acceptance ceiling: up to 5,000 ms each for
+bringing the page forward and trial actionability, plus the 6,000 ms observation
+watchdog. The synthetic transient-movement control has a 21,000 ms ceiling because
+it adds a bounded 5,000 ms setup hook. These are receipt acceptance budgets;
+individual timers are soft deadlines and can overrun under host suspension. The
+100 ms interaction budget, 1500 ms missing-input/state guard and slow, absent and
+untrusted negative controls remain unchanged. The trusted click itself is also
+bounded by the 1500 ms guard. Transient-control restoration has a separate 1,000 ms
+bound; a restoration failure rejects the receipt but retains captured snapshots and
+a separate diagnostic. A page-close failure is also recorded separately and cannot
+replace the original measurement error.
 
 ## Formatter pagination context
 

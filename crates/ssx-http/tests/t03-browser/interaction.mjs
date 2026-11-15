@@ -2,6 +2,13 @@ import assert from 'node:assert/strict';
 
 export const INTERACTION_DEFINITION = 'trusted-event-timestamp-to-state-and-next-frame-v1';
 
+const READINESS_OBSERVATION_GRACE_MS = 1000;
+const TRANSIENT_RESTORE_TIMEOUT_MS = 1000;
+
+function readinessAcceptanceBudgetMs(timeoutMs, includesSetup) {
+  return timeoutMs * (includesSetup ? 4 : 3) + READINESS_OBSERVATION_GRACE_MS;
+}
+
 // Two frame callbacks give the updated state a rendering opportunity. This is
 // a browser-frame response proxy, not Event Timing/INP or proof of physical paint.
 export async function measureInteraction(page, action, expected, timeoutMs = 1500) {
@@ -201,6 +208,8 @@ async function prepareTrustedClick(page, selector, timeoutMs = 5000, beforeObser
       ...(Array.isArray(state.frame_snapshots) ? state.frame_snapshots : []),
       state.final,
     ];
+  const acceptanceBudgetMs = readinessAcceptanceBudgetMs(timeoutMs, beforeObserve !== null);
+  const elapsedMs = performance.now() - started;
   const snapshotActionable = (snapshot) => snapshot?.connected === true
     && snapshot?.visible === true
     && snapshot?.enabled === true
@@ -213,7 +222,8 @@ async function prepareTrustedClick(page, selector, timeoutMs = 5000, beforeObser
     && state.visibility === 'visible'
     && observedSnapshots.length === 4
     && observedSnapshots.every(snapshotActionable)
-    && state.rect_stable === true;
+    && state.rect_stable === true
+    && elapsedMs <= acceptanceBudgetMs;
 
   return {
     ready,
@@ -229,7 +239,8 @@ async function prepareTrustedClick(page, selector, timeoutMs = 5000, beforeObser
     trial_click_ms: trialClickMs,
     trial_click_passed: trialClickError === null,
     trial_click_error: trialClickError,
-    elapsed_ms: performance.now() - started,
+    elapsed_ms: elapsedMs,
+    acceptance_budget_ms: acceptanceBudgetMs,
     timeout_ms: timeoutMs,
     error: stateError,
   };
@@ -244,6 +255,7 @@ export async function timingControls(browser) {
     slow_ms: null,
     transient_bounds_rejected: false,
     transient_bounds_evidence: null,
+    transient_bounds_restore_error: null,
     absent_input_rejected: false,
     absent_state_rejected: false,
     untrusted_input_rejected: false,
@@ -262,7 +274,8 @@ export async function timingControls(browser) {
     };
     const rejectTransientMovement = async () => {
       await page.setContent('<button id="respond">Respond</button>');
-      let readiness;
+      let readiness = null;
+      let preparationError = null;
       try {
         readiness = await prepareTrustedClick(page, '#respond', 5000, async () => {
           await page.evaluate(() => {
@@ -278,13 +291,44 @@ export async function timingControls(browser) {
             });
           });
         });
+      } catch (error) {
+        preparationError = error;
+      }
+      // Retain observations before attempting best-effort page restoration. A
+      // failed restore must not erase the evidence that explains the failure.
+      controls.transient_bounds_evidence = readiness;
+
+      let restoreTimer;
+      let restoreError = null;
+      try {
+        await Promise.race([
+          Promise.resolve().then(() => page.evaluate(() => {
+            const original = window.__ssxT03OriginalRequestAnimationFrame;
+            if (typeof original === 'function') window.requestAnimationFrame = original;
+            delete window.__ssxT03OriginalRequestAnimationFrame;
+            document.querySelector('#respond')?.style.removeProperty('transform');
+          })),
+          new Promise((_, reject) => {
+            restoreTimer = setTimeout(
+              () => reject(new Error(`transient bounds restore exceeded ${TRANSIENT_RESTORE_TIMEOUT_MS} ms`)),
+              TRANSIENT_RESTORE_TIMEOUT_MS,
+            );
+          }),
+        ]);
+      } catch (error) {
+        restoreError = error instanceof Error ? error.message : String(error);
       } finally {
-        await page.evaluate(() => {
-          const original = window.__ssxT03OriginalRequestAnimationFrame;
-          if (typeof original === 'function') window.requestAnimationFrame = original;
-          delete window.__ssxT03OriginalRequestAnimationFrame;
-          document.querySelector('#respond')?.style.removeProperty('transform');
-        });
+        clearTimeout(restoreTimer);
+      }
+      controls.transient_bounds_restore_error = restoreError;
+      if (preparationError) {
+        if (restoreError !== null && typeof preparationError === 'object') {
+          preparationError.transient_bounds_restore_error = restoreError;
+        }
+        throw preparationError;
+      }
+      if (restoreError !== null) {
+        throw new Error(`transient bounds restore failed: ${restoreError}`);
       }
       const initialX = readiness.initial?.bounds?.x;
       const firstFrameX = readiness.frame_snapshots?.[0]?.bounds?.x;
@@ -304,6 +348,7 @@ export async function timingControls(browser) {
         && readiness.bring_to_front_error === null
         && readiness.trial_click_passed === true
         && readiness.trial_click_error === null
+        && readiness.elapsed_ms <= readiness.acceptance_budget_ms
         && readiness.error === null
         && readiness.rect_stable === false
         && snapshots.length === 4

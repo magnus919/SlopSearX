@@ -45,7 +45,7 @@ const HTTP_TESTS: [&str; 11] = [
     "blank_optional_html_bounds_are_absent_and_machine_blanks_stay_rejected",
     "landing_native_form_submits_query_and_scope_together_from_both_buttons",
 ];
-const SOURCES: [(&str, &[u8]); 14] = [
+const SOURCES: [(&str, &[u8]); 15] = [
     ("crates/xtask/src/t03.rs", include_bytes!("t03.rs")),
     (
         "crates/ssx-http/src/portal.rs",
@@ -92,6 +92,10 @@ const SOURCES: [(&str, &[u8]); 14] = [
         include_bytes!("../../ssx-http/tests/t03-browser/interaction.mjs"),
     ),
     (
+        "crates/ssx-http/tests/t03-browser/interaction.test.mjs",
+        include_bytes!("../../ssx-http/tests/t03-browser/interaction.test.mjs"),
+    ),
+    (
         "docs/rust-rewrite/t03/source-assertions-v1.json",
         SOURCE_ASSERTIONS,
     ),
@@ -106,6 +110,30 @@ fn need(ok: bool, message: &str) -> Result<()> {
     } else {
         Err(format!("T03 {message}"))
     }
+}
+fn readiness_acceptance_budget_ms(timeout_ms: u64, includes_setup: bool) -> f64 {
+    timeout_ms as f64 * if includes_setup { 4.0 } else { 3.0 } + 1000.0
+}
+fn validate_readiness_elapsed(readiness: &Value, includes_setup: bool, label: &str) -> Result<()> {
+    let timeout_ms = readiness["timeout_ms"]
+        .as_u64()
+        .ok_or("readiness timeout missing")?;
+    let expected_budget_ms = readiness_acceptance_budget_ms(timeout_ms, includes_setup);
+    let acceptance_budget_ms = readiness["acceptance_budget_ms"]
+        .as_f64()
+        .ok_or("readiness aggregate acceptance budget missing")?;
+    let elapsed_ms = readiness["elapsed_ms"]
+        .as_f64()
+        .ok_or("readiness aggregate elapsed time missing")?;
+    need(
+        acceptance_budget_ms == expected_budget_ms
+            && elapsed_ms.is_finite()
+            && elapsed_ms >= 0.0
+            && elapsed_ms <= expected_budget_ms,
+        &format!(
+            "{label} aggregate elapsed exceeds its {expected_budget_ms:.0} ms acceptance budget"
+        ),
+    )
 }
 fn hash(raw: &[u8]) -> String {
     Sha256::digest(raw)
@@ -1289,6 +1317,7 @@ fn validate_budgets(scenario: &str, engine: &str, budgets: &Value) -> Result<()>
             "slow_ms",
             "transient_bounds_rejected",
             "transient_bounds_evidence",
+            "transient_bounds_restore_error",
             "absent_input_rejected",
             "absent_state_rejected",
             "untrusted_input_rejected",
@@ -1310,6 +1339,10 @@ fn validate_budgets(scenario: &str, engine: &str, budgets: &Value) -> Result<()>
             && controls["untrusted_input_rejected"] == true,
         "interaction measurement controls must reject transient motion and detect slow/missing/untrusted input",
     )?;
+    need(
+        controls["transient_bounds_restore_error"].is_null(),
+        "transient bounds restoration failed",
+    )?;
     let transient = &controls["transient_bounds_evidence"];
     exact_keys(
         transient,
@@ -1328,6 +1361,7 @@ fn validate_budgets(scenario: &str, engine: &str, budgets: &Value) -> Result<()>
             "trial_click_passed",
             "trial_click_error",
             "elapsed_ms",
+            "acceptance_budget_ms",
             "timeout_ms",
             "error",
         ],
@@ -1358,6 +1392,7 @@ fn validate_budgets(scenario: &str, engine: &str, budgets: &Value) -> Result<()>
             &format!("transient bounds timing missing or invalid: {metric}"),
         )?;
     }
+    validate_readiness_elapsed(transient, true, "transient bounds readiness")?;
     need(
         transient["browser_ready_ms"]
             .as_f64()
@@ -1455,6 +1490,7 @@ fn validate_budgets(scenario: &str, engine: &str, budgets: &Value) -> Result<()>
                 "trial_click_passed",
                 "trial_click_error",
                 "elapsed_ms",
+                "acceptance_budget_ms",
                 "timeout_ms",
                 "error",
             ],
@@ -1484,6 +1520,7 @@ fn validate_budgets(scenario: &str, engine: &str, budgets: &Value) -> Result<()>
                 &format!("pre-input readiness timing missing or invalid: {metric}"),
             )?;
         }
+        validate_readiness_elapsed(readiness, false, "pre-input readiness")?;
         need(
             readiness["browser_ready_ms"]
                 .as_f64()
@@ -2877,6 +2914,12 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         node_version.trim().starts_with('v'),
         "Node runtime identity missing",
     )?;
+    let mut interaction_tests = Command::new("node");
+    interaction_tests.args([
+        "--test",
+        "crates/ssx-http/tests/t03-browser/interaction.test.mjs",
+    ]);
+    capture(root, interaction_tests, Duration::from_secs(30), records)?;
     let build = cargo(
         root,
         &[
@@ -3323,6 +3366,7 @@ mod tests {
                 "trial_click_passed": true,
                 "trial_click_error": null,
                 "elapsed_ms": 24.0,
+                "acceptance_budget_ms": 16000.0,
                 "timeout_ms": 5000,
                 "error": null
             })
@@ -3332,6 +3376,7 @@ mod tests {
             evidence["ready"] = json!(false);
             evidence["frame_snapshots"][0]["bounds"]["x"] = json!(11.0);
             evidence["rect_stable"] = json!(false);
+            evidence["acceptance_budget_ms"] = json!(21000.0);
             evidence
         };
         json!({
@@ -3356,6 +3401,7 @@ mod tests {
                     "slow_ms":150.0,
                     "transient_bounds_rejected":true,
                     "transient_bounds_evidence":transient_movement(),
+                    "transient_bounds_restore_error":null,
                     "absent_input_rejected":true,
                     "absent_state_rejected":true,
                     "untrusted_input_rejected":true,
@@ -3436,7 +3482,56 @@ mod tests {
     }
 
     #[test]
+    fn readiness_aggregate_elapsed_uses_distinct_inclusive_acceptance_budgets() {
+        let mut budgets = passing_budgets();
+        budgets["interaction_evidence"]["controls"]["pre_input"][0]["readiness"]["elapsed_ms"] =
+            json!(16000.0);
+        validate_budgets("contract", "chromium", &budgets)
+            .expect("ordinary readiness accepts its inclusive 16 second total");
+
+        for elapsed in [16000.0001, 1_000_000_000.0] {
+            let mut budgets = passing_budgets();
+            budgets["interaction_evidence"]["controls"]["pre_input"][0]["readiness"]["elapsed_ms"] =
+                json!(elapsed);
+            let error = validate_budgets("contract", "chromium", &budgets)
+                .expect_err("ordinary readiness must reject aggregate elapsed over budget");
+            assert!(error.contains("aggregate elapsed"), "{error}");
+        }
+
+        let mut budgets = passing_budgets();
+        budgets["interaction_evidence"]["controls"]["transient_bounds_evidence"]["elapsed_ms"] =
+            json!(21000.0);
+        validate_budgets("contract", "chromium", &budgets)
+            .expect("transient control accepts its inclusive 21 second total");
+
+        for elapsed in [21000.0001, 1_000_000_000.0] {
+            let mut budgets = passing_budgets();
+            budgets["interaction_evidence"]["controls"]["transient_bounds_evidence"]["elapsed_ms"] =
+                json!(elapsed);
+            let error = validate_budgets("contract", "chromium", &budgets)
+                .expect_err("transient readiness must reject aggregate elapsed over budget");
+            assert!(error.contains("aggregate elapsed"), "{error}");
+        }
+
+        let mut budgets = passing_budgets();
+        budgets["interaction_evidence"]["controls"]["pre_input"][0]["readiness"]["acceptance_budget_ms"] =
+            json!(21000.0);
+        budgets["interaction_evidence"]["controls"]["pre_input"][0]["readiness"]["elapsed_ms"] =
+            json!(21000.0);
+        let error = validate_budgets("contract", "chromium", &budgets)
+            .expect_err("ordinary readiness must not borrow transient setup allowance");
+        assert!(error.contains("aggregate elapsed"), "{error}");
+    }
+
+    #[test]
     fn trusted_click_readiness_requires_frames_and_hit_test_evidence() {
+        let mut budgets = passing_budgets();
+        budgets["interaction_evidence"]["controls"]["transient_bounds_restore_error"] =
+            json!("restore failed");
+        let error = validate_budgets("contract", "chromium", &budgets)
+            .expect_err("transient restoration failure must reject the receipt");
+        assert!(error.contains("restoration failed"), "{error}");
+
         let mut budgets = passing_budgets();
         budgets["interaction_evidence"]["controls"]["pre_input"][0]["readiness"]["frames_observed"] =
             json!(1);
