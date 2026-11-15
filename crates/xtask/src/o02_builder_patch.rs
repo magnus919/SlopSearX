@@ -96,6 +96,15 @@ impl Projection {
         Ok((size(&self.0["current"])?, sha(&self.0["current"])?))
     }
     pub(super) fn prior(&self, raw: &[u8]) -> Result<Vec<u8>> {
+        let normalized;
+        let raw = if self.0["path"] == "tests/test_deployment_artifacts.py"
+            && raw.len() != size(&self.0["current"])?
+        {
+            normalized = super::image_pin_custody::normalize(raw)?;
+            normalized.as_slice()
+        } else {
+            raw
+        };
         endpoint(&self.0["current"], raw)?;
         let edits = self.0["edits"]
             .as_array()

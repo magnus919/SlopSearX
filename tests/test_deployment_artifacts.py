@@ -142,7 +142,8 @@ def test_promotion_workflow_guards_the_app_image_pin() -> None:
     assert "schedule" in triggers and "workflow_dispatch" in triggers
 
     step_text = (ROOT / ".github/workflows/image-promotion.yml").read_text()
-    assert "scripts/promote_image_digest.py --write" in step_text
+    assert "cargo xtask ci-helper image-pin-promote --write" in step_text
+    assert "scripts/promote_image_digest.py --write" not in step_text
 
 
 def test_docker_prune_keeps_a_retention_window_for_orphaned_pins() -> None:

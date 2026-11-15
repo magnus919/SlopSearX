@@ -7,10 +7,14 @@
 //! media types, three-attempt retry policy and 30-second timeout as before.
 //!
 //! Evidence boundary: this module verifies pins and queries registries. Its
-//! promotion write path only accepts a no-op while source-custody pins are fixed;
+//! promotion writer prepares four exact, validated outputs before replacement;
 //! it never builds, pushes or promotes an image, and it never touches production
 //! state.
 use crate::Result;
+use crate::o02_health_retirement::image_pin_custody;
+#[cfg(unix)]
+#[path = "o02_image_files.rs"]
+mod promotion_files;
 use sha2::{Digest, Sha256};
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -353,18 +357,35 @@ fn oracle_pin(root: &Path) -> Result<String> {
     if path == repository_oracle && canonical_root == build_root {
         let operand = crate::o02_health_retirement::deployment_source_operand(&canonical_root)?;
         let operand = std::str::from_utf8(&operand).map_err(|error| error.to_string())?;
-        return frozen_oracle_pin_text(operand);
+        frozen_oracle_pin_text(operand)?;
+        return image_pin_custody::current_digest(text.as_bytes());
+    }
+    if let Ok(digest) = image_pin_custody::current_digest(text.as_bytes()) {
+        // A copied real oracle still needs the independently authenticated
+        // runtime capsule and historical inverse, never a Python scanner.
+        let operand = crate::o02_health_retirement::deployment_source_operand(&canonical_root)?;
+        frozen_oracle_pin_text(std::str::from_utf8(&operand).map_err(|e| e.to_string())?)?;
+        return Ok(digest);
     }
     oracle_pin_text(&text)
 }
 
 /// Collects the unique active image digest across manifests and parity oracle.
 pub fn extract_pinned_digest(root: &Path) -> Result<String> {
+    #[cfg(unix)]
+    let _guard = promotion_files::read_guard(root)?;
     let mut pins = BTreeSet::new();
     for name in PIN_FILES {
         pins.insert(deployment_pin(root, name)?);
     }
     pins.insert(oracle_pin(root)?);
+    pins.insert(spec_pin_text(&bounded_text(
+        &root
+            .canonicalize()
+            .map_err(|e| e.to_string())?
+            .join("spec.md"),
+        "spec.md",
+    )?)?);
     need(
         pins.len() == 1,
         &format!(
@@ -375,16 +396,196 @@ pub fn extract_pinned_digest(root: &Path) -> Result<String> {
     Ok(pins.into_iter().next().expect("one pin"))
 }
 
-/// Refuses digest drift while the Python source hash is fixture-bound; same-pin
-/// invocation is a no-op. Drift requires the sealed source-promotion workflow.
-pub fn apply_promotion(root: &Path, new_digest: &str) -> Result<Vec<String>> {
-    let current = extract_pinned_digest(root)?;
-    if new_digest != current {
-        return Err(
-            "native --write refuses drift while the fixture-bound test pin would remain stale; use the sealed promotion workflow".into(),
-        );
+const PROMOTION_FILES: [&str; 4] = [PIN_FILES[0], PIN_FILES[1], TEST_PIN_FILE, "spec.md"];
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct PinText {
+    path: &'static str,
+    bytes: Vec<u8>,
+}
+struct PromotionPlan {
+    originals: Vec<PinText>,
+    outputs: Vec<PinText>,
+    current: String,
+    latest: String,
+}
+impl PromotionPlan {
+    fn changed(&self) -> bool {
+        self.current != self.latest
     }
-    Ok(Vec::new())
+}
+#[derive(Debug)]
+struct ApplyError {
+    message: &'static str,
+    replaced: Vec<&'static str>,
+    cleanup_failed: Vec<&'static str>,
+}
+impl std::fmt::Display for ApplyError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}; replaced=[{}]; staging_cleanup_failed=[{}]",
+            self.message,
+            self.replaced.join(", "),
+            self.cleanup_failed.join(", ")
+        )
+    }
+}
+
+// Preserve YAML formatting while proving the semantic delta is exactly the
+// named active image field. Comments, aliases, escaped scalars and unrelated
+// references cannot authorize a replacement or broaden its scope.
+fn replace_deployment(name: &str, text: &str, current: &str, latest: &str) -> Result<String> {
+    need(
+        deployment_pin_text(name, text)? == current,
+        "manifest pin changed during planning",
+    )?;
+    let old = format!("{IMAGE}@{current}");
+    let new = format!("{IMAGE}@{latest}");
+    need(
+        text.matches(&old).count() == 1,
+        "manifest requires one unambiguous literal image reference",
+    )?;
+    let updated = text.replacen(&old, &new, 1);
+    let mut expected = parse_yaml(text, name)?;
+    if name == PIN_FILES[0] {
+        expected["services"]["slopsearx"]["image"] = new.into();
+    } else {
+        for container in expected["spec"]["template"]["spec"]["containers"]
+            .as_array_mut()
+            .ok_or("O02 image pin: containers required")?
+        {
+            if container["name"] == "slopsearx" {
+                container["image"] = new.clone().into();
+            }
+        }
+    }
+    need(
+        parse_yaml(&updated, name)? == expected,
+        "replacement must change only the active image field",
+    )?;
+    need(
+        deployment_pin_text(name, &updated)? == latest,
+        "updated active image digest",
+    )?;
+    Ok(updated)
+}
+
+fn spec_pin_text(text: &str) -> Result<String> {
+    need(
+        text.matches(IMAGE).count() == 2,
+        "spec.md must contain exactly two application image references",
+    )?;
+    let blocks: Vec<&str> = text
+        .split("```yaml\n")
+        .skip(1)
+        .filter_map(|tail| tail.split_once("\n```").map(|(block, _)| block))
+        .filter(|block| block.contains(IMAGE))
+        .collect();
+    need(
+        blocks.len() == 2,
+        "spec.md requires two active YAML examples",
+    )?;
+    let kubernetes = deployment_pin_text(PIN_FILES[1], blocks[0])?;
+    let compose = parse_yaml(blocks[1], "spec.md Compose example")?;
+    let compose = digest_reference(
+        compose["slopsearx"]["image"]
+            .as_str()
+            .ok_or("O02 image pin: spec.md lacks active Compose image")?,
+        "spec.md Compose example",
+    )?;
+    need(kubernetes == compose, "spec.md example pins must agree")?;
+    Ok(kubernetes)
+}
+
+fn replace_spec(text: &str, current: &str, latest: &str) -> Result<String> {
+    need(
+        spec_pin_text(text)? == current,
+        "spec.md pin must match active deployment",
+    )?;
+    let old = format!("{IMAGE}@{current}");
+    let new = format!("{IMAGE}@{latest}");
+    need(
+        text.matches(&old).count() == 2,
+        "spec.md requires exactly two literal active references",
+    )?;
+    let updated = text.replace(&old, &new);
+    need(
+        spec_pin_text(&updated)? == latest,
+        "updated spec.md active example pins",
+    )?;
+    need(
+        updated.replace(&new, &old) == text,
+        "spec.md bytes outside the two references remain exact",
+    )?;
+    Ok(updated)
+}
+
+fn promotion_plan(inputs: &[PinText], latest: Option<&str>) -> Result<PromotionPlan> {
+    need(
+        inputs.len() == PROMOTION_FILES.len(),
+        "exactly four promotion operands required",
+    )?;
+    for (source, path) in inputs.iter().zip(PROMOTION_FILES) {
+        need(
+            source.path == path && source.bytes.len() <= MAX_PIN_INPUT_BYTES as usize,
+            "ordered bounded promotion operands",
+        )?;
+    }
+    let current = image_pin_custody::current_digest(&inputs[2].bytes)?;
+    let latest = latest.unwrap_or(&current);
+    digest_reference(&format!("{IMAGE}@{latest}"), "target digest")?;
+    let mut outputs = Vec::new();
+    for (index, source) in inputs.iter().enumerate() {
+        let bytes = if index < 2 {
+            replace_deployment(
+                source.path,
+                std::str::from_utf8(&source.bytes).map_err(|e| e.to_string())?,
+                &current,
+                latest,
+            )?
+            .into_bytes()
+        } else if index == 2 {
+            image_pin_custody::replace(&source.bytes, latest)?
+        } else {
+            replace_spec(
+                std::str::from_utf8(&source.bytes).map_err(|e| e.to_string())?,
+                &current,
+                latest,
+            )?
+            .into_bytes()
+        };
+        outputs.push(PinText {
+            path: source.path,
+            bytes,
+        });
+    }
+    Ok(PromotionPlan {
+        originals: inputs.to_vec(),
+        outputs,
+        current: current.clone(),
+        latest: latest.into(),
+    })
+}
+
+/// Prepare all four operands before per-file atomic replacement. A failed
+/// replacement reports every completed path and never claims set-wide atomicity.
+#[cfg(unix)]
+pub fn apply_promotion(root: &Path, new_digest: &str) -> Result<Vec<String>> {
+    let snapshot = promotion_files::PinSnapshot::read(root)?;
+    // Authenticate the runtime capsule and existing F01/W03 inverse as well as
+    // the digest-slot template validated by the snapshot planner.
+    let operand = crate::o02_health_retirement::deployment_source_operand(root)?;
+    frozen_oracle_pin_text(std::str::from_utf8(&operand).map_err(|e| e.to_string())?)?;
+    let plan = snapshot.plan(new_digest)?;
+    snapshot
+        .apply(&plan)
+        .map(|paths| paths.into_iter().map(String::from).collect())
+        .map_err(|error| format!("O02 image pin: {error}"))
+}
+#[cfg(not(unix))]
+pub fn apply_promotion(_: &Path, _: &str) -> Result<Vec<String>> {
+    Err("O02 image pin: promotion writes require Unix no-follow filesystem controls".into())
 }
 
 // ---------------------------------------------------------------------------
@@ -675,9 +876,10 @@ fn real_sleep(seconds: u64) {
     std::thread::sleep(std::time::Duration::from_secs(seconds));
 }
 
-fn promotion_mode(args: &[String]) -> Result<(bool, Option<String>)> {
+fn promotion_mode(args: &[String]) -> Result<(&'static str, Option<String>)> {
     let mut check = false;
     let mut write = false;
+    let mut recover = false;
     let mut root = None;
     let mut index = 0;
     while index < args.len() {
@@ -689,6 +891,10 @@ fn promotion_mode(args: &[String]) -> Result<(bool, Option<String>)> {
             "--write" => {
                 need(!write, "duplicate --write flag")?;
                 write = true;
+            }
+            "--recover" => {
+                need(!recover, "duplicate --recover flag")?;
+                recover = true;
             }
             "--root" => {
                 need(root.is_none(), "duplicate --root flag")?;
@@ -708,10 +914,30 @@ fn promotion_mode(args: &[String]) -> Result<(bool, Option<String>)> {
         index += 1;
     }
     need(
-        check ^ write,
-        "image-pin-promote requires exactly one of --check or --write",
+        usize::from(check) + usize::from(write) + usize::from(recover) == 1,
+        "image-pin-promote requires exactly one of --check, --write or --recover",
     )?;
-    Ok((check, root))
+    Ok((
+        if check {
+            "check"
+        } else if write {
+            "write"
+        } else {
+            "recover"
+        },
+        root,
+    ))
+}
+
+/// Explicit offline recovery; --check never calls this mutating path.
+#[cfg(unix)]
+pub fn recover_promotion(root: &Path) -> Result<()> {
+    let _guard = promotion_files::recover(root)?;
+    Ok(())
+}
+#[cfg(not(unix))]
+pub fn recover_promotion(_: &Path) -> Result<()> {
+    Err("O02 image pin: recovery requires Unix filesystem controls".into())
 }
 
 fn dockerfile_value(args: &[String]) -> Result<String> {
@@ -775,10 +1001,19 @@ fn verify_base(root: &Path, args: &[String]) -> Result<i32> {
 }
 
 fn promote_with_mode(root: &Path, check: bool) -> Result<i32> {
+    promote_with_transport(root, check, &CurlTransport, &mut real_sleep)
+}
+fn promote_with_transport(
+    root: &Path,
+    check: bool,
+    transport: &dyn Transport,
+    sleep: &mut dyn FnMut(u64),
+) -> Result<i32> {
+    if !check {
+        recover_promotion(root)?;
+    }
     let pinned = extract_pinned_digest(root)?;
-    let transport = CurlTransport;
-    let mut sleep = real_sleep;
-    let latest = latest_digest(&transport, &mut sleep)?;
+    let latest = latest_digest(transport, sleep)?;
     if pinned == latest {
         println!("{IMAGE} pin is current: {pinned}");
         return Ok(0);
@@ -813,12 +1048,16 @@ pub fn cli(root: &Path, args: &[String]) -> Result<()> {
             let effective = root.to_path_buf();
             command_exit_code(verify_base(&effective, rest))
         }
-        "image-pin-promote" => {
-            let (check, selected_root) = promotion_mode(rest)?;
+        "image-pin-promote" => command_exit_code((|| {
+            let (mode, selected_root) = promotion_mode(rest)?;
             let effective =
                 selected_root.map_or_else(|| root.to_path_buf(), std::path::PathBuf::from);
-            command_exit_code(promote_with_mode(&effective, check))
-        }
+            if mode == "recover" {
+                recover_promotion(&effective).map(|()| 0)
+            } else {
+                promote_with_mode(&effective, mode == "check")
+            }
+        })()),
         other => return Err(format!("O02 image pin: unknown command {other}")),
     };
     if code == 0 {
@@ -1332,6 +1571,7 @@ mod tests {
             format!("GHCR_DIGEST_PIN = \"{manifest}\"\n"),
         )
         .expect("oracle fixture");
+        fs::write(root.join("spec.md"),format!("```yaml\nspec:\n  template:\n    spec:\n      containers:\n        - name: slopsearx\n          image: {manifest}\n```\n\n```yaml\nslopsearx:\n  image: {manifest}\n```\n")).unwrap();
     }
 
     #[test]
@@ -1689,41 +1929,833 @@ mod tests {
         assert!(error.contains(PIN_FILES[0]), "{error}");
     }
 
+    #[cfg(unix)]
+    fn promotion_fixture(name: &str) -> FixtureDir {
+        let root = fixture_root(name);
+        write_pin_fixtures(&root, FROZEN_TEST_PIN_DIGEST);
+        fs::write(
+            root.join(TEST_PIN_FILE),
+            include_bytes!("../../../tests/test_deployment_artifacts.py"),
+        )
+        .unwrap();
+        let capsule = root.join("docs/rust-rewrite/o02/builder-patch-v2/capsule.json");
+        fs::create_dir_all(capsule.parent().unwrap()).unwrap();
+        fs::write(
+            capsule,
+            include_bytes!("../../../docs/rust-rewrite/o02/builder-patch-v2/capsule.json"),
+        )
+        .unwrap();
+        root
+    }
+
     #[test]
-    fn native_write_refuses_drift_without_mutating_manifest_or_test_oracle() {
-        let root = fixture_root("apply");
-        let old = "d".repeat(64);
+    #[cfg(unix)]
+    fn native_write_updates_only_digest_slots_and_is_idempotent() {
+        let root = promotion_fixture("apply");
+        let original = fs::read(root.join(TEST_PIN_FILE)).unwrap();
         let new = format!("sha256:{}", "f".repeat(64));
-        write_pin_fixtures(&root, &format!("sha256:{old}"));
-        let test_pin = root.join(TEST_PIN_FILE);
-        let original_manifests =
-            PIN_FILES.map(|name| fs::read(root.join(name)).expect("manifest before"));
-        let original_test_pin = fs::read(&test_pin).expect("test pin before");
-        let error = apply_promotion(&root, &new).expect_err("must not create split-brain pins");
-        assert!(error.contains("fixture-bound"), "{error}");
-        for (name, original) in PIN_FILES.into_iter().zip(original_manifests) {
-            assert_eq!(fs::read(root.join(name)).expect("manifest after"), original);
+        assert_eq!(apply_promotion(&root, &new).unwrap(), PROMOTION_FILES);
+        assert_eq!(extract_pinned_digest(&root).unwrap(), new);
+        let current = fs::read(root.join(TEST_PIN_FILE)).unwrap();
+        assert_eq!(
+            image_pin_custody::normalize(&current).unwrap(),
+            image_pin_custody::normalize(&original).unwrap()
+        );
+        assert_eq!(apply_promotion(&root, &new).unwrap(), Vec::<String>::new());
+        // Existing strict F01/W03 inverse accepts the parameterized successor.
+        let operand = crate::o02_health_retirement::deployment_source_operand(&root).unwrap();
+        assert_eq!(
+            frozen_oracle_pin_text(std::str::from_utf8(&operand).unwrap()).unwrap(),
+            FROZEN_TEST_PIN_DIGEST
+        );
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn malformed_promotion_operands_and_targets_do_not_write() {
+        for kind in 0..6 {
+            let root = promotion_fixture("bad-plan");
+            let oracle = root.join(TEST_PIN_FILE);
+            let manifest = root.join(PIN_FILES[0]);
+            let mut target = format!("sha256:{}", "f".repeat(64));
+            match kind {
+                0 => target = "sha256:nope".into(),
+                1 => {
+                    let mut raw = fs::read(&oracle).unwrap();
+                    raw[0] ^= 1;
+                    fs::write(&oracle, raw).unwrap();
+                }
+                2 => {
+                    let text = fs::read_to_string(&manifest).unwrap();
+                    fs::write(
+                        &manifest,
+                        format!("{text}\n# {IMAGE}@{FROZEN_TEST_PIN_DIGEST}\n"),
+                    )
+                    .unwrap();
+                }
+                3 => fs::write(&manifest, "services: {slopsearx: {image: latest}}\n").unwrap(),
+                4 => fs::write(
+                    &oracle,
+                    format!("GHCR_DIGEST_PIN = \"{IMAGE}@{FROZEN_TEST_PIN_DIGEST}\"\n"),
+                )
+                .unwrap(),
+                _ => {
+                    let capsule = root.join("docs/rust-rewrite/o02/builder-patch-v2/capsule.json");
+                    fs::write(capsule, "{}\n").unwrap();
+                }
+            }
+            let before = PROMOTION_FILES.map(|p| fs::read(root.join(p)).unwrap());
+            assert!(apply_promotion(&root, &target).is_err(), "case {kind}");
+            for (path, bytes) in PROMOTION_FILES.into_iter().zip(before) {
+                assert_eq!(
+                    fs::read(root.join(path)).unwrap(),
+                    bytes,
+                    "case {kind}: {path}"
+                );
+            }
         }
+    }
+
+    #[test]
+    fn replacement_proves_semantic_delta_and_rejects_alias_and_comment_decoys() {
+        let old = format!("{IMAGE}@{FROZEN_TEST_PIN_DIGEST}");
+        let new = format!("sha256:{}", "f".repeat(64));
+        for text in [
+            format!("pin: &pin {old}\nservices: {{slopsearx: {{image: *pin}}}}\n"),
+            format!("# {old}\nservices: {{slopsearx: {{image: latest}}}}\n"),
+            format!("services: {{slopsearx: {{image: {old}, image: latest}}}}\n"),
+        ] {
+            assert!(replace_deployment(PIN_FILES[0], &text, FROZEN_TEST_PIN_DIGEST, &new).is_err());
+        }
+        let text =
+            format!("# retained comment\nservices:\n  slopsearx:\n    image: '{old}' # active\n");
+        let output = replace_deployment(PIN_FILES[0], &text, FROZEN_TEST_PIN_DIGEST, &new).unwrap();
+        assert_eq!(output, text.replace(FROZEN_TEST_PIN_DIGEST, &new));
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn promotion_snapshot_rejects_changed_source_and_cleans_staging_failures() {
+        use promotion_files::{ApplyPoint, PinSnapshot};
+        let new = format!("sha256:{}", "f".repeat(64));
+        for stage_failure in [true, false] {
+            let root = promotion_fixture("stage-failure");
+            let snapshot = PinSnapshot::read(&root).unwrap();
+            let plan = snapshot.plan(&new).unwrap();
+            let before = PROMOTION_FILES.map(|p| fs::read(root.join(p)).unwrap());
+            let error = snapshot
+                .apply_with_test_hook(&plan, |point, index, _, _| {
+                    if stage_failure && point == ApplyPoint::BeforeStage && index == 2 {
+                        return Err(std::io::Error::other("injected staging failure"));
+                    }
+                    if !stage_failure && point == ApplyPoint::BeforeReplace && index == 0 {
+                        fs::write(root.join(PIN_FILES[0]), "changed concurrently\n")?;
+                    }
+                    Ok(())
+                })
+                .unwrap_err();
+            assert!(error.replaced.is_empty());
+            assert_eq!(error.cleanup_failed.is_empty(), stage_failure);
+            drop(snapshot);
+            if !stage_failure {
+                assert!(extract_pinned_digest(&root).is_err());
+                fs::write(root.join(PIN_FILES[0]), &before[0]).unwrap();
+                recover_promotion(&root).unwrap();
+                assert_eq!(
+                    extract_pinned_digest(&root).unwrap(),
+                    FROZEN_TEST_PIN_DIGEST
+                );
+            }
+            for (index, (path, bytes)) in PROMOTION_FILES.into_iter().zip(before).enumerate() {
+                if stage_failure || index != 0 {
+                    assert_eq!(fs::read(root.join(path)).unwrap(), bytes);
+                }
+            }
+            for dir in [root.to_path_buf(), root.join("k8s"), root.join("tests")] {
+                assert!(fs::read_dir(dir).unwrap().all(|e| {
+                    !e.unwrap()
+                        .file_name()
+                        .to_string_lossy()
+                        .starts_with(".ssx-image-promotion")
+                }));
+            }
+        }
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn promotion_rolls_back_every_rename_boundary_and_retains_failed_rollback() {
+        use promotion_files::{ApplyPoint, PinSnapshot};
+        let new = format!("sha256:{}", "f".repeat(64));
+        for boundary in 0..=PROMOTION_FILES.len() {
+            for fail_rollback in [false, true] {
+                let root = promotion_fixture("rollback");
+                let before = PROMOTION_FILES.map(|p| fs::read(root.join(p)).unwrap());
+                let snapshot = PinSnapshot::read(&root).unwrap();
+                let plan = snapshot.plan(&new).unwrap();
+                let error = snapshot
+                    .apply_with_test_hook(&plan, |point, index, _, _| {
+                        if (point == ApplyPoint::BeforeRename && index == boundary)
+                            || (point == ApplyPoint::BeforeCommit
+                                && boundary == PROMOTION_FILES.len())
+                            || (point == ApplyPoint::BeforeRollback && fail_rollback)
+                        {
+                            return Err(std::io::Error::other("injected failure"));
+                        }
+                        Ok(())
+                    })
+                    .unwrap_err();
+                drop(snapshot);
+                let retained = fail_rollback && boundary > 0;
+                assert_eq!(
+                    !error.cleanup_failed.is_empty(),
+                    retained,
+                    "boundary {boundary}"
+                );
+                assert_eq!(
+                    root.join(".ssx-image-promotion/journal.json").exists(),
+                    retained
+                );
+                if retained {
+                    let journal = fs::read(root.join(".ssx-image-promotion/journal.json")).unwrap();
+                    let state = PROMOTION_FILES.map(|p| fs::read(root.join(p)).unwrap());
+                    assert!(extract_pinned_digest(&root).is_err());
+                    assert_eq!(
+                        fs::read(root.join(".ssx-image-promotion/journal.json")).unwrap(),
+                        journal
+                    );
+                    for (path, bytes) in PROMOTION_FILES.into_iter().zip(state) {
+                        assert_eq!(fs::read(root.join(path)).unwrap(), bytes);
+                    }
+                    // A process can stop while preparing a compensating file.
+                    // Its journal-owned partial staging bytes are retired safely.
+                    use std::os::unix::fs::PermissionsExt;
+                    let partial = root.join(".ssx-image-rollback-0");
+                    fs::write(&partial, b"partial backup write").unwrap();
+                    fs::set_permissions(&partial, fs::Permissions::from_mode(0o600)).unwrap();
+                    recover_promotion(&root).unwrap();
+                    assert!(!partial.exists());
+                }
+                assert_eq!(
+                    extract_pinned_digest(&root).unwrap(),
+                    FROZEN_TEST_PIN_DIGEST
+                );
+                for (path, bytes) in PROMOTION_FILES.into_iter().zip(before) {
+                    assert_eq!(fs::read(root.join(path)).unwrap(), bytes);
+                }
+                assert!(!root.join(".ssx-image-promotion").exists());
+            }
+        }
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn interrupted_transaction_requires_explicit_recovery_before_check() {
+        use promotion_files::{ApplyPoint, PinSnapshot};
+        let new = format!("sha256:{}", "f".repeat(64));
+        for boundary in 0..=PROMOTION_FILES.len() {
+            let root = promotion_fixture("interrupted");
+            let before = PROMOTION_FILES.map(|p| fs::read(root.join(p)).unwrap());
+            let snapshot = PinSnapshot::read(&root).unwrap();
+            let plan = snapshot.plan(&new).unwrap();
+            let interrupted = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                let _ = snapshot.apply_with_test_hook(&plan, |point, index, _, _| {
+                    if (point == ApplyPoint::BeforeRename && index == boundary)
+                        || (point == ApplyPoint::BeforeCommit && boundary == PROMOTION_FILES.len())
+                    {
+                        panic!("simulated process interruption after {boundary} renames");
+                    }
+                    Ok(())
+                });
+            }));
+            assert!(interrupted.is_err());
+            assert!(root.join(".ssx-image-promotion/journal.json").exists());
+            drop(snapshot);
+            let journal = fs::read(root.join(".ssx-image-promotion/journal.json")).unwrap();
+            let state = PROMOTION_FILES.map(|p| fs::read(root.join(p)).unwrap());
+            assert!(extract_pinned_digest(&root).is_err());
+            assert_eq!(
+                fs::read(root.join(".ssx-image-promotion/journal.json")).unwrap(),
+                journal
+            );
+            for (path, bytes) in PROMOTION_FILES.into_iter().zip(state) {
+                assert_eq!(fs::read(root.join(path)).unwrap(), bytes);
+            }
+            // Simulate leftover output files from a hard interruption (unlike
+            // unwinding, SIGKILL would not run Stage::drop).
+            use std::os::unix::fs::PermissionsExt;
+            let record: serde_json::Value = serde_json::from_slice(&journal).unwrap();
+            for (path, name) in PROMOTION_FILES
+                .into_iter()
+                .zip(record["stages"].as_array().unwrap())
+            {
+                let stage = root
+                    .join(path)
+                    .parent()
+                    .unwrap()
+                    .join(name.as_str().unwrap());
+                fs::write(&stage, b"interrupted output write").unwrap();
+                fs::set_permissions(&stage, fs::Permissions::from_mode(0o600)).unwrap();
+            }
+            recover_promotion(&root).unwrap();
+            if boundary % 2 == 0 {
+                assert_eq!(
+                    extract_pinned_digest(&root).unwrap(),
+                    FROZEN_TEST_PIN_DIGEST
+                );
+            } else {
+                assert!(
+                    apply_promotion(&root, FROZEN_TEST_PIN_DIGEST)
+                        .unwrap()
+                        .is_empty()
+                );
+            }
+            for (path, bytes) in PROMOTION_FILES.into_iter().zip(before) {
+                assert_eq!(fs::read(root.join(path)).unwrap(), bytes);
+            }
+            assert!(!root.join(".ssx-image-promotion").exists());
+        }
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn every_publication_and_cleanup_boundary_is_recoverable() {
+        use promotion_files::{ApplyPoint, PinSnapshot};
+        let points = [
+            ApplyPoint::InitCreated,
+            ApplyPoint::InitWritten,
+            ApplyPoint::InitSynced,
+            ApplyPoint::InitRenamed,
+            ApplyPoint::InitPublished,
+            ApplyPoint::CommitCreated,
+            ApplyPoint::CommitWritten,
+            ApplyPoint::CommitSynced,
+            ApplyPoint::CommitRenamed,
+            ApplyPoint::CleanupReceiptCreated,
+            ApplyPoint::CleanupReceiptWritten,
+            ApplyPoint::CleanupReceiptSynced,
+            ApplyPoint::CleanupReceiptPublished,
+            ApplyPoint::CleanupMarkersRemoved,
+            ApplyPoint::CleanupDirectoryRemoved,
+        ];
+        let new = format!("sha256:{}", "f".repeat(64));
+        for point in points {
+            let root = promotion_fixture("publication-crash");
+            let snapshot = PinSnapshot::read(&root).unwrap();
+            let plan = snapshot.plan(&new).unwrap();
+            let interrupted = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                let _ = snapshot.apply_with_test_hook(&plan, |at, _, _, _| {
+                    if at == point {
+                        if at == ApplyPoint::CommitCreated || at == ApplyPoint::CommitWritten {
+                            let journal =
+                                fs::read(root.join(".ssx-image-promotion/journal.json")).unwrap();
+                            fs::write(
+                                root.join(".ssx-image-promotion/commit.pending"),
+                                &journal[..17],
+                            )
+                            .unwrap();
+                        }
+                        panic!("injected publication/cleanup interruption");
+                    }
+                    Ok(())
+                });
+            }));
+            assert!(interrupted.is_err());
+            drop(snapshot);
+            let state = PROMOTION_FILES.map(|p| fs::read(root.join(p)).unwrap());
+            let _ = extract_pinned_digest(&root);
+            for (path, raw) in PROMOTION_FILES.into_iter().zip(state) {
+                assert_eq!(fs::read(root.join(path)).unwrap(), raw);
+            }
+            recover_promotion(&root).unwrap();
+            recover_promotion(&root).unwrap();
+            let committed = matches!(
+                point,
+                ApplyPoint::CommitRenamed
+                    | ApplyPoint::CleanupReceiptCreated
+                    | ApplyPoint::CleanupReceiptWritten
+                    | ApplyPoint::CleanupReceiptSynced
+                    | ApplyPoint::CleanupReceiptPublished
+                    | ApplyPoint::CleanupMarkersRemoved
+                    | ApplyPoint::CleanupDirectoryRemoved
+            );
+            assert_eq!(
+                extract_pinned_digest(&root).unwrap(),
+                if committed {
+                    new.clone()
+                } else {
+                    FROZEN_TEST_PIN_DIGEST.into()
+                }
+            );
+            assert!(!root.join(".ssx-image-promotion").exists());
+            assert!(!root.join(".ssx-image-promotion-cleanup.json").exists());
+        }
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn commit_errors_compensate_only_before_marker_publication() {
+        use promotion_files::{ApplyPoint, PinSnapshot};
+        let new = format!("sha256:{}", "f".repeat(64));
+        for point in [
+            ApplyPoint::CommitCreated,
+            ApplyPoint::CommitWritten,
+            ApplyPoint::CommitSynced,
+            ApplyPoint::CommitRenamed,
+        ] {
+            let root = promotion_fixture("commit-error");
+            let before = PROMOTION_FILES.map(|path| fs::read(root.join(path)).unwrap());
+            let snapshot = PinSnapshot::read(&root).unwrap();
+            let plan = snapshot.plan(&new).unwrap();
+            let mut rollback_calls = 0;
+            let error = snapshot
+                .apply_with_test_hook(&plan, |at, _, _, _| {
+                    if at == ApplyPoint::BeforeRollback && point == ApplyPoint::CommitRenamed {
+                        rollback_calls += 1;
+                        return Err(std::io::Error::other("injected rollback refusal"));
+                    }
+                    if at == point {
+                        return Err(std::io::Error::other("commit I/O failure"));
+                    }
+                    Ok(())
+                })
+                .unwrap_err();
+            let published = point == ApplyPoint::CommitRenamed;
+            assert_eq!(!error.replaced.is_empty(), published);
+            assert_eq!(!error.cleanup_failed.is_empty(), published);
+            assert_eq!(rollback_calls, 0);
+            drop(snapshot);
+            recover_promotion(&root).unwrap();
+            for (path, raw) in PROMOTION_FILES.into_iter().zip(before) {
+                if published {
+                    assert_eq!(
+                        fs::read(root.join(path)).unwrap(),
+                        plan.outputs.iter().find(|p| p.path == path).unwrap().bytes
+                    );
+                } else {
+                    assert_eq!(fs::read(root.join(path)).unwrap(), raw);
+                }
+            }
+        }
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn reserved_publication_never_replaces_a_foreign_artifact() {
+        use promotion_files::{ApplyPoint, PinSnapshot};
+        use std::os::unix::fs::PermissionsExt;
+        let new = format!("sha256:{}", "f".repeat(64));
+        for point in [
+            ApplyPoint::JournalBeforePublish,
+            ApplyPoint::InitBeforePublish,
+            ApplyPoint::CommitBeforePublish,
+            ApplyPoint::CleanupBeforePublish,
+        ] {
+            let root = promotion_fixture("foreign-publication");
+            let before = PROMOTION_FILES.map(|p| fs::read(root.join(p)).unwrap());
+            let snapshot = PinSnapshot::read(&root).unwrap();
+            let plan = snapshot.plan(&new).unwrap();
+            let mut foreign = None;
+            let result = snapshot.apply_with_test_hook(&plan, |at, _, _, _| {
+                if at == point {
+                    let path = match point {
+                        ApplyPoint::JournalBeforePublish => fs::read_dir(&*root)
+                            .unwrap()
+                            .map(|e| e.unwrap().path())
+                            .find(|p| {
+                                p.file_name()
+                                    .unwrap()
+                                    .to_string_lossy()
+                                    .starts_with(".ssx-image-promotion-init-")
+                            })
+                            .unwrap()
+                            .join("journal.json"),
+                        ApplyPoint::InitBeforePublish => root.join(".ssx-image-promotion"),
+                        ApplyPoint::CommitBeforePublish => {
+                            root.join(".ssx-image-promotion/committed")
+                        }
+                        _ => root.join(".ssx-image-promotion-cleanup.json"),
+                    };
+                    if point == ApplyPoint::InitBeforePublish {
+                        fs::create_dir(&path).unwrap();
+                        fs::set_permissions(&path, fs::Permissions::from_mode(0o700)).unwrap();
+                    } else {
+                        fs::write(&path, b"foreign artifact").unwrap();
+                        fs::set_permissions(&path, fs::Permissions::from_mode(0o600)).unwrap();
+                    }
+                    foreign = Some(path);
+                }
+                Ok(())
+            });
+            drop(snapshot);
+            let foreign = foreign.unwrap();
+            if point == ApplyPoint::InitBeforePublish {
+                assert!(foreign.is_dir());
+                assert_eq!(fs::read_dir(&foreign).unwrap().count(), 0);
+            } else {
+                assert_eq!(fs::read(&foreign).unwrap(), b"foreign artifact");
+            }
+            if point == ApplyPoint::CleanupBeforePublish {
+                assert!(result.is_ok());
+            } else {
+                assert!(result.is_err());
+            }
+            if matches!(
+                point,
+                ApplyPoint::JournalBeforePublish | ApplyPoint::InitBeforePublish
+            ) {
+                for (path, raw) in PROMOTION_FILES.into_iter().zip(before) {
+                    assert_eq!(fs::read(root.join(path)).unwrap(), raw);
+                }
+            } else {
+                assert!(recover_promotion(&root).is_err());
+                assert_eq!(fs::read(&foreign).unwrap(), b"foreign artifact");
+            }
+        }
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn direct_write_recovers_before_extraction_without_mutating_check() {
+        use promotion_files::{ApplyPoint, PinSnapshot};
+        let root = promotion_fixture("direct-write");
+        let new = format!("sha256:{}", "f".repeat(64));
+        let snapshot = PinSnapshot::read(&root).unwrap();
+        let plan = snapshot.plan(&new).unwrap();
+        let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            let _ = snapshot.apply_with_test_hook(&plan, |point, index, _, _| {
+                if point == ApplyPoint::BeforeRename && index == 1 {
+                    panic!("interrupt");
+                }
+                Ok(())
+            });
+        }));
+        drop(snapshot);
+        let check = Fake::new(vec![]);
+        assert!(promote_with_transport(&root, true, &check, &mut dismiss).is_err());
+        assert!(check.calls.borrow().is_empty());
+        let transport = Fake::new(vec![
+            Ok(response(200, None, r#"{"token":"t"}"#)),
+            Ok(response(
+                200,
+                Some(("Docker-Content-Digest", FROZEN_TEST_PIN_DIGEST)),
+                "",
+            )),
+        ]);
         assert_eq!(
-            fs::read(&test_pin).expect("test oracle after"),
-            original_test_pin
+            promote_with_transport(&root, false, &transport, &mut dismiss).unwrap(),
+            0
         );
         assert_eq!(
-            extract_pinned_digest(&root).expect("pin remains consistent"),
-            format!("sha256:{old}")
+            extract_pinned_digest(&root).unwrap(),
+            FROZEN_TEST_PIN_DIGEST
         );
+    }
+
+    #[test]
+    fn promotion_cli_subprocess_helper() {
+        if let Ok(raw) = std::env::var("SLOPSEARX_O02_INVALID_ARGS") {
+            let mut args = vec!["image-pin-promote".to_string()];
+            args.extend(raw.split_whitespace().map(String::from));
+            cli(Path::new(env!("CARGO_MANIFEST_DIR")), &args).unwrap();
+            panic!("invalid modes must exit before returning");
+        }
+    }
+
+    #[test]
+    fn invalid_modes_exit_two_in_the_real_cli_dispatch() {
+        for args in [
+            "",
+            "--check --write",
+            "--check --recover",
+            "--check --surprise",
+            "--write --root",
+        ] {
+            let output = Command::new(std::env::current_exe().unwrap())
+                .args([
+                    "--exact",
+                    "o06::o02_image_pin::tests::promotion_cli_subprocess_helper",
+                    "--nocapture",
+                ])
+                .env("SLOPSEARX_O02_INVALID_ARGS", args)
+                .output()
+                .unwrap();
+            assert_eq!(output.status.code(), Some(2), "args {args:?}: {output:?}");
+        }
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn recovery_preserves_unknown_or_invalid_transaction_material() {
+        use std::os::unix::fs::{PermissionsExt, symlink};
+        for kind in 0..7 {
+            let root = promotion_fixture("unknown-transaction");
+            let transaction = root.join(".ssx-image-promotion");
+            fs::create_dir(&transaction).unwrap();
+            fs::set_permissions(&transaction, fs::Permissions::from_mode(0o700)).unwrap();
+            let pending = transaction.join("journal.pending");
+            let external = root.join("unrelated-original");
+            fs::write(&external, b"user data").unwrap();
+            match kind {
+                0 => {}
+                1 => fs::write(transaction.join("unrelated"), b"user data").unwrap(),
+                2 => fs::write(&pending, b"{broken journal").unwrap(),
+                3 => symlink(&external, &pending).unwrap(),
+                4 => fs::hard_link(&external, &pending).unwrap(),
+                5 => {
+                    fs::write(&pending, b"invalid data").unwrap();
+                    fs::set_permissions(&pending, fs::Permissions::from_mode(0o644)).unwrap();
+                }
+                _ => fs::set_permissions(&transaction, fs::Permissions::from_mode(0o755)).unwrap(),
+            }
+            let before = PROMOTION_FILES.map(|path| fs::read(root.join(path)).unwrap());
+            let names: Vec<_> = fs::read_dir(&transaction)
+                .unwrap()
+                .map(|e| e.unwrap().file_name())
+                .collect();
+            assert!(extract_pinned_digest(&root).is_err());
+            assert!(recover_promotion(&root).is_err(), "case {kind}");
+            assert!(transaction.exists());
+            assert_eq!(fs::read(&external).unwrap(), b"user data");
+            assert_eq!(
+                fs::read_dir(&transaction)
+                    .unwrap()
+                    .map(|e| e.unwrap().file_name())
+                    .collect::<Vec<_>>(),
+                names
+            );
+            for (path, raw) in PROMOTION_FILES.into_iter().zip(before) {
+                assert_eq!(fs::read(root.join(path)).unwrap(), raw);
+            }
+            if kind == 3 {
+                fs::remove_file(&pending).unwrap();
+            }
+            fs::set_permissions(&transaction, fs::Permissions::from_mode(0o700)).unwrap();
+        }
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn authenticated_pending_journal_recovers_without_inheriting_name_authority() {
+        use promotion_files::{ApplyPoint, PinSnapshot};
+        let root = promotion_fixture("pending");
+        let new = format!("sha256:{}", "f".repeat(64));
+        let snapshot = PinSnapshot::read(&root).unwrap();
+        let plan = snapshot.plan(&new).unwrap();
+        let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            let _ = snapshot.apply_with_test_hook(&plan, |point, _, _, _| {
+                if point == ApplyPoint::BeforeStage {
+                    panic!("interrupted with durable originals");
+                }
+                Ok(())
+            });
+        }));
+        drop(snapshot);
+        let directory = root.join(".ssx-image-promotion");
+        fs::rename(
+            directory.join("journal.json"),
+            directory.join("journal.pending"),
+        )
+        .unwrap();
+        recover_promotion(&root).unwrap();
+        assert!(!directory.exists());
         assert_eq!(
-            apply_promotion(&root, &format!("sha256:{old}")).expect("same-digest no-op"),
-            Vec::<String>::new()
+            extract_pinned_digest(&root).unwrap(),
+            FROZEN_TEST_PIN_DIGEST
         );
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn committed_transaction_cleanup_preserves_successful_pins() {
+        use promotion_files::{ApplyPoint, PinSnapshot};
+        let root = promotion_fixture("committed");
+        let new = format!("sha256:{}", "f".repeat(64));
+        let snapshot = PinSnapshot::read(&root).unwrap();
+        let plan = snapshot.plan(&new).unwrap();
+        let changed = snapshot
+            .apply_with_test_hook(&plan, |point, _, _, _| {
+                if point == ApplyPoint::AfterCommit {
+                    return Err(std::io::Error::other("injected cleanup failure"));
+                }
+                Ok(())
+            })
+            .unwrap();
+        assert_eq!(changed, PROMOTION_FILES);
+        drop(snapshot);
+        assert!(root.join(".ssx-image-promotion/committed").exists());
+        assert!(extract_pinned_digest(&root).is_err());
+        recover_promotion(&root).unwrap();
+        assert_eq!(extract_pinned_digest(&root).unwrap(), new);
+        assert!(!root.join(".ssx-image-promotion").exists());
+        recover_promotion(&root).unwrap();
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn promotion_rejects_symlinks_and_wrong_modes() {
+        use std::os::unix::fs::{PermissionsExt, symlink};
+        let root = promotion_fixture("write-links");
+        let path = root.join(PIN_FILES[0]);
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o600)).unwrap();
+        assert!(apply_promotion(&root, FROZEN_TEST_PIN_DIGEST).is_err());
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o644)).unwrap();
+        let saved = root.join("saved-compose");
+        fs::rename(&path, &saved).unwrap();
+        symlink(&saved, &path).unwrap();
+        assert!(apply_promotion(&root, FROZEN_TEST_PIN_DIGEST).is_err());
+        fs::remove_file(&path).unwrap();
+        fs::rename(&saved, &path).unwrap();
+    }
+
+    #[test]
+    fn promotion_workflow_uses_native_modes_and_rejects_unexpected_exits() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let text = fs::read_to_string(root.join(".github/workflows/image-promotion.yml")).unwrap();
+        let workflow = parse_yaml(&text, "promotion workflow").unwrap();
+        let ledger: serde_json::Value = serde_json::from_slice(
+            &fs::read(root.join("docs/rust-rewrite/ci/gates.json")).unwrap(),
+        )
+        .unwrap();
+        let entry = &ledger["gates"]["image-promotion.yml:promote"]["source"];
+        assert_eq!(entry["job"], workflow["jobs"]["promote"]);
+        let steps = workflow["jobs"]["promote"]["steps"].as_array().unwrap();
+        let recovery = steps
+            .iter()
+            .position(|step| {
+                step["run"]
+                    .as_str()
+                    .is_some_and(|run| run == "cargo xtask ci-helper image-pin-promote --recover")
+            })
+            .unwrap();
+        let check = steps
+            .iter()
+            .position(|step| {
+                step["run"]
+                    .as_str()
+                    .is_some_and(|run| run.contains("image-pin-promote --check"))
+            })
+            .unwrap();
+        let write = steps
+            .iter()
+            .position(|step| {
+                step["run"]
+                    .as_str()
+                    .is_some_and(|run| run.contains("image-pin-promote --write --root ."))
+            })
+            .unwrap();
+        assert!(recovery < check && check < write);
+        assert!(!text.contains("scripts/promote_image_digest.py"));
+        let fixture = fixture_root("workflow-exits");
+        for (index, accepted) in [(check, [0, 1]), (write, [0, 10])] {
+            let run = steps[index]["run"].as_str().unwrap();
+            for code in [0, 1, 2, 10, 101, 130] {
+                let output = Command::new("bash")
+                    .args(["-ec", &format!("cargo() {{ if [ \"$4\" = --recover ]; then return 0; fi; return {code}; }}\n{run}")])
+                    .env("GITHUB_OUTPUT", fixture.join("output"))
+                    .output()
+                    .unwrap();
+                assert_eq!(
+                    output.status.success(),
+                    accepted.contains(&code),
+                    "mode {index}, exit {code}: {:?}",
+                    output
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn promotion_workflow_blocks_all_pending_transaction_artifacts() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let workflow = parse_yaml(
+            &fs::read_to_string(root.join(".github/workflows/image-promotion.yml")).unwrap(),
+            "workflow",
+        )
+        .unwrap();
+        let run = workflow["jobs"]["promote"]["steps"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|step| step["id"] == "promote")
+            .unwrap()["run"]
+            .as_str()
+            .unwrap();
+        assert!(run.contains("cargo xtask ci-helper image-pin-promote --recover"));
+        for (name, create) in [
+            (".ssx-image-promotion", "mkdir"),
+            (".ssx-image-promotion-cleanup.json", "touch"),
+            (".ssx-image-promotion-cleanup.pending", "touch"),
+        ] {
+            let fixture = fixture_root("publication-block");
+            let script = format!(
+                "cargo() {{ if [ \"$4\" = --write ]; then {create} {name}; return 10; fi; return 0; }}\n{run}"
+            );
+            let output = Command::new("bash")
+                .args(["-ec", &script])
+                .current_dir(&*fixture)
+                .env("GITHUB_OUTPUT", fixture.join("output"))
+                .output()
+                .unwrap();
+            assert!(!output.status.success(), "{name}");
+            assert!(!fixture.join("output").exists());
+        }
+    }
+
+    #[test]
+    fn actual_four_operands_plan_and_custody_spans_remain_exact() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let inputs: Vec<PinText> = PROMOTION_FILES
+            .into_iter()
+            .map(|path| PinText {
+                path,
+                bytes: fs::read(root.join(path)).unwrap(),
+            })
+            .collect();
+        let new = format!("sha256:{}", "f".repeat(64));
+        let plan = promotion_plan(&inputs, Some(&new)).unwrap();
+        assert_eq!(plan.outputs.len(), 4);
+        assert_eq!(
+            spec_pin_text(std::str::from_utf8(&plan.outputs[3].bytes).unwrap()).unwrap(),
+            new
+        );
+        let normalized = image_pin_custody::normalize(&plan.outputs[2].bytes).unwrap();
+        assert_eq!(normalized.len(), 13732);
+        assert_eq!(
+            Sha256::digest(&normalized)
+                .iter()
+                .map(|b| format!("{b:02x}"))
+                .collect::<String>(),
+            "e9d53620f211325296cea8f3723c11a013621a8eb7fc642e077f06bf235035b8"
+        );
+        let text = std::str::from_utf8(&inputs[2].bytes).unwrap();
+        let assertion =
+            "    assert \"cargo xtask ci-helper image-pin-promote --write\" in step_text\n";
+        assert_eq!(text.matches(assertion).count(), 1);
+        assert!(image_pin_custody::normalize(text.replace(assertion, "").as_bytes()).is_err());
+        assert!(
+            image_pin_custody::normalize(
+                text.replace("not in step_text", "in step_text").as_bytes()
+            )
+            .is_err()
+        );
+        let spec = std::str::from_utf8(&inputs[3].bytes).unwrap();
+        for invalid in [
+            format!("{spec}\n# {IMAGE}@{FROZEN_TEST_PIN_DIGEST}\n"),
+            spec.replacen(FROZEN_TEST_PIN_DIGEST, &new, 1),
+        ] {
+            assert!(spec_pin_text(&invalid).is_err());
+        }
     }
 
     #[test]
     fn promotion_requires_exactly_one_explicit_mode() {
         assert!(promotion_mode(&[]).is_err());
         assert!(promotion_mode(&["--check".into(), "--write".into()]).is_err());
-        assert!(promotion_mode(&["--check".into()]).expect("check mode").0);
-        assert!(!promotion_mode(&["--write".into()]).expect("write mode").0);
+        assert_eq!(promotion_mode(&["--check".into()]).unwrap().0, "check");
+        assert_eq!(promotion_mode(&["--write".into()]).unwrap().0, "write");
+        assert_eq!(promotion_mode(&["--recover".into()]).unwrap().0, "recover");
+        assert!(promotion_mode(&["--recover".into(), "--check".into()]).is_err());
         assert!(promotion_mode(&["--check".into(), "--surprise".into()]).is_err());
         assert!(
             promotion_mode(&[

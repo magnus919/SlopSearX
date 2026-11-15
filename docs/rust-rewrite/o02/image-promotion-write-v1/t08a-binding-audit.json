@@ -1,0 +1,191 @@
+{
+  "schema": "O02_IMAGE_PROMOTION_WRITE_BINDINGS_V1",
+  "baseline": "88314a23079333e185d96cdcdb973554a9500182",
+  "prior_sha256": "c74f0d3b3e6a52015d867eeeb9a0dd6fa70b04739e237fc60d4e01734ac2b844",
+  "current_sha256": "a7464843cb3ff07eeaf1b9b696fbe340e4de3932be6b330a7296432c0bd000e6",
+  "changed_rows": [
+    {
+      "path": "crates/xtask/src/o02_image_gate_successor.rs",
+      "prior": null,
+      "current": {
+        "path": "crates/xtask/src/o02_image_gate_successor.rs",
+        "bytes": 9764,
+        "sha256": "35779809f316fe92ba99c18f46e20a3fdf6327e9941f97e07b8a885041a536a3",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ]
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/t06/source-amendments/dnspython-security-current-main-v1.rs",
+      "prior": {
+        "path": "docs/rust-rewrite/t06/source-amendments/dnspython-security-current-main-v1.rs",
+        "bytes": 28731,
+        "sha256": "766a1714ba02c68cbda5a1405c9a3be601a333435429538e604424fac136fe10",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ]
+      },
+      "current": {
+        "path": "docs/rust-rewrite/t06/source-amendments/dnspython-security-current-main-v1.rs",
+        "bytes": 30446,
+        "sha256": "6e4424d8596b876b2c4e953f2666b9cdb502d937ccfad5f28c8c8c5fc7e1f621",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ]
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/ci/gates.json",
+      "prior": {
+        "path": "docs/rust-rewrite/ci/gates.json",
+        "bytes": 176465,
+        "sha256": "45c7f9f39791ee75c3e6d91f6da1ecca2e213ed29080dea13f853511dd0c655e",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ]
+      },
+      "current": {
+        "path": "docs/rust-rewrite/ci/gates.json",
+        "bytes": 177543,
+        "sha256": "96e79651427f59c19c6a5bb3a695da0ba14b3db036eb64ca98e9fdc3acb4b545",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ]
+      }
+    },
+    {
+      "path": ".github/workflows/image-promotion.yml",
+      "prior": null,
+      "current": {
+        "path": ".github/workflows/image-promotion.yml",
+        "bytes": 3146,
+        "sha256": "37f0c6e0c9157fb61b7dd70b77ed7c9c805f7a47b1e66fb0f613e85d17c3c6b6",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ]
+      }
+    },
+    {
+      "path": "crates/xtask/Cargo.toml",
+      "prior": {
+        "path": "crates/xtask/Cargo.toml",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ],
+        "bytes": 937,
+        "sha256": "0e90db4dbe2f030fc5fe1973c766bf456b4e93f1dbb4fc2577c89dfd5b30d08a"
+      },
+      "current": {
+        "path": "crates/xtask/Cargo.toml",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ],
+        "bytes": 943,
+        "sha256": "561b5cf8c398ada3e213e94969eab796fd8a8845f7c05b6834e02e5a44a8f4f3"
+      }
+    },
+    {
+      "path": "crates/xtask/src/o02_builder_patch.rs",
+      "prior": {
+        "path": "crates/xtask/src/o02_builder_patch.rs",
+        "bytes": 7996,
+        "sha256": "bcf40cebc32e7733215b8b81c9ae423f3cfb1deb871220986262f5c890299b57",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ]
+      },
+      "current": {
+        "path": "crates/xtask/src/o02_builder_patch.rs",
+        "bytes": 8306,
+        "sha256": "cd8bedc92c8a5adafdd4eefacee6f0a15d1cebd73346fa6a518ebf977b889417",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ]
+      }
+    },
+    {
+      "path": "crates/xtask/src/o02_health_retirement.rs",
+      "prior": {
+        "path": "crates/xtask/src/o02_health_retirement.rs",
+        "bytes": 34776,
+        "sha256": "491d8507394464a7e37c9d5cd077bf9dedd147d7f1be4f6192727e2045996097",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ]
+      },
+      "current": {
+        "path": "crates/xtask/src/o02_health_retirement.rs",
+        "bytes": 35616,
+        "sha256": "adcda1c13f4b6d7274fb883d1f188f01c2cf9d21790dd003134f3e26a4299e50",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ]
+      }
+    },
+    {
+      "path": "crates/xtask/src/o02_image_custody.rs",
+      "prior": null,
+      "current": {
+        "path": "crates/xtask/src/o02_image_custody.rs",
+        "bytes": 3105,
+        "sha256": "9b15a69623a398a517e697205cc81b432fa4edbe8e811fa42697ca0b44438dd2",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ]
+      }
+    },
+    {
+      "path": "crates/xtask/src/o02_image_pin.rs",
+      "prior": null,
+      "current": {
+        "path": "crates/xtask/src/o02_image_pin.rs",
+        "bytes": 112400,
+        "sha256": "ea9fe45d42d6ef30b0dba60e3d0e2dcc993c3004602cfc67ee5bd26e6ff59673",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ]
+      }
+    },
+    {
+      "path": "crates/xtask/src/o02_image_files.rs",
+      "prior": null,
+      "current": {
+        "path": "crates/xtask/src/o02_image_files.rs",
+        "bytes": 18005,
+        "sha256": "191ba12825e2a83010c51299001f6acec3ce13d54be2bd425aca8ca6df642904",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ]
+      }
+    },
+    {
+      "path": "crates/xtask/src/o02_image_transaction.rs",
+      "prior": null,
+      "current": {
+        "path": "crates/xtask/src/o02_image_transaction.rs",
+        "bytes": 29539,
+        "sha256": "a6fd256480893bdc387b5c26bd078277353cd93d3912769b1f20878372724cf7",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ]
+      }
+    }
+  ]
+}
