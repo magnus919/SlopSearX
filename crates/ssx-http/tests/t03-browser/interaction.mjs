@@ -64,7 +64,7 @@ export async function measureInteraction(page, action, expected, timeoutMs = 150
   }
 }
 
-async function prepareTrustedClick(page, selector, timeoutMs = 5000) {
+async function prepareTrustedClick(page, selector, timeoutMs = 5000, beforeObserve = null) {
   const started = performance.now();
   const bounded = async (promise, label) => {
     let timer;
@@ -98,6 +98,10 @@ async function prepareTrustedClick(page, selector, timeoutMs = 5000) {
   let stateError = null;
   let watchdog;
   try {
+    if (beforeObserve) {
+      const setupError = await bounded(beforeObserve(), 'readiness test setup');
+      if (setupError !== null) throw new Error(setupError);
+    }
     state = await Promise.race([
       page.evaluate(async ({ selector, timeoutMs }) => {
         const inspect = () => {
@@ -133,6 +137,7 @@ async function prepareTrustedClick(page, selector, timeoutMs = 5000) {
         const deadline = startedAt + timeoutMs;
         const initial = inspect();
         let framesObserved = 0;
+        const frameSnapshots = [];
         const nextFrame = () => new Promise((resolveFrame) => {
           const remaining = deadline - performance.now();
           if (remaining <= 0) {
@@ -141,14 +146,20 @@ async function prepareTrustedClick(page, selector, timeoutMs = 5000) {
           }
           let settled = false;
           let timer;
+          let animationFrameId;
           const finish = (advanced) => {
             if (settled) return;
             settled = true;
             clearTimeout(timer);
+            if (!advanced && animationFrameId !== undefined) {
+              cancelAnimationFrame(animationFrameId);
+            }
             resolveFrame(advanced);
           };
           timer = setTimeout(() => finish(false), remaining);
-          requestAnimationFrame(() => {
+          animationFrameId = requestAnimationFrame(() => {
+            if (settled) return;
+            frameSnapshots.push(inspect());
             framesObserved += 1;
             finish(true);
           });
@@ -157,12 +168,14 @@ async function prepareTrustedClick(page, selector, timeoutMs = 5000) {
           if (!await nextFrame()) break;
         }
         const final = inspect();
-        const rectStable = sameBounds(initial.bounds, final.bounds);
+        const rectStable = [initial, ...frameSnapshots, final]
+          .every((snapshot) => sameBounds(initial.bounds, snapshot.bounds));
         const visibility = document.visibilityState;
         return {
           frames_observed: framesObserved,
           visibility,
           initial,
+          frame_snapshots: frameSnapshots,
           final,
           rect_stable: rectStable,
           browser_ready_ms: performance.now() - startedAt,
@@ -181,19 +194,25 @@ async function prepareTrustedClick(page, selector, timeoutMs = 5000) {
     clearTimeout(watchdog);
   }
 
+  const observedSnapshots = state === null
+    ? []
+    : [
+      state.initial,
+      ...(Array.isArray(state.frame_snapshots) ? state.frame_snapshots : []),
+      state.final,
+    ];
+  const snapshotActionable = (snapshot) => snapshot?.connected === true
+    && snapshot?.visible === true
+    && snapshot?.enabled === true
+    && snapshot?.center_hit_target === true;
   const ready = state !== null
     && bringToFrontError === null
     && trialClickError === null
     && state.frames_observed === 2
+    && state.frame_snapshots?.length === 2
     && state.visibility === 'visible'
-    && state.initial?.connected === true
-    && state.initial?.visible === true
-    && state.initial?.enabled === true
-    && state.initial?.center_hit_target === true
-    && state.final?.connected === true
-    && state.final?.visible === true
-    && state.final?.enabled === true
-    && state.final?.center_hit_target === true
+    && observedSnapshots.length === 4
+    && observedSnapshots.every(snapshotActionable)
     && state.rect_stable === true;
 
   return {
@@ -201,6 +220,7 @@ async function prepareTrustedClick(page, selector, timeoutMs = 5000) {
     frames_observed: state?.frames_observed ?? 0,
     visibility: state?.visibility ?? null,
     initial: state?.initial ?? null,
+    frame_snapshots: state?.frame_snapshots ?? [],
     final: state?.final ?? null,
     rect_stable: state?.rect_stable ?? false,
     browser_ready_ms: state?.browser_ready_ms ?? null,
@@ -222,6 +242,8 @@ export async function timingControls(browser) {
   const controls = {
     fast_ms: null,
     slow_ms: null,
+    transient_bounds_rejected: false,
+    transient_bounds_evidence: null,
     absent_input_rejected: false,
     absent_state_rejected: false,
     untrusted_input_rejected: false,
@@ -238,6 +260,61 @@ export async function timingControls(browser) {
         event.currentTarget.setAttribute('data-ready', '1');
       }), delay);
     };
+    const rejectTransientMovement = async () => {
+      await page.setContent('<button id="respond">Respond</button>');
+      let readiness;
+      try {
+        readiness = await prepareTrustedClick(page, '#respond', 5000, async () => {
+          await page.evaluate(() => {
+            const original = window.requestAnimationFrame.bind(window);
+            let frame = 0;
+            window.__ssxT03OriginalRequestAnimationFrame = original;
+            window.requestAnimationFrame = (callback) => original((timestamp) => {
+              frame += 1;
+              const target = document.querySelector('#respond');
+              if (frame === 1) target.style.transform = 'translateX(1px)';
+              if (frame === 2) target.style.transform = '';
+              callback(timestamp);
+            });
+          });
+        });
+      } finally {
+        await page.evaluate(() => {
+          const original = window.__ssxT03OriginalRequestAnimationFrame;
+          if (typeof original === 'function') window.requestAnimationFrame = original;
+          delete window.__ssxT03OriginalRequestAnimationFrame;
+          document.querySelector('#respond')?.style.removeProperty('transform');
+        });
+      }
+      const initialX = readiness.initial?.bounds?.x;
+      const firstFrameX = readiness.frame_snapshots?.[0]?.bounds?.x;
+      const secondFrameX = readiness.frame_snapshots?.[1]?.bounds?.x;
+      const snapshots = [
+        readiness.initial,
+        ...(Array.isArray(readiness.frame_snapshots) ? readiness.frame_snapshots : []),
+        readiness.final,
+      ];
+      const snapshotActionable = (snapshot) => snapshot?.connected === true
+        && snapshot?.visible === true
+        && snapshot?.enabled === true
+        && snapshot?.center_hit_target === true;
+      const rejectedForTransientMovement = readiness.ready === false
+        && readiness.frames_observed === 2
+        && readiness.visibility === 'visible'
+        && readiness.bring_to_front_error === null
+        && readiness.trial_click_passed === true
+        && readiness.trial_click_error === null
+        && readiness.error === null
+        && readiness.rect_stable === false
+        && snapshots.length === 4
+        && snapshots.every(snapshotActionable)
+        && Number.isFinite(initialX)
+        && Number.isFinite(firstFrameX)
+        && Number.isFinite(secondFrameX)
+        && Math.abs(firstFrameX - initialX) > 0.5
+        && Math.abs(secondFrameX - initialX) <= 0.5;
+      return { rejected: rejectedForTransientMovement, evidence: readiness };
+    };
     const trustedClick = async (name, setupMs) => {
       const phase = {
         control: name,
@@ -246,7 +323,6 @@ export async function timingControls(browser) {
         action_started: false,
         action_completed: false,
         action_driver_ms: null,
-        interaction_ms: null,
         error: null,
       };
       controls.pre_input.push(phase);
@@ -266,7 +342,6 @@ export async function timingControls(browser) {
           }
         }, expected);
         phase.action_completed = actionCompleted;
-        phase.interaction_ms = sample.duration_ms;
         return sample;
       } catch (error) {
         phase.action_completed = actionCompleted;
@@ -275,6 +350,11 @@ export async function timingControls(browser) {
         throw error;
       }
     };
+    control = 'transient bounds movement';
+    const transientBounds = await rejectTransientMovement();
+    controls.transient_bounds_rejected = transientBounds.rejected;
+    controls.transient_bounds_evidence = transientBounds.evidence;
+    assert(controls.transient_bounds_rejected, 'transient bounds movement was not rejected');
     let setupStarted = performance.now();
     await setup(0);
     control = 'fast trusted click';

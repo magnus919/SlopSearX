@@ -1079,6 +1079,52 @@ fn exact_keys(value: &Value, expected: &[&str], label: &str) -> Result<()> {
     )
 }
 
+fn bounds_within_tolerance(left: &Value, right: &Value) -> bool {
+    ["x", "y", "width", "height"].into_iter().all(|key| {
+        let (Some(left), Some(right)) = (
+            left.get(key).and_then(Value::as_f64),
+            right.get(key).and_then(Value::as_f64),
+        ) else {
+            return false;
+        };
+        left.is_finite() && right.is_finite() && (left - right).abs() <= 0.5
+    })
+}
+
+fn validate_t03_dom_snapshot(snapshot: &Value) -> Result<()> {
+    exact_keys(
+        snapshot,
+        &[
+            "connected",
+            "visible",
+            "enabled",
+            "center_hit_target",
+            "bounds",
+        ],
+        "pre-input DOM snapshot",
+    )?;
+    need(
+        snapshot["connected"] == true
+            && snapshot["visible"] == true
+            && snapshot["enabled"] == true
+            && snapshot["center_hit_target"] == true,
+        "pre-input DOM snapshot is not connected, visible, enabled and hit-testable",
+    )?;
+    let bounds = &snapshot["bounds"];
+    exact_keys(bounds, &["x", "y", "width", "height"], "pre-input bounds")?;
+    need(
+        bounds["x"].as_f64().is_some_and(|value| value.is_finite())
+            && bounds["y"].as_f64().is_some_and(|value| value.is_finite())
+            && bounds["width"]
+                .as_f64()
+                .is_some_and(|value| value.is_finite() && value > 0.0)
+            && bounds["height"]
+                .as_f64()
+                .is_some_and(|value| value.is_finite() && value > 0.0),
+        "pre-input bounds are missing or invalid",
+    )
+}
+
 fn validate_engine_call(line: &str, group: &str, error: &str) -> Result<()> {
     // Engine-call query parameters are raw request evidence. The T03 page-limit
     // case intentionally includes a 4,300-digit page token, so parse through the
@@ -1241,6 +1287,8 @@ fn validate_budgets(scenario: &str, engine: &str, budgets: &Value) -> Result<()>
         &[
             "fast_ms",
             "slow_ms",
+            "transient_bounds_rejected",
+            "transient_bounds_evidence",
             "absent_input_rejected",
             "absent_state_rejected",
             "untrusted_input_rejected",
@@ -1256,10 +1304,97 @@ fn validate_budgets(scenario: &str, engine: &str, budgets: &Value) -> Result<()>
             && controls["slow_ms"]
                 .as_f64()
                 .is_some_and(|value| value.is_finite() && value > 100.0)
+            && controls["transient_bounds_rejected"] == true
             && controls["absent_input_rejected"] == true
             && controls["absent_state_rejected"] == true
             && controls["untrusted_input_rejected"] == true,
-        "interaction measurement controls must detect slow/missing/untrusted input",
+        "interaction measurement controls must reject transient motion and detect slow/missing/untrusted input",
+    )?;
+    let transient = &controls["transient_bounds_evidence"];
+    exact_keys(
+        transient,
+        &[
+            "ready",
+            "frames_observed",
+            "visibility",
+            "initial",
+            "frame_snapshots",
+            "final",
+            "rect_stable",
+            "browser_ready_ms",
+            "bring_to_front_ms",
+            "bring_to_front_error",
+            "trial_click_ms",
+            "trial_click_passed",
+            "trial_click_error",
+            "elapsed_ms",
+            "timeout_ms",
+            "error",
+        ],
+        "transient bounds evidence",
+    )?;
+    need(
+        transient["ready"] == false
+            && transient["frames_observed"].as_u64() == Some(2)
+            && transient["visibility"] == "visible"
+            && transient["rect_stable"] == false
+            && transient["bring_to_front_error"].is_null()
+            && transient["trial_click_passed"] == true
+            && transient["trial_click_error"].is_null()
+            && transient["error"].is_null()
+            && transient["timeout_ms"].as_u64() == Some(5000),
+        "transient bounds control must record a bounded rejection after successful readiness setup",
+    )?;
+    for metric in [
+        "browser_ready_ms",
+        "bring_to_front_ms",
+        "trial_click_ms",
+        "elapsed_ms",
+    ] {
+        need(
+            transient[metric]
+                .as_f64()
+                .is_some_and(|value| value.is_finite() && value >= 0.0),
+            &format!("transient bounds timing missing or invalid: {metric}"),
+        )?;
+    }
+    need(
+        transient["browser_ready_ms"]
+            .as_f64()
+            .is_some_and(|value| value <= 5000.0)
+            && transient["bring_to_front_ms"]
+                .as_f64()
+                .is_some_and(|value| value <= 5000.0)
+            && transient["trial_click_ms"]
+                .as_f64()
+                .is_some_and(|value| value <= 5000.0),
+        "transient bounds readiness phases exceeded their bounded timeouts",
+    )?;
+    let transient_frames = transient["frame_snapshots"]
+        .as_array()
+        .ok_or("transient frame snapshots missing")?;
+    need(
+        transient_frames.len() == 2,
+        "transient bounds evidence must contain two frame snapshots",
+    )?;
+    let transient_initial = &transient["initial"];
+    validate_t03_dom_snapshot(transient_initial)?;
+    let transient_initial_bounds = &transient_initial["bounds"];
+    for snapshot in transient_frames
+        .iter()
+        .chain(std::iter::once(&transient["final"]))
+    {
+        validate_t03_dom_snapshot(snapshot)?;
+    }
+    let first_frame_stable =
+        bounds_within_tolerance(transient_initial_bounds, &transient_frames[0]["bounds"]);
+    let returned_frame_stable =
+        bounds_within_tolerance(transient_initial_bounds, &transient_frames[1]["bounds"]);
+    let final_stable =
+        bounds_within_tolerance(transient_initial_bounds, &transient["final"]["bounds"]);
+    need(
+        !first_frame_stable && returned_frame_stable && final_stable,
+        "transient bounds evidence must show one moved frame followed by return to initial bounds",
     )?;
     need(
         controls["cleanup_error"].is_null(),
@@ -1285,7 +1420,6 @@ fn validate_budgets(scenario: &str, engine: &str, budgets: &Value) -> Result<()>
                 "action_started",
                 "action_completed",
                 "action_driver_ms",
-                "interaction_ms",
                 "error",
             ],
             "pre-input timing control",
@@ -1300,9 +1434,6 @@ fn validate_budgets(scenario: &str, engine: &str, budgets: &Value) -> Result<()>
                     .is_some_and(|value| value.is_finite() && value >= 0.0)
                 && phase["action_driver_ms"]
                     .as_f64()
-                    .is_some_and(|value| value.is_finite() && value >= 0.0)
-                && phase["interaction_ms"]
-                    .as_f64()
                     .is_some_and(|value| value.is_finite() && value >= 0.0),
             "pre-input timing control action evidence",
         )?;
@@ -1314,6 +1445,7 @@ fn validate_budgets(scenario: &str, engine: &str, budgets: &Value) -> Result<()>
                 "frames_observed",
                 "visibility",
                 "initial",
+                "frame_snapshots",
                 "final",
                 "rect_stable",
                 "browser_ready_ms",
@@ -1332,7 +1464,6 @@ fn validate_budgets(scenario: &str, engine: &str, budgets: &Value) -> Result<()>
             readiness["ready"] == true
                 && readiness["frames_observed"].as_u64() == Some(2)
                 && readiness["visibility"] == "visible"
-                && readiness["rect_stable"] == true
                 && readiness["trial_click_passed"] == true
                 && readiness["bring_to_front_error"].is_null()
                 && readiness["trial_click_error"].is_null()
@@ -1365,46 +1496,35 @@ fn validate_budgets(scenario: &str, engine: &str, budgets: &Value) -> Result<()>
                     .is_some_and(|value| value <= 5000.0),
             "pre-input readiness phases exceeded their bounded timeouts",
         )?;
-        for snapshot_name in ["initial", "final"] {
-            let snapshot = &readiness[snapshot_name];
-            exact_keys(
-                snapshot,
-                &[
-                    "connected",
-                    "visible",
-                    "enabled",
-                    "center_hit_target",
-                    "bounds",
-                ],
-                "pre-input DOM snapshot",
-            )?;
+        let frame_snapshots = readiness["frame_snapshots"]
+            .as_array()
+            .ok_or("pre-input frame snapshots missing")?;
+        need(
+            frame_snapshots.len() == 2,
+            "exactly two pre-input animation-frame snapshots are required",
+        )?;
+        let initial = &readiness["initial"];
+        validate_t03_dom_snapshot(initial)?;
+        let initial_bounds = &initial["bounds"];
+        for snapshot in frame_snapshots
+            .iter()
+            .chain(std::iter::once(&readiness["final"]))
+        {
+            validate_t03_dom_snapshot(snapshot)?;
             need(
-                snapshot["connected"] == true
-                    && snapshot["visible"] == true
-                    && snapshot["enabled"] == true
-                    && snapshot["center_hit_target"] == true,
-                "pre-input DOM snapshot is not connected, visible, enabled and hit-testable",
-            )?;
-            let bounds = &snapshot["bounds"];
-            exact_keys(bounds, &["x", "y", "width", "height"], "pre-input bounds")?;
-            need(
-                bounds["x"].as_f64().is_some_and(|value| value.is_finite())
-                    && bounds["y"].as_f64().is_some_and(|value| value.is_finite())
-                    && bounds["width"]
-                        .as_f64()
-                        .is_some_and(|value| value.is_finite() && value > 0.0)
-                    && bounds["height"]
-                        .as_f64()
-                        .is_some_and(|value| value.is_finite() && value > 0.0),
-                "pre-input bounds are missing or invalid",
+                bounds_within_tolerance(initial_bounds, &snapshot["bounds"]),
+                "pre-input bounds changed across sampled animation frames",
             )?;
         }
+        let bounds_stable = frame_snapshots
+            .iter()
+            .chain(std::iter::once(&readiness["final"]))
+            .all(|snapshot| bounds_within_tolerance(initial_bounds, &snapshot["bounds"]));
+        need(
+            readiness["rect_stable"] == true && bounds_stable,
+            "pre-input stability claim conflicts with recorded bounds",
+        )?;
     }
-    need(
-        pre_input[0]["interaction_ms"] == controls["fast_ms"]
-            && pre_input[1]["interaction_ms"] == controls["slow_ms"],
-        "pre-input interaction samples differ from the timing controls",
-    )?;
     exact_keys(
         &budgets["cls_samples"],
         &["landing", "results", "result_settle_ms"],
@@ -3179,24 +3299,22 @@ mod tests {
 
     pub(super) fn passing_budgets() -> Value {
         let readiness = || {
+            let snapshot = || {
+                json!({
+                    "connected": true,
+                    "visible": true,
+                    "enabled": true,
+                    "center_hit_target": true,
+                    "bounds": {"x": 10.0, "y": 20.0, "width": 80.0, "height": 30.0}
+                })
+            };
             json!({
                 "ready": true,
                 "frames_observed": 2,
                 "visibility": "visible",
-                "initial": {
-                    "connected": true,
-                    "visible": true,
-                    "enabled": true,
-                    "center_hit_target": true,
-                    "bounds": {"x": 10.0, "y": 20.0, "width": 80.0, "height": 30.0}
-                },
-                "final": {
-                    "connected": true,
-                    "visible": true,
-                    "enabled": true,
-                    "center_hit_target": true,
-                    "bounds": {"x": 10.0, "y": 20.0, "width": 80.0, "height": 30.0}
-                },
+                "initial": snapshot(),
+                "frame_snapshots": [snapshot(), snapshot()],
+                "final": snapshot(),
                 "rect_stable": true,
                 "browser_ready_ms": 20.0,
                 "bring_to_front_ms": 1.0,
@@ -3208,6 +3326,13 @@ mod tests {
                 "timeout_ms": 5000,
                 "error": null
             })
+        };
+        let transient_movement = || {
+            let mut evidence = readiness();
+            evidence["ready"] = json!(false);
+            evidence["frame_snapshots"][0]["bounds"]["x"] = json!(11.0);
+            evidence["rect_stable"] = json!(false);
+            evidence
         };
         json!({
             "profile": "synthetic offline T03 fixture; Chromium; Fast 3G emulation",
@@ -3229,6 +3354,8 @@ mod tests {
                 "controls": {
                     "fast_ms":20.0,
                     "slow_ms":150.0,
+                    "transient_bounds_rejected":true,
+                    "transient_bounds_evidence":transient_movement(),
                     "absent_input_rejected":true,
                     "absent_state_rejected":true,
                     "untrusted_input_rejected":true,
@@ -3241,7 +3368,6 @@ mod tests {
                             "action_started":true,
                             "action_completed":true,
                             "action_driver_ms":40.0,
-                            "interaction_ms":20.0,
                             "error":null
                         },
                         {
@@ -3251,7 +3377,6 @@ mod tests {
                             "action_started":true,
                             "action_completed":true,
                             "action_driver_ms":45.0,
-                            "interaction_ms":150.0,
                             "error":null
                         }
                     ]
@@ -3332,6 +3457,89 @@ mod tests {
         let error = validate_budgets("contract", "chromium", &budgets)
             .expect_err("browser cleanup failure must fail");
         assert!(error.contains("browser cleanup failed"), "{error}");
+    }
+
+    #[test]
+    fn trusted_click_readiness_recomputes_bounds_and_actionability() {
+        let mut budgets = passing_budgets();
+        budgets["interaction_evidence"]["controls"]["pre_input"][0]["readiness"]["frame_snapshots"]
+            [0]["bounds"]["x"] = json!(11.0);
+        let error = validate_budgets("contract", "chromium", &budgets)
+            .expect_err("intermediate movement must fail even when the final sample returns");
+        assert!(error.contains("bounds changed"), "{error}");
+
+        let mut budgets = passing_budgets();
+        budgets["interaction_evidence"]["controls"]["pre_input"][1]["readiness"]["final"]["bounds"]
+            ["x"] = json!(11.0);
+        let error = validate_budgets("contract", "chromium", &budgets)
+            .expect_err("contradictory final bounds must fail");
+        assert!(error.contains("bounds changed"), "{error}");
+
+        for field in ["x", "y", "width", "height"] {
+            let mut budgets = passing_budgets();
+            let initial = budgets["interaction_evidence"]["controls"]["pre_input"][0]["readiness"]
+                ["initial"]["bounds"][field]
+                .as_f64()
+                .expect("fixture bounds are numeric");
+            budgets["interaction_evidence"]["controls"]["pre_input"][0]["readiness"]["frame_snapshots"]
+                [0]["bounds"][field] = json!(initial + 0.5);
+            validate_budgets("contract", "chromium", &budgets)
+                .expect("0.5 pixel tolerance is inclusive");
+
+            let mut budgets = passing_budgets();
+            let initial = budgets["interaction_evidence"]["controls"]["pre_input"][0]["readiness"]
+                ["initial"]["bounds"][field]
+                .as_f64()
+                .expect("fixture bounds are numeric");
+            budgets["interaction_evidence"]["controls"]["pre_input"][0]["readiness"]["frame_snapshots"]
+                [0]["bounds"][field] = json!(initial + 0.5001);
+            let error = validate_budgets("contract", "chromium", &budgets)
+                .expect_err("movement beyond tolerance must fail");
+            assert!(error.contains("bounds changed"), "{error}");
+        }
+
+        let mut budgets = passing_budgets();
+        budgets["interaction_evidence"]["controls"]["pre_input"][0]["readiness"]["frame_snapshots"]
+            [0]["bounds"]["x"] = json!(10.4);
+        budgets["interaction_evidence"]["controls"]["pre_input"][0]["readiness"]["frame_snapshots"]
+            [1]["bounds"]["x"] = json!(10.8);
+        let error = validate_budgets("contract", "chromium", &budgets)
+            .expect_err("cumulative drift from initial must fail");
+        assert!(error.contains("bounds changed"), "{error}");
+
+        let mut budgets = passing_budgets();
+        budgets["interaction_evidence"]["controls"]["pre_input"][0]["readiness"]["frame_snapshots"]
+            [0]["visible"] = json!(false);
+        let error = validate_budgets("contract", "chromium", &budgets)
+            .expect_err("intermediate invisibility must fail");
+        assert!(error.contains("DOM snapshot"), "{error}");
+
+        let mut budgets = passing_budgets();
+        budgets["interaction_evidence"]["controls"]["pre_input"][0]["readiness"]["frame_snapshots"] =
+            json!([]);
+        let error = validate_budgets("contract", "chromium", &budgets)
+            .expect_err("missing frame snapshots must fail");
+        assert!(error.contains("exactly two"), "{error}");
+
+        let mut budgets = passing_budgets();
+        budgets["interaction_evidence"]["controls"]["transient_bounds_evidence"]["trial_click_passed"] =
+            json!(false);
+        let error = validate_budgets("contract", "chromium", &budgets)
+            .expect_err("unrelated trial-click failure must not satisfy the movement control");
+        assert!(error.contains("successful readiness setup"), "{error}");
+
+        let mut budgets = passing_budgets();
+        budgets["interaction_evidence"]["controls"]["transient_bounds_evidence"]["frame_snapshots"]
+            [0]["bounds"]["x"] = json!(10.0);
+        let error = validate_budgets("contract", "chromium", &budgets)
+            .expect_err("stable snapshots must not satisfy the movement control");
+        assert!(error.contains("one moved frame"), "{error}");
+
+        let mut budgets = passing_budgets();
+        budgets["interaction_evidence"]["controls"]["pre_input"][0]["interaction_ms"] = json!(20.0);
+        let error = validate_budgets("contract", "chromium", &budgets)
+            .expect_err("duplicated phase sample must fail the exact schema");
+        assert!(error.contains("fields differ"), "{error}");
     }
 
     #[test]

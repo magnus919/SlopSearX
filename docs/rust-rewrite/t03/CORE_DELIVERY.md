@@ -79,10 +79,13 @@ and source/media evidence in this candidate.
 
 The fast and slow trusted-click controls first record a bounded pre-input readiness
 phase: the target is brought forward, a trial click proves Playwright actionability
-without dispatching input, and two browser animation frames confirm stable bounds,
-visibility and hit testing. These preparation measurements stay separate from the
-interaction samples. The 100 ms interaction budget, 1500 ms missing-input/state
-guard and slow, absent and untrusted negative controls remain unchanged. The
+without dispatching input, and snapshots taken before and during two sampled browser
+animation frames confirm bounds within 0.5 CSS pixels of the initial sample,
+visibility and hit testing. A controlled one-frame move-and-return must be rejected.
+This is bounded sampling, not proof of continuous stability or physical paint.
+Preparation measurements stay separate from the interaction samples. The 100 ms
+interaction budget, 1500 ms missing-input/state guard and slow, absent and untrusted
+negative controls remain unchanged. The
 trusted click itself is also bounded by the 1500 ms guard. A failed control
 retains its partial readiness and click-duration evidence in the runtime receipt;
 a page-close failure is recorded separately and cannot replace the original
