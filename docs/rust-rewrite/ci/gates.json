@@ -155,8 +155,12 @@
               "uses": "actions/checkout@v7"
             },
             {
+              "name": "Check native Docker Hub mirror helper",
+              "run": "bash tests/test_ci_dockerhub_mirror_shell.sh"
+            },
+            {
               "name": "Configure hosted-runner Docker Hub cache",
-              "run": "python3 scripts/configure_ci_dockerhub_mirror.py"
+              "run": "bash scripts/configure_ci_dockerhub_mirror.sh"
             },
             {
               "name": "Validate Prometheus rules and firing behavior",
@@ -335,7 +339,7 @@
             },
             {
               "name": "Unused dependency check with deptry",
-              "run": "deptry . --per-rule-ignores \"DEP002=lxml|uvicorn|pytest|pytest-asyncio|ruff|cssselect|mypy|pytest-cov|pip-tools|pre-commit|radon|vulture|import-linter|deptry|pip-audit|fastmcp|prometheus-client,DEP003=starlette\""
+              "run": "deptry . --per-rule-ignores \"DEP002=lxml|uvicorn|pytest|pytest-asyncio|ruff|cssselect|mypy|pytest-cov|pip-tools|pre-commit|radon|vulture|import-linter|deptry|pip-audit|fastmcp|prometheus-client|dnspython,DEP003=starlette\""
             }
           ]
         },
@@ -597,7 +601,7 @@
             },
             {
               "name": "Configure hosted-runner Docker Hub cache",
-              "run": "python3 scripts/configure_ci_dockerhub_mirror.py"
+              "run": "bash scripts/configure_ci_dockerhub_mirror.sh"
             },
             {
               "name": "Set up Docker Buildx",
@@ -662,11 +666,11 @@
             },
             {
               "name": "Smoke test container",
-              "run": "trap 'docker rm -f slopsearx-smoke >/dev/null 2>&1 || true' EXIT\ndocker run -d --name slopsearx-smoke -p 8080:8080 ${{ steps.tag.outputs.ref }}\nsleep 3\ncurl -f --retry 5 --retry-delay 2 http://localhost:8080/health\npython3 scripts/portal_release_smoke.py --base-url http://localhost:8080 --expected-theme dark\n# Actual shipped probe: direct local health despite hostile proxy environment.\ndocker exec -e HTTP_PROXY=http://127.0.0.1:9 -e http_proxy=http://127.0.0.1:9 \\\n  -e ALL_PROXY=http://127.0.0.1:9 -e NO_PROXY= -e no_proxy= \\\n  slopsearx-smoke /usr/local/bin/ssx-healthcheck\n# A fresh container with no server must fail, silently, with exit one.\nset +e\noutput=$(docker run --rm --entrypoint /usr/local/bin/ssx-healthcheck ${{ steps.tag.outputs.ref }} 2>&1)\nstatus=$?\nset -e\ntest \"$status\" -eq 1\ntest -z \"$output\"\ndocker stop slopsearx-smoke\ndocker rm slopsearx-smoke\n"
+              "run": "trap 'docker rm -f slopsearx-smoke >/dev/null 2>&1 || true' EXIT\ndocker run -d --name slopsearx-smoke -p 8080:8080 ${{ steps.tag.outputs.ref }}\nsleep 3\ncurl -f --retry 5 --retry-delay 2 http://localhost:8080/health\ncargo xtask ci-helper portal-release-smoke --base-url http://localhost:8080 --expected-theme dark\n# Actual shipped probe: direct local health despite hostile proxy environment.\ndocker exec -e HTTP_PROXY=http://127.0.0.1:9 -e http_proxy=http://127.0.0.1:9 \\\n  -e ALL_PROXY=http://127.0.0.1:9 -e NO_PROXY= -e no_proxy= \\\n  slopsearx-smoke /usr/local/bin/ssx-healthcheck\n# A fresh container with no server must fail, silently, with exit one.\nset +e\noutput=$(docker run --rm --entrypoint /usr/local/bin/ssx-healthcheck ${{ steps.tag.outputs.ref }} 2>&1)\nstatus=$?\nset -e\ntest \"$status\" -eq 1\ntest -z \"$output\"\ndocker stop slopsearx-smoke\ndocker rm slopsearx-smoke\n"
             },
             {
               "name": "Smoke test configured Darker default",
-              "run": "docker run -d --name slopsearx-smoke-darker -p 8081:8080 \\\n  -e SLOPSEARX_PORTAL_DEFAULT_THEME=darker \\\n  ${{ steps.tag.outputs.ref }}\nsleep 3\ncurl -f --retry 5 --retry-delay 2 http://localhost:8081/health\npython3 scripts/portal_release_smoke.py --base-url http://localhost:8081 --expected-theme darker\ndocker stop slopsearx-smoke-darker\ndocker rm slopsearx-smoke-darker\n"
+              "run": "docker run -d --name slopsearx-smoke-darker -p 8081:8080 \\\n  -e SLOPSEARX_PORTAL_DEFAULT_THEME=darker \\\n  ${{ steps.tag.outputs.ref }}\nsleep 3\ncurl -f --retry 5 --retry-delay 2 http://localhost:8081/health\ncargo xtask ci-helper portal-release-smoke --base-url http://localhost:8081 --expected-theme darker\ndocker stop slopsearx-smoke-darker\ndocker rm slopsearx-smoke-darker\n"
             },
             {
               "env": {
@@ -1178,7 +1182,7 @@
             },
             {
               "name": "Unused dependency check with deptry",
-              "run": "deptry . --per-rule-ignores \"DEP002=lxml|uvicorn|pytest|pytest-asyncio|ruff|cssselect|mypy|pytest-cov|pip-tools|pre-commit|radon|vulture|import-linter|deptry|pip-audit,DEP003=starlette\""
+              "run": "deptry . --per-rule-ignores \"DEP002=lxml|uvicorn|pytest|pytest-asyncio|ruff|cssselect|mypy|pytest-cov|pip-tools|pre-commit|radon|vulture|import-linter|deptry|pip-audit|dnspython,DEP003=starlette\""
             }
           ]
         },
@@ -2643,7 +2647,7 @@
             },
             {
               "name": "Native external-child corpus and source installation",
-              "run": "set -euo pipefail\nif [ \"$RUNNER_OS\" = Windows ]; then\n  cargo run --locked -p ssx-cli-check -- check T08A --output \"$CARGO_TARGET_DIR/rust-evidence/T08A.json\"\nelse\n  cargo xtask check T08A --output \"$CARGO_TARGET_DIR/rust-evidence/T08A.json\"\nfi\nif [ ! -s \"$CARGO_TARGET_DIR/rust-evidence/T08A.json\" ]; then\n  echo \"::error::T08A gate exited zero without writing $CARGO_TARGET_DIR/rust-evidence/T08A.json\"\n  exit 1\nfi\ngit ls-files --stage > \"$CARGO_TARGET_DIR/rust-evidence/index-after.txt\"\nif ! cmp \"$CARGO_TARGET_DIR/rust-evidence/index-before.txt\" \"$CARGO_TARGET_DIR/rust-evidence/index-after.txt\"; then\n  echo \"::error::T08A gate changed the Git index\"\n  exit 1\nfi\ndirty=\"$(git status --porcelain=v1 --untracked-files=all)\"\nif [ -n \"$dirty\" ]; then\n  echo \"::error::T08A gate left the worktree dirty\"\n  echo \"$dirty\"\n  exit 1\nfi\n"
+              "run": "set -euo pipefail\nif [ \"$RUNNER_OS\" = Windows ]; then\n  mkdir -p \"$CARGO_TARGET_DIR/w07-windows-compile\"\n  rustc \\\n    --edition=2024 \\\n    --crate-name ssx_w07_windows_reader \\\n    --crate-type=lib \\\n    --emit=metadata \\\n    -D warnings \\\n    --target \"$EXPECTED_TARGET\" \\\n    crates/xtask/src/w07_windows_reader.rs \\\n    -o \"$CARGO_TARGET_DIR/w07-windows-compile/reader.rmeta\" \\\n    2>&1 | tee \"$CARGO_TARGET_DIR/rust-evidence/w07-windows-reader-check.log\"\n  test -s \"$CARGO_TARGET_DIR/w07-windows-compile/reader.rmeta\"\n  cargo run --locked -p ssx-cli-check -- check T08A --output \"$CARGO_TARGET_DIR/rust-evidence/T08A.json\"\nelse\n  cargo xtask check T08A --output \"$CARGO_TARGET_DIR/rust-evidence/T08A.json\"\nfi\nif [ ! -s \"$CARGO_TARGET_DIR/rust-evidence/T08A.json\" ]; then\n  echo \"::error::T08A gate exited zero without writing $CARGO_TARGET_DIR/rust-evidence/T08A.json\"\n  exit 1\nfi\ngit ls-files --stage > \"$CARGO_TARGET_DIR/rust-evidence/index-after.txt\"\nif ! cmp \"$CARGO_TARGET_DIR/rust-evidence/index-before.txt\" \"$CARGO_TARGET_DIR/rust-evidence/index-after.txt\"; then\n  echo \"::error::T08A gate changed the Git index\"\n  exit 1\nfi\ndirty=\"$(git status --porcelain=v1 --untracked-files=all)\"\nif [ -n \"$dirty\" ]; then\n  echo \"::error::T08A gate left the worktree dirty\"\n  echo \"$dirty\"\n  exit 1\nfi\n"
             },
             {
               "if": "${{ always() }}",
@@ -2711,7 +2715,7 @@
       },
       "owner": "T08A",
       "state": "additive",
-      "successor": "cargo xtask check T08A; real native external-child CLI/TLS/proxy corpus and source install on five supported client targets; fail closed aggregate, no Python runtime/backend fallback"
+      "successor": "Direct native rustc compilation of the exact std-only W07 Windows reader on the matching Windows host, then T08A and native client evidence on five targets; this does not qualify full xtask or backend execution on Windows."
     },
     "rust-cli.yml:native-cli-acceptance": {
       "source": {

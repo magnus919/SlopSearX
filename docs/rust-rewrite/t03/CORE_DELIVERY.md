@@ -38,7 +38,11 @@ summary string stays at its custody-frozen historical wording; the authoritative
 engine coverage is the gate's own browser-scenario records and this note. Its
 CLS budget checks both the landing document and populated results document
 after a 250 ms settle interval; it reports the larger value and preserves both
-samples. This is an automation slice, not completion of #898.
+samples. The Chromium interaction budget applies the declared CDP profile to
+every measured page, including the separate storage-blocked context; a guard
+rejects any budget sample from an unprofiled page. Firefox and WebKit journeys
+remain unthrottled and do not claim this budget. This is an automation slice,
+not completion of #898.
 
 `crates/ssx-http/tests/t03.rs` runs a real native HTTP child process and saves whole response/status/header/call-count receipts with startup binary identity and joined shutdown receipts. Its eleven cases cover the 16 inherited literal portal assertions, captured browser enforcement without machine-wire changes, landing query/scope submission through both native buttons, and exact large-page state, malicious/optional/empty/partial/unavailable/grouped results, invalid and sensitive scope rejection without dispatch, cached error/429/disabled format recovery, the 4300-digit page limit, cookie noninterference and the 18-request blank-date matrix.
 
@@ -63,3 +67,12 @@ The selected `PublicPortal` renders the closed `SearchResponse.date_filter` proo
 `ssx-http/tests/science_openalex.rs` extends the actual registered OpenAlex/shared-service/private-Valkey portal composition with one-sided leap-day and two-sided bounds through GET/form POST on `/` and `/search`. It resubmits both rendered forms, follows JSON/YAML and pagination links, checks exact upstream filter bytes and publication days, and preserves missing-proof reacquisition. Separate actual-upstream controls distinguish HTTP 200/empty from HTTP 503/error. A pure rendering negative control refuses proof inferred only from request or metadata.
 
 This slice changes HTML presentation only. Shared validation, explicit audited OpenAlex-only scope, machine metadata and cache policy remain authoritative. These non-browser checks do not establish real Safari, VoiceOver, visual, performance or production-composition acceptance; current-head hosted portal acceptance and source-binding reconciliation remain required.
+
+The source assertion inventory now derives its classification totals from all 98
+rows and requires both summary count declarations to agree (47 unresolved,
+33 candidate counterparts, 18 retained raw mapping gaps). The T03 gate also
+rejects duplicate or missing row identities, unknown classifications and accepted
+parity claims. These checks establish inventory consistency only; the source
+assertions still require their original acceptance evidence. Current-main date
+roundtrip and profiling controls remain alongside the empty-date-control journey
+and source/media evidence in this candidate.
