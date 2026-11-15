@@ -6,9 +6,9 @@
   "implementation_scope": "Replace the active upstream-contract workflow invocation with a bounded Rust xtask command. This is one O02 slice only; it does not complete O02 or retire historical Python sources.",
   "implementation_source": {
     "path": "crates/xtask/src/o02_upstream_contracts.rs",
-    "git_blob": "564f005d9dfcac0ec681498de1dbdc1b2058e8be",
+    "git_blob": "828e58db7796b7d27dd8a503af50a85cc6a9f17c",
     "baseline_workflow_blob": "60892fe2347e530d42f0e16afefab5f915c067a4",
-    "sha256": "19ad6a0bbdee4e19fe546b1f1d06e7cb95a949403aff32d792c9a1238269a19a",
+    "sha256": "7e91e12e0addbe92f673c1de8793d5e87a98c013af269453ad51d53338c350a2",
     "current_workflow_sha256": "41996506954834119ad17341b505c004d85635c189392e8ced0fc2a4a6e27824"
   },
   "historical_sources": [
@@ -56,7 +56,7 @@
   "local_commands": {
     "offline_default": "cargo xtask upstream-contracts --output PATH",
     "explicit_live": "cargo xtask upstream-contracts --live --output PATH",
-    "capture": "--capture-dir PATH"
+    "capture": "--capture-dir PATH; outputs label live capture or offline fixture replay provenance"
   },
   "preserved_contract": [
     "The three fixed probes remain npm/typescript, OpenAlex/Attention Is All You Need, and crates.io/serde, requesting three results each.",
@@ -70,6 +70,7 @@
   "intentional_differences": [
     "The Rust command defaults to offline fixture replay and reports mode=offline_fixture with network_requests=0; live network access requires an explicit --live flag. The former Python command performed live probes when invoked.",
     "The report adds mode and network_requests fields while retaining the prior report facts and exit semantics.",
+    "Offline capture-dir outputs are marked offline_fixture_replay, retain the original fixture path and capture time, and use generated_at; captured_at is reserved for live probes.",
     "OpenAlex uses its native Rust adapter user agent. Identical request headers are not claimed."
   ],
   "verification": {
@@ -124,5 +125,46 @@
       "scope": "Seven exact spans only in upstream-contracts.yml:live-contracts; authenticates newest physical gates.json before unchanged DNSpython historical inverse."
     },
     "physical_read": "Exact-size no-follow open; descriptor read bounded to expected size plus one; before/opened/after/path metadata and mode checks; no symlink ancestors. Unix device/inode/timestamps and0644; Windows stage-zero100644, no reparse points, deny concurrent write/delete sharing."
+  },
+  "repair_validation": {
+    "applied_to_commit": "dab31a06fce89a7c522da556ae05f074bdb80773",
+    "source_identity": {
+      "path": "crates/xtask/src/o02_upstream_contracts.rs",
+      "git_blob": "828e58db7796b7d27dd8a503af50a85cc6a9f17c",
+      "sha256": "7e91e12e0addbe92f673c1de8793d5e87a98c013af269453ad51d53338c350a2"
+    },
+    "review_findings": [
+      "Offline fixture replay captures now identify mode=offline_fixture_replay, use generated_at, and preserve fixture path and original capture time; captured_at is reserved for live captures.",
+      "Atomic-write failure cleanup removes a temporary path only after this invocation successfully created it; a regression test confirms a pre-existing temporary file is preserved."
+    ],
+    "focused_test_command": "cargo test --locked --offline -p xtask o02_upstream_contracts -- --nocapture --test-threads=1",
+    "focused_test_evidence": "run02/logs/focused-tests-pinned.log",
+    "focused_test_exit_code": 0,
+    "focused_test_count": 18,
+    "format_command": "cargo fmt --all -- --check",
+    "format_toolchain": "Rust 1.99.0",
+    "format_exit_code": 0,
+    "clippy_command": "cargo clippy --locked --offline -p xtask --all-targets -- -D warnings",
+    "clippy_evidence": "run02/logs/clippy.log",
+    "clippy_exit_code": 0,
+    "offline_cli_command": "cargo xtask upstream-contracts --output run02/evidence/offline-report.json --capture-dir run02/evidence/captures",
+    "offline_cli_evidence": "run02/evidence/offline-report.json",
+    "offline_cli_exit_code": 0,
+    "offline_probe_count": 3,
+    "network_requests": 0,
+    "live_provider_calls": "none",
+    "precommit_all_files": {
+      "command": "pre-commit run --all-files",
+      "evidence": "run02/logs/pre-commit.log",
+      "exit_code": 1,
+      "outcome": "All hooks passed except ruff-format, which changed one unrelated assertion's wrapping in tests/test_coverage_saved_method_materials.py, and import-linter, whose configured .venv/bin/lint-imports executable was absent. The unrelated formatter-only diff was restored to HEAD. The changed-file pre-commit run and import-linter both passed separately."
+    },
+    "precommit_changed_files_command": "pre-commit run --files crates/xtask/src/o02_upstream_contracts.rs docs/UPSTREAM_CONTRACTS.md docs/rust-rewrite/o02/UPSTREAM_CONTRACTS_TRANSITION.json",
+    "precommit_changed_files_evidence": "run02/logs/pre-commit-changed-files.log",
+    "precommit_changed_files_exit_code": 0,
+    "import_linter_command": "lint-imports (import-linter==2.15)",
+    "import_linter_evidence": "run02/logs/import-linter.log",
+    "import_linter_exit_code": 0,
+    "independent_review": "Both findings are closed; no remaining code findings."
   }
 }

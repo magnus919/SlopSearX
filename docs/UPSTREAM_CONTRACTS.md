@@ -49,10 +49,14 @@ checks are separate from required PR CI and upload the machine report even on
 failure. No secrets are required. Pull requests and the default local command
 remain deterministic and offline.
 
-To prepare new evidence for review, add
-`--capture-dir /path/to/upstream-captures` to the native command. Only successful
-probes write allowlisted payloads. Inspect that directory before copying
-fixtures into `tests/fixtures/upstream_contracts`; review source schema changes
+To prepare new evidence for review, add `--capture-dir PATH` to the native command.
+Only successful probes write allowlisted payloads. Live captures are marked
+with `mode=live` and a `captured_at` timestamp. Offline fixture replays are marked
+with `mode=offline_fixture_replay` and `generated_at`; they also preserve the
+fixture path and its original source capture time. Offline replay output is not
+new provider evidence. Use `--live` only when an explicitly authorized live
+check is needed, and inspect the capture directory before copying new live
+captures into `tests/fixtures/upstream_contracts`. Review source schema changes
 and ensure no unnecessary personal fields were retained. Fixture sanitization
 intentionally omits abstracts and npm popularity metadata; crates download
 counts are retained because its parser uses them. Ordinary unit tests remain

@@ -686,17 +686,31 @@ fn sanitized_payload(probe: Probe, body: &[u8]) -> std::result::Result<Value, &'
     })
 }
 
-fn fixture_payload(probe: Probe) -> Result<Vec<u8>> {
-    let fixture = match probe.name {
-        "npm" => include_str!("../../../tests/fixtures/upstream_contracts/npm.json"),
-        "openalex" => include_str!("../../../tests/fixtures/upstream_contracts/openalex.json"),
-        "crates" => include_str!("../../../tests/fixtures/upstream_contracts/crates.json"),
+fn fixture_record(probe: Probe) -> Result<(&'static str, Value)> {
+    let (path, source) = match probe.name {
+        "npm" => (
+            "tests/fixtures/upstream_contracts/npm.json",
+            include_str!("../../../tests/fixtures/upstream_contracts/npm.json"),
+        ),
+        "openalex" => (
+            "tests/fixtures/upstream_contracts/openalex.json",
+            include_str!("../../../tests/fixtures/upstream_contracts/openalex.json"),
+        ),
+        "crates" => (
+            "tests/fixtures/upstream_contracts/crates.json",
+            include_str!("../../../tests/fixtures/upstream_contracts/crates.json"),
+        ),
         _ => return Err("unknown upstream probe".into()),
     };
-    let fixture: Value = serde_json::from_str(fixture).map_err(|_| "fixture JSON invalid")?;
+    let fixture: Value = serde_json::from_str(source).map_err(|_| "fixture JSON invalid")?;
     if fixture["query"].as_str() != Some(probe.query) {
         return Err("fixture query differs from the fixed probe".into());
     }
+    Ok((path, fixture))
+}
+
+fn fixture_payload(probe: Probe) -> Result<Vec<u8>> {
+    let (_, fixture) = fixture_record(probe)?;
     serde_json::to_vec(&fixture["payload"])
         .map_err(|_| "fixture payload serialization failed".into())
 }
@@ -805,11 +819,13 @@ fn write_atomic(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
         name.to_string_lossy(),
         std::process::id()
     ));
+    let mut created_temporary = false;
     let result = (|| {
         let mut file = OpenOptions::new()
             .write(true)
             .create_new(true)
             .open(&temporary)?;
+        created_temporary = true;
         file.write_all(bytes)?;
         file.sync_all()?;
         drop(file);
@@ -819,7 +835,7 @@ fn write_atomic(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
         }
         Ok(())
     })();
-    if result.is_err() {
+    if result.is_err() && created_temporary {
         let _ = fs::remove_file(&temporary);
     }
     result
@@ -851,14 +867,35 @@ async fn run_all(options: CliOptions, root: &Path) -> Result<i32> {
         {
             match sanitized_payload(*probe, &output.raw_body) {
                 Ok(payload) => {
-                    let capture = json!({
-                        "engine": probe.name,
-                        "query": probe.query,
-                        "captured_at": timestamp(),
-                        "source": format!("https://{}{}", probe.host, probe.path),
-                        "sanitization": "allowlisted public parser fields; top three; no headers or personal author fields",
-                        "payload": payload
-                    });
+                    let capture = if options.live {
+                        json!({
+                            "engine": probe.name,
+                            "query": probe.query,
+                            "mode": "live",
+                            "captured_at": timestamp(),
+                            "source": format!("https://{}{}", probe.host, probe.path),
+                            "sanitization": "allowlisted public parser fields; top three; no headers or personal author fields",
+                            "payload": payload
+                        })
+                    } else {
+                        let (fixture_path, fixture) = fixture_record(*probe)?;
+                        let fixture_captured_at = fixture["captured_at"]
+                            .as_str()
+                            .ok_or("fixture capture time missing")?;
+                        json!({
+                            "engine": probe.name,
+                            "query": probe.query,
+                            "mode": "offline_fixture_replay",
+                            "generated_at": timestamp(),
+                            "source": format!("https://{}{}", probe.host, probe.path),
+                            "fixture": {
+                                "path": fixture_path,
+                                "captured_at": fixture_captured_at
+                            },
+                            "sanitization": "allowlisted public parser fields; top three; no headers or personal author fields",
+                            "payload": payload
+                        })
+                    };
                     let path = directory.join(format!("{}.json", probe.name));
                     let bytes = serde_json::to_vec_pretty(&capture)
                         .map_err(|_| "capture serialization failed")?;
@@ -1183,6 +1220,56 @@ mod tests {
         let _ = fs::remove_dir_all(&directory);
         fs::create_dir_all(&directory).unwrap();
         directory
+    }
+
+    #[test]
+    fn write_atomic_preserves_a_preexisting_temporary_file() {
+        let scratch = test_scratch("preexisting-temp");
+        let output = scratch.join("report.json");
+        let temporary = scratch.join(format!(".report.json.{}.tmp", std::process::id()));
+        fs::write(&temporary, b"belongs to another write").unwrap();
+
+        assert!(write_atomic(&output, b"replacement").is_err());
+        assert_eq!(fs::read(&temporary).unwrap(), b"belongs to another write");
+        assert!(!output.exists());
+        fs::remove_dir_all(scratch).unwrap();
+    }
+
+    #[tokio::test]
+    async fn offline_capture_is_marked_as_replay_and_retains_fixture_provenance() {
+        let scratch = test_scratch("offline-capture-provenance");
+        let output = scratch.join("report.json");
+        let capture_dir = scratch.join("captures");
+        let code = run_all(
+            CliOptions {
+                output: output.clone(),
+                capture_dir: Some(capture_dir.clone()),
+                live: false,
+            },
+            &test_root(),
+        )
+        .await
+        .unwrap();
+        assert_eq!(code, 0);
+
+        let report: Value = serde_json::from_slice(&fs::read(&output).unwrap()).unwrap();
+        assert_eq!(report["mode"], "offline_fixture");
+        assert_eq!(report["probes"][1]["network_requests"], 0);
+        let capture: Value =
+            serde_json::from_slice(&fs::read(capture_dir.join("openalex.json")).unwrap()).unwrap();
+        assert_eq!(capture["mode"], "offline_fixture_replay");
+        assert!(capture.get("captured_at").is_none());
+        assert!(capture["generated_at"].as_str().is_some());
+        assert_eq!(capture["source"], "https://api.openalex.org/works");
+        assert_eq!(
+            capture["fixture"]["path"],
+            "tests/fixtures/upstream_contracts/openalex.json"
+        );
+        assert_eq!(
+            capture["fixture"]["captured_at"],
+            "2026-09-07T01:51:36.864826+00:00"
+        );
+        fs::remove_dir_all(scratch).unwrap();
     }
 
     #[tokio::test]
