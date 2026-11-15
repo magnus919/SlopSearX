@@ -77,6 +77,17 @@ assertions still require their original acceptance evidence. Current-main date
 roundtrip and profiling controls remain alongside the empty-date-control journey
 and source/media evidence in this candidate.
 
+The fast and slow trusted-click controls first record a bounded pre-input readiness
+phase: the target is brought forward, a trial click proves Playwright actionability
+without dispatching input, and two browser animation frames confirm stable bounds,
+visibility and hit testing. These preparation measurements stay separate from the
+interaction samples. The 100 ms interaction budget, 1500 ms missing-input/state
+guard and slow, absent and untrusted negative controls remain unchanged. The
+trusted click itself is also bounded by the 1500 ms guard. A failed control
+retains its partial readiness and click-duration evidence in the runtime receipt;
+a page-close failure is recorded separately and cannot replace the original
+measurement error.
+
 ## Formatter pagination context
 
 `PublicPortal::search_with_context` accepts a typed `PortalRenderContext` with

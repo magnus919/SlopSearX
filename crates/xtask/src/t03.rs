@@ -1244,6 +1244,8 @@ fn validate_budgets(scenario: &str, engine: &str, budgets: &Value) -> Result<()>
             "absent_input_rejected",
             "absent_state_rejected",
             "untrusted_input_rejected",
+            "pre_input",
+            "cleanup_error",
         ],
         "interaction controls",
     )?;
@@ -1258,6 +1260,150 @@ fn validate_budgets(scenario: &str, engine: &str, budgets: &Value) -> Result<()>
             && controls["absent_state_rejected"] == true
             && controls["untrusted_input_rejected"] == true,
         "interaction measurement controls must detect slow/missing/untrusted input",
+    )?;
+    need(
+        controls["cleanup_error"].is_null(),
+        "interaction control browser cleanup failed",
+    )?;
+    let pre_input = controls["pre_input"]
+        .as_array()
+        .ok_or("pre-input readiness evidence missing")?;
+    need(
+        pre_input.len() == 2,
+        "fast and slow trusted-click readiness records required",
+    )?;
+    for (phase, control_name) in pre_input
+        .iter()
+        .zip(["fast trusted click", "slow trusted click"])
+    {
+        exact_keys(
+            phase,
+            &[
+                "control",
+                "setup_ms",
+                "readiness",
+                "action_started",
+                "action_completed",
+                "action_driver_ms",
+                "interaction_ms",
+                "error",
+            ],
+            "pre-input timing control",
+        )?;
+        need(
+            phase["control"] == control_name
+                && phase["action_started"] == true
+                && phase["action_completed"] == true
+                && phase["error"].is_null()
+                && phase["setup_ms"]
+                    .as_f64()
+                    .is_some_and(|value| value.is_finite() && value >= 0.0)
+                && phase["action_driver_ms"]
+                    .as_f64()
+                    .is_some_and(|value| value.is_finite() && value >= 0.0)
+                && phase["interaction_ms"]
+                    .as_f64()
+                    .is_some_and(|value| value.is_finite() && value >= 0.0),
+            "pre-input timing control action evidence",
+        )?;
+        let readiness = &phase["readiness"];
+        exact_keys(
+            readiness,
+            &[
+                "ready",
+                "frames_observed",
+                "visibility",
+                "initial",
+                "final",
+                "rect_stable",
+                "browser_ready_ms",
+                "bring_to_front_ms",
+                "bring_to_front_error",
+                "trial_click_ms",
+                "trial_click_passed",
+                "trial_click_error",
+                "elapsed_ms",
+                "timeout_ms",
+                "error",
+            ],
+            "pre-input readiness",
+        )?;
+        need(
+            readiness["ready"] == true
+                && readiness["frames_observed"].as_u64() == Some(2)
+                && readiness["visibility"] == "visible"
+                && readiness["rect_stable"] == true
+                && readiness["trial_click_passed"] == true
+                && readiness["bring_to_front_error"].is_null()
+                && readiness["trial_click_error"].is_null()
+                && readiness["error"].is_null()
+                && readiness["timeout_ms"].as_u64() == Some(5000),
+            "trusted-click readiness must prove visible stable hit-tested target after two frames",
+        )?;
+        for metric in [
+            "browser_ready_ms",
+            "bring_to_front_ms",
+            "trial_click_ms",
+            "elapsed_ms",
+        ] {
+            need(
+                readiness[metric]
+                    .as_f64()
+                    .is_some_and(|value| value.is_finite() && value >= 0.0),
+                &format!("pre-input readiness timing missing or invalid: {metric}"),
+            )?;
+        }
+        need(
+            readiness["browser_ready_ms"]
+                .as_f64()
+                .is_some_and(|value| value <= 5000.0)
+                && readiness["bring_to_front_ms"]
+                    .as_f64()
+                    .is_some_and(|value| value <= 5000.0)
+                && readiness["trial_click_ms"]
+                    .as_f64()
+                    .is_some_and(|value| value <= 5000.0),
+            "pre-input readiness phases exceeded their bounded timeouts",
+        )?;
+        for snapshot_name in ["initial", "final"] {
+            let snapshot = &readiness[snapshot_name];
+            exact_keys(
+                snapshot,
+                &[
+                    "connected",
+                    "visible",
+                    "enabled",
+                    "center_hit_target",
+                    "bounds",
+                ],
+                "pre-input DOM snapshot",
+            )?;
+            need(
+                snapshot["connected"] == true
+                    && snapshot["visible"] == true
+                    && snapshot["enabled"] == true
+                    && snapshot["center_hit_target"] == true,
+                "pre-input DOM snapshot is not connected, visible, enabled and hit-testable",
+            )?;
+            let bounds = &snapshot["bounds"];
+            exact_keys(bounds, &["x", "y", "width", "height"], "pre-input bounds")?;
+            need(
+                bounds["x"].as_f64().is_some_and(|value| value.is_finite())
+                    && bounds["y"].as_f64().is_some_and(|value| value.is_finite())
+                    && bounds["width"]
+                        .as_f64()
+                        .is_some_and(|value| value.is_finite() && value > 0.0)
+                    && bounds["height"]
+                        .as_f64()
+                        .is_some_and(|value| value.is_finite() && value > 0.0),
+                "pre-input bounds are missing or invalid",
+            )?;
+        }
+    }
+    need(
+        pre_input[0]["interaction_ms"] == controls["fast_ms"]
+            && pre_input[1]["interaction_ms"] == controls["slow_ms"],
+        "pre-input interaction samples differ from the timing controls",
     )?;
     exact_keys(
         &budgets["cls_samples"],
@@ -3032,6 +3178,37 @@ mod tests {
     }
 
     pub(super) fn passing_budgets() -> Value {
+        let readiness = || {
+            json!({
+                "ready": true,
+                "frames_observed": 2,
+                "visibility": "visible",
+                "initial": {
+                    "connected": true,
+                    "visible": true,
+                    "enabled": true,
+                    "center_hit_target": true,
+                    "bounds": {"x": 10.0, "y": 20.0, "width": 80.0, "height": 30.0}
+                },
+                "final": {
+                    "connected": true,
+                    "visible": true,
+                    "enabled": true,
+                    "center_hit_target": true,
+                    "bounds": {"x": 10.0, "y": 20.0, "width": 80.0, "height": 30.0}
+                },
+                "rect_stable": true,
+                "browser_ready_ms": 20.0,
+                "bring_to_front_ms": 1.0,
+                "bring_to_front_error": null,
+                "trial_click_ms": 2.0,
+                "trial_click_passed": true,
+                "trial_click_error": null,
+                "elapsed_ms": 24.0,
+                "timeout_ms": 5000,
+                "error": null
+            })
+        };
         json!({
             "profile": "synthetic offline T03 fixture; Chromium; Fast 3G emulation",
             "html_uncompressed_bytes": {"observed": 1024.0, "limit": 51200.0, "pass": true},
@@ -3049,7 +3226,36 @@ mod tests {
                     {"id":"disclosure", "event":"keydown", "trusted":true, "state_observed":true, "duration_ms":20.0, "driver_ms":100.0},
                     {"id":"focus", "event":"keydown", "trusted":true, "state_observed":true, "duration_ms":10.0, "driver_ms":100.0}
                 ],
-                "controls": {"fast_ms":20.0,"slow_ms":150.0,"absent_input_rejected":true,"absent_state_rejected":true,"untrusted_input_rejected":true}
+                "controls": {
+                    "fast_ms":20.0,
+                    "slow_ms":150.0,
+                    "absent_input_rejected":true,
+                    "absent_state_rejected":true,
+                    "untrusted_input_rejected":true,
+                    "cleanup_error":null,
+                    "pre_input":[
+                        {
+                            "control":"fast trusted click",
+                            "setup_ms":0.0,
+                            "readiness":readiness(),
+                            "action_started":true,
+                            "action_completed":true,
+                            "action_driver_ms":40.0,
+                            "interaction_ms":20.0,
+                            "error":null
+                        },
+                        {
+                            "control":"slow trusted click",
+                            "setup_ms":1.0,
+                            "readiness":readiness(),
+                            "action_started":true,
+                            "action_completed":true,
+                            "action_driver_ms":45.0,
+                            "interaction_ms":150.0,
+                            "error":null
+                        }
+                    ]
+                }
             },
             "handoff_p95_ms": {"observed": 60.0, "limit": 150.0, "pass": true}
         })
@@ -3102,6 +3308,30 @@ mod tests {
     fn passing_budgets_validate() {
         validate_budgets("contract", "chromium", &passing_budgets()).expect("budgets pass");
         validate_budgets("contract", "firefox", &json!({})).expect("non-profiled has no budgets");
+    }
+
+    #[test]
+    fn trusted_click_readiness_requires_frames_and_hit_test_evidence() {
+        let mut budgets = passing_budgets();
+        budgets["interaction_evidence"]["controls"]["pre_input"][0]["readiness"]["frames_observed"] =
+            json!(1);
+        let error =
+            validate_budgets("contract", "chromium", &budgets).expect_err("one frame must fail");
+        assert!(error.contains("trusted-click readiness"), "{error}");
+
+        let mut budgets = passing_budgets();
+        budgets["interaction_evidence"]["controls"]["pre_input"][1]["readiness"]["final"]["center_hit_target"] =
+            json!(false);
+        let error = validate_budgets("contract", "chromium", &budgets)
+            .expect_err("occluded target must fail");
+        assert!(error.contains("DOM snapshot"), "{error}");
+
+        let mut budgets = passing_budgets();
+        budgets["interaction_evidence"]["controls"]["cleanup_error"] =
+            json!("browser close failed");
+        let error = validate_budgets("contract", "chromium", &budgets)
+            .expect_err("browser cleanup failure must fail");
+        assert!(error.contains("browser cleanup failed"), "{error}");
     }
 
     #[test]
