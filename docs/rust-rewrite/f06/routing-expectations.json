@@ -1,0 +1,314 @@
+{
+  "engines": [
+    {
+      "name": "abuseipdb",
+      "purpose": "IP reputation and abuse reports",
+      "role": "specialist",
+      "use_when": "an IP address or abuse reputation is central"
+    },
+    {
+      "name": "arxiv",
+      "purpose": "research preprints",
+      "role": "specialist",
+      "use_when": "the query seeks scientific papers or preprints"
+    },
+    {
+      "name": "ashby",
+      "purpose": "jobs hosted by Ashby",
+      "role": "specialist",
+      "use_when": "the query seeks current job openings"
+    },
+    {
+      "name": "brave",
+      "purpose": null,
+      "role": "general",
+      "use_when": null
+    },
+    {
+      "name": "censys",
+      "purpose": "internet hosts and certificates",
+      "role": "specialist",
+      "use_when": "the query targets exposed infrastructure or certificates"
+    },
+    {
+      "name": "clinicaltrials",
+      "purpose": "registered clinical trials",
+      "role": "specialist",
+      "use_when": "the query seeks trials, interventions, or enrollment"
+    },
+    {
+      "name": "crates",
+      "purpose": "Rust packages",
+      "role": "specialist",
+      "use_when": "the query names a Rust crate or package need"
+    },
+    {
+      "name": "crtsh",
+      "purpose": "certificate transparency records",
+      "role": "specialist",
+      "use_when": "the query concerns domains, subdomains, or certificates"
+    },
+    {
+      "name": "cve",
+      "purpose": "canonical CVE records",
+      "role": "specialist",
+      "use_when": "the query names a CVE or vulnerability identifier"
+    },
+    {
+      "name": "dehashed",
+      "purpose": "paid breach-data lookup",
+      "role": "specialist",
+      "use_when": "authorized breach exposure lookup is explicitly requested"
+    },
+    {
+      "name": "dockerhub",
+      "purpose": "container images",
+      "role": "specialist",
+      "use_when": "the query seeks a Docker image or tag"
+    },
+    {
+      "name": "duckduckgo",
+      "purpose": null,
+      "role": "general",
+      "use_when": null
+    },
+    {
+      "name": "edgar",
+      "purpose": "US public-company filings",
+      "role": "specialist",
+      "use_when": "the query seeks SEC filings or company disclosures"
+    },
+    {
+      "name": "epss",
+      "purpose": "vulnerability exploitation probability",
+      "role": "specialist",
+      "use_when": "the query seeks EPSS likelihood for a CVE"
+    },
+    {
+      "name": "europepmc",
+      "purpose": "biomedical publication and preprint metadata",
+      "role": "specialist",
+      "use_when": "the query seeks biomedical literature including preprints beyond PubMed"
+    },
+    {
+      "name": "exploitdb",
+      "purpose": "public exploit records",
+      "role": "specialist",
+      "use_when": "the query seeks a known exploit or proof of concept"
+    },
+    {
+      "name": "fred",
+      "purpose": "US economic time series",
+      "role": "specialist",
+      "use_when": "the query seeks macroeconomic data or indicators"
+    },
+    {
+      "name": "github",
+      "purpose": "source repositories, issues, and pull requests",
+      "role": "specialist",
+      "use_when": "the query seeks code or repository artifacts"
+    },
+    {
+      "name": "google",
+      "purpose": null,
+      "role": "general",
+      "use_when": null
+    },
+    {
+      "name": "greenhouse",
+      "purpose": "jobs hosted by Greenhouse",
+      "role": "specialist",
+      "use_when": "the query seeks current job openings"
+    },
+    {
+      "name": "greynoise",
+      "purpose": "internet scanner and IP intelligence",
+      "role": "specialist",
+      "use_when": "the query seeks context about an observed IP"
+    },
+    {
+      "name": "hackernews",
+      "purpose": null,
+      "role": "broad_support",
+      "use_when": null
+    },
+    {
+      "name": "hibp",
+      "purpose": "breach exposure status",
+      "role": "specialist",
+      "use_when": "authorized account or domain breach lookup is explicit"
+    },
+    {
+      "name": "huggingface",
+      "purpose": "machine-learning datasets, models, and papers",
+      "role": "specialist",
+      "use_when": "the query seeks ML artifacts"
+    },
+    {
+      "name": "intelx",
+      "purpose": "paid threat-intelligence search",
+      "role": "specialist",
+      "use_when": "authorized threat-intelligence lookup is explicit"
+    },
+    {
+      "name": "internetarchive",
+      "purpose": "archived web pages and historical media",
+      "role": "specialist",
+      "use_when": "the query seeks an older or removed version"
+    },
+    {
+      "name": "lever",
+      "purpose": "jobs hosted by Lever",
+      "role": "specialist",
+      "use_when": "the query seeks current job openings"
+    },
+    {
+      "name": "mitreattack",
+      "purpose": "adversary tactics and techniques",
+      "role": "specialist",
+      "use_when": "the query seeks ATT&CK techniques, groups, or mitigations"
+    },
+    {
+      "name": "musicbrainz",
+      "purpose": "music release and artist metadata",
+      "role": "specialist",
+      "use_when": "the query seeks structured music credits or releases"
+    },
+    {
+      "name": "nominatim",
+      "purpose": "OpenStreetMap place geocoding",
+      "role": "specialist",
+      "use_when": "the query seeks a place, address, or coordinates"
+    },
+    {
+      "name": "npm",
+      "purpose": "JavaScript packages",
+      "role": "specialist",
+      "use_when": "the query names a Node or JavaScript package need"
+    },
+    {
+      "name": "nvd",
+      "purpose": "NIST vulnerability records",
+      "role": "specialist",
+      "use_when": "the query seeks CVE severity, affected products, or references"
+    },
+    {
+      "name": "openalex",
+      "purpose": "scholarly works and authors",
+      "role": "specialist",
+      "use_when": "the query seeks research literature or citation metadata"
+    },
+    {
+      "name": "openfda",
+      "purpose": "FDA drugs, devices, labels, and adverse events",
+      "role": "specialist",
+      "use_when": "the query seeks regulated medical-product data"
+    },
+    {
+      "name": "openlibrary",
+      "purpose": "books and editions",
+      "role": "specialist",
+      "use_when": "the query seeks a book, author, ISBN, or edition"
+    },
+    {
+      "name": "otx",
+      "purpose": "community threat indicators",
+      "role": "specialist",
+      "use_when": "the query seeks indicators, pulses, or threat context"
+    },
+    {
+      "name": "oyez",
+      "purpose": "US Supreme Court cases and audio",
+      "role": "specialist",
+      "use_when": "the query seeks a Supreme Court case or argument"
+    },
+    {
+      "name": "pubchem",
+      "purpose": "chemical compounds and bioassays",
+      "role": "specialist",
+      "use_when": "the query seeks a compound, structure, or chemical identifier"
+    },
+    {
+      "name": "pubmed",
+      "purpose": "biomedical literature",
+      "role": "specialist",
+      "use_when": "the query seeks medical or life-science publications"
+    },
+    {
+      "name": "pypi",
+      "purpose": "Python packages",
+      "role": "specialist",
+      "use_when": "the query names a Python package need"
+    },
+    {
+      "name": "reddit",
+      "purpose": null,
+      "role": "broad_support",
+      "use_when": null
+    },
+    {
+      "name": "rubygems",
+      "purpose": "Ruby packages",
+      "role": "specialist",
+      "use_when": "the query names a Ruby gem or package need"
+    },
+    {
+      "name": "semanticscholar",
+      "purpose": "scholarly papers and citations",
+      "role": "specialist",
+      "use_when": "the query seeks papers or citation relationships"
+    },
+    {
+      "name": "shodan",
+      "purpose": "internet-connected device search",
+      "role": "specialist",
+      "use_when": "the query targets exposed services or devices"
+    },
+    {
+      "name": "stackexchange",
+      "purpose": null,
+      "role": "broad_support",
+      "use_when": null
+    },
+    {
+      "name": "tmdb",
+      "purpose": "movie and television metadata",
+      "role": "specialist",
+      "use_when": "the query seeks film, series, cast, or release information"
+    },
+    {
+      "name": "uniprot",
+      "purpose": "protein sequences and annotations",
+      "role": "specialist",
+      "use_when": "the query seeks a protein, gene product, or accession"
+    },
+    {
+      "name": "urlhaus",
+      "purpose": "malware URL intelligence",
+      "role": "specialist",
+      "use_when": "the query concerns a suspicious URL or malware distribution"
+    },
+    {
+      "name": "virustotal",
+      "purpose": "file, URL, domain, and IP reputation",
+      "role": "specialist",
+      "use_when": "the query seeks multi-scanner malware reputation"
+    },
+    {
+      "name": "vulncheck",
+      "purpose": "vulnerability and exploitation intelligence",
+      "role": "specialist",
+      "use_when": "the query seeks exploitability or vulnerability enrichment"
+    },
+    {
+      "name": "wikipedia",
+      "purpose": null,
+      "role": "broad_support",
+      "use_when": null
+    }
+  ],
+  "plan_id": "F06",
+  "schema_version": 1,
+  "source": "slopsearx/jev.py::ROUTING_CARDS/GENERAL_ENGINES/BROAD_SUPPORT_ENGINES",
+  "source_git_blob": "2bbb5c01f20b4db16730cbe3460e625b3d27fa23"
+}

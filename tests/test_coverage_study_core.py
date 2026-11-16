@@ -2,6 +2,7 @@ import hashlib
 import json
 import unittest
 import uuid
+from pathlib import Path
 
 from scripts import coverage_study_core as core
 
@@ -191,6 +192,86 @@ def make_run(navigation_skips=NAV_SKIPS):
 
 
 class RegistrationPreflightTests(unittest.TestCase):
+    def test_registered_v2_companion_keeps_development_confirmation_closure_identical(self):
+        root = Path(__file__).parents[1]
+        evidence_dir = root / "docs/experiments/evidence/coverage-first-study"
+        registered_dir = evidence_dir / "registered-2026-10-12-acquisition-v2"
+        protocol_bytes = (registered_dir / "protocol.json").read_bytes()
+        companion_bytes = (evidence_dir / "band-companion/development-contract.json").read_bytes()
+        self.assertEqual(
+            companion_bytes,
+            (evidence_dir / "band-companion/confirmation-contract.json").read_bytes(),
+        )
+        companion_sha = digest(companion_bytes)
+        source_files = {
+            "coverage_study_core": "scripts/coverage_study_core.py",
+            "coverage_gate_calculation": "scripts/coverage_gate_calculation.py",
+            "coverage_stage_orchestration": "scripts/coverage_stage_orchestration.py",
+            "coverage_stage_finalization": "scripts/coverage_stage_finalization.py",
+            "coverage_operator_runner": "scripts/coverage_operator_runner.py",
+            "coverage_band_companion": "scripts/coverage_band_companion.py",
+            "coverage_late_registration": "scripts/coverage_late_registration.py",
+        }
+        source_pins = {name: digest((root / path).read_bytes()) for name, path in source_files.items()}
+
+        def register(stage_uuid, stage_kind):
+            args, materials, _, _ = make_fixture(stage_uuid=stage_uuid, stage_kind=stage_kind)
+            materials["protocol"] = protocol_bytes
+            materials["qualified_source_closure"] = canonical(
+                {
+                    "schema": "coverage-study-qualified-source-closure/2",
+                    "source_revision": SOURCE_REVISION,
+                    "material_pins": {
+                        "coverage_source": digest(materials["coverage_source"]),
+                        "production_rerank_source": digest(materials["production_rerank_source"]),
+                        "dependency_lock": digest(materials["dependency_lock"]),
+                        "band_companion": companion_sha,
+                    },
+                    "source_pins": source_pins,
+                }
+            )
+            reseal_fixture(args, materials, stage_kind=stage_kind, stage_uuid=stage_uuid)
+            registration = json.loads(args["registration_bytes"])
+            registration["band_companion_sha256"] = companion_sha
+            registration_bytes = canonical(registration)
+            args.update(
+                registration_bytes=registration_bytes,
+                expected_registration_sha256=digest(registration_bytes),
+                band_companion_bytes=companion_bytes,
+                expected_band_companion_sha256=companion_sha,
+                expected_source_pins=source_pins,
+            )
+            return args
+
+        development_args = register(DEV_STAGE, "development")
+        development = core.preflight_stage(**development_args)
+        development_receipt = canonical(
+            {
+                "schema": core.DEVELOPMENT_RECEIPT_SCHEMA,
+                "stage_uuid": DEV_STAGE,
+                "stage_kind": "development",
+                "status": "passed",
+                "protocol_sha256": digest(protocol_bytes),
+                "source_revision": SOURCE_REVISION,
+                "source_closure_sha256": development.pins["qualified_source_closure"],
+                "result_sha256": "e" * 64,
+            }
+        )
+        confirmation_args = register(STAGE, "confirmation")
+        self.assertEqual(
+            development.pins["qualified_source_closure"],
+            confirmation_args["expected_pins"]["qualified_source_closure"],
+        )
+        confirmation_args.update(
+            development_receipt_bytes=development_receipt,
+            expected_development_receipt_sha256=digest(development_receipt),
+            expected_development_stage_uuid=DEV_STAGE,
+        )
+        confirmation = core.preflight_stage(**confirmation_args)
+        self.assertEqual(confirmation.stage_kind, "confirmation")
+        self.assertTrue(confirmation.selector_input_map_required)
+        self.assertFalse(confirmation.fresh_execution_authorized)
+
     def test_valid_development_is_preflight_only_and_never_authorizes(self):
         args, *_ = make_fixture()
         prepared = core.preflight_stage(**args)
@@ -238,9 +319,7 @@ class RegistrationPreflightTests(unittest.TestCase):
         self.assertFalse(prepared.fresh_execution_authorized)
 
         args, materials, _, _ = make_fixture()
-        materials["protocol"] = canonical(
-            {"selector_input_map_schema": "coverage-selector-input-map/2-registered"}
-        )
+        materials["protocol"] = canonical({"selector_input_map_schema": "coverage-selector-input-map/2-registered"})
         reseal_fixture(args, materials)
         with self.assertRaisesRegex(core.StudyError, "selector-input-map-registration-status-required"):
             core.preflight_stage(**args)

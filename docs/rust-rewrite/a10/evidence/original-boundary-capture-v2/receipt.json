@@ -1,0 +1,59 @@
+{
+  "owner_pid": 77811,
+  "command": [
+    "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+    "/Volumes/tank01/magnus/git/slopsearx-a10/docs/rust-rewrite/a10/capture_boundaries.py",
+    "--allow-original-oracle",
+    "--output",
+    "/Volumes/tank01/magnus/git/slopsearx-a10/docs/rust-rewrite/a10/source-boundaries-v2.json"
+  ],
+  "input_sha256": {
+    "docs/rust-rewrite/a10/capture_boundaries.py": "82119317e6a9f7c20688e9cb7fdfdb5c0ad5ff4a8a94e94477c8aa9121cb6b88",
+    "docs/rust-rewrite/a10/boundary-inputs-v1.json": "56019967cf96d0a446ccb2c37d249a9f8bb43bd38b50974f35f45c3990e5f96b",
+    "docs/rust-rewrite/a10/oracle-inventory.json": "b4f1574e7b9320559fcdd5a76a5f5d15a95d3ba9b3860e0a7b87efa1fa3f3461",
+    "engines/cve.py": "b2e4f7177a3b09758305ef3c89c80e205e2d5551ca07c786ef3c8234988a8851",
+    "tests/test_cve.py": "c2e93dcbcc94fc960ef6e7ca2e92f2e0510444ae60a1394396b0e4166141cb7f",
+    "engines/nvd.py": "ef465e8decab33aa61e8e7ec1ea5c9b6352a33a803d6c43694600b39a37bc64d",
+    "tests/test_nvd.py": "b9c168244cb384741b59ce068f6f8b177bf8944e9eda690fe6b152a609dc4b55",
+    "engines/epss.py": "e6df882daf4f6324dac834289c7c12358d38ab1e729cd695aca6b6676a364f04",
+    "tests/test_epss.py": "5a3f0d06a01c2115dcea270a46ea808449bc0e6ce0c29b5793d18228b41d8830",
+    "engines/exploitdb.py": "69f1502ba59882e962230a052a87a15f24034eb0d678ae6f9755acb0b53aa26b",
+    "tests/test_exploitdb.py": "ac988665920d7747d5584af866953780149758b577e061642626bd8a8b422006",
+    "engines/mitreattack.py": "f0c2dd0735b5392aa84e4a6e252542b441d6b6954442860e42d86bfdb55d96c4",
+    "tests/test_mitreattack.py": "f7155da58c8eb1cb5bab046434ac5952e29a229eedcc404addf0fc20dc65cbff"
+  },
+  "guard_checks": [
+    {
+      "command": [
+        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+        "/Volumes/tank01/magnus/git/slopsearx-a10/docs/rust-rewrite/a10/capture_boundaries.py",
+        "--output",
+        "/private/tmp/a10-original-boundary-capture-v2/denied.json"
+      ],
+      "exit_code": 1,
+      "log_sha256": "5c564cbfe71d6fe1a72dd913b0335b71f5bae4253b863f164b829ab600ee6f46"
+    },
+    {
+      "command": [
+        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+        "-O",
+        "/Volumes/tank01/magnus/git/slopsearx-a10/docs/rust-rewrite/a10/capture_boundaries.py",
+        "--output",
+        "/private/tmp/a10-original-boundary-capture-v2/denied-O.json"
+      ],
+      "exit_code": 1,
+      "log_sha256": "5c564cbfe71d6fe1a72dd913b0335b71f5bae4253b863f164b829ab600ee6f46"
+    }
+  ],
+  "started": 1792213198.984721,
+  "child_pid": 77826,
+  "exit_code": 0,
+  "terminal": true,
+  "ended": 1792213200.399883,
+  "source_equal": true,
+  "log_sha256": "3427ed0a8ba442d9aa7b553b929c363d3dcd4ce8f001ea388ce703ec86e1de60",
+  "output_sha256": "dad7065badf627e9feddf3e66d9ddb62e9b94a87cba3d7f0d356894a1dfe406d",
+  "actual_records": 308,
+  "actual_unique_ids": 308,
+  "source_inputs_unchanged": true
+}

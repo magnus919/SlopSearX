@@ -1,0 +1,27 @@
+{
+  "batch": "A14",
+  "status": "native_component_accepted_pending_current_main_and_ci",
+  "source_pin_commit": "a8a7b3e05ccb7ee2e536c0651163c429384f8738",
+  "corrected_candidate_validation": {
+    "result": null,
+    "native_functions": 18,
+    "protected_native_subcases": 178,
+    "provider_calls": 0,
+    "python_executed": false,
+    "qualification": "denied until root code and source-map approval"
+  },
+  "historical_pre_review_evidence": {
+    "frozen_pre_review_candidate": "/Volumes/tank01/magnus/rust-evidence/a14/20261017-frozen-before-corrections/candidate.tar",
+    "frozen_pre_review_candidate_sha256": "2f06a8f06e4388c50836ef71a97c6dfd7177c5964ea0b31fbcf568c725b1b722",
+    "historical_evidence": "all original eight-function candidate snapshots and raw first failures are preserved byte-for-byte in the frozen archive; they do not qualify the corrected implementation"
+  },
+  "portal_impact": "native result/category/date/payload behavior is preserved; no portal implementation or browser-visible contract change is introduced; aggregate integration/portal gates remain root-owned",
+  "scope": "full three-provider source-semantic implementation and actual F06 registry factories; no policy/routing/Cargo/shared-helper changes",
+  "local_qualification": {
+    "native_functions": 18,
+    "distinct_completed_subcases": 178,
+    "gate_guard_tests": 2,
+    "report_sha256": "d09521f2db037bd0a0e7f176f17e6e29ea8fccd12923562f02a01fbbc024a9b0",
+    "scope": "Qualified component source before this documentation-only acceptance update; fresh main integration/CI remain required."
+  }
+}

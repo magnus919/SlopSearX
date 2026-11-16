@@ -1,0 +1,6424 @@
+{
+  "schema_version": 1,
+  "plan_id": "F13",
+  "source_commit": "35d97ccf8c9b2d8246373b2024cc8d7a457705a3",
+  "source_files": {
+    "slopsearx/cache.py": {
+      "git_blob": "354dbc179c4ca6ebc4ac9f85dd66a40d07ba3c09",
+      "sha256": "88155d2060f19bcb7740c9498f8f82378e26c4c60ac4d013bee9913eb333c089"
+    },
+    "slopsearx/snapshot.py": {
+      "git_blob": "fe0e62b9872b3d01cef6a8f843d9720f2cd50a42",
+      "sha256": "85c88b483635003a4a395f40cf48eb83a564b8dd3965ed8a139ba65c1ea88377"
+    },
+    "slopsearx/service.py": {
+      "git_blob": "8b45ce71efc3c7cc4a72b962968e146a63e135be",
+      "sha256": "aed455ccbefcfee5ffcf099876dc7230cead27527313269edc0f69b504c20922"
+    },
+    "slopsearx/filters.py": {
+      "git_blob": "e1a1cac35c5fcbbf2e6fb7728241953aa8047669",
+      "sha256": "f0edd2f633cc9a42c49660ca74b225732cbc82937a15ad58a5b0dbeb76e103a9"
+    },
+    "slopsearx/artifacts.py": {
+      "git_blob": "2cea4d16eb901b4c0ac0a2f5c0795add57f1f869",
+      "sha256": "61aad828f61008623cc23d57b3a51c2c40e591ebfeece8c4065ec9d5a7470678"
+    },
+    "slopsearx/payload.py": {
+      "git_blob": "efa149d48bae401f7a0a9df6e50c8c614adecbb5",
+      "sha256": "a44a95655566f9fadaf62da1bab8c975f71f3ead6c3cc57f48c411a9c093c40d"
+    },
+    "tests/test_cache.py": {
+      "git_blob": "8830f11cd664d68dd169c4e6deaba48b9fc1106c",
+      "sha256": "bb3fec26f9a49c70c44ffbe0995488b9a90c03e66cd8bf51f9f6d347ee503f58"
+    },
+    "tests/test_mcp_snapshots.py": {
+      "git_blob": "783f710689c16cdf12d51cc443d1ad30efb87b0c",
+      "sha256": "d0eef9212e77a2365342e7303f62e33f27d855f011dae81c0109288088d4e698"
+    },
+    "tests/test_cache_integration.py": {
+      "git_blob": "f4b7eb88f5693f2d1dfcc76de48de1e5d8c2b3c7",
+      "sha256": "44e2809b7f3f73421441b33f0675e530cff91d579357580363c5600bcb2bb1d7"
+    }
+  },
+  "cases": [
+    {
+      "kind": "key",
+      "id": "query-0",
+      "input": {
+        "query": "q"
+      },
+      "expected": "search:v2:0e781b5b8b15a218f2945588e87d1e8424c276046e045b911967282f372e1884"
+    },
+    {
+      "kind": "key",
+      "id": "query-1",
+      "input": {
+        "query": " q "
+      },
+      "expected": "search:v2:0e781b5b8b15a218f2945588e87d1e8424c276046e045b911967282f372e1884"
+    },
+    {
+      "kind": "key",
+      "id": "query-2",
+      "input": {
+        "query": "\u001cq\u001f"
+      },
+      "expected": "search:v2:0e781b5b8b15a218f2945588e87d1e8424c276046e045b911967282f372e1884"
+    },
+    {
+      "kind": "key",
+      "id": "query-3",
+      "input": {
+        "query": "Q"
+      },
+      "expected": "search:v2:1d5e2c281b449691a5c8e6f0f361833d0ffada382f99967f8e4a538190bea71b"
+    },
+    {
+      "kind": "key",
+      "id": "query-4",
+      "input": {
+        "query": "C++"
+      },
+      "expected": "search:v2:26df309a4ac537d13f531112a18de199644932c3ee85c87eba250ff6ded7fd41"
+    },
+    {
+      "kind": "key",
+      "id": "query-5",
+      "input": {
+        "query": "C#"
+      },
+      "expected": "search:v2:02932844365b9d1ad1460f08343a382529a03bba364a36c7064e63468df6292b"
+    },
+    {
+      "kind": "key",
+      "id": "query-6",
+      "input": {
+        "query": "café"
+      },
+      "expected": "search:v2:db44b8543e1185896db32bbcd360aca3c85ee320ec251fe7afae69856fdf4435"
+    },
+    {
+      "kind": "key",
+      "id": "query-7",
+      "input": {
+        "query": "😀"
+      },
+      "expected": "search:v2:f99d0facdf09fc6e47ada05a7e4f65852ec54f79bccaf3bfe067335709d49a1e"
+    },
+    {
+      "kind": "key",
+      "id": "query-8",
+      "input": {
+        "query": "a%20b"
+      },
+      "expected": "search:v2:f6bcfea9aa27941c303d6d886b107a5c1e383f47f6c077b9b5fd005116db1df5"
+    },
+    {
+      "kind": "key",
+      "id": "query-9",
+      "input": {
+        "query": "a b"
+      },
+      "expected": "search:v2:280309f9591555c039ca3a7a40d5e8b1794ac85aecebefbb0c88fbfa04e97447"
+    },
+    {
+      "kind": "key",
+      "id": "query-10",
+      "input": {
+        "query": "a|b"
+      },
+      "expected": "search:v2:35d2ed565277e1833933742709bc3ed0d77bc3fcd94a6876b5195ad575cebc60"
+    },
+    {
+      "kind": "key",
+      "id": "query-11",
+      "input": {
+        "query": "a:b"
+      },
+      "expected": "search:v2:9355f9f4f9863af71124f5235b499a82356b80ab139eda9c374fc1b1ec4b3fb5"
+    },
+    {
+      "kind": "key",
+      "id": "query-12",
+      "input": {
+        "query": ""
+      },
+      "expected": "search:v2:61d910592c707000cca3a6744f5e7e108ae0d3a91a3bca2f81d1cbcdaa4dfec6"
+    },
+    {
+      "kind": "key",
+      "id": "scope-none",
+      "input": {
+        "query": "q"
+      },
+      "expected": "search:v2:0e781b5b8b15a218f2945588e87d1e8424c276046e045b911967282f372e1884"
+    },
+    {
+      "kind": "key",
+      "id": "scope-empty",
+      "input": {
+        "query": "q",
+        "engines": [],
+        "categories": []
+      },
+      "expected": "search:v2:0e781b5b8b15a218f2945588e87d1e8424c276046e045b911967282f372e1884"
+    },
+    {
+      "kind": "key",
+      "id": "scope-sort",
+      "input": {
+        "query": "q",
+        "engines": [
+          "b",
+          "a"
+        ],
+        "categories": [
+          "z",
+          "a"
+        ]
+      },
+      "expected": "search:v2:8c962d74d16127e8f17de2a21cd30077abe6fa7c24870c4516572a121b69a9a6"
+    },
+    {
+      "kind": "key",
+      "id": "scope-sorted",
+      "input": {
+        "query": "q",
+        "engines": [
+          "a",
+          "b"
+        ],
+        "categories": [
+          "a",
+          "z"
+        ]
+      },
+      "expected": "search:v2:8c962d74d16127e8f17de2a21cd30077abe6fa7c24870c4516572a121b69a9a6"
+    },
+    {
+      "kind": "key",
+      "id": "scope-duplicates",
+      "input": {
+        "query": "q",
+        "engines": [
+          "a",
+          "a"
+        ]
+      },
+      "expected": "search:v2:8555e67f6eadf81f1befec1047a4aab09d05d80dcb4729ee66c542e0bcbc2a25"
+    },
+    {
+      "kind": "key",
+      "id": "scope-single",
+      "input": {
+        "query": "q",
+        "engines": [
+          "a"
+        ]
+      },
+      "expected": "search:v2:a9e9f52bcc86a1590fc7ae7445e00099cf84ae6e6c18d62c5c4c31d53ba98053"
+    },
+    {
+      "kind": "key",
+      "id": "language",
+      "input": {
+        "query": "q",
+        "language": "fr"
+      },
+      "expected": "search:v2:5523cd0fb6bae613e1a50de60f610f48f8ddf0460d896142cee12dbea63f85b9"
+    },
+    {
+      "kind": "key",
+      "id": "safe",
+      "input": {
+        "query": "q",
+        "safesearch": 2
+      },
+      "expected": "search:v2:6f32ce9fb3fb26e4c93df16e16ae4a650c4afeddea4fef193f0e04812ff8365a"
+    },
+    {
+      "kind": "key",
+      "id": "page",
+      "input": {
+        "query": "q",
+        "pageno": 2
+      },
+      "expected": "search:v2:a8e691898561a5e5bc56ed07ec74ccf80b761f8e543c67e5e25958a8be96ed5c"
+    },
+    {
+      "kind": "key",
+      "id": "media",
+      "input": {
+        "query": "q",
+        "media_type": "image"
+      },
+      "expected": "search:v2:5f5d049ee39bc8deea56ffe462be4516ea1cfcddf8b664734f7c2d1738d6da85"
+    },
+    {
+      "kind": "key",
+      "id": "absolute-date",
+      "input": {
+        "query": "q",
+        "date_from": "2026-01-01",
+        "date_to": "2026-01-31"
+      },
+      "expected": "search:v2:107f37d4eb9a8c434ed7cdfe26cc8d79659598e78740b6d2837f1ffefd3e946d"
+    },
+    {
+      "kind": "key",
+      "id": "relative-day",
+      "input": {
+        "query": "q",
+        "time_range": "day",
+        "time_range_anchor": "2026-03-01"
+      },
+      "expected": "search:v2:4ddf3f4c2bb10ede81047d041b30c52b16bbbda0afea6912f531e4e9fdb81f0c"
+    },
+    {
+      "kind": "key",
+      "id": "relative-next-day",
+      "input": {
+        "query": "q",
+        "time_range": "day",
+        "time_range_anchor": "2026-03-02"
+      },
+      "expected": "search:v2:4f871ef4adff86e648f2f33095a9fa80472c492aaeb616a0f8fa91ca32c9520f"
+    },
+    {
+      "kind": "key",
+      "id": "relative-month",
+      "input": {
+        "query": "q",
+        "time_range": "month",
+        "time_range_anchor": "2026-03-01"
+      },
+      "expected": "search:v2:0a904c2e8ac3c0412401c2ecdee3ddf605db377b17d9e108b1c7803b01bbe4e6"
+    },
+    {
+      "kind": "key",
+      "id": "invalid-range",
+      "input": {
+        "query": "q",
+        "time_range": "invalid",
+        "time_range_anchor": "2026-03-01"
+      },
+      "expected": "search:v2:9a99b28ba0c107c094053ed1d869cf71554d791b60398a061b63657527036f70"
+    },
+    {
+      "kind": "key",
+      "id": "empty-range",
+      "input": {
+        "query": "q",
+        "time_range": ""
+      },
+      "expected": "search:v2:11cf6077236ce1a4e264dd947d1d5bd942e87de22428bf262a9eb18cf605ee1d"
+    },
+    {
+      "kind": "answer-key",
+      "id": "answer-0",
+      "input": {
+        "query": "q"
+      },
+      "expected": "answer:v2:8e35c2cd3bf6641bdb0e2050b76932cbb2e6034a0ddacc1d9bea82a6ba57f7cf"
+    },
+    {
+      "kind": "answer-key",
+      "id": "answer-1",
+      "input": {
+        "query": " q "
+      },
+      "expected": "answer:v2:8e35c2cd3bf6641bdb0e2050b76932cbb2e6034a0ddacc1d9bea82a6ba57f7cf"
+    },
+    {
+      "kind": "answer-key",
+      "id": "answer-2",
+      "input": {
+        "query": "Q"
+      },
+      "expected": "answer:v2:4ae81572f06e1b88fd5ced7a1a000945432e83e1551e6f721ee9c00b8cc33260"
+    },
+    {
+      "kind": "answer-key",
+      "id": "answer-3",
+      "input": {
+        "query": "café"
+      },
+      "expected": "answer:v2:850f7dc43910ff890f8879c0ed26fe697c93a067ad93a7d50f466a7028a9bf4e"
+    },
+    {
+      "kind": "answer-key",
+      "id": "answer-4",
+      "input": {
+        "query": "a%20b"
+      },
+      "expected": "answer:v2:719b5ec792eb69fe3dfe29c75ce06b0a9e5813eeb97d1ba79594f16cc84cd9d4"
+    },
+    {
+      "kind": "answer-key",
+      "id": "answer-5",
+      "input": {
+        "query": "a b"
+      },
+      "expected": "answer:v2:c8687a08aa5d6ed2044328fa6a697ab8e96dc34291e8c2034ae8c38e6fcc6d65"
+    },
+    {
+      "kind": "ttl",
+      "id": "ttl-0",
+      "input": {
+        "normal": "3600",
+        "partial_ttl": "30",
+        "categories": [],
+        "partial": false
+      },
+      "expected": {
+        "ttl": 3600
+      }
+    },
+    {
+      "kind": "ttl",
+      "id": "ttl-1",
+      "input": {
+        "normal": "3600",
+        "partial_ttl": "30",
+        "categories": [
+          "news"
+        ],
+        "partial": false
+      },
+      "expected": {
+        "ttl": 300
+      }
+    },
+    {
+      "kind": "ttl",
+      "id": "ttl-2",
+      "input": {
+        "normal": "3600",
+        "partial_ttl": "30",
+        "categories": [
+          "notnews"
+        ],
+        "partial": false
+      },
+      "expected": {
+        "ttl": 300
+      }
+    },
+    {
+      "kind": "ttl",
+      "id": "ttl-3",
+      "input": {
+        "normal": "120",
+        "partial_ttl": "30",
+        "categories": [
+          "NEWS"
+        ],
+        "partial": false
+      },
+      "expected": {
+        "ttl": 120
+      }
+    },
+    {
+      "kind": "ttl",
+      "id": "ttl-4",
+      "input": {
+        "normal": "3600",
+        "partial_ttl": "30",
+        "categories": [],
+        "partial": true
+      },
+      "expected": {
+        "ttl": 30
+      }
+    },
+    {
+      "kind": "ttl",
+      "id": "ttl-5",
+      "input": {
+        "normal": "10",
+        "partial_ttl": "30",
+        "categories": [],
+        "partial": true
+      },
+      "expected": {
+        "ttl": 10
+      }
+    },
+    {
+      "kind": "ttl",
+      "id": "ttl-6",
+      "input": {
+        "normal": "3600",
+        "partial_ttl": "300",
+        "categories": [
+          "news"
+        ],
+        "partial": true
+      },
+      "expected": {
+        "ttl": 300
+      }
+    },
+    {
+      "kind": "ttl",
+      "id": "ttl-7",
+      "input": {
+        "normal": "3_600",
+        "partial_ttl": "3_0",
+        "categories": [],
+        "partial": true
+      },
+      "expected": {
+        "ttl": 30
+      }
+    },
+    {
+      "kind": "ttl",
+      "id": "ttl-8",
+      "input": {
+        "normal": " ٣٦٠٠ ",
+        "partial_ttl": "٣٠",
+        "categories": [],
+        "partial": false
+      },
+      "expected": {
+        "ttl": 3600
+      }
+    },
+    {
+      "kind": "ttl",
+      "id": "ttl-9",
+      "input": {
+        "normal": "0",
+        "partial_ttl": "30",
+        "categories": [],
+        "partial": false
+      },
+      "expected": {
+        "error": "ValueError"
+      }
+    },
+    {
+      "kind": "ttl",
+      "id": "ttl-10",
+      "input": {
+        "normal": "-1",
+        "partial_ttl": "30",
+        "categories": [],
+        "partial": false
+      },
+      "expected": {
+        "error": "ValueError"
+      }
+    },
+    {
+      "kind": "ttl",
+      "id": "ttl-11",
+      "input": {
+        "normal": "1.0",
+        "partial_ttl": "30",
+        "categories": [],
+        "partial": false
+      },
+      "expected": {
+        "error": "ValueError"
+      }
+    },
+    {
+      "kind": "ttl",
+      "id": "ttl-12",
+      "input": {
+        "normal": "3600",
+        "partial_ttl": "301",
+        "categories": [],
+        "partial": true
+      },
+      "expected": {
+        "error": "ValueError"
+      }
+    },
+    {
+      "kind": "ttl",
+      "id": "ttl-13",
+      "input": {
+        "normal": "3600",
+        "partial_ttl": "0",
+        "categories": [],
+        "partial": true
+      },
+      "expected": {
+        "error": "ValueError"
+      }
+    },
+    {
+      "kind": "ttl",
+      "id": "ttl-14",
+      "input": {
+        "normal": "3600",
+        "partial_ttl": "0",
+        "categories": [],
+        "partial": false
+      },
+      "expected": {
+        "ttl": 3600
+      }
+    },
+    {
+      "kind": "view",
+      "id": "view-0",
+      "input": {
+        "canonical": {
+          "query": "q",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "engine_outcomes": [],
+          "suggestions": [
+            "suggest"
+          ],
+          "answers": [
+            {
+              "nested": {
+                "value": "original"
+              }
+            }
+          ],
+          "corrections": [],
+          "infoboxes": [
+            {
+              "urls": [
+                {
+                  "title": "original"
+                }
+              ]
+            }
+          ],
+          "query_id": "ssx-q",
+          "cached": false,
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "response_time_ms": 0,
+          "partial": false,
+          "deadline_exceeded": false,
+          "all_unresponsive": false,
+          "empty_engines": [
+            [
+              "b",
+              "empty"
+            ]
+          ],
+          "cached_error": false,
+          "dispatched_engine_count": 0
+        },
+        "include": [
+          "results"
+        ],
+        "max_results": 1
+      },
+      "expected": {
+        "query": "q",
+        "results": [
+          {
+            "url": "https://example.com/0",
+            "title": "Title0",
+            "content": "full content",
+            "engine": "a",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": {
+              "data": {
+                "nested": [
+                  "original"
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "scope": {
+          "selected_engines": [
+            "a"
+          ],
+          "resolved_categories": [],
+          "routing_rule": "",
+          "matched_topic": null,
+          "warnings": [],
+          "excluded_engines": [],
+          "routing_fallback": false,
+          "routing_budget_applied": false,
+          "routing_tradeoffs": [],
+          "jev_added_engines": [],
+          "jev_scores": {}
+        },
+        "engine_outcomes": [],
+        "suggestions": [],
+        "answers": [
+          {
+            "nested": {
+              "value": "original"
+            }
+          }
+        ],
+        "corrections": [],
+        "infoboxes": [
+          {
+            "urls": [
+              {
+                "title": "original"
+              }
+            ]
+          }
+        ],
+        "query_id": "ssx-q",
+        "cached": false,
+        "ranking_explanation": "tier_then_cross_engine_presence",
+        "response_time_ms": 0,
+        "partial": false,
+        "deadline_exceeded": false,
+        "all_unresponsive": false,
+        "empty_engines": [],
+        "cached_error": false,
+        "dispatched_engine_count": 0
+      }
+    },
+    {
+      "kind": "view",
+      "id": "view-1",
+      "input": {
+        "canonical": {
+          "query": "q",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "engine_outcomes": [],
+          "suggestions": [
+            "suggest"
+          ],
+          "answers": [
+            {
+              "nested": {
+                "value": "original"
+              }
+            }
+          ],
+          "corrections": [],
+          "infoboxes": [
+            {
+              "urls": [
+                {
+                  "title": "original"
+                }
+              ]
+            }
+          ],
+          "query_id": "ssx-q",
+          "cached": false,
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "response_time_ms": 0,
+          "partial": false,
+          "deadline_exceeded": false,
+          "all_unresponsive": false,
+          "empty_engines": [
+            [
+              "b",
+              "empty"
+            ]
+          ],
+          "cached_error": false,
+          "dispatched_engine_count": 0
+        },
+        "include": [
+          "results",
+          "suggestions"
+        ],
+        "max_results": 2
+      },
+      "expected": {
+        "query": "q",
+        "results": [
+          {
+            "url": "https://example.com/0",
+            "title": "Title0",
+            "content": "full content",
+            "engine": "a",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": {
+              "data": {
+                "nested": [
+                  "original"
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "https://example.com/1",
+            "title": "Title1",
+            "content": "full content",
+            "engine": "a",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": {
+              "data": {
+                "nested": [
+                  "original"
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "scope": {
+          "selected_engines": [
+            "a"
+          ],
+          "resolved_categories": [],
+          "routing_rule": "",
+          "matched_topic": null,
+          "warnings": [],
+          "excluded_engines": [],
+          "routing_fallback": false,
+          "routing_budget_applied": false,
+          "routing_tradeoffs": [],
+          "jev_added_engines": [],
+          "jev_scores": {}
+        },
+        "engine_outcomes": [],
+        "suggestions": [
+          "suggest"
+        ],
+        "answers": [
+          {
+            "nested": {
+              "value": "original"
+            }
+          }
+        ],
+        "corrections": [],
+        "infoboxes": [
+          {
+            "urls": [
+              {
+                "title": "original"
+              }
+            ]
+          }
+        ],
+        "query_id": "ssx-q",
+        "cached": false,
+        "ranking_explanation": "tier_then_cross_engine_presence",
+        "response_time_ms": 0,
+        "partial": false,
+        "deadline_exceeded": false,
+        "all_unresponsive": false,
+        "empty_engines": [],
+        "cached_error": false,
+        "dispatched_engine_count": 0
+      }
+    },
+    {
+      "kind": "view",
+      "id": "view-2",
+      "input": {
+        "canonical": {
+          "query": "q",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "engine_outcomes": [],
+          "suggestions": [
+            "suggest"
+          ],
+          "answers": [
+            {
+              "nested": {
+                "value": "original"
+              }
+            }
+          ],
+          "corrections": [],
+          "infoboxes": [
+            {
+              "urls": [
+                {
+                  "title": "original"
+                }
+              ]
+            }
+          ],
+          "query_id": "ssx-q",
+          "cached": false,
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "response_time_ms": 0,
+          "partial": false,
+          "deadline_exceeded": false,
+          "all_unresponsive": false,
+          "empty_engines": [
+            [
+              "b",
+              "empty"
+            ]
+          ],
+          "cached_error": false,
+          "dispatched_engine_count": 0
+        },
+        "include": [
+          "results",
+          "suggestions",
+          "engine_status",
+          "diagnostics"
+        ],
+        "max_results": null
+      },
+      "expected": {
+        "query": "q",
+        "results": [
+          {
+            "url": "https://example.com/0",
+            "title": "Title0",
+            "content": "full content",
+            "engine": "a",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": {
+              "data": {
+                "nested": [
+                  "original"
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "https://example.com/1",
+            "title": "Title1",
+            "content": "full content",
+            "engine": "a",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": {
+              "data": {
+                "nested": [
+                  "original"
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "https://example.com/2",
+            "title": "Title2",
+            "content": "full content",
+            "engine": "a",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": {
+              "data": {
+                "nested": [
+                  "original"
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "scope": {
+          "selected_engines": [
+            "a"
+          ],
+          "resolved_categories": [],
+          "routing_rule": "",
+          "matched_topic": null,
+          "warnings": [],
+          "excluded_engines": [],
+          "routing_fallback": false,
+          "routing_budget_applied": false,
+          "routing_tradeoffs": [],
+          "jev_added_engines": [],
+          "jev_scores": {}
+        },
+        "engine_outcomes": [],
+        "suggestions": [
+          "suggest"
+        ],
+        "answers": [
+          {
+            "nested": {
+              "value": "original"
+            }
+          }
+        ],
+        "corrections": [],
+        "infoboxes": [
+          {
+            "urls": [
+              {
+                "title": "original"
+              }
+            ]
+          }
+        ],
+        "query_id": "ssx-q",
+        "cached": false,
+        "ranking_explanation": "tier_then_cross_engine_presence",
+        "response_time_ms": 0,
+        "partial": false,
+        "deadline_exceeded": false,
+        "all_unresponsive": false,
+        "empty_engines": [
+          [
+            "b",
+            "empty"
+          ]
+        ],
+        "cached_error": false,
+        "dispatched_engine_count": 0
+      }
+    },
+    {
+      "kind": "view",
+      "id": "view-3",
+      "input": {
+        "canonical": {
+          "query": "q",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "engine_outcomes": [],
+          "suggestions": [
+            "suggest"
+          ],
+          "answers": [
+            {
+              "nested": {
+                "value": "original"
+              }
+            }
+          ],
+          "corrections": [],
+          "infoboxes": [
+            {
+              "urls": [
+                {
+                  "title": "original"
+                }
+              ]
+            }
+          ],
+          "query_id": "ssx-q",
+          "cached": false,
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "response_time_ms": 0,
+          "partial": false,
+          "deadline_exceeded": false,
+          "all_unresponsive": false,
+          "empty_engines": [
+            [
+              "b",
+              "empty"
+            ]
+          ],
+          "cached_error": false,
+          "dispatched_engine_count": 0
+        },
+        "include": [],
+        "max_results": 0
+      },
+      "expected": {
+        "query": "q",
+        "results": [
+          {
+            "url": "https://example.com/0",
+            "title": "Title0",
+            "content": "full content",
+            "engine": "a",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": {
+              "data": {
+                "nested": [
+                  "original"
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "https://example.com/1",
+            "title": "Title1",
+            "content": "full content",
+            "engine": "a",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": {
+              "data": {
+                "nested": [
+                  "original"
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "https://example.com/2",
+            "title": "Title2",
+            "content": "full content",
+            "engine": "a",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": {
+              "data": {
+                "nested": [
+                  "original"
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "scope": {
+          "selected_engines": [
+            "a"
+          ],
+          "resolved_categories": [],
+          "routing_rule": "",
+          "matched_topic": null,
+          "warnings": [],
+          "excluded_engines": [],
+          "routing_fallback": false,
+          "routing_budget_applied": false,
+          "routing_tradeoffs": [],
+          "jev_added_engines": [],
+          "jev_scores": {}
+        },
+        "engine_outcomes": [],
+        "suggestions": [],
+        "answers": [
+          {
+            "nested": {
+              "value": "original"
+            }
+          }
+        ],
+        "corrections": [],
+        "infoboxes": [
+          {
+            "urls": [
+              {
+                "title": "original"
+              }
+            ]
+          }
+        ],
+        "query_id": "ssx-q",
+        "cached": false,
+        "ranking_explanation": "tier_then_cross_engine_presence",
+        "response_time_ms": 0,
+        "partial": false,
+        "deadline_exceeded": false,
+        "all_unresponsive": false,
+        "empty_engines": [],
+        "cached_error": false,
+        "dispatched_engine_count": 0
+      }
+    },
+    {
+      "kind": "view",
+      "id": "view-4",
+      "input": {
+        "canonical": {
+          "query": "q",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "engine_outcomes": [],
+          "suggestions": [
+            "suggest"
+          ],
+          "answers": [
+            {
+              "nested": {
+                "value": "original"
+              }
+            }
+          ],
+          "corrections": [],
+          "infoboxes": [
+            {
+              "urls": [
+                {
+                  "title": "original"
+                }
+              ]
+            }
+          ],
+          "query_id": "ssx-q",
+          "cached": false,
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "response_time_ms": 0,
+          "partial": false,
+          "deadline_exceeded": false,
+          "all_unresponsive": false,
+          "empty_engines": [
+            [
+              "b",
+              "empty"
+            ]
+          ],
+          "cached_error": false,
+          "dispatched_engine_count": 0
+        },
+        "include": [],
+        "max_results": -1
+      },
+      "expected": {
+        "query": "q",
+        "results": [
+          {
+            "url": "https://example.com/0",
+            "title": "Title0",
+            "content": "full content",
+            "engine": "a",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": {
+              "data": {
+                "nested": [
+                  "original"
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "https://example.com/1",
+            "title": "Title1",
+            "content": "full content",
+            "engine": "a",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": {
+              "data": {
+                "nested": [
+                  "original"
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "https://example.com/2",
+            "title": "Title2",
+            "content": "full content",
+            "engine": "a",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": {
+              "data": {
+                "nested": [
+                  "original"
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "scope": {
+          "selected_engines": [
+            "a"
+          ],
+          "resolved_categories": [],
+          "routing_rule": "",
+          "matched_topic": null,
+          "warnings": [],
+          "excluded_engines": [],
+          "routing_fallback": false,
+          "routing_budget_applied": false,
+          "routing_tradeoffs": [],
+          "jev_added_engines": [],
+          "jev_scores": {}
+        },
+        "engine_outcomes": [],
+        "suggestions": [],
+        "answers": [
+          {
+            "nested": {
+              "value": "original"
+            }
+          }
+        ],
+        "corrections": [],
+        "infoboxes": [
+          {
+            "urls": [
+              {
+                "title": "original"
+              }
+            ]
+          }
+        ],
+        "query_id": "ssx-q",
+        "cached": false,
+        "ranking_explanation": "tier_then_cross_engine_presence",
+        "response_time_ms": 0,
+        "partial": false,
+        "deadline_exceeded": false,
+        "all_unresponsive": false,
+        "empty_engines": [],
+        "cached_error": false,
+        "dispatched_engine_count": 0
+      }
+    },
+    {
+      "kind": "view",
+      "id": "view-5",
+      "input": {
+        "canonical": {
+          "query": "q",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "engine_outcomes": [],
+          "suggestions": [
+            "suggest"
+          ],
+          "answers": [
+            {
+              "nested": {
+                "value": "original"
+              }
+            }
+          ],
+          "corrections": [],
+          "infoboxes": [
+            {
+              "urls": [
+                {
+                  "title": "original"
+                }
+              ]
+            }
+          ],
+          "query_id": "ssx-q",
+          "cached": false,
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "response_time_ms": 0,
+          "partial": false,
+          "deadline_exceeded": false,
+          "all_unresponsive": false,
+          "empty_engines": [
+            [
+              "b",
+              "empty"
+            ]
+          ],
+          "cached_error": false,
+          "dispatched_engine_count": 0
+        },
+        "include": [],
+        "max_results": 10
+      },
+      "expected": {
+        "query": "q",
+        "results": [
+          {
+            "url": "https://example.com/0",
+            "title": "Title0",
+            "content": "full content",
+            "engine": "a",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": {
+              "data": {
+                "nested": [
+                  "original"
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "https://example.com/1",
+            "title": "Title1",
+            "content": "full content",
+            "engine": "a",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": {
+              "data": {
+                "nested": [
+                  "original"
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "https://example.com/2",
+            "title": "Title2",
+            "content": "full content",
+            "engine": "a",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": {
+              "data": {
+                "nested": [
+                  "original"
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "scope": {
+          "selected_engines": [
+            "a"
+          ],
+          "resolved_categories": [],
+          "routing_rule": "",
+          "matched_topic": null,
+          "warnings": [],
+          "excluded_engines": [],
+          "routing_fallback": false,
+          "routing_budget_applied": false,
+          "routing_tradeoffs": [],
+          "jev_added_engines": [],
+          "jev_scores": {}
+        },
+        "engine_outcomes": [],
+        "suggestions": [],
+        "answers": [
+          {
+            "nested": {
+              "value": "original"
+            }
+          }
+        ],
+        "corrections": [],
+        "infoboxes": [
+          {
+            "urls": [
+              {
+                "title": "original"
+              }
+            ]
+          }
+        ],
+        "query_id": "ssx-q",
+        "cached": false,
+        "ranking_explanation": "tier_then_cross_engine_presence",
+        "response_time_ms": 0,
+        "partial": false,
+        "deadline_exceeded": false,
+        "all_unresponsive": false,
+        "empty_engines": [],
+        "cached_error": false,
+        "dispatched_engine_count": 0
+      }
+    },
+    {
+      "kind": "snapshot-create",
+      "id": "snapshot-create",
+      "input": {
+        "tenant": "tenant-a",
+        "ttl": 10,
+        "now": 100.0,
+        "id": "snap-0123456789ab"
+      },
+      "expected": {
+        "payload": {
+          "snapshot_id": "snap-0123456789ab",
+          "query": "q",
+          "query_id": "ssx-q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "total": 3,
+          "tenant": "tenant-a",
+          "created_at": 100.0,
+          "expires_at": 110.0,
+          "lineage": []
+        },
+        "physical_ttl": 310,
+        "key": "mcp:snapshot:tenant-a:snap-0123456789ab",
+        "result_id": "snap-0123456789ab:2"
+      }
+    },
+    {
+      "kind": "snapshot-read",
+      "id": "live",
+      "input": {
+        "payload": {
+          "snapshot_id": "snap-0123456789ab",
+          "query": "q",
+          "query_id": "ssx-q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "total": 3,
+          "tenant": "tenant-a",
+          "created_at": 100.0,
+          "expires_at": 110.0,
+          "lineage": []
+        },
+        "tenant": "tenant-a",
+        "now": 109.0,
+        "id": "snap-0123456789ab"
+      },
+      "expected": {
+        "state": "found",
+        "id": "snap-0123456789ab",
+        "total": 3,
+        "tenant": "tenant-a",
+        "created_at": 100.0,
+        "expires_at": 110.0,
+        "ranking": "tier_then_cross_engine_presence",
+        "lineage_available": true,
+        "results": [
+          [
+            "a",
+            "b"
+          ],
+          [
+            "a",
+            "b"
+          ],
+          [
+            "a",
+            "b"
+          ]
+        ]
+      }
+    },
+    {
+      "kind": "snapshot-read",
+      "id": "equal",
+      "input": {
+        "payload": {
+          "snapshot_id": "snap-0123456789ab",
+          "query": "q",
+          "query_id": "ssx-q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "total": 3,
+          "tenant": "tenant-a",
+          "created_at": 100.0,
+          "expires_at": 110.0,
+          "lineage": []
+        },
+        "tenant": "tenant-a",
+        "now": 110.0,
+        "id": "snap-0123456789ab"
+      },
+      "expected": {
+        "state": "found",
+        "id": "snap-0123456789ab",
+        "total": 3,
+        "tenant": "tenant-a",
+        "created_at": 100.0,
+        "expires_at": 110.0,
+        "ranking": "tier_then_cross_engine_presence",
+        "lineage_available": true,
+        "results": [
+          [
+            "a",
+            "b"
+          ],
+          [
+            "a",
+            "b"
+          ],
+          [
+            "a",
+            "b"
+          ]
+        ]
+      }
+    },
+    {
+      "kind": "snapshot-read",
+      "id": "expired",
+      "input": {
+        "payload": {
+          "snapshot_id": "snap-0123456789ab",
+          "query": "q",
+          "query_id": "ssx-q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "total": 3,
+          "tenant": "tenant-a",
+          "created_at": 100.0,
+          "expires_at": 110.0,
+          "lineage": []
+        },
+        "tenant": "tenant-a",
+        "now": 110.001,
+        "id": "snap-0123456789ab"
+      },
+      "expected": {
+        "state": "expired",
+        "expires_at": 110.0
+      }
+    },
+    {
+      "kind": "snapshot-read",
+      "id": "other-tenant",
+      "input": {
+        "payload": {
+          "snapshot_id": "snap-0123456789ab",
+          "query": "q",
+          "query_id": "ssx-q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "total": 3,
+          "tenant": "tenant-b",
+          "created_at": 100.0,
+          "expires_at": 110.0,
+          "lineage": []
+        },
+        "tenant": "tenant-a",
+        "now": 109,
+        "id": "snap-0123456789ab"
+      },
+      "expected": {
+        "state": "missing"
+      }
+    },
+    {
+      "kind": "snapshot-read",
+      "id": "nan-expiry",
+      "input": {
+        "payload": {
+          "snapshot_id": "snap-0123456789ab",
+          "query": "q",
+          "query_id": "ssx-q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "total": 3,
+          "tenant": "tenant-a",
+          "created_at": 100.0,
+          "expires_at": "NaN",
+          "lineage": []
+        },
+        "tenant": "tenant-a",
+        "now": 109,
+        "id": "snap-0123456789ab"
+      },
+      "expected": {
+        "state": "missing"
+      }
+    },
+    {
+      "kind": "snapshot-read",
+      "id": "inf-created",
+      "input": {
+        "payload": {
+          "snapshot_id": "snap-0123456789ab",
+          "query": "q",
+          "query_id": "ssx-q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "total": 3,
+          "tenant": "tenant-a",
+          "created_at": "Infinity",
+          "expires_at": 110.0,
+          "lineage": []
+        },
+        "tenant": "tenant-a",
+        "now": 109,
+        "id": "snap-0123456789ab"
+      },
+      "expected": {
+        "state": "missing"
+      }
+    },
+    {
+      "kind": "snapshot-read",
+      "id": "bad-results",
+      "input": {
+        "payload": {
+          "snapshot_id": "snap-0123456789ab",
+          "query": "q",
+          "query_id": "ssx-q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [
+            1
+          ],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "total": 3,
+          "tenant": "tenant-a",
+          "created_at": 100.0,
+          "expires_at": 110.0,
+          "lineage": []
+        },
+        "tenant": "tenant-a",
+        "now": 109,
+        "id": "snap-0123456789ab"
+      },
+      "expected": {
+        "state": "missing"
+      }
+    },
+    {
+      "kind": "snapshot-read",
+      "id": "bad-scope",
+      "input": {
+        "payload": {
+          "snapshot_id": "snap-0123456789ab",
+          "query": "q",
+          "query_id": "ssx-q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": [
+            1
+          ],
+          "total": 3,
+          "tenant": "tenant-a",
+          "created_at": 100.0,
+          "expires_at": 110.0,
+          "lineage": []
+        },
+        "tenant": "tenant-a",
+        "now": 109,
+        "id": "snap-0123456789ab"
+      },
+      "expected": {
+        "state": "missing"
+      }
+    },
+    {
+      "kind": "snapshot-read",
+      "id": "bad-total",
+      "input": {
+        "payload": {
+          "snapshot_id": "snap-0123456789ab",
+          "query": "q",
+          "query_id": "ssx-q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "total": "bad",
+          "tenant": "tenant-a",
+          "created_at": 100.0,
+          "expires_at": 110.0,
+          "lineage": []
+        },
+        "tenant": "tenant-a",
+        "now": 109,
+        "id": "snap-0123456789ab"
+      },
+      "expected": {
+        "state": "missing"
+      }
+    },
+    {
+      "kind": "snapshot-read",
+      "id": "legacy",
+      "input": {
+        "payload": {
+          "snapshot_id": "snap-0123456789ab",
+          "query": "q",
+          "query_id": "ssx-q",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "total": 3,
+          "tenant": "tenant-a"
+        },
+        "tenant": "tenant-a",
+        "now": 10000,
+        "id": "snap-0123456789ab"
+      },
+      "expected": {
+        "state": "found",
+        "id": "snap-0123456789ab",
+        "total": 3,
+        "tenant": "tenant-a",
+        "created_at": 0.0,
+        "expires_at": null,
+        "ranking": "tier_then_cross_engine_presence",
+        "lineage_available": false,
+        "results": [
+          [
+            "a",
+            "b"
+          ],
+          [
+            "a",
+            "b"
+          ],
+          [
+            "a",
+            "b"
+          ]
+        ]
+      }
+    },
+    {
+      "kind": "snapshot-read",
+      "id": "legacy-engines",
+      "input": {
+        "payload": {
+          "snapshot_id": "snap-0123456789ab",
+          "query": "q",
+          "query_id": "ssx-q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [
+            {
+              "url": "u",
+              "engine": "a",
+              "engines": "{'b', 'a'}"
+            }
+          ],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "total": 1,
+          "tenant": "tenant-a",
+          "created_at": 100.0,
+          "expires_at": 110.0,
+          "lineage": []
+        },
+        "tenant": "tenant-a",
+        "now": 109,
+        "id": "snap-0123456789ab"
+      },
+      "expected": {
+        "state": "found",
+        "id": "snap-0123456789ab",
+        "total": 1,
+        "tenant": "tenant-a",
+        "created_at": 100.0,
+        "expires_at": 110.0,
+        "ranking": "tier_then_cross_engine_presence",
+        "lineage_available": true,
+        "results": [
+          [
+            "a",
+            "b"
+          ]
+        ]
+      }
+    },
+    {
+      "kind": "source-quirk",
+      "id": "connected-read-loss",
+      "input": {},
+      "expected": {
+        "unavailable": false,
+        "snapshot": null
+      }
+    },
+    {
+      "kind": "source-quirk",
+      "id": "failed-write-publishes-id",
+      "input": {},
+      "expected": {
+        "id": "snap-0123456789ab"
+      }
+    },
+    {
+      "kind": "routing",
+      "id": "routing-0",
+      "input": {
+        "cap": {
+          "enabled": true,
+          "auth_class": "none",
+          "auth_configured": true,
+          "cost_class": "free",
+          "circuit_open": false,
+          "last_known_status": "ok",
+          "last_known_status_stale": false
+        },
+        "max_engines": 0
+      },
+      "expected": "routing:d3e03a1c8070a2a9"
+    },
+    {
+      "kind": "routing",
+      "id": "routing-1",
+      "input": {
+        "cap": {
+          "enabled": true,
+          "auth_class": "none",
+          "auth_configured": false,
+          "cost_class": "free",
+          "circuit_open": false,
+          "last_known_status": "ok",
+          "last_known_status_stale": false
+        },
+        "max_engines": 0
+      },
+      "expected": "routing:2d18fa17fb87bbf7"
+    },
+    {
+      "kind": "routing",
+      "id": "routing-2",
+      "input": {
+        "cap": {
+          "enabled": true,
+          "auth_class": "none",
+          "auth_configured": true,
+          "cost_class": "paid",
+          "circuit_open": false,
+          "last_known_status": "ok",
+          "last_known_status_stale": false
+        },
+        "max_engines": 0
+      },
+      "expected": "routing:3cf08b03411e330c"
+    },
+    {
+      "kind": "routing",
+      "id": "routing-3",
+      "input": {
+        "cap": {
+          "enabled": true,
+          "auth_class": "none",
+          "auth_configured": true,
+          "cost_class": "free",
+          "circuit_open": true,
+          "last_known_status": "ok",
+          "last_known_status_stale": false
+        },
+        "max_engines": 0
+      },
+      "expected": "routing:8edf0168daaaf222"
+    },
+    {
+      "kind": "routing",
+      "id": "routing-4",
+      "input": {
+        "cap": {
+          "enabled": true,
+          "auth_class": "none",
+          "auth_configured": true,
+          "cost_class": "free",
+          "circuit_open": false,
+          "last_known_status": "error",
+          "last_known_status_stale": false
+        },
+        "max_engines": 0
+      },
+      "expected": "routing:d3e03a1c8070a2a9"
+    },
+    {
+      "kind": "routing",
+      "id": "routing-5",
+      "input": {
+        "cap": {
+          "enabled": true,
+          "auth_class": "none",
+          "auth_configured": true,
+          "cost_class": "free",
+          "circuit_open": false,
+          "last_known_status": "ok",
+          "last_known_status_stale": true
+        },
+        "max_engines": 0
+      },
+      "expected": "routing:d3e03a1c8070a2a9"
+    },
+    {
+      "kind": "routing",
+      "id": "routing-6",
+      "input": {
+        "cap": {
+          "enabled": true,
+          "auth_class": "none",
+          "auth_configured": true,
+          "cost_class": "free",
+          "circuit_open": false,
+          "last_known_status": "ok",
+          "last_known_status_stale": false
+        },
+        "max_engines": 1
+      },
+      "expected": "routing:11a9105d4c2f8144"
+    },
+    {
+      "kind": "routing",
+      "id": "routing-7",
+      "input": {
+        "cap": {
+          "enabled": true,
+          "auth_class": "none",
+          "auth_configured": true,
+          "cost_class": "free",
+          "circuit_open": false,
+          "last_known_status": "error",
+          "last_known_status_stale": false
+        },
+        "max_engines": 1
+      },
+      "expected": "routing:26dd898468cbc9f4"
+    },
+    {
+      "kind": "routing",
+      "id": "routing-8",
+      "input": {
+        "cap": {
+          "enabled": true,
+          "auth_class": "none",
+          "auth_configured": true,
+          "cost_class": "free",
+          "circuit_open": false,
+          "last_known_status": "ok",
+          "last_known_status_stale": true
+        },
+        "max_engines": 1
+      },
+      "expected": "routing:b1aecc3f7d8d1f2b"
+    },
+    {
+      "kind": "routing",
+      "id": "routing-9",
+      "input": {
+        "cap": {
+          "enabled": false,
+          "auth_class": "none",
+          "auth_configured": true,
+          "cost_class": "free",
+          "circuit_open": false,
+          "last_known_status": "ok",
+          "last_known_status_stale": false
+        },
+        "max_engines": 0
+      },
+      "expected": "routing:d5ef4713cb668ddf"
+    },
+    {
+      "kind": "composed-key",
+      "id": "composed-0",
+      "input": {
+        "query": "q",
+        "routing_digest": "routing:fixed",
+        "interactive_timeout_ms": null,
+        "generate_suggestions": true
+      },
+      "expected": "search:v2:0e781b5b8b15a218f2945588e87d1e8424c276046e045b911967282f372e1884:routing:fixed:suggestions:1"
+    },
+    {
+      "kind": "composed-key",
+      "id": "composed-1",
+      "input": {
+        "query": "q",
+        "routing_digest": "routing:fixed",
+        "interactive_timeout_ms": 100,
+        "generate_suggestions": true
+      },
+      "expected": "search:v2:0e781b5b8b15a218f2945588e87d1e8424c276046e045b911967282f372e1884:routing:fixed:interactive:100:suggestions:1"
+    },
+    {
+      "kind": "composed-key",
+      "id": "composed-2",
+      "input": {
+        "query": "q",
+        "routing_digest": "routing:fixed",
+        "interactive_timeout_ms": 100,
+        "generate_suggestions": false
+      },
+      "expected": "search:v2:0e781b5b8b15a218f2945588e87d1e8424c276046e045b911967282f372e1884:routing:fixed:interactive:100:suggestions:0"
+    },
+    {
+      "kind": "composed-key",
+      "id": "composed-3",
+      "input": {
+        "query": "q",
+        "routing_digest": "routing:fixed",
+        "interactive_timeout_ms": 0,
+        "generate_suggestions": false
+      },
+      "expected": "search:v2:0e781b5b8b15a218f2945588e87d1e8424c276046e045b911967282f372e1884:routing:fixed:interactive:0:suggestions:0"
+    },
+    {
+      "kind": "cache-read",
+      "id": "cache-read-0",
+      "input": {
+        "raw": null
+      },
+      "expected": null
+    },
+    {
+      "kind": "cache-read",
+      "id": "cache-read-1",
+      "input": {
+        "raw": "{}"
+      },
+      "expected": {}
+    },
+    {
+      "kind": "cache-read",
+      "id": "cache-read-2",
+      "input": {
+        "raw": "[]"
+      },
+      "expected": null
+    },
+    {
+      "kind": "cache-read",
+      "id": "cache-read-3",
+      "input": {
+        "raw": "null"
+      },
+      "expected": null
+    },
+    {
+      "kind": "cache-read",
+      "id": "cache-read-4",
+      "input": {
+        "raw": "true"
+      },
+      "expected": null
+    },
+    {
+      "kind": "cache-read",
+      "id": "cache-read-5",
+      "input": {
+        "raw": "1"
+      },
+      "expected": null
+    },
+    {
+      "kind": "cache-read",
+      "id": "cache-read-6",
+      "input": {
+        "raw": "\"text\""
+      },
+      "expected": null
+    },
+    {
+      "kind": "cache-read",
+      "id": "cache-read-7",
+      "input": {
+        "raw": "{"
+      },
+      "expected": null
+    },
+    {
+      "kind": "cache-read",
+      "id": "cache-read-8",
+      "input": {
+        "raw": "{\"_error\":true,\"timestamp\":100}"
+      },
+      "expected": {
+        "_error": true,
+        "timestamp": 100
+      }
+    },
+    {
+      "kind": "cache-read",
+      "id": "cache-read-9",
+      "input": {
+        "raw": "{\"query\": \"q\", \"results\": [{\"url\": \"https://example.com/0\", \"title\": \"Title0\", \"content\": \"full content\", \"engine\": \"a\", \"engines\": [\"a\", \"b\"], \"score\": 0.0, \"position\": 0, \"category\": \"general\", \"published_date\": null, \"thumbnail\": null, \"img_src\": null, \"media\": null, \"tier\": 1, \"payload\": {\"data\": {\"nested\": [\"original\"]}}, \"work_group\": null}, {\"url\": \"https://example.com/1\", \"title\": \"Title1\", \"content\": \"full content\", \"engine\": \"a\", \"engines\": [\"a\", \"b\"], \"score\": 0.0, \"position\": 0, \"category\": \"general\", \"published_date\": null, \"thumbnail\": null, \"img_src\": null, \"media\": null, \"tier\": 1, \"payload\": {\"data\": {\"nested\": [\"original\"]}}, \"work_group\": null}, {\"url\": \"https://example.com/2\", \"title\": \"Title2\", \"content\": \"full content\", \"engine\": \"a\", \"engines\": [\"a\", \"b\"], \"score\": 0.0, \"position\": 0, \"category\": \"general\", \"published_date\": null, \"thumbnail\": null, \"img_src\": null, \"media\": null, \"tier\": 1, \"payload\": {\"data\": {\"nested\": [\"original\"]}}, \"work_group\": null}], \"scope\": {\"selected_engines\": [\"a\"], \"resolved_categories\": [], \"routing_rule\": \"\", \"matched_topic\": null, \"warnings\": [], \"excluded_engines\": [], \"routing_fallback\": false, \"routing_budget_applied\": false, \"routing_tradeoffs\": [], \"jev_added_engines\": [], \"jev_scores\": {}}, \"engine_outcomes\": [], \"suggestions\": [\"suggest\"], \"answers\": [{\"nested\": {\"value\": \"original\"}}], \"corrections\": [], \"infoboxes\": [{\"urls\": [{\"title\": \"original\"}]}], \"query_id\": \"ssx-q\", \"cached\": false, \"ranking_explanation\": \"tier_then_cross_engine_presence\", \"response_time_ms\": 0, \"partial\": false, \"deadline_exceeded\": false, \"all_unresponsive\": false, \"empty_engines\": [[\"b\", \"empty\"]], \"cached_error\": false, \"dispatched_engine_count\": 0}"
+      },
+      "expected": {
+        "query": "q",
+        "results": [
+          {
+            "url": "https://example.com/0",
+            "title": "Title0",
+            "content": "full content",
+            "engine": "a",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": {
+              "data": {
+                "nested": [
+                  "original"
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "https://example.com/1",
+            "title": "Title1",
+            "content": "full content",
+            "engine": "a",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": {
+              "data": {
+                "nested": [
+                  "original"
+                ]
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "https://example.com/2",
+            "title": "Title2",
+            "content": "full content",
+            "engine": "a",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": {
+              "data": {
+                "nested": [
+                  "original"
+                ]
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "scope": {
+          "selected_engines": [
+            "a"
+          ],
+          "resolved_categories": [],
+          "routing_rule": "",
+          "matched_topic": null,
+          "warnings": [],
+          "excluded_engines": [],
+          "routing_fallback": false,
+          "routing_budget_applied": false,
+          "routing_tradeoffs": [],
+          "jev_added_engines": [],
+          "jev_scores": {}
+        },
+        "engine_outcomes": [],
+        "suggestions": [
+          "suggest"
+        ],
+        "answers": [
+          {
+            "nested": {
+              "value": "original"
+            }
+          }
+        ],
+        "corrections": [],
+        "infoboxes": [
+          {
+            "urls": [
+              {
+                "title": "original"
+              }
+            ]
+          }
+        ],
+        "query_id": "ssx-q",
+        "cached": false,
+        "ranking_explanation": "tier_then_cross_engine_presence",
+        "response_time_ms": 0,
+        "partial": false,
+        "deadline_exceeded": false,
+        "all_unresponsive": false,
+        "empty_engines": [
+          [
+            "b",
+            "empty"
+          ]
+        ],
+        "cached_error": false,
+        "dispatched_engine_count": 0
+      }
+    },
+    {
+      "kind": "cache-write",
+      "id": "separate-negative-answer",
+      "input": {},
+      "expected": {
+        "writes": [
+          [
+            "negative",
+            60,
+            "{\"_error\": true, \"timestamp\": 100}"
+          ],
+          [
+            "answer:v2:8e35c2cd3bf6641bdb0e2050b76932cbb2e6034a0ddacc1d9bea82a6ba57f7cf",
+            3600,
+            "{\"answer\": \"value\"}"
+          ]
+        ]
+      }
+    },
+    {
+      "kind": "cache-write",
+      "id": "negative-disconnected",
+      "input": {},
+      "expected": {
+        "writes": []
+      }
+    },
+    {
+      "kind": "snapshot-integrity",
+      "id": "mismatched-id",
+      "input": {
+        "payload": {
+          "snapshot_id": "snap-other",
+          "query": "q",
+          "query_id": "ssx-q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "total": 3,
+          "tenant": "tenant-a",
+          "created_at": 100.0,
+          "expires_at": 110.0,
+          "lineage": []
+        },
+        "id": "snap-0123456789ab",
+        "tenant": "tenant-a",
+        "now": 109
+      },
+      "expected": {
+        "state": "found",
+        "id": "snap-other",
+        "query_id": "ssx-q",
+        "total": 3
+      }
+    },
+    {
+      "kind": "snapshot-integrity",
+      "id": "omitted-id",
+      "input": {
+        "payload": {
+          "query": "q",
+          "query_id": "ssx-q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "total": 3,
+          "tenant": "tenant-a",
+          "created_at": 100.0,
+          "expires_at": 110.0,
+          "lineage": []
+        },
+        "id": "snap-0123456789ab",
+        "tenant": "tenant-a",
+        "now": 109
+      },
+      "expected": {
+        "state": "found",
+        "id": "",
+        "query_id": "ssx-q",
+        "total": 3
+      }
+    },
+    {
+      "kind": "snapshot-integrity",
+      "id": "omitted-query-id",
+      "input": {
+        "payload": {
+          "snapshot_id": "snap-0123456789ab",
+          "query": "q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "total": 3,
+          "tenant": "tenant-a",
+          "created_at": 100.0,
+          "expires_at": 110.0,
+          "lineage": []
+        },
+        "id": "snap-0123456789ab",
+        "tenant": "tenant-a",
+        "now": 109
+      },
+      "expected": {
+        "state": "found",
+        "id": "snap-0123456789ab",
+        "query_id": "",
+        "total": 3
+      }
+    },
+    {
+      "kind": "snapshot-integrity",
+      "id": "inconsistent-total",
+      "input": {
+        "payload": {
+          "snapshot_id": "snap-0123456789ab",
+          "query": "q",
+          "query_id": "ssx-q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "total": 99,
+          "tenant": "tenant-a",
+          "created_at": 100.0,
+          "expires_at": 110.0,
+          "lineage": []
+        },
+        "id": "snap-0123456789ab",
+        "tenant": "tenant-a",
+        "now": 109
+      },
+      "expected": {
+        "state": "found",
+        "id": "snap-0123456789ab",
+        "query_id": "ssx-q",
+        "total": 99
+      }
+    },
+    {
+      "kind": "snapshot-integrity",
+      "id": "backward-expiry",
+      "input": {
+        "payload": {
+          "snapshot_id": "snap-0123456789ab",
+          "query": "q",
+          "query_id": "ssx-q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "total": 3,
+          "tenant": "tenant-a",
+          "created_at": 100.0,
+          "expires_at": 90,
+          "lineage": []
+        },
+        "id": "snap-0123456789ab",
+        "tenant": "tenant-a",
+        "now": 109
+      },
+      "expected": {
+        "state": "expired"
+      }
+    },
+    {
+      "kind": "snapshot-read",
+      "id": "null-total-empty",
+      "input": {
+        "payload": {
+          "snapshot_id": "snap-0123456789ab",
+          "query": "q",
+          "query_id": "ssx-q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "total": null,
+          "tenant": "tenant-a",
+          "created_at": 100.0,
+          "expires_at": 110.0,
+          "lineage": []
+        },
+        "id": "snap-0123456789ab",
+        "tenant": "tenant-a",
+        "now": 109
+      },
+      "expected": {
+        "state": "missing"
+      }
+    },
+    {
+      "kind": "snapshot-read",
+      "id": "bad-jev-scores",
+      "input": {
+        "payload": {
+          "snapshot_id": "snap-0123456789ab",
+          "query": "q",
+          "query_id": "ssx-q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "jev_scores": [
+              1
+            ]
+          },
+          "total": 3,
+          "tenant": "tenant-a",
+          "created_at": 100.0,
+          "expires_at": 110.0,
+          "lineage": []
+        },
+        "id": "snap-0123456789ab",
+        "tenant": "tenant-a",
+        "now": 109
+      },
+      "expected": {
+        "state": "missing"
+      }
+    },
+    {
+      "kind": "negative-view",
+      "id": "negative-view",
+      "input": {
+        "query": "current query",
+        "query_id": "ssx-current",
+        "ranking_explanation": "tier_then_cross_engine_presence",
+        "include": [
+          "results"
+        ],
+        "max_results": 1
+      },
+      "expected": {
+        "payload": {
+          "query": "current query",
+          "results": [],
+          "scope": {
+            "selected_engines": [],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "engine_outcomes": [],
+          "suggestions": [],
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "query_id": "ssx-current",
+          "cached": false,
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "response_time_ms": 0,
+          "partial": false,
+          "deadline_exceeded": false,
+          "all_unresponsive": false,
+          "empty_engines": [],
+          "cached_error": true,
+          "dispatched_engine_count": 0
+        },
+        "cached": true,
+        "cached_error": true
+      }
+    },
+    {
+      "kind": "negative-metadata",
+      "id": "negative-metadata-0",
+      "input": {
+        "timestamp": null
+      },
+      "expected": {
+        "cached": true,
+        "cached_error": true
+      }
+    },
+    {
+      "kind": "negative-metadata",
+      "id": "negative-metadata-1",
+      "input": {
+        "timestamp": "bad"
+      },
+      "expected": {
+        "cached": true,
+        "cached_error": true
+      }
+    },
+    {
+      "kind": "negative-metadata",
+      "id": "negative-metadata-2",
+      "input": {
+        "timestamp": {}
+      },
+      "expected": {
+        "cached": true,
+        "cached_error": true
+      }
+    },
+    {
+      "kind": "negative-metadata",
+      "id": "negative-metadata-3",
+      "input": {
+        "timestamp": "100"
+      },
+      "expected": {
+        "cached": true,
+        "cached_error": true
+      }
+    },
+    {
+      "kind": "negative-metadata",
+      "id": "negative-metadata-4",
+      "input": {
+        "timestamp": 100.5
+      },
+      "expected": {
+        "cached": true,
+        "cached_error": true
+      }
+    },
+    {
+      "kind": "answer-nonobject",
+      "id": "answer-nonobject-0",
+      "input": {
+        "value": []
+      },
+      "expected": {
+        "written": [],
+        "read": null
+      }
+    },
+    {
+      "kind": "answer-nonobject",
+      "id": "answer-nonobject-1",
+      "input": {
+        "value": null
+      },
+      "expected": {
+        "written": null,
+        "read": null
+      }
+    },
+    {
+      "kind": "answer-nonobject",
+      "id": "answer-nonobject-2",
+      "input": {
+        "value": "text"
+      },
+      "expected": {
+        "written": "text",
+        "read": null
+      }
+    },
+    {
+      "kind": "answer-nonobject",
+      "id": "answer-nonobject-3",
+      "input": {
+        "value": 1
+      },
+      "expected": {
+        "written": 1,
+        "read": null
+      }
+    },
+    {
+      "kind": "answer-nonobject",
+      "id": "answer-nonobject-4",
+      "input": {
+        "value": true
+      },
+      "expected": {
+        "written": true,
+        "read": null
+      }
+    },
+    {
+      "kind": "storage-bounds",
+      "id": "source-count-10000",
+      "input": {
+        "count": 10000
+      },
+      "expected": {
+        "created": true,
+        "read_total": 10000,
+        "physical_ttl": 310
+      }
+    },
+    {
+      "kind": "storage-bounds",
+      "id": "source-count-10001",
+      "input": {
+        "count": 10001
+      },
+      "expected": {
+        "created": true,
+        "read_total": 10001,
+        "physical_ttl": 310
+      }
+    },
+    {
+      "kind": "storage-bounds",
+      "id": "source-bytes-over-4mib",
+      "input": {
+        "value_bytes": 4194305
+      },
+      "expected": {
+        "written": true,
+        "serialized_bytes": 4194322
+      }
+    },
+    {
+      "kind": "snapshot-scope",
+      "id": "legacy-scope-iterables",
+      "input": {
+        "payload": {
+          "snapshot_id": "snap-0123456789ab",
+          "query": "q",
+          "query_id": "ssx-q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": "npm",
+            "resolved_categories": {
+              "news": 1,
+              "general": 2
+            },
+            "warnings": "ab",
+            "jev_added_engines": "gh"
+          },
+          "total": 3,
+          "tenant": "tenant-a",
+          "created_at": 100.0,
+          "expires_at": 110.0,
+          "lineage": []
+        },
+        "id": "snap-0123456789ab",
+        "now": 109
+      },
+      "expected": {
+        "state": "found",
+        "scope": {
+          "selected_engines": [
+            "n",
+            "p",
+            "m"
+          ],
+          "resolved_categories": [
+            "news",
+            "general"
+          ],
+          "routing_rule": "",
+          "matched_topic": null,
+          "warnings": [
+            "a",
+            "b"
+          ],
+          "excluded_engines": [],
+          "routing_fallback": false,
+          "routing_budget_applied": false,
+          "routing_tradeoffs": [],
+          "jev_added_engines": [
+            "g",
+            "h"
+          ],
+          "jev_scores": {}
+        }
+      }
+    },
+    {
+      "kind": "snapshot-scope",
+      "id": "legacy-scope-unicode",
+      "input": {
+        "payload": {
+          "snapshot_id": "snap-0123456789ab",
+          "query": "q",
+          "query_id": "ssx-q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": "é😀",
+            "warnings": {
+              "warning-a": 1,
+              "warning-b": 2
+            }
+          },
+          "total": 3,
+          "tenant": "tenant-a",
+          "created_at": 100.0,
+          "expires_at": 110.0,
+          "lineage": []
+        },
+        "id": "snap-0123456789ab",
+        "now": 109
+      },
+      "expected": {
+        "state": "found",
+        "scope": {
+          "selected_engines": [
+            "é",
+            "😀"
+          ],
+          "resolved_categories": [],
+          "routing_rule": "",
+          "matched_topic": null,
+          "warnings": [
+            "warning-a",
+            "warning-b"
+          ],
+          "excluded_engines": [],
+          "routing_fallback": false,
+          "routing_budget_applied": false,
+          "routing_tradeoffs": [],
+          "jev_added_engines": [],
+          "jev_scores": {}
+        }
+      }
+    },
+    {
+      "kind": "snapshot-scope",
+      "id": "legacy-scope-falsy",
+      "input": {
+        "payload": {
+          "snapshot_id": "snap-0123456789ab",
+          "query": "q",
+          "query_id": "ssx-q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": false,
+            "resolved_categories": 0,
+            "warnings": null,
+            "jev_added_engines": ""
+          },
+          "total": 3,
+          "tenant": "tenant-a",
+          "created_at": 100.0,
+          "expires_at": 110.0,
+          "lineage": []
+        },
+        "id": "snap-0123456789ab",
+        "now": 109
+      },
+      "expected": {
+        "state": "found",
+        "scope": {
+          "selected_engines": [],
+          "resolved_categories": [],
+          "routing_rule": "",
+          "matched_topic": null,
+          "warnings": [],
+          "excluded_engines": [],
+          "routing_fallback": false,
+          "routing_budget_applied": false,
+          "routing_tradeoffs": [],
+          "jev_added_engines": [],
+          "jev_scores": {}
+        }
+      }
+    },
+    {
+      "kind": "snapshot-scope",
+      "id": "legacy-scope-true",
+      "input": {
+        "payload": {
+          "snapshot_id": "snap-0123456789ab",
+          "query": "q",
+          "query_id": "ssx-q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": true
+          },
+          "total": 3,
+          "tenant": "tenant-a",
+          "created_at": 100.0,
+          "expires_at": 110.0,
+          "lineage": []
+        },
+        "id": "snap-0123456789ab",
+        "now": 109
+      },
+      "expected": {
+        "state": "missing"
+      }
+    },
+    {
+      "kind": "snapshot-scope",
+      "id": "legacy-scope-number",
+      "input": {
+        "payload": {
+          "snapshot_id": "snap-0123456789ab",
+          "query": "q",
+          "query_id": "ssx-q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "warnings": 1
+          },
+          "total": 3,
+          "tenant": "tenant-a",
+          "created_at": 100.0,
+          "expires_at": 110.0,
+          "lineage": []
+        },
+        "id": "snap-0123456789ab",
+        "now": 109
+      },
+      "expected": {
+        "state": "missing"
+      }
+    },
+    {
+      "kind": "snapshot-lineage",
+      "id": "legacy-lineage-0",
+      "input": {
+        "payload": {
+          "snapshot_id": "snap-0123456789ab",
+          "query": "q",
+          "query_id": "ssx-q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "total": 3,
+          "tenant": "tenant-a",
+          "created_at": 100.0,
+          "expires_at": 110.0,
+          "lineage": null
+        },
+        "id": "snap-0123456789ab",
+        "now": 109
+      },
+      "expected": {
+        "state": "found",
+        "lineage": [],
+        "lineage_available": true
+      }
+    },
+    {
+      "kind": "snapshot-lineage",
+      "id": "legacy-lineage-1",
+      "input": {
+        "payload": {
+          "snapshot_id": "snap-0123456789ab",
+          "query": "q",
+          "query_id": "ssx-q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "total": 3,
+          "tenant": "tenant-a",
+          "created_at": 100.0,
+          "expires_at": 110.0,
+          "lineage": false
+        },
+        "id": "snap-0123456789ab",
+        "now": 109
+      },
+      "expected": {
+        "state": "found",
+        "lineage": [],
+        "lineage_available": true
+      }
+    },
+    {
+      "kind": "snapshot-lineage",
+      "id": "legacy-lineage-2",
+      "input": {
+        "payload": {
+          "snapshot_id": "snap-0123456789ab",
+          "query": "q",
+          "query_id": "ssx-q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "total": 3,
+          "tenant": "tenant-a",
+          "created_at": 100.0,
+          "expires_at": 110.0,
+          "lineage": 0
+        },
+        "id": "snap-0123456789ab",
+        "now": 109
+      },
+      "expected": {
+        "state": "found",
+        "lineage": [],
+        "lineage_available": true
+      }
+    },
+    {
+      "kind": "snapshot-lineage",
+      "id": "legacy-lineage-3",
+      "input": {
+        "payload": {
+          "snapshot_id": "snap-0123456789ab",
+          "query": "q",
+          "query_id": "ssx-q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "total": 3,
+          "tenant": "tenant-a",
+          "created_at": 100.0,
+          "expires_at": 110.0,
+          "lineage": true
+        },
+        "id": "snap-0123456789ab",
+        "now": 109
+      },
+      "expected": {
+        "state": "missing"
+      }
+    },
+    {
+      "kind": "snapshot-lineage",
+      "id": "legacy-lineage-4",
+      "input": {
+        "payload": {
+          "snapshot_id": "snap-0123456789ab",
+          "query": "q",
+          "query_id": "ssx-q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "total": 3,
+          "tenant": "tenant-a",
+          "created_at": 100.0,
+          "expires_at": 110.0,
+          "lineage": 7
+        },
+        "id": "snap-0123456789ab",
+        "now": 109
+      },
+      "expected": {
+        "state": "missing"
+      }
+    },
+    {
+      "kind": "snapshot-lineage",
+      "id": "legacy-lineage-5",
+      "input": {
+        "payload": {
+          "snapshot_id": "snap-0123456789ab",
+          "query": "q",
+          "query_id": "ssx-q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "total": 3,
+          "tenant": "tenant-a",
+          "created_at": 100.0,
+          "expires_at": 110.0,
+          "lineage": "abc"
+        },
+        "id": "snap-0123456789ab",
+        "now": 109
+      },
+      "expected": {
+        "state": "found",
+        "lineage": [],
+        "lineage_available": true
+      }
+    },
+    {
+      "kind": "snapshot-lineage",
+      "id": "legacy-lineage-6",
+      "input": {
+        "payload": {
+          "snapshot_id": "snap-0123456789ab",
+          "query": "q",
+          "query_id": "ssx-q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "total": 3,
+          "tenant": "tenant-a",
+          "created_at": 100.0,
+          "expires_at": 110.0,
+          "lineage": {
+            "x": 1
+          }
+        },
+        "id": "snap-0123456789ab",
+        "now": 109
+      },
+      "expected": {
+        "state": "found",
+        "lineage": [],
+        "lineage_available": true
+      }
+    },
+    {
+      "kind": "snapshot-lineage",
+      "id": "legacy-lineage-7",
+      "input": {
+        "payload": {
+          "snapshot_id": "snap-0123456789ab",
+          "query": "q",
+          "query_id": "ssx-q",
+          "ranking_explanation": "tier_then_cross_engine_presence",
+          "results": [
+            {
+              "url": "https://example.com/0",
+              "title": "Title0",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/1",
+              "title": "Title1",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/2",
+              "title": "Title2",
+              "content": "full content",
+              "engine": "a",
+              "engines": [
+                "a",
+                "b"
+              ],
+              "score": 0.0,
+              "position": 0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "tier": 1,
+              "payload": {
+                "data": {
+                  "nested": [
+                    "original"
+                  ]
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "scope": {
+            "selected_engines": [
+              "a"
+            ],
+            "resolved_categories": [],
+            "routing_rule": "",
+            "matched_topic": null,
+            "warnings": [],
+            "excluded_engines": [],
+            "routing_fallback": false,
+            "routing_budget_applied": false,
+            "routing_tradeoffs": [],
+            "jev_added_engines": [],
+            "jev_scores": {}
+          },
+          "total": 3,
+          "tenant": "tenant-a",
+          "created_at": 100.0,
+          "expires_at": 110.0,
+          "lineage": [
+            {
+              "relation": "legacy"
+            },
+            7,
+            "x"
+          ]
+        },
+        "id": "snap-0123456789ab",
+        "now": 109
+      },
+      "expected": {
+        "state": "found",
+        "lineage": [
+          {
+            "relation": "legacy"
+          }
+        ],
+        "lineage_available": true
+      }
+    }
+  ]
+}

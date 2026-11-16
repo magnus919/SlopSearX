@@ -1,0 +1,139 @@
+{
+  "records": [
+    {
+      "id": "archive-timeout-positive-stalled",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Actual original loopback ReadTimeout string is empty; native classified catalog Error uses bounded credential-free transport diagnostic. Both one request and EOF cleanup are asserted.",
+      "source_output": {
+        "status": "error",
+        "error_message": "",
+        "results": []
+      },
+      "native_output": {
+        "status": "error",
+        "error_message": "Internet Archive request timed out",
+        "results": []
+      }
+    },
+    {
+      "id": "archive-timeout-inf-immediate",
+      "category": "accepted-F06-nonfinite-JSON-profile-supersession",
+      "reason": "Existing accepted F06 finite JSON/YAML profile rejects nonfinite timeout before native factory instantiation. Raw original adapter acceptance/disconnection is retained as observation, not claimed native adapter parity.",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://archive.org/details/book",
+            "title": "Book",
+            "content": "",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.5,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "configuration_rejected": true,
+        "adapter_instantiated": false,
+        "provider_requests": 0
+      }
+    },
+    {
+      "id": "archive-timeout-inf-stalled",
+      "category": "accepted-F06-nonfinite-JSON-profile-supersession",
+      "reason": "Existing accepted F06 finite JSON/YAML profile rejects nonfinite timeout before native factory instantiation. Raw original adapter acceptance/disconnection is retained as observation, not claimed native adapter parity.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Server disconnected without sending a response.",
+        "results": []
+      },
+      "native_output": {
+        "configuration_rejected": true,
+        "adapter_instantiated": false,
+        "provider_requests": 0
+      }
+    },
+    {
+      "id": "archive-timeout-negative-inf-immediate",
+      "category": "accepted-F06-nonfinite-JSON-profile-supersession",
+      "reason": "Existing accepted F06 finite JSON/YAML profile rejects nonfinite timeout before native factory instantiation. Raw original adapter acceptance/disconnection is retained as observation, not claimed native adapter parity.",
+      "source_output": {
+        "status": "error",
+        "error_message": "",
+        "results": []
+      },
+      "native_output": {
+        "configuration_rejected": true,
+        "adapter_instantiated": false,
+        "provider_requests": 0
+      }
+    },
+    {
+      "id": "archive-timeout-negative-inf-stalled",
+      "category": "accepted-F06-nonfinite-JSON-profile-supersession",
+      "reason": "Existing accepted F06 finite JSON/YAML profile rejects nonfinite timeout before native factory instantiation. Raw original adapter acceptance/disconnection is retained as observation, not claimed native adapter parity.",
+      "source_output": {
+        "status": "error",
+        "error_message": "",
+        "results": []
+      },
+      "native_output": {
+        "configuration_rejected": true,
+        "adapter_instantiated": false,
+        "provider_requests": 0
+      }
+    },
+    {
+      "id": "archive-timeout-nan-immediate",
+      "category": "accepted-F06-nonfinite-JSON-profile-supersession",
+      "reason": "Existing accepted F06 finite JSON/YAML profile rejects nonfinite timeout before native factory instantiation. Raw original adapter acceptance/disconnection is retained as observation, not claimed native adapter parity.",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://archive.org/details/book",
+            "title": "Book",
+            "content": "",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.5,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "configuration_rejected": true,
+        "adapter_instantiated": false,
+        "provider_requests": 0
+      }
+    },
+    {
+      "id": "archive-timeout-nan-stalled",
+      "category": "accepted-F06-nonfinite-JSON-profile-supersession",
+      "reason": "Existing accepted F06 finite JSON/YAML profile rejects nonfinite timeout before native factory instantiation. Raw original adapter acceptance/disconnection is retained as observation, not claimed native adapter parity.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Server disconnected without sending a response.",
+        "results": []
+      },
+      "native_output": {
+        "configuration_rejected": true,
+        "adapter_instantiated": false,
+        "provider_requests": 0
+      }
+    }
+  ]
+}

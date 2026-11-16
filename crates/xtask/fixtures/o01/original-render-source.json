@@ -1,0 +1,198 @@
+{
+  "id": "original.metrics.full-render",
+  "source_node": "tests/test_metrics.py::TestRenderMetrics::test_render_produces_valid_openmetrics",
+  "pins": [
+    {
+      "path": "slopsearx/metrics.py",
+      "sha256": "2df238e07c692be05f73bdc3b1e7896dbae576df1d5128a445e6a9fe196c0edc"
+    },
+    {
+      "path": "tests/test_metrics.py",
+      "sha256": "ca0a9862b2551dc9d1e9705f2bbd616548caca7de8438ae0f7670d91d8308306"
+    }
+  ],
+  "render": "# HELP slopsearx_engine_queries_total Total queries dispatched per engine\n# TYPE slopsearx_engine_queries_total counter\nslopsearx_engine_queries_total{engine=\"brave\"} 1\n# HELP slopsearx_engine_errors_total Failed engine outcomes, excluding successful empty results\n# TYPE slopsearx_engine_errors_total counter\n# HELP slopsearx_engine_latency_seconds Query latency per engine in seconds\n# TYPE slopsearx_engine_latency_seconds histogram\nslopsearx_engine_latency_seconds_bucket{engine=\"brave\",le=\"0.005\"} 0\nslopsearx_engine_latency_seconds_bucket{engine=\"brave\",le=\"0.01\"} 0\nslopsearx_engine_latency_seconds_bucket{engine=\"brave\",le=\"0.025\"} 0\nslopsearx_engine_latency_seconds_bucket{engine=\"brave\",le=\"0.05\"} 0\nslopsearx_engine_latency_seconds_bucket{engine=\"brave\",le=\"0.1\"} 0\nslopsearx_engine_latency_seconds_bucket{engine=\"brave\",le=\"0.25\"} 0\nslopsearx_engine_latency_seconds_bucket{engine=\"brave\",le=\"0.5\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"brave\",le=\"1\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"brave\",le=\"2.5\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"brave\",le=\"5\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"brave\",le=\"10\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"brave\",le=\"30\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"brave\",le=\"60\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"brave\",le=\"+Inf\"} 1\nslopsearx_engine_latency_seconds_sum{engine=\"brave\"} 0.34\nslopsearx_engine_latency_seconds_count{engine=\"brave\"} 1\n# HELP slopsearx_engine_status Engine status (0=ok, 1=degraded, 2=down)\n# TYPE slopsearx_engine_status gauge\nslopsearx_engine_status{engine=\"brave\"} 0\n# HELP slopsearx_cache_hit_total Cache hit/miss counters\n# TYPE slopsearx_cache_hit_total counter\nslopsearx_cache_hit_total{type=\"hit\"} 1\n# HELP slopsearx_server_requests_total Total search requests handled\n# TYPE slopsearx_server_requests_total counter\nslopsearx_server_requests_total{} 1\n# HELP slopsearx_http_search_completed_total Completed HTTP searches by outcome (success, rejected, failure)\n# TYPE slopsearx_http_search_completed_total counter\n# HELP slopsearx_http_search_duration_seconds HTTP search application duration including response rendering, by outcome\n# TYPE slopsearx_http_search_duration_seconds histogram\n# HELP slopsearx_server_requests_by_category_total Search requests per category\n# TYPE slopsearx_server_requests_by_category_total counter\n# HELP slopsearx_server_requests_by_format_total Search requests per output format\n# TYPE slopsearx_server_requests_by_format_total counter\n# HELP slopsearx_server_errors_total Server errors by type (timeout, circuit_open, rate_limited, internal)\n# TYPE slopsearx_server_errors_total counter\n# HELP slopsearx_mcp_tool_calls_total MCP tool invocations per tool\n# TYPE slopsearx_mcp_tool_calls_total counter\n# HELP slopsearx_mcp_tool_errors_total MCP tool errors per tool and error code\n# TYPE slopsearx_mcp_tool_errors_total counter\n# HELP slopsearx_mcp_tool_latency_seconds MCP tool latency per tool in seconds\n# TYPE slopsearx_mcp_tool_latency_seconds histogram\n# HELP slopsearx_workflow_accepted_total Accepted durable workflow operations\n# TYPE slopsearx_workflow_accepted_total counter\n# HELP slopsearx_workflow_terminal_total Durable workflow terminal outcomes\n# TYPE slopsearx_workflow_terminal_total counter\n# HELP slopsearx_workflow_retries_total Durable workflow retry attempts\n# TYPE slopsearx_workflow_retries_total counter\n# HELP slopsearx_workflow_lease_recoveries_total Expired workflow leases recovered by a worker\n# TYPE slopsearx_workflow_lease_recoveries_total counter\n# HELP slopsearx_workflow_rejections_total Rejected workflow operations by reason class\n# TYPE slopsearx_workflow_rejections_total counter\n# HELP slopsearx_workflow_expired_total Observed durable workflow artifact expirations\n# TYPE slopsearx_workflow_expired_total counter\n# HELP slopsearx_workflow_queued Queued workflow operations visible to this replica\n# TYPE slopsearx_workflow_queued gauge\n# HELP slopsearx_workflow_running Running workflow operations visible to this replica\n# TYPE slopsearx_workflow_running gauge\n# HELP slopsearx_workflow_active_leases Active workflow leases held by this replica\n# TYPE slopsearx_workflow_active_leases gauge\n# HELP slopsearx_workflow_oldest_claimable_age_seconds Age of the oldest claimable workflow operation\n# TYPE slopsearx_workflow_oldest_claimable_age_seconds gauge\n# HELP slopsearx_workflow_store_items Bounded workflow store or index cardinality\n# TYPE slopsearx_workflow_store_items gauge\n# HELP slopsearx_workflow_queue_wait_seconds Workflow queue wait before claim\n# TYPE slopsearx_workflow_queue_wait_seconds histogram\n# HELP slopsearx_workflow_execution_seconds Workflow execution duration\n# TYPE slopsearx_workflow_execution_seconds histogram\n# HELP slopsearx_workflow_report_generation_seconds Saved-search report generation duration\n# TYPE slopsearx_workflow_report_generation_seconds histogram\n# HELP slopsearx_workflow_admitted_results Results admitted to one durable workflow artifact\n# TYPE slopsearx_workflow_admitted_results histogram\n# HELP slopsearx_saved_search_event_publications_total Saved-search outbox events published by event type\n# TYPE slopsearx_saved_search_event_publications_total counter\n# HELP slopsearx_saved_search_event_reads_total Saved-search outbox read operations by closed outcome\n# TYPE slopsearx_saved_search_event_reads_total counter\n# HELP slopsearx_saved_search_event_acknowledgements_total Saved-search outbox acknowledgement operations by closed outcome\n# TYPE slopsearx_saved_search_event_acknowledgements_total counter\n# HELP slopsearx_saved_search_event_retention_gaps_total Saved-search outbox reads that observed a retention gap\n# TYPE slopsearx_saved_search_event_retention_gaps_total counter\n# HELP slopsearx_saved_search_event_capacity_rejections_total Saved-search outbox operations rejected by bounded resource\n# TYPE slopsearx_saved_search_event_capacity_rejections_total counter\n# HELP slopsearx_saved_search_event_backlog_age_seconds Age of the oldest event returned by the most recent local consumer read\n# TYPE slopsearx_saved_search_event_backlog_age_seconds gauge\n",
+  "parsed_family_count": 35,
+  "parsed_families": [
+    {
+      "name": "slopsearx_engine_queries",
+      "type": "counter",
+      "sample_count": 1
+    },
+    {
+      "name": "slopsearx_engine_errors",
+      "type": "counter",
+      "sample_count": 0
+    },
+    {
+      "name": "slopsearx_engine_latency_seconds",
+      "type": "histogram",
+      "sample_count": 16
+    },
+    {
+      "name": "slopsearx_engine_status",
+      "type": "gauge",
+      "sample_count": 1
+    },
+    {
+      "name": "slopsearx_cache_hit",
+      "type": "counter",
+      "sample_count": 1
+    },
+    {
+      "name": "slopsearx_server_requests",
+      "type": "counter",
+      "sample_count": 1
+    },
+    {
+      "name": "slopsearx_http_search_completed",
+      "type": "counter",
+      "sample_count": 0
+    },
+    {
+      "name": "slopsearx_http_search_duration_seconds",
+      "type": "histogram",
+      "sample_count": 0
+    },
+    {
+      "name": "slopsearx_server_requests_by_category",
+      "type": "counter",
+      "sample_count": 0
+    },
+    {
+      "name": "slopsearx_server_requests_by_format",
+      "type": "counter",
+      "sample_count": 0
+    },
+    {
+      "name": "slopsearx_server_errors",
+      "type": "counter",
+      "sample_count": 0
+    },
+    {
+      "name": "slopsearx_mcp_tool_calls",
+      "type": "counter",
+      "sample_count": 0
+    },
+    {
+      "name": "slopsearx_mcp_tool_errors",
+      "type": "counter",
+      "sample_count": 0
+    },
+    {
+      "name": "slopsearx_mcp_tool_latency_seconds",
+      "type": "histogram",
+      "sample_count": 0
+    },
+    {
+      "name": "slopsearx_workflow_accepted",
+      "type": "counter",
+      "sample_count": 0
+    },
+    {
+      "name": "slopsearx_workflow_terminal",
+      "type": "counter",
+      "sample_count": 0
+    },
+    {
+      "name": "slopsearx_workflow_retries",
+      "type": "counter",
+      "sample_count": 0
+    },
+    {
+      "name": "slopsearx_workflow_lease_recoveries",
+      "type": "counter",
+      "sample_count": 0
+    },
+    {
+      "name": "slopsearx_workflow_rejections",
+      "type": "counter",
+      "sample_count": 0
+    },
+    {
+      "name": "slopsearx_workflow_expired",
+      "type": "counter",
+      "sample_count": 0
+    },
+    {
+      "name": "slopsearx_workflow_queued",
+      "type": "gauge",
+      "sample_count": 0
+    },
+    {
+      "name": "slopsearx_workflow_running",
+      "type": "gauge",
+      "sample_count": 0
+    },
+    {
+      "name": "slopsearx_workflow_active_leases",
+      "type": "gauge",
+      "sample_count": 0
+    },
+    {
+      "name": "slopsearx_workflow_oldest_claimable_age_seconds",
+      "type": "gauge",
+      "sample_count": 0
+    },
+    {
+      "name": "slopsearx_workflow_store_items",
+      "type": "gauge",
+      "sample_count": 0
+    },
+    {
+      "name": "slopsearx_workflow_queue_wait_seconds",
+      "type": "histogram",
+      "sample_count": 0
+    },
+    {
+      "name": "slopsearx_workflow_execution_seconds",
+      "type": "histogram",
+      "sample_count": 0
+    },
+    {
+      "name": "slopsearx_workflow_report_generation_seconds",
+      "type": "histogram",
+      "sample_count": 0
+    },
+    {
+      "name": "slopsearx_workflow_admitted_results",
+      "type": "histogram",
+      "sample_count": 0
+    },
+    {
+      "name": "slopsearx_saved_search_event_publications",
+      "type": "counter",
+      "sample_count": 0
+    },
+    {
+      "name": "slopsearx_saved_search_event_reads",
+      "type": "counter",
+      "sample_count": 0
+    },
+    {
+      "name": "slopsearx_saved_search_event_acknowledgements",
+      "type": "counter",
+      "sample_count": 0
+    },
+    {
+      "name": "slopsearx_saved_search_event_retention_gaps",
+      "type": "counter",
+      "sample_count": 0
+    },
+    {
+      "name": "slopsearx_saved_search_event_capacity_rejections",
+      "type": "counter",
+      "sample_count": 0
+    },
+    {
+      "name": "slopsearx_saved_search_event_backlog_age_seconds",
+      "type": "gauge",
+      "sample_count": 0
+    }
+  ],
+  "parser_provenance": {
+    "path": "/private/tmp/slopsearx-rust-oracle-py314/lib/python3.14/site-packages/prometheus_client/parser.py",
+    "sha256": "fba73ec6e54a9bc8498eb7237f0d673310802f97365f8835096f27e2deb0824d"
+  },
+  "retirement": "temporary manual source oracle; no mandatory Python; native compares exact captured render; G08 retire runnable producer"
+}

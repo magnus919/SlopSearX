@@ -1,0 +1,154 @@
+--- a/src/parser.rs
++++ b/src/parser.rs
+@@ -171,7 +171,26 @@
+       Self::InvalidEncoding(error) => Some(error),
+       _ => None,
+     }
++  }
++}
++
++// No URL/public ID or context is read. The only write is to a non-null output
++// supplied by libxml2; failing loads never transfer ownership of an input.
++unsafe extern "C" fn refuse_external_resource(
++  _context: *mut c_void,
++  _url: *const c_char,
++  _public_id: *const c_char,
++  _resource_type: xmlResourceType,
++  _flags: xmlParserInputFlags,
++  output: *mut *mut xmlParserInput,
++) -> xmlParserErrors {
++  #[cfg(test)]
++  A05_REFUSALS.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
++  if !output.is_null() {
++    // SAFETY: callback ABI supplies an output slot, checked non-null above.
++    unsafe { output.write(ptr::null_mut()) };
+   }
++  xmlParserErrors_XML_IO_LOAD_ERROR
+ }
+ 
+ struct ParserContext {
+@@ -503,9 +522,37 @@
+   /// handler (`xmlSetStructuredErrorFunc`) and restores it afterwards, so a handler
+   /// installed by the application does not see these errors.
+   pub fn parse_string_with_diagnostics<Bytes: AsRef<[u8]>>(
++    &self,
++    input: Bytes,
++    parser_options: ParserOptions,
++  ) -> Result<(Document, Vec<StructuredError>), XmlParseFailure> {
++    self.parse_with_resource_policy(input, parser_options, false)
++  }
++
++  /// Parse untrusted HTML decoded to UTF-8, refusing every external resource.
++  ///
++  /// This API never accepts file names, base URLs, callbacks, XML parsing mode,
++  /// encoding guesses, or options that relax libxml2's limits. The returned
++  /// document stays owned by the calling thread. Requires libxml2 >= 2.14.
++  pub fn parse_untrusted_html_utf8(
++    input: &str,
++  ) -> Result<(Document, Vec<StructuredError>), XmlParseFailure> {
++    let parser = Self::default_html();
++    let options = ParserOptions {
++      encoding: Some("UTF-8"),
++      ignore_enc: true,
++      huge: false,
++      no_net: true,
++      ..ParserOptions::default()
++    };
++    parser.parse_with_resource_policy(input.as_bytes(), options, true)
++  }
++
++  fn parse_with_resource_policy<Bytes: AsRef<[u8]>>(
+     &self,
+     input: Bytes,
+     parser_options: ParserOptions,
++    deny_external: bool,
+   ) -> Result<(Document, Vec<StructuredError>), XmlParseFailure> {
+     let bytes = input.as_ref();
+     let size = try_usize_to_i32(bytes.len()).map_err(|_| XmlParseFailure::DocumentTooLarge)?;
+@@ -516,6 +563,17 @@
+       .map_or(DEFAULT_ENCODING, CStr::as_ptr);
+     let options = parser_options.to_flags(&self.format);
+     let context = ParserContext::new(self.format)?;
++    if deny_external {
++      // SAFETY: the live context is uniquely owned here, the callback is static,
++      // never dereferences caller data, never unwinds and supplies no resource.
++      unsafe {
++        xmlCtxtSetResourceLoader(
++          context.ptr.as_ptr(),
++          Some(refuse_external_resource),
++          ptr::null_mut(),
++        );
++      }
++    }
+     let mut collector = ErrorCollector::install();
+     unsafe {
+       let document = match self.format {
+@@ -666,6 +724,68 @@
+         }
+         well_formed_final
+       },
++    }
++  }
++}
++
++
++#[cfg(test)]
++static A05_REFUSALS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
++
++#[cfg(test)]
++mod a05_policy_tests {
++  use super::*;
++
++  #[test]
++  fn a05_refusal_callback_abi_and_real_context_dispatch() {
++    crate::init_parser();
++    let mut output = ptr::NonNull::<xmlParserInput>::dangling().as_ptr();
++    let result = unsafe {
++      refuse_external_resource(ptr::null_mut(), ptr::null(), ptr::null(), 0, 0, &mut output)
++    };
++    assert_eq!(result, xmlParserErrors_XML_IO_LOAD_ERROR);
++    assert!(output.is_null());
++    assert_eq!(unsafe {
++      refuse_external_resource(ptr::null_mut(), ptr::null(), ptr::null(), 0, 0, ptr::null_mut())
++    }, xmlParserErrors_XML_IO_LOAD_ERROR);
++
++    let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
++    listener.set_nonblocking(true).unwrap();
++    let canary = std::env::temp_dir().join(format!("a05-loader-canary-{}", std::process::id()));
++    std::fs::write(&canary, b"<canary>FILE-MUST-NOT-BE-READ</canary>").unwrap();
++    let inputs = [
++      format!("file://{}", canary.display()),
++      format!("http://{}/canary", listener.local_addr().unwrap()),
++      "ftp://127.0.0.1/no".to_owned(),
++      canary.to_string_lossy().into_owned(),
++    ];
++    for url in inputs {
++      let context = ParserContext::new(ParseFormat::XML).unwrap();
++      let url = CString::new(url).unwrap();
++      let before = A05_REFUSALS.load(std::sync::atomic::Ordering::SeqCst);
++      let doc = unsafe {
++        xmlCtxtSetResourceLoader(context.ptr.as_ptr(), Some(refuse_external_resource), ptr::null_mut());
++        xmlCtxtReadFile(context.ptr.as_ptr(), url.as_ptr(), ptr::null(), 0)
++      };
++      assert!(doc.is_null());
++      assert!(A05_REFUSALS.load(std::sync::atomic::Ordering::SeqCst) > before,
++        "libxml2 must actually invoke the installed loader");
+     }
++    assert!(matches!(listener.accept(), Err(e) if e.kind() == std::io::ErrorKind::WouldBlock));
++    std::fs::remove_file(canary).unwrap();
+   }
++
++  #[test]
++  fn a05_error_collector_restores_thread_state_on_panic() {
++    crate::init_parser();
++    let before_handler = unsafe { *__xmlStructuredError() };
++    let before_data = unsafe { *__xmlStructuredErrorContext() };
++    let outcome = std::panic::catch_unwind(|| {
++      let _collector = ErrorCollector::install();
++      panic!("controlled unwind while collector owns its callback data");
++    });
++    assert!(outcome.is_err());
++    assert_eq!(unsafe { *__xmlStructuredError() }.map(|f|f as usize), before_handler.map(|f|f as usize));
++    assert_eq!(unsafe { *__xmlStructuredErrorContext() }, before_data);
++  }
+ }

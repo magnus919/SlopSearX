@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "purpose": "Exact four original YAML entry/native F06 validation differences; distinct from adapter output parity",
+  "source_reference": {
+    "path": "docs/rust-rewrite/a11/source-config-entry-v1.json",
+    "sha256": "fe6d9609bbd62261c029b87cda9b8348d7783d45c85673906e8f1b4c69fc81b3"
+  },
+  "native_discovery": {
+    "path": "/private/tmp/a11-config-entry-native-v1/observations.json",
+    "sha256": "32ed5f0ed83e9e9e1613a70aa84074a835d584a26557a5270d0f82fa44923bdb"
+  },
+  "entries": [
+    {
+      "identity": "a11-config/otx/max-none",
+      "source_entry_record": {
+        "id": "a11-config/otx/max-none",
+        "yaml": "engines:\n  otx:\n    enabled: true\n    api_key: fixture-only-key\n    max_results: null\n",
+        "loaded_type": "NoneType",
+        "loaded_max_results": null,
+        "asdict_max_results": null,
+        "normalized_max_results": null,
+        "otx_object_config": {
+          "enabled": true,
+          "base_url": "https://otx.alienvault.com/api/v1",
+          "type": "api",
+          "timeout_ms": 10000,
+          "max_results": null,
+          "rate_limit": 5,
+          "weight": 0.7,
+          "api_key": "fixture-only-key",
+          "api_secret": null,
+          "user_agent": null,
+          "categories": null,
+          "proxy_pool": null,
+          "scrape_proxy_url": null
+        },
+        "search_performed": false,
+        "adapter_shutdown_joined": true
+      },
+      "native_entry_error": "engine otx: invalid engine settings",
+      "classification": "accepted-F06-entry-layer-validation-difference",
+      "rationale": "Original YAML dataclass path preserves this value through actual OTX construction. Native accepted F06 rejects non-scalar or outside-signed64-bit settings before A11 settings/factory construction. Preserve F06; do not add an engine-only raw production API. No source search/slicing/request/public wire result was executed for this configuration oracle."
+    },
+    {
+      "identity": "a11-config/otx/max-list",
+      "source_entry_record": {
+        "id": "a11-config/otx/max-list",
+        "yaml": "engines:\n  otx:\n    enabled: true\n    api_key: fixture-only-key\n    max_results: [1, 2]\n",
+        "loaded_type": "list",
+        "loaded_max_results": [
+          1,
+          2
+        ],
+        "asdict_max_results": [
+          1,
+          2
+        ],
+        "normalized_max_results": [
+          1,
+          2
+        ],
+        "otx_object_config": {
+          "enabled": true,
+          "base_url": "https://otx.alienvault.com/api/v1",
+          "type": "api",
+          "timeout_ms": 10000,
+          "max_results": [
+            1,
+            2
+          ],
+          "rate_limit": 5,
+          "weight": 0.7,
+          "api_key": "fixture-only-key",
+          "api_secret": null,
+          "user_agent": null,
+          "categories": null,
+          "proxy_pool": null,
+          "scrape_proxy_url": null
+        },
+        "search_performed": false,
+        "adapter_shutdown_joined": true
+      },
+      "native_entry_error": "engine otx: invalid engine settings",
+      "classification": "accepted-F06-entry-layer-validation-difference",
+      "rationale": "Original YAML dataclass path preserves this value through actual OTX construction. Native accepted F06 rejects non-scalar or outside-signed64-bit settings before A11 settings/factory construction. Preserve F06; do not add an engine-only raw production API. No source search/slicing/request/public wire result was executed for this configuration oracle."
+    },
+    {
+      "identity": "a11-config/otx/max-dict",
+      "source_entry_record": {
+        "id": "a11-config/otx/max-dict",
+        "yaml": "engines:\n  otx:\n    enabled: true\n    api_key: fixture-only-key\n    max_results: {limit: 3}\n",
+        "loaded_type": "dict",
+        "loaded_max_results": {
+          "limit": 3
+        },
+        "asdict_max_results": {
+          "limit": 3
+        },
+        "normalized_max_results": {
+          "limit": 3
+        },
+        "otx_object_config": {
+          "enabled": true,
+          "base_url": "https://otx.alienvault.com/api/v1",
+          "type": "api",
+          "timeout_ms": 10000,
+          "max_results": {
+            "limit": 3
+          },
+          "rate_limit": 5,
+          "weight": 0.7,
+          "api_key": "fixture-only-key",
+          "api_secret": null,
+          "user_agent": null,
+          "categories": null,
+          "proxy_pool": null,
+          "scrape_proxy_url": null
+        },
+        "search_performed": false,
+        "adapter_shutdown_joined": true
+      },
+      "native_entry_error": "engine otx: invalid engine settings",
+      "classification": "accepted-F06-entry-layer-validation-difference",
+      "rationale": "Original YAML dataclass path preserves this value through actual OTX construction. Native accepted F06 rejects non-scalar or outside-signed64-bit settings before A11 settings/factory construction. Preserve F06; do not add an engine-only raw production API. No source search/slicing/request/public wire result was executed for this configuration oracle."
+    },
+    {
+      "identity": "a11-config/otx/max-huge-int",
+      "source_entry_record": {
+        "id": "a11-config/otx/max-huge-int",
+        "yaml": "engines:\n  otx:\n    enabled: true\n    api_key: fixture-only-key\n    max_results: 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890\n",
+        "loaded_type": "int",
+        "loaded_max_results": 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890,
+        "asdict_max_results": 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890,
+        "normalized_max_results": 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890,
+        "otx_object_config": {
+          "enabled": true,
+          "base_url": "https://otx.alienvault.com/api/v1",
+          "type": "api",
+          "timeout_ms": 10000,
+          "max_results": 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890,
+          "rate_limit": 5,
+          "weight": 0.7,
+          "api_key": "fixture-only-key",
+          "api_secret": null,
+          "user_agent": null,
+          "categories": null,
+          "proxy_pool": null,
+          "scrape_proxy_url": null
+        },
+        "search_performed": false,
+        "adapter_shutdown_joined": true
+      },
+      "native_entry_error": "invalid config YAML",
+      "classification": "accepted-F06-entry-layer-validation-difference",
+      "rationale": "Original YAML dataclass path preserves this value through actual OTX construction. Native accepted F06 rejects non-scalar or outside-signed64-bit settings before A11 settings/factory construction. Preserve F06; do not add an engine-only raw production API. No source search/slicing/request/public wire result was executed for this configuration oracle."
+    }
+  ]
+}

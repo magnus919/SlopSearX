@@ -1,0 +1,2296 @@
+{
+  "schema_version": 1,
+  "plan_id": "A06",
+  "baseline": "730c37a5f48b9830088594582cefb4c2f10a35e8",
+  "status": "supplemental-regression-source-pack",
+  "normalization": "latency_ms omitted; sets sorted; enum values serialized; no other output normalization",
+  "source_sha256": {
+    "engines/openalex.py": "537f1da9deda5f75ffde429167620c0006d93c485d0e5e8723b5c39f6c102e59",
+    "engines/semanticscholar.py": "4a5daf809e77ff7001f9ba2b92f3d035eec507a7e3c199d2180582de3d4b8b8c",
+    "engines/arxiv.py": "4e174dc8af03bafc662b4ccadd724d4727ec63a1ea02579de27af5fe9fa2f408",
+    "slopsearx/adapter.py": "5883a35c48d0dad1077306fbda21997ee1d32116a8c03633a6b762de0c26d6f3",
+    "slopsearx/payload.py": "a44a95655566f9fadaf62da1bab8c975f71f3ead6c3cc57f48c411a9c093c40d",
+    "slopsearx/filters.py": "f0edd2f633cc9a42c49660ca74b225732cbc82937a15ad58a5b0dbeb76e103a9"
+  },
+  "records": [
+    {
+      "id": "openalex.regression.original_order_and_abstract",
+      "engine": "openalex",
+      "query": "C++ learning",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "eyJyZXN1bHRzIjogW3siaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzEyMyIsICJ0aXRsZSI6ICJBIFN0dWR5IG9uIE1hY2hpbmUgTGVhcm5pbmciLCAiZG9pIjogImh0dHBzOi8vZG9pLm9yZy8xMC4xMjM0L3Rlc3QiLCAicmVsZXZhbmNlX3Njb3JlIjogNDIuNSwgImNpdGVkX2J5X2NvdW50IjogNDUwLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAzLTE1IiwgImFic3RyYWN0X2ludmVydGVkX2luZGV4IjogeyJNYWNoaW5lIjogWzBdLCAibGVhcm5pbmciOiBbMV0sICJpcyI6IFsyXSwgImltcG9ydGFudCI6IFszXX19LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnL1c0NTYiLCAidGl0bGUiOiAiRGVlcCBMZWFybmluZyBBZHZhbmNlcyIsICJkb2kiOiBudWxsLCAiY2l0ZWRfYnlfY291bnQiOiAxMjAsICJwdWJsaWNhdGlvbl9kYXRlIjogIjIwMjMtMTEtMDEiLCAiYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiBudWxsfV19",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=C%2B%2B%20learning&per_page=10",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://doi.org/10.1234/test",
+            "title": "A Study on Machine Learning",
+            "content": "Machine learning is important",
+            "engine": "openalex",
+            "engines": [],
+            "score": 42.5,
+            "position": 0,
+            "category": "general",
+            "published_date": "2024-03-15",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "doi": "https://doi.org/10.1234/test",
+                "openalex_id": "https://openalex.org/W123"
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+                  "doi",
+                  "openalex_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "https://openalex.org/W456",
+            "title": "Deep Learning Advances",
+            "content": "",
+            "engine": "openalex",
+            "engines": [],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": "2023-11-01",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "openalex_id": "https://openalex.org/W456"
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+                  "openalex_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.regression.doi_0",
+      "engine": "openalex",
+      "query": "graph neural networks",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "eyJyZXN1bHRzIjogW3siaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzEyMyIsICJ0aXRsZSI6ICJBIFN0dWR5IG9uIE1hY2hpbmUgTGVhcm5pbmciLCAiZG9pIjogImh0dHBzOi8vZG9pLm9yZy8xMC4xMDM4L25hdHVyZTE0NTM5IiwgInJlbGV2YW5jZV9zY29yZSI6IDQyLjUsICJjaXRlZF9ieV9jb3VudCI6IDQ1MCwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNC0wMy0xNSIsICJhYnN0cmFjdF9pbnZlcnRlZF9pbmRleCI6IHsiTWFjaGluZSI6IFswXSwgImxlYXJuaW5nIjogWzFdLCAiaXMiOiBbMl0sICJpbXBvcnRhbnQiOiBbM119fV19",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=graph%20neural%20networks&per_page=10",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://doi.org/10.1038/nature14539",
+            "title": "A Study on Machine Learning",
+            "content": "Machine learning is important",
+            "engine": "openalex",
+            "engines": [],
+            "score": 42.5,
+            "position": 0,
+            "category": "general",
+            "published_date": "2024-03-15",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "doi": "https://doi.org/10.1038/nature14539",
+                "openalex_id": "https://openalex.org/W123"
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+                  "doi",
+                  "openalex_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.regression.doi_1",
+      "engine": "openalex",
+      "query": "graph neural networks",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "eyJyZXN1bHRzIjogW3siaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzEyMyIsICJ0aXRsZSI6ICJBIFN0dWR5IG9uIE1hY2hpbmUgTGVhcm5pbmciLCAiZG9pIjogImh0dHA6Ly9keC5kb2kub3JnLzEwLjEwMzgvbmF0dXJlMTQ1MzkiLCAicmVsZXZhbmNlX3Njb3JlIjogNDIuNSwgImNpdGVkX2J5X2NvdW50IjogNDUwLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAzLTE1IiwgImFic3RyYWN0X2ludmVydGVkX2luZGV4IjogeyJNYWNoaW5lIjogWzBdLCAibGVhcm5pbmciOiBbMV0sICJpcyI6IFsyXSwgImltcG9ydGFudCI6IFszXX19XX0=",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=graph%20neural%20networks&per_page=10",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "http://dx.doi.org/10.1038/nature14539",
+            "title": "A Study on Machine Learning",
+            "content": "Machine learning is important",
+            "engine": "openalex",
+            "engines": [],
+            "score": 42.5,
+            "position": 0,
+            "category": "general",
+            "published_date": "2024-03-15",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "doi": "http://dx.doi.org/10.1038/nature14539",
+                "openalex_id": "https://openalex.org/W123"
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+                  "doi",
+                  "openalex_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.regression.doi_2",
+      "engine": "openalex",
+      "query": "graph neural networks",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "eyJyZXN1bHRzIjogW3siaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzEyMyIsICJ0aXRsZSI6ICJBIFN0dWR5IG9uIE1hY2hpbmUgTGVhcm5pbmciLCAiZG9pIjogIjEwLjEwMzgvbmF0dXJlMTQ1MzkiLCAicmVsZXZhbmNlX3Njb3JlIjogNDIuNSwgImNpdGVkX2J5X2NvdW50IjogNDUwLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAzLTE1IiwgImFic3RyYWN0X2ludmVydGVkX2luZGV4IjogeyJNYWNoaW5lIjogWzBdLCAibGVhcm5pbmciOiBbMV0sICJpcyI6IFsyXSwgImltcG9ydGFudCI6IFszXX19XX0=",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=graph%20neural%20networks&per_page=10",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://doi.org/10.1038/nature14539",
+            "title": "A Study on Machine Learning",
+            "content": "Machine learning is important",
+            "engine": "openalex",
+            "engines": [],
+            "score": 42.5,
+            "position": 0,
+            "category": "general",
+            "published_date": "2024-03-15",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "doi": "10.1038/nature14539",
+                "openalex_id": "https://openalex.org/W123"
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+                  "doi",
+                  "openalex_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.regression.doi_3",
+      "engine": "openalex",
+      "query": "graph neural networks",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "eyJyZXN1bHRzIjogW3siaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzEyMyIsICJ0aXRsZSI6ICJBIFN0dWR5IG9uIE1hY2hpbmUgTGVhcm5pbmciLCAiZG9pIjogbnVsbCwgInJlbGV2YW5jZV9zY29yZSI6IDQyLjUsICJjaXRlZF9ieV9jb3VudCI6IDQ1MCwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNC0wMy0xNSIsICJhYnN0cmFjdF9pbnZlcnRlZF9pbmRleCI6IHsiTWFjaGluZSI6IFswXSwgImxlYXJuaW5nIjogWzFdLCAiaXMiOiBbMl0sICJpbXBvcnRhbnQiOiBbM119fV19",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=graph%20neural%20networks&per_page=10",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://openalex.org/W123",
+            "title": "A Study on Machine Learning",
+            "content": "Machine learning is important",
+            "engine": "openalex",
+            "engines": [],
+            "score": 42.5,
+            "position": 0,
+            "category": "general",
+            "published_date": "2024-03-15",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "openalex_id": "https://openalex.org/W123"
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+                  "openalex_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.regression.doi_4",
+      "engine": "openalex",
+      "query": "graph neural networks",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "eyJyZXN1bHRzIjogW3siaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzEyMyIsICJ0aXRsZSI6ICJBIFN0dWR5IG9uIE1hY2hpbmUgTGVhcm5pbmciLCAiZG9pIjogIiAgIiwgInJlbGV2YW5jZV9zY29yZSI6IDQyLjUsICJjaXRlZF9ieV9jb3VudCI6IDQ1MCwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNC0wMy0xNSIsICJhYnN0cmFjdF9pbnZlcnRlZF9pbmRleCI6IHsiTWFjaGluZSI6IFswXSwgImxlYXJuaW5nIjogWzFdLCAiaXMiOiBbMl0sICJpbXBvcnRhbnQiOiBbM119fV19",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=graph%20neural%20networks&per_page=10",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://openalex.org/W123",
+            "title": "A Study on Machine Learning",
+            "content": "Machine learning is important",
+            "engine": "openalex",
+            "engines": [],
+            "score": 42.5,
+            "position": 0,
+            "category": "general",
+            "published_date": "2024-03-15",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "doi": "  ",
+                "openalex_id": "https://openalex.org/W123"
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+                  "doi",
+                  "openalex_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.regression.malformed_0",
+      "engine": "openalex",
+      "query": "graph neural networks",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "W10=",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=graph%20neural%20networks&per_page=10",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'list' object has no attribute 'get'",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.regression.malformed_1",
+      "engine": "openalex",
+      "query": "graph neural networks",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "eyJyZXN1bHRzIjogbnVsbH0=",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=graph%20neural%20networks&per_page=10",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'NoneType' object is not subscriptable",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.regression.malformed_2",
+      "engine": "openalex",
+      "query": "graph neural networks",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "eyJyZXN1bHRzIjogW3t9LCB7ImFic3RyYWN0X2ludmVydGVkX2luZGV4IjogWyJiYWQiXX1dfQ==",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=graph%20neural%20networks&per_page=10",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'list' object has no attribute 'items'",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.regression.malformed_3",
+      "engine": "openalex",
+      "query": "graph neural networks",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "eyJyZXN1bHRzIjogW3siY2l0ZWRfYnlfY291bnQiOiAiYmFkIiwgInJlbGV2YW5jZV9zY29yZSI6IHsiYmFkIjogMX19XX0=",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=graph%20neural%20networks&per_page=10",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "float() argument must be a string or a real number, not 'dict'",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.regression.malformed_4",
+      "engine": "openalex",
+      "query": "graph neural networks",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "eyJyZXN1bHRzIjogW3siYWJzdHJhY3RfaW52ZXJ0ZWRfaW5kZXgiOiB7IndvcmQiOiBudWxsfX1dfQ==",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=graph%20neural%20networks&per_page=10",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'NoneType' object is not iterable",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.regression.inclusive_dates_0",
+      "engine": "openalex",
+      "query": "C++ & climate",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "eyJyZXN1bHRzIjogW3siaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzAiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI4In0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzEiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI5In0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzIiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAzLTAxIn0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzMiLCAicHVibGljYXRpb25fZGF0ZSI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnL1c0IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNCJ9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnL1c1IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiYmFkIn1dfQ==",
+          "headers": {}
+        }
+      ],
+      "params": {
+        "date_from": "2024-02-29"
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=C%2B%2B%20%26%20climate&per_page=10&filter=from_publication_date%3A2024-02-29",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://openalex.org/W1",
+            "title": "",
+            "content": "",
+            "engine": "openalex",
+            "engines": [],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": "2024-02-29",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "openalex_id": "https://openalex.org/W1"
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+                  "openalex_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "https://openalex.org/W2",
+            "title": "",
+            "content": "",
+            "engine": "openalex",
+            "engines": [],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": "2024-03-01",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "openalex_id": "https://openalex.org/W2"
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+                  "openalex_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.regression.inclusive_dates_1",
+      "engine": "openalex",
+      "query": "C++ & climate",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "eyJyZXN1bHRzIjogW3siaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzAiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI4In0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzEiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI5In0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzIiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAzLTAxIn0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzMiLCAicHVibGljYXRpb25fZGF0ZSI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnL1c0IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNCJ9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnL1c1IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiYmFkIn1dfQ==",
+          "headers": {}
+        }
+      ],
+      "params": {
+        "date_to": "2024-02-29"
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=C%2B%2B%20%26%20climate&per_page=10&filter=to_publication_date%3A2024-02-29",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://openalex.org/W0",
+            "title": "",
+            "content": "",
+            "engine": "openalex",
+            "engines": [],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": "2024-02-28",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "openalex_id": "https://openalex.org/W0"
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+                  "openalex_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          },
+          {
+            "url": "https://openalex.org/W1",
+            "title": "",
+            "content": "",
+            "engine": "openalex",
+            "engines": [],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": "2024-02-29",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "openalex_id": "https://openalex.org/W1"
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+                  "openalex_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.regression.inclusive_dates_2",
+      "engine": "openalex",
+      "query": "C++ & climate",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "eyJyZXN1bHRzIjogW3siaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzAiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI4In0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzEiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI5In0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzIiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAzLTAxIn0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzMiLCAicHVibGljYXRpb25fZGF0ZSI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnL1c0IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNCJ9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnL1c1IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiYmFkIn1dfQ==",
+          "headers": {}
+        }
+      ],
+      "params": {
+        "date_from": "2024-02-29",
+        "date_to": "2024-02-29"
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.openalex.org/works?search=C%2B%2B%20%26%20climate&per_page=10&filter=from_publication_date%3A2024-02-29%2Cto_publication_date%3A2024-02-29",
+          "headers": {
+            "host": "api.openalex.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://openalex.org/W1",
+            "title": "",
+            "content": "",
+            "engine": "openalex",
+            "engines": [],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": "2024-02-29",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "openalex_id": "https://openalex.org/W1"
+              },
+              "provenance": {
+                "engine": "openalex",
+                "adapter_fields": [
+                  "openalex_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.regression.invalid_dates_0",
+      "engine": "openalex",
+      "query": "graph neural networks",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "eyJyZXN1bHRzIjogW3siaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzAiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI4In0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzEiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI5In0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzIiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAzLTAxIn0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzMiLCAicHVibGljYXRpb25fZGF0ZSI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnL1c0IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNCJ9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnL1c1IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiYmFkIn1dfQ==",
+          "headers": {}
+        }
+      ],
+      "params": {
+        "date_from": "2023-02-29"
+      },
+      "requests": [],
+      "client_options": [],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "date_from must be a valid YYYY-MM-DD calendar date",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.regression.invalid_dates_1",
+      "engine": "openalex",
+      "query": "graph neural networks",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "eyJyZXN1bHRzIjogW3siaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzAiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI4In0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzEiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI5In0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzIiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAzLTAxIn0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzMiLCAicHVibGljYXRpb25fZGF0ZSI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnL1c0IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNCJ9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnL1c1IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiYmFkIn1dfQ==",
+          "headers": {}
+        }
+      ],
+      "params": {
+        "date_to": "2024-13-01"
+      },
+      "requests": [],
+      "client_options": [],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "date_to must be a valid YYYY-MM-DD calendar date",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.regression.invalid_dates_2",
+      "engine": "openalex",
+      "query": "graph neural networks",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "eyJyZXN1bHRzIjogW3siaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzAiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI4In0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzEiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI5In0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzIiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAzLTAxIn0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzMiLCAicHVibGljYXRpb25fZGF0ZSI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnL1c0IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNCJ9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnL1c1IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiYmFkIn1dfQ==",
+          "headers": {}
+        }
+      ],
+      "params": {
+        "date_from": "20240101"
+      },
+      "requests": [],
+      "client_options": [],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "date_from must be a valid YYYY-MM-DD calendar date",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.regression.invalid_dates_3",
+      "engine": "openalex",
+      "query": "graph neural networks",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "eyJyZXN1bHRzIjogW3siaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzAiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI4In0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzEiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI5In0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzIiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAzLTAxIn0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzMiLCAicHVibGljYXRpb25fZGF0ZSI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnL1c0IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNCJ9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnL1c1IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiYmFkIn1dfQ==",
+          "headers": {}
+        }
+      ],
+      "params": {
+        "date_from": ""
+      },
+      "requests": [],
+      "client_options": [],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "date_from must be a valid YYYY-MM-DD calendar date",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.regression.invalid_dates_4",
+      "engine": "openalex",
+      "query": "graph neural networks",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "eyJyZXN1bHRzIjogW3siaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzAiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI4In0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzEiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI5In0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzIiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAzLTAxIn0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzMiLCAicHVibGljYXRpb25fZGF0ZSI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnL1c0IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNCJ9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnL1c1IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiYmFkIn1dfQ==",
+          "headers": {}
+        }
+      ],
+      "params": {
+        "date_from": "2024-01-01,publication_year:2020"
+      },
+      "requests": [],
+      "client_options": [],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "date_from must be a valid YYYY-MM-DD calendar date",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.regression.invalid_dates_5",
+      "engine": "openalex",
+      "query": "graph neural networks",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "eyJyZXN1bHRzIjogW3siaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzAiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI4In0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzEiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI5In0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzIiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAzLTAxIn0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzMiLCAicHVibGljYXRpb25fZGF0ZSI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnL1c0IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNCJ9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnL1c1IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiYmFkIn1dfQ==",
+          "headers": {}
+        }
+      ],
+      "params": {
+        "date_from": "2024-03-01",
+        "date_to": "2024-02-01"
+      },
+      "requests": [],
+      "client_options": [],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "date_from must be on or before date_to",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "openalex.regression.invalid_dates_6",
+      "engine": "openalex",
+      "query": "graph neural networks",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "eyJyZXN1bHRzIjogW3siaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzAiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI4In0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzEiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAyLTI5In0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzIiLCAicHVibGljYXRpb25fZGF0ZSI6ICIyMDI0LTAzLTAxIn0sIHsiaWQiOiAiaHR0cHM6Ly9vcGVuYWxleC5vcmcvVzMiLCAicHVibGljYXRpb25fZGF0ZSI6IG51bGx9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnL1c0IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiMjAyNCJ9LCB7ImlkIjogImh0dHBzOi8vb3BlbmFsZXgub3JnL1c1IiwgInB1YmxpY2F0aW9uX2RhdGUiOiAiYmFkIn1dfQ==",
+          "headers": {}
+        }
+      ],
+      "params": {
+        "time_range": "all"
+      },
+      "requests": [],
+      "client_options": [],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "time_range must be day, week, month, or year",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.regression.original_query_0",
+      "engine": "arxiv",
+      "query": "graph neural networks",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3A%22graph+neural+networks%22&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.regression.original_query_1",
+      "engine": "arxiv",
+      "query": "protein-protein interactions",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3A%22protein-protein+interactions%22&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.regression.original_query_2",
+      "engine": "arxiv",
+      "query": "graph",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Agraph&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.regression.original_query_3",
+      "engine": "arxiv",
+      "query": "ti:\"graph neural networks\"",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Ati%3A%22graph+neural+networks%22&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.regression.original_query_4",
+      "engine": "arxiv",
+      "query": "ti:graph neural",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Ati%3Agraph+neural&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.regression.original_query_5",
+      "engine": "arxiv",
+      "query": "graph AND neural",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Agraph+AND+neural&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.regression.original_query_6",
+      "engine": "arxiv",
+      "query": "graph OR neural",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Agraph+OR+neural&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.regression.original_query_7",
+      "engine": "arxiv",
+      "query": "graph ANDNOT neural",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Agraph+ANDNOT+neural&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.regression.original_query_8",
+      "engine": "arxiv",
+      "query": "graph and neural",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Agraph+and+neural&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.regression.original_query_9",
+      "engine": "arxiv",
+      "query": "graph (neural networks)",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Agraph+%28neural+networks%29&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.regression.original_retry_after_0",
+      "engine": "semanticscholar",
+      "query": "graph neural networks",
+      "responses": [
+        {
+          "status": 429,
+          "body_b64": "e30=",
+          "headers": {
+            "Retry-After": "45"
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=graph+neural+networks&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "rate_limited",
+        "error_message": "upstream rate limited; cooldown 45s",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.regression.original_retry_after_1",
+      "engine": "semanticscholar",
+      "query": "graph neural networks",
+      "responses": [
+        {
+          "status": 429,
+          "body_b64": "e30=",
+          "headers": {
+            "Retry-After": "not-a-duration"
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=graph+neural+networks&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "rate_limited",
+        "error_message": "upstream rate limited; cooldown 30s",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.regression.original_retry_after_2",
+      "engine": "semanticscholar",
+      "query": "graph neural networks",
+      "responses": [
+        {
+          "status": 429,
+          "body_b64": "e30=",
+          "headers": {
+            "Retry-After": "Wed, 01 Jan 2020 00:00:00 GMT"
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=graph+neural+networks&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "rate_limited",
+        "error_message": "upstream rate limited; cooldown 30s",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.regression.original_retry_after_3",
+      "engine": "semanticscholar",
+      "query": "graph neural networks",
+      "responses": [
+        {
+          "status": 429,
+          "body_b64": "e30=",
+          "headers": {
+            "Retry-After": "999999"
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=graph+neural+networks&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "rate_limited",
+        "error_message": "upstream rate limited; cooldown 300s",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.regression.original_retry_after_4",
+      "engine": "semanticscholar",
+      "query": "graph neural networks",
+      "responses": [
+        {
+          "status": 429,
+          "body_b64": "e30=",
+          "headers": {
+            "Retry-After": "-5"
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=graph+neural+networks&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "rate_limited",
+        "error_message": "upstream rate limited; cooldown 30s",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.regression.original_retry_after_5",
+      "engine": "semanticscholar",
+      "query": "graph neural networks",
+      "responses": [
+        {
+          "status": 429,
+          "body_b64": "e30=",
+          "headers": {
+            "Retry-After": "Tue, 14 Nov 2023 22:14:05 GMT"
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=graph+neural+networks&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "rate_limited",
+        "error_message": "upstream rate limited; cooldown 45s",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.regression.original_retry_after_6",
+      "engine": "semanticscholar",
+      "query": "graph neural networks",
+      "responses": [
+        {
+          "status": 429,
+          "body_b64": "e30=",
+          "headers": {
+            "Retry-After": "Tue, 14 Nov 2023 22:12:35 GMT"
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=graph+neural+networks&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "rate_limited",
+        "error_message": "upstream rate limited; cooldown 30s",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    }
+  ]
+}

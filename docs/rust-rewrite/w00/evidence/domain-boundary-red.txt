@@ -1,0 +1,42 @@
+   Compiling ssx-domain v0.1.0 (/Users/magnus/.codex/worktrees/rust-w00-saved-store/SlopSearX/crates/ssx-domain)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.32s
+     Running unittests src/lib.rs (target/debug/deps/ssx_domain-11b68c147ad81f76)
+
+running 3 tests
+test saved::boundary_review_tests::finite_input_arithmetic_overflow_does_not_manufacture_slot_zero ... FAILED
+test saved::boundary_review_tests::oversized_identity_is_calculated_without_persistence_macro_panic ... FAILED
+test saved::boundary_review_tests::oversized_window_is_fallible_without_macro_panic ... FAILED
+
+failures:
+
+---- saved::boundary_review_tests::finite_input_arithmetic_overflow_does_not_manufacture_slot_zero stdout ----
+
+thread 'saved::boundary_review_tests::finite_input_arithmetic_overflow_does_not_manufacture_slot_zero' (23562305) panicked at crates/ssx-domain/src/saved.rs:340:9:
+assertion failed: record.slot(f64::MAX).is_err()
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- saved::boundary_review_tests::oversized_identity_is_calculated_without_persistence_macro_panic stdout ----
+
+thread 'saved::boundary_review_tests::oversized_identity_is_calculated_without_persistence_macro_panic' (23562306) panicked at crates/ssx-domain/src/saved.rs:124:13:
+called `Result::unwrap()` on an `Err` value: Error("JSON byte limit exceeded", line: 0, column: 0)
+
+thread 'saved::boundary_review_tests::oversized_identity_is_calculated_without_persistence_macro_panic' (23562306) panicked at crates/ssx-domain/src/saved.rs:350:9:
+assertion failed: std::panic::catch_unwind(|| record.slot(1060.0)).is_ok()
+
+---- saved::boundary_review_tests::oversized_window_is_fallible_without_macro_panic stdout ----
+
+thread 'saved::boundary_review_tests::oversized_window_is_fallible_without_macro_panic' (23562307) panicked at crates/ssx-domain/src/saved.rs:68:9:
+called `Result::unwrap()` on an `Err` value: Error("JSON byte limit exceeded", line: 0, column: 0)
+
+thread 'saved::boundary_review_tests::oversized_window_is_fallible_without_macro_panic' (23562307) panicked at crates/ssx-domain/src/saved.rs:345:9:
+assertion failed: std::panic::catch_unwind(|| record.window()).is_ok()
+
+
+failures:
+    saved::boundary_review_tests::finite_input_arithmetic_overflow_does_not_manufacture_slot_zero
+    saved::boundary_review_tests::oversized_identity_is_calculated_without_persistence_macro_panic
+    saved::boundary_review_tests::oversized_window_is_fallible_without_macro_panic
+
+test result: FAILED. 0 passed; 3 failed; 0 ignored; 0 measured; 27 filtered out; finished in 0.17s
+
+error: test failed, to rerun pass `-p ssx-domain --lib`

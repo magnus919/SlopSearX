@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "plan_id": "W08",
+  "qualified_code_head": "a67a156100d30f87cb824a52699ae575da8dc0cd",
+  "scope": "native dossier service/read-only composition and existing worker; not final MCP/portal/production acceptance",
+  "status": "native_scope_passed",
+  "regression_map_snapshot": {
+    "path": "docs/rust-rewrite/w08/regression-map.json",
+    "sha256": "27d29ab39db74e769331011455a318aa0ddebecf941a88d4e0e6a587d00c9a6b",
+    "historical_status_note": "Its pending field is the sealed qualification input; this receipt supersedes execution status without changing that input or its reference mappings."
+  },
+  "commands": [
+    {
+      "label": "Standalone T06 source controls",
+      "stage": "01-standalone-t06-source-controls",
+      "actual_exit": 0,
+      "case_count": 5,
+      "receipt_path": "/Volumes/tank01/magnus/rust-builds/slopsearx/w08-native-composition-20261027/quality-04/01-standalone-t06-source-controls/actual-wait.json",
+      "receipt_sha256": "74aecbc207d76e1d6e483ef956d665ae77bf900fde80fcdd6707743905c20337"
+    },
+    {
+      "label": "Strict Clippy (application, infrastructure, xtask; all targets)",
+      "stage": "02-strict-clippy",
+      "actual_exit": 0,
+      "case_count": null,
+      "receipt_path": "/Volumes/tank01/magnus/rust-builds/slopsearx/w08-native-composition-20261027/quality-04/02-strict-clippy/actual-wait.json",
+      "receipt_sha256": "0923e81977aa8426e1f6f4764df53c2a440e76e52e4b810559b35836cf53306a"
+    },
+    {
+      "label": "W08 source/completion controls",
+      "stage": "03-w08-source-controls",
+      "actual_exit": 0,
+      "case_count": 2,
+      "receipt_path": "/Volumes/tank01/magnus/rust-builds/slopsearx/w08-native-composition-20261027/quality-04/03-w08-source-controls/actual-wait.json",
+      "receipt_sha256": "f82a0704921a6b179628a840efb0b3efe8cf995e0cd69236a24ebc408f34d62c"
+    },
+    {
+      "label": "W07 predecessor controls",
+      "stage": "04-w07-predecessor-controls",
+      "actual_exit": 0,
+      "case_count": 7,
+      "receipt_path": "/Volumes/tank01/magnus/rust-builds/slopsearx/w08-native-composition-20261027/quality-04/04-w07-predecessor-controls/actual-wait.json",
+      "receipt_sha256": "59fbd8fe10d38b9b81be6e3844a637e9392d728757403abfeda87989375a8a3e"
+    },
+    {
+      "label": "Shared closed-source controls",
+      "stage": "05-closed-shared-source-controls",
+      "actual_exit": 0,
+      "case_count": 1,
+      "receipt_path": "/Volumes/tank01/magnus/rust-builds/slopsearx/w08-native-composition-20261027/quality-04/05-closed-shared-source-controls/actual-wait.json",
+      "receipt_sha256": "1f0315dde086ced510a1de1058cb03857c48ca2569c961f0c423aea89fffbba4"
+    },
+    {
+      "label": "W08 gate",
+      "stage": "06-w08-gate",
+      "actual_exit": 0,
+      "case_count": 26,
+      "receipt_path": "/Volumes/tank01/magnus/rust-builds/slopsearx/w08-native-composition-20261027/quality-04/06-w08-gate/actual-wait.json",
+      "receipt_sha256": "895fc87bcac08ebcfec592ecdec4601eed4d43157c39fd951bcf4ce9fcd60bac"
+    },
+    {
+      "label": "W02 worker/completion gate",
+      "stage": "07-w02-gate",
+      "actual_exit": 0,
+      "case_count": 31,
+      "receipt_path": "/Volumes/tank01/magnus/rust-builds/slopsearx/w08-native-composition-20261027/quality-04/07-w02-gate/actual-wait.json",
+      "receipt_sha256": "5edca25d690eddd9da3c1acfbd88c29b5d0a5bd7dfc92786b87c03f184f8fe64"
+    },
+    {
+      "label": "Workspace format check",
+      "stage": "08-final-format-after-proof-fix",
+      "actual_exit": 0,
+      "case_count": null,
+      "receipt_path": "/Volumes/tank01/magnus/rust-builds/slopsearx/w08-native-composition-20261027/quality-04/08-final-format-after-proof-fix/actual-wait.json",
+      "receipt_sha256": "29e4af4ef1b01d981393d558097e58cfb5ed6d9e0207ff34fd38f2fd7feb1089"
+    }
+  ],
+  "gate_reports": [
+    {
+      "plan_id": "W08",
+      "status": "passed",
+      "path": "/Volumes/tank01/magnus/rust-builds/slopsearx/w08-native-composition-20261027/quality-04/W08.json",
+      "sha256": "82b4cf4c6c56ede5f5797aaffd9336d0a516b0b54f67534023a9337fa8c0a1c5"
+    },
+    {
+      "plan_id": "W02",
+      "status": "passed",
+      "path": "/Volumes/tank01/magnus/rust-builds/slopsearx/w08-native-composition-20261027/quality-04/W02.json",
+      "sha256": "be1e60597af1b0a637d6a79c50e51a6d91437c7101c198bb994722dd0d947f4f"
+    }
+  ],
+  "toolchain": "Rust1.99.0, pinned Valkey8.1.10; locked/offline, jobs2, debug0, incremental0",
+  "resource_result": {
+    "target_before_quality4_bytes": 15775551488,
+    "target_after_quality4_bytes": 15810449408,
+    "phase_peak_limit_bytes": 17345708032,
+    "global_hard_limit_bytes": 19327352832,
+    "soft_limit_crossed": false,
+    "original_total_growth_budget_bytes": 2147483648,
+    "all_original_sessions_retired": true,
+    "all_three_leases_released": true,
+    "temporary_scratch_removed": true
+  },
+  "limitations": [
+    "No live provider, production, full rewrite, relevance or advisory applicability claim",
+    "W09 owns final registry/schema/wire and trusted live per-tenant worker authority routing across restarts/replicas",
+    "W10 owns protected portal composition UI/browser acceptance; existing portal CI remains required",
+    "Final documentation child is not the native-qualified head; all qualified code/test/input bytes must remain exact, final full-head gates belong to CI"
+  ],
+  "finishing_receipt_root": "/Volumes/tank01/magnus/rust-builds/slopsearx/w08-native-composition-20261027",
+  "static_evidence_note": "Final delivery receipt records actual canonical hook and AST exits, source/index guards and documentation-child identity."
+}

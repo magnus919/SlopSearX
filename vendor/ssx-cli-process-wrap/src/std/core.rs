@@ -1,0 +1,467 @@
+use std::{
+	any::Any,
+	io::{Read, Result},
+	process::{Child, ChildStderr, ChildStdin, ChildStdout, Command, ExitStatus, Output},
+};
+
+#[cfg(windows)]
+use std::os::windows::io::{AsHandle, BorrowedHandle};
+
+#[cfg(unix)]
+use nix::{
+	sys::signal::{Signal, kill},
+	unistd::Pid,
+};
+
+crate::generic_wrap::Wrap!(Command, Child, ChildWrapper, |child| child);
+
+/// Wrapper for `std::process::Child`.
+///
+/// This trait exposes most of the functionality of the underlying [`Child`]. It is implemented for
+/// [`Child`] and by wrappers.
+///
+/// The required methods are `inner`, `inner_mut`, and `into_inner`. Together they expose each lower
+/// layer, allowing wrappers to be unwrapped and the native [`Child`] to be used directly when
+/// necessary.
+///
+/// Each non-terminal wrapper must use them to expose its direct lower layer. A terminal non-native
+/// child returns itself from all three methods. Wrapper chains must otherwise be acyclic and
+/// terminate in either a native [`Child`] or a self-returning non-native child.
+///
+/// The `try_inner_child`, `try_inner_child_mut`, and `try_into_inner_child` convenience methods on
+/// the trait object traverse these layers when access to a native [`Child`] is required.
+///
+/// It also makes it possible for all the other methods to have default implementations. Some are
+/// direct passthroughs to the lower layers, while others are more complex.
+///
+/// Here's a simple example of a wrapper:
+///
+/// ```rust
+/// use process_wrap::std::*;
+/// use std::process::Child;
+///
+/// #[derive(Debug)]
+/// pub struct YourChildWrapper(Child);
+///
+/// impl ChildWrapper for YourChildWrapper {
+///     fn inner(&self) -> &dyn ChildWrapper {
+///         &self.0
+///     }
+///
+///     fn inner_mut(&mut self) -> &mut dyn ChildWrapper {
+///         &mut self.0
+///     }
+///
+///     fn into_inner(self: Box<Self>) -> Box<dyn ChildWrapper> {
+///         Box::new((*self).0)
+///     }
+///
+///     #[cfg(windows)]
+///     fn process_handle(
+///         &self,
+///     ) -> Option<std::os::windows::io::BorrowedHandle<'_>> {
+///         self.0.process_handle()
+///     }
+/// }
+/// ```
+pub trait ChildWrapper: Any + std::fmt::Debug + Send + Sync {
+	/// Obtain a reference to the wrapped child.
+	fn inner(&self) -> &dyn ChildWrapper;
+
+	/// Obtain a mutable reference to the wrapped child.
+	fn inner_mut(&mut self) -> &mut dyn ChildWrapper;
+
+	/// Consume the current wrapper and return the wrapped child.
+	///
+	/// Note that this may disrupt whatever the current wrapper was doing. However, wrappers must
+	/// ensure that the wrapped child is in a consistent state when this is called or they are
+	/// dropped, so that this is always safe.
+	fn into_inner(self: Box<Self>) -> Box<dyn ChildWrapper>;
+
+	/// Borrow the handle for the process represented by this child, if available.
+	///
+	/// This method is only available on Windows. The returned handle cannot outlive the borrow of
+	/// `self`. Transparent child wrappers should override this method and delegate directly to the
+	/// child they own. Terminal custom children which do not represent a native process may retain the
+	/// default implementation.
+	///
+	/// Implementations returning `Some` must return a process handle, rather than another kind of
+	/// Windows object.
+	#[cfg(windows)]
+	fn process_handle(&self) -> Option<BorrowedHandle<'_>> {
+		None
+	}
+
+	/// Obtain a clone if possible.
+	///
+	/// Some implementations may make it possible to clone the implementing structure, even though
+	/// std's `Child` isn't `Clone`. In those cases, this method should be overridden.
+	fn try_clone(&self) -> Option<Box<dyn ChildWrapper>> {
+		None
+	}
+
+	/// Obtain the `Child`'s stdin.
+	///
+	/// By default this is a passthrough to the wrapped child.
+	fn stdin(&mut self) -> &mut Option<ChildStdin> {
+		self.inner_mut().stdin()
+	}
+
+	/// Obtain the `Child`'s stdout.
+	///
+	/// By default this is a passthrough to the wrapped child.
+	fn stdout(&mut self) -> &mut Option<ChildStdout> {
+		self.inner_mut().stdout()
+	}
+
+	/// Obtain the `Child`'s stderr.
+	///
+	/// By default this is a passthrough to the wrapped child.
+	fn stderr(&mut self) -> &mut Option<ChildStderr> {
+		self.inner_mut().stderr()
+	}
+
+	/// Obtain the `Child`'s process ID.
+	///
+	/// In general this should be the PID of the top-level spawned process that was spawned
+	/// However, that may vary depending on what a wrapper does.
+	fn id(&self) -> u32 {
+		self.inner().id()
+	}
+
+	/// Kill the `Child` and wait for it to exit.
+	///
+	/// By default this calls `start_kill()` and then `wait()`, which is the same way it is done on
+	/// the underlying `Child`, but that way implementing either or both of those methods will use
+	/// them when calling `kill()`, instead of requiring a stub implementation.
+	fn kill(&mut self) -> Result<()> {
+		self.start_kill()?;
+		self.wait()?;
+		Ok(())
+	}
+
+	/// Kill the `Child` without waiting for it to exit.
+	///
+	/// By default this is:
+	/// - on Unix, sending a `SIGKILL` signal to the process;
+	/// - otherwise, a passthrough to the underlying `kill()` method.
+	///
+	/// The `start_kill()` method doesn't exist on std's `Child`, and was introduced by Tokio. This
+	/// library uses it to provide a consistent API across both std and Tokio (and because it's a
+	/// generally useful API).
+	fn start_kill(&mut self) -> Result<()> {
+		self.inner_mut().start_kill()
+	}
+
+	/// Check if the `Child` has exited without blocking, and if so, return its exit status.
+	///
+	/// Wrappers must ensure that repeatedly calling this (or other wait methods) after the child
+	/// has exited will always return the same result.
+	///
+	/// By default this is a passthrough to the underlying `Child`.
+	fn try_wait(&mut self) -> Result<Option<ExitStatus>> {
+		self.inner_mut().try_wait()
+	}
+
+	/// Wait for the `Child` to exit and return its exit status.
+	///
+	/// Wrappers must ensure that repeatedly calling this (or other wait methods) after the child
+	/// has exited will always return the same result.
+	///
+	/// By default this is a passthrough to the underlying `Child`.
+	fn wait(&mut self) -> Result<ExitStatus> {
+		self.inner_mut().wait()
+	}
+
+	/// Wait for the `Child` to exit and return its exit status and outputs.
+	///
+	/// Note that this method reads the child's stdout and stderr to completion into memory.
+	///
+	/// On Unix, this reads from stdout and stderr simultaneously. On other platforms, it reads from
+	/// stdout first, then stderr (pull requests welcome to improve this).
+	///
+	/// By default this is a reimplementation of the std method, so that it can use the wrapper's
+	/// `wait()` method instead of the underlying `Child`'s `wait()`.
+	fn wait_with_output(mut self: Box<Self>) -> Result<Output>
+	where
+		Self: 'static,
+	{
+		drop(self.stdin().take());
+
+		let (mut stdout, mut stderr) = (Vec::new(), Vec::new());
+		match (self.stdout().take(), self.stderr().take()) {
+			(None, None) => {}
+			(Some(mut out), None) => {
+				let res = out.read_to_end(&mut stdout);
+				res.unwrap();
+			}
+			(None, Some(mut err)) => {
+				let res = err.read_to_end(&mut stderr);
+				res.unwrap();
+			}
+			(Some(out), Some(err)) => {
+				let res = read2(out, &mut stdout, err, &mut stderr);
+				res.unwrap();
+			}
+		}
+
+		let status = self.wait()?;
+		Ok(Output {
+			status,
+			stdout,
+			stderr,
+		})
+	}
+
+	/// Send a signal to the `Child`.
+	///
+	/// This method is only available on Unix. It doesn't exist on std's `Child`, nor on Tokio's. It
+	/// was introduced by command-group to abstract over the signal behaviour between process groups
+	/// and unwrapped processes.
+	#[cfg(unix)]
+	fn signal(&self, sig: i32) -> Result<()> {
+		self.inner().signal(sig)
+	}
+}
+
+impl ChildWrapper for Child {
+	fn inner(&self) -> &dyn ChildWrapper {
+		self
+	}
+	fn inner_mut(&mut self) -> &mut dyn ChildWrapper {
+		self
+	}
+	fn into_inner(self: Box<Self>) -> Box<dyn ChildWrapper> {
+		self
+	}
+	#[cfg(windows)]
+	fn process_handle(&self) -> Option<BorrowedHandle<'_>> {
+		Some(self.as_handle())
+	}
+	fn stdin(&mut self) -> &mut Option<ChildStdin> {
+		&mut self.stdin
+	}
+	fn stdout(&mut self) -> &mut Option<ChildStdout> {
+		&mut self.stdout
+	}
+	fn stderr(&mut self) -> &mut Option<ChildStderr> {
+		&mut self.stderr
+	}
+	fn id(&self) -> u32 {
+		Child::id(self)
+	}
+	fn start_kill(&mut self) -> Result<()> {
+		#[cfg(unix)]
+		{
+			self.signal(Signal::SIGKILL as _)
+		}
+
+		#[cfg(not(unix))]
+		{
+			Child::kill(self)
+		}
+	}
+	fn try_wait(&mut self) -> Result<Option<ExitStatus>> {
+		Child::try_wait(self)
+	}
+	fn wait(&mut self) -> Result<ExitStatus> {
+		Child::wait(self)
+	}
+	#[cfg(unix)]
+	fn signal(&self, sig: i32) -> Result<()> {
+		kill(
+			Pid::from_raw(i32::try_from(self.id()).map_err(std::io::Error::other)?),
+			Signal::try_from(sig)?,
+		)
+		.map_err(std::io::Error::from)
+	}
+}
+
+fn same_child(left: &dyn ChildWrapper, right: &dyn ChildWrapper) -> bool {
+	std::ptr::addr_eq(left, right) && left.type_id() == right.type_id()
+}
+
+impl dyn ChildWrapper + '_ {
+	fn downcast_ref<T: 'static>(&self) -> Option<&T> {
+		(self as &dyn Any).downcast_ref()
+	}
+
+	fn is_raw_child(&self) -> bool {
+		self.downcast_ref::<Child>().is_some()
+	}
+
+	/// Try to obtain a reference to the underlying native [`Child`].
+	///
+	/// Returns `None` if the wrapper chain terminates in a non-native child.
+	pub fn try_inner_child(&self) -> Option<&Child> {
+		let mut inner = self;
+		loop {
+			if let Some(child) = inner.downcast_ref::<Child>() {
+				return Some(child);
+			}
+
+			let next = inner.inner();
+			if same_child(inner, next) {
+				return None;
+			}
+			inner = next;
+		}
+	}
+
+	/// Try to obtain a mutable reference to the underlying native [`Child`].
+	///
+	/// Returns `None` if the wrapper chain terminates in a non-native child.
+	///
+	/// # Safety
+	///
+	/// The caller must ensure that using the returned mutable child does not violate invariants
+	/// maintained by any wrapper in the chain.
+	pub unsafe fn try_inner_child_mut(&mut self) -> Option<&mut Child> {
+		let mut inner = self;
+		loop {
+			if inner.is_raw_child() {
+				return (inner as &mut dyn Any).downcast_mut();
+			}
+
+			let inner_type = (&*inner as &dyn Any).type_id();
+			let inner_ptr = std::ptr::from_mut(inner);
+			let next = inner.inner_mut();
+			if std::ptr::addr_eq(inner_ptr, std::ptr::from_mut(next))
+				&& inner_type == (&*next as &dyn Any).type_id()
+			{
+				return None;
+			}
+			inner = next;
+		}
+	}
+
+	/// Try to consume the wrapper chain and obtain the underlying native [`Child`].
+	///
+	/// If the chain terminates in a non-native child, returns that terminal child without calling its
+	/// `into_inner` method. Wrappers already traversed before reaching it have been consumed.
+	///
+	/// # Safety
+	///
+	/// The caller must ensure that removing every traversed wrapper does not violate wrapper
+	/// invariants or bypass required cleanup. This also applies when the method returns `Err`, because
+	/// wrappers above the returned terminal child have already been consumed.
+	pub unsafe fn try_into_inner_child(self: Box<Self>) -> std::result::Result<Child, Box<Self>> {
+		let mut inner = self;
+		loop {
+			if inner.is_raw_child() {
+				return match (inner as Box<dyn Any>).downcast::<Child>() {
+					Ok(child) => Ok(*child),
+					Err(_) => unreachable!("native child type was checked before downcasting"),
+				};
+			}
+
+			let terminal = {
+				let next = inner.inner();
+				same_child(inner.as_ref(), next)
+			};
+			if terminal {
+				return Err(inner);
+			}
+			inner = inner.into_inner();
+		}
+	}
+}
+
+#[cfg(unix)]
+fn read2(
+	mut out_r: ChildStdout,
+	out_v: &mut Vec<u8>,
+	mut err_r: ChildStderr,
+	err_v: &mut Vec<u8>,
+) -> Result<()> {
+	use nix::{
+		errno::Errno,
+		libc,
+		poll::{PollFd, PollFlags, PollTimeout, poll},
+	};
+	use std::{
+		io::Error,
+		os::fd::{AsRawFd, BorrowedFd},
+	};
+
+	let out_fd = out_r.as_raw_fd();
+	let err_fd = err_r.as_raw_fd();
+	// SAFETY: these are dropped at the same time as all other FDs here
+	let out_bfd = unsafe { BorrowedFd::borrow_raw(out_fd) };
+	let err_bfd = unsafe { BorrowedFd::borrow_raw(err_fd) };
+
+	set_nonblocking(out_bfd, true)?;
+	set_nonblocking(err_bfd, true)?;
+
+	let mut fds = [
+		PollFd::new(out_bfd, PollFlags::POLLIN),
+		PollFd::new(err_bfd, PollFlags::POLLIN),
+	];
+
+	loop {
+		poll(&mut fds, PollTimeout::NONE)?;
+
+		if fds[0].revents().is_some() && read(&mut out_r, out_v)? {
+			set_nonblocking(err_bfd, false)?;
+			return err_r.read_to_end(err_v).map(drop);
+		}
+		if fds[1].revents().is_some() && read(&mut err_r, err_v)? {
+			set_nonblocking(out_bfd, false)?;
+			return out_r.read_to_end(out_v).map(drop);
+		}
+	}
+
+	fn read(r: &mut impl Read, dst: &mut Vec<u8>) -> Result<bool> {
+		match r.read_to_end(dst) {
+			Ok(_) => Ok(true),
+			Err(e) => {
+				if e.raw_os_error() == Some(libc::EWOULDBLOCK)
+					|| e.raw_os_error() == Some(libc::EAGAIN)
+				{
+					Ok(false)
+				} else {
+					Err(e)
+				}
+			}
+		}
+	}
+
+	#[cfg(target_os = "linux")]
+	fn set_nonblocking(fd: BorrowedFd, nonblocking: bool) -> Result<()> {
+		let v = nonblocking as libc::c_int;
+		let res = unsafe { libc::ioctl(fd.as_raw_fd(), libc::FIONBIO, &v) };
+
+		Errno::result(res).map_err(Error::from).map(drop)
+	}
+
+	#[cfg(not(target_os = "linux"))]
+	fn set_nonblocking(fd: BorrowedFd, nonblocking: bool) -> Result<()> {
+		use nix::fcntl::{FcntlArg, OFlag, fcntl};
+
+		let mut flags = OFlag::from_bits_truncate(fcntl(fd, FcntlArg::F_GETFL)?);
+		flags.set(OFlag::O_NONBLOCK, nonblocking);
+
+		fcntl(fd, FcntlArg::F_SETFL(flags))
+			.map_err(Error::from)
+			.map(drop)
+	}
+}
+
+// if you're reading this code and despairing, we'd love
+// your contribution of a proper read2 for your platform!
+#[cfg(not(unix))]
+fn read2(
+	mut out_r: ChildStdout,
+	out_v: &mut Vec<u8>,
+	mut err_r: ChildStderr,
+	err_v: &mut Vec<u8>,
+) -> Result<()> {
+	out_r.read_to_end(out_v)?;
+	err_r.read_to_end(err_v)?;
+	Ok(())
+}
+
+const _: () = {
+	const fn assert_sync<T: ?Sized + Sync>() {}
+	assert_sync::<dyn ChildWrapper>();
+};

@@ -1,0 +1,482 @@
+{
+  "amended_source_paths": [
+    "crates/ssx-infra/src/http.rs",
+    "crates/ssx-infra/tests/a13_dehashed.rs",
+    "crates/ssx-infra/tests/a13_remaining_fixture/mod.rs",
+    "crates/xtask/src/a11.rs",
+    "crates/ssx-infra/src/adapters/clinicaltrials.rs",
+    "crates/ssx-infra/src/adapters/mod.rs",
+    "crates/ssx-infra/src/search.rs",
+    "crates/ssx-infra/src/search_deadline_drain_tests.rs",
+    "crates/xtask/src/a09.rs",
+    "Cargo.lock"
+  ],
+  "amendments": [
+    {
+      "archive": {
+        "bytes": 41754,
+        "git_blob": "392a01333fb5e3bb529dae13ca88cfde6a08f1e0",
+        "mode": "0644",
+        "path": "docs/rust-rewrite/a13/source-amendments/http.rs.9f1a.frozen",
+        "sha256": "131cc1313b96f36bfbd9cf865a2e1857a6120ef3a2736ebee0b0b9565f80ac6b"
+      },
+      "historical_pins": [
+        {
+          "container_path": "docs/rust-rewrite/a10/qualification.json",
+          "container_sha256": "85a7121b09c7963326e0bb17b9fc30172649e349fb591a8a3494228af711ce14",
+          "source_bytes": 41754,
+          "source_mode": "0644",
+          "source_sha256": "131cc1313b96f36bfbd9cf865a2e1857a6120ef3a2736ebee0b0b9565f80ac6b"
+        },
+        {
+          "container_path": "docs/rust-rewrite/a11/qualification.json",
+          "container_sha256": "69b18d8f2ecb57639972c89bf57b105b83098ea38350bca00695182eda098ff4",
+          "source_bytes": 41754,
+          "source_mode": "0644",
+          "source_sha256": "131cc1313b96f36bfbd9cf865a2e1857a6120ef3a2736ebee0b0b9565f80ac6b"
+        },
+        {
+          "container_path": "docs/rust-rewrite/a12/qualification-v1.json",
+          "container_sha256": "37bdd69e0c26437f902e9aad3acb60908fbae920dcc10e42aeefaadbb0a40320",
+          "source_bytes": 41754,
+          "source_mode": "0644",
+          "source_sha256": "131cc1313b96f36bfbd9cf865a2e1857a6120ef3a2736ebee0b0b9565f80ac6b"
+        },
+        {
+          "container_path": "docs/rust-rewrite/a13/dehashed-source-map-v1.json",
+          "container_sha256": "226174da4be26ff9e902e73dc79a6d5344e5405abfae3a051ed19339a51a4b2d",
+          "source_bytes": 41754,
+          "source_mode": "0644",
+          "source_sha256": "131cc1313b96f36bfbd9cf865a2e1857a6120ef3a2736ebee0b0b9565f80ac6b"
+        },
+        {
+          "container_path": "docs/rust-rewrite/a13/remaining/source-map.json",
+          "container_sha256": "af359782abc772c727a885e66a87d519aea5393bcec31e0e105b2de46a8c5d22",
+          "source_bytes": 41754,
+          "source_mode": "0644",
+          "source_sha256": "131cc1313b96f36bfbd9cf865a2e1857a6120ef3a2736ebee0b0b9565f80ac6b"
+        },
+        {
+          "container_path": "docs/rust-rewrite/a13/qualification-v1.json",
+          "container_sha256": "e2d9249fbadd0eca06a10215f796defc5845722c63fcf9f409ab9eac8a85f74e",
+          "source_bytes": 41754,
+          "source_mode": "0644",
+          "source_sha256": "131cc1313b96f36bfbd9cf865a2e1857a6120ef3a2736ebee0b0b9565f80ac6b"
+        }
+      ],
+      "previous_successor_archive": {
+        "bytes": 46811,
+        "mode": "0644",
+        "path": "docs/rust-rewrite/a13/source-amendments/http.rs.7d5d.frozen",
+        "sha256": "7d5dd8a75239d745c279837080dd6a934056544e69b1d465b1d4ce51fc01fe6c",
+        "source_path": "crates/ssx-infra/src/http.rs"
+      },
+      "source_path": "crates/ssx-infra/src/http.rs",
+      "successor": {
+        "bytes": 46902,
+        "mode": "0644",
+        "path": "crates/ssx-infra/src/http.rs",
+        "predecessor_sha256": "7d5dd8a75239d745c279837080dd6a934056544e69b1d465b1d4ce51fc01fe6c",
+        "sha256": "716e43773370d9b1ada7274c3ca66d8409e5202a6bbcd682ae337cab7eba4120",
+        "status": "proposed exact F10 cfg(test) inclusion successor; qualification pending"
+      }
+    },
+    {
+      "archive": {
+        "bytes": 61928,
+        "git_blob": "d2a99b060f750f6d51e402e922289d4f708775b4",
+        "mode": "0644",
+        "path": "docs/rust-rewrite/a13/source-amendments/a13_dehashed.rs.9f1a.frozen",
+        "sha256": "49a7857775c07e6d89cdd26d72e25a47a63f84e7694e3d569c3edca3b8a3b1a2"
+      },
+      "historical_pins": [
+        {
+          "container_path": "docs/rust-rewrite/a13/qualification-v1.json",
+          "container_sha256": "e2d9249fbadd0eca06a10215f796defc5845722c63fcf9f409ab9eac8a85f74e",
+          "source_bytes": 61928,
+          "source_mode": "0644",
+          "source_sha256": "49a7857775c07e6d89cdd26d72e25a47a63f84e7694e3d569c3edca3b8a3b1a2"
+        }
+      ],
+      "source_path": "crates/ssx-infra/tests/a13_dehashed.rs",
+      "successor": {
+        "bytes": 63871,
+        "mode": "0644",
+        "path": "crates/ssx-infra/tests/a13_dehashed.rs",
+        "sha256": "dd21f09aceb24b0d7c9e751a6295079ffffb01c42299bfde365673c26b8e7487"
+      }
+    },
+    {
+      "archive": {
+        "bytes": 40406,
+        "git_blob": "bc9090f100298962b59fa1b9ccf6ed91221ad05f",
+        "mode": "0644",
+        "path": "docs/rust-rewrite/a13/source-amendments/a13_remaining_fixture_mod.rs.9f1a.frozen",
+        "sha256": "f79ab11ded4e6d214c16b9f9bedc75b8d57b00f7cfd3e60386ae575ae10f12fc"
+      },
+      "historical_pins": [
+        {
+          "container_path": "docs/rust-rewrite/a13/qualification-v1.json",
+          "container_sha256": "e2d9249fbadd0eca06a10215f796defc5845722c63fcf9f409ab9eac8a85f74e",
+          "source_bytes": 40406,
+          "source_mode": "0644",
+          "source_sha256": "f79ab11ded4e6d214c16b9f9bedc75b8d57b00f7cfd3e60386ae575ae10f12fc"
+        }
+      ],
+      "source_path": "crates/ssx-infra/tests/a13_remaining_fixture/mod.rs",
+      "successor": {
+        "bytes": 40795,
+        "mode": "0644",
+        "path": "crates/ssx-infra/tests/a13_remaining_fixture/mod.rs",
+        "sha256": "8ffd08e73a6f0b27d510470e8af0ee6d294693384402532d7b9442871d0004ab"
+      }
+    },
+    {
+      "archive": {
+        "bytes": 19879,
+        "git_blob": "dc5c8639a1e8b88b7159096e2758ae1827bca2be",
+        "mode": "0644",
+        "path": "docs/rust-rewrite/a13/source-amendments/xtask_a11.rs.9f1a.frozen",
+        "sha256": "c4b4593ca7cc073137e6618462261fc954959d2069fab7b18e973b2646e9bcb0"
+      },
+      "historical_pins": [
+        {
+          "container_path": "docs/rust-rewrite/a13/remaining/source-map.json",
+          "container_sha256": "af359782abc772c727a885e66a87d519aea5393bcec31e0e105b2de46a8c5d22",
+          "source_bytes": 19879,
+          "source_mode": "0644",
+          "source_sha256": "c4b4593ca7cc073137e6618462261fc954959d2069fab7b18e973b2646e9bcb0"
+        }
+      ],
+      "source_path": "crates/xtask/src/a11.rs",
+      "successor": {
+        "bytes": 20045,
+        "mode": "0644",
+        "path": "crates/xtask/src/a11.rs",
+        "sha256": "fdd0ad7593e02154b1f5204eb6e5be2ebb898b30e4039bada83b621553eb9eb7"
+      }
+    },
+    {
+      "archive": {
+        "bytes": 33943,
+        "git_blob": "f4cc578e117b3f75b56cd6a7994c3ae38eb61dae",
+        "mode": "0644",
+        "path": "docs/rust-rewrite/a13/source-amendments/clinicaltrials.rs.9f1a.frozen",
+        "sha256": "f7f74938aafe9ce7560f74fbddf907baf8ead53b8b6c0f22a7435de66372c5b7"
+      },
+      "historical_pins": [
+        {
+          "container_path": "docs/rust-rewrite/a10/qualification.json",
+          "container_sha256": "85a7121b09c7963326e0bb17b9fc30172649e349fb591a8a3494228af711ce14",
+          "source_bytes": 33943,
+          "source_mode": "0644",
+          "source_sha256": "f7f74938aafe9ce7560f74fbddf907baf8ead53b8b6c0f22a7435de66372c5b7"
+        },
+        {
+          "container_path": "docs/rust-rewrite/a11/qualification.json",
+          "container_sha256": "69b18d8f2ecb57639972c89bf57b105b83098ea38350bca00695182eda098ff4",
+          "source_bytes": 33943,
+          "source_mode": "0644",
+          "source_sha256": "f7f74938aafe9ce7560f74fbddf907baf8ead53b8b6c0f22a7435de66372c5b7"
+        },
+        {
+          "container_path": "docs/rust-rewrite/a13/qualification-v1.json",
+          "container_sha256": "e2d9249fbadd0eca06a10215f796defc5845722c63fcf9f409ab9eac8a85f74e",
+          "source_bytes": 33943,
+          "source_mode": "0644",
+          "source_sha256": "f7f74938aafe9ce7560f74fbddf907baf8ead53b8b6c0f22a7435de66372c5b7"
+        },
+        {
+          "container_path": "docs/rust-rewrite/a13/remaining/source-map.json",
+          "container_sha256": "af359782abc772c727a885e66a87d519aea5393bcec31e0e105b2de46a8c5d22",
+          "source_bytes": 33943,
+          "source_mode": "0644",
+          "source_sha256": "f7f74938aafe9ce7560f74fbddf907baf8ead53b8b6c0f22a7435de66372c5b7"
+        },
+        {
+          "container_path": "docs/rust-rewrite/a13/dehashed-source-map-v1.json",
+          "container_sha256": "226174da4be26ff9e902e73dc79a6d5344e5405abfae3a051ed19339a51a4b2d",
+          "source_bytes": 33943,
+          "source_mode": "0644",
+          "source_sha256": "f7f74938aafe9ce7560f74fbddf907baf8ead53b8b6c0f22a7435de66372c5b7"
+        }
+      ],
+      "previous_successor_archive": {
+        "bytes": 42796,
+        "mode": "0644",
+        "path": "docs/rust-rewrite/a13/source-amendments/clinicaltrials.rs.5515.frozen",
+        "sha256": "5515a0427191669a760d70c96478f504b1fc7f6466e89eba556bfc9f9b1f6f96",
+        "source_path": "crates/ssx-infra/src/adapters/clinicaltrials.rs"
+      },
+      "source_path": "crates/ssx-infra/src/adapters/clinicaltrials.rs",
+      "successor": {
+        "bytes": 42996,
+        "lint_afterimage_manifest_sha256": "ec2ea73904a87306186070c17ee199ab976a56e256e612ebf95d88a562e34254",
+        "mode": "0644",
+        "path": "crates/ssx-infra/src/adapters/clinicaltrials.rs",
+        "predecessor_sha256": "5515a0427191669a760d70c96478f504b1fc7f6466e89eba556bfc9f9b1f6f96",
+        "sha256": "2baaac73ee64f63192ec9c35ad44577d42cf4c314d1b6d3c57c7447086319485",
+        "source_manifest_sha256": "eb8a72f99bf7f15008e79e573dd046bfe27ee094bb7c918bdd0515ac76709d24"
+      }
+    },
+    {
+      "archive": {
+        "bytes": 32368,
+        "git_blob": "d2f928628404f119df489fb090428c65a884c57b",
+        "mode": "0644",
+        "path": "docs/rust-rewrite/a13/source-amendments/mod.rs.6e7d.frozen",
+        "sha256": "6e7d83bc62eb4b6134e1c7d04f178668950c7e7c11bd835c6fc5f923454b5791"
+      },
+      "historical_pins": [
+        {
+          "container_path": "docs/rust-rewrite/a10/qualification.json",
+          "container_sha256": "85a7121b09c7963326e0bb17b9fc30172649e349fb591a8a3494228af711ce14",
+          "source_bytes": 32368,
+          "source_mode": "0644",
+          "source_sha256": "6e7d83bc62eb4b6134e1c7d04f178668950c7e7c11bd835c6fc5f923454b5791"
+        },
+        {
+          "container_path": "docs/rust-rewrite/a11/qualification.json",
+          "container_sha256": "69b18d8f2ecb57639972c89bf57b105b83098ea38350bca00695182eda098ff4",
+          "source_bytes": 32368,
+          "source_mode": "0644",
+          "source_sha256": "6e7d83bc62eb4b6134e1c7d04f178668950c7e7c11bd835c6fc5f923454b5791"
+        },
+        {
+          "container_path": "docs/rust-rewrite/a12/qualification-v1.json",
+          "container_sha256": "37bdd69e0c26437f902e9aad3acb60908fbae920dcc10e42aeefaadbb0a40320",
+          "source_bytes": 32368,
+          "source_mode": "0644",
+          "source_sha256": "6e7d83bc62eb4b6134e1c7d04f178668950c7e7c11bd835c6fc5f923454b5791"
+        },
+        {
+          "container_path": "docs/rust-rewrite/a13/qualification-v1.json",
+          "container_sha256": "e2d9249fbadd0eca06a10215f796defc5845722c63fcf9f409ab9eac8a85f74e",
+          "source_bytes": 32368,
+          "source_mode": "0644",
+          "source_sha256": "6e7d83bc62eb4b6134e1c7d04f178668950c7e7c11bd835c6fc5f923454b5791"
+        },
+        {
+          "container_path": "docs/rust-rewrite/a13/remaining/source-map.json",
+          "container_sha256": "af359782abc772c727a885e66a87d519aea5393bcec31e0e105b2de46a8c5d22",
+          "source_bytes": 32368,
+          "source_mode": "0644",
+          "source_sha256": "6e7d83bc62eb4b6134e1c7d04f178668950c7e7c11bd835c6fc5f923454b5791"
+        },
+        {
+          "container_path": "docs/rust-rewrite/a13/dehashed-source-map-v1.json",
+          "container_sha256": "226174da4be26ff9e902e73dc79a6d5344e5405abfae3a051ed19339a51a4b2d",
+          "source_bytes": 32368,
+          "source_mode": "0644",
+          "source_sha256": "6e7d83bc62eb4b6134e1c7d04f178668950c7e7c11bd835c6fc5f923454b5791"
+        },
+        {
+          "container_path": "docs/rust-rewrite/a09/coverage.json",
+          "container_sha256": "d3dbf8be85061348dded0b783a55dd11f5d79e789857e2046ebe808504f162c8",
+          "source_bytes": 32368,
+          "source_mode": "0644",
+          "source_sha256": "6e7d83bc62eb4b6134e1c7d04f178668950c7e7c11bd835c6fc5f923454b5791"
+        }
+      ],
+      "source_path": "crates/ssx-infra/src/adapters/mod.rs",
+      "successor": {
+        "bytes": 32404,
+        "mode": "0644",
+        "path": "crates/ssx-infra/src/adapters/mod.rs",
+        "predecessor_sha256": "6e7d83bc62eb4b6134e1c7d04f178668950c7e7c11bd835c6fc5f923454b5791",
+        "sha256": "e18ddbd0a0d6bef8f05b20d7c44124e8a0c34a3f0385e2607ca51e1012ad2ee9",
+        "status": "reviewed current A07 test-module declaration"
+      }
+    },
+    {
+      "archive": {
+        "bytes": 82956,
+        "git_blob": "24b63b4b422c4ac2baa1fce20f6e5a1fb7d1e562",
+        "mode": "0644",
+        "path": "docs/rust-rewrite/a13/source-amendments/search.rs.273e.frozen",
+        "sha256": "9391917f1d3bd3c94fe5114342164be2bc8d821856e5441139ec09ce52cbede8"
+      },
+      "historical_pins": [
+        {
+          "container_path": "docs/rust-rewrite/a13/qualification-v1.json",
+          "container_sha256": "e2d9249fbadd0eca06a10215f796defc5845722c63fcf9f409ab9eac8a85f74e",
+          "source_bytes": 82956,
+          "source_mode": "0644",
+          "source_sha256": "9391917f1d3bd3c94fe5114342164be2bc8d821856e5441139ec09ce52cbede8"
+        },
+        {
+          "container_path": "docs/rust-rewrite/a13/dehashed-source-map-v1.json",
+          "container_sha256": "226174da4be26ff9e902e73dc79a6d5344e5405abfae3a051ed19339a51a4b2d",
+          "source_bytes": 82956,
+          "source_mode": "0644",
+          "source_sha256": "9391917f1d3bd3c94fe5114342164be2bc8d821856e5441139ec09ce52cbede8"
+        },
+        {
+          "container_path": "docs/rust-rewrite/a13/remaining/source-map.json",
+          "container_sha256": "af359782abc772c727a885e66a87d519aea5393bcec31e0e105b2de46a8c5d22",
+          "source_bytes": 82956,
+          "source_mode": "0644",
+          "source_sha256": "9391917f1d3bd3c94fe5114342164be2bc8d821856e5441139ec09ce52cbede8"
+        },
+        {
+          "container_path": "docs/rust-rewrite/o01/coverage.json",
+          "container_sha256": "76d216907f00ac637505101e83454f43d9a812213432e1c40a20d5a8d75934b0",
+          "source_bytes": 82956,
+          "source_mode": "0644",
+          "source_sha256": "9391917f1d3bd3c94fe5114342164be2bc8d821856e5441139ec09ce52cbede8"
+        }
+      ],
+      "source_path": "crates/ssx-infra/src/search.rs",
+      "successor": {
+        "bytes": 86121,
+        "mode": "0644",
+        "path": "crates/ssx-infra/src/search.rs",
+        "sha256": "fcac2929eb6637960d5e1086c321f0eac62fc0f8446cf73f22d6b43406137b12"
+      }
+    },
+    {
+      "archive": {
+        "bytes": 14360,
+        "git_blob": "3f590e98adb3a1e6c17b6dbc3f17c9682fef486f",
+        "mode": "0644",
+        "path": "docs/rust-rewrite/a13/source-amendments/search_deadline_drain_tests.rs.273e.frozen",
+        "sha256": "46cfdee019bb3922e6bff0997c0b5e7067d12554e3ca98c775254df40289081d"
+      },
+      "historical_pins": [
+        {
+          "container_path": "docs/rust-rewrite/a13/qualification-v1.json",
+          "container_sha256": "e2d9249fbadd0eca06a10215f796defc5845722c63fcf9f409ab9eac8a85f74e",
+          "source_bytes": 14360,
+          "source_mode": "0644",
+          "source_sha256": "46cfdee019bb3922e6bff0997c0b5e7067d12554e3ca98c775254df40289081d"
+        }
+      ],
+      "source_path": "crates/ssx-infra/src/search_deadline_drain_tests.rs",
+      "successor": {
+        "bytes": 21279,
+        "mode": "0644",
+        "path": "crates/ssx-infra/src/search_deadline_drain_tests.rs",
+        "sha256": "22ac8986deffda13569adeb1d21be601a72481fcc08e2b85f9c56eda0822bb6c"
+      }
+    },
+    {
+      "archive": {
+        "bytes": 21552,
+        "git_blob": "c5a40b1dc376e57cb92000643829e89207e528bc",
+        "mode": "0644",
+        "path": "docs/rust-rewrite/a13/source-amendments/xtask_a09.rs.273e.frozen",
+        "sha256": "99a99ed417d00bf1438881eecdb71f475cd0e58cadca3ef434c0d22678731193"
+      },
+      "historical_pins": [
+        {
+          "container_path": "docs/rust-rewrite/a13/remaining/source-map.json",
+          "container_sha256": "af359782abc772c727a885e66a87d519aea5393bcec31e0e105b2de46a8c5d22",
+          "source_bytes": 21552,
+          "source_mode": "0644",
+          "source_sha256": "99a99ed417d00bf1438881eecdb71f475cd0e58cadca3ef434c0d22678731193"
+        }
+      ],
+      "source_path": "crates/xtask/src/a09.rs",
+      "successor": {
+        "bytes": 21736,
+        "mode": "0644",
+        "path": "crates/xtask/src/a09.rs",
+        "sha256": "17ad5dfd910d7a55a135c0a2dcf5d9386bfe8cd34bd31d865375386cc7013330",
+        "status": "reviewed additive strict A09 historical source-pin reconciliation"
+      }
+    },
+    {
+      "archive": {
+        "bytes": 87421,
+        "git_blob": "a190ada31c969c36a74c94124e9bf095524cef03",
+        "mode": "0644",
+        "path": "docs/rust-rewrite/a13/source-amendments/Cargo.lock.8aec.security-v1.frozen",
+        "sha256": "b3781e5d46f4b3f545664a9bfc712b99b7196ad853fdf7fcc9ede89b1497d860"
+      },
+      "historical_pins": [
+        {
+          "container_path": "docs/rust-rewrite/a09/coverage.json",
+          "container_sha256": "d3dbf8be85061348dded0b783a55dd11f5d79e789857e2046ebe808504f162c8",
+          "source_bytes": 87421,
+          "source_mode": "0644",
+          "source_sha256": "b3781e5d46f4b3f545664a9bfc712b99b7196ad853fdf7fcc9ede89b1497d860"
+        },
+        {
+          "container_path": "docs/rust-rewrite/a10/qualification.json",
+          "container_sha256": "85a7121b09c7963326e0bb17b9fc30172649e349fb591a8a3494228af711ce14",
+          "source_bytes": 87421,
+          "source_mode": "0644",
+          "source_sha256": "b3781e5d46f4b3f545664a9bfc712b99b7196ad853fdf7fcc9ede89b1497d860"
+        },
+        {
+          "container_path": "docs/rust-rewrite/a11/qualification.json",
+          "container_sha256": "69b18d8f2ecb57639972c89bf57b105b83098ea38350bca00695182eda098ff4",
+          "source_bytes": 87421,
+          "source_mode": "0644",
+          "source_sha256": "b3781e5d46f4b3f545664a9bfc712b99b7196ad853fdf7fcc9ede89b1497d860"
+        },
+        {
+          "container_path": "docs/rust-rewrite/a12/qualification-v1.json",
+          "container_sha256": "37bdd69e0c26437f902e9aad3acb60908fbae920dcc10e42aeefaadbb0a40320",
+          "source_bytes": 87421,
+          "source_mode": "0644",
+          "source_sha256": "b3781e5d46f4b3f545664a9bfc712b99b7196ad853fdf7fcc9ede89b1497d860"
+        },
+        {
+          "container_path": "docs/rust-rewrite/a13/dehashed-source-map-v1.json",
+          "container_sha256": "226174da4be26ff9e902e73dc79a6d5344e5405abfae3a051ed19339a51a4b2d",
+          "source_bytes": 87421,
+          "source_mode": "0644",
+          "source_sha256": "b3781e5d46f4b3f545664a9bfc712b99b7196ad853fdf7fcc9ede89b1497d860"
+        },
+        {
+          "container_path": "docs/rust-rewrite/a13/remaining/source-map.json",
+          "container_sha256": "af359782abc772c727a885e66a87d519aea5393bcec31e0e105b2de46a8c5d22",
+          "source_bytes": 87421,
+          "source_mode": "0644",
+          "source_sha256": "b3781e5d46f4b3f545664a9bfc712b99b7196ad853fdf7fcc9ede89b1497d860"
+        },
+        {
+          "container_path": "docs/rust-rewrite/a13/qualification-v1.json",
+          "container_sha256": "e2d9249fbadd0eca06a10215f796defc5845722c63fcf9f409ab9eac8a85f74e",
+          "source_bytes": 87421,
+          "source_mode": "0644",
+          "source_sha256": "b3781e5d46f4b3f545664a9bfc712b99b7196ad853fdf7fcc9ede89b1497d860"
+        },
+        {
+          "container_path": "docs/rust-rewrite/o01/coverage.json",
+          "container_sha256": "76d216907f00ac637505101e83454f43d9a812213432e1c40a20d5a8d75934b0",
+          "source_bytes": 87421,
+          "source_mode": "0644",
+          "source_sha256": "b3781e5d46f4b3f545664a9bfc712b99b7196ad853fdf7fcc9ede89b1497d860"
+        },
+        {
+          "container_path": "docs/rust-rewrite/w06/qualification.json",
+          "container_sha256": "41223f66479f9ba4bcb51b4e60cc1abc9a806658aa1d706e349ae10efa555ed3",
+          "source_bytes": 87421,
+          "source_mode": "0644",
+          "source_sha256": "b3781e5d46f4b3f545664a9bfc712b99b7196ad853fdf7fcc9ede89b1497d860"
+        }
+      ],
+      "source_path": "Cargo.lock",
+      "successor": {
+        "bytes": 87422,
+        "mode": "0644",
+        "path": "Cargo.lock",
+        "sha256": "dff7171a6adc772be3015d858f29a350762454dbbab26696dca96718e87cb997",
+        "status": "security-updated; exact two-package substitution only"
+      }
+    }
+  ],
+  "baseline_commit": "9af56c2c54a8ccc91db3e43ffd31cfae5e46b673",
+  "historical_source_commit": "8aecf43ae8b2c25946f92c688f8a4ae299c53af5",
+  "kind": "A13_SECURITY_LOCK_AMENDMENT_V1",
+  "predecessor_baseline_commit": "273e83c80b0643191d97d4cedd9a5ca451868b55",
+  "predecessor_manifest": {
+    "path": "docs/rust-rewrite/a13/source-amendments/a13-current-source-amendment-v5.json",
+    "sha256": "4b64a708e58858425e4f7758333caef9ad4a4037e48c083702c3c3da0c71f3a8"
+  },
+  "qualification_state": "SOURCE_AMENDMENT_ONLY_NATIVE_CI_PENDING",
+  "reason": "Namespaced security lock provenance sidecar; preserves V5 current-source history and binds the precise two-package lockfile security update without occupying the canonical A13 V6 path.",
+  "schema_version": 1
+}

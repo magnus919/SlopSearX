@@ -1,0 +1,60 @@
+{
+  "baseline": "1e9dd82d62456fe6f511cc5ade88bae619fac027",
+  "kind": "parent_owned_narrow_inventory_proposal_not_applied",
+  "source_row": {
+    "path": "docs/rust-rewrite/w11/oracle/export.py",
+    "classification": "backend-coupled tooling/test",
+    "migration_owner": "W11",
+    "migration_owners": [
+      "W11",
+      "G08"
+    ],
+    "disposition": "temporary_developer_oracle_retire_before_backend_removal",
+    "evidence": "W11 offline AST plan digest/array normalization and actual staged-store read/retry observations against private disposable Valkey; native gate consumes immutable JSON only.",
+    "reason": "No backend imports, providers, live state, runtime or mandatory Python invocation. Retire executable Python in G08, retain JSON.",
+    "introduced_after_baseline": "1e9dd82d62456fe6f511cc5ade88bae619fac027"
+  },
+  "invocation_row": {
+    "path": "docs/rust-rewrite/w11/README.md",
+    "example_path": "docs/rust-rewrite/w11/oracle/export.py",
+    "evidence": "SLOPSEARX_TEST_VALKEY_SERVER=/path/to/pinned/valkey-server /private/tmp/slopsearx-rust-oracle-py314/bin/python docs/rust-rewrite/w11/oracle/export.py",
+    "classification": "temporary backend-coupled developer oracle; never a mandatory native gate or runtime dependency",
+    "migration_owner": "W11",
+    "retirement_owner": "G08",
+    "disposition": "retire executable Python before backend removal; retain immutable JSON source evidence"
+  },
+  "f01_add_source": {
+    "path": "docs/rust-rewrite/w11/oracle/export.py",
+    "git_blob": "3e6edaa6fd4a32043b84d8eacb5829256b846309"
+  },
+  "source_sha256": "4f7e3bf96331c12c10f7faf1cfdff3cf370832d410492be59886682f60e43ac3",
+  "deltas": {
+    "tracked_python_source_count": [
+      384,
+      385
+    ],
+    "backend-coupled tooling/test": [
+      261,
+      262
+    ],
+    "backend/runtime": [
+      122,
+      122
+    ],
+    "client-only": [
+      1,
+      1
+    ],
+    "developer_oracle_invocation_rows": [
+      25,
+      26
+    ]
+  },
+  "required_shared_updates": [
+    "python-disposition.json add complete source row, tracked count, source classifications, tracked_expected_count, manifest_count",
+    "python-invocations.json add complete developer invocation row and developer_oracle_invocation_rows",
+    "DRIFT.md append W11 baseline and isolated oracle retirement note",
+    "crates/xtask/fixtures/F01.json add source and update only modified three inventory Git blob anchors"
+  ],
+  "preservation": "All existing rows preserved byte-for-byte as JSON values. Do not incorporate unmerged O01. Retained v1 source snapshot is .source.txt, not runnable or py.txt; no historical py.txt count delta."
+}

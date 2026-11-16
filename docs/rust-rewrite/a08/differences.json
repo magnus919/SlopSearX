@@ -1,0 +1,1846 @@
+{
+  "schema_version": 1,
+  "normalization": "Only result.score integer-vs-f64 numeric encoding is normalized under accepted FiniteF64; booleans, strings, nonfinite, source codepoints and every other field remain typed.",
+  "records": [
+    {
+      "id": "edgar-outer-list",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "'list' object has no attribute 'get'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "expected source object",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "edgar-outer-null",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "'NoneType' object has no attribute 'get'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "expected source object",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "edgar-http-404",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "Client error '404 Not Found' for url 'https://efts.sec.gov/LATEST/search-index?q=test&limit=10&offset=0'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "provider HTTP 404",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "edgar-http-503",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "Server error '503 Service Unavailable' for url 'https://efts.sec.gov/LATEST/search-index?q=test&limit=10&offset=0'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "provider HTTP 503",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "edgar-max-2.0",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "slice indices must be integers or None or have an __index__ method",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "slice indices must be integers",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "edgar-max-'2'",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "slice indices must be integers or None or have an __index__ method",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "slice indices must be integers",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "edgar-timeout-'5000'",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "unsupported operand type(s) for /: 'str' and 'float'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "invalid timeout_ms",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "edgar-timeout-0",
+      "category": "mock-timer-superseded-by-real-loopback",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019324000001/a.htm",
+            "title": "Apple \u2014 10-K",
+            "content": "10-K \u2014 Annual report",
+            "engine": "edgar",
+            "position": 1,
+            "score": 2.0,
+            "category": "general",
+            "published_date": "2024-03-31",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": null,
+        "results": [],
+        "status": "timeout"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "edgar-timeout--1",
+      "category": "mock-timer-superseded-by-real-loopback",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019324000001/a.htm",
+            "title": "Apple \u2014 10-K",
+            "content": "10-K \u2014 Annual report",
+            "engine": "edgar",
+            "position": 1,
+            "score": 2.0,
+            "category": "general",
+            "published_date": "2024-03-31",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": null,
+        "results": [],
+        "status": "timeout"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "edgar-malformed-json",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "Expecting property name enclosed in double quotes: line 1 column 2 (char 1)",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "invalid source JSON: Syntax { position: 1, message: \"Expecting property name enclosed in double quotes\" }",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "fred-outer-list",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "'list' object has no attribute 'get'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "expected source object",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "fred-outer-null",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "'NoneType' object has no attribute 'get'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "expected source object",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "fred-http-404",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "Client error '404 Not Found' for url 'https://api.stlouisfed.org/fred/series/search?file_type=json&search_text=test&limit=10&order_by=popularity&sort_order=desc%27For+more+information+check%3A+https%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FHTTP%2FStatus%2F404",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "provider HTTP 404",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "fred-http-503",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "Server error '503 Service Unavailable' for url 'https://api.stlouisfed.org/fred/series/search?file_type=json&search_text=test&limit=10&order_by=popularity&sort_order=desc%27For+more+information+check%3A+https%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FHTTP%2FStatus%2F503",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "provider HTTP 503",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "fred-max-2.0",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "slice indices must be integers or None or have an __index__ method",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "slice indices must be integers",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "fred-max-'2'",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "slice indices must be integers or None or have an __index__ method",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "slice indices must be integers",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "fred-timeout-'5000'",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "unsupported operand type(s) for /: 'str' and 'float'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "invalid timeout_ms",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "fred-timeout-0",
+      "category": "mock-timer-superseded-by-real-loopback",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://fred.stlouisfed.org/series/GDP",
+            "title": "Gross domestic product (GDP)",
+            "content": "Quarterly \u2014 Billions \u2014 Adjusted \u2014 NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN",
+            "engine": "fred",
+            "position": 1,
+            "score": 98.0,
+            "category": "general",
+            "published_date": "1947-01-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "financial",
+              "type": "economic_series",
+              "schema_version": 1,
+              "data": {
+                "series_id": "GDP",
+                "title": "Gross domestic product",
+                "units": "Billions",
+                "frequency": "Quarterly",
+                "seasonal_adjustment": "Adjusted",
+                "observation_start": "1947-01-01",
+                "notes": "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN"
+              },
+              "provenance": {
+                "engine": "fred",
+                "adapter_fields": [
+                  "series_id",
+                  "title",
+                  "units",
+                  "frequency",
+                  "seasonal_adjustment",
+                  "observation_start",
+                  "notes"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": null,
+        "results": [],
+        "status": "timeout"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "fred-timeout--1",
+      "category": "mock-timer-superseded-by-real-loopback",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://fred.stlouisfed.org/series/GDP",
+            "title": "Gross domestic product (GDP)",
+            "content": "Quarterly \u2014 Billions \u2014 Adjusted \u2014 NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN",
+            "engine": "fred",
+            "position": 1,
+            "score": 98.0,
+            "category": "general",
+            "published_date": "1947-01-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "financial",
+              "type": "economic_series",
+              "schema_version": 1,
+              "data": {
+                "series_id": "GDP",
+                "title": "Gross domestic product",
+                "units": "Billions",
+                "frequency": "Quarterly",
+                "seasonal_adjustment": "Adjusted",
+                "observation_start": "1947-01-01",
+                "notes": "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN"
+              },
+              "provenance": {
+                "engine": "fred",
+                "adapter_fields": [
+                  "series_id",
+                  "title",
+                  "units",
+                  "frequency",
+                  "seasonal_adjustment",
+                  "observation_start",
+                  "notes"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": null,
+        "results": [],
+        "status": "timeout"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "fred-malformed-json",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "Expecting property name enclosed in double quotes: line 1 column 2 (char 1)",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "invalid source JSON: Syntax { position: 1, message: \"Expecting property name enclosed in double quotes\" }",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "openfda-http-503",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "Server error '503 Service Unavailable' for url 'https://api.fda.gov/drug/label.json?search=openfda.brand_name.exact%3A%22test%22+openfda.brand_name.exact%3A%22TEST%22+openfda.brand_name.exact%3A%22Test%22+openfda.generic_name.exact%3A%22test%22+openfda.generic_name.exact%3A%22TEST%22+openfda.generic_name.exact%3A%22Test%22+openfda.substance_name.exact%3A%22test%22+openfda.substance_name.exact%3A%22TEST%22+openfda.substance_name.exact%3A%22Test%22&limit=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "provider HTTP 503",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "openfda-max-2.0",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "slice indices must be integers or None or have an __index__ method",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "slice indices must be integers",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "openfda-max-'2'",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "slice indices must be integers or None or have an __index__ method",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "slice indices must be integers",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "openfda-timeout-'5000'",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "unsupported operand type(s) for /: 'str' and 'float'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "invalid timeout_ms",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "openfda-timeout-0",
+      "category": "mock-timer-superseded-by-real-loopback",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://api.fda.gov/drug/label.json?search=set_id.exact%3A%22label-1%22&limit=1",
+            "title": "TEST",
+            "content": "Maker \u2014 Active: Compound \u2014 Purpose \u2014 IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII",
+            "engine": "openfda",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "biomedical",
+              "type": "drug_label",
+              "schema_version": 1,
+              "data": {
+                "brand_name": "TEST",
+                "generic_name": "test",
+                "manufacturer": "Maker",
+                "substance": "Compound",
+                "purpose": "Purpose",
+                "indications": "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII",
+                "set_id": "label-1"
+              },
+              "provenance": {
+                "engine": "openfda",
+                "adapter_fields": [
+                  "brand_name",
+                  "generic_name",
+                  "manufacturer",
+                  "substance",
+                  "purpose",
+                  "indications",
+                  "set_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": null,
+        "results": [],
+        "status": "timeout"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "openfda-timeout--1",
+      "category": "mock-timer-superseded-by-real-loopback",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://api.fda.gov/drug/label.json?search=set_id.exact%3A%22label-1%22&limit=1",
+            "title": "TEST",
+            "content": "Maker \u2014 Active: Compound \u2014 Purpose \u2014 IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII",
+            "engine": "openfda",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "biomedical",
+              "type": "drug_label",
+              "schema_version": 1,
+              "data": {
+                "brand_name": "TEST",
+                "generic_name": "test",
+                "manufacturer": "Maker",
+                "substance": "Compound",
+                "purpose": "Purpose",
+                "indications": "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII",
+                "set_id": "label-1"
+              },
+              "provenance": {
+                "engine": "openfda",
+                "adapter_fields": [
+                  "brand_name",
+                  "generic_name",
+                  "manufacturer",
+                  "substance",
+                  "purpose",
+                  "indications",
+                  "set_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": null,
+        "results": [],
+        "status": "timeout"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "openfda-malformed-json",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "Expecting property name enclosed in double quotes: line 1 column 2 (char 1)",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "invalid source JSON: Syntax { position: 1, message: \"Expecting property name enclosed in double quotes\" }",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "oyez-http-503",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "Server error '503 Service Unavailable' for url 'https://beta-search.oyez.org/elasticsearch_index_scotus_nodes/_search'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "provider HTTP 503",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "oyez-max-'2'",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "'>=' not supported between instances of 'int' and 'str'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "setting does not support arithmetic",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "oyez-timeout-'5000'",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "unsupported operand type(s) for /: 'str' and 'float'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "invalid timeout_ms",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "oyez-timeout-0",
+      "category": "mock-timer-superseded-by-real-loopback",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.oyez.org/cases/1953/1",
+            "title": "Brown v Board",
+            "content": "Decided: 1954-05-17 | Equal protection",
+            "engine": "oyez",
+            "position": 1,
+            "score": 9.0,
+            "category": "general",
+            "published_date": "1954-05-17",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": null,
+        "results": [],
+        "status": "timeout"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "oyez-timeout--1",
+      "category": "mock-timer-superseded-by-real-loopback",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.oyez.org/cases/1953/1",
+            "title": "Brown v Board",
+            "content": "Decided: 1954-05-17 | Equal protection",
+            "engine": "oyez",
+            "position": 1,
+            "score": 9.0,
+            "category": "general",
+            "published_date": "1954-05-17",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": null,
+        "results": [],
+        "status": "timeout"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "oyez-malformed-json",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "Expecting property name enclosed in double quotes: line 1 column 2 (char 1)",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "invalid source JSON: Syntax { position: 1, message: \"Expecting property name enclosed in double quotes\" }",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "edgar-names-42",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "'int' object is not subscriptable",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "EDGAR display_names is not subscriptable",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "edgar-hits-None",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "'NoneType' object is not subscriptable",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "source result collection does not support slicing",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "edgar-hits-{}",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "slice(None, 10, None)",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "source result collection does not support slicing",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "edgar-hits-1",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "'int' object is not subscriptable",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "source result collection does not support slicing",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "fred-popularity-'NaN'",
+      "category": "finite-scalar-domain-refusal",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://fred.stlouisfed.org/series/GDP",
+            "title": "Gross domestic product (GDP)",
+            "content": "Quarterly \u2014 Billions \u2014 Adjusted \u2014 NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN",
+            "engine": "fred",
+            "position": 1,
+            "score": {
+              "$nonfinite": "nan"
+            },
+            "category": "general",
+            "published_date": "1947-01-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "financial",
+              "type": "economic_series",
+              "schema_version": 1,
+              "data": {
+                "series_id": "GDP",
+                "title": "Gross domestic product",
+                "units": "Billions",
+                "frequency": "Quarterly",
+                "seasonal_adjustment": "Adjusted",
+                "observation_start": "1947-01-01",
+                "notes": "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN"
+              },
+              "provenance": {
+                "engine": "fred",
+                "adapter_fields": [
+                  "series_id",
+                  "title",
+                  "units",
+                  "frequency",
+                  "seasonal_adjustment",
+                  "observation_start",
+                  "notes"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "source payload requires reviewed JSON projection",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "fred-popularity-'Infinity'",
+      "category": "finite-scalar-domain-refusal",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://fred.stlouisfed.org/series/GDP",
+            "title": "Gross domestic product (GDP)",
+            "content": "Quarterly \u2014 Billions \u2014 Adjusted \u2014 NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN",
+            "engine": "fred",
+            "position": 1,
+            "score": {
+              "$nonfinite": "inf"
+            },
+            "category": "general",
+            "published_date": "1947-01-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "financial",
+              "type": "economic_series",
+              "schema_version": 1,
+              "data": {
+                "series_id": "GDP",
+                "title": "Gross domestic product",
+                "units": "Billions",
+                "frequency": "Quarterly",
+                "seasonal_adjustment": "Adjusted",
+                "observation_start": "1947-01-01",
+                "notes": "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN"
+              },
+              "provenance": {
+                "engine": "fred",
+                "adapter_fields": [
+                  "series_id",
+                  "title",
+                  "units",
+                  "frequency",
+                  "seasonal_adjustment",
+                  "observation_start",
+                  "notes"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "source payload requires reviewed JSON projection",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "fred-popularity-'bad'",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "could not convert string to float: 'bad'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "invalid source float",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "fred-series-None",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "'NoneType' object is not subscriptable",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "source result collection does not support slicing",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "fred-series-{}",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "slice(None, 10, None)",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "source result collection does not support slicing",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "fred-series-1",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "'int' object is not subscriptable",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "source result collection does not support slicing",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "oyez-score-'NaN'",
+      "category": "finite-scalar-domain-refusal",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.oyez.org/cases/1953/1",
+            "title": "Brown v Board",
+            "content": "Decided: 1954-05-17 | Equal protection",
+            "engine": "oyez",
+            "position": 1,
+            "score": {
+              "$nonfinite": "nan"
+            },
+            "category": "general",
+            "published_date": "1954-05-17",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "source payload requires reviewed JSON projection",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "openfda-stage-failure-0",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "Server error '503 Service Unavailable' for url 'https://api.fda.gov/drug/label.json?search=openfda.brand_name.exact%3A%22test%22+openfda.brand_name.exact%3A%22TEST%22+openfda.brand_name.exact%3A%22Test%22+openfda.generic_name.exact%3A%22test%22+openfda.generic_name.exact%3A%22TEST%22+openfda.generic_name.exact%3A%22Test%22+openfda.substance_name.exact%3A%22test%22+openfda.substance_name.exact%3A%22TEST%22+openfda.substance_name.exact%3A%22Test%22&limit=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "provider HTTP 503",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "openfda-stage-failure-1",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "Server error '503 Service Unavailable' for url 'https://api.fda.gov/drug/label.json?search=openfda.brand_name%3A%22test%22+openfda.generic_name%3A%22test%22+openfda.substance_name%3A%22test%22&limit=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "provider HTTP 503",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "edgar-score-True",
+      "category": "finite-scalar-domain-refusal",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019324000001/a.htm",
+            "title": "Apple \u2014 10-K",
+            "content": "10-K \u2014 Annual report",
+            "engine": "edgar",
+            "position": 1,
+            "score": true,
+            "category": "general",
+            "published_date": "2024-03-31",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "EDGAR score must be numeric",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "edgar-score-'7'",
+      "category": "finite-scalar-domain-refusal",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019324000001/a.htm",
+            "title": "Apple \u2014 10-K",
+            "content": "10-K \u2014 Annual report",
+            "engine": "edgar",
+            "position": 1,
+            "score": "7",
+            "category": "general",
+            "published_date": "2024-03-31",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "EDGAR score must be numeric",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "edgar-score-nan",
+      "category": "finite-scalar-domain-refusal",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019324000001/a.htm",
+            "title": "Apple \u2014 10-K",
+            "content": "10-K \u2014 Annual report",
+            "engine": "edgar",
+            "position": 1,
+            "score": {
+              "$nonfinite": "nan"
+            },
+            "category": "general",
+            "published_date": "2024-03-31",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "source payload requires reviewed JSON projection",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "edgar-score-inf",
+      "category": "finite-scalar-domain-refusal",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019324000001/a.htm",
+            "title": "Apple \u2014 10-K",
+            "content": "10-K \u2014 Annual report",
+            "engine": "edgar",
+            "position": 1,
+            "score": {
+              "$nonfinite": "inf"
+            },
+            "category": "general",
+            "published_date": "2024-03-31",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "source payload requires reviewed JSON projection",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "edgar-date-1",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "'int' object is not subscriptable",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "EDGAR filed_at is not sliceable text",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "edgar-outer-hits-None",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "'NoneType' object has no attribute 'get'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "expected source object",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "edgar-outer-hits-1",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "'int' object has no attribute 'get'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "expected source object",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "edgar-outer-hits-[]",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "'list' object has no attribute 'get'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "expected source object",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "edgar-outer-hits-' '",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "'str' object has no attribute 'get'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "expected source object",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "fred-direct-key-shape-True",
+      "category": "F06-typed-config-rejection-supersession",
+      "source_output": {
+        "raised": "AttributeError",
+        "error_message": "'bool' object has no attribute 'strip'"
+      },
+      "native_output": {
+        "status": "configuration_rejected",
+        "phase": "F06",
+        "adapter_instantiated": false,
+        "requests": []
+      },
+      "review": "parent-approved typed config boundary; excluded from adapter replay; actual F06 loader rejection before instantiation",
+      "native_case": "ssx-infra/test:a08_factories/oyez_yaml_direct_search_override_and_nontext_secrets_remain_rejected_by_f06"
+    },
+    {
+      "id": "fred-direct-key-shape-42",
+      "category": "F06-typed-config-rejection-supersession",
+      "source_output": {
+        "raised": "AttributeError",
+        "error_message": "'int' object has no attribute 'strip'"
+      },
+      "native_output": {
+        "status": "configuration_rejected",
+        "phase": "F06",
+        "adapter_instantiated": false,
+        "requests": []
+      },
+      "review": "parent-approved typed config boundary; excluded from adapter replay; actual F06 loader rejection before instantiation",
+      "native_case": "ssx-infra/test:a08_factories/oyez_yaml_direct_search_override_and_nontext_secrets_remain_rejected_by_f06"
+    },
+    {
+      "id": "fred-title-'A\\ud800B'",
+      "category": "finite-scalar-domain-refusal",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://fred.stlouisfed.org/series/GDP",
+            "title": {
+              "$source_text": [
+                65,
+                55296,
+                66,
+                32,
+                40,
+                71,
+                68,
+                80,
+                41
+              ]
+            },
+            "content": "Quarterly \u2014 Billions \u2014 Adjusted \u2014 NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN",
+            "engine": "fred",
+            "position": 1,
+            "score": 98.0,
+            "category": "general",
+            "published_date": "1947-01-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "financial",
+              "type": "economic_series",
+              "schema_version": 1,
+              "data": {
+                "series_id": "GDP",
+                "title": "A\ufffdB",
+                "units": "Billions",
+                "frequency": "Quarterly",
+                "seasonal_adjustment": "Adjusted",
+                "observation_start": "1947-01-01",
+                "notes": "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN"
+              },
+              "provenance": {
+                "engine": "fred",
+                "adapter_fields": [
+                  "series_id",
+                  "title",
+                  "units",
+                  "frequency",
+                  "seasonal_adjustment",
+                  "observation_start",
+                  "notes"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "source stringification contains non-scalar Unicode",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "fred-notes-surrogate-'\\ud800bad'",
+      "category": "finite-scalar-domain-refusal",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://fred.stlouisfed.org/series/GDP",
+            "title": "Gross domestic product (GDP)",
+            "content": {
+              "$source_text": [
+                81,
+                117,
+                97,
+                114,
+                116,
+                101,
+                114,
+                108,
+                121,
+                32,
+                8212,
+                32,
+                66,
+                105,
+                108,
+                108,
+                105,
+                111,
+                110,
+                115,
+                32,
+                8212,
+                32,
+                65,
+                100,
+                106,
+                117,
+                115,
+                116,
+                101,
+                100,
+                32,
+                8212,
+                32,
+                55296,
+                98,
+                97,
+                100
+              ]
+            },
+            "engine": "fred",
+            "position": 1,
+            "score": 98.0,
+            "category": "general",
+            "published_date": "1947-01-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "financial",
+              "type": "economic_series",
+              "schema_version": 1,
+              "data": {
+                "series_id": "GDP",
+                "title": "Gross domestic product",
+                "units": "Billions",
+                "frequency": "Quarterly",
+                "seasonal_adjustment": "Adjusted",
+                "observation_start": "1947-01-01",
+                "notes": "\ufffdbad"
+              },
+              "provenance": {
+                "engine": "fred",
+                "adapter_fields": [
+                  "series_id",
+                  "title",
+                  "units",
+                  "frequency",
+                  "seasonal_adjustment",
+                  "observation_start",
+                  "notes"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "source text contains non-scalar Unicode; requires reviewed projection",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "oyez-name-surrogate-'title\\ud800'",
+      "category": "finite-scalar-domain-refusal",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.oyez.org/cases/1953/1",
+            "title": {
+              "$source_text": [
+                116,
+                105,
+                116,
+                108,
+                101,
+                55296
+              ]
+            },
+            "content": "Decided: 1954-05-17 | Equal protection",
+            "engine": "oyez",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": "1954-05-17",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "Oyez text contains non-scalar Unicode",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "oyez-name-surrogate-[None, 'title\\ud800']",
+      "category": "finite-scalar-domain-refusal",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.oyez.org/cases/1953/1",
+            "title": {
+              "$source_text": [
+                116,
+                105,
+                116,
+                108,
+                101,
+                55296
+              ]
+            },
+            "content": "Decided: 1954-05-17 | Equal protection",
+            "engine": "oyez",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": "1954-05-17",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "Oyez text contains non-scalar Unicode",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "openfda-indications-surrogate-'\\ud800bad'",
+      "category": "finite-scalar-domain-refusal",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://api.fda.gov/drug/label.json?search=set_id.exact%3A%22label-1%22&limit=1",
+            "title": "TEST",
+            "content": {
+              "$source_text": [
+                77,
+                97,
+                107,
+                101,
+                114,
+                32,
+                8212,
+                32,
+                65,
+                99,
+                116,
+                105,
+                118,
+                101,
+                58,
+                32,
+                67,
+                111,
+                109,
+                112,
+                111,
+                117,
+                110,
+                100,
+                32,
+                8212,
+                32,
+                80,
+                117,
+                114,
+                112,
+                111,
+                115,
+                101,
+                32,
+                8212,
+                32,
+                55296,
+                98,
+                97,
+                100
+              ]
+            },
+            "engine": "openfda",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "biomedical",
+              "type": "drug_label",
+              "schema_version": 1,
+              "data": {
+                "brand_name": "TEST",
+                "generic_name": "test",
+                "manufacturer": "Maker",
+                "substance": "Compound",
+                "purpose": "Purpose",
+                "indications": "\ufffdbad",
+                "set_id": "label-1"
+              },
+              "provenance": {
+                "engine": "openfda",
+                "adapter_fields": [
+                  "brand_name",
+                  "generic_name",
+                  "manufacturer",
+                  "substance",
+                  "purpose",
+                  "indications",
+                  "set_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "source text contains non-scalar Unicode; requires reviewed projection",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "openfda-id-surrogate-'id\\ud800'",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "'utf-8' codec can't encode character '\\ud800' in position 16: surrogates not allowed",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "FDA text contains non-scalar Unicode",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "openfda-id-surrogate-['id\\ud800']",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "'utf-8' codec can't encode character '\\ud800' in position 16: surrogates not allowed",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "FDA text contains non-scalar Unicode",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "openfda-name-surrogate-'brand\\ud800'",
+      "category": "finite-scalar-domain-refusal",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://api.fda.gov/drug/label.json?search=set_id.exact%3A%22label-1%22&limit=1",
+            "title": {
+              "$source_text": [
+                98,
+                114,
+                97,
+                110,
+                100,
+                55296
+              ]
+            },
+            "content": "Purpose \u2014 IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII",
+            "engine": "openfda",
+            "position": 1,
+            "score": 0.25,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "biomedical",
+              "type": "drug_label",
+              "schema_version": 1,
+              "data": {
+                "brand_name": "brand\ufffd",
+                "purpose": "Purpose",
+                "indications": "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII",
+                "set_id": "label-1"
+              },
+              "provenance": {
+                "engine": "openfda",
+                "adapter_fields": [
+                  "brand_name",
+                  "purpose",
+                  "indications",
+                  "set_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "FDA text contains non-scalar Unicode",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "openfda-name-surrogate-['brand\\ud800']",
+      "category": "finite-scalar-domain-refusal",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://api.fda.gov/drug/label.json?search=set_id.exact%3A%22label-1%22&limit=1",
+            "title": {
+              "$source_text": [
+                98,
+                114,
+                97,
+                110,
+                100,
+                55296
+              ]
+            },
+            "content": "Purpose \u2014 IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII",
+            "engine": "openfda",
+            "position": 1,
+            "score": 0.25,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "biomedical",
+              "type": "drug_label",
+              "schema_version": 1,
+              "data": {
+                "brand_name": "brand\ufffd",
+                "purpose": "Purpose",
+                "indications": "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII",
+                "set_id": "label-1"
+              },
+              "provenance": {
+                "engine": "openfda",
+                "adapter_fields": [
+                  "brand_name",
+                  "purpose",
+                  "indications",
+                  "set_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "FDA text contains non-scalar Unicode",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "fred-redaction-245",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "https://fred.test/search?x=1",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "biomedical provider request failed",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "fred-redaction-246",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "failed https://fred.test/search?x=1+surround",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "biomedical provider request failed",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "fred-redaction-247",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "https://fred.test/search?x=1",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "biomedical provider request failed",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "fred-redaction-248",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "https://[broken?api_key=<synthetic-key>",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "biomedical provider request failed",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "tests/test_fred.py::TestFREDAdapterSearch::test_http_status_error_sanitized#0",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "Server error '500 Internal Server Error' for url 'https://api.stlouisfed.org/fred/series/search?file_type=json&search_text=test&limit=10&order_by=popularity&sort_order=desc%27For+more+information+check%3A+https%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FHTTP%2FStatus%2F500",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "provider HTTP 500",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    },
+    {
+      "id": "tests/test_fred.py::TestFREDAdapterSearch::test_broad_exception_sanitized#0",
+      "category": "native-library-diagnostic-wording",
+      "source_output": {
+        "status": "error",
+        "error_message": "https://api.stlouisfed.org/fred/series/search?file_type=json&search_text=test&limit=10",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "biomedical provider request failed",
+        "results": [],
+        "status": "error"
+      },
+      "review": "proposed exact cases for parent review"
+    }
+  ]
+}

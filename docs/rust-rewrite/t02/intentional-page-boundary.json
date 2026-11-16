@@ -1,0 +1,49 @@
+{
+  "status": "root-reviewed direction; exact artifacts and final qualification review pending",
+  "id": "T02-page-u64-bound",
+  "source": "Python arbitrary precision int permits a lexically valid positive pageno above u64::MAX to reach the adapter",
+  "native": "HTTP rejects pageno above 18446744073709551615 before acquisition; the accepted F05 SearchRequest.page domain is u64",
+  "response": {
+    "status": 400,
+    "media_type": "application/json",
+    "body": {
+      "error": "invalid_filter",
+      "message": "Invalid value for 'pageno'.",
+      "field": "pageno"
+    },
+    "engine_calls": 0
+  },
+  "source_record_file": "docs/rust-rewrite/t02/oracle/source_http_grammar_records.jsonl",
+  "source_record_sha256": "36a02f0fc3345dc3831c7f310ba6edc844dc710ccfb01616a6b9072bd9d59d95",
+  "source_case_ids": [
+    "integer_pageno_01",
+    "integer_pageno_02",
+    "integer_pageno_03"
+  ],
+  "source_outcomes": {
+    "status": 200,
+    "engine_calls_each": 1
+  },
+  "neighbor_controls": [
+    "integer_pageno_00",
+    "integer_pageno_04",
+    "integer_pageno_05",
+    "integer_pageno_06",
+    "integer_pageno_07",
+    "integer_pageno_08",
+    "integer_pageno_09",
+    "integer_pageno_10",
+    "integer_pageno_11",
+    "integer_precedence_0",
+    "integer_precedence_1",
+    "integer_precedence_2",
+    "integer_precedence_3",
+    "integer_precedence_4"
+  ],
+  "invariants": [
+    "no truncation or saturation into an accepted provider request",
+    "lexical failure remains distinct from field range failure",
+    "format/initial numeric field/sensitive/bounded-format rejection precedence retained"
+  ],
+  "not_claimed": "arbitrary-precision page parity"
+}

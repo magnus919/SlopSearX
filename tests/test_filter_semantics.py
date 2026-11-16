@@ -42,7 +42,7 @@ from slopsearx.mcp import tools as t
 from slopsearx.mcp.state import McpState, set_state
 from slopsearx.research import ResearchJob, ResearchJobRunner, ResearchJobStore, ResearchQuery, generate_job_id
 from slopsearx.router import QueryRouter
-from slopsearx.service import AppContext, SearchRequest, SearchService
+from slopsearx.service import AppContext, QueryValidationError, SearchRequest, SearchService
 from slopsearx.snapshot import SnapshotStore
 
 
@@ -602,12 +602,8 @@ class TestEnforcementTruthAcrossPaths:
         result = await t.slopsearx_search_science(
             "transformers", source_types=["papers"], date_from="2024-01-01", date_to="2024-12-31"
         )
-        assert "error" not in result
-        report = result["enforcement"]
-        assert set(report) == {"date_from", "date_to"}
-        for entry in report.values():
-            _assert_valid_entry(entry)
-            assert entry["status"] == "unsupported"
+        assert result["error"]["code"] == "invalid_input"
+        assert result["error"]["field"] == "engines"
 
     async def test_research_preserves_enforcement_truth(self, state: McpState) -> None:
         job = ResearchJob(
@@ -668,7 +664,7 @@ class TestAuditedOpenAlexDates:
                 "climate", engines=["openalex"], date_from="2023-01-01", date_to="2023-01-01"
             )
             mixed = await t.slopsearx_search_science("climate", engines=["openalex", "arxiv"], date_from="2024-02-29")
-        assert len(seen) == 3
+        assert len(seen) == 2
         assert cached["meta"]["cached"] is True
         assert first["enforcement"] == cached["enforcement"]
         assert first["results"][0]["published_at"] == "2024-02-29"
@@ -676,10 +672,10 @@ class TestAuditedOpenAlexDates:
         for key in ("date_from", "date_to"):
             assert first["enforcement"][key]["status"] == "enforced"
             assert first["enforcement"][key]["enforced_by"] == ["upstream:openalex"]
-        assert mixed["enforcement"]["date_from"]["status"] == "partially_enforced"
-        assert mixed["enforcement"]["date_from"]["enforced_by"] == ["upstream:openalex"]
-        assert any("date_from" in warning for warning in mixed["warnings"])
-        assert any(result["primary_engine"] == "arxiv" for result in mixed["results"])
+        assert mixed["error"]["code"] == "invalid_input"
+        assert first["engine_outcomes"][0]["status"] == cached["engine_outcomes"][0]["status"] == "ok"
+        assert first["meta"]["date_filter"] == cached["meta"]["date_filter"]
+        assert first["meta"]["date_filter"]["applied"] == {"date_from": "2024-02-29", "date_to": "2024-02-29"}
 
     @pytest.mark.parametrize(
         "bounds",
@@ -735,16 +731,16 @@ class TestAuditedOpenAlexDates:
             ]
         }
         async with MockHTTP(lambda request: httpx.Response(200, json=payload)):
-            response = await state.service.search(
-                SearchRequest(
-                    query="climate",
-                    engines=["openalex"],
-                    date_from=older.isoformat(),
-                    date_to=today.isoformat(),
-                    time_range="week",
+            with pytest.raises(QueryValidationError, match="cannot be combined"):
+                await state.service.search(
+                    SearchRequest(
+                        query="climate",
+                        engines=["openalex"],
+                        date_from=older.isoformat(),
+                        date_to=today.isoformat(),
+                        time_range="week",
+                    )
                 )
-            )
-        assert [r.published_date for r in response.results] == [today.isoformat()]
 
 
 async def test_relative_window_is_frozen_across_midnight(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -776,3 +772,39 @@ async def test_relative_window_is_frozen_across_midnight(monkeypatch: pytest.Mon
     assert not after_midnight.cached
     assert engine.calls == 2
     assert request._time_range_anchor is None  # caller's reusable request was not mutated
+
+
+async def test_absolute_date_cache_requires_proof_and_separates_bounds():
+    from engines.openalex import OpenAlexAdapter
+
+    class AuditedEmpty(OpenAlexAdapter):
+        calls = 0
+
+        async def search(self, query, params=None):
+            self.calls += 1
+            return AdapterResponse(results=[], status=EngineStatus.OK)
+
+    engine = AuditedEmpty()
+    cache = _FakeStore()
+    service = SearchService(AppContext(active_engines={"openalex": engine}, cache=cache))
+    request = SearchRequest(query="climate", engines=["openalex"], date_from="2024-02-29")
+    first = await service.search(request)
+    second = await service.search(request)
+    assert second.cached and engine.calls == 1
+    assert first.date_filter == second.date_filter
+    for payload in cache._data.values():
+        payload.pop("date_filter", None)
+    third = await service.search(request)
+    assert not third.cached and engine.calls == 2
+    await service.search(SearchRequest(query="climate", engines=["openalex"], date_to="2024-02-29"))
+    assert engine.calls == 3
+    legacy = await service.search(SearchRequest(query="climate", engines=["openalex"]))
+    assert engine.calls == 4 and legacy.date_filter is None
+
+
+async def test_absolute_date_scope_requires_audited_adapter_not_just_name():
+    engine = _MockEngine("openalex")
+    service = SearchService(AppContext(active_engines={"openalex": engine}))
+    with pytest.raises(QueryValidationError, match="does not enforce"):
+        await service.search(SearchRequest(query="climate", engines=["openalex"], date_from="2024-02-29"))
+    assert engine.calls == 0

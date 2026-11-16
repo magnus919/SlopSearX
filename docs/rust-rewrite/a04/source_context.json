@@ -1,0 +1,1143 @@
+{
+  "schema_version": 1,
+  "plan_id": "A04",
+  "records": [
+    {
+      "id": "brave.web.success",
+      "engine": "brave",
+      "config": {
+        "api_key": "test-key"
+      },
+      "query": "test query",
+      "params": null,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.search.brave.com/res/v1/web/search?q=test+query&count=20&safesearch=off",
+          "headers": {
+            "user-agent": "python-httpx/0.28.1",
+            "accept": "application/json",
+            "x-subscription-token": "test-key"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "eyJ3ZWIiOnsicmVzdWx0cyI6W3sidXJsIjoiaHR0cHM6Ly9leGFtcGxlLmNvbS9wYWdlMSIsInRpdGxlIjoiVGVzdCBQYWdlIDEiLCJkZXNjcmlwdGlvbiI6IkRlc2NyaXB0aW9uIG9mIHRlc3QgcGFnZSAxIiwidGh1bWJuYWlsIjp7InNyYyI6Imh0dHBzOi8vZXhhbXBsZS5jb20vdGh1bWIxLmpwZyJ9fSx7InVybCI6Imh0dHBzOi8vZXhhbXBsZS5jb20vcGFnZTIiLCJ0aXRsZSI6IlRlc3QgUGFnZSAyIiwiZGVzY3JpcHRpb24iOiJEZXNjcmlwdGlvbiBvZiB0ZXN0IHBhZ2UgMiJ9XX19",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "brave.images.media",
+      "engine": "brave",
+      "config": {
+        "api_key": "test-key"
+      },
+      "query": "raspberry pi",
+      "params": {
+        "categories": [
+          "images"
+        ]
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.search.brave.com/res/v1/images/search?q=raspberry+pi&count=20&safesearch=off",
+          "headers": {
+            "user-agent": "python-httpx/0.28.1",
+            "accept": "application/json",
+            "x-subscription-token": "test-key"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "eyJyZXN1bHRzIjpbeyJ0aXRsZSI6IlJhc3BiZXJyeSBQaSBwaG90byIsInBhZ2VfdXJsIjoiaHR0cHM6Ly9leGFtcGxlLmNvbS9waS5qcGciLCJ0aHVtYm5haWwiOnsic3JjIjoiaHR0cHM6Ly9leGFtcGxlLmNvbS9waV90aHVtYi5qcGcifSwiZGVzY3JpcHRpb24iOiJBIHBob3RvIG9mIGEgUmFzcGJlcnJ5IFBpIn1dfQ==",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "brave.news.route",
+      "engine": "brave",
+      "config": {
+        "api_key": "test-key"
+      },
+      "query": "breaking",
+      "params": {
+        "categories": [
+          "news"
+        ]
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.search.brave.com/res/v1/news/search?q=breaking&count=20&safesearch=off",
+          "headers": {
+            "user-agent": "python-httpx/0.28.1",
+            "accept": "application/json",
+            "x-subscription-token": "test-key"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "eyJyZXN1bHRzIjpbeyJ1cmwiOiJodHRwczovL2V4YW1wbGUuY29tL25ld3MxIiwidGl0bGUiOiJCcmVha2luZyBOZXdzIiwiZGVzY3JpcHRpb24iOiJTb21ldGhpbmcgaGFwcGVuZWQifV19",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "brave.videos.route",
+      "engine": "brave",
+      "config": {
+        "api_key": "test-key"
+      },
+      "query": "tutorial",
+      "params": {
+        "categories": [
+          "videos"
+        ]
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.search.brave.com/res/v1/videos/search?q=tutorial&count=20&safesearch=off",
+          "headers": {
+            "user-agent": "python-httpx/0.28.1",
+            "accept": "application/json",
+            "x-subscription-token": "test-key"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "eyJyZXN1bHRzIjpbeyJ1cmwiOiJodHRwczovL2V4YW1wbGUuY29tL25ld3MxIiwidGl0bGUiOiJCcmVha2luZyBOZXdzIiwiZGVzY3JpcHRpb24iOiJTb21ldGhpbmcgaGFwcGVuZWQifV19",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "brave.web.fallback",
+      "engine": "brave",
+      "config": {
+        "api_key": "test-key"
+      },
+      "query": "science",
+      "params": {
+        "categories": [
+          "science"
+        ]
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.search.brave.com/res/v1/web/search?q=science&count=20&safesearch=off",
+          "headers": {
+            "user-agent": "python-httpx/0.28.1",
+            "accept": "application/json",
+            "x-subscription-token": "test-key"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "eyJ3ZWIiOnsicmVzdWx0cyI6W3sidXJsIjoiaHR0cHM6Ly9leGFtcGxlLmNvbS9wYWdlMSIsInRpdGxlIjoiVGVzdCBQYWdlIDEiLCJkZXNjcmlwdGlvbiI6IkRlc2NyaXB0aW9uIG9mIHRlc3QgcGFnZSAxIiwidGh1bWJuYWlsIjp7InNyYyI6Imh0dHBzOi8vZXhhbXBsZS5jb20vdGh1bWIxLmpwZyJ9fSx7InVybCI6Imh0dHBzOi8vZXhhbXBsZS5jb20vcGFnZTIiLCJ0aXRsZSI6IlRlc3QgUGFnZSAyIiwiZGVzY3JpcHRpb24iOiJEZXNjcmlwdGlvbiBvZiB0ZXN0IHBhZ2UgMiJ9XX19",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "brave.429",
+      "engine": "brave",
+      "config": {
+        "api_key": "test-key"
+      },
+      "query": "test",
+      "params": null,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.search.brave.com/res/v1/web/search?q=test&count=20&safesearch=off",
+          "headers": {
+            "user-agent": "python-httpx/0.28.1",
+            "accept": "application/json",
+            "x-subscription-token": "test-key"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 429,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "brave.403",
+      "engine": "brave",
+      "config": {
+        "api_key": "test-key"
+      },
+      "query": "test",
+      "params": null,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.search.brave.com/res/v1/web/search?q=test&count=20&safesearch=off",
+          "headers": {
+            "user-agent": "python-httpx/0.28.1",
+            "accept": "application/json",
+            "x-subscription-token": "test-key"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 403,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "brave.timeout",
+      "engine": "brave",
+      "config": {
+        "api_key": "test-key"
+      },
+      "query": "test",
+      "params": null,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.search.brave.com/res/v1/web/search?q=test&count=20&safesearch=off",
+          "headers": {
+            "user-agent": "python-httpx/0.28.1",
+            "accept": "application/json",
+            "x-subscription-token": "test-key"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": null,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "",
+          "exception_type": "TimeoutException"
+        }
+      ]
+    },
+    {
+      "id": "brave.missing_key",
+      "engine": "brave",
+      "config": {
+        "api_key": ""
+      },
+      "query": "test",
+      "params": null,
+      "requests": [],
+      "responses": []
+    },
+    {
+      "id": "brave.answers",
+      "engine": "brave",
+      "config": {
+        "api_key": "test-key"
+      },
+      "query": "entity",
+      "params": null,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.search.brave.com/res/v1/web/search?q=entity&count=20&safesearch=off",
+          "headers": {
+            "user-agent": "python-httpx/0.28.1",
+            "accept": "application/json",
+            "x-subscription-token": "test-key"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "eyJpbmZvYm94Ijp7InJlc3VsdHMiOlt7InVybCI6Imh0dHBzOi8vZXhhbXBsZS50ZXN0L2VudGl0eSIsInRpdGxlIjoiRW50aXR5IiwiZGVzY3JpcHRpb24iOiJBbiBlbnRpdHkgZGVzY3JpcHRpb24ifV19LCJtaXhlZCI6eyJtYWluIjpbeyJ0eXBlIjoiYW5zd2VyIiwiZGF0YSI6eyJ1cmwiOiJodHRwczovL2V4YW1wbGUudGVzdC9hbnN3ZXIiLCJ0aXRsZSI6IkFuc3dlciIsImRlc2NyaXB0aW9uIjoiQW4gaW5saW5lIGFuc3dlciJ9fV19fQ==",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "brave.image.full_media",
+      "engine": "brave",
+      "config": {
+        "api_key": "test-key"
+      },
+      "query": "image",
+      "params": {
+        "categories": [
+          "images"
+        ]
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.search.brave.com/res/v1/images/search?q=image&count=20&safesearch=off",
+          "headers": {
+            "user-agent": "python-httpx/0.28.1",
+            "accept": "application/json",
+            "x-subscription-token": "test-key"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "eyJyZXN1bHRzIjpbeyJ0aXRsZSI6ImltYWdlIiwicGFnZV91cmwiOiJodHRwczovL3BhZ2UudGVzdC9pbWFnZSIsInRodW1ibmFpbCI6eyJzcmMiOiJodHRwczovL3RodW1iLnRlc3QvaW1hZ2UuanBnIn0sImltYWdlIjp7InNyYyI6Imh0dHBzOi8vY2RuLnRlc3QvaW1hZ2UuanBnIiwid2lkdGgiOjY0MCwiaGVpZ2h0Ijo0ODB9fV19",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "brave.video.media",
+      "engine": "brave",
+      "config": {
+        "api_key": "test-key"
+      },
+      "query": "video",
+      "params": {
+        "categories": [
+          "videos"
+        ]
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.search.brave.com/res/v1/videos/search?q=video&count=20&safesearch=off",
+          "headers": {
+            "user-agent": "python-httpx/0.28.1",
+            "accept": "application/json",
+            "x-subscription-token": "test-key"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "eyJyZXN1bHRzIjpbeyJ0aXRsZSI6InZpZGVvIiwidXJsIjoiaHR0cHM6Ly9wYWdlLnRlc3QvdmlkZW8iLCJkZXNjcmlwdGlvbiI6ImNsaXAiLCJ0aHVtYm5haWwiOnsic3JjIjoiaHR0cHM6Ly90aHVtYi50ZXN0L3ZpZGVvLmpwZyJ9LCJkdXJhdGlvbiI6MTIuNX0seyJ0aXRsZSI6Im5vIG1lZGlhIiwidXJsIjoiaHR0cHM6Ly9wYWdlLnRlc3Qvbm8tbWVkaWEiLCJkZXNjcmlwdGlvbiI6InRleHQifV19",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "wikipedia.two_stage",
+      "engine": "wikipedia",
+      "config": {},
+      "query": "test query",
+      "params": null,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://en.wikipedia.org/w/api.php?action=opensearch&search=test+query&limit=3&format=json&origin=%2A",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (https://github.com/magnus919/SlopSearX; meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://en.wikipedia.org/w/api.php?action=query&titles=Test+Page+1%7CTest+Page+2&prop=extracts%7Cpageimages%7Cpageprops&exintro=1&explaintext=1&pithumbsize=300&format=json&origin=%2A",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (https://github.com/magnus919/SlopSearX; meta search engine; agent-native)"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "WyJ0ZXN0IHF1ZXJ5IixbIlRlc3QgUGFnZSAxIiwiVGVzdCBQYWdlIDIiXSxbImh0dHBzOi8vZW4ud2lraXBlZGlhLm9yZy93aWtpL1Rlc3RfUGFnZV8xIiwiaHR0cHM6Ly9lbi53aWtpcGVkaWEub3JnL3dpa2kvVGVzdF9QYWdlXzIiXSxbInNuaXBwZXQgMSIsInNuaXBwZXQgMiJdXQ==",
+          "exception_type": null
+        },
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "eyJiYXRjaGNvbXBsZXRlIjoiIiwicXVlcnkiOnsicGFnZXMiOnsiMTIzIjp7InBhZ2VpZCI6MTIzLCJucyI6MCwidGl0bGUiOiJUZXN0IFBhZ2UgMSIsImV4dHJhY3QiOiJUaGlzIGlzIGEgcmljaCBleHRyYWN0IGZvciB0ZXN0IHBhZ2UgMSB3aXRoIG1vcmUgZGV0YWlsZWQgY29udGVudC4iLCJ0aHVtYm5haWwiOnsic291cmNlIjoiaHR0cHM6Ly91cGxvYWQud2lraW1lZGlhLm9yZy93aWtpcGVkaWEvdGVzdDEuanBnIiwid2lkdGgiOjMwMCwiaGVpZ2h0IjozMDB9fSwiNDU2Ijp7InBhZ2VpZCI6NDU2LCJucyI6MCwidGl0bGUiOiJUZXN0IFBhZ2UgMiIsImV4dHJhY3QiOiJFeHRyYWN0IGZvciB0ZXN0IHBhZ2UgMiB3aXRoIGFkZGl0aW9uYWwgY29udGV4dCBhYm91dCB0aGUgdG9waWMuIn19fX0=",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "wikipedia.empty_titles",
+      "engine": "wikipedia",
+      "config": {},
+      "query": "test query",
+      "params": null,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://en.wikipedia.org/w/api.php?action=opensearch&search=test+query&limit=3&format=json&origin=%2A",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (https://github.com/magnus919/SlopSearX; meta search engine; agent-native)"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "WyJ0ZXN0IHF1ZXJ5IixbXSxbXSxbXV0=",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "wikipedia.missing_page",
+      "engine": "wikipedia",
+      "config": {},
+      "query": "test query",
+      "params": null,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://en.wikipedia.org/w/api.php?action=opensearch&search=test+query&limit=3&format=json&origin=%2A",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (https://github.com/magnus919/SlopSearX; meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://en.wikipedia.org/w/api.php?action=query&titles=Test+Page+1%7CTest+Page+2&prop=extracts%7Cpageimages%7Cpageprops&exintro=1&explaintext=1&pithumbsize=300&format=json&origin=%2A",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (https://github.com/magnus919/SlopSearX; meta search engine; agent-native)"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "WyJ0ZXN0IHF1ZXJ5IixbIlRlc3QgUGFnZSAxIiwiVGVzdCBQYWdlIDIiXSxbImh0dHBzOi8vZW4ud2lraXBlZGlhLm9yZy93aWtpL1Rlc3RfUGFnZV8xIiwiaHR0cHM6Ly9lbi53aWtpcGVkaWEub3JnL3dpa2kvVGVzdF9QYWdlXzIiXSxbInNuaXBwZXQgMSIsInNuaXBwZXQgMiJdXQ==",
+          "exception_type": null
+        },
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "eyJiYXRjaGNvbXBsZXRlIjoiIiwicXVlcnkiOnsicGFnZXMiOnsiLTEiOnsibWlzc2luZyI6IiIsInRpdGxlIjoiTWlzc2luZyJ9fX19",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "wikipedia.429",
+      "engine": "wikipedia",
+      "config": {},
+      "query": "test",
+      "params": null,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://en.wikipedia.org/w/api.php?action=opensearch&search=test&limit=3&format=json&origin=%2A",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (https://github.com/magnus919/SlopSearX; meta search engine; agent-native)"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 429,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "wikipedia.contact_ua",
+      "engine": "wikipedia",
+      "config": {
+        "user_agent": "Project contact https://example.test/contact"
+      },
+      "query": "test query",
+      "params": null,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://en.wikipedia.org/w/api.php?action=opensearch&search=test+query&limit=3&format=json&origin=%2A",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "Project contact https://example.test/contact"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://en.wikipedia.org/w/api.php?action=query&titles=Test+Page+1%7CTest+Page+2&prop=extracts%7Cpageimages%7Cpageprops&exintro=1&explaintext=1&pithumbsize=300&format=json&origin=%2A",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "Project contact https://example.test/contact"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "WyJ0ZXN0IHF1ZXJ5IixbIlRlc3QgUGFnZSAxIiwiVGVzdCBQYWdlIDIiXSxbImh0dHBzOi8vZW4ud2lraXBlZGlhLm9yZy93aWtpL1Rlc3RfUGFnZV8xIiwiaHR0cHM6Ly9lbi53aWtpcGVkaWEub3JnL3dpa2kvVGVzdF9QYWdlXzIiXSxbInNuaXBwZXQgMSIsInNuaXBwZXQgMiJdXQ==",
+          "exception_type": null
+        },
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "eyJiYXRjaGNvbXBsZXRlIjoiIiwicXVlcnkiOnsicGFnZXMiOnsiMTIzIjp7InBhZ2VpZCI6MTIzLCJucyI6MCwidGl0bGUiOiJUZXN0IFBhZ2UgMSIsImV4dHJhY3QiOiJUaGlzIGlzIGEgcmljaCBleHRyYWN0IGZvciB0ZXN0IHBhZ2UgMSB3aXRoIG1vcmUgZGV0YWlsZWQgY29udGVudC4iLCJ0aHVtYm5haWwiOnsic291cmNlIjoiaHR0cHM6Ly91cGxvYWQud2lraW1lZGlhLm9yZy93aWtpcGVkaWEvdGVzdDEuanBnIiwid2lkdGgiOjMwMCwiaGVpZ2h0IjozMDB9fSwiNDU2Ijp7InBhZ2VpZCI6NDU2LCJucyI6MCwidGl0bGUiOiJUZXN0IFBhZ2UgMiIsImV4dHJhY3QiOiJFeHRyYWN0IGZvciB0ZXN0IHBhZ2UgMiB3aXRoIGFkZGl0aW9uYWwgY29udGV4dCBhYm91dCB0aGUgdG9waWMuIn19fX0=",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "reddit.empty_permalink_prefix",
+      "engine": "reddit",
+      "config": {},
+      "query": "test query",
+      "params": null,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.reddit.com/search.json?q=test+query&limit=10&sort=relevance&t=all&raw_json=1",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native; by /u/SlopSearX)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "eyJkYXRhIjp7ImNoaWxkcmVuIjpbeyJraW5kIjoidDMiLCJkYXRhIjp7InRpdGxlIjoiTGluayIsInVybCI6Imh0dHBzOi8vZXhhbXBsZS50ZXN0L2xpbmsiLCJzZWxmdGV4dCI6IiIsInNjb3JlIjoxLCJudW1fY29tbWVudHMiOjAsImF1dGhvciI6ImF1dGhvciIsInN1YnJlZGRpdCI6InB5dGhvbiIsImNyZWF0ZWRfdXRjIjoxNzAwMDAwMDAwLCJvdmVyXzE4IjpmYWxzZSwidGh1bWJuYWlsIjoiIn19XX19",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "reddit.truthy_nsfw",
+      "engine": "reddit",
+      "config": {},
+      "query": "test query",
+      "params": null,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.reddit.com/search.json?q=test+query&limit=10&sort=relevance&t=all&raw_json=1",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native; by /u/SlopSearX)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "eyJkYXRhIjp7ImNoaWxkcmVuIjpbeyJraW5kIjoidDMiLCJkYXRhIjp7InRpdGxlIjoiTnVtZXJpYyBOU0ZXIiwidXJsIjoiaHR0cHM6Ly9leGFtcGxlLnRlc3QvbnNmdyIsInNlbGZ0ZXh0IjoiIiwic2NvcmUiOjEsIm51bV9jb21tZW50cyI6MCwiYXV0aG9yIjoiYXV0aG9yIiwic3VicmVkZGl0IjoicHl0aG9uIiwiY3JlYXRlZF91dGMiOjE3MDAwMDAwMDAsIm92ZXJfMTgiOjEsInRodW1ibmFpbCI6IiJ9fV19fQ==",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "reddit.listing",
+      "engine": "reddit",
+      "config": {},
+      "query": "test query",
+      "params": null,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.reddit.com/search.json?q=test+query&limit=10&sort=relevance&t=all&raw_json=1",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native; by /u/SlopSearX)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "eyJkYXRhIjp7ImNoaWxkcmVuIjpbeyJraW5kIjoidDMiLCJkYXRhIjp7InRpdGxlIjoiUmVkZGl0IFBvc3QgT25lIiwidXJsIjoiaHR0cHM6Ly9leGFtcGxlLmNvbS9wb3N0MSIsInNlbGZ0ZXh0IjoiVGhpcyBpcyB0aGUgY29udGVudCBvZiBwb3N0IG9uZS4iLCJwZXJtYWxpbmsiOiIvci90ZXN0L2NvbW1lbnRzL2FiYzEyMy9yZWRkaXRfcG9zdF9vbmUvIiwic2NvcmUiOjE1MCwibnVtX2NvbW1lbnRzIjoyNSwiYXV0aG9yIjoidXNlcjEiLCJzdWJyZWRkaXQiOiJ0ZXN0IiwiY3JlYXRlZF91dGMiOjE3MDAwMDAwMDAsIm92ZXJfMTgiOmZhbHNlLCJ0aHVtYm5haWwiOiJodHRwczovL2V4YW1wbGUuY29tL3RodW1iMS5qcGcifX0seyJraW5kIjoidDMiLCJkYXRhIjp7InRpdGxlIjoiUmVkZGl0IFBvc3QgVHdvIC0gU2VsZiBQb3N0IiwidXJsIjoiIiwic2VsZnRleHQiOiIiLCJwZXJtYWxpbmsiOiIvci90ZXN0L2NvbW1lbnRzL2RlZjQ1Ni9yZWRkaXRfcG9zdF90d28vIiwic2NvcmUiOjg5LCJudW1fY29tbWVudHMiOjUsImF1dGhvciI6InVzZXIyIiwic3VicmVkZGl0IjoidGVzdCIsImNyZWF0ZWRfdXRjIjoxNzAwMDAxMDAwLCJvdmVyXzE4IjpmYWxzZSwidGh1bWJuYWlsIjoic2VsZiJ9fSx7ImtpbmQiOiJ0MyIsImRhdGEiOnsidGl0bGUiOiJOU0ZXIFBvc3QgVGhyZWUiLCJ1cmwiOiJodHRwczovL2V4YW1wbGUuY29tL25zZnciLCJzZWxmdGV4dCI6IlRoaXMgc2hvdWxkIGJlIGZpbHRlcmVkIG91dC4iLCJwZXJtYWxpbmsiOiIvci90ZXN0L2NvbW1lbnRzL2doaTc4OS9uc2Z3X3Bvc3RfdGhyZWUvIiwic2NvcmUiOjk5OSwibnVtX2NvbW1lbnRzIjowLCJhdXRob3IiOiJuc2Z3X3VzZXIiLCJzdWJyZWRkaXQiOiJ0ZXN0IiwiY3JlYXRlZF91dGMiOjE3MDAwMDIwMDAsIm92ZXJfMTgiOnRydWUsInRodW1ibmFpbCI6Im5zZncifX1dfX0=",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "reddit.empty",
+      "engine": "reddit",
+      "config": {},
+      "query": "test query",
+      "params": null,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.reddit.com/search.json?q=test+query&limit=10&sort=relevance&t=all&raw_json=1",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native; by /u/SlopSearX)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "eyJkYXRhIjp7ImNoaWxkcmVuIjpbXSwiYWZ0ZXIiOm51bGwsImJlZm9yZSI6bnVsbH19",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "reddit.oauth",
+      "engine": "reddit",
+      "config": {
+        "api_key": "oauth-token"
+      },
+      "query": "test query",
+      "params": null,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://oauth.reddit.com/search?q=test+query&limit=10&sort=relevance&t=all&raw_json=1",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native; by /u/SlopSearX)",
+            "accept": "application/json",
+            "authorization": "Bearer oauth-token"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "eyJkYXRhIjp7ImNoaWxkcmVuIjpbXX19",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "reddit.oauth.custom",
+      "engine": "reddit",
+      "config": {
+        "base_url": "https://reddit.example.test/api",
+        "api_key": "oauth-token"
+      },
+      "query": "test query",
+      "params": null,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://reddit.example.test/api/search?q=test+query&limit=10&sort=relevance&t=all&raw_json=1",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native; by /u/SlopSearX)",
+            "accept": "application/json",
+            "authorization": "Bearer oauth-token"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "eyJkYXRhIjp7ImNoaWxkcmVuIjpbXX19",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "reddit.429",
+      "engine": "reddit",
+      "config": {},
+      "query": "test query",
+      "params": null,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.reddit.com/search.json?q=test+query&limit=10&sort=relevance&t=all&raw_json=1",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native; by /u/SlopSearX)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 429,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "reddit.403",
+      "engine": "reddit",
+      "config": {},
+      "query": "test query",
+      "params": null,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.reddit.com/search.json?q=test+query&limit=10&sort=relevance&t=all&raw_json=1",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native; by /u/SlopSearX)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 403,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "reddit.oauth.403",
+      "engine": "reddit",
+      "config": {
+        "api_key": "oauth-token"
+      },
+      "query": "test query",
+      "params": null,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://oauth.reddit.com/search?q=test+query&limit=10&sort=relevance&t=all&raw_json=1",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native; by /u/SlopSearX)",
+            "accept": "application/json",
+            "authorization": "Bearer oauth-token"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 403,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "reddit.oauth.401",
+      "engine": "reddit",
+      "config": {
+        "api_key": "oauth-token"
+      },
+      "query": "test query",
+      "params": null,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://oauth.reddit.com/search?q=test+query&limit=10&sort=relevance&t=all&raw_json=1",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native; by /u/SlopSearX)",
+            "accept": "application/json",
+            "authorization": "Bearer oauth-token"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 401,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "reddit.500",
+      "engine": "reddit",
+      "config": {},
+      "query": "test query",
+      "params": null,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.reddit.com/search.json?q=test+query&limit=10&sort=relevance&t=all&raw_json=1",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native; by /u/SlopSearX)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 500,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "reddit.malformed_json",
+      "engine": "reddit",
+      "config": {},
+      "query": "test query",
+      "params": null,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.reddit.com/search.json?q=test+query&limit=10&sort=relevance&t=all&raw_json=1",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native; by /u/SlopSearX)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "e25vdC1qc29u",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "reddit.malformed_children",
+      "engine": "reddit",
+      "config": {},
+      "query": "test query",
+      "params": null,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.reddit.com/search.json?q=test+query&limit=10&sort=relevance&t=all&raw_json=1",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native; by /u/SlopSearX)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "eyJkYXRhIjp7ImNoaWxkcmVuIjp7fX19",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "reddit.subreddit",
+      "engine": "reddit",
+      "config": {},
+      "query": "test query",
+      "params": {
+        "categories": [
+          "reddit:subreddit"
+        ],
+        "subreddit": "python"
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.reddit.com/r/python/search.json?q=test+query&limit=10&sort=relevance&t=all&raw_json=1",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native; by /u/SlopSearX)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "eyJkYXRhIjp7ImNoaWxkcmVuIjpbXX19",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "reddit.subreddit_missing",
+      "engine": "reddit",
+      "config": {},
+      "query": "test query",
+      "params": {
+        "categories": [
+          "reddit:subreddit"
+        ]
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.reddit.com/r/all/search.json?q=test+query&limit=10&sort=relevance&t=all&raw_json=1",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native; by /u/SlopSearX)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "eyJkYXRhIjp7ImNoaWxkcmVuIjpbXX19",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "reddit.subreddit_empty",
+      "engine": "reddit",
+      "config": {},
+      "query": "test query",
+      "params": {
+        "categories": [
+          "reddit:subreddit"
+        ],
+        "subreddit": ""
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.reddit.com/r//search.json?q=test+query&limit=10&sort=relevance&t=all&raw_json=1",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native; by /u/SlopSearX)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "eyJkYXRhIjp7ImNoaWxkcmVuIjpbXX19",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "reddit.subreddit_null",
+      "engine": "reddit",
+      "config": {},
+      "query": "test query",
+      "params": {
+        "categories": [
+          "reddit:subreddit"
+        ],
+        "subreddit": null
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.reddit.com/r/None/search.json?q=test+query&limit=10&sort=relevance&t=all&raw_json=1",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native; by /u/SlopSearX)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "eyJkYXRhIjp7ImNoaWxkcmVuIjpbXX19",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "reddit.subreddit_number",
+      "engine": "reddit",
+      "config": {},
+      "query": "test query",
+      "params": {
+        "categories": [
+          "reddit:subreddit"
+        ],
+        "subreddit": 7
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.reddit.com/r/7/search.json?q=test+query&limit=10&sort=relevance&t=all&raw_json=1",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native; by /u/SlopSearX)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "eyJkYXRhIjp7ImNoaWxkcmVuIjpbXX19",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "reddit.subreddit_path_special",
+      "engine": "reddit",
+      "config": {},
+      "query": "test query",
+      "params": {
+        "categories": [
+          "reddit:subreddit"
+        ],
+        "subreddit": "foo/bar"
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.reddit.com/r/foo/bar/search.json?q=test+query&limit=10&sort=relevance&t=all&raw_json=1",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native; by /u/SlopSearX)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "eyJkYXRhIjp7ImNoaWxkcmVuIjpbXX19",
+          "exception_type": null
+        }
+      ]
+    },
+    {
+      "id": "reddit.general_ignores_subreddit",
+      "engine": "reddit",
+      "config": {},
+      "query": "test query",
+      "params": {
+        "categories": [
+          "general"
+        ],
+        "subreddit": "python"
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.reddit.com/search.json?q=test+query&limit=10&sort=relevance&t=all&raw_json=1",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native; by /u/SlopSearX)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body_b64": "eyJkYXRhIjp7ImNoaWxkcmVuIjpbXX19",
+          "exception_type": null
+        }
+      ]
+    }
+  ]
+}

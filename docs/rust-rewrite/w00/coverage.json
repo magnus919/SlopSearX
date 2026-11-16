@@ -1,0 +1,432 @@
+{
+  "schema_version": 1,
+  "plan_id": "W00",
+  "baseline": "66b29c3f8437af45a4f0d28f7c54a0f0727f7fa5",
+  "provenance": "Actual offline source observations; mandatory native private Valkey tests; no live provider calls. Downstream mappings are not executed parity.",
+  "source_observations": [
+    {
+      "path": "slopsearx/saved_models.py",
+      "git_blob": "f9f3e893e06a317f604357ee05030dfe277d7a27"
+    },
+    {
+      "path": "slopsearx/saved_store.py",
+      "git_blob": "5999e14a71539529fb410fe27715c2a71fc3ebd7"
+    },
+    {
+      "path": "slopsearx/saved_runner.py",
+      "git_blob": "b313cc7983afa1629ced33e379672c6cd7fdc1ee"
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "git_blob": "061593ce45d3e2440e818703af6b50d6e6d99cf1"
+    },
+    {
+      "path": "slopsearx/capabilities.py",
+      "git_blob": "5ef6f90750352fdadbc877561d3520c1fe774fdb"
+    },
+    {
+      "path": "tests/test_research_retry_followup.py",
+      "git_blob": "e5700d40e73d18debbae41108e778efcc2512fca"
+    },
+    {
+      "path": "tests/test_saved_models.py",
+      "git_blob": "a8e47d6b8cca8aac7b7b5b44478e8e3a147298f7"
+    },
+    {
+      "path": "tests/test_saved_valkey.py",
+      "git_blob": "6f1d0690110763e4436d09aaa331c2356dbcb2ed"
+    },
+    {
+      "path": "tests/test_saved_searches.py",
+      "git_blob": "8d870d43bbfdf45e9026f549b3e2cdee5827fea2"
+    },
+    {
+      "path": "tests/test_saved_transport.py",
+      "git_blob": "d6fe845787bcd34a4b82073cfe411abcf94b57ae"
+    },
+    {
+      "path": "tests/test_workflow_recent_indexes.py",
+      "git_blob": "0cd352d9c80cd52ca6aa41d929654dea714b4221"
+    }
+  ],
+  "native_identity_sources": [
+    "Cargo.toml",
+    "Cargo.lock",
+    "crates/ssx-domain/Cargo.toml",
+    "crates/ssx-domain/src/lib.rs",
+    "crates/ssx-domain/src/saved.rs",
+    "crates/ssx-domain/src/canonical.rs",
+    "crates/ssx-domain/src/storage.rs",
+    "crates/ssx-domain/src/identity.rs",
+    "crates/ssx-domain/src/records.rs",
+    "crates/ssx-application/Cargo.toml",
+    "crates/ssx-application/src/lib.rs",
+    "crates/ssx-application/src/saved.rs",
+    "crates/ssx-application/src/policy.rs",
+    "crates/ssx-application/src/scope.rs",
+    "crates/ssx-infra/Cargo.toml",
+    "crates/ssx-infra/src/valkey/mod.rs",
+    "crates/ssx-infra/src/valkey/keys.rs",
+    "crates/ssx-infra/src/valkey/scripts.rs",
+    "crates/ssx-infra/src/valkey/scripts/saved_claim.lua",
+    "crates/ssx-infra/src/valkey/saved.rs",
+    "crates/ssx-infra/src/valkey/saved_scripts/hints.lua",
+    "crates/ssx-infra/src/valkey/saved_scripts/prune_hint.lua",
+    "crates/ssx-infra/src/valkey/saved_scripts/prune_tenants.lua",
+    "crates/ssx-infra/src/valkey/saved_scripts/repair_tenant.lua",
+    "crates/ssx-infra/src/valkey/saved_scripts/transition.lua",
+    "crates/ssx-infra/tests/w00.rs",
+    "crates/xtask/src/main.rs",
+    "crates/xtask/src/w00.rs",
+    "docs/rust-rewrite/w00/source.json",
+    "docs/rust-rewrite/w00/integration-source.json",
+    "docs/rust-rewrite/w00/capture_source.py",
+    "docs/rust-rewrite/w00/coverage.json",
+    "docs/rust-rewrite/w00/README.md",
+    "docs/rust-rewrite/w00/PARITY.md",
+    ".github/workflows/rust.yml",
+    "docs/rust-rewrite/ci/gates.json",
+    "docs/rust-rewrite/w00/evidence/README.md",
+    "docs/rust-rewrite/w00/evidence/source-before-claim-rehydration.json",
+    "docs/rust-rewrite/w00/evidence/domain-boundary-red.txt",
+    "docs/rust-rewrite/w00/evidence/fingerprint-boundary-red.txt",
+    "docs/rust-rewrite/w00/evidence/review-correction-red.txt",
+    "docs/rust-rewrite/w00/evidence/final-review-two-red.txt"
+  ],
+  "source_test_mappings": [
+    {
+      "source_test": "tests/test_saved_models.py::test_added_changed_and_not_observed_events_keep_source_values",
+      "scope": "downstream",
+      "native_tests": [],
+      "remaining_owner": "W04 comparison/report construction"
+    },
+    {
+      "source_test": "tests/test_saved_models.py::test_ranking_changes_are_not_source_changes",
+      "scope": "downstream",
+      "native_tests": [],
+      "remaining_owner": "W04 comparison/report construction"
+    },
+    {
+      "source_test": "tests/test_saved_models.py::test_incomparable_observation_never_replaces_good_baseline",
+      "scope": "downstream",
+      "native_tests": [
+        "probe_claim_hydrates_live_baseline",
+        "claim_baseline_snapshot_variants_races_and_fencing",
+        "claim_read_failure_and_unknown_commit_preserve_authority",
+        "independent_nonobject_baseline_refuses_before_claim",
+        "baseline_object_shape_matches_load_before_any_lease"
+      ],
+      "remaining_owner": "W04 comparison/report construction"
+    },
+    {
+      "source_test": "tests/test_saved_models.py::test_expired_baseline_initializes_without_false_absence",
+      "scope": "downstream",
+      "native_tests": [
+        "probe_claim_hydrates_live_baseline",
+        "claim_baseline_snapshot_variants_races_and_fencing",
+        "claim_read_failure_and_unknown_commit_preserve_authority",
+        "independent_nonobject_baseline_refuses_before_claim",
+        "baseline_object_shape_matches_load_before_any_lease"
+      ],
+      "remaining_owner": "W04 comparison/report construction"
+    },
+    {
+      "source_test": "tests/test_saved_valkey.py::test_atomic_quota_and_revision_conflict",
+      "scope": "W00",
+      "native_tests": [
+        "atomic_revision_claim_pause_delete_and_tombstone",
+        "concurrent_quota_and_claim_have_one_owner_and_no_lost_definition",
+        "probe_large_revision_increment",
+        "revision_extremes_and_competing_updates_are_exact",
+        "independent_max_revision_delete_and_repair",
+        "max_revision_full_lifecycle_repair_quota_and_true_overflow",
+        "repair_exact_proof_replacement_or_new_boundary_conflicts_without_writes",
+        "maximum_revision_repair_proof_keeps_exact_byte_budgets"
+      ],
+      "remaining_owner": null
+    },
+    {
+      "source_test": "tests/test_saved_valkey.py::test_atomic_quota_uses_authoritative_records_when_index_is_missing",
+      "scope": "W00",
+      "native_tests": [
+        "quota_repair_tenant_binding_and_full_preflight"
+      ],
+      "remaining_owner": null
+    },
+    {
+      "source_test": "tests/test_saved_valkey.py::test_authoritative_quota_scan_treats_tenant_glob_characters_literally",
+      "scope": "W00",
+      "native_tests": [
+        "quota_repair_tenant_binding_and_full_preflight",
+        "authoritative_tenant_enumeration_continues_and_escapes_literal_prefixes"
+      ],
+      "remaining_owner": null
+    },
+    {
+      "source_test": "tests/test_saved_valkey.py::test_quota_reconciliation_fails_closed_when_one_bounded_scan_cannot_finish",
+      "scope": "W00",
+      "native_tests": [
+        "authoritative_repair_key_budget_refuses_partial_publication",
+        "repair_byte_boundaries_are_atomic_and_preserve_existing_records"
+      ],
+      "remaining_owner": null
+    },
+    {
+      "source_test": "tests/test_saved_valkey.py::test_delete_never_reconstructs_authoritative_count_from_missing_index",
+      "scope": "W00",
+      "native_tests": [
+        "deletion_with_missing_index_forces_authoritative_quota_repair",
+        "independent_max_revision_delete_and_repair",
+        "max_revision_full_lifecycle_repair_quota_and_true_overflow",
+        "repair_exact_proof_replacement_or_new_boundary_conflicts_without_writes",
+        "maximum_revision_repair_proof_keeps_exact_byte_budgets"
+      ],
+      "remaining_owner": null
+    },
+    {
+      "source_test": "tests/test_saved_valkey.py::test_quota_reconciliation_fails_closed_on_malformed_authoritative_record",
+      "scope": "W00",
+      "native_tests": [
+        "quota_repair_tenant_binding_and_full_preflight"
+      ],
+      "remaining_owner": null
+    },
+    {
+      "source_test": "tests/test_saved_valkey.py::test_duplicate_claim_stale_owner_and_bounded_reports",
+      "scope": "W00-partial",
+      "native_tests": [
+        "concurrent_quota_and_claim_have_one_owner_and_no_lost_definition",
+        "server_time_expiry_future_preparation_and_stale_owner_fail_closed"
+      ],
+      "remaining_owner": "W04 report retention and result publication"
+    },
+    {
+      "source_test": "tests/test_saved_valkey.py::test_report_order_and_retention_use_completion_time_when_expiry_ties",
+      "scope": "downstream",
+      "native_tests": [],
+      "remaining_owner": "W04 provider execution, comparison, metrics or result publication"
+    },
+    {
+      "source_test": "tests/test_saved_valkey.py::test_mutation_during_claim_fences_late_commit",
+      "scope": "W00-partial",
+      "native_tests": [
+        "atomic_revision_claim_pause_delete_and_tombstone"
+      ],
+      "remaining_owner": "W04 result publication; W00 verifies stale ownership rejection"
+    },
+    {
+      "source_test": "tests/test_saved_valkey.py::test_index_repair_and_physical_ttl_do_not_extend_lifetime",
+      "scope": "W00",
+      "native_tests": [
+        "restart_reconcile_due_recent_and_tenant_continuation",
+        "repair_preserves_longest_expiry_and_rejects_overflow_before_writes",
+        "server_time_expiry_future_preparation_and_stale_owner_fail_closed",
+        "independent_max_revision_delete_and_repair",
+        "max_revision_full_lifecycle_repair_quota_and_true_overflow",
+        "repair_exact_proof_replacement_or_new_boundary_conflicts_without_writes",
+        "maximum_revision_repair_proof_keeps_exact_byte_budgets"
+      ],
+      "remaining_owner": null
+    },
+    {
+      "source_test": "tests/test_saved_valkey.py::test_real_valkey_runner_hydrates_baseline_and_emits_delta",
+      "scope": "downstream",
+      "native_tests": [
+        "probe_claim_hydrates_live_baseline",
+        "claim_baseline_snapshot_variants_races_and_fencing",
+        "claim_read_failure_and_unknown_commit_preserve_authority",
+        "independent_nonobject_baseline_refuses_before_claim",
+        "baseline_object_shape_matches_load_before_any_lease"
+      ],
+      "remaining_owner": "W04 provider execution, comparison, metrics or result publication"
+    },
+    {
+      "source_test": "tests/test_saved_valkey.py::test_reclaim_keeps_persisted_schedule_identity",
+      "scope": "W00",
+      "native_tests": [
+        "server_time_expiry_future_preparation_and_stale_owner_fail_closed",
+        "claimed_cjson_bytes_and_run_ids_match_accepted_source_script"
+      ],
+      "remaining_owner": null
+    },
+    {
+      "source_test": "tests/test_saved_valkey.py::test_due_cleanup_and_tenant_expiry_are_bounded",
+      "scope": "W00-partial",
+      "native_tests": [
+        "due_cleanup_is_bounded_and_logical_expiry_preserves_retention_record"
+      ],
+      "remaining_owner": "W05 expiry events; W00 bounds hints and logical expiry"
+    },
+    {
+      "source_test": "tests/test_saved_valkey.py::test_authoritative_tenant_scan_repairs_missing_hint_with_continuation",
+      "scope": "W00",
+      "native_tests": [
+        "authoritative_tenant_enumeration_continues_and_escapes_literal_prefixes",
+        "restart_reconcile_due_recent_and_tenant_continuation",
+        "independent_max_revision_delete_and_repair",
+        "max_revision_full_lifecycle_repair_quota_and_true_overflow",
+        "repair_exact_proof_replacement_or_new_boundary_conflicts_without_writes",
+        "maximum_revision_repair_proof_keeps_exact_byte_budgets"
+      ],
+      "remaining_owner": null
+    },
+    {
+      "source_test": "tests/test_saved_searches.py::test_crud_schedule_and_coverage_aware_events",
+      "scope": "W00-partial",
+      "native_tests": [
+        "atomic_revision_claim_pause_delete_and_tombstone",
+        "source_payload_window_schedule_and_rehydration"
+      ],
+      "remaining_owner": "W04 comparisons/execution and W09 transport tools"
+    },
+    {
+      "source_test": "tests/test_saved_searches.py::test_pause_rejects_non_positive_revision",
+      "scope": "W00-partial",
+      "native_tests": [
+        "atomic_revision_claim_pause_delete_and_tombstone",
+        "probe_large_revision_increment",
+        "revision_extremes_and_competing_updates_are_exact",
+        "independent_max_revision_delete_and_repair",
+        "max_revision_full_lifecycle_repair_quota_and_true_overflow",
+        "repair_exact_proof_replacement_or_new_boundary_conflicts_without_writes",
+        "maximum_revision_repair_proof_keeps_exact_byte_budgets"
+      ],
+      "remaining_owner": "W09 structured tool error envelope; W00 rejects stale/zero revisions without writes"
+    },
+    {
+      "source_test": "tests/test_saved_searches.py::test_scope_update_resets_baseline_and_enforces_policy",
+      "scope": "W00-partial",
+      "native_tests": [
+        "atomic_revision_claim_pause_delete_and_tombstone",
+        "revoked_engine_control_and_reduced_untouched_limits_match_source",
+        "probe_claim_hydrates_live_baseline",
+        "claim_baseline_snapshot_variants_races_and_fencing",
+        "claim_read_failure_and_unknown_commit_preserve_authority",
+        "independent_nonobject_baseline_refuses_before_claim",
+        "baseline_object_shape_matches_load_before_any_lease"
+      ],
+      "remaining_owner": "W09 public tool envelope"
+    },
+    {
+      "source_test": "tests/test_saved_searches.py::test_tenant_isolation_and_grant",
+      "scope": "W00",
+      "native_tests": [
+        "exact_colon_collision_is_rejected_and_tenants_admit_independently",
+        "strict_inputs_and_sensitive_scope_reject_before_preparation"
+      ],
+      "remaining_owner": null
+    },
+    {
+      "source_test": "tests/test_saved_searches.py::test_strict_bounded_inputs_are_atomic",
+      "scope": "W00",
+      "native_tests": [
+        "strict_inputs_and_sensitive_scope_reject_before_preparation"
+      ],
+      "remaining_owner": null
+    },
+    {
+      "source_test": "tests/test_saved_searches.py::test_mixed_sensitive_scope_is_atomic",
+      "scope": "W00",
+      "native_tests": [
+        "strict_inputs_and_sensitive_scope_reject_before_preparation"
+      ],
+      "remaining_owner": null
+    },
+    {
+      "source_test": "tests/test_saved_searches.py::test_scheduled_run_bypasses_canonical_cache",
+      "scope": "downstream",
+      "native_tests": [],
+      "remaining_owner": "W04 provider execution, comparison, metrics or result publication"
+    },
+    {
+      "source_test": "tests/test_saved_searches.py::test_expired_lease_recovery_normalizes_running_gauge",
+      "scope": "downstream",
+      "native_tests": [],
+      "remaining_owner": "W04 provider execution, comparison, metrics or result publication"
+    },
+    {
+      "source_test": "tests/test_saved_searches.py::test_midflight_policy_revocation_blocks_evidence_commit",
+      "scope": "downstream",
+      "native_tests": [],
+      "remaining_owner": "W04 provider execution, comparison, metrics or result publication"
+    },
+    {
+      "source_test": "tests/test_saved_searches.py::test_current_scope_policy_applies_to_definition_and_report_reads",
+      "scope": "downstream",
+      "native_tests": [],
+      "remaining_owner": "W04/W09 retained report policy/read boundary"
+    },
+    {
+      "source_test": "tests/test_saved_searches.py::test_retained_old_scope_report_is_revalidated_after_scope_change",
+      "scope": "downstream",
+      "native_tests": [
+        "probe_configured_query_limit",
+        "probe_query_limit_does_not_revalidate_untouched_query",
+        "supplied_query_bounds_and_unchanged_query_keep_engine_authority"
+      ],
+      "remaining_owner": "W04/W09 retained report policy/read boundary"
+    },
+    {
+      "source_test": "tests/test_saved_searches.py::test_failed_run_retains_baseline_and_reports_missed_slots",
+      "scope": "W00-partial",
+      "native_tests": [
+        "source_payload_window_schedule_and_rehydration",
+        "probe_claim_hydrates_live_baseline",
+        "claim_baseline_snapshot_variants_races_and_fencing",
+        "claim_read_failure_and_unknown_commit_preserve_authority",
+        "independent_nonobject_baseline_refuses_before_claim",
+        "baseline_object_shape_matches_load_before_any_lease"
+      ],
+      "remaining_owner": "W04 failed-run evidence/baseline publication"
+    },
+    {
+      "source_test": "tests/test_saved_searches.py::test_start_immediately_uses_creation_slot_and_keeps_first_interval",
+      "scope": "W00-partial",
+      "native_tests": [
+        "source_payload_window_schedule_and_rehydration"
+      ],
+      "remaining_owner": "W04 actual execution of the pure schedule"
+    },
+    {
+      "source_test": "tests/test_saved_transport.py::test_saved_search_transport_journey",
+      "scope": "downstream",
+      "native_tests": [],
+      "remaining_owner": "W09 saved MCP tools and transport"
+    },
+    {
+      "source_test": "tests/test_saved_transport.py::test_saved_search_transport_rejects_boolean_integers",
+      "scope": "downstream",
+      "native_tests": [],
+      "remaining_owner": "W09 saved MCP tools and transport"
+    },
+    {
+      "source_test": "tests/test_workflow_recent_indexes.py::test_research_recent_index_is_concurrency_bounded_and_fills_around_stale_entries",
+      "scope": "downstream",
+      "native_tests": [],
+      "remaining_owner": "Accepted W01 research recent indexes; not saved definitions"
+    },
+    {
+      "source_test": "tests/test_workflow_recent_indexes.py::test_saved_recent_index_pages_past_fifty_and_retains_definition_horizon",
+      "scope": "W00",
+      "native_tests": [
+        "recent_index_is_bounded_and_fills_around_stale_records",
+        "repair_preserves_longest_expiry_and_rejects_overflow_before_writes"
+      ],
+      "remaining_owner": null
+    },
+    {
+      "source_test": "tests/test_workflow_recent_indexes.py::test_saved_recent_fallback_does_not_shorten_existing_index_horizon",
+      "scope": "W00",
+      "native_tests": [
+        "repair_preserves_longest_expiry_and_rejects_overflow_before_writes"
+      ],
+      "remaining_owner": null
+    },
+    {
+      "source_test": "tests/test_workflow_recent_indexes.py::test_console_real_store_fills_past_fifty_policy_revoked_definitions",
+      "scope": "downstream",
+      "native_tests": [],
+      "remaining_owner": "W10/O05 portal workflow composition and policy filtering"
+    }
+  ]
+}

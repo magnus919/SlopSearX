@@ -1,0 +1,908 @@
+{
+  "baseline": "93db215de1c5b59ffdcac035a79ffcbd8e806762",
+  "inputs_sha256": "09381cd39ecb3dede754b7fd73b0a96a2e7d4a9e672761f4dff5904ce6faa5ed",
+  "sources": {
+    "slopsearx/saved_events.py": "83a389ac5895fa0b9f8311d846e31d01533e639ea73c09f80838dc674da4b4b9",
+    "slopsearx/saved_store.py": "9e3d03577d6721a5ef46e19b872b1c8744471e167e305130b48db582bd0006df",
+    "slopsearx/saved_runner.py": "07fafa028edcf156bc9d3e7c818d15bdd32acbf4cefc837375bc78c138ac4b07",
+    "slopsearx/mcp/tools.py": "6bbbdb270f14fda7d90ae8dbe1983aae33526df430f76a960f0c7483417eb35a",
+    "tests/test_saved_events.py": "cbd58028266cda0ffb859a0245464ca91a83825ec39b10e71917f16096ae5094",
+    "tests/test_saved_events_valkey.py": "1c1ea3cfe575f076f462ed06d8888eaabdcb3b2af43730961f4eac976b100d74",
+    "tests/test_saved_events_transport.py": "499aaf7162bead80c5a2b2db82d6dcfb58681813dfad42775e22201dee1ca1f4",
+    "tests/test_saved_event_metrics.py": "f5d1e75b4fbdc5dc20d4dcd1308ddb586eacab1b1eb9df5a2560f0d09545aae6"
+  },
+  "normalization": "opaque event identity fixed to event-0123456789abcdefghijklmn; no other output normalization",
+  "cases": [
+    {
+      "name": "created-complete",
+      "report": {
+        "run_id": "run-\u03b1",
+        "finished_at": 1060.5,
+        "status": "compared",
+        "incomparable_reasons": [],
+        "observation": {
+          "coverage": {
+            "wikipedia": "ok",
+            "brave": "ok"
+          },
+          "discovered_count": 7
+        },
+        "events": [
+          {
+            "kind": "added"
+          },
+          {
+            "kind": "source_field_changed"
+          },
+          {
+            "kind": "not_observed_in_latest_run"
+          },
+          {
+            "kind": "added"
+          },
+          {
+            "kind": "ignored"
+          }
+        ],
+        "missed_slots": 2
+      },
+      "stored": {
+        "contract": "slopsearx.saved_search_event",
+        "contract_version": 1,
+        "event_id": "event-0123456789abcdefghijklmn",
+        "event_type": "report_created",
+        "occurred_at": 1060.5,
+        "saved_search_id": "saved-events",
+        "run_id": "run-\u03b1",
+        "saved_search": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_search",
+          "id": "saved-events"
+        },
+        "run": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_report",
+          "id": "composite-v1-5b2273617665642d6576656e7473222c2272756e2d5c7530336231225d"
+        },
+        "summary": {
+          "status": "compared",
+          "added_count": 2,
+          "changed_count": 1,
+          "not_observed_count": 1,
+          "discovered_count": 7,
+          "missed_slots": 2
+        },
+        "coverage_state": "complete",
+        "reason_code": "none",
+        "_policy_engines": [
+          "brave",
+          "wikipedia"
+        ],
+        "_unknown_internal": "private"
+      },
+      "public": {
+        "contract": "slopsearx.saved_search_event",
+        "contract_version": 1,
+        "event_id": "event-0123456789abcdefghijklmn",
+        "event_type": "report_created",
+        "occurred_at": 1060.5,
+        "saved_search_id": "saved-events",
+        "run_id": "run-\u03b1",
+        "saved_search": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_search",
+          "id": "saved-events"
+        },
+        "run": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_report",
+          "id": "composite-v1-5b2273617665642d6576656e7473222c2272756e2d5c7530336231225d"
+        },
+        "summary": {
+          "status": "compared",
+          "added_count": 2,
+          "changed_count": 1,
+          "not_observed_count": 1,
+          "discovered_count": 7,
+          "missed_slots": 2
+        },
+        "coverage_state": "complete",
+        "reason_code": "none",
+        "cursor": "1060500-0",
+        "policy_state": "current"
+      },
+      "redacted": {
+        "contract": "slopsearx.saved_search_event",
+        "contract_version": 1,
+        "event_id": "event-0123456789abcdefghijklmn",
+        "event_type": "report_created",
+        "occurred_at": 1060.5,
+        "saved_search_id": "saved-events",
+        "run_id": "run-\u03b1",
+        "saved_search": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_search",
+          "id": "saved-events"
+        },
+        "run": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_report",
+          "id": "composite-v1-5b2273617665642d6576656e7473222c2272756e2d5c7530336231225d"
+        },
+        "summary": null,
+        "coverage_state": "redacted",
+        "reason_code": "policy_redacted",
+        "cursor": "1060500-0",
+        "policy_state": "redacted"
+      }
+    },
+    {
+      "name": "incomparable-partial",
+      "report": {
+        "run_id": "run-\u03b1",
+        "finished_at": 1060.5,
+        "status": "incomparable",
+        "incomparable_reasons": [
+          "incomplete_response"
+        ],
+        "observation": {
+          "coverage": {
+            "wikipedia": "ok",
+            "brave": "timeout"
+          }
+        },
+        "events": []
+      },
+      "stored": {
+        "contract": "slopsearx.saved_search_event",
+        "contract_version": 1,
+        "event_id": "event-0123456789abcdefghijklmn",
+        "event_type": "run_incomparable",
+        "occurred_at": 1060.5,
+        "saved_search_id": "saved-events",
+        "run_id": "run-\u03b1",
+        "saved_search": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_search",
+          "id": "saved-events"
+        },
+        "run": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_report",
+          "id": "composite-v1-5b2273617665642d6576656e7473222c2272756e2d5c7530336231225d"
+        },
+        "summary": {
+          "status": "incomparable",
+          "added_count": 0,
+          "changed_count": 0,
+          "not_observed_count": 0,
+          "discovered_count": 0,
+          "missed_slots": 0
+        },
+        "coverage_state": "partial",
+        "reason_code": "observation_incomparable",
+        "_policy_engines": [
+          "brave",
+          "wikipedia"
+        ],
+        "_unknown_internal": "private"
+      },
+      "public": {
+        "contract": "slopsearx.saved_search_event",
+        "contract_version": 1,
+        "event_id": "event-0123456789abcdefghijklmn",
+        "event_type": "run_incomparable",
+        "occurred_at": 1060.5,
+        "saved_search_id": "saved-events",
+        "run_id": "run-\u03b1",
+        "saved_search": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_search",
+          "id": "saved-events"
+        },
+        "run": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_report",
+          "id": "composite-v1-5b2273617665642d6576656e7473222c2272756e2d5c7530336231225d"
+        },
+        "summary": {
+          "status": "incomparable",
+          "added_count": 0,
+          "changed_count": 0,
+          "not_observed_count": 0,
+          "discovered_count": 0,
+          "missed_slots": 0
+        },
+        "coverage_state": "partial",
+        "reason_code": "observation_incomparable",
+        "cursor": "1060500-0",
+        "policy_state": "current"
+      },
+      "redacted": {
+        "contract": "slopsearx.saved_search_event",
+        "contract_version": 1,
+        "event_id": "event-0123456789abcdefghijklmn",
+        "event_type": "run_incomparable",
+        "occurred_at": 1060.5,
+        "saved_search_id": "saved-events",
+        "run_id": "run-\u03b1",
+        "saved_search": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_search",
+          "id": "saved-events"
+        },
+        "run": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_report",
+          "id": "composite-v1-5b2273617665642d6576656e7473222c2272756e2d5c7530336231225d"
+        },
+        "summary": null,
+        "coverage_state": "redacted",
+        "reason_code": "policy_redacted",
+        "cursor": "1060500-0",
+        "policy_state": "redacted"
+      }
+    },
+    {
+      "name": "dispatch-precedence",
+      "report": {
+        "run_id": "run-\u03b1",
+        "finished_at": 1060.5,
+        "status": "incomparable",
+        "incomparable_reasons": [
+          "dispatch_failed"
+        ],
+        "observation": {
+          "coverage": {},
+          "operational_error": "RuntimeError"
+        }
+      },
+      "stored": {
+        "contract": "slopsearx.saved_search_event",
+        "contract_version": 1,
+        "event_id": "event-0123456789abcdefghijklmn",
+        "event_type": "run_failed",
+        "occurred_at": 1060.5,
+        "saved_search_id": "saved-events",
+        "run_id": "run-\u03b1",
+        "saved_search": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_search",
+          "id": "saved-events"
+        },
+        "run": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_report",
+          "id": "composite-v1-5b2273617665642d6576656e7473222c2272756e2d5c7530336231225d"
+        },
+        "summary": {
+          "status": "incomparable",
+          "added_count": 0,
+          "changed_count": 0,
+          "not_observed_count": 0,
+          "discovered_count": 0,
+          "missed_slots": 0
+        },
+        "coverage_state": "unknown",
+        "reason_code": "dispatch_failed",
+        "_policy_engines": [
+          "brave",
+          "wikipedia"
+        ],
+        "_unknown_internal": "private"
+      },
+      "public": {
+        "contract": "slopsearx.saved_search_event",
+        "contract_version": 1,
+        "event_id": "event-0123456789abcdefghijklmn",
+        "event_type": "run_failed",
+        "occurred_at": 1060.5,
+        "saved_search_id": "saved-events",
+        "run_id": "run-\u03b1",
+        "saved_search": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_search",
+          "id": "saved-events"
+        },
+        "run": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_report",
+          "id": "composite-v1-5b2273617665642d6576656e7473222c2272756e2d5c7530336231225d"
+        },
+        "summary": {
+          "status": "incomparable",
+          "added_count": 0,
+          "changed_count": 0,
+          "not_observed_count": 0,
+          "discovered_count": 0,
+          "missed_slots": 0
+        },
+        "coverage_state": "unknown",
+        "reason_code": "dispatch_failed",
+        "cursor": "1060500-0",
+        "policy_state": "current"
+      },
+      "redacted": {
+        "contract": "slopsearx.saved_search_event",
+        "contract_version": 1,
+        "event_id": "event-0123456789abcdefghijklmn",
+        "event_type": "run_failed",
+        "occurred_at": 1060.5,
+        "saved_search_id": "saved-events",
+        "run_id": "run-\u03b1",
+        "saved_search": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_search",
+          "id": "saved-events"
+        },
+        "run": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_report",
+          "id": "composite-v1-5b2273617665642d6576656e7473222c2272756e2d5c7530336231225d"
+        },
+        "summary": null,
+        "coverage_state": "redacted",
+        "reason_code": "policy_redacted",
+        "cursor": "1060500-0",
+        "policy_state": "redacted"
+      }
+    },
+    {
+      "name": "operational-precedence",
+      "report": {
+        "run_id": "run-\u03b1",
+        "finished_at": 1060.5,
+        "status": "compared",
+        "incomparable_reasons": [],
+        "observation": {
+          "coverage": {},
+          "operational_error": "RuntimeError"
+        }
+      },
+      "stored": {
+        "contract": "slopsearx.saved_search_event",
+        "contract_version": 1,
+        "event_id": "event-0123456789abcdefghijklmn",
+        "event_type": "run_failed",
+        "occurred_at": 1060.5,
+        "saved_search_id": "saved-events",
+        "run_id": "run-\u03b1",
+        "saved_search": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_search",
+          "id": "saved-events"
+        },
+        "run": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_report",
+          "id": "composite-v1-5b2273617665642d6576656e7473222c2272756e2d5c7530336231225d"
+        },
+        "summary": {
+          "status": "compared",
+          "added_count": 0,
+          "changed_count": 0,
+          "not_observed_count": 0,
+          "discovered_count": 0,
+          "missed_slots": 0
+        },
+        "coverage_state": "unknown",
+        "reason_code": "dispatch_failed",
+        "_policy_engines": [
+          "brave",
+          "wikipedia"
+        ],
+        "_unknown_internal": "private"
+      },
+      "public": {
+        "contract": "slopsearx.saved_search_event",
+        "contract_version": 1,
+        "event_id": "event-0123456789abcdefghijklmn",
+        "event_type": "run_failed",
+        "occurred_at": 1060.5,
+        "saved_search_id": "saved-events",
+        "run_id": "run-\u03b1",
+        "saved_search": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_search",
+          "id": "saved-events"
+        },
+        "run": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_report",
+          "id": "composite-v1-5b2273617665642d6576656e7473222c2272756e2d5c7530336231225d"
+        },
+        "summary": {
+          "status": "compared",
+          "added_count": 0,
+          "changed_count": 0,
+          "not_observed_count": 0,
+          "discovered_count": 0,
+          "missed_slots": 0
+        },
+        "coverage_state": "unknown",
+        "reason_code": "dispatch_failed",
+        "cursor": "1060500-0",
+        "policy_state": "current"
+      },
+      "redacted": {
+        "contract": "slopsearx.saved_search_event",
+        "contract_version": 1,
+        "event_id": "event-0123456789abcdefghijklmn",
+        "event_type": "run_failed",
+        "occurred_at": 1060.5,
+        "saved_search_id": "saved-events",
+        "run_id": "run-\u03b1",
+        "saved_search": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_search",
+          "id": "saved-events"
+        },
+        "run": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_report",
+          "id": "composite-v1-5b2273617665642d6576656e7473222c2272756e2d5c7530336231225d"
+        },
+        "summary": null,
+        "coverage_state": "redacted",
+        "reason_code": "policy_redacted",
+        "cursor": "1060500-0",
+        "policy_state": "redacted"
+      }
+    },
+    {
+      "name": "unknown-coverage",
+      "report": {
+        "run_id": "run-\u03b1",
+        "finished_at": 1060.5,
+        "status": "compared",
+        "events": [],
+        "observation": {}
+      },
+      "stored": {
+        "contract": "slopsearx.saved_search_event",
+        "contract_version": 1,
+        "event_id": "event-0123456789abcdefghijklmn",
+        "event_type": "report_created",
+        "occurred_at": 1060.5,
+        "saved_search_id": "saved-events",
+        "run_id": "run-\u03b1",
+        "saved_search": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_search",
+          "id": "saved-events"
+        },
+        "run": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_report",
+          "id": "composite-v1-5b2273617665642d6576656e7473222c2272756e2d5c7530336231225d"
+        },
+        "summary": {
+          "status": "compared",
+          "added_count": 0,
+          "changed_count": 0,
+          "not_observed_count": 0,
+          "discovered_count": 0,
+          "missed_slots": 0
+        },
+        "coverage_state": "unknown",
+        "reason_code": "none",
+        "_policy_engines": [
+          "brave",
+          "wikipedia"
+        ],
+        "_unknown_internal": "private"
+      },
+      "public": {
+        "contract": "slopsearx.saved_search_event",
+        "contract_version": 1,
+        "event_id": "event-0123456789abcdefghijklmn",
+        "event_type": "report_created",
+        "occurred_at": 1060.5,
+        "saved_search_id": "saved-events",
+        "run_id": "run-\u03b1",
+        "saved_search": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_search",
+          "id": "saved-events"
+        },
+        "run": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_report",
+          "id": "composite-v1-5b2273617665642d6576656e7473222c2272756e2d5c7530336231225d"
+        },
+        "summary": {
+          "status": "compared",
+          "added_count": 0,
+          "changed_count": 0,
+          "not_observed_count": 0,
+          "discovered_count": 0,
+          "missed_slots": 0
+        },
+        "coverage_state": "unknown",
+        "reason_code": "none",
+        "cursor": "1060500-0",
+        "policy_state": "current"
+      },
+      "redacted": {
+        "contract": "slopsearx.saved_search_event",
+        "contract_version": 1,
+        "event_id": "event-0123456789abcdefghijklmn",
+        "event_type": "report_created",
+        "occurred_at": 1060.5,
+        "saved_search_id": "saved-events",
+        "run_id": "run-\u03b1",
+        "saved_search": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_search",
+          "id": "saved-events"
+        },
+        "run": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_report",
+          "id": "composite-v1-5b2273617665642d6576656e7473222c2272756e2d5c7530336231225d"
+        },
+        "summary": null,
+        "coverage_state": "redacted",
+        "reason_code": "policy_redacted",
+        "cursor": "1060500-0",
+        "policy_state": "redacted"
+      }
+    },
+    {
+      "name": "default-status",
+      "report": {
+        "run_id": "run-\u03b1",
+        "finished_at": 1060.5,
+        "events": []
+      },
+      "stored": {
+        "contract": "slopsearx.saved_search_event",
+        "contract_version": 1,
+        "event_id": "event-0123456789abcdefghijklmn",
+        "event_type": "run_incomparable",
+        "occurred_at": 1060.5,
+        "saved_search_id": "saved-events",
+        "run_id": "run-\u03b1",
+        "saved_search": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_search",
+          "id": "saved-events"
+        },
+        "run": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_report",
+          "id": "composite-v1-5b2273617665642d6576656e7473222c2272756e2d5c7530336231225d"
+        },
+        "summary": {
+          "status": "incomparable",
+          "added_count": 0,
+          "changed_count": 0,
+          "not_observed_count": 0,
+          "discovered_count": 0,
+          "missed_slots": 0
+        },
+        "coverage_state": "unknown",
+        "reason_code": "observation_incomparable",
+        "_policy_engines": [
+          "brave",
+          "wikipedia"
+        ],
+        "_unknown_internal": "private"
+      },
+      "public": {
+        "contract": "slopsearx.saved_search_event",
+        "contract_version": 1,
+        "event_id": "event-0123456789abcdefghijklmn",
+        "event_type": "run_incomparable",
+        "occurred_at": 1060.5,
+        "saved_search_id": "saved-events",
+        "run_id": "run-\u03b1",
+        "saved_search": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_search",
+          "id": "saved-events"
+        },
+        "run": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_report",
+          "id": "composite-v1-5b2273617665642d6576656e7473222c2272756e2d5c7530336231225d"
+        },
+        "summary": {
+          "status": "incomparable",
+          "added_count": 0,
+          "changed_count": 0,
+          "not_observed_count": 0,
+          "discovered_count": 0,
+          "missed_slots": 0
+        },
+        "coverage_state": "unknown",
+        "reason_code": "observation_incomparable",
+        "cursor": "1060500-0",
+        "policy_state": "current"
+      },
+      "redacted": {
+        "contract": "slopsearx.saved_search_event",
+        "contract_version": 1,
+        "event_id": "event-0123456789abcdefghijklmn",
+        "event_type": "run_incomparable",
+        "occurred_at": 1060.5,
+        "saved_search_id": "saved-events",
+        "run_id": "run-\u03b1",
+        "saved_search": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_search",
+          "id": "saved-events"
+        },
+        "run": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_report",
+          "id": "composite-v1-5b2273617665642d6576656e7473222c2272756e2d5c7530336231225d"
+        },
+        "summary": null,
+        "coverage_state": "redacted",
+        "reason_code": "policy_redacted",
+        "cursor": "1060500-0",
+        "policy_state": "redacted"
+      }
+    },
+    {
+      "name": "definition_paused",
+      "stored": {
+        "contract": "slopsearx.saved_search_event",
+        "contract_version": 1,
+        "event_id": "event-0123456789abcdefghijklmn",
+        "event_type": "definition_paused",
+        "occurred_at": 1600.0,
+        "saved_search_id": "saved-events",
+        "run_id": null,
+        "saved_search": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_search",
+          "id": "saved-events"
+        },
+        "run": null,
+        "summary": null,
+        "coverage_state": "unknown",
+        "reason_code": "operator_paused",
+        "_policy_engines": [
+          "brave",
+          "wikipedia"
+        ]
+      },
+      "public": {
+        "contract": "slopsearx.saved_search_event",
+        "contract_version": 1,
+        "event_id": "event-0123456789abcdefghijklmn",
+        "event_type": "definition_paused",
+        "occurred_at": 1600.0,
+        "saved_search_id": "saved-events",
+        "run_id": null,
+        "saved_search": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_search",
+          "id": "saved-events"
+        },
+        "run": null,
+        "summary": null,
+        "coverage_state": "unknown",
+        "reason_code": "operator_paused",
+        "cursor": "1600000-0",
+        "policy_state": "current"
+      },
+      "redacted": {
+        "contract": "slopsearx.saved_search_event",
+        "contract_version": 1,
+        "event_id": "event-0123456789abcdefghijklmn",
+        "event_type": "definition_paused",
+        "occurred_at": 1600.0,
+        "saved_search_id": "saved-events",
+        "run_id": null,
+        "saved_search": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_search",
+          "id": "saved-events"
+        },
+        "run": null,
+        "summary": null,
+        "coverage_state": "redacted",
+        "reason_code": "policy_redacted",
+        "cursor": "1600000-0",
+        "policy_state": "redacted"
+      }
+    },
+    {
+      "name": "definition_expired",
+      "stored": {
+        "contract": "slopsearx.saved_search_event",
+        "contract_version": 1,
+        "event_id": "event-0123456789abcdefghijklmn",
+        "event_type": "definition_expired",
+        "occurred_at": 1600.0,
+        "saved_search_id": "saved-events",
+        "run_id": null,
+        "saved_search": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_search",
+          "id": "saved-events"
+        },
+        "run": null,
+        "summary": null,
+        "coverage_state": "unknown",
+        "reason_code": "lifetime_elapsed",
+        "_policy_engines": [
+          "brave",
+          "wikipedia"
+        ]
+      },
+      "public": {
+        "contract": "slopsearx.saved_search_event",
+        "contract_version": 1,
+        "event_id": "event-0123456789abcdefghijklmn",
+        "event_type": "definition_expired",
+        "occurred_at": 1600.0,
+        "saved_search_id": "saved-events",
+        "run_id": null,
+        "saved_search": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_search",
+          "id": "saved-events"
+        },
+        "run": null,
+        "summary": null,
+        "coverage_state": "unknown",
+        "reason_code": "lifetime_elapsed",
+        "cursor": "1600000-0",
+        "policy_state": "current"
+      },
+      "redacted": {
+        "contract": "slopsearx.saved_search_event",
+        "contract_version": 1,
+        "event_id": "event-0123456789abcdefghijklmn",
+        "event_type": "definition_expired",
+        "occurred_at": 1600.0,
+        "saved_search_id": "saved-events",
+        "run_id": null,
+        "saved_search": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "saved_search",
+          "id": "saved-events"
+        },
+        "run": null,
+        "summary": null,
+        "coverage_state": "redacted",
+        "reason_code": "policy_redacted",
+        "cursor": "1600000-0",
+        "policy_state": "redacted"
+      }
+    }
+  ],
+  "validation": [
+    {
+      "kind": "consumer",
+      "input": "agent",
+      "output": "agent"
+    },
+    {
+      "kind": "consumer",
+      "input": "a.b_c:d-e",
+      "output": "a.b_c:d-e"
+    },
+    {
+      "kind": "consumer",
+      "input": "",
+      "output": "invalid_input"
+    },
+    {
+      "kind": "consumer",
+      "input": "has space",
+      "output": "invalid_input"
+    },
+    {
+      "kind": "consumer",
+      "input": "\u00e9",
+      "output": "invalid_input"
+    },
+    {
+      "kind": "consumer",
+      "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "output": "invalid_input"
+    },
+    {
+      "kind": "cursor",
+      "input": "0-0",
+      "output": "0-0"
+    },
+    {
+      "kind": "cursor",
+      "input": "1-0",
+      "output": "1-0"
+    },
+    {
+      "kind": "cursor",
+      "input": "18446744073709551615-18446744073709551615",
+      "output": "18446744073709551615-18446744073709551615"
+    },
+    {
+      "kind": "cursor",
+      "input": "99999999999999999999999999999999-999999999999999999999999999999999",
+      "output": "invalid_input"
+    },
+    {
+      "kind": "cursor",
+      "input": "01-0",
+      "output": "invalid_input"
+    },
+    {
+      "kind": "cursor",
+      "input": "bad",
+      "output": "invalid_input"
+    },
+    {
+      "kind": "cursor",
+      "input": "1-01",
+      "output": "invalid_input"
+    },
+    {
+      "kind": "cursor",
+      "input": "1--0",
+      "output": "invalid_input"
+    },
+    {
+      "kind": "cursor",
+      "input": "-1-0",
+      "output": "invalid_input"
+    },
+    {
+      "kind": "cursor",
+      "input": "1-1-1",
+      "output": "invalid_input"
+    },
+    {
+      "kind": "cursor",
+      "input": "11111111111111111111111111111111111111111111111111111111111111111-0",
+      "output": "invalid_input"
+    }
+  ]
+}

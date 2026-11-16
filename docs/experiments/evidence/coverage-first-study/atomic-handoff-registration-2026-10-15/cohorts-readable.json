@@ -1,0 +1,1094 @@
+{
+  "decision_context": "Prospectively locked fresh cohorts for the frozen-input acquisition method; stage and source registration remain required before calls.",
+  "global_contract": {
+    "allowed_engines": [
+      "arxiv",
+      "openalex",
+      "github",
+      "wikipedia"
+    ],
+    "brave": "excluded",
+    "freshness": "All task definitions are newly authored. Pools, physical source captures, and independent references must be newly acquired for this registered study; no prior pool, capture, source artifact, or grade may be carried forward. A URL may naturally recur in a fresh acquisition: preserve the card under the frozen production dedup rules and report URL overlap as metadata; do not drop it or claim the stage is untouched from an earlier measurement on that basis alone.",
+    "intent_balance": "Each stage contains four evidence_seeking and four source_discovery tasks; each pool-size band contains exactly two of each intent.",
+    "intent_definitions": {
+      "evidence_seeking": "Find candidate sources that provide evidence relevant to the task requirements; ranking assesses visible relevance, not truth or sufficiency.",
+      "source_discovery": "Locate and compare public documentation or research resources relevant to the declared topic and facets. Candidate metadata supports finding sources; it does not justify factual implementation claims about those sources."
+    },
+    "metadata_overlap_audit": {
+      "fields_compared": [
+        "research.task_question",
+        "research.search_query",
+        "navigation.search_query",
+        "navigation.target_url"
+      ],
+      "prior_manifest": "docs/experiments/evidence/EXP-077/cohorts.json",
+      "report": "cohort-overlap-check.json",
+      "result": "No normalized hash overlaps after replacement; incidental URL recurrence in newly acquired results remains allowed and must be reported, not suppressed.",
+      "status": "completed_metadata_only"
+    },
+    "natural_count_definition": "Number of eligible cards naturally present after the frozen production acquisition, grouping, and deduplication path, before ranking or presentation slicing.",
+    "navigation_target_contract": "Navigation targets are exact official GitHub repository landing pages, not vendor documentation pages. Each target has an explicit GitHub-only reference-category pool plan and a 2-4 keyword repository-search query. The exact-target rank-1 gate applies. Each target URL remains subject to source qualification before execution.",
+    "paired_query_contract": "Each research case has three distinct fields. search_query is a predeclared concise topical retrieval query of one to four terms and is sent unchanged to every selected engine and to both W0 and coverage candidate ranking. The coverage candidate additionally receives the full purpose and critical facets. task_question is the bounded task-use question for answer assessment; it is not substituted into the search API query.",
+    "per_engine_limit_per_pool": 20,
+    "pool_band_rules": {
+      "research_41_80": "Four predeclared engines, each capped at 20; expected natural eligible count is 41-80. Counts 0-40 or above 80 are inconclusive; no rescue or truncation.",
+      "research_le_40": "Two predeclared engines, each capped at 20; expected natural eligible count is 1-40. Zero is inconclusive."
+    },
+    "pool_rules": "Acquire the complete natural eligible pool. Do not trim, pad, split, concatenate, substitute engines, rescue, or issue replacement queries. Record actual post-grouping/deduplication count. Empty, failed, overflow, or wrong-band pools remain in the record and are inconclusive; do not replace them.",
+    "scope_limit": "This manifest proposes task/query content and engine mix only. It does not authorize live calls, freeze source/runtime/protocol hashes, set stage UUIDs, or replace any prior release decision by itself.",
+    "search_policy": "Evidence-seeking/source-discovery only; no answer synthesis or answer claims are inputs to ranking.",
+    "search_surface": "Research and navigation queries use only the declared SearXNG category reference. This is supported by the declared arxiv/openalex/github/wikipedia engine set; GitHub reference searches the repository endpoint and returns repository landing URLs.",
+    "separation": "Research facets are caller-declared evidence requirements, not evaluator labels, source grades, answer keys, or expected conclusions. Keep source/reference artifacts and evaluator judgments out of candidate inputs."
+  },
+  "schema": "coverage-first-study-cohorts/1",
+  "stages": [
+    {
+      "navigation_targets": [
+        {
+          "navigation_pool_plan": {
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github"
+            ],
+            "expected_result_url_kind": "github_repository_landing_page",
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "navigation_query_id": "D26-N01-Q",
+          "purpose": "Find the official public repository landing page for the named project.",
+          "search_query": "argo rollouts",
+          "target_id": "D26-N01",
+          "target_type": "official_github_repository_landing_page",
+          "target_url": "https://github.com/argoproj/argo-rollouts"
+        },
+        {
+          "navigation_pool_plan": {
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github"
+            ],
+            "expected_result_url_kind": "github_repository_landing_page",
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "navigation_query_id": "D26-N02-Q",
+          "purpose": "Find the official public repository landing page for the named project.",
+          "search_query": "tekton pipeline",
+          "target_id": "D26-N02",
+          "target_type": "official_github_repository_landing_page",
+          "target_url": "https://github.com/tektoncd/pipeline"
+        },
+        {
+          "navigation_pool_plan": {
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github"
+            ],
+            "expected_result_url_kind": "github_repository_landing_page",
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "navigation_query_id": "D26-N03-Q",
+          "purpose": "Find the official public repository landing page for the named project.",
+          "search_query": "crossplane control plane",
+          "target_id": "D26-N03",
+          "target_type": "official_github_repository_landing_page",
+          "target_url": "https://github.com/crossplane/crossplane"
+        },
+        {
+          "navigation_pool_plan": {
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github"
+            ],
+            "expected_result_url_kind": "github_repository_landing_page",
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "navigation_query_id": "D26-N04-Q",
+          "purpose": "Find the official public repository landing page for the named project.",
+          "search_query": "keda autoscaling",
+          "target_id": "D26-N04",
+          "target_type": "official_github_repository_landing_page",
+          "target_url": "https://github.com/kedacore/keda"
+        },
+        {
+          "navigation_pool_plan": {
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github"
+            ],
+            "expected_result_url_kind": "github_repository_landing_page",
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "navigation_query_id": "D26-N05-Q",
+          "purpose": "Find the official public repository landing page for the named project.",
+          "search_query": "dagger ci",
+          "target_id": "D26-N05",
+          "target_type": "official_github_repository_landing_page",
+          "target_url": "https://github.com/dagger/dagger"
+        }
+      ],
+      "research_cases": [
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "What ordering or compatibility conditions are documented?",
+                "How are lagging consumers or partial rollouts handled?"
+              ],
+              "definition": "Deployment sequencing and compatibility: rollout order, compatibility windows, and coexistence of old and new service versions.",
+              "facet_id": "D26-Q01-F1"
+            },
+            {
+              "critical_checks": [
+                "What confirms the data transition is complete and correct?",
+                "What recovery limits or irreversible steps are disclosed?"
+              ],
+              "definition": "Data transition verification and recovery: Identify evidence used to verify backfills/cutovers and constraints on rollback or forward repair.",
+              "facet_id": "D26-Q01-F2"
+            }
+          ],
+          "intent": "evidence_seeking",
+          "pool_plan": {
+            "band": "research_le_40",
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github",
+              "openalex"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Find evidence for sequencing compatible schema changes across services and verifying that data transitions completed safely. Use applicable evidence to answer the task; source presence alone does not establish the required point.",
+          "purpose_id": "D26-P01",
+          "query_id": "D26-Q01",
+          "search_query": "online schema migration",
+          "task_id": "D26-R01",
+          "task_question": "How should a software platform plan a shared database schema change when multiple services deploy on different schedules?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "Who can change ownership records, and when?",
+                "What prevents stale ownership from persisting?"
+              ],
+              "definition": "Ownership record lifecycle: Identify who owns updates and what events require ownership metadata to change.",
+              "facet_id": "D26-Q02-F1"
+            },
+            {
+              "critical_checks": [
+                "How does a user reach the responsible team?",
+                "What failure modes or gaps in escalation are documented?"
+              ],
+              "definition": "Operational escalation use: Identify how service ownership connects to on-call, incident routing, or service review.",
+              "facet_id": "D26-Q02-F2"
+            }
+          ],
+          "intent": "evidence_seeking",
+          "pool_plan": {
+            "band": "research_le_40",
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Find evidence about maintaining service ownership records, validating their freshness, and making operational responsibility actionable. Use applicable evidence to answer the task; source presence alone does not establish the required point.",
+          "purpose_id": "D26-P02",
+          "query_id": "D26-Q02",
+          "search_query": "service ownership catalog",
+          "task_id": "D26-R02",
+          "task_question": "How can an enterprise keep ownership and escalation information reliable as platform services and teams change?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "Which extension points and versioning mechanisms are described?",
+                "How are local modifications kept distinguishable from upstream template changes?"
+              ],
+              "definition": "Template and extension model: Identify how templates are authored, versioned, and extended by consuming teams.",
+              "facet_id": "D26-Q03-F1"
+            },
+            {
+              "critical_checks": [
+                "What migration or support burden is discussed?",
+                "What limits are stated for template reuse across different stacks?"
+              ],
+              "definition": "Adoption and maintenance constraints: Identify documented maintenance costs and how template changes reach existing services.",
+              "facet_id": "D26-Q03-F2"
+            }
+          ],
+          "intent": "source_discovery",
+          "pool_plan": {
+            "band": "research_le_40",
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github",
+              "openalex"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Locate and compare technical resources on reusable platform templates, extension points, and the tradeoffs of local customization. Use discovered sources to support a substantive response; a bibliography alone does not complete the task.",
+          "purpose_id": "D26-P03",
+          "query_id": "D26-Q03",
+          "search_query": "internal developer portal",
+          "task_id": "D26-R03",
+          "task_question": "How should a platform team design reusable service templates so customization remains maintainable as the platform evolves?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "Which service indicators and measurement windows are described?",
+                "How are queueing delays separated from execution failures?"
+              ],
+              "definition": "User-facing service objectives: Identify measures that represent build/test service reliability from the developer perspective.",
+              "facet_id": "D26-Q04-F1"
+            },
+            {
+              "critical_checks": [
+                "What workload assumptions or tradeoffs are disclosed?",
+                "How are missed objectives connected to corrective action?"
+              ],
+              "definition": "Capacity and policy tradeoffs: Identify how capacity planning, fairness, or maintenance affects chosen objectives.",
+              "facet_id": "D26-Q04-F2"
+            }
+          ],
+          "intent": "source_discovery",
+          "pool_plan": {
+            "band": "research_le_40",
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Find and compare resources that help platform owners define user-visible reliability and capacity measures for shared engineering services. Use discovered sources to support a substantive response; a bibliography alone does not complete the task.",
+          "purpose_id": "D26-P04",
+          "query_id": "D26-Q04",
+          "search_query": "platform service levels",
+          "task_id": "D26-R04",
+          "task_question": "What service objectives should a shared build-and-test platform expose so product teams can plan around queue delays?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "Which build inputs affect cache identity?",
+                "How are writes or reads isolated across projects or trust levels?"
+              ],
+              "definition": "Cache identity and isolation: Identify inputs or namespaces used to determine whether an artifact can be reused safely.",
+              "facet_id": "D26-Q05-F1"
+            },
+            {
+              "critical_checks": [
+                "What checks detect a bad or stale artifact?",
+                "What recovery and performance tradeoffs are documented?"
+              ],
+              "definition": "Freshness and recovery: Identify invalidation, verification, and recovery behavior when cached outputs may be stale or untrusted.",
+              "facet_id": "D26-Q05-F2"
+            }
+          ],
+          "intent": "evidence_seeking",
+          "pool_plan": {
+            "band": "research_41_80",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "arxiv",
+              "openalex",
+              "github",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Find evidence about integrity, isolation, and invalidation for reusable build artifacts in shared automation environments. Use applicable evidence to answer the task; source presence alone does not establish the required point.",
+          "purpose_id": "D26-P05",
+          "query_id": "D26-Q05",
+          "search_query": "build cache",
+          "task_id": "D26-R05",
+          "task_question": "How should a multi-project software factory protect shared build caches from stale or cross-project artifacts while preserving useful reuse?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "How are priorities or quotas applied?",
+                "What starvation or fairness limits are documented?"
+              ],
+              "definition": "Scheduling and fairness behavior: Identify priority, quota, or queue policy and how it affects competing teams.",
+              "facet_id": "D26-Q06-F1"
+            },
+            {
+              "critical_checks": [
+                "Which workload and capacity metrics are reported?",
+                "What happens to queued work during overload or maintenance?"
+              ],
+              "definition": "Capacity and latency evidence: Identify measurements used to evaluate queue time, utilization, and overload handling.",
+              "facet_id": "D26-Q06-F2"
+            }
+          ],
+          "intent": "evidence_seeking",
+          "pool_plan": {
+            "band": "research_41_80",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "arxiv",
+              "openalex",
+              "github",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Find evidence for scheduling policies and their fairness, latency, and capacity tradeoffs in shared engineering execution systems. Use applicable evidence to answer the task; source presence alone does not establish the required point.",
+          "purpose_id": "D26-P06",
+          "query_id": "D26-Q06",
+          "search_query": "job scheduling",
+          "task_id": "D26-R06",
+          "task_question": "What scheduling policies help an enterprise platform allocate shared build runners across teams with bursty and differently prioritized work?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "How is useful test coverage or realism assessed?",
+                "What limitations arise from transformed or synthetic data?"
+              ],
+              "definition": "Data preparation and fidelity: Identify methods for generating, selecting, or transforming data used in non-production tests.",
+              "facet_id": "D26-Q07-F1"
+            },
+            {
+              "critical_checks": [
+                "How are sensitive fields and access scoped?",
+                "How is data retention or cleanup verified?"
+              ],
+              "definition": "Exposure and lifecycle controls: Identify controls over access, retention, and disposal of test data.",
+              "facet_id": "D26-Q07-F2"
+            }
+          ],
+          "intent": "source_discovery",
+          "pool_plan": {
+            "band": "research_41_80",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "arxiv",
+              "openalex",
+              "github",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Locate sources describing test-data preparation and controls for realistic lower-environment testing, including limits and operational costs. Use discovered sources to support a substantive response; a bibliography alone does not complete the task.",
+          "purpose_id": "D26-P07",
+          "query_id": "D26-Q07",
+          "search_query": "test data",
+          "task_id": "D26-R07",
+          "task_question": "How can teams prepare realistic nonproduction test data without exposing production records, and which lifecycle controls should they apply?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "How are baseline versions selected and represented?",
+                "How can teams vary or override a baseline without losing visibility?"
+              ],
+              "definition": "Baseline, pinning, and controlled variation across shared platform environments.",
+              "facet_id": "D26-Q08-F1"
+            },
+            {
+              "critical_checks": [
+                "What checks assess compatibility before broad adoption?",
+                "How are divergence, upgrades, and retirement handled?"
+              ],
+              "definition": "Compatibility validation and lifecycle of shared dependency sets.",
+              "facet_id": "D26-Q08-F2"
+            }
+          ],
+          "intent": "source_discovery",
+          "pool_plan": {
+            "band": "research_41_80",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "arxiv",
+              "openalex",
+              "github",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Find evidence about shared dependency baseline and override approaches, including how teams assess compatibility and manage divergence. Use applicable evidence to answer the task; source presence alone does not establish the required point.",
+          "purpose_id": "D26-P08",
+          "query_id": "D26-Q08",
+          "search_query": "software dependencies",
+          "task_id": "D26-R08",
+          "task_question": "How can an enterprise platform provide shared dependency baselines for agent and build environments while allowing product teams to upgrade components independently?"
+        }
+      ],
+      "stage": "development",
+      "stage_state": "registered_unadmitted_uninvoked"
+    },
+    {
+      "confirmation_precondition": "Acquire no confirmation pool until the separate development stage has a verified pass under the unchanged mixed and band-companion gates.",
+      "navigation_targets": [
+        {
+          "navigation_pool_plan": {
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github"
+            ],
+            "expected_result_url_kind": "github_repository_landing_page",
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "navigation_query_id": "C26-N01-Q",
+          "purpose": "Find the official public repository landing page for the named project.",
+          "search_query": "flux gitops",
+          "target_id": "C26-N01",
+          "target_type": "official_github_repository_landing_page",
+          "target_url": "https://github.com/fluxcd/flux2"
+        },
+        {
+          "navigation_pool_plan": {
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github"
+            ],
+            "expected_result_url_kind": "github_repository_landing_page",
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "navigation_query_id": "C26-N02-Q",
+          "purpose": "Find the official public repository landing page for the named project.",
+          "search_query": "argo cd",
+          "target_id": "C26-N02",
+          "target_type": "official_github_repository_landing_page",
+          "target_url": "https://github.com/argoproj/argo-cd"
+        },
+        {
+          "navigation_pool_plan": {
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github"
+            ],
+            "expected_result_url_kind": "github_repository_landing_page",
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "navigation_query_id": "C26-N03-Q",
+          "purpose": "Find the official public repository landing page for the named project.",
+          "search_query": "backstage platform",
+          "target_id": "C26-N03",
+          "target_type": "official_github_repository_landing_page",
+          "target_url": "https://github.com/backstage/backstage"
+        },
+        {
+          "navigation_pool_plan": {
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github"
+            ],
+            "expected_result_url_kind": "github_repository_landing_page",
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "navigation_query_id": "C26-N04-Q",
+          "purpose": "Find the official public repository landing page for the named project.",
+          "search_query": "knative serving",
+          "target_id": "C26-N04",
+          "target_type": "official_github_repository_landing_page",
+          "target_url": "https://github.com/knative/serving"
+        },
+        {
+          "navigation_pool_plan": {
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github"
+            ],
+            "expected_result_url_kind": "github_repository_landing_page",
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "navigation_query_id": "C26-N05-Q",
+          "purpose": "Find the official public repository landing page for the named project.",
+          "search_query": "helm package manager",
+          "target_id": "C26-N05",
+          "target_type": "official_github_repository_landing_page",
+          "target_url": "https://github.com/helm/helm"
+        }
+      ],
+      "research_cases": [
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "What inventory or usage evidence is collected?",
+                "How are unknown or inactive consumers treated?"
+              ],
+              "definition": "Consumer discovery and readiness: Identify how providers find affected consumers and assess migration readiness.",
+              "facet_id": "C26-Q01-F1"
+            },
+            {
+              "critical_checks": [
+                "What notice or coexistence period is described?",
+                "How is service impact checked before removal?"
+              ],
+              "definition": "Deprecation and migration controls: Identify notice, compatibility, and removal sequencing practices.",
+              "facet_id": "C26-Q01-F2"
+            }
+          ],
+          "intent": "evidence_seeking",
+          "pool_plan": {
+            "band": "research_le_40",
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github",
+              "openalex"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Find evidence on communicating API lifecycle changes, measuring consumer readiness, and reducing disruption during deprecation. Use applicable evidence to answer the task; source presence alone does not establish the required point.",
+          "purpose_id": "C26-P01",
+          "query_id": "C26-Q01",
+          "search_query": "API deprecation strategy",
+          "task_id": "C26-R01",
+          "task_question": "How should an internal platform retire a service API when downstream teams cannot migrate at the same time?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "What events trigger cleanup or extension?",
+                "How is policy applied to abandoned environments?"
+              ],
+              "definition": "Retention and cleanup policy: Identify lifecycle triggers, retention periods, and exceptions for active investigations.",
+              "facet_id": "C26-Q02-F1"
+            },
+            {
+              "critical_checks": [
+                "What information supports a repeatable diagnosis?",
+                "What privacy, storage, or cost limits are stated?"
+              ],
+              "definition": "Reproducibility and diagnostics: Identify which configuration or logs are retained to reconstruct a failed run.",
+              "facet_id": "C26-Q02-F2"
+            }
+          ],
+          "intent": "evidence_seeking",
+          "pool_plan": {
+            "band": "research_le_40",
+            "engine_configs": {
+              "openalex": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "wikipedia",
+              "openalex"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Find evidence on temporary environment lifecycle policies that balance cost, reproducibility, and debugging needs. Use applicable evidence to answer the task; source presence alone does not establish the required point.",
+          "purpose_id": "C26-P02",
+          "query_id": "C26-Q02",
+          "search_query": "test environment lifecycle",
+          "task_id": "C26-R02",
+          "task_question": "How can an engineering platform clean up temporary test environments without discarding evidence needed to diagnose failures?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "What user outcome is measured rather than merely tool availability?",
+                "How are task complexity and prior experience handled?"
+              ],
+              "definition": "Onboarding outcome measures: Identify measures tied to a developer reaching a useful first contribution or service operation.",
+              "facet_id": "C26-Q03-F1"
+            },
+            {
+              "critical_checks": [
+                "What limits on causal interpretation are stated?",
+                "How are teams with different stacks compared fairly?"
+              ],
+              "definition": "Interpretation and bias: Identify confounders, sampling limits, or support costs in onboarding studies.",
+              "facet_id": "C26-Q03-F2"
+            }
+          ],
+          "intent": "source_discovery",
+          "pool_plan": {
+            "band": "research_le_40",
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Locate and compare evidence about measuring developer onboarding experience and interpreting platform adoption signals. Use discovered sources to support a substantive response; a bibliography alone does not complete the task.",
+          "purpose_id": "C26-P03",
+          "query_id": "C26-Q03",
+          "search_query": "developer onboarding metrics",
+          "task_id": "C26-R03",
+          "task_question": "How can teams assess onboarding friction across services with different technology stacks without mistaking adoption metrics for causal impact?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "How are fixed and variable costs represented?",
+                "What gaps remain when usage does not map cleanly to a team?"
+              ],
+              "definition": "Cost attribution model: Identify which shared costs are allocated and which usage signals drive allocation.",
+              "facet_id": "C26-Q04-F1"
+            },
+            {
+              "critical_checks": [
+                "How are cost signals used without discouraging valuable shared services?",
+                "What governance or appeal path is described?"
+              ],
+              "definition": "Incentives and governance: Identify how allocation affects capacity choices, budgets, and platform stewardship.",
+              "facet_id": "C26-Q04-F2"
+            }
+          ],
+          "intent": "source_discovery",
+          "pool_plan": {
+            "band": "research_le_40",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "arxiv",
+              "openalex"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Find and compare approaches to attributing shared platform costs and communicating consumption constraints to product teams. Use discovered sources to support a substantive response; a bibliography alone does not complete the task.",
+          "purpose_id": "C26-P04",
+          "query_id": "C26-Q04",
+          "search_query": "platform cost allocation",
+          "task_id": "C26-R04",
+          "task_question": "How should an enterprise allocate shared engineering platform costs across teams while keeping fixed costs and adoption incentives visible?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "What consistency guarantees or delays are documented?",
+                "How are missing or stale replicas detected?"
+              ],
+              "definition": "Replication and consistency: Identify replication behavior and how clients discover or select replicas.",
+              "facet_id": "C26-Q05-F1"
+            },
+            {
+              "critical_checks": [
+                "What verifies artifact identity across replicas?",
+                "What recovery behavior and operational limits are described?"
+              ],
+              "definition": "Integrity and recovery: Identify verification and recovery procedures when replicas disagree or become unavailable.",
+              "facet_id": "C26-Q05-F2"
+            }
+          ],
+          "intent": "evidence_seeking",
+          "pool_plan": {
+            "band": "research_41_80",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "arxiv",
+              "openalex",
+              "github",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Find evidence about registry replication, consistency, and integrity checks needed for reliable artifact distribution. Use applicable evidence to answer the task; source presence alone does not establish the required point.",
+          "purpose_id": "C26-P05",
+          "query_id": "C26-Q05",
+          "search_query": "artifact registry",
+          "task_id": "C26-R05",
+          "task_question": "How should a software factory validate artifact availability and integrity when its registry uses replicas or regional mirrors?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "How are per-team usage and shared contention represented?",
+                "What happens when a quota is exhausted?"
+              ],
+              "definition": "Quota and usage visibility: Identify allocation units and user-facing signals for approaching or exceeding limits.",
+              "facet_id": "C26-Q06-F1"
+            },
+            {
+              "critical_checks": [
+                "What fairness or priority tradeoffs are described?",
+                "How are service-level effects monitored?"
+              ],
+              "definition": "Policy and service impact: Identify how capacity policies balance interactive and batch workloads.",
+              "facet_id": "C26-Q06-F2"
+            }
+          ],
+          "intent": "evidence_seeking",
+          "pool_plan": {
+            "band": "research_41_80",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "arxiv",
+              "openalex",
+              "github",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Find evidence on communicating and enforcing shared platform quotas without obscuring contention or service-level impact. Use applicable evidence to answer the task; source presence alone does not establish the required point.",
+          "purpose_id": "C26-P06",
+          "query_id": "C26-Q06",
+          "search_query": "resource quotas",
+          "task_id": "C26-R06",
+          "task_question": "How can platform teams make capacity limits visible and predictable for teams running a mix of interactive agent jobs and scheduled builds?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "Which host or toolchain assumptions are explicit?",
+                "How are platform-specific requirements represented?"
+              ],
+              "definition": "Portability contract: Identify which environment inputs must be declared or controlled for a build to run elsewhere.",
+              "facet_id": "C26-Q07-F1"
+            },
+            {
+              "critical_checks": [
+                "What output or provenance comparisons are used?",
+                "What reproducibility limits remain?"
+              ],
+              "definition": "Verification and diagnostics: Identify how equivalence or divergence across execution environments is detected.",
+              "facet_id": "C26-Q07-F2"
+            }
+          ],
+          "intent": "source_discovery",
+          "pool_plan": {
+            "band": "research_41_80",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "arxiv",
+              "openalex",
+              "github",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Locate sources describing portable build definitions, environment dependencies, and practical limits of reproducibility across execution backends. Use discovered sources to support a substantive response; a bibliography alone does not complete the task.",
+          "purpose_id": "C26-P07",
+          "query_id": "C26-Q07",
+          "search_query": "build automation",
+          "task_id": "C26-R07",
+          "task_question": "How can engineering teams make build pipelines portable across execution environments while preserving useful failure diagnostics?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "What ordering or delivery guarantees are specified?",
+                "How are duplicates or out-of-order events handled?"
+              ],
+              "definition": "Delivery and ordering semantics: Identify delivery guarantees, ordering scope, and duplicate handling.",
+              "facet_id": "C26-Q08-F1"
+            },
+            {
+              "critical_checks": [
+                "How can a consumer resume from a known point?",
+                "What data-loss or retention limits are disclosed?"
+              ],
+              "definition": "Replay and consumer recovery: Identify retention, offset, and replay behavior after consumer interruption.",
+              "facet_id": "C26-Q08-F2"
+            }
+          ],
+          "intent": "source_discovery",
+          "pool_plan": {
+            "band": "research_41_80",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "arxiv",
+              "openalex",
+              "github",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Locate sources that explain event-stream delivery guarantees and consumer recovery relevant to platform workflow integrations. Use discovered sources to support a substantive response; a bibliography alone does not complete the task.",
+          "purpose_id": "C26-P08",
+          "query_id": "C26-Q08",
+          "search_query": "event streaming",
+          "task_id": "C26-R08",
+          "task_question": "How should platform teams reason about event ordering, delivery, and replay when connecting internal event streams to automation?"
+        }
+      ],
+      "stage": "confirmation",
+      "stage_state": "registered_unadmitted_uninvoked"
+    }
+  ],
+  "status": "registered"
+}

@@ -13,7 +13,7 @@ import pytest
 from scripts import intent_ranking_coverage as coverage
 from scripts import intent_ranking_receipts as receipts
 from scripts import intent_ranking_replay as replay
-from slopsearx.rerank import LEVELS, MODEL
+from slopsearx.rerank import MODEL
 
 FACETS = [
     {"id": "scope", "description": "Evidence about requested scope."},
@@ -54,7 +54,7 @@ def good_response(compiled):
         answers[f"score:{cid}"] = {
             "type": "score",
             "score": 7,
-            "legend": {str(i): level for i, level in enumerate(LEVELS)},
+            "legend": {str(i): level for i, level in enumerate(coverage.LEVELS)},
             "probabilities": probs,
             "confidence": 0.7,
         }

@@ -1,0 +1,30 @@
+
+running 3 tests
+
+thread 'independent_meta_content_only' (21395183) panicked at /private/tmp/a02-independent-probe.rs:166:9:
+assertion `left == right` failed: meta_content_only
+  left: Object({"url": String("https://pypi.org/project/café/"), "title": String("café "), "content": String(""), "engine": String("pypi"), "position": Number(Number("1")), "score": Number(Number("1.0")), "payload": Object({"domain": String("packages"), "type": String("package"), "schema_version": Number(Number("1")), "data": Object({"name": String("café")}), "provenance": Object({"engine": String("pypi"), "adapter_fields": Array([String("name")]), "normalized_fields": Array([]), "inferred_fields": Array([])})})})
+ right: Object({"url": String("https://pypi.org/project/cafÃ©/"), "title": String("cafÃ© "), "content": String(""), "engine": String("pypi"), "position": Number(Number("1")), "score": Number(Number("1.0")), "payload": Object({"domain": String("packages"), "type": String("package"), "schema_version": Number(Number("1")), "data": Object({"name": String("cafÃ©")}), "provenance": Object({"engine": String("pypi"), "adapter_fields": Array([String("name")]), "normalized_fields": Array([]), "inferred_fields": Array([])})})})
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'independent_meta_unknown_then_valid' (21395185) panicked at /private/tmp/a02-independent-probe.rs:166:9:
+assertion `left == right` failed: meta_unknown_then_valid
+  left: Object({"url": String("https://pypi.org/project/cafÃ©/"), "title": String("cafÃ© "), "content": String(""), "engine": String("pypi"), "position": Number(Number("1")), "score": Number(Number("1.0")), "payload": Object({"domain": String("packages"), "type": String("package"), "schema_version": Number(Number("1")), "data": Object({"name": String("cafÃ©")}), "provenance": Object({"engine": String("pypi"), "adapter_fields": Array([String("name")]), "normalized_fields": Array([]), "inferred_fields": Array([])})})})
+ right: Object({"url": String("https://pypi.org/project/café/"), "title": String("café "), "content": String(""), "engine": String("pypi"), "position": Number(Number("1")), "score": Number(Number("1.0")), "payload": Object({"domain": String("packages"), "type": String("package"), "schema_version": Number(Number("1")), "data": Object({"name": String("café")}), "provenance": Object({"engine": String("pypi"), "adapter_fields": Array([String("name")]), "normalized_fields": Array([]), "inferred_fields": Array([])})})})
+
+thread 'independent_meta_name_content' (21395184) panicked at /private/tmp/a02-independent-probe.rs:166:9:
+assertion `left == right` failed: meta_name_content
+  left: Object({"url": String("https://pypi.org/project/café/"), "title": String("café "), "content": String(""), "engine": String("pypi"), "position": Number(Number("1")), "score": Number(Number("1.0")), "payload": Object({"domain": String("packages"), "type": String("package"), "schema_version": Number(Number("1")), "data": Object({"name": String("café")}), "provenance": Object({"engine": String("pypi"), "adapter_fields": Array([String("name")]), "normalized_fields": Array([]), "inferred_fields": Array([])})})})
+ right: Object({"url": String("https://pypi.org/project/cafÃ©/"), "title": String("cafÃ© "), "content": String(""), "engine": String("pypi"), "position": Number(Number("1")), "score": Number(Number("1.0")), "payload": Object({"domain": String("packages"), "type": String("package"), "schema_version": Number(Number("1")), "data": Object({"name": String("cafÃ©")}), "provenance": Object({"engine": String("pypi"), "adapter_fields": Array([String("name")]), "normalized_fields": Array([]), "inferred_fields": Array([])})})})
+test independent_meta_content_only ... FAILED
+test independent_meta_unknown_then_valid ... FAILED
+test independent_meta_name_content ... FAILED
+
+failures:
+
+failures:
+    independent_meta_content_only
+    independent_meta_name_content
+    independent_meta_unknown_then_valid
+
+test result: FAILED. 0 passed; 3 failed; 0 ignored; 0 measured; 11 filtered out; finished in 0.02s

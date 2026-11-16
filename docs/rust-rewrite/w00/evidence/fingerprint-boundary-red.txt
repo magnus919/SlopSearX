@@ -1,0 +1,35 @@
+   Compiling ssx-domain v0.1.0 (/Users/magnus/.codex/worktrees/rust-w00-saved-store/SlopSearX/crates/ssx-domain)
+warning: unused import: `json`
+ --> crates/ssx-domain/src/saved.rs:8:23
+  |
+8 | use ssx_json::{Value, json};
+  |                       ^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `ssx-domain` (lib) generated 1 warning (run `cargo fix --lib -p ssx-domain` to apply 1 suggestion)
+   Compiling ssx-application v0.1.0 (/Users/magnus/.codex/worktrees/rust-w00-saved-store/SlopSearX/crates/ssx-application)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.85s
+     Running unittests src/lib.rs (target/debug/deps/ssx_application-7b20eaf255ad26bb)
+
+running 1 test
+test saved::fingerprint_boundary_tests::large_policy_metadata_identity_does_not_use_persistence_macro_bounds ... FAILED
+
+failures:
+
+---- saved::fingerprint_boundary_tests::large_policy_metadata_identity_does_not_use_persistence_macro_bounds stdout ----
+
+thread 'saved::fingerprint_boundary_tests::large_policy_metadata_identity_does_not_use_persistence_macro_bounds' (23583557) panicked at crates/ssx-application/src/saved.rs:56:31:
+called `Result::unwrap()` on an `Err` value: Error("JSON byte limit exceeded", line: 0, column: 0)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'saved::fingerprint_boundary_tests::large_policy_metadata_identity_does_not_use_persistence_macro_bounds' (23583557) panicked at crates/ssx-application/src/saved.rs:503:9:
+assertion failed: std::panic::catch_unwind(|| p.fingerprint(&["brave".into()])).is_ok()
+
+
+failures:
+    saved::fingerprint_boundary_tests::large_policy_metadata_identity_does_not_use_persistence_macro_bounds
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.09s
+
+error: test failed, to rerun pass `-p ssx-application --lib`

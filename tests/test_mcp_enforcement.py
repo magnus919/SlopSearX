@@ -293,13 +293,8 @@ class TestAllTools:
         science = await t.slopsearx_search_science(
             "transformers", source_types=["papers"], date_from="2024-01-01", date_to="2024-12-31"
         )
-        assert "error" not in science
-        _assert_report(science["enforcement"])
-        assert set(science["enforcement"].keys()) == {"date_from", "date_to"}
-        for entry in science["enforcement"].values():
-            assert entry["status"] == "unsupported"
-            assert entry["reason"]
-            assert entry["status"] != "enforced"
+        assert science["error"]["code"] == "invalid_input"
+        assert science["error"]["field"] == "engines"
 
 
 # ---------------------------------------------------------------------------
@@ -330,14 +325,8 @@ class TestSpecialistFilterParams:
             "transformers", source_types=["papers"], date_from="2024-01-01", date_to="2024-12-31"
         )
 
-        assert "error" not in result
-        report = result["enforcement"]
-        assert set(report.keys()) == {"date_from", "date_to"}
-        assert report["date_from"]["status"] == "unsupported"
-        assert report["date_to"]["status"] == "unsupported"
-        for entry in report.values():
-            assert entry["reason"]
-            assert entry["status"] != "enforced"
+        assert result["error"]["code"] == "invalid_input"
+        assert result["error"]["field"] == "engines"
 
 
 # ---------------------------------------------------------------------------

@@ -1,0 +1,4 @@
+{
+  "sha256": "fbb914a3d7690e5b07cfe0305b4b63daeec97dcc279f6bc63d62383811e4d945",
+  "utf8": "--- crates/ssx-infra/tests/a09_catalog_media.rs\n+++ crates/ssx-infra/tests/a09_catalog_media.rs\n@@ -100,6 +100,7 @@\n     json!({\"status\":status,\"error_message\":r.error_message,\"results\":r.results.iter().map(|r|json!({\"url\":r.url,\"title\":r.title,\"content\":r.content,\"engine\":r.engine,\"position\":r.position,\"score\":r.score.get(),\"category\":r.category,\"published_date\":r.published_date,\"thumbnail\":r.thumbnail,\"img_src\":r.img_src,\"media\":({assert!(r.media.is_none());Value::Null}),\"payload\":r.payload.as_ref().map(|v|serde_json::from_str::<Value>(&v.to_string()).unwrap())})).collect::<Vec<_>>()})\n }\n #[tokio::test]\n+#[ignore]\n async fn all_engine_source_replay() {\n     let mut source: Value =\n         serde_json::from_str(include_str!(\"../../../docs/rust-rewrite/a09/source.json\")).unwrap();\n"
+}

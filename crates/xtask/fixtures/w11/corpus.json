@@ -1,0 +1,413 @@
+{
+  "schema_version": 1,
+  "plan_id": "W11",
+  "baseline": "1e9dd82d62456fe6f511cc5ade88bae619fac027",
+  "sources": [
+    {
+      "path": "slopsearx/staged.py",
+      "sha256": "6a916005fb404369294f8f3d2e0c96ade191beae2be85087640e085bb9d4d256",
+      "git_blob": "26a80af7fa217eda44836710ed3887146a3ef655"
+    },
+    {
+      "path": "slopsearx/mcp/staged_tools.py",
+      "sha256": "ac49b6942567aaab2c8bb56c15bb325f6a87d68f6c65a75a4bc912a74310a2ff",
+      "git_blob": "53c63e759baed2edb7cdd4c7b2fe2033c635c5d0"
+    },
+    {
+      "path": "tests/test_staged_search.py",
+      "sha256": "44bd4207e4f6feced604d9e8f2fc049a9b8ce7062271fe7c1bf27ac9a8c2aa8c",
+      "git_blob": "e535a8a961ed5ef3632e5b795005e4f1a27ab004"
+    },
+    {
+      "path": "tests/test_staged_valkey_integration.py",
+      "sha256": "ef3b19f2f85c2dfb6e15871bcb0a3a818debb4d3b49f57bb3aa3af86bb7e362e",
+      "git_blob": "573a6bf1cceefe1baa79e31ca45f81e8572c7ba8"
+    }
+  ],
+  "record": {
+    "operation_id": "legacy:id:\u96ea",
+    "tenant": "org:team",
+    "version": 1,
+    "accepted_at": 100.0,
+    "execution_deadline_at": 130.0,
+    "expires_at": 3700.0,
+    "state": "queued",
+    "stop_reason": null,
+    "plan": {
+      "query": "\u96ea\ud83d\ude00 \\\"",
+      "filters": {
+        "language": "en",
+        "time_range": null,
+        "safesearch": "off",
+        "freshness": "no_preference"
+      },
+      "initial_scope": {
+        "requested": {
+          "engines": [
+            "alpha"
+          ]
+        },
+        "selected_engines": [
+          "alpha"
+        ],
+        "excluded_engines": []
+      },
+      "fallback_scope": null,
+      "allow_scope_expansion": false,
+      "fallback_when": "clean_empty"
+    },
+    "objectives": {
+      "requested": {
+        "deadline_ms": 30000,
+        "max_engine_calls": 3
+      },
+      "effective": {
+        "deadline_ms": 30000,
+        "max_engine_calls": 3
+      },
+      "unmet": []
+    },
+    "budget": {
+      "unit": "adapter_search_invocations",
+      "limit": 3,
+      "reserved": 0,
+      "observed": 0
+    },
+    "stages": [
+      {
+        "index": 0,
+        "scope": {
+          "requested": {
+            "engines": [
+              "alpha"
+            ]
+          },
+          "selected_engines": [
+            "alpha"
+          ],
+          "excluded_engines": []
+        },
+        "state": "pending",
+        "skipped_reason": null,
+        "attempts": [],
+        "enforcement": {}
+      }
+    ],
+    "retry_keys": [],
+    "selected_result_attempt_id": null,
+    "next_stage": 0,
+    "plan_digest": "05c45a3da34fb6599369a0344c27151502a43e72854d09e525e86503b6391c66"
+  },
+  "canonical_identity": "{\"allow_scope_expansion\":false,\"fallback_scope\":null,\"filters\":{\"freshness\":\"no_preference\",\"language\":\"en\",\"safesearch\":\"off\",\"time_range\":null},\"initial_scope\":{\"excluded_engines\":[],\"requested\":{\"engines\":[\"alpha\"]},\"selected_engines\":[\"alpha\"]},\"objectives\":{\"effective\":{\"deadline_ms\":30000,\"max_engine_calls\":3},\"requested\":{\"deadline_ms\":30000,\"max_engine_calls\":3}},\"query\":\"\\u96ea\\ud83d\\ude00 \\\\\\\"\",\"version\":1}",
+  "digest": "05c45a3da34fb6599369a0344c27151502a43e72854d09e525e86503b6391c66",
+  "normalizations": [
+    {
+      "input": {
+        "operation_id": "legacy:id:\u96ea",
+        "tenant": "org:team",
+        "version": 1,
+        "accepted_at": 100.0,
+        "execution_deadline_at": 130.0,
+        "expires_at": 3700.0,
+        "state": "queued",
+        "stop_reason": null,
+        "plan": {
+          "query": "\u96ea\ud83d\ude00 \\\"",
+          "filters": {
+            "language": "en",
+            "time_range": null,
+            "safesearch": "off",
+            "freshness": "no_preference"
+          },
+          "initial_scope": {
+            "requested": {
+              "engines": [
+                "alpha"
+              ]
+            },
+            "selected_engines": [
+              "alpha"
+            ],
+            "excluded_engines": []
+          },
+          "fallback_scope": null,
+          "allow_scope_expansion": false,
+          "fallback_when": "clean_empty"
+        },
+        "objectives": {
+          "requested": {
+            "deadline_ms": 30000,
+            "max_engine_calls": 3
+          },
+          "effective": {
+            "deadline_ms": 30000,
+            "max_engine_calls": 3
+          },
+          "unmet": []
+        },
+        "budget": {
+          "unit": "adapter_search_invocations",
+          "limit": 3,
+          "reserved": 0,
+          "observed": 0
+        },
+        "stages": [
+          {
+            "index": 0,
+            "scope": {
+              "requested": {
+                "engines": [
+                  "alpha"
+                ]
+              },
+              "selected_engines": [
+                "alpha"
+              ],
+              "excluded_engines": []
+            },
+            "state": "pending",
+            "skipped_reason": null,
+            "attempts": [],
+            "enforcement": {}
+          }
+        ],
+        "retry_keys": {},
+        "selected_result_attempt_id": null,
+        "next_stage": 0,
+        "plan_digest": "05c45a3da34fb6599369a0344c27151502a43e72854d09e525e86503b6391c66"
+      },
+      "source": {
+        "operation_id": "legacy:id:\u96ea",
+        "tenant": "org:team",
+        "version": 1,
+        "accepted_at": 100.0,
+        "execution_deadline_at": 130.0,
+        "expires_at": 3700.0,
+        "state": "queued",
+        "stop_reason": null,
+        "plan": {
+          "query": "\u96ea\ud83d\ude00 \\\"",
+          "filters": {
+            "language": "en",
+            "time_range": null,
+            "safesearch": "off",
+            "freshness": "no_preference"
+          },
+          "initial_scope": {
+            "requested": {
+              "engines": [
+                "alpha"
+              ]
+            },
+            "selected_engines": [
+              "alpha"
+            ],
+            "excluded_engines": []
+          },
+          "fallback_scope": null,
+          "allow_scope_expansion": false,
+          "fallback_when": "clean_empty"
+        },
+        "objectives": {
+          "requested": {
+            "deadline_ms": 30000,
+            "max_engine_calls": 3
+          },
+          "effective": {
+            "deadline_ms": 30000,
+            "max_engine_calls": 3
+          },
+          "unmet": []
+        },
+        "budget": {
+          "unit": "adapter_search_invocations",
+          "limit": 3,
+          "reserved": 0,
+          "observed": 0
+        },
+        "stages": [
+          {
+            "index": 0,
+            "scope": {
+              "requested": {
+                "engines": [
+                  "alpha"
+                ]
+              },
+              "selected_engines": [
+                "alpha"
+              ],
+              "excluded_engines": []
+            },
+            "state": "pending",
+            "skipped_reason": null,
+            "attempts": [],
+            "enforcement": {}
+          }
+        ],
+        "retry_keys": [],
+        "selected_result_attempt_id": null,
+        "next_stage": 0,
+        "plan_digest": "05c45a3da34fb6599369a0344c27151502a43e72854d09e525e86503b6391c66"
+      },
+      "native_accept": true
+    },
+    {
+      "input": {
+        "operation_id": "legacy:id:\u96ea",
+        "tenant": "org:team",
+        "version": 1,
+        "accepted_at": 100.0,
+        "execution_deadline_at": 130.0,
+        "expires_at": 3700.0,
+        "state": "queued",
+        "stop_reason": null,
+        "plan": {
+          "query": "\u96ea\ud83d\ude00 \\\"",
+          "filters": {
+            "language": "en",
+            "time_range": null,
+            "safesearch": "off",
+            "freshness": "no_preference"
+          },
+          "initial_scope": {
+            "requested": {
+              "engines": [
+                "alpha"
+              ]
+            },
+            "selected_engines": [
+              "alpha"
+            ],
+            "excluded_engines": []
+          },
+          "fallback_scope": null,
+          "allow_scope_expansion": false,
+          "fallback_when": "clean_empty"
+        },
+        "objectives": {
+          "requested": {
+            "deadline_ms": 30000,
+            "max_engine_calls": 3
+          },
+          "effective": {
+            "deadline_ms": 30000,
+            "max_engine_calls": 3
+          },
+          "unmet": []
+        },
+        "budget": {
+          "unit": "adapter_search_invocations",
+          "limit": 3,
+          "reserved": 0,
+          "observed": 0
+        },
+        "stages": [
+          {
+            "index": 0,
+            "scope": {
+              "requested": {
+                "engines": [
+                  "alpha"
+                ]
+              },
+              "selected_engines": [
+                "alpha"
+              ],
+              "excluded_engines": []
+            },
+            "state": "pending",
+            "skipped_reason": null,
+            "attempts": [],
+            "enforcement": {}
+          }
+        ],
+        "retry_keys": {
+          "malformed": 1
+        },
+        "selected_result_attempt_id": null,
+        "next_stage": 0,
+        "plan_digest": "05c45a3da34fb6599369a0344c27151502a43e72854d09e525e86503b6391c66"
+      },
+      "source": {
+        "operation_id": "legacy:id:\u96ea",
+        "tenant": "org:team",
+        "version": 1,
+        "accepted_at": 100.0,
+        "execution_deadline_at": 130.0,
+        "expires_at": 3700.0,
+        "state": "queued",
+        "stop_reason": null,
+        "plan": {
+          "query": "\u96ea\ud83d\ude00 \\\"",
+          "filters": {
+            "language": "en",
+            "time_range": null,
+            "safesearch": "off",
+            "freshness": "no_preference"
+          },
+          "initial_scope": {
+            "requested": {
+              "engines": [
+                "alpha"
+              ]
+            },
+            "selected_engines": [
+              "alpha"
+            ],
+            "excluded_engines": []
+          },
+          "fallback_scope": null,
+          "allow_scope_expansion": false,
+          "fallback_when": "clean_empty"
+        },
+        "objectives": {
+          "requested": {
+            "deadline_ms": 30000,
+            "max_engine_calls": 3
+          },
+          "effective": {
+            "deadline_ms": 30000,
+            "max_engine_calls": 3
+          },
+          "unmet": []
+        },
+        "budget": {
+          "unit": "adapter_search_invocations",
+          "limit": 3,
+          "reserved": 0,
+          "observed": 0
+        },
+        "stages": [
+          {
+            "index": 0,
+            "scope": {
+              "requested": {
+                "engines": [
+                  "alpha"
+                ]
+              },
+              "selected_engines": [
+                "alpha"
+              ],
+              "excluded_engines": []
+            },
+            "state": "pending",
+            "skipped_reason": null,
+            "attempts": [],
+            "enforcement": {}
+          }
+        ],
+        "retry_keys": [],
+        "selected_result_attempt_id": null,
+        "next_stage": 0,
+        "plan_digest": "05c45a3da34fb6599369a0344c27151502a43e72854d09e525e86503b6391c66"
+      },
+      "native_accept": false
+    }
+  ],
+  "expiry_equality": {
+    "read_expired": false,
+    "retry_expired": true
+  }
+}

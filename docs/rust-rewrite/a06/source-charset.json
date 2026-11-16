@@ -1,0 +1,4260 @@
+{
+  "schema_version": 1,
+  "plan_id": "A06",
+  "scope": "actual HTTPX Headers/email selector plus complete actual arXiv adapter outputs",
+  "normalization": "latency_ms omitted; sets sorted; enum values serialized; no other output normalization",
+  "library_source_sha256": {
+    "_models.py": "e3ffc6bb2bf580bc6e6428708a6f247d036220e709f5a72b785392babbd97e6b",
+    "message.py": "65620d24398c60137ea750c3830365916193978af32bd0b412131ee3fa6c7ee7",
+    "utils.py": "1712b710b29fc7c9f22d8ee522be470695c6bf4d580458cfc7e32dcd5cc31c6e"
+  },
+  "records": [
+    {
+      "id": "arxiv.charset.absent",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": []
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": null,
+        "charset_encoding": null,
+        "selected_encoding": "utf-8"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_0",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              ""
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "",
+        "charset_encoding": null,
+        "selected_encoding": "utf-8"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_1",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbg=="
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain",
+        "charset_encoding": null,
+        "selected_encoding": "utf-8"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_2",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "Z2FyYmFnZTsgY2hhcnNldD11dGYtMTY="
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'utf-16' codec can't decode bytes in position 0-1: Stream does not start with BOM",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "garbage; charset=utf-16",
+        "charset_encoding": "utf-16",
+        "selected_encoding": "utf-16"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_3",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldA=="
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset",
+        "charset_encoding": "",
+        "selected_encoding": "utf-8"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_4",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldD0="
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset=",
+        "charset_encoding": "",
+        "selected_encoding": "utf-8"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_5",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldD1ib2d1cw=="
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset=bogus",
+        "charset_encoding": "bogus",
+        "selected_encoding": "utf-8"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_6",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgQ0hBUlNFVD1VVEYtNw=="
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; CHARSET=UTF-7",
+        "charset_encoding": "utf-7",
+        "selected_encoding": "utf-7"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_7",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldD0idXRmLTci"
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset=\"utf-7\"",
+        "charset_encoding": "utf-7",
+        "selected_encoding": "utf-7"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_8",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldD0idXRmLTc7YmFkIjsgY2hhcnNldD11dGYtOA=="
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset=\"utf-7;bad\"; charset=utf-8",
+        "charset_encoding": "utf-7;bad",
+        "selected_encoding": "utf-8"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_9",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldD0idXRmLTc7IGNoYXJzZXQ9dXRmLTg="
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset=\"utf-7; charset=utf-8",
+        "charset_encoding": "\"utf-7; charset=utf-8",
+        "selected_encoding": "utf-8"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_10",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldD0idXRmXCI3IjsgY2hhcnNldD11dGYtOA=="
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset=\"utf\\\"7\"; charset=utf-8",
+        "charset_encoding": "utf\"7",
+        "selected_encoding": "utf\"7"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_11",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldD08dXRmLTc+"
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset=<utf-7>",
+        "charset_encoding": "utf-7",
+        "selected_encoding": "utf-7"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_12",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldD11dGYtNzsgY2hhcnNldD11dGYtOA=="
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset=utf-7; charset=utf-8",
+        "charset_encoding": "utf-7",
+        "selected_encoding": "utf-7"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_13",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldDsgY2hhcnNldD11dGYtNw=="
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset; charset=utf-7",
+        "charset_encoding": "",
+        "selected_encoding": "utf-8"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_14",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldCo9dXMtYXNjaWknJ3V0Zi03"
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset*=us-ascii''utf-7",
+        "charset_encoding": "utf-7",
+        "selected_encoding": "utf-7"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_15",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldCo9dW5rbm93bicndXRmLTc="
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset*=unknown''utf-7",
+        "charset_encoding": "utf-7",
+        "selected_encoding": "utf-7"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_16",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldCo9dXRmLTgnJyVGRnV0Zi03"
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset*=utf-8''%FFutf-7",
+        "charset_encoding": null,
+        "selected_encoding": "utf-8"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_17",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldCo9dXRmLTgnJ3V0Zi03"
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset*=utf-8''utf-7",
+        "charset_encoding": "utf-7",
+        "selected_encoding": "utf-7"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_18",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldCo9dXRmLTgnZW4ndXRmLTc="
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset*=utf-8'en'utf-7",
+        "charset_encoding": "utf-7",
+        "selected_encoding": "utf-7"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_19",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldCo9dXRmLTcnJ3V0Zi03JTJCJTIx"
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset*=utf-7''utf-7%2B%21",
+        "charset_encoding": "utf-7+!",
+        "selected_encoding": "utf-7+!"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_20",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldCo9dXRmLTE2Jyd1dGYtNw=="
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset*=utf-16''utf-7",
+        "charset_encoding": "utf-7",
+        "selected_encoding": "utf-7"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_21",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldCo9cm90LTEzJyd1dGYtNw=="
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset*=rot-13''utf-7",
+        "charset_encoding": "utf-7",
+        "selected_encoding": "utf-7"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_22",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldCo9dXRmLTgnJyVDMyVBOQ=="
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset*=utf-8''%C3%A9",
+        "charset_encoding": null,
+        "selected_encoding": "utf-8"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_23",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldCo9dXRmLTgnJyU3NXRmLTc="
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset*=utf-8''%75tf-7",
+        "charset_encoding": "utf-7",
+        "selected_encoding": "utf-7"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_24",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldCo9dXRmLTgnJ3V0Zi0lWlo3"
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset*=utf-8''utf-%ZZ7",
+        "charset_encoding": "utf-%zz7",
+        "selected_encoding": "utf-8"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_25",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldCoxPTc7IGNoYXJzZXQqMD11dGYt"
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset*1=7; charset*0=utf-",
+        "charset_encoding": "utf-7",
+        "selected_encoding": "utf-7"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_26",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldCoyPTc7IGNoYXJzZXQqMD11dGYt"
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset*2=7; charset*0=utf-",
+        "charset_encoding": "utf-7",
+        "selected_encoding": "utf-7"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_27",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldCowKj11cy1hc2NpaScndXRmLTsgY2hhcnNldCoxPTc="
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset*0*=us-ascii''utf-; charset*1=7",
+        "charset_encoding": "utf-7",
+        "selected_encoding": "utf-7"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_28",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldCowPXV0Zi07IGNoYXJzZXQqMSo9Nw=="
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset*0=utf-; charset*1*=7",
+        "charset_encoding": "utf-7",
+        "selected_encoding": "utf-7"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_29",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldCo9dXRmLTgnJ3V0Zi04OyBjaGFyc2V0KjA9dXRmLTc="
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset*=utf-8''utf-8; charset*0=utf-7",
+        "charset_encoding": "utf-7",
+        "selected_encoding": "utf-7"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_30",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldCo9dXRmLTgnJ3V0Zi03OyBjaGFyc2V0PXV0Zi04"
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset*=utf-8''utf-7; charset=utf-8",
+        "charset_encoding": "utf-8",
+        "selected_encoding": "utf-8"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_31",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldCowPXV0Zi07IGNoYXJzZXQqMD03"
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset*0=utf-; charset*0=7",
+        "charset_encoding": "utf-7",
+        "selected_encoding": "utf-7"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_32",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldCowMDA9dXRmLTc="
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset*000=utf-7",
+        "charset_encoding": "utf-7",
+        "selected_encoding": "utf-7"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_33",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldCoqPXV0Zi03OyBjaGFyc2V0PXV0Zi04"
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset**=utf-7; charset=utf-8",
+        "charset_encoding": "utf-8",
+        "selected_encoding": "utf-8"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_34",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldCorMT11dGYtNw=="
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset*+1=utf-7",
+        "charset_encoding": null,
+        "selected_encoding": "utf-8"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_35",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldD11dGYtNxw="
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset=utf-7\u001c",
+        "charset_encoding": "utf-7",
+        "selected_encoding": "utf-7"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_36",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldD11dMOpZi03"
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "utf-8",
+        "content_type": "text/plain; charset=utéf-7",
+        "charset_encoding": null,
+        "selected_encoding": "utf-8"
+      }
+    },
+    {
+      "id": "arxiv.charset.value_37",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldD11dGYtNywgdGV4dC9odG1sOyBjaGFyc2V0PXV0Zi04"
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset=utf-7, text/html; charset=utf-8",
+        "charset_encoding": "utf-7, text/html",
+        "selected_encoding": "utf-8"
+      }
+    },
+    {
+      "id": "arxiv.charset.headers_0",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldD11dGYtNw=="
+            ],
+            [
+              "Y29udGVudC10eXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldD11dGYtOA=="
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; charset=utf-7, text/plain; charset=utf-8",
+        "charset_encoding": "utf-7, text/plain",
+        "selected_encoding": "utf-8"
+      }
+    },
+    {
+      "id": "arxiv.charset.headers_1",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbg=="
+            ],
+            [
+              "Y29udGVudC10eXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldD11dGYtNw=="
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain, text/plain; charset=utf-7",
+        "charset_encoding": "utf-7",
+        "selected_encoding": "utf-7"
+      }
+    },
+    {
+      "id": "arxiv.charset.headers_2",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldD11dMOpZi03"
+            ],
+            [
+              "T3RoZXI=",
+              "/w=="
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "iso-8859-1",
+        "content_type": "text/plain; charset=utÃ©f-7",
+        "charset_encoding": null,
+        "selected_encoding": "utf-8"
+      }
+    },
+    {
+      "id": "arxiv.charset.headers_3",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldD11dGYtNw=="
+            ],
+            [
+              "T3RoZXI=",
+              "w6k="
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "utf-8",
+        "content_type": "text/plain; charset=utf-7",
+        "charset_encoding": "utf-7",
+        "selected_encoding": "utf-7"
+      }
+    },
+    {
+      "id": "arxiv.charset.headers_4",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Q29udGVudC1UeXBl",
+              "dGV4dC9wbGFpbjsgY2hhcnNldD11dGYtNw=="
+            ],
+            [
+              "T3RoZXI=",
+              "/w=="
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "iso-8859-1",
+        "content_type": "text/plain; charset=utf-7",
+        "charset_encoding": "utf-7",
+        "selected_encoding": "utf-7"
+      }
+    },
+    {
+      "id": "arxiv.charset.irrelevant_continuation_integer_limit",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers_b64": [
+            [
+              "Y29udGVudC10eXBl",
+              "dGV4dC9wbGFpbjsgZm9vKjk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5OTk5PXg7IGNoYXJzZXQ9dXRmLTc="
+            ]
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Exceeds the limit (4300 digits) for integer string conversion: value has 4301 digits; use sys.set_int_max_str_digits() to increase the limit",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "selector": {
+        "header_encoding": "ascii",
+        "content_type": "text/plain; foo*99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999=x; charset=utf-7",
+        "error": {
+          "type": "ValueError",
+          "message": "Exceeds the limit (4300 digits) for integer string conversion: value has 4301 digits; use sys.set_int_max_str_digits() to increase the limit"
+        }
+      }
+    }
+  ]
+}

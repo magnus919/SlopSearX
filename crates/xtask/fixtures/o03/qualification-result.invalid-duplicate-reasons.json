@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0.0",
+  "plan_id": "EXP-TEST",
+  "runtime_receipt_sha256": "4e52f72738c41c168b3d849e371dc968ba6264576898cb3203edf5750286f65d",
+  "checks": [
+    {
+      "check_id": "replay",
+      "status": "failed",
+      "evidence_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    {
+      "check_id": "accounting",
+      "status": "passed",
+      "evidence_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+    }
+  ],
+  "outcome": "rejected",
+  "reason_codes": [
+    "REJECTED",
+    "REJECTED"
+  ],
+  "source_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+  "decision_timestamp_unix_ms": 1000
+}

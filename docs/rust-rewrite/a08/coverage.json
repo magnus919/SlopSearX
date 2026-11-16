@@ -1,0 +1,1258 @@
+{
+  "schema_version": 1,
+  "plan_id": "A08",
+  "issue": 927,
+  "baseline": "2f78b9d02cfe62c9829fcfb38b85cd632a889de0",
+  "status": "actual implementation and scoped native gate; exact parent review/CI/merge remain delivery acceptance",
+  "source_inventory": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "d710c84ebad4582dc607cc3bdb806a5a5253259e4cabd5c515f51e55c3588af8",
+      "git_blob": "fa5b75d5407dfb90613d617d4f6c24f236b06aa4"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "sha256": "2df6be141a3b06c662a4062af79eb074248ea70f297a7bf4c65432c10feba681",
+      "git_blob": "8950cc84fbf5abebf8c72a1a8fe39b4cd9ef3eb1"
+    },
+    {
+      "path": "docs/rust-rewrite/CASE_STUDY.md",
+      "sha256": "da92206b79b788b468fc8c0ab3b19f68fe6747d86b4f73af7d01ec362ff47a39",
+      "git_blob": "d609376fa8a8dba26de1d941a60351915f2b1687"
+    },
+    {
+      "path": "docs/rust-rewrite/a01/README.md",
+      "sha256": "7dfe805866c574f6b781886cf8a225af9b2e72314b77837c617cdb2078a20faa",
+      "git_blob": "90e0b39d9ea18687a66f3bd6b5a6cf52e6029f35"
+    },
+    {
+      "path": "engines/openfda.py",
+      "sha256": "5ac12009c87125758fe4322ce5aee0c5405c8531e037c7c465283afa5ee25221",
+      "git_blob": "91898916e27f77f03d304bfdfb91bd7a91be3945"
+    },
+    {
+      "path": "engines/edgar.py",
+      "sha256": "906a493921b8300421432180314ce4e0707871aa9bd73c9a5b9670347ee67d42",
+      "git_blob": "09fb3d493c74d893331b0a6a5d77a219e00069e6"
+    },
+    {
+      "path": "engines/fred.py",
+      "sha256": "f4e1d1a58a52f5f2df62869b8a27d5f973d4d6b30b3792df939583bc145b4d7e",
+      "git_blob": "822978e99603a76556053c0847e05799e2576485"
+    },
+    {
+      "path": "engines/oyez.py",
+      "sha256": "8e82628c96ab964d99d0f01b73d4fbc8345c77149569f3fff2a57995aa67bb19",
+      "git_blob": "c670def9eb6e1d60fc8a0fa485f18752c5d5910f"
+    },
+    {
+      "path": "tests/test_openfda.py",
+      "sha256": "02c26eb273acbba23a9d5e38dd9c8fb745edb80d2398e37037ba836a7afa26bc",
+      "git_blob": "00fda6fc622ab02c6c85b847ce0930a1b3ef620f"
+    },
+    {
+      "path": "tests/test_edgar_url_contract.py",
+      "sha256": "8826557571f8e46ee87489fb08d498cb8145051edd72d4abb9004f1badf7e015",
+      "git_blob": "d471850c05029e2063634e270be9e195f68333a9"
+    },
+    {
+      "path": "tests/test_fred.py",
+      "sha256": "07107eab83c76e9c2d9586e7582715c8fb0d4a0561fa18181794fd23e4e3cd80",
+      "git_blob": "7cf83b57095ead0120cb748d5f226bc8de3b4160"
+    },
+    {
+      "path": "tests/test_oyez_relevance.py",
+      "sha256": "73384389b12c9961bab533d0cbb7d2ac2ce6610bc16d5fbfbd2088a10606381a",
+      "git_blob": "b0bb8089a8aa3cc079623f852f5f45495828e3b2"
+    },
+    {
+      "path": "tests/test_new_engines.py",
+      "sha256": "a6df3df9b68fdc8a4b617d4059a5bd26a8cd82c5d8de1574ac9c48d2d14ad8a4",
+      "git_blob": "4e5293d694bb40332584a9541b6ad41326a01cc0"
+    },
+    {
+      "path": "tests/test_payload.py",
+      "sha256": "a7bc52b2747f0ebc440a4d7ce69671635530c7142d43eb128cb3132e297fb11a",
+      "git_blob": "4b5bc1a0940ad6c1214eb55764fb4aea57188de9"
+    },
+    {
+      "path": "tests/test_misc_polish.py",
+      "sha256": "a790e67e3536b28c45707bc06705f521d8853e2ba003a8b49eca2476a9078a36",
+      "git_blob": "5844fc6fa5354efeb35f4134c505b3c3be282aa8"
+    },
+    {
+      "path": "slopsearx/adapter.py",
+      "sha256": "5883a35c48d0dad1077306fbda21997ee1d32116a8c03633a6b762de0c26d6f3",
+      "git_blob": "664e853d9ab1330596d01899ebe015701de09e88"
+    },
+    {
+      "path": "slopsearx/payload.py",
+      "sha256": "a44a95655566f9fadaf62da1bab8c975f71f3ead6c3cc57f48c411a9c093c40d",
+      "git_blob": "efa149d48bae401f7a0a9df6e50c8c614adecbb5"
+    },
+    {
+      "path": "slopsearx/config.py",
+      "sha256": "1cf76b8732439782342a9d217fb2f7c423f688533f287dbf78729a1defc5236e",
+      "git_blob": "761db0521d74ec6d955aa8a84fd92a4a62533c43"
+    },
+    {
+      "path": "slopsearx/jev.py",
+      "sha256": "abdf250eda6018155b700b2cc4d22fe57ec1ae39c148c1f942082540d34cfe03",
+      "git_blob": "2bbb5c01f20b4db16730cbe3460e625b3d27fa23"
+    },
+    {
+      "path": "slopsearx/filters.py",
+      "sha256": "f0edd2f633cc9a42c49660ca74b225732cbc82937a15ad58a5b0dbeb76e103a9",
+      "git_blob": "e1a1cac35c5fcbbf2e6fb7728241953aa8047669"
+    },
+    {
+      "path": "docs/rust-rewrite/f06/fragments/openfda.json",
+      "sha256": "108bf052670d7def93d38e8fa3a73fe88e178d2394d17558ac18ce7e576b6f27",
+      "git_blob": "ef1963205e7aa84d0a1c0cd2c3eec225a4c1fa71"
+    },
+    {
+      "path": "docs/rust-rewrite/f06/fragments/edgar.json",
+      "sha256": "c2007d0976efc6d1657694b225e32cb2a0ae8a45598d9e10f84c17504d06d0e8",
+      "git_blob": "5fd1812d1659c4233c0149b340d47b929796e1b9"
+    },
+    {
+      "path": "docs/rust-rewrite/f06/fragments/fred.json",
+      "sha256": "f810924d5459be842fe90c33a0ab9fcd3212cc3ba506592cb99cf0666aaabfb4",
+      "git_blob": "d8a8a2bdca75cf1c68b72dda31f0f716f2c953d6"
+    },
+    {
+      "path": "docs/rust-rewrite/f06/fragments/oyez.json",
+      "sha256": "9620a735fbc25965cfa6bdb3bdf6733856f87938fa106727c583636478b604ce",
+      "git_blob": "f8d3b913e9ee81c26279c23e76f6d1d7c6f2eb77"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "docs/rust-rewrite/a08/BOUNDARIES.md",
+      "sha256": "9931fd70ebc57ac5f40db55545ac7099938261d49b79a211f1eea2348e0cbf89"
+    },
+    {
+      "path": "docs/rust-rewrite/a08/PORTAL_IMPACT.md",
+      "sha256": "e937788d7ae3a4ca1d2f5275a1f5a8a6b30cde725dbc6bfb9bf5c289f3905e7e"
+    },
+    {
+      "path": "docs/rust-rewrite/a08/README.md",
+      "sha256": "73452b2a6e66aa62958d5b7baa48b18136bca9b81b6e0330e76d482724b1ece7"
+    },
+    {
+      "path": "docs/rust-rewrite/a08/case16-data.json",
+      "sha256": "84045d610bd4b76d1af112b4fcd960835ebb877cfc13fa61fc7c7d5689c4bddc"
+    },
+    {
+      "path": "docs/rust-rewrite/a08/case16.json",
+      "sha256": "3cd99d8115b97e14d433b1aa39d1571f2b9974ee2c34d71fbe3afdc4dbbeaf6a"
+    },
+    {
+      "path": "docs/rust-rewrite/a08/differences.json",
+      "sha256": "be4b89f76f48126fc7316684ce45cd5b8ad232036840e37dd602aac527029c34"
+    },
+    {
+      "path": "docs/rust-rewrite/a08/oracle/export_case.py",
+      "sha256": "89e92611745664efea00c50a55287c71521c7bb3d9f204061d7e257b6b5c259d"
+    },
+    {
+      "path": "docs/rust-rewrite/a08/oracle/export_regressions.py",
+      "sha256": "0a4467e3ed93d6fec08e00d36435d0328dd5e366c6e1044d47d2b6e321edbabe"
+    },
+    {
+      "path": "docs/rust-rewrite/a08/oracle/export_source.py",
+      "sha256": "330be8e766e51dbed6482ff85c9a7a65fae10493784cd0603f80fa5eaacbd53a"
+    },
+    {
+      "path": "docs/rust-rewrite/a08/oracle/export_timeout.py",
+      "sha256": "8fb0ab865e80aeeece54a145e62d8d082f7dc7542103aba2c046530779d6e7e6"
+    },
+    {
+      "path": "docs/rust-rewrite/a08/oracle-runs.json",
+      "sha256": "0fcabe5f2deea65ebbf537486ab21ca443fd39f2ad9dca8dace81b14c8f5fff6"
+    },
+    {
+      "path": "docs/rust-rewrite/a08/regressions.json",
+      "sha256": "d4fc84fd63b856a3a7f8559a8a8a6565e171383a79294788f72c660aa7fe2d15"
+    },
+    {
+      "path": "docs/rust-rewrite/a08/source.json",
+      "sha256": "a16bcf6bde89876645cb76f4a7a68c7d0cd96795ead4e77f971190184f6b8539"
+    },
+    {
+      "path": "docs/rust-rewrite/a08/timeout-loopback.json",
+      "sha256": "9a838fec55fe744dade1e6c7422265d8b580da5740759ac7bb05ad1d7ae4017f"
+    },
+    {
+      "path": "docs/rust-rewrite/a08/header-differences.json",
+      "sha256": "a1034125c9ff8047e85559537a29be85872d9c04a5ee057fa21739e1d71904f8"
+    }
+  ],
+  "ordered_case_ids": [
+    "edgar-success",
+    "edgar-empty",
+    "edgar-missing",
+    "edgar-outer-list",
+    "edgar-outer-null",
+    "edgar-http-404",
+    "edgar-http-429",
+    "edgar-http-503",
+    "edgar-max-0",
+    "edgar-max--1",
+    "edgar-max-True",
+    "edgar-max-2.0",
+    "edgar-max-'2'",
+    "edgar-timeout-True",
+    "edgar-timeout-'5000'",
+    "edgar-timeout-0",
+    "edgar-timeout--1",
+    "edgar-malformed-json",
+    "edgar-timeout",
+    "fred-success",
+    "fred-empty",
+    "fred-missing",
+    "fred-outer-list",
+    "fred-outer-null",
+    "fred-http-404",
+    "fred-http-429",
+    "fred-http-503",
+    "fred-max-0",
+    "fred-max--1",
+    "fred-max-True",
+    "fred-max-2.0",
+    "fred-max-'2'",
+    "fred-timeout-True",
+    "fred-timeout-'5000'",
+    "fred-timeout-0",
+    "fred-timeout--1",
+    "fred-malformed-json",
+    "fred-timeout",
+    "openfda-success",
+    "openfda-empty",
+    "openfda-missing",
+    "openfda-outer-list",
+    "openfda-outer-null",
+    "openfda-http-404",
+    "openfda-http-429",
+    "openfda-http-503",
+    "openfda-max-0",
+    "openfda-max--1",
+    "openfda-max-True",
+    "openfda-max-2.0",
+    "openfda-max-'2'",
+    "openfda-timeout-True",
+    "openfda-timeout-'5000'",
+    "openfda-timeout-0",
+    "openfda-timeout--1",
+    "openfda-malformed-json",
+    "openfda-timeout",
+    "oyez-success",
+    "oyez-empty",
+    "oyez-missing",
+    "oyez-outer-list",
+    "oyez-outer-null",
+    "oyez-http-404",
+    "oyez-http-429",
+    "oyez-http-503",
+    "oyez-max-0",
+    "oyez-max--1",
+    "oyez-max-True",
+    "oyez-max-2.0",
+    "oyez-max-'2'",
+    "oyez-timeout-True",
+    "oyez-timeout-'5000'",
+    "oyez-timeout-0",
+    "oyez-timeout--1",
+    "oyez-malformed-json",
+    "oyez-timeout",
+    "edgar-url-source-filing_url",
+    "edgar-url-hit-filing_url",
+    "edgar-url-source-file_url",
+    "edgar-url-hit-file_url",
+    "edgar-url-source-url",
+    "edgar-url-hit-url",
+    "edgar-url-source-link",
+    "edgar-url-hit-link",
+    "edgar-url-source-href",
+    "edgar-url-hit-href",
+    "edgar-cik-True",
+    "edgar-cik-0",
+    "edgar-cik-'0000'",
+    "edgar-cik-' 0008 '",
+    "edgar-cik-'\u0668'",
+    "edgar-cik-['0008']",
+    "edgar-cik-[]",
+    "edgar-cik-'12345678901'",
+    "edgar-accession-'0000000008-24-000001'",
+    "edgar-accession-'\u0660\u0660\u0660\u0660\u0660\u0660\u0660\u0660\u0660\u0668-\u0662\u0664-\u0660\u0660\u0660\u0660\u0660\u0661'",
+    "edgar-accession-'bad'",
+    "edgar-accession-None",
+    "edgar-distinct-omissions",
+    "edgar-names-None",
+    "edgar-names-[]",
+    "edgar-names-'AB'",
+    "edgar-names-42",
+    "edgar-names-{}",
+    "edgar-names-[None]",
+    "edgar-names-[42]",
+    "edgar-hits-None",
+    "edgar-hits-{}",
+    "edgar-hits-''",
+    "edgar-hits-1",
+    "edgar-unsafe-https://evil.test/Archives/edgar/data/8/000000000824000001/a.htm",
+    "edgar-unsafe-https://www.sec.gov:444/Archives/edgar/data/8/000000000824000001/a.htm",
+    "edgar-unsafe-https://user@www.sec.gov/Archives/edgar/data/8/000000000824000001/a.htm",
+    "edgar-unsafe-https://www.sec.gov/Archives/edgar/data/8/000000000824000001/a.htm?x=1",
+    "fred-key-None",
+    "fred-key-''",
+    "fred-key-'   '",
+    "fred-popularity-None",
+    "fred-popularity-''",
+    "fred-popularity-[]",
+    "fred-popularity-{}",
+    "fred-popularity-'9.5'",
+    "fred-popularity-True",
+    "fred-popularity-'NaN'",
+    "fred-popularity-'Infinity'",
+    "fred-popularity-'bad'",
+    "fred-series-None",
+    "fred-series-{}",
+    "fred-series-''",
+    "fred-series-1",
+    "fred-falsey-payload",
+    "oyez-rest",
+    "oyez-search-override",
+    "oyez-url-/cases/1953/1",
+    "oyez-url-/cases/../..",
+    "oyez-url-https://user:pw@API.OYEZ.ORG:444/cases/19%35%33/1?x=1#f",
+    "oyez-url-/cases/1953/a%2Fb",
+    "oyez-url-https://evil.test/cases/1953/1",
+    "oyez-url-/cases/1953",
+    "oyez-url-/cases//1",
+    "oyez-url-cases/1953/1",
+    "oyez-order-omit",
+    "oyez-score-None",
+    "oyez-score-'bad'",
+    "oyez-score-True",
+    "oyez-score-'9.5'",
+    "oyez-score-'NaN'",
+    "oyez-score-[]",
+    "oyez-score-{}",
+    "openfda-blank",
+    "openfda-fallback",
+    "openfda-no-id-suppresses-fallback",
+    "openfda-stage-failure-0",
+    "openfda-stage-failure-1",
+    "openfda-results-None",
+    "openfda-results-{}",
+    "openfda-results-''",
+    "openfda-results-1",
+    "openfda-query-Advil",
+    "openfda-query-\u00dftra\u00dfe",
+    "openfda-query-\u01f3ELTA test",
+    "openfda-query-istanbul \u0130 \u03a3\u039f\u03a3",
+    "openfda-query-a\"b\\c",
+    "openfda-query-they're BILL'S",
+    "openfda-query-\u0149\ufb03",
+    "openfda-id-Falseset_id",
+    "openfda-id-Trueset_id",
+    "openfda-id-Falseid",
+    "openfda-id-Trueid",
+    "openfda-id-Falsespl_id",
+    "openfda-id-Truespl_id",
+    "openfda-id-Falsespl_set_id",
+    "openfda-id-Truespl_set_id",
+    "openfda-rank-dedup",
+    "edgar-score-None",
+    "edgar-score-{}",
+    "edgar-score-[]",
+    "edgar-score-True",
+    "edgar-score-'7'",
+    "edgar-score-nan",
+    "edgar-score-inf",
+    "edgar-document-primary_doc",
+    "edgar-document-primaryDocument",
+    "edgar-document-primary_document",
+    "edgar-document-file_name",
+    "edgar-url-boundary-https://www.sec.gov:/Archives/edgar/data/8/000000000824000001/a.htm",
+    "edgar-url-boundary-https://www.sec.gov:00443/Archives/edgar/data/8/000000000824000001/a.htm",
+    "edgar-url-boundary-https://www.sec.gov/Archives/edgar/data/8/000000000824000001/a.htm?#",
+    "edgar-url-boundary-https://www.sec.gov/Archives/edgar/data/8/000000000824000001/a.htm;params",
+    "edgar-url-boundary-https://www.%73ec.gov/Archives/edgar/data/8/000000000824000001/a.htm",
+    "edgar-date-None",
+    "edgar-date-1",
+    "edgar-date-[]",
+    "edgar-date-{}",
+    "edgar-date-'not a date'",
+    "edgar-date-'2024-xx-xx-long'",
+    "edgar-outer-hits-None",
+    "edgar-outer-hits-1",
+    "edgar-outer-hits-[]",
+    "edgar-outer-hits-{}",
+    "edgar-outer-hits-' '",
+    "fred-direct-key-shape-None",
+    "fred-direct-key-shape-True",
+    "fred-direct-key-shape-42",
+    "fred-direct-key-shape-[]",
+    "fred-direct-key-shape-{}",
+    "fred-title-None",
+    "fred-title-True",
+    "fred-title-42",
+    "fred-title-[]",
+    "fred-title-{}",
+    "fred-title-'A\\ud800B'",
+    "fred-notes-surrogate-'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\\ud800'",
+    "fred-notes-surrogate-'\\ud800bad'",
+    "oyez-url-boundary-https://www.oyez.org:bad/cases/1953/1",
+    "oyez-url-boundary-https://www.%6fyez.org/cases/1953/1",
+    "oyez-url-boundary-/cases/1953/a%\u00e9",
+    "oyez-url-boundary-/cases/1953/%FF",
+    "oyez-url-boundary-/cases/1953/1;params",
+    "oyez-name-surrogate-'title\\ud800'",
+    "oyez-name-surrogate-[None, 'title\\ud800']",
+    "oyez-results-shape-[]",
+    "oyez-results-shape-{}",
+    "oyez-results-shape-None",
+    "oyez-results-shape-True",
+    "oyez-results-shape-42",
+    "oyez-results-shape-'wrong'",
+    "oyez-hits-shape-None",
+    "oyez-hits-shape-[]",
+    "oyez-hits-shape-{}",
+    "oyez-hits-shape-True",
+    "oyez-hits-shape-42",
+    "oyez-hits-shape-'bad'",
+    "openfda-harmonized-None",
+    "openfda-harmonized-[]",
+    "openfda-harmonized-{}",
+    "openfda-harmonized-True",
+    "openfda-harmonized-42",
+    "openfda-harmonized-'bad'",
+    "openfda-indications-surrogate-'IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII\\ud800'",
+    "openfda-indications-surrogate-'\\ud800bad'",
+    "openfda-id-surrogate-'id\\ud800'",
+    "openfda-id-surrogate-['id\\ud800']",
+    "openfda-name-surrogate-'brand\\ud800'",
+    "openfda-name-surrogate-['brand\\ud800']",
+    "fred-redaction-245",
+    "fred-redaction-246",
+    "fred-redaction-247",
+    "fred-redaction-248",
+    "edgar-parse-00-unresolved",
+    "edgar-parse-00-fallback",
+    "edgar-parse-01-unresolved",
+    "edgar-parse-01-fallback",
+    "edgar-parse-02-unresolved",
+    "edgar-parse-02-fallback",
+    "edgar-parse-03-unresolved",
+    "edgar-parse-03-fallback",
+    "edgar-parse-04-unresolved",
+    "edgar-parse-04-fallback",
+    "edgar-parse-05-unresolved",
+    "edgar-parse-05-fallback",
+    "edgar-parse-06-unresolved",
+    "edgar-parse-06-fallback",
+    "edgar-parse-07-unresolved",
+    "edgar-parse-07-fallback",
+    "edgar-parse-08-unresolved",
+    "edgar-parse-08-fallback",
+    "edgar-parse-09-unresolved",
+    "edgar-parse-09-fallback",
+    "edgar-parse-10-unresolved",
+    "edgar-parse-10-fallback",
+    "edgar-parse-11-unresolved",
+    "edgar-parse-11-fallback",
+    "edgar-parse-12-unresolved",
+    "edgar-parse-12-fallback",
+    "edgar-parse-13-unresolved",
+    "edgar-parse-13-fallback",
+    "edgar-parse-14-unresolved",
+    "edgar-parse-14-fallback",
+    "edgar-parse-15-unresolved",
+    "edgar-parse-15-fallback",
+    "edgar-parse-16-unresolved",
+    "edgar-parse-16-fallback",
+    "edgar-parse-17-unresolved",
+    "edgar-parse-17-fallback",
+    "edgar-parse-18-unresolved",
+    "edgar-parse-18-fallback",
+    "oyez-parse-00",
+    "oyez-parse-01",
+    "oyez-parse-02",
+    "oyez-parse-03",
+    "oyez-parse-04",
+    "oyez-parse-05",
+    "oyez-parse-06",
+    "oyez-parse-07",
+    "oyez-parse-08",
+    "oyez-parse-09",
+    "oyez-parse-10",
+    "oyez-parse-11",
+    "oyez-parse-12",
+    "oyez-parse-13",
+    "oyez-parse-14",
+    "oyez-netloc-00",
+    "oyez-netloc-01",
+    "oyez-netloc-02",
+    "oyez-netloc-03",
+    "oyez-netloc-04",
+    "oyez-netloc-05",
+    "oyez-netloc-06",
+    "oyez-netloc-07",
+    "oyez-netloc-08",
+    "oyez-netloc-09",
+    "oyez-netloc-10",
+    "oyez-netloc-11",
+    "oyez-netloc-12",
+    "oyez-netloc-13",
+    "oyez-netloc-14",
+    "oyez-netloc-15",
+    "oyez-netloc-16",
+    "oyez-netloc-17",
+    "oyez-netloc-18",
+    "oyez-netloc-19",
+    "oyez-netloc-20",
+    "oyez-netloc-21",
+    "oyez-netloc-22",
+    "oyez-netloc-23",
+    "oyez-netloc-24",
+    "oyez-netloc-25",
+    "oyez-netloc-26",
+    "oyez-netloc-27",
+    "oyez-netloc-28",
+    "oyez-netloc-29",
+    "oyez-netloc-30",
+    "oyez-netloc-31",
+    "oyez-netloc-32",
+    "oyez-netloc-33",
+    "oyez-netloc-34",
+    "oyez-netloc-35",
+    "oyez-relative-netloc-0",
+    "oyez-relative-netloc-1",
+    "oyez-post-number-0",
+    "oyez-post-number-1",
+    "oyez-post-number-2",
+    "oyez-post-number-3",
+    "tests/test_openfda.py::test_exact_name_fields_rank_before_related_and_preserve_provenance#0",
+    "tests/test_openfda.py::test_identified_same_brand_records_keep_distinct_source_links#0",
+    "tests/test_openfda.py::test_engine_entry_blank_base_url_uses_openfda_default#0",
+    "tests/test_openfda.py::test_identifier_free_labels_are_omitted_before_merge_and_format#0",
+    "tests/test_openfda.py::test_empty_exact_query_uses_one_bounded_fielded_broad_fallback#0",
+    "tests/test_openfda.py::test_empty_exact_and_broad_404_is_valid_empty#0",
+    "tests/test_openfda.py::test_malformed_results_are_an_error#0",
+    "tests/test_openfda.py::test_timeout_and_rate_limit_classification_is_preserved#0",
+    "tests/test_openfda.py::test_timeout_and_rate_limit_classification_is_preserved#1",
+    "tests/test_edgar_url_contract.py::test_filing_identity_builds_distinct_archive_urls#0",
+    "tests/test_edgar_url_contract.py::test_cik_only_result_retains_canonical_company_url#0",
+    "tests/test_edgar_url_contract.py::test_same_cik_filing_looking_records_without_accessions_are_omitted#0",
+    "tests/test_edgar_url_contract.py::test_valid_provider_archive_link_is_used_without_inventing_identity#0",
+    "tests/test_edgar_url_contract.py::test_provider_archive_link_with_nonstandard_port_is_rejected#0",
+    "tests/test_edgar_url_contract.py::test_unresolved_or_unsafe_identity_is_omitted_and_reported#0",
+    "tests/test_fred.py::TestFREDAdapterSearch::test_search_returns_results#0",
+    "tests/test_fred.py::TestFREDAdapterSearch::test_keeps_api_key_in_query_param#0",
+    "tests/test_fred.py::TestFREDAdapterSearch::test_missing_api_key_returns_not_configured#0",
+    "tests/test_fred.py::TestFREDAdapterSearch::test_empty_key_treated_as_not_configured#0",
+    "tests/test_fred.py::TestFREDAdapterSearch::test_whitespace_key_treated_as_not_configured#0",
+    "tests/test_fred.py::TestFREDAdapterSearch::test_http_status_error_sanitized#0",
+    "tests/test_fred.py::TestFREDAdapterSearch::test_broad_exception_sanitized#0",
+    "tests/test_fred.py::TestFREDAdapterSearch::test_rate_limited#0",
+    "tests/test_fred.py::TestFREDAdapterSearch::test_timeout#0",
+    "tests/test_fred.py::TestFREDAdapterSearch::test_payload_notes_untruncated_long_notes#0",
+    "tests/test_oyez_relevance.py::test_uses_oyez_source_search_and_preserves_relevance_order#0",
+    "tests/test_oyez_relevance.py::test_adapter_does_not_reorder_raw_source_hits#0",
+    "tests/test_oyez_relevance.py::test_unresolved_records_are_omitted_without_empty_url_merge#0",
+    "tests/test_oyez_relevance.py::test_explicit_rest_override_keeps_legacy_case_fixture_shape#0",
+    "tests/test_oyez_relevance.py::test_empty_base_url_from_configured_startup_uses_source_search#0",
+    "tests/test_new_engines.py::TestOpenFDAAdapter::test_search_returns_results#0",
+    "tests/test_new_engines.py::TestEdgarAdapter::test_search_returns_results#0",
+    "tests/test_new_engines.py::TestFredAdapter::test_search_returns_results#0",
+    "tests/test_new_engines.py::TestFredAdapter::test_search_missing_key#0",
+    "tests/test_new_engines.py::TestOyezAdapter::test_search_returns_results#0",
+    "tests/test_payload.py::TestFinancialPayload::test_fred_payload#0",
+    "tests/test_payload.py::TestBiomedicalPayload::test_openfda_payload#0",
+    "tests/test_payload.py::TestBiomedicalPayload::test_openfda_absent_fields_stay_absent#0",
+    "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[https://evil.example/cases/1954/1]#0",
+    "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[https://api.oyez.org/not-cases/1954/1]#0",
+    "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[https://api.oyez.org/cases/1954]#0",
+    "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[cases/1954/1]#0",
+    "tests/test_oyez_relevance.py::test_case_url_does_not_infer_identity_without_provider_url#0"
+  ],
+  "regression_mapping": [
+    {
+      "node": "tests/test_openfda.py::test_exact_name_fields_rank_before_related_and_preserve_provenance",
+      "parameter_instances": [
+        "tests/test_openfda.py::test_exact_name_fields_rank_before_related_and_preserve_provenance"
+      ],
+      "source_case_ids": [
+        "tests/test_openfda.py::test_exact_name_fields_rank_before_related_and_preserve_provenance#0"
+      ],
+      "native_cases": [
+        "replay",
+        "envelope"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_openfda.py::test_identified_same_brand_records_keep_distinct_source_links",
+      "parameter_instances": [
+        "tests/test_openfda.py::test_identified_same_brand_records_keep_distinct_source_links"
+      ],
+      "source_case_ids": [
+        "tests/test_openfda.py::test_identified_same_brand_records_keep_distinct_source_links#0"
+      ],
+      "native_cases": [
+        "replay"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_openfda.py::test_engine_entry_blank_base_url_uses_openfda_default",
+      "parameter_instances": [
+        "tests/test_openfda.py::test_engine_entry_blank_base_url_uses_openfda_default"
+      ],
+      "source_case_ids": [
+        "tests/test_openfda.py::test_engine_entry_blank_base_url_uses_openfda_default#0"
+      ],
+      "native_cases": [
+        "replay"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_openfda.py::test_identifier_free_labels_are_omitted_before_merge_and_format",
+      "parameter_instances": [
+        "tests/test_openfda.py::test_identifier_free_labels_are_omitted_before_merge_and_format"
+      ],
+      "source_case_ids": [
+        "tests/test_openfda.py::test_identifier_free_labels_are_omitted_before_merge_and_format#0"
+      ],
+      "native_cases": [
+        "replay",
+        "consumer"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_openfda.py::test_empty_exact_query_uses_one_bounded_fielded_broad_fallback",
+      "parameter_instances": [
+        "tests/test_openfda.py::test_empty_exact_query_uses_one_bounded_fielded_broad_fallback"
+      ],
+      "source_case_ids": [
+        "tests/test_openfda.py::test_empty_exact_query_uses_one_bounded_fielded_broad_fallback#0"
+      ],
+      "native_cases": [
+        "replay"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_openfda.py::test_empty_exact_and_broad_404_is_valid_empty",
+      "parameter_instances": [
+        "tests/test_openfda.py::test_empty_exact_and_broad_404_is_valid_empty"
+      ],
+      "source_case_ids": [
+        "tests/test_openfda.py::test_empty_exact_and_broad_404_is_valid_empty#0"
+      ],
+      "native_cases": [
+        "replay"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_openfda.py::test_malformed_results_are_an_error",
+      "parameter_instances": [
+        "tests/test_openfda.py::test_malformed_results_are_an_error"
+      ],
+      "source_case_ids": [
+        "tests/test_openfda.py::test_malformed_results_are_an_error#0"
+      ],
+      "native_cases": [
+        "replay"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_openfda.py::test_timeout_and_rate_limit_classification_is_preserved",
+      "parameter_instances": [
+        "tests/test_openfda.py::test_timeout_and_rate_limit_classification_is_preserved"
+      ],
+      "source_case_ids": [
+        "tests/test_openfda.py::test_timeout_and_rate_limit_classification_is_preserved#0",
+        "tests/test_openfda.py::test_timeout_and_rate_limit_classification_is_preserved#1"
+      ],
+      "native_cases": [
+        "replay",
+        "timer",
+        "drop"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_edgar_url_contract.py::test_filing_identity_builds_distinct_archive_urls",
+      "parameter_instances": [
+        "tests/test_edgar_url_contract.py::test_filing_identity_builds_distinct_archive_urls"
+      ],
+      "source_case_ids": [
+        "tests/test_edgar_url_contract.py::test_filing_identity_builds_distinct_archive_urls#0"
+      ],
+      "native_cases": [
+        "replay"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_edgar_url_contract.py::test_cik_only_result_retains_canonical_company_url",
+      "parameter_instances": [
+        "tests/test_edgar_url_contract.py::test_cik_only_result_retains_canonical_company_url"
+      ],
+      "source_case_ids": [
+        "tests/test_edgar_url_contract.py::test_cik_only_result_retains_canonical_company_url#0"
+      ],
+      "native_cases": [
+        "replay"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_edgar_url_contract.py::test_same_cik_filing_looking_records_without_accessions_are_omitted",
+      "parameter_instances": [
+        "tests/test_edgar_url_contract.py::test_same_cik_filing_looking_records_without_accessions_are_omitted"
+      ],
+      "source_case_ids": [
+        "tests/test_edgar_url_contract.py::test_same_cik_filing_looking_records_without_accessions_are_omitted#0"
+      ],
+      "native_cases": [
+        "replay",
+        "consumer"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_edgar_url_contract.py::test_valid_provider_archive_link_is_used_without_inventing_identity",
+      "parameter_instances": [
+        "tests/test_edgar_url_contract.py::test_valid_provider_archive_link_is_used_without_inventing_identity"
+      ],
+      "source_case_ids": [
+        "tests/test_edgar_url_contract.py::test_valid_provider_archive_link_is_used_without_inventing_identity#0"
+      ],
+      "native_cases": [
+        "replay"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_edgar_url_contract.py::test_provider_archive_link_with_nonstandard_port_is_rejected",
+      "parameter_instances": [
+        "tests/test_edgar_url_contract.py::test_provider_archive_link_with_nonstandard_port_is_rejected"
+      ],
+      "source_case_ids": [
+        "tests/test_edgar_url_contract.py::test_provider_archive_link_with_nonstandard_port_is_rejected#0"
+      ],
+      "native_cases": [
+        "replay"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_edgar_url_contract.py::test_unresolved_or_unsafe_identity_is_omitted_and_reported",
+      "parameter_instances": [
+        "tests/test_edgar_url_contract.py::test_unresolved_or_unsafe_identity_is_omitted_and_reported"
+      ],
+      "source_case_ids": [
+        "tests/test_edgar_url_contract.py::test_unresolved_or_unsafe_identity_is_omitted_and_reported#0"
+      ],
+      "native_cases": [
+        "replay",
+        "consumer"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_fred.py::TestFREDAdapterRegistration::test_adapter_registered",
+      "parameter_instances": [
+        "tests/test_fred.py::TestFREDAdapterRegistration::test_adapter_registered"
+      ],
+      "source_case_ids": [],
+      "native_cases": [
+        "factory",
+        "scope"
+      ],
+      "mapping_status": "registration-only source node mapped to actual native factories/catalog selection"
+    },
+    {
+      "node": "tests/test_fred.py::TestFREDAdapterSearch::test_search_returns_results",
+      "parameter_instances": [
+        "tests/test_fred.py::TestFREDAdapterSearch::test_search_returns_results"
+      ],
+      "source_case_ids": [
+        "tests/test_fred.py::TestFREDAdapterSearch::test_search_returns_results#0"
+      ],
+      "native_cases": [
+        "replay"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_fred.py::TestFREDAdapterSearch::test_keeps_api_key_in_query_param",
+      "parameter_instances": [
+        "tests/test_fred.py::TestFREDAdapterSearch::test_keeps_api_key_in_query_param"
+      ],
+      "source_case_ids": [
+        "tests/test_fred.py::TestFREDAdapterSearch::test_keeps_api_key_in_query_param#0"
+      ],
+      "native_cases": [
+        "replay"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_fred.py::TestFREDAdapterSearch::test_missing_api_key_returns_not_configured",
+      "parameter_instances": [
+        "tests/test_fred.py::TestFREDAdapterSearch::test_missing_api_key_returns_not_configured"
+      ],
+      "source_case_ids": [
+        "tests/test_fred.py::TestFREDAdapterSearch::test_missing_api_key_returns_not_configured#0"
+      ],
+      "native_cases": [
+        "replay"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_fred.py::TestFREDAdapterSearch::test_empty_key_treated_as_not_configured",
+      "parameter_instances": [
+        "tests/test_fred.py::TestFREDAdapterSearch::test_empty_key_treated_as_not_configured"
+      ],
+      "source_case_ids": [
+        "tests/test_fred.py::TestFREDAdapterSearch::test_empty_key_treated_as_not_configured#0"
+      ],
+      "native_cases": [
+        "replay"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_fred.py::TestFREDAdapterSearch::test_whitespace_key_treated_as_not_configured",
+      "parameter_instances": [
+        "tests/test_fred.py::TestFREDAdapterSearch::test_whitespace_key_treated_as_not_configured"
+      ],
+      "source_case_ids": [
+        "tests/test_fred.py::TestFREDAdapterSearch::test_whitespace_key_treated_as_not_configured#0"
+      ],
+      "native_cases": [
+        "replay"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_fred.py::TestFREDAdapterSearch::test_http_status_error_sanitized",
+      "parameter_instances": [
+        "tests/test_fred.py::TestFREDAdapterSearch::test_http_status_error_sanitized"
+      ],
+      "source_case_ids": [
+        "tests/test_fred.py::TestFREDAdapterSearch::test_http_status_error_sanitized#0"
+      ],
+      "native_cases": [
+        "replay"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_fred.py::TestFREDAdapterSearch::test_broad_exception_sanitized",
+      "parameter_instances": [
+        "tests/test_fred.py::TestFREDAdapterSearch::test_broad_exception_sanitized"
+      ],
+      "source_case_ids": [
+        "tests/test_fred.py::TestFREDAdapterSearch::test_broad_exception_sanitized#0"
+      ],
+      "native_cases": [
+        "replay"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_fred.py::TestFREDAdapterSearch::test_rate_limited",
+      "parameter_instances": [
+        "tests/test_fred.py::TestFREDAdapterSearch::test_rate_limited"
+      ],
+      "source_case_ids": [
+        "tests/test_fred.py::TestFREDAdapterSearch::test_rate_limited#0"
+      ],
+      "native_cases": [
+        "replay"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_fred.py::TestFREDAdapterSearch::test_timeout",
+      "parameter_instances": [
+        "tests/test_fred.py::TestFREDAdapterSearch::test_timeout"
+      ],
+      "source_case_ids": [
+        "tests/test_fred.py::TestFREDAdapterSearch::test_timeout#0"
+      ],
+      "native_cases": [
+        "replay",
+        "timer",
+        "drop"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_fred.py::TestFREDAdapterSearch::test_payload_notes_untruncated_long_notes",
+      "parameter_instances": [
+        "tests/test_fred.py::TestFREDAdapterSearch::test_payload_notes_untruncated_long_notes"
+      ],
+      "source_case_ids": [
+        "tests/test_fred.py::TestFREDAdapterSearch::test_payload_notes_untruncated_long_notes#0"
+      ],
+      "native_cases": [
+        "replay",
+        "envelope"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_oyez_relevance.py::test_uses_oyez_source_search_and_preserves_relevance_order",
+      "parameter_instances": [
+        "tests/test_oyez_relevance.py::test_uses_oyez_source_search_and_preserves_relevance_order"
+      ],
+      "source_case_ids": [
+        "tests/test_oyez_relevance.py::test_uses_oyez_source_search_and_preserves_relevance_order#0"
+      ],
+      "native_cases": [
+        "replay"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_oyez_relevance.py::test_adapter_does_not_reorder_raw_source_hits",
+      "parameter_instances": [
+        "tests/test_oyez_relevance.py::test_adapter_does_not_reorder_raw_source_hits"
+      ],
+      "source_case_ids": [
+        "tests/test_oyez_relevance.py::test_adapter_does_not_reorder_raw_source_hits#0"
+      ],
+      "native_cases": [
+        "replay"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_oyez_relevance.py::test_unresolved_records_are_omitted_without_empty_url_merge",
+      "parameter_instances": [
+        "tests/test_oyez_relevance.py::test_unresolved_records_are_omitted_without_empty_url_merge"
+      ],
+      "source_case_ids": [
+        "tests/test_oyez_relevance.py::test_unresolved_records_are_omitted_without_empty_url_merge#0"
+      ],
+      "native_cases": [
+        "replay",
+        "consumer"
+      ],
+      "mapping_status": "actual source invocation native replay; original HTML subassertions handed to T03/G01, native rank/compact JSON executed"
+    },
+    {
+      "node": "tests/test_oyez_relevance.py::test_explicit_rest_override_keeps_legacy_case_fixture_shape",
+      "parameter_instances": [
+        "tests/test_oyez_relevance.py::test_explicit_rest_override_keeps_legacy_case_fixture_shape"
+      ],
+      "source_case_ids": [
+        "tests/test_oyez_relevance.py::test_explicit_rest_override_keeps_legacy_case_fixture_shape#0"
+      ],
+      "native_cases": [
+        "replay"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_oyez_relevance.py::test_empty_base_url_from_configured_startup_uses_source_search",
+      "parameter_instances": [
+        "tests/test_oyez_relevance.py::test_empty_base_url_from_configured_startup_uses_source_search"
+      ],
+      "source_case_ids": [
+        "tests/test_oyez_relevance.py::test_empty_base_url_from_configured_startup_uses_source_search#0"
+      ],
+      "native_cases": [
+        "replay",
+        "factory"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity",
+      "parameter_instances": [
+        "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[https://evil.example/cases/1954/1]",
+        "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[https://api.oyez.org/not-cases/1954/1]",
+        "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[https://api.oyez.org/cases/1954]",
+        "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[cases/1954/1]"
+      ],
+      "source_case_ids": [
+        "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[https://evil.example/cases/1954/1]#0",
+        "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[https://api.oyez.org/not-cases/1954/1]#0",
+        "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[https://api.oyez.org/cases/1954]#0",
+        "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[cases/1954/1]#0"
+      ],
+      "native_cases": [
+        "replay"
+      ],
+      "mapping_status": "captured original URL-helper assertions replayed through actual source and native adapters"
+    },
+    {
+      "node": "tests/test_oyez_relevance.py::test_case_url_does_not_infer_identity_without_provider_url",
+      "parameter_instances": [
+        "tests/test_oyez_relevance.py::test_case_url_does_not_infer_identity_without_provider_url"
+      ],
+      "source_case_ids": [
+        "tests/test_oyez_relevance.py::test_case_url_does_not_infer_identity_without_provider_url#0"
+      ],
+      "native_cases": [
+        "replay"
+      ],
+      "mapping_status": "captured original URL-helper assertions replayed through actual source and native adapters"
+    },
+    {
+      "node": "tests/test_new_engines.py::TestOpenFDAAdapter::test_search_returns_results",
+      "parameter_instances": [
+        "tests/test_new_engines.py::TestOpenFDAAdapter::test_search_returns_results"
+      ],
+      "source_case_ids": [
+        "tests/test_new_engines.py::TestOpenFDAAdapter::test_search_returns_results#0"
+      ],
+      "native_cases": [
+        "replay"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_new_engines.py::TestOpenFDAAdapter::test_adapter_registered",
+      "parameter_instances": [
+        "tests/test_new_engines.py::TestOpenFDAAdapter::test_adapter_registered"
+      ],
+      "source_case_ids": [],
+      "native_cases": [
+        "factory",
+        "scope"
+      ],
+      "mapping_status": "registration-only source node mapped to actual native factories/catalog selection"
+    },
+    {
+      "node": "tests/test_new_engines.py::TestEdgarAdapter::test_search_returns_results",
+      "parameter_instances": [
+        "tests/test_new_engines.py::TestEdgarAdapter::test_search_returns_results"
+      ],
+      "source_case_ids": [
+        "tests/test_new_engines.py::TestEdgarAdapter::test_search_returns_results#0"
+      ],
+      "native_cases": [
+        "replay"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_new_engines.py::TestEdgarAdapter::test_adapter_registered",
+      "parameter_instances": [
+        "tests/test_new_engines.py::TestEdgarAdapter::test_adapter_registered"
+      ],
+      "source_case_ids": [],
+      "native_cases": [
+        "factory",
+        "scope"
+      ],
+      "mapping_status": "registration-only source node mapped to actual native factories/catalog selection"
+    },
+    {
+      "node": "tests/test_new_engines.py::TestFredAdapter::test_search_returns_results",
+      "parameter_instances": [
+        "tests/test_new_engines.py::TestFredAdapter::test_search_returns_results"
+      ],
+      "source_case_ids": [
+        "tests/test_new_engines.py::TestFredAdapter::test_search_returns_results#0"
+      ],
+      "native_cases": [
+        "replay"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_new_engines.py::TestFredAdapter::test_search_missing_key",
+      "parameter_instances": [
+        "tests/test_new_engines.py::TestFredAdapter::test_search_missing_key"
+      ],
+      "source_case_ids": [
+        "tests/test_new_engines.py::TestFredAdapter::test_search_missing_key#0"
+      ],
+      "native_cases": [
+        "replay"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_new_engines.py::TestFredAdapter::test_adapter_registered",
+      "parameter_instances": [
+        "tests/test_new_engines.py::TestFredAdapter::test_adapter_registered"
+      ],
+      "source_case_ids": [],
+      "native_cases": [
+        "factory",
+        "scope"
+      ],
+      "mapping_status": "registration-only source node mapped to actual native factories/catalog selection"
+    },
+    {
+      "node": "tests/test_new_engines.py::TestOyezAdapter::test_search_returns_results",
+      "parameter_instances": [
+        "tests/test_new_engines.py::TestOyezAdapter::test_search_returns_results"
+      ],
+      "source_case_ids": [
+        "tests/test_new_engines.py::TestOyezAdapter::test_search_returns_results#0"
+      ],
+      "native_cases": [
+        "replay"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_new_engines.py::TestOyezAdapter::test_adapter_registered",
+      "parameter_instances": [
+        "tests/test_new_engines.py::TestOyezAdapter::test_adapter_registered"
+      ],
+      "source_case_ids": [],
+      "native_cases": [
+        "factory",
+        "scope"
+      ],
+      "mapping_status": "registration-only source node mapped to actual native factories/catalog selection"
+    },
+    {
+      "node": "tests/test_payload.py::TestFinancialPayload::test_fred_payload",
+      "parameter_instances": [
+        "tests/test_payload.py::TestFinancialPayload::test_fred_payload"
+      ],
+      "source_case_ids": [
+        "tests/test_payload.py::TestFinancialPayload::test_fred_payload#0"
+      ],
+      "native_cases": [
+        "replay",
+        "envelope"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_payload.py::TestBiomedicalPayload::test_openfda_payload",
+      "parameter_instances": [
+        "tests/test_payload.py::TestBiomedicalPayload::test_openfda_payload"
+      ],
+      "source_case_ids": [
+        "tests/test_payload.py::TestBiomedicalPayload::test_openfda_payload#0"
+      ],
+      "native_cases": [
+        "replay",
+        "envelope"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    },
+    {
+      "node": "tests/test_payload.py::TestBiomedicalPayload::test_openfda_absent_fields_stay_absent",
+      "parameter_instances": [
+        "tests/test_payload.py::TestBiomedicalPayload::test_openfda_absent_fields_stay_absent"
+      ],
+      "source_case_ids": [
+        "tests/test_payload.py::TestBiomedicalPayload::test_openfda_absent_fields_stay_absent#0"
+      ],
+      "native_cases": [
+        "replay",
+        "envelope"
+      ],
+      "mapping_status": "actual source invocation native replay"
+    }
+  ],
+  "native_case_bindings": {
+    "replay": {
+      "package": "ssx-infra",
+      "target": "a08_regulatory",
+      "qualified_name": "all_engine_source_replay"
+    },
+    "factory": {
+      "package": "ssx-infra",
+      "target": "a08_factories",
+      "qualified_name": "actual_resolved_config_snapshots_and_audited_metadata"
+    },
+    "scope": {
+      "package": "ssx-infra",
+      "target": "a08_factories",
+      "qualified_name": "actual_registered_metadata_drives_specialist_scope_selection"
+    },
+    "config": {
+      "package": "ssx-infra",
+      "target": "a08_factories",
+      "qualified_name": "oyez_yaml_direct_search_override_and_nontext_secrets_remain_rejected_by_f06"
+    },
+    "timer": {
+      "package": "ssx-infra",
+      "target": "a08_factories",
+      "qualified_name": "all_four_real_network_timers_match_actual_source_loopback"
+    },
+    "drop": {
+      "package": "ssx-infra",
+      "target": "a08_factories",
+      "qualified_name": "all_four_future_drops_close_real_pending_sockets"
+    },
+    "admission": {
+      "package": "ssx-infra",
+      "target": "a08_factories",
+      "qualified_name": "all_four_denied_unavailable_and_pending_admission_stop_before_http"
+    },
+    "consumer": {
+      "package": "ssx-mcp",
+      "target": "a08_consumers",
+      "qualified_name": "actual_fda_and_oyez_omit_before_rank_and_compact_json"
+    },
+    "payload_consumer": {
+      "package": "ssx-mcp",
+      "target": "a08_consumers",
+      "qualified_name": "actual_fda_full_payload_stays_canonical_while_compact_disclosure_obeys_threshold"
+    },
+    "unicode": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::fda_case::tests::complete_source_whole_string_variants"
+    },
+    "envelope": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::source_payload::generic_envelope_tests::generic_science_wrapper_keeps_bytes_charges_and_declared_envelopes"
+    },
+    "netloc": {
+      "package": "ssx-domain",
+      "target": "lib",
+      "qualified_name": "storage::urllib_contract_tests::additive_netloc_diagnostics_preserve_boolean_and_source_precedence"
+    }
+  },
+  "source_counts": {
+    "controls": 344,
+    "original_functions": 44,
+    "parameter_instances": 47,
+    "original_invocations": 38,
+    "native_adapter_controls": 385,
+    "F06_typed_config_supersessions": 2,
+    "helper_derived_adapter_replays": 5
+  },
+  "downstream_handoffs": [
+    {
+      "node": "tests/test_misc_polish.py::TestScienceBiomedicalResolution::test_biomedical_resolves_to_declared_profile",
+      "owner": "G01/T06",
+      "status": "synthetic engine profile boundary; not adapter implementation evidence"
+    },
+    {
+      "node": "tests/test_misc_polish.py::TestScienceBiomedicalResolution::test_biomedical_profile_does_not_leak_other_source_types",
+      "owner": "G01/T06",
+      "status": "synthetic engine compact provenance boundary; exact current names verified below; not adapter evidence"
+    },
+    {
+      "node": "tests/test_oyez_relevance.py::test_unresolved_records_are_omitted_without_empty_url_merge",
+      "owner": "T03/G01",
+      "status": "native adapter/rank/compact JSON executes; actual portal HTML/browser remains downstream"
+    }
+  ]
+}

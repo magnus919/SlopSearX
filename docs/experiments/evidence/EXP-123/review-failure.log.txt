@@ -1,0 +1,640 @@
+analyze / analysis	UNKNOWN STEP	﻿2026-10-15T13:11:46.3433051Z Current runner version: '2.337.0'
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3452518Z ##[group]Runner Image Provisioner
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3453550Z Hosted Compute Agent
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3454203Z Version: 20261012.601
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3454772Z Commit: f3dc54e1fb89da6852db922499a0233137369e1d
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3455483Z Build Date: 2026-10-12T17:48:21Z
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3456117Z Worker ID: {7a045e1f-9d00-4871-b771-8f8ba888a6d1}
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3456789Z Region: westus3
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3457272Z Cloud: Azure
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3457798Z ##[endgroup]
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3459166Z ##[group]Operating System
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3459753Z Ubuntu
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3460254Z 24.04.5
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3460746Z LTS
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3461282Z ##[endgroup]
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3461896Z ##[group]Runner Image
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3462443Z Image: ubuntu-24.04
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3463342Z Version: 20261012.334.1
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3464483Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261012.334/images/ubuntu/Ubuntu2404-Readme.md
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3465799Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261012.334
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3466732Z ##[endgroup]
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3467897Z ##[group]GITHUB_TOKEN Permissions
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3469802Z Actions: read
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3470293Z Checks: read
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3471165Z Contents: read
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3471699Z Metadata: read
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3472202Z PullRequests: read
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3472744Z ##[endgroup]
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3474749Z Secret source: Actions
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3475562Z Cache mode: read
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3476158Z Prepare workflow directory
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3763573Z Prepare all required actions
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.3819245Z Getting action download info
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.7272504Z Download action repository 'actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683' (SHA:11bd71901bbe5b1630ceea73d27597364c9af683)
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.8361900Z Download action repository 'actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:46.9319896Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2098382Z Uses: groktopus/codereview/.github/workflows/pr-analysis.yml@04c7fc0b42221872e6c6b611be91c68e462fc679
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2102090Z ##[group] Inputs
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2102709Z   harness_repository: groktopus/codereview
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2103875Z   harness_sha: 04c7fc0b42221872e6c6b611be91c68e462fc679
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2104560Z   target_repository: magnus919/SlopSearX
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2105634Z   pull_request_number: 865
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2106224Z   base_ref: main
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2106764Z   base_sha: 514011f8ceb8a7c0f405d13dce6b90c8199210ec
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2107513Z   head_sha: 3b27897f89fa642105b5f4c14df590c4d541892a
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2108397Z   emit_publication_bundle: true
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2109045Z   review_contract: bounded-production-v17
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2109662Z ##[endgroup]
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2110214Z Complete job name: analyze / analysis
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2673118Z ##[group]Run python3 - <<'PY'
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2673900Z ^[[36;1mpython3 - <<'PY'^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2674451Z ^[[36;1mimport os, re, subprocess^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2675260Z ^[[36;1mif not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', os.environ['HARNESS_REPOSITORY']):^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2676111Z ^[[36;1m    raise SystemExit('harness_repository_invalid')^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2676922Z ^[[36;1mif not re.fullmatch(r'[0-9a-f]{40}', os.environ['HARNESS_SHA']):^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2677783Z ^[[36;1m    raise SystemExit('harness_revision_must_be_full_immutable_sha')^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2678693Z ^[[36;1mif not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', os.environ['TARGET_REPOSITORY']):^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2679554Z ^[[36;1m    raise SystemExit('target_repository_invalid')^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2680480Z ^[[36;1mif not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', os.environ['CALLER_REPOSITORY']):^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2681682Z ^[[36;1m    raise SystemExit('caller_repository_invalid')^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2682418Z ^[[36;1mcaller = os.environ['CALLER_REPOSITORY']^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2683557Z ^[[36;1mtarget = os.environ['TARGET_REPOSITORY']^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2684251Z ^[[36;1mif caller != target:^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2684869Z ^[[36;1m    central_pilot = (^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2685488Z ^[[36;1m        caller == 'groktopus/codereview'^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2686228Z ^[[36;1m        and os.environ['CALLER_REF'] == 'refs/heads/main'^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2687033Z ^[[36;1m        and os.environ['CALLER_WORKFLOW_REF']^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2687910Z ^[[36;1m        == 'groktopus/codereview/.github/workflows/slopsearx-pilot.yml@refs/heads/main'^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2688809Z ^[[36;1m        and target == 'magnus919/SlopSearX'^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2689421Z ^[[36;1m    )^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2689945Z ^[[36;1m    if not central_pilot:^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2690675Z ^[[36;1m        raise SystemExit('caller_target_repository_mismatch')^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2691501Z ^[[36;1melif os.environ['EMIT_PUBLICATION_BUNDLE'] == 'true':^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2692292Z ^[[36;1m    default_branch = os.environ['CALLER_DEFAULT_BRANCH']^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2693235Z ^[[36;1m    caller_workflow_ref = os.environ['CALLER_WORKFLOW_REF']^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2694312Z ^[[36;1m    if (^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2694947Z ^[[36;1m        os.environ['CALLER_EVENT'] != 'pull_request_target'^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2696164Z ^[[36;1m        or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._/-]{0,127}', default_branch)^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2697074Z ^[[36;1m        or '..' in default_branch.split('/')^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2697847Z ^[[36;1m        or '//' in default_branch^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2698665Z ^[[36;1m        or os.environ['CALLER_REF'] != 'refs/heads/' + default_branch^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2699503Z ^[[36;1m        or os.environ['BASE_REF'] != default_branch^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2700437Z ^[[36;1m        or os.environ['CALLER_SHA'] != os.environ['CALLER_WORKFLOW_SHA']^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2701478Z ^[[36;1m        or not caller_workflow_ref.startswith(caller + '/.github/workflows/')^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2702565Z ^[[36;1m        or not caller_workflow_ref.endswith('@refs/heads/' + default_branch)^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2703502Z ^[[36;1m    ):^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2704212Z ^[[36;1m        raise SystemExit('publication_source_context_mismatch')^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2705225Z ^[[36;1mif not os.environ['PR_NUMBER'].isdigit() or int(os.environ['PR_NUMBER']) < 1:^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2706223Z ^[[36;1m    raise SystemExit('pull_request_number_invalid')^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2707025Z ^[[36;1mbase_ref = os.environ['BASE_REF']^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2707703Z ^[[36;1mif not base_ref or len(base_ref.encode('utf-8')) > 200:^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2708473Z ^[[36;1m    raise SystemExit('target_base_ref_invalid')^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2709151Z ^[[36;1mchecked_ref = subprocess.run(^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2709854Z ^[[36;1m    ['git', 'check-ref-format', 'refs/heads/' + base_ref],^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2710869Z ^[[36;1m    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=3, check=False,^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2711708Z ^[[36;1m)^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2712215Z ^[[36;1mif checked_ref.returncode:^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2712928Z ^[[36;1m    raise SystemExit('target_base_ref_invalid')^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2713760Z ^[[36;1mif not re.fullmatch(r'[0-9a-f]{40}', os.environ['BASE_SHA']):^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2714537Z ^[[36;1m    raise SystemExit('target_base_identity_invalid')^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2715378Z ^[[36;1mif not re.fullmatch(r'[0-9a-f]{40}', os.environ['HEAD_SHA']):^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2716262Z ^[[36;1m    raise SystemExit('target_head_identity_invalid')^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2716908Z ^[[36;1mPY^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2881234Z shell: /usr/bin/bash -e {0}
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2882047Z env:
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2882594Z   HARNESS_REPOSITORY: groktopus/codereview
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2883831Z   HARNESS_SHA: 04c7fc0b42221872e6c6b611be91c68e462fc679
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2884462Z   CALLER_REPOSITORY: magnus919/SlopSearX
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2885082Z   CALLER_REF: refs/heads/main
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2885888Z   CALLER_WORKFLOW_REF: magnus919/SlopSearX/.github/workflows/pr-review-analysis.yml@refs/heads/main
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2886762Z   CALLER_EVENT: pull_request_target
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2887295Z   CALLER_DEFAULT_BRANCH: main
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2887891Z   CALLER_SHA: 514011f8ceb8a7c0f405d13dce6b90c8199210ec
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2888567Z   CALLER_WORKFLOW_SHA: 514011f8ceb8a7c0f405d13dce6b90c8199210ec
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2889257Z   EMIT_PUBLICATION_BUNDLE: true
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2889792Z   TARGET_REPOSITORY: magnus919/SlopSearX
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2890339Z   PR_NUMBER: 865
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2890825Z   BASE_REF: main
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2891338Z   BASE_SHA: 514011f8ceb8a7c0f405d13dce6b90c8199210ec
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2892005Z   HEAD_SHA: 3b27897f89fa642105b5f4c14df590c4d541892a
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.2892571Z ##[endgroup]
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.3609251Z ##[group]Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.3610044Z with:
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.3610547Z   repository: groktopus/codereview
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.3611212Z   ref: 04c7fc0b42221872e6c6b611be91c68e462fc679
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.3614887Z   token: ***
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.3615371Z   persist-credentials: false
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.3615905Z   ssh-strict: true
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.3616399Z   ssh-user: git
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.3616847Z   clean: true
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.3617329Z   sparse-checkout-cone-mode: true
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.3617835Z   fetch-depth: 1
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.3618344Z   fetch-tags: false
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.3618788Z   show-progress: true
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.3619297Z   lfs: false
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.3619726Z   submodules: false
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.3620225Z   set-safe-directory: true
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.3620722Z ##[endgroup]
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4468391Z Syncing repository: groktopus/codereview
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4470792Z ##[group]Getting Git version info
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4471828Z Working directory is '/home/runner/work/SlopSearX/SlopSearX'
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4473337Z [command]/usr/bin/git version
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4477364Z git version 2.55.0
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4496299Z ##[endgroup]
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4508663Z Temporarily overriding HOME='/home/runner/work/_temp/97cd7347-a5a4-43f6-8d34-b5afbf09a91e' before making global git config changes
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4509923Z Adding repository directory to the temporary git global config as a safe directory
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4513090Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/SlopSearX/SlopSearX
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4554783Z Deleting the contents of '/home/runner/work/SlopSearX/SlopSearX'
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4558481Z ##[group]Initializing the repository
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4562187Z [command]/usr/bin/git init /home/runner/work/SlopSearX/SlopSearX
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4647560Z hint: Using 'master' as the name for the initial branch. This default branch name
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4649091Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4650396Z hint: to use in all of your new repositories, which will suppress this warning,
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4651515Z hint: call:
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4652181Z hint:
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4652789Z hint: 	git config --global init.defaultBranch <name>
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4653589Z hint:
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4654205Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4655099Z hint: 'development'. The just-created branch can be renamed via this command:
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4655785Z hint:
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4656255Z hint: 	git branch -m <name>
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4656811Z hint:
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4657552Z hint: Disable this message with "git config set advice.defaultBranchName false"
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4658551Z Initialized empty Git repository in /home/runner/work/SlopSearX/SlopSearX/.git/
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4667534Z [command]/usr/bin/git remote add origin https://github.com/groktopus/codereview
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4702199Z ##[endgroup]
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4703522Z ##[group]Disabling automatic garbage collection
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4705668Z [command]/usr/bin/git config --local gc.auto 0
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4730165Z ##[endgroup]
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4731343Z ##[group]Setting up auth
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4736503Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.4760618Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.5052210Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.5077640Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.5267849Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.5305935Z ##[endgroup]
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.5307151Z ##[group]Fetching the repository
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:47.5314304Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin 04c7fc0b42221872e6c6b611be91c68e462fc679
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9153196Z From https://github.com/groktopus/codereview
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9154279Z  * branch            04c7fc0b42221872e6c6b611be91c68e462fc679 -> FETCH_HEAD
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9158714Z ##[endgroup]
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9159424Z ##[group]Determining the checkout info
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9160741Z ##[endgroup]
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9166393Z [command]/usr/bin/git sparse-checkout disable
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9209869Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9234698Z ##[group]Checking out the ref
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9238417Z [command]/usr/bin/git checkout --progress --force 04c7fc0b42221872e6c6b611be91c68e462fc679
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9665296Z Note: switching to '04c7fc0b42221872e6c6b611be91c68e462fc679'.
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9665917Z 
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9666239Z You are in 'detached HEAD' state. You can look around, make experimental
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9666946Z changes and commit them, and you can discard any commits you make in this
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9667588Z state without impacting any branches by switching back to a branch.
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9667985Z 
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9668276Z If you want to create a new branch to retain commits you create, you may
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9668828Z do so (now or later) by using -c with the switch command. Example:
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9669183Z 
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9669446Z   git switch -c <new-branch-name>
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9669790Z 
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9669956Z Or undo this operation with:
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9670297Z 
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9670477Z   git switch -
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9670759Z 
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9671086Z Turn off this advice by setting config variable advice.detachedHead to false
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9671554Z 
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9672017Z HEAD is now at 04c7fc0 Run protected publication through a bounded action with explicit canary mode
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9675865Z ##[endgroup]
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9711749Z [command]/usr/bin/git log -1 --format=%H
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9730038Z 04c7fc0b42221872e6c6b611be91c68e462fc679
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9737769Z ##[group]Removing auth
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9741589Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9765324Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9923159Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9944039Z http.https://github.com/.extraheader
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9948506Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:48.9975362Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.0140693Z ##[endgroup]
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.0272764Z ##[group]Run ACTUAL_HARNESS_SHA="$(git rev-parse HEAD)"
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.0273733Z ^[[36;1mACTUAL_HARNESS_SHA="$(git rev-parse HEAD)"^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.0274547Z ^[[36;1mif [ "$ACTUAL_HARNESS_SHA" != "$EXPECTED_HARNESS_SHA" ]; then^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.0275205Z ^[[36;1m  echo 'checked_out_harness_revision_mismatch' >&2^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.0275682Z ^[[36;1m  exit 1^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.0276716Z ^[[36;1mfi^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.0319860Z shell: /usr/bin/bash -e {0}
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.0320475Z env:
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.0321017Z   EXPECTED_HARNESS_SHA: 04c7fc0b42221872e6c6b611be91c68e462fc679
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.0321566Z ##[endgroup]
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.0512042Z ##[group]Run actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.0512636Z with:
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.0513338Z   python-version: 3.13
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.0513774Z   check-latest: false
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.0516193Z   token: ***
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.0516606Z   update-environment: true
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.0517024Z   allow-prereleases: false
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.0517445Z   freethreaded: false
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.0517874Z ##[endgroup]
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.1659379Z ##[group]Installed versions
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.1738451Z (node:2123) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.1740119Z (Use `node --trace-deprecation ...` to show where the warning was created)
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.1741051Z Successfully set up CPython (3.13.16)
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.1742224Z ##[endgroup]
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.1860972Z ##[group]Run python -m pip install .
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.1861450Z ^[[36;1mpython -m pip install .^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.1941254Z shell: /usr/bin/bash -e {0}
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.1941785Z env:
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.1942299Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.1943076Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib/pkgconfig
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.1943830Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.1944379Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.1945016Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.1945839Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:49.1946524Z ##[endgroup]
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:53.1469289Z Processing ./.
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:53.1483040Z   Installing build dependencies: started
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:54.6257786Z   Installing build dependencies: finished with status 'done'
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:54.6262280Z   Getting requirements to build wheel: started
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:55.3699105Z   Getting requirements to build wheel: finished with status 'done'
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:55.3707321Z   Preparing metadata (pyproject.toml): started
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:55.5333861Z   Preparing metadata (pyproject.toml): finished with status 'done'
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:55.5358938Z Building wheels for collected packages: pr-review-harness
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:55.5364852Z   Building wheel for pr-review-harness (pyproject.toml): started
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:55.7662713Z   Building wheel for pr-review-harness (pyproject.toml): finished with status 'done'
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:55.7671792Z   Created wheel for pr-review-harness: filename=pr_review_harness-0.1.0-py3-none-any.whl size=392772 sha256=6190b2b46602d51a3a56ab615ace91740cc6fb504fcdea79ba5ee32f6e44ae3d
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:55.7674232Z   Stored in directory: /tmp/pip-ephem-wheel-cache-3kwktjyf/wheels/b5/1b/d3/c21866b7b343fed37802b10d2da26937e0cc6ec2eb199ab3d3
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:55.7692588Z Successfully built pr-review-harness
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:55.7805838Z Installing collected packages: pr-review-harness
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.0627970Z Successfully installed pr-review-harness-0.1.0
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1251541Z ##[group]Run python - <<'PY'
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1252105Z ^[[36;1mpython - <<'PY'^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1252509Z ^[[36;1mimport json, os, re, subprocess^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1253058Z ^[[36;1mfrom pathlib import Path^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1253572Z ^[[36;1mfrom pr_review_harness.github import GitHubPRAdapter^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1254022Z ^[[36;1m^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1254349Z ^[[36;1mdef git(*args, timeout=30):^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1254984Z ^[[36;1m    return subprocess.run(args, check=True, text=True, capture_output=True, timeout=timeout).stdout.strip()^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1255532Z ^[[36;1m^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1255923Z ^[[36;1mharness_sha = os.environ['HARNESS_SHA']^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1256337Z ^[[36;1mtarget = os.environ['TARGET_REPOSITORY']^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1256817Z ^[[36;1mnumber = int(os.environ['PR_NUMBER'])^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1257206Z ^[[36;1mbase_ref = os.environ['BASE_REF']^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1257744Z ^[[36;1mbase_sha = os.environ['BASE_SHA']^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1258144Z ^[[36;1mhead_sha = os.environ['HEAD_SHA']^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1258780Z ^[[36;1mif not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', os.environ.get('GITHUB_REPOSITORY', '')):^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1259342Z ^[[36;1m    raise SystemExit('caller_repository_invalid')^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1259872Z ^[[36;1mif not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', target):^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1260420Z ^[[36;1m    raise SystemExit('target_repository_invalid')^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1260857Z ^[[36;1mif not re.fullmatch(r'[0-9a-f]{40}', harness_sha):^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1261381Z ^[[36;1m    raise SystemExit('harness_revision_must_be_full_sha')^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1261905Z ^[[36;1mif any(not re.fullmatch(r'[0-9a-f]{40}', sha) for sha in (base_sha, head_sha)):^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1262493Z ^[[36;1m    raise SystemExit('target_revision_invalid')^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1263055Z ^[[36;1mif number < 1 or not base_ref:^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1263710Z ^[[36;1m    raise SystemExit('pull_request_identity_invalid')^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1264161Z ^[[36;1mif git('git', 'rev-parse', 'HEAD') != harness_sha:^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1264688Z ^[[36;1m    raise SystemExit('checked_out_harness_revision_mismatch')^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1265144Z ^[[36;1m^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1265497Z ^[[36;1mcurrent = GitHubPRAdapter().pull_request(target, number)^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1266104Z ^[[36;1mif current.get('state') != 'open' or current.get('draft') is True:^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1266609Z ^[[36;1m    raise SystemExit('target_pull_request_not_open_ready')^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1267188Z ^[[36;1mif current['base_sha'] != base_sha or current['head_sha'] != head_sha:^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1267699Z ^[[36;1m    raise SystemExit('target_pull_request_revision_mismatch')^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1268161Z ^[[36;1m^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1268612Z ^[[36;1mcomparison = GitHubPRAdapter().compare_revisions(target, base_sha, head_sha)^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1269169Z ^[[36;1mmerge_base_sha = comparison['merge_base_sha']^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1269654Z ^[[36;1mbase_depth = max(1, comparison['behind_by'] + 1)^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1270075Z ^[[36;1mhead_depth = max(1, comparison['ahead_by'] + 1)^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1270533Z ^[[36;1m^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1270856Z ^[[36;1mstore = os.environ['OBJECT_STORE']^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1271274Z ^[[36;1mgit('git', 'init', '--bare', store)^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1271686Z ^[[36;1murl = 'https://github.com/' + target + '.git'^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1272168Z ^[[36;1mgit('git', '-C', store, 'config', 'remote.origin.url', url)^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1272688Z ^[[36;1mgit('git', '-C', store, 'config', 'remote.origin.promisor', 'true')^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1273603Z ^[[36;1mgit('git', '-C', store, 'config', 'remote.origin.partialclonefilter', 'blob:none')^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1274356Z ^[[36;1mgit('git', '-C', store, 'config', 'extensions.partialClone', 'origin')^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1275098Z ^[[36;1mgit('git', '-C', store, 'fetch', '--no-tags', '--filter=blob:none', f'--depth={head_depth}', 'origin',^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1275775Z ^[[36;1m    f'+refs/pull/{number}/head:refs/pr/head', timeout=120)^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1276225Z ^[[36;1mbase_ref_full = 'refs/heads/' + base_ref^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1276853Z ^[[36;1mif subprocess.run(['git', '-C', store, 'check-ref-format', base_ref_full], check=False, timeout=10).returncode:^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1277489Z ^[[36;1m    raise SystemExit('target_base_ref_invalid')^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1278046Z ^[[36;1mgit('git', '-C', store, 'fetch', '--no-tags', '--filter=blob:none', f'--depth={base_depth}', 'origin',^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1278641Z ^[[36;1m    f'+{base_sha}:refs/pr/base', timeout=120)^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1279106Z ^[[36;1mif git('git', '-C', store, 'rev-parse', 'refs/pr/head') != head_sha:^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1279644Z ^[[36;1m    raise SystemExit('fetched_target_head_mismatch')^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1280168Z ^[[36;1mif git('git', '-C', store, 'rev-parse', 'refs/pr/base') != base_sha:^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1280687Z ^[[36;1m    raise SystemExit('fetched_target_base_mismatch')^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1281254Z ^[[36;1mmerge_bases = git('git', '-C', store, 'merge-base', '--all', base_sha, head_sha).splitlines()^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1281801Z ^[[36;1mif merge_bases != [merge_base_sha]:^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1282270Z ^[[36;1m    raise SystemExit('fetched_target_merge_base_mismatch')^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1282690Z ^[[36;1m^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1283447Z ^[[36;1mevent = {'number': number, 'pull_request': {'base': {'sha': base_sha}, 'head': {'sha': head_sha}}}^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1284142Z ^[[36;1mPath(os.environ['EVENT_OUTPUT']).write_text(json.dumps(event), encoding='utf-8')^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1284616Z ^[[36;1mPY^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1327676Z shell: /usr/bin/bash -e {0}
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1328131Z env:
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1328529Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1329055Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib/pkgconfig
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1329624Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1330118Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1330575Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1331057Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1331569Z   HARNESS_SHA: 04c7fc0b42221872e6c6b611be91c68e462fc679
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1331968Z   TARGET_REPOSITORY: magnus919/SlopSearX
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1332347Z   PR_NUMBER: 865
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1332650Z   BASE_REF: main
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1333278Z   BASE_SHA: 514011f8ceb8a7c0f405d13dce6b90c8199210ec
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1333754Z   HEAD_SHA: 3b27897f89fa642105b5f4c14df590c4d541892a
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1336301Z   GH_TOKEN: ***
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1336681Z   OBJECT_STORE: /home/runner/work/_temp/target.git
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1337103Z   EVENT_OUTPUT: /home/runner/work/_temp/pr-event.json
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:11:56.1337567Z ##[endgroup]
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5568354Z ##[group]Run python - <<'PY'
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5568815Z ^[[36;1mpython - <<'PY'^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5569130Z ^[[36;1mimport json^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5569429Z ^[[36;1mimport os^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5569700Z ^[[36;1mimport re^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5570013Z ^[[36;1mimport stat^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5570273Z ^[[36;1m^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5570578Z ^[[36;1mMAX_EVENT_BYTES = 16_384^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5570855Z ^[[36;1m^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5571172Z ^[[36;1mdef reject_duplicates(pairs):^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5571504Z ^[[36;1m    result = {}^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5571837Z ^[[36;1m    for key, value in pairs:^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5572176Z ^[[36;1m        if key in result:^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5572525Z ^[[36;1m            raise ValueError("duplicate_json_key")^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5573205Z ^[[36;1m        result[key] = value^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5573516Z ^[[36;1m    return result^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5573837Z ^[[36;1m^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5574217Z ^[[36;1mdef reject_constant(_value):^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5574593Z ^[[36;1m    raise ValueError("nonstandard_json_constant")^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5574955Z ^[[36;1m^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5575244Z ^[[36;1mdef fail():^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5575564Z ^[[36;1m    raise SystemExit("generated_pull_request_event_invalid")^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5575991Z ^[[36;1m^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5576240Z ^[[36;1mdef main():^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5576613Z ^[[36;1m    number_text = os.environ.get("EXPECTED_PR_NUMBER", "")^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5577017Z ^[[36;1m    base_sha = os.environ.get("EXPECTED_BASE_SHA", "")^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5577473Z ^[[36;1m    head_sha = os.environ.get("EXPECTED_HEAD_SHA", "")^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5577867Z ^[[36;1m    if not re.fullmatch(r"[1-9][0-9]{0,8}", number_text):^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5578247Z ^[[36;1m        fail()^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5578696Z ^[[36;1m    if not re.fullmatch(r"[0-9a-f]{40}", base_sha) or not re.fullmatch(r"[0-9a-f]{40}", head_sha):^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5579112Z ^[[36;1m        fail()^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5579453Z ^[[36;1m    try:^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5579879Z ^[[36;1m        descriptor = os.open(os.environ["PR_EVENT_PATH"], os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5580411Z ^[[36;1m        with os.fdopen(descriptor, "rb") as stream:^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5580819Z ^[[36;1m            if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5581254Z ^[[36;1m                fail()^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5581603Z ^[[36;1m            raw = stream.read(MAX_EVENT_BYTES + 1)^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5581959Z ^[[36;1m    except (KeyError, OSError):^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5582310Z ^[[36;1m        fail()^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5582589Z ^[[36;1m    if len(raw) > MAX_EVENT_BYTES:^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5583147Z ^[[36;1m        fail()^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5583431Z ^[[36;1m    try:^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5583754Z ^[[36;1m        document = json.loads(^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5584073Z ^[[36;1m            raw.decode("utf-8"),^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5584490Z ^[[36;1m            object_pairs_hook=reject_duplicates,^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5584853Z ^[[36;1m            parse_constant=reject_constant,^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5585205Z ^[[36;1m        )^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5585632Z ^[[36;1m    except (UnicodeDecodeError, ValueError, json.JSONDecodeError, RecursionError):^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5586065Z ^[[36;1m        fail()^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5586508Z ^[[36;1m    if not isinstance(document, dict) or set(document) != {"number", "pull_request"}:^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5586927Z ^[[36;1m        fail()^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5587263Z ^[[36;1m    number = document.get("number")^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5587714Z ^[[36;1m    if isinstance(number, bool) or not isinstance(number, int) or number != int(number_text):^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5588201Z ^[[36;1m        fail()^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5588518Z ^[[36;1m    pull_request = document.get("pull_request")^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5589128Z ^[[36;1m    if not isinstance(pull_request, dict) or set(pull_request) != {"base", "head"}:^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5589604Z ^[[36;1m        fail()^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5589886Z ^[[36;1m    base = pull_request.get("base")^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5590281Z ^[[36;1m    head = pull_request.get("head")^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5590649Z ^[[36;1m    if not isinstance(base, dict) or set(base) != {"sha"}:^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5591043Z ^[[36;1m        fail()^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5591381Z ^[[36;1m    if not isinstance(head, dict) or set(head) != {"sha"}:^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5592168Z ^[[36;1m        fail()^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5592513Z ^[[36;1m    if base.get("sha") != base_sha or head.get("sha") != head_sha:^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5593160Z ^[[36;1m        fail()^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5593491Z ^[[36;1m^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5593739Z ^[[36;1mif __name__ == "__main__":^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5594090Z ^[[36;1m    main()^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5594439Z ^[[36;1mPY^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5631252Z shell: /usr/bin/bash -e {0}
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5631675Z env:
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5632023Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5632548Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib/pkgconfig
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5633110Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5633546Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5633955Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5634375Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5634851Z   PR_EVENT_PATH: /home/runner/work/_temp/pr-event.json
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5635200Z   EXPECTED_PR_NUMBER: 865
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5635606Z   EXPECTED_BASE_SHA: 514011f8ceb8a7c0f405d13dce6b90c8199210ec
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5636005Z   EXPECTED_HEAD_SHA: 3b27897f89fa642105b5f4c14df590c4d541892a
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5636413Z ##[endgroup]
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5903602Z ##[group]Run python scripts/resolve_review_contract.py \
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5904069Z ^[[36;1mpython scripts/resolve_review_contract.py \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5904469Z ^[[36;1m  --github-output "$GITHUB_OUTPUT" \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5904828Z ^[[36;1m  --binding-artifact artifacts/profile-binding.json^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5935076Z shell: /usr/bin/bash -e {0}
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5935459Z env:
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5935779Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5936306Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib/pkgconfig
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5936769Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5937214Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5937629Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5938020Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5938500Z   TARGET_REPOSITORY: magnus919/SlopSearX
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5938857Z   REVIEW_CONTRACT: bounded-production-v17
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.5939184Z ##[endgroup]
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.6315971Z {"limits_path":"profiles/ordinary-review-limits-v3.json","limits_sha256":"ec191dcde1672b4f86aac24ee6412752cd9a08871d1aba1b332d11341b6fd2a6","max_claim_assessments":"4","profile_map_sha256":"eb8e91c8510bc7f246fb8f21f9659654695263fb4b81ec8c2099a029b86fe121","profile_path":"profiles/slopsearx-v17-context-target-manifest-candidate.json","profile_sha256":"28725e806a87812386ff67f5c6e63320cc9f3f2b9c1a79c6942c7cf1be004dac","profile_version":"slopsearx-production-v17-context-target-manifest-candidate","review_contract":"bounded-production-v17","status":"RESOLVED","target_repository":"magnus919/SlopSearX"}
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.6416397Z ##[group]Run python scripts/provider_config_from_env.py \
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.6416901Z ^[[36;1mpython scripts/provider_config_from_env.py \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.6417325Z ^[[36;1m  --output-dir "$RUNNER_TEMP/pr-review-provider-config" \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.6417810Z ^[[36;1m  --json > "$RUNNER_TEMP/pr-review-provider-config-paths.json"^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.6447348Z shell: /usr/bin/bash -e {0}
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.6447680Z env:
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.6448020Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.6448475Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib/pkgconfig
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.6448955Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.6449401Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.6449830Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.6450233Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.6450895Z   LLM_BASE_URL: ***
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.6451174Z   LLM_MODEL: ***
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.6451512Z   LLM_API_KEY: ***
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.6451822Z   JEV_BASE_URL: ***
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.6452122Z   JEV_MODEL: ***
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.6452770Z   JEV_API_KEY: ***
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.6453254Z ##[endgroup]
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7251672Z ##[group]Run test "$(sha256sum "$PROFILE" | cut -d' ' -f1)" = "$EXPECTED_PROFILE_SHA256"
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7252241Z ^[[36;1mtest "$(sha256sum "$PROFILE" | cut -d' ' -f1)" = "$EXPECTED_PROFILE_SHA256"^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7252742Z ^[[36;1mtest "$(sha256sum "$LIMITS" | cut -d' ' -f1)" = "$EXPECTED_LIMITS_SHA256"^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7253387Z ^[[36;1mmkdir -p artifacts^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7253789Z ^[[36;1menv GITHUB_REPOSITORY="$TARGET_REPOSITORY" pr-review review \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7254179Z ^[[36;1m  --repo "$OBJECT_STORE" \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7254536Z ^[[36;1m  --event-file "$PR_EVENT_PATH" \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7254854Z ^[[36;1m  --profile "$PROFILE" \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7255313Z ^[[36;1m  --provider-config "$RUNNER_TEMP/pr-review-provider-config/provider.json" \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7255826Z ^[[36;1m  --decision-config "$RUNNER_TEMP/pr-review-provider-config/decision.json" \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7256265Z ^[[36;1m  --limits "$LIMITS" \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7256720Z ^[[36;1m  --max-claim-assessments "$MAX_CLAIM_ASSESSMENTS" \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7257130Z ^[[36;1m  --output artifacts/review \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7257447Z ^[[36;1m  --run-id "pr-865-38740632500" \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7257836Z ^[[36;1m  --capture-recovery-inputs artifacts/recovery-inputs.json \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7258236Z ^[[36;1m  --mode AUTO \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7258584Z ^[[36;1m  --json > artifacts/review-result.json^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7289218Z shell: /usr/bin/bash -e {0}
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7289569Z env:
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7289940Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7290522Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib/pkgconfig
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7290946Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7291368Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7291789Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7292204Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7292608Z   PR_EVENT_PATH: /home/runner/work/_temp/pr-event.json
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7293200Z   TARGET_REPOSITORY: magnus919/SlopSearX
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7295607Z   GH_TOKEN: ***
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7295960Z   LLM_API_KEY: ***
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7296460Z   JEV_API_KEY: ***
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7296849Z   PROFILE: profiles/slopsearx-v17-context-target-manifest-candidate.json
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7297371Z   EXPECTED_PROFILE_SHA256: 28725e806a87812386ff67f5c6e63320cc9f3f2b9c1a79c6942c7cf1be004dac
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7297890Z   LIMITS: profiles/ordinary-review-limits-v3.json
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7298328Z   EXPECTED_LIMITS_SHA256: ec191dcde1672b4f86aac24ee6412752cd9a08871d1aba1b332d11341b6fd2a6
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7298815Z   MAX_CLAIM_ASSESSMENTS: 4
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7299134Z   OBJECT_STORE: /home/runner/work/_temp/target.git
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:02.7299504Z ##[endgroup]
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4041435Z ##[group]Run python scripts/pr_analysis_artifact_manifest.py \
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4042108Z ^[[36;1mpython scripts/pr_analysis_artifact_manifest.py \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4042546Z ^[[36;1m  --artifact-root artifacts \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4043287Z ^[[36;1m  --workflow-repository "$WORKFLOW_REPOSITORY" \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4043732Z ^[[36;1m  --workflow-run-id "$WORKFLOW_RUN_ID" \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4044236Z ^[[36;1m  --workflow-run-attempt "$WORKFLOW_RUN_ATTEMPT" \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4044683Z ^[[36;1m  --workflow-run-head-sha "$WORKFLOW_RUN_HEAD_SHA" \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4045088Z ^[[36;1m  --run-workflow-ref "$RUN_WORKFLOW_REF" \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4045516Z ^[[36;1m  --called-workflow-ref "$CALLED_WORKFLOW_REF" \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4046299Z ^[[36;1m  --called-workflow-sha "$CALLED_WORKFLOW_SHA" \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4046887Z ^[[36;1m  --called-workflow-repository "$CALLED_WORKFLOW_REPOSITORY" \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4047670Z ^[[36;1m  --called-workflow-file-path "$CALLED_WORKFLOW_FILE_PATH" \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4048166Z ^[[36;1m  --target-repository "$TARGET_REPOSITORY" \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4048621Z ^[[36;1m  --pull-request-number "$PR_NUMBER" \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4049063Z ^[[36;1m  --base-sha "$BASE_SHA" \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4049407Z ^[[36;1m  --head-sha "$HEAD_SHA" \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4049843Z ^[[36;1m  --harness-repository "$HARNESS_REPOSITORY" \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4050291Z ^[[36;1m  --harness-sha "$HARNESS_SHA" \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4050731Z ^[[36;1m  --expected-profile-sha256 "$EXPECTED_PROFILE_SHA256" \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4051172Z ^[[36;1m  --profile "$PROFILE" \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4051534Z ^[[36;1m  --provider-config "$PROVIDER_CONFIG" \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4051953Z ^[[36;1m  --decision-config "$DECISION_CONFIG"^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4087475Z shell: /usr/bin/bash -e {0}
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4087799Z env:
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4088221Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4088728Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib/pkgconfig
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4089221Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4089654Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4090065Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4090521Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4090903Z   WORKFLOW_REPOSITORY: magnus919/SlopSearX
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4091269Z   WORKFLOW_RUN_ID: 38740632500
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4091552Z   WORKFLOW_RUN_ATTEMPT: 1
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4091991Z   WORKFLOW_RUN_HEAD_SHA: 514011f8ceb8a7c0f405d13dce6b90c8199210ec
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4092499Z   RUN_WORKFLOW_REF: magnus919/SlopSearX/.github/workflows/pr-review-analysis.yml@refs/heads/main
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4093433Z   CALLED_WORKFLOW_REF: groktopus/codereview/.github/workflows/pr-analysis.yml@04c7fc0b42221872e6c6b611be91c68e462fc679
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4094037Z   CALLED_WORKFLOW_SHA: 04c7fc0b42221872e6c6b611be91c68e462fc679
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4094450Z   CALLED_WORKFLOW_REPOSITORY: groktopus/codereview
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4094892Z   CALLED_WORKFLOW_FILE_PATH: .github/workflows/pr-analysis.yml
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4095257Z   TARGET_REPOSITORY: magnus919/SlopSearX
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4095604Z   PR_NUMBER: 865
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4095890Z   BASE_SHA: 514011f8ceb8a7c0f405d13dce6b90c8199210ec
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4096330Z   HEAD_SHA: 3b27897f89fa642105b5f4c14df590c4d541892a
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4096673Z   HARNESS_REPOSITORY: groktopus/codereview
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4097074Z   HARNESS_SHA: 04c7fc0b42221872e6c6b611be91c68e462fc679
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4097537Z   PROFILE: profiles/slopsearx-v17-context-target-manifest-candidate.json
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4098105Z   EXPECTED_PROFILE_SHA256: 28725e806a87812386ff67f5c6e63320cc9f3f2b9c1a79c6942c7cf1be004dac
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4098681Z   PROVIDER_CONFIG: /home/runner/work/_temp/pr-review-provider-config/provider.json
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4099330Z   DECISION_CONFIG: /home/runner/work/_temp/pr-review-provider-config/decision.json
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4099777Z ##[endgroup]
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4570974Z {"status":"verified","manifest_sha256":"8163e0962d17f28174545332b0e2a3370e1be522fbb48ee0c5b5e5dadbb31702","file_count":5,"checkpoint_path":"review/pr-865-38740632500.json"}
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4679791Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4680262Z with:
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4680538Z   name: pr-review-865-38740632500-1
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4680999Z   path: artifacts/
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4681306Z   if-no-files-found: warn
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4681608Z   retention-days: 7
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4681949Z   compression-level: 6
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4682245Z   overwrite: false
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4682556Z   include-hidden-files: false
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4682943Z env:
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4683323Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4683890Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib/pkgconfig
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4684372Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4684769Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4685219Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4685795Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.4686183Z ##[endgroup]
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.6095171Z (node:2411) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.6095879Z (Use `node --trace-deprecation ...` to show where the warning was created)
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.6154796Z With the provided path, there will be 6 files uploaded
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.6160939Z Artifact name is valid!
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.6161821Z Root directory input is valid!
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.9553853Z Beginning upload of artifact content to blob storage
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:34.9833172Z (node:2411) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.2817198Z Uploaded bytes 68165
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.3379164Z Finished uploading artifact content to blob storage!
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.3380093Z SHA256 digest of uploaded artifact zip is d9de0be28ca7f77d7b1713856c021535bc82a7f3c014001d4e88c6688aa66b5b
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.3381434Z Finalizing artifact upload
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6313310Z Artifact pr-review-865-38740632500-1.zip successfully finalized. Artifact ID 11975907261
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6314829Z Artifact pr-review-865-38740632500-1 has been successfully uploaded! Final size is 68165 bytes. Artifact ID is 11975907261
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6320722Z Artifact download URL: https://github.com/magnus919/SlopSearX/actions/runs/38740632500/artifacts/11975907261
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6549317Z ##[group]Run python scripts/pr_analysis_publication_bundle.py \
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6549725Z ^[[36;1mpython scripts/pr_analysis_publication_bundle.py \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6550100Z ^[[36;1m  --result "artifacts/review/pr-$PR_NUMBER-$GITHUB_RUN_ID.json" \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6550427Z ^[[36;1m  --profile "$PROFILE" \^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6550697Z ^[[36;1m  --output-dir "$PUBLICATION_OUTPUT_DIR"^[[0m
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6585040Z shell: /usr/bin/bash -e {0}
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6585273Z env:
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6585517Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6585887Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib/pkgconfig
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6586249Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6586584Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6586911Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6587290Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6589583Z   GH_TOKEN: ***
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6589796Z   GITHUB_REPOSITORY: magnus919/SlopSearX
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6590052Z   GITHUB_RUN_ID: 38740632500
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6590280Z   GITHUB_RUN_ATTEMPT: 1
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6590523Z   GITHUB_SHA: 514011f8ceb8a7c0f405d13dce6b90c8199210ec
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6590847Z   GITHUB_WORKFLOW_SHA: 514011f8ceb8a7c0f405d13dce6b90c8199210ec
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6591277Z   GITHUB_WORKFLOW_REF: magnus919/SlopSearX/.github/workflows/pr-review-analysis.yml@refs/heads/main
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6591665Z   GITHUB_REF: refs/heads/main
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6591896Z   GITHUB_EVENT_NAME: pull_request_target
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6592130Z   GITHUB_DEFAULT_BRANCH: main
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6592356Z   TARGET_REPOSITORY: magnus919/SlopSearX
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6592584Z   PR_NUMBER: 865
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6593159Z   BASE_SHA: 514011f8ceb8a7c0f405d13dce6b90c8199210ec
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6593496Z   HEAD_SHA: 3b27897f89fa642105b5f4c14df590c4d541892a
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6593899Z   HARNESS_REPOSITORY: groktopus/codereview
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6594193Z   HARNESS_SHA: 04c7fc0b42221872e6c6b611be91c68e462fc679
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6594495Z   CALLED_WORKFLOW_REPOSITORY: groktopus/codereview
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6594815Z   CALLED_WORKFLOW_FILE_PATH: .github/workflows/pr-analysis.yml
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6595159Z   CALLED_WORKFLOW_SHA: 04c7fc0b42221872e6c6b611be91c68e462fc679
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6595634Z   CALLED_WORKFLOW_REF: groktopus/codereview/.github/workflows/pr-analysis.yml@04c7fc0b42221872e6c6b611be91c68e462fc679
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6596165Z   PROFILE: profiles/slopsearx-v17-context-target-manifest-candidate.json
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6596629Z   PROFILE_VERSION: slopsearx-production-v17-context-target-manifest-candidate
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6597098Z   PROFILE_SHA256: 28725e806a87812386ff67f5c6e63320cc9f3f2b9c1a79c6942c7cf1be004dac
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6597560Z   PROVIDER_CONFIG: /home/runner/work/_temp/pr-review-provider-config/provider.json
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6598008Z   DECISION_CONFIG: /home/runner/work/_temp/pr-review-provider-config/decision.json
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6598439Z   LLM_API_KEY: ***
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6598863Z   JEV_API_KEY: ***
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6599155Z   PUBLICATION_OUTPUT_DIR: /home/runner/work/_temp/pr-review-publication
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:35.6599470Z ##[endgroup]
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:36.3000777Z {"error":"github_default_branch_identity_mismatch","status":"REJECTED"}
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:36.3184472Z ##[error]Process completed with exit code 2.
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:36.3285736Z Post job cleanup.
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:36.4051000Z [command]/usr/bin/git version
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:36.4088846Z git version 2.55.0
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:36.4123926Z Temporarily overriding HOME='/home/runner/work/_temp/e6daa19d-6915-43e9-80e8-29ef67a97d16' before making global git config changes
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:36.4124647Z Adding repository directory to the temporary git global config as a safe directory
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:36.4129209Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/SlopSearX/SlopSearX
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:36.4162185Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:36.4189304Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:36.4423843Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:36.4446603Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:36.4878091Z Cleaning up orphan processes
+analyze / analysis	UNKNOWN STEP	2026-10-15T13:12:36.5072253Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683, actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

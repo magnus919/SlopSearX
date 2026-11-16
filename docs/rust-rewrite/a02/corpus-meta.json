@@ -1,0 +1,275 @@
+{
+  "schema_version": 1,
+  "plan_id": "A02",
+  "capture": "source-bound Python3.14 offline MockTransport; synthetic regressions, no providers",
+  "source_commit": "025ab2f2d50febcb573ba62579eecf7e2d07ef3a",
+  "source_files": [
+    {
+      "path": "engines/pypi.py",
+      "git_blob": "e10a1da680178cb333dbcd53ef9dbb0dd5be81b4",
+      "sha256": "16b09518585f440ddb20ecdd7bcf398d93004813a4d1e916afc83e18081b9590"
+    },
+    {
+      "path": "engines/rubygems.py",
+      "git_blob": "127ff07eec863a450b3c89e1e876201ecea89880",
+      "sha256": "29c00458aaf2804872565acaa19df9f447463509b3cc0f4869959c33d82e7849"
+    },
+    {
+      "path": "engines/dockerhub.py",
+      "git_blob": "cf1792ec3d34a9e8c535235791c1aeb7a29ea439",
+      "sha256": "4915cf45ba079dc47f776f03884c678ee8cc824f94a551ee80057d8c9a5bcbb9"
+    },
+    {
+      "path": "slopsearx/adapter.py",
+      "git_blob": "664e853d9ab1330596d01899ebe015701de09e88",
+      "sha256": "5883a35c48d0dad1077306fbda21997ee1d32116a8c03633a6b762de0c26d6f3"
+    },
+    {
+      "path": "slopsearx/payload.py",
+      "git_blob": "efa149d48bae401f7a0a9df6e50c8c614adecbb5",
+      "sha256": "a44a95655566f9fadaf62da1bab8c975f71f3ead6c3cc57f48c411a9c093c40d"
+    },
+    {
+      "path": "tests/test_new_engines.py",
+      "git_blob": "4e5293d694bb40332584a9541b6ad41326a01cc0",
+      "sha256": "a6df3df9b68fdc8a4b617d4059a5bd26a8cd82c5d8de1574ac9c48d2d14ad8a4"
+    },
+    {
+      "path": "tests/test_payload.py",
+      "git_blob": "4b5bc1a0940ad6c1214eb55764fb4aea57188de9",
+      "sha256": "a7bc52b2747f0ebc440a4d7ce69671635530c7142d43eb128cb3132e297fb11a"
+    },
+    {
+      "path": "tests/test_dockerhub.py",
+      "git_blob": "ab8e9686fc37305ceb629eb3a6f56651ef49a88b",
+      "sha256": "61fbc8b4c4c876e474330d711b2fd35b993cf52252cbb7919e8d90e086e56994"
+    }
+  ],
+  "cases": [
+    {
+      "id": "meta_content_only",
+      "engine": "pypi",
+      "query": "caf",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body": "<meta content=\"text/html; charset=utf-8\"><a href=\"/simple/café/\">x</a>"
+        },
+        {
+          "status": 200,
+          "body": "{\"info\":{}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/caf/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/caf%C3%83%C2%A9/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/cafÃ©/",
+            "title": "cafÃ© ",
+            "content": "",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "cafÃ©"
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "meta_name_content",
+      "engine": "pypi",
+      "query": "caf",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body": "<meta name=\"description\" content=\"charset=utf-8\"><a href=\"/simple/café/\">x</a>"
+        },
+        {
+          "status": 200,
+          "body": "{\"info\":{}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/caf/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/caf%C3%83%C2%A9/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/cafÃ©/",
+            "title": "cafÃ© ",
+            "content": "",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "cafÃ©"
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "meta_unknown_then_valid",
+      "engine": "pypi",
+      "query": "caf",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body": "<meta charset=\"bogus\"><meta charset=\"utf-8\"><a href=\"/simple/café/\">x</a>"
+        },
+        {
+          "status": 200,
+          "body": "{\"info\":{}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/caf/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/caf%C3%A9/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/café/",
+            "title": "café ",
+            "content": "",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "café"
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

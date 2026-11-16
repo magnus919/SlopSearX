@@ -1,0 +1,1284 @@
+{
+  "cases": [
+    {
+      "id": "audit.none",
+      "input": {},
+      "output": {
+        "awaited": 0,
+        "commands": [],
+        "returned": true
+      }
+    },
+    {
+      "id": "audit.disconnected",
+      "input": {},
+      "output": {
+        "awaited": 0,
+        "commands": [],
+        "returned": true
+      }
+    },
+    {
+      "id": "audit.no-client",
+      "input": {},
+      "output": {
+        "awaited": 0,
+        "commands": [],
+        "returned": true
+      }
+    },
+    {
+      "id": "audit.failed",
+      "input": {},
+      "output": {
+        "awaited": 1,
+        "commands": [
+          [
+            "execute_command",
+            "XADD",
+            "query_audit:2026-10-17",
+            "MAXLEN",
+            "~",
+            "10000",
+            "*",
+            "query",
+            "synthetic query",
+            "client_ip",
+            "192.0.2.12",
+            "timestamp",
+            "2026-10-17T12:00:00.000Z",
+            "engines",
+            "",
+            "engines_ok",
+            "0",
+            "engines_error",
+            "0",
+            "engines_timeout",
+            "0",
+            "total_results",
+            "0",
+            "latency_ms",
+            "1.0"
+          ],
+          [
+            "expire",
+            "query_audit:2026-10-17",
+            7776000
+          ]
+        ],
+        "returned": true
+      }
+    },
+    {
+      "id": "stats.none",
+      "input": {},
+      "output": {
+        "awaited": 0,
+        "commands": [],
+        "returned": true
+      }
+    },
+    {
+      "id": "stats.disconnected",
+      "input": {},
+      "output": {
+        "awaited": 0,
+        "commands": [],
+        "returned": true
+      }
+    },
+    {
+      "id": "stats.no-client",
+      "input": {},
+      "output": {
+        "awaited": 0,
+        "commands": [],
+        "returned": true
+      }
+    },
+    {
+      "id": "stats.failed",
+      "input": {},
+      "output": {
+        "awaited": 1,
+        "commands": [
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "queries",
+            1
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "results_returned",
+            0
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "errors",
+            0
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "rate_limited",
+            0
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "total_latency_ms",
+            1
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "total_score",
+            0
+          ],
+          [
+            "expire",
+            "engine_stats:fixture:2026-10-17",
+            7776000
+          ]
+        ],
+        "returned": true
+      }
+    },
+    {
+      "id": "stats.status.ok",
+      "input": {
+        "status": "ok"
+      },
+      "output": {
+        "awaited": 1,
+        "commands": [
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "queries",
+            1
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "results_returned",
+            4
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "errors",
+            0
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "rate_limited",
+            0
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "total_latency_ms",
+            12
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "total_score",
+            750
+          ],
+          [
+            "expire",
+            "engine_stats:fixture:2026-10-17",
+            7776000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "stats.status.rate_limited",
+      "input": {
+        "status": "rate_limited"
+      },
+      "output": {
+        "awaited": 1,
+        "commands": [
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "queries",
+            1
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "results_returned",
+            4
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "errors",
+            0
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "rate_limited",
+            1
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "total_latency_ms",
+            12
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "total_score",
+            750
+          ],
+          [
+            "expire",
+            "engine_stats:fixture:2026-10-17",
+            7776000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "stats.status.blocked",
+      "input": {
+        "status": "blocked"
+      },
+      "output": {
+        "awaited": 1,
+        "commands": [
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "queries",
+            1
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "results_returned",
+            4
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "errors",
+            0
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "rate_limited",
+            0
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "total_latency_ms",
+            12
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "total_score",
+            750
+          ],
+          [
+            "expire",
+            "engine_stats:fixture:2026-10-17",
+            7776000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "stats.status.error",
+      "input": {
+        "status": "error"
+      },
+      "output": {
+        "awaited": 1,
+        "commands": [
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "queries",
+            1
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "results_returned",
+            4
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "errors",
+            1
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "rate_limited",
+            0
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "total_latency_ms",
+            12
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "total_score",
+            750
+          ],
+          [
+            "expire",
+            "engine_stats:fixture:2026-10-17",
+            7776000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "stats.status.timeout",
+      "input": {
+        "status": "timeout"
+      },
+      "output": {
+        "awaited": 1,
+        "commands": [
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "queries",
+            1
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "results_returned",
+            4
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "errors",
+            1
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "rate_limited",
+            0
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "total_latency_ms",
+            12
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "total_score",
+            750
+          ],
+          [
+            "expire",
+            "engine_stats:fixture:2026-10-17",
+            7776000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "stats.status.unavailable",
+      "input": {
+        "status": "unavailable"
+      },
+      "output": {
+        "awaited": 1,
+        "commands": [
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "queries",
+            1
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "results_returned",
+            4
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "errors",
+            0
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "rate_limited",
+            0
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "total_latency_ms",
+            12
+          ],
+          [
+            "hincrby",
+            "engine_stats:fixture:2026-10-17",
+            "total_score",
+            750
+          ],
+          [
+            "expire",
+            "engine_stats:fixture:2026-10-17",
+            7776000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "audit.latency.0",
+      "input": {
+        "repr": "0",
+        "type": "int"
+      },
+      "output": {
+        "commands": [
+          [
+            "execute_command",
+            "XADD",
+            "query_audit:2026-10-17",
+            "MAXLEN",
+            "~",
+            "10000",
+            "*",
+            "query",
+            "synthetic query",
+            "client_ip",
+            "192.0.2.12",
+            "timestamp",
+            "2026-10-17T12:00:00.000Z",
+            "engines",
+            "",
+            "engines_ok",
+            "0",
+            "engines_error",
+            "0",
+            "engines_timeout",
+            "0",
+            "total_results",
+            "0",
+            "latency_ms",
+            "0"
+          ],
+          [
+            "expire",
+            "query_audit:2026-10-17",
+            7776000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "audit.latency.1",
+      "input": {
+        "repr": "1",
+        "type": "int"
+      },
+      "output": {
+        "commands": [
+          [
+            "execute_command",
+            "XADD",
+            "query_audit:2026-10-17",
+            "MAXLEN",
+            "~",
+            "10000",
+            "*",
+            "query",
+            "synthetic query",
+            "client_ip",
+            "192.0.2.12",
+            "timestamp",
+            "2026-10-17T12:00:00.000Z",
+            "engines",
+            "",
+            "engines_ok",
+            "0",
+            "engines_error",
+            "0",
+            "engines_timeout",
+            "0",
+            "total_results",
+            "0",
+            "latency_ms",
+            "1"
+          ],
+          [
+            "expire",
+            "query_audit:2026-10-17",
+            7776000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "audit.latency.123",
+      "input": {
+        "repr": "123",
+        "type": "int"
+      },
+      "output": {
+        "commands": [
+          [
+            "execute_command",
+            "XADD",
+            "query_audit:2026-10-17",
+            "MAXLEN",
+            "~",
+            "10000",
+            "*",
+            "query",
+            "synthetic query",
+            "client_ip",
+            "192.0.2.12",
+            "timestamp",
+            "2026-10-17T12:00:00.000Z",
+            "engines",
+            "",
+            "engines_ok",
+            "0",
+            "engines_error",
+            "0",
+            "engines_timeout",
+            "0",
+            "total_results",
+            "0",
+            "latency_ms",
+            "123"
+          ],
+          [
+            "expire",
+            "query_audit:2026-10-17",
+            7776000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "audit.latency.0.0",
+      "input": {
+        "repr": "0.0",
+        "type": "float"
+      },
+      "output": {
+        "commands": [
+          [
+            "execute_command",
+            "XADD",
+            "query_audit:2026-10-17",
+            "MAXLEN",
+            "~",
+            "10000",
+            "*",
+            "query",
+            "synthetic query",
+            "client_ip",
+            "192.0.2.12",
+            "timestamp",
+            "2026-10-17T12:00:00.000Z",
+            "engines",
+            "",
+            "engines_ok",
+            "0",
+            "engines_error",
+            "0",
+            "engines_timeout",
+            "0",
+            "total_results",
+            "0",
+            "latency_ms",
+            "0.0"
+          ],
+          [
+            "expire",
+            "query_audit:2026-10-17",
+            7776000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "audit.latency.-0.0",
+      "input": {
+        "repr": "-0.0",
+        "type": "float"
+      },
+      "output": {
+        "commands": [
+          [
+            "execute_command",
+            "XADD",
+            "query_audit:2026-10-17",
+            "MAXLEN",
+            "~",
+            "10000",
+            "*",
+            "query",
+            "synthetic query",
+            "client_ip",
+            "192.0.2.12",
+            "timestamp",
+            "2026-10-17T12:00:00.000Z",
+            "engines",
+            "",
+            "engines_ok",
+            "0",
+            "engines_error",
+            "0",
+            "engines_timeout",
+            "0",
+            "total_results",
+            "0",
+            "latency_ms",
+            "-0.0"
+          ],
+          [
+            "expire",
+            "query_audit:2026-10-17",
+            7776000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "audit.latency.1.05",
+      "input": {
+        "repr": "1.05",
+        "type": "float"
+      },
+      "output": {
+        "commands": [
+          [
+            "execute_command",
+            "XADD",
+            "query_audit:2026-10-17",
+            "MAXLEN",
+            "~",
+            "10000",
+            "*",
+            "query",
+            "synthetic query",
+            "client_ip",
+            "192.0.2.12",
+            "timestamp",
+            "2026-10-17T12:00:00.000Z",
+            "engines",
+            "",
+            "engines_ok",
+            "0",
+            "engines_error",
+            "0",
+            "engines_timeout",
+            "0",
+            "total_results",
+            "0",
+            "latency_ms",
+            "1.1"
+          ],
+          [
+            "expire",
+            "query_audit:2026-10-17",
+            7776000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "audit.latency.1.15",
+      "input": {
+        "repr": "1.15",
+        "type": "float"
+      },
+      "output": {
+        "commands": [
+          [
+            "execute_command",
+            "XADD",
+            "query_audit:2026-10-17",
+            "MAXLEN",
+            "~",
+            "10000",
+            "*",
+            "query",
+            "synthetic query",
+            "client_ip",
+            "192.0.2.12",
+            "timestamp",
+            "2026-10-17T12:00:00.000Z",
+            "engines",
+            "",
+            "engines_ok",
+            "0",
+            "engines_error",
+            "0",
+            "engines_timeout",
+            "0",
+            "total_results",
+            "0",
+            "latency_ms",
+            "1.1"
+          ],
+          [
+            "expire",
+            "query_audit:2026-10-17",
+            7776000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "audit.latency.1.25",
+      "input": {
+        "repr": "1.25",
+        "type": "float"
+      },
+      "output": {
+        "commands": [
+          [
+            "execute_command",
+            "XADD",
+            "query_audit:2026-10-17",
+            "MAXLEN",
+            "~",
+            "10000",
+            "*",
+            "query",
+            "synthetic query",
+            "client_ip",
+            "192.0.2.12",
+            "timestamp",
+            "2026-10-17T12:00:00.000Z",
+            "engines",
+            "",
+            "engines_ok",
+            "0",
+            "engines_error",
+            "0",
+            "engines_timeout",
+            "0",
+            "total_results",
+            "0",
+            "latency_ms",
+            "1.2"
+          ],
+          [
+            "expire",
+            "query_audit:2026-10-17",
+            7776000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "audit.latency.1.35",
+      "input": {
+        "repr": "1.35",
+        "type": "float"
+      },
+      "output": {
+        "commands": [
+          [
+            "execute_command",
+            "XADD",
+            "query_audit:2026-10-17",
+            "MAXLEN",
+            "~",
+            "10000",
+            "*",
+            "query",
+            "synthetic query",
+            "client_ip",
+            "192.0.2.12",
+            "timestamp",
+            "2026-10-17T12:00:00.000Z",
+            "engines",
+            "",
+            "engines_ok",
+            "0",
+            "engines_error",
+            "0",
+            "engines_timeout",
+            "0",
+            "total_results",
+            "0",
+            "latency_ms",
+            "1.4"
+          ],
+          [
+            "expire",
+            "query_audit:2026-10-17",
+            7776000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "audit.latency.123.4",
+      "input": {
+        "repr": "123.4",
+        "type": "float"
+      },
+      "output": {
+        "commands": [
+          [
+            "execute_command",
+            "XADD",
+            "query_audit:2026-10-17",
+            "MAXLEN",
+            "~",
+            "10000",
+            "*",
+            "query",
+            "synthetic query",
+            "client_ip",
+            "192.0.2.12",
+            "timestamp",
+            "2026-10-17T12:00:00.000Z",
+            "engines",
+            "",
+            "engines_ok",
+            "0",
+            "engines_error",
+            "0",
+            "engines_timeout",
+            "0",
+            "total_results",
+            "0",
+            "latency_ms",
+            "123.4"
+          ],
+          [
+            "expire",
+            "query_audit:2026-10-17",
+            7776000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "audit.latency.123.45",
+      "input": {
+        "repr": "123.45",
+        "type": "float"
+      },
+      "output": {
+        "commands": [
+          [
+            "execute_command",
+            "XADD",
+            "query_audit:2026-10-17",
+            "MAXLEN",
+            "~",
+            "10000",
+            "*",
+            "query",
+            "synthetic query",
+            "client_ip",
+            "192.0.2.12",
+            "timestamp",
+            "2026-10-17T12:00:00.000Z",
+            "engines",
+            "",
+            "engines_ok",
+            "0",
+            "engines_error",
+            "0",
+            "engines_timeout",
+            "0",
+            "total_results",
+            "0",
+            "latency_ms",
+            "123.5"
+          ],
+          [
+            "expire",
+            "query_audit:2026-10-17",
+            7776000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "audit.latency.123.55",
+      "input": {
+        "repr": "123.55",
+        "type": "float"
+      },
+      "output": {
+        "commands": [
+          [
+            "execute_command",
+            "XADD",
+            "query_audit:2026-10-17",
+            "MAXLEN",
+            "~",
+            "10000",
+            "*",
+            "query",
+            "synthetic query",
+            "client_ip",
+            "192.0.2.12",
+            "timestamp",
+            "2026-10-17T12:00:00.000Z",
+            "engines",
+            "",
+            "engines_ok",
+            "0",
+            "engines_error",
+            "0",
+            "engines_timeout",
+            "0",
+            "total_results",
+            "0",
+            "latency_ms",
+            "123.5"
+          ],
+          [
+            "expire",
+            "query_audit:2026-10-17",
+            7776000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "audit.latency.999999999999.95",
+      "input": {
+        "repr": "999999999999.95",
+        "type": "float"
+      },
+      "output": {
+        "commands": [
+          [
+            "execute_command",
+            "XADD",
+            "query_audit:2026-10-17",
+            "MAXLEN",
+            "~",
+            "10000",
+            "*",
+            "query",
+            "synthetic query",
+            "client_ip",
+            "192.0.2.12",
+            "timestamp",
+            "2026-10-17T12:00:00.000Z",
+            "engines",
+            "",
+            "engines_ok",
+            "0",
+            "engines_error",
+            "0",
+            "engines_timeout",
+            "0",
+            "total_results",
+            "0",
+            "latency_ms",
+            "999999999999.9"
+          ],
+          [
+            "expire",
+            "query_audit:2026-10-17",
+            7776000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "audit.statuses.object",
+      "input": {},
+      "output": {
+        "commands": [
+          [
+            "execute_command",
+            "XADD",
+            "query_audit:2026-10-17",
+            "MAXLEN",
+            "~",
+            "10000",
+            "*",
+            "query",
+            "synthetic query",
+            "client_ip",
+            "192.0.2.12",
+            "timestamp",
+            "2026-10-17T12:00:00.000Z",
+            "engines",
+            "ok,rate_limited,blocked,error,timeout,unavailable",
+            "engines_ok",
+            "1",
+            "engines_error",
+            "3",
+            "engines_timeout",
+            "1",
+            "total_results",
+            "0",
+            "latency_ms",
+            "0"
+          ],
+          [
+            "expire",
+            "query_audit:2026-10-17",
+            7776000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "audit.statuses.dict",
+      "input": {},
+      "output": {
+        "commands": [
+          [
+            "execute_command",
+            "XADD",
+            "query_audit:2026-10-17",
+            "MAXLEN",
+            "~",
+            "10000",
+            "*",
+            "query",
+            "synthetic query",
+            "client_ip",
+            "192.0.2.12",
+            "timestamp",
+            "2026-10-17T12:00:00.000Z",
+            "engines",
+            "ok,rate_limited,blocked,error,timeout,unavailable",
+            "engines_ok",
+            "1",
+            "engines_error",
+            "3",
+            "engines_timeout",
+            "1",
+            "total_results",
+            "0",
+            "latency_ms",
+            "0"
+          ],
+          [
+            "expire",
+            "query_audit:2026-10-17",
+            7776000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "logging.config.29",
+      "input": {
+        "environment": null,
+        "explicit": null
+      },
+      "output": []
+    },
+    {
+      "id": "logging.config.30",
+      "input": {
+        "environment": null,
+        "explicit": ""
+      },
+      "output": []
+    },
+    {
+      "id": "logging.config.31",
+      "input": {
+        "environment": "https://publickey@monitor.invalid/12",
+        "explicit": null
+      },
+      "output": [
+        {
+          "_experiments": {
+            "continuous_profiling_auto_start": false
+          },
+          "dsn": "https://publickey@monitor.invalid/12",
+          "sample_rate": 1.0,
+          "send_default_pii": false,
+          "traces_sample_rate": 0.0
+        }
+      ]
+    },
+    {
+      "id": "logging.config.32",
+      "input": {
+        "environment": "https://publickey@monitor.invalid/12",
+        "explicit": ""
+      },
+      "output": [
+        {
+          "_experiments": {
+            "continuous_profiling_auto_start": false
+          },
+          "dsn": "https://publickey@monitor.invalid/12",
+          "sample_rate": 1.0,
+          "send_default_pii": false,
+          "traces_sample_rate": 0.0
+        }
+      ]
+    },
+    {
+      "id": "logging.config.33",
+      "input": {
+        "environment": "https://publickey@monitor.invalid/12",
+        "explicit": "https://explicitkey@monitor.invalid/13"
+      },
+      "output": [
+        {
+          "_experiments": {
+            "continuous_profiling_auto_start": false
+          },
+          "dsn": "https://explicitkey@monitor.invalid/13",
+          "sample_rate": 1.0,
+          "send_default_pii": false,
+          "traces_sample_rate": 0.0
+        }
+      ]
+    },
+    {
+      "id": "histogram.buckets.34",
+      "input": {
+        "buckets": [
+          "1.0",
+          "1.0"
+        ]
+      },
+      "output": {
+        "error": "ValueError",
+        "message": "Histogram buckets must be finite, nonnegative, and strictly increasing"
+      }
+    },
+    {
+      "id": "histogram.buckets.35",
+      "input": {
+        "buckets": [
+          "2.0",
+          "1.0"
+        ]
+      },
+      "output": {
+        "error": "ValueError",
+        "message": "Histogram buckets must be finite, nonnegative, and strictly increasing"
+      }
+    },
+    {
+      "id": "histogram.buckets.36",
+      "input": {
+        "buckets": [
+          "-1.0"
+        ]
+      },
+      "output": {
+        "error": "ValueError",
+        "message": "Histogram buckets must be finite, nonnegative, and strictly increasing"
+      }
+    },
+    {
+      "id": "histogram.buckets.37",
+      "input": {
+        "buckets": [
+          "inf"
+        ]
+      },
+      "output": {
+        "error": "ValueError",
+        "message": "Histogram buckets must be finite, nonnegative, and strictly increasing"
+      }
+    },
+    {
+      "id": "histogram.buckets.38",
+      "input": {
+        "buckets": [
+          "0.1",
+          "0.5",
+          "5.0"
+        ]
+      },
+      "output": {
+        "render": "# HELP custom custom histogram\n# TYPE custom histogram\ncustom_bucket{engine=\"fixture\",le=\"0.1\"} 2\ncustom_bucket{engine=\"fixture\",le=\"0.5\"} 4\ncustom_bucket{engine=\"fixture\",le=\"5\"} 4\ncustom_bucket{engine=\"fixture\",le=\"+Inf\"} 5\ncustom_sum{engine=\"fixture\"} 6.8\ncustom_count{engine=\"fixture\"} 5\n"
+      }
+    }
+  ],
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "schema_version": 1,
+  "scope": "offline-source-supplement-not-native-qualification",
+  "source_pins": [
+    {
+      "path": "slopsearx/metrics.py",
+      "sha256": "2df238e07c692be05f73bdc3b1e7896dbae576df1d5128a445e6a9fe196c0edc"
+    },
+    {
+      "path": "slopsearx/stats.py",
+      "sha256": "04dd73d675394d3d0cea39a9841db4fad19d9de16515236d227c00bbc12d1169"
+    },
+    {
+      "path": "slopsearx/audit.py",
+      "sha256": "11896df807d77088ae4985540936705a8c27a463cd1aa4f7ecca5bbd4a1f5c32"
+    },
+    {
+      "path": "slopsearx/logging.py",
+      "sha256": "b4208d3c051914bea94404de16248959abee4ca61dffcaa641cc5b2e4d18652e"
+    },
+    {
+      "path": "slopsearx/service.py",
+      "sha256": "45903193ef89987f7be83c1e593e44b7752251a54eb8719eae15a241840102ac"
+    },
+    {
+      "path": "slopsearx/adapter.py",
+      "sha256": "5883a35c48d0dad1077306fbda21997ee1d32116a8c03633a6b762de0c26d6f3"
+    },
+    {
+      "path": "tests/test_metrics.py",
+      "sha256": "ca0a9862b2551dc9d1e9705f2bbd616548caca7de8438ae0f7670d91d8308306"
+    },
+    {
+      "path": "tests/test_stats.py",
+      "sha256": "9e30e607cc2498f6a1ee293c26dd6947d3c3d7743944724523bb24b3ea63e0ec"
+    },
+    {
+      "path": "tests/test_audit.py",
+      "sha256": "899b5d078cb5c2d942c1fdcc66831e435cde497a1135f8edeb899ddf2c03b43c"
+    },
+    {
+      "path": "tests/test_saved_event_metrics.py",
+      "sha256": "f5d1e75b4fbdc5dc20d4dcd1308ddb586eacab1b1eb9df5a2560f0d09545aae6"
+    },
+    {
+      "path": "tests/test_workflow_metrics.py",
+      "sha256": "ecd288c89f1a146541a5665667c271bc4ba0c6c103e64202983ac7ee3b7374b4"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "timezone": "America/New_York",
+  "effective_tzname": [
+    "EST",
+    "EDT"
+  ],
+  "timezone_standard_seconds_west": 18000,
+  "daylight": 1,
+  "environment_TZ": "absent in source captures; set America/New_York for native replay only",
+  "observations": [
+    {
+      "artifact": "source-observation-001.json",
+      "sha256": "2fa8b498a07dd5bd923df1354dd776036dd29ec2aa49c512a950202c01d18e5b"
+    },
+    {
+      "artifact": "template-observation-001.json",
+      "sha256": "9ed3d6a584d1e610a569b6f2065ce301659cb474acd9e63550744e9e1922bbe0"
+    },
+    {
+      "artifact": "deadline-observation-001.json",
+      "sha256": "6a9a5896ab736758d6c16533bea5259b10628cf27a0e41ed6bf553571baae399"
+    }
+  ],
+  "provider_calls": 0,
+  "source_capture_write_claim": "preview has delegated real fake-store counters; template/deadline are pure methods with no store port",
+  "refusal_controls": {
+    "normal_missing_grant": "rejected before imports",
+    "optimized_missing_grant": "rejected before imports",
+    "normal_existing_output": "rejected before imports",
+    "optimized_existing_output": "rejected before imports"
+  }
+}

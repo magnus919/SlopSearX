@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -69,6 +70,30 @@ def test_v2_execution_profile_is_closed_and_preserves_v1_timeout():
     ):
         with pytest.raises(ValueError):
             acquisition.execution_profile_from_protocol(invalid)
+
+
+def test_frozen_pool_profile_accepts_only_locked_operational_descriptor():
+    material_dir = (
+        Path(__file__).parents[1] / "docs/experiments/evidence/coverage-first-study/frozen-input-method-materials"
+    )
+    protocol = json.loads((material_dir / "protocol.json").read_bytes())
+    assert protocol["pool_input_mode"] == "frozen-pool/1"
+    assert (
+        acquisition.execution_profile_from_protocol(
+            protocol["acquisition"], pool_input_mode=protocol["pool_input_mode"]
+        )
+        is acquisition.CONTINUE_ACQUISITION_PROFILE
+    )
+    for field, value in (
+        ("pacing_seconds", 6),
+        ("max_physical_http_calls", 54),
+        ("finalization_reserve_seconds", 301),
+    ):
+        invalid = {**protocol["acquisition"], field: value}
+        with pytest.raises(ValueError):
+            acquisition.execution_profile_from_protocol(invalid, pool_input_mode="frozen-pool/1")
+    with pytest.raises(ValueError):
+        acquisition.execution_profile_from_protocol(protocol["acquisition"], pool_input_mode="unregistered-mode")
 
 
 def _adapter_configs(engines: tuple[str, ...]) -> dict[str, EngineAdapter]:
@@ -282,3 +307,47 @@ async def test_failures_are_retained_without_retry_or_rescue() -> None:
     assert receipt.operations[0].failure_reasons
     assert receipt.physical_request_count == 2
     assert len(transport.exchanges) == 2
+
+
+@pytest.mark.parametrize("stage_kind", ["development", "confirmation"])
+def test_registered_v4_selects_fresh_inputs_for_each_stage(stage_kind):
+    material = (
+        Path(__file__).parents[1]
+        / "docs/experiments/evidence/coverage-first-study/research-task-use-method-materials/protocol.json"
+    )
+    protocol = json.loads(material.read_bytes())
+    assert acquisition.pool_input_mode_for_stage(protocol, stage_kind) == "frozen-pool/1"
+
+
+@pytest.mark.parametrize(
+    "schema", ["coverage-first-study-protocol/1", "coverage-first-study-protocol/2", "coverage-first-study-protocol/3"]
+)
+def test_fresh_stage_map_does_not_change_legacy_contracts(schema):
+    protocol = {
+        "schema": schema,
+        "pool_input_mode": "frozen-pool/1",
+        "pool_input_mode_by_stage": {"development": "frozen-pool/1", "confirmation": "frozen-pool/1"},
+    }
+    with pytest.raises(ValueError, match="unsupported stage input methods"):
+        acquisition.pool_input_mode_for_stage(protocol, "development")
+
+
+@pytest.mark.parametrize("stage_kind", [None, "", "other"])
+def test_fresh_stage_map_requires_a_declared_stage(stage_kind):
+    protocol = {
+        "schema": "coverage-first-study-protocol/4",
+        "pool_input_mode": "frozen-pool/1",
+        "pool_input_mode_by_stage": {"development": "frozen-pool/1", "confirmation": "frozen-pool/1"},
+    }
+    with pytest.raises(ValueError):
+        acquisition.pool_input_mode_for_stage(protocol, stage_kind)
+
+
+def test_fresh_stage_map_rejects_conflicting_global_mode():
+    protocol = {
+        "schema": "coverage-first-study-protocol/4",
+        "pool_input_mode": "saved-corpus/1",
+        "pool_input_mode_by_stage": {"development": "frozen-pool/1", "confirmation": "frozen-pool/1"},
+    }
+    with pytest.raises(ValueError):
+        acquisition.pool_input_mode_for_stage(protocol, "development")

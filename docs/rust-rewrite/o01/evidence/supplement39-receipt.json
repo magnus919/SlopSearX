@@ -1,0 +1,43 @@
+{
+  "status": "offline_source_capture_only",
+  "native_execution": false,
+  "network_connections": 0,
+  "case_count": 39,
+  "command": [
+    "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+    "-O",
+    "/private/tmp/o01-source-supplement/capture.py"
+  ],
+  "first_attempt": "timestamp was not fixed until later audit cases; preserved; final/replay equal with synthetic timestamp fixed before all cases",
+  "retirement": "temporary source oracle; G08 remove runnable script/backend tree; native gate JSON-only; pending additive inventory proposal",
+  "artifacts": [
+    {
+      "path": "/private/tmp/o01-source-supplement/capture.py",
+      "sha256": "1a61bbb3805c1758d39fb83e9df04e755ddec45156074849ace7d7bad27efc48"
+    },
+    {
+      "path": "/private/tmp/o01-source-supplement/source-pins.json",
+      "sha256": "8bc4a0e55a45e6826b3ce65ce63a81c5fb77ac3c843661f37ecb6107404bf641"
+    },
+    {
+      "path": "/private/tmp/o01-source-supplement/source.json",
+      "sha256": "3be31afefbb03204440275261ddf65fd4993cc83fa46880b4c10d8f0b6718aad"
+    },
+    {
+      "path": "/private/tmp/o01-source-supplement/source-replay.json",
+      "sha256": "3be31afefbb03204440275261ddf65fd4993cc83fa46880b4c10d8f0b6718aad"
+    },
+    {
+      "path": "/private/tmp/o01-source-supplement/capture.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/private/tmp/o01-source-supplement/replay.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/private/tmp/o01-source-supplement/source-attempt1.json",
+      "sha256": "e6216ad579106775086fb7dd3c4ec439c9d0aa8fd3e39e66f037af1e0cba4b3a"
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "schema": "O02_UPSTREAM_CONTRACTS_SOURCE_SUCCESSOR_V1",
+  "baseline": "661af83a1b95a3e7873cfda99c05d0fb6a02fe0a",
+  "scope": "Two exact additive upstream-contracts dispatcher and dependency insertions per path; reconstruct accepted main and lock before unchanged historical custody. No historical acceptance or runtime qualification is conferred.",
+  "rows": [
+    {
+      "path": "Cargo.lock",
+      "prior": {
+        "bytes": 94314,
+        "sha256": "89545e8f75650c1d83c7aa5a36c92bc878184cf87cf42d3d0e93b2acc0a1ccd7",
+        "mode": "0644"
+      },
+      "prior_git_blob": "46165dce1a345c7608b3d1ee6dfd249233e6e973",
+      "current": {
+        "bytes": 94340,
+        "sha256": "fcc6f4375b5f967d6a1d96172a0707438957e95fbddd83a502105bf5fede4847",
+        "mode": "0644"
+      },
+      "edits": [
+        {
+          "at": 91527,
+          "remove_utf8": "",
+          "insert_utf8": " \"reqwest\",\n"
+        },
+        {
+          "at": 91626,
+          "remove_utf8": "",
+          "insert_utf8": " \"ssx-infra\",\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/xtask/src/main.rs",
+      "prior": {
+        "bytes": 45399,
+        "sha256": "8552ffd6647bca01c89cba514bb297d00ccfaca8ce4a656ef505222349012e36",
+        "mode": "0644"
+      },
+      "prior_git_blob": "5e9e83d404bb649051c50b604ad2f1b267e211ab",
+      "current": {
+        "bytes": 45733,
+        "sha256": "d1375df4b4210f8ac4f8b6c62b65c8d1c72531f70fe5ef593c556fa0c454bb91",
+        "mode": "0644"
+      },
+      "edits": [
+        {
+          "at": 392,
+          "remove_utf8": "",
+          "insert_utf8": "mod o02_upstream_contracts;\n"
+        },
+        {
+          "at": 22895,
+          "remove_utf8": "",
+          "insert_utf8": "    if args.first().is_some_and(|a| a == \"upstream-contracts\") {\n        match o02_upstream_contracts::cli(&args[1..]) {\n            Ok(code) => std::process::exit(code),\n            Err(error) => {\n                eprintln!(\"{error}\");\n                std::process::exit(1);\n            }\n        }\n    }\n"
+        }
+      ]
+    }
+  ]
+}

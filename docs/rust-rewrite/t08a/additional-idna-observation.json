@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "source_sha256": "4c45e876fc79dffc0f7da8ccccc9c6ba67d4f4cc9e0bd9e8194f74184b96c65b",
+  "captures": [
+    {
+      "native_case": {
+        "id": "url-latin1-idna-localhost",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {
+          "SSX_URL": "http://local\u00adhost:$PORT"
+        },
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/health",
+            "accept": "application/json"
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-source-observations.json#url-latin1-idna-localhost"
+      },
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "python_status": 0
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "cached_nan_duplicate": {
+    "engines": [
+      "pubmed",
+      "pubmed"
+    ],
+    "score_repr": "nan",
+    "provider_calls": 0
+  },
+  "budget_bypass": {
+    "selected": [
+      "brave",
+      "pubmed"
+    ],
+    "excluded": [
+      {
+        "engine": "pubmed",
+        "reason": "cost_class 'paid' exceeds the configured budget max 'free'",
+        "stage": "budget"
+      }
+    ],
+    "max_engines": 1,
+    "max_cost_class": "free",
+    "provider_calls": 0
+  },
+  "bool": {
+    "decision": {
+      "engines": [
+        "pubmed"
+      ],
+      "scores": {
+        "pubmed": 1.0
+      }
+    },
+    "mock_requests": 1,
+    "live_provider_calls": 0
+  },
+  "above_range": {
+    "decision": null,
+    "mock_requests": 1,
+    "live_provider_calls": 0
+  },
+  "missing": {
+    "decision": null,
+    "mock_requests": 1,
+    "live_provider_calls": 0
+  }
+}

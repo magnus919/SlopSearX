@@ -1,0 +1,60 @@
+"""Optional G08 A11 original-reference typed public representation supplement; never native runtime."""
+from __future__ import annotations
+# ruff: noqa: E402 -- pure admission/network guards precede backend imports
+import argparse
+import sys
+import unicodedata
+p=argparse.ArgumentParser();p.add_argument('--allow-original-oracle',action='store_true');p.add_argument('--output',required=True);a=p.parse_args()
+if not a.allow_original_oracle:raise RuntimeError('explicit original-oracle grant required')
+if sys.version_info[:3]!=(3,14,7)or unicodedata.unidata_version!='16.0.0':raise RuntimeError('Python3.14.7/Unicode16 required')
+import socket
+def denied(*args,**kwargs):raise RuntimeError('A11 original oracle denies all real network/DNS')
+socket.socket.connect=denied;socket.socket.connect_ex=denied;socket.socket.sendto=denied;socket.create_connection=denied;socket.getaddrinfo=denied
+import os
+os.environ['PYTHONDONTWRITEBYTECODE']='1';sys.dont_write_bytecode=True
+for key in list(os.environ):
+ if key.startswith('ENGINE_')or key.lower()in{'http_proxy','https_proxy','all_proxy'}:os.environ.pop(key)
+from pathlib import Path
+import json,hashlib,dataclasses,math,asyncio,importlib,base64,subprocess
+root=Path(__file__).resolve().parents[3]
+if root.name!='slopsearx-a11':raise RuntimeError('isolated A11 worktree required')
+sys.path.insert(0,str(root));output=Path(a.output)
+if output.exists():raise FileExistsError('exclusive original outputs already exist')
+stream=output.open('x',encoding='utf-8')
+paths=[f'{d}/{prefix}{e}.py'for e in ['abuseipdb','greynoise','otx','urlhaus']for d,prefix in [('engines',''),('tests','test_')]]+['slopsearx/adapter.py','tests/test_adapters.py','docs/rust-rewrite/a11/representation-inputs-v1.json'];sha=lambda b:hashlib.sha256(b).hexdigest();before={f:sha((root/f).read_bytes())for f in paths};producer=sha(Path(__file__).read_bytes());inputs=json.loads((root/paths[-1]).read_text())
+import httpx
+classes={'abuseipdb':'AbuseIPDBAdapter','greynoise':'GreyNoiseAdapter','otx':'OTXAdapter','urlhaus':'URLhausAdapter'}
+classes={e:getattr(importlib.import_module('engines.'+e),n)for e,n in classes.items()}
+def safe(v):
+ if dataclasses.is_dataclass(v):return safe(dataclasses.asdict(v))
+ if isinstance(v,dict):return{str(k):safe(x)for k,x in v.items()}
+ if isinstance(v,(list,tuple)):return[safe(x)for x in v]
+ if isinstance(v,(set,frozenset)):return sorted(safe(x)for x in v)
+ if isinstance(v,float)and not math.isfinite(v):return{'__original_nonfinite_number__':repr(v)}
+ if v is None or isinstance(v,(str,bool,int,float)):return v
+ if hasattr(v,'value'):return safe(v.value)
+ raise RuntimeError('unreviewed capture type '+type(v).__name__)
+async def capture(case):
+ cfg=dict(case['config']);timeout=cfg.pop('__transport_timeout',False);record={'id':case['id'],'engine':case['engine'],'query':case['query'],'params':case['params'],'config':cfg,'exchanges':[],'admission_calls':[]}
+ class Limiter:
+  async def acquire(self,engine):record['admission_calls'].append(engine);return case.get('admission','allowed')=='allowed'
+ adapter=classes[case['engine']](cfg,rate_limiter=Limiter()if 'admission'in case else None)
+ async def exchange(req):
+  row={'request':{'method':req.method,'url':str(req.url),'headers':list(req.headers.multi_items()),'body_base64':base64.b64encode(req.content).decode()}};record['exchanges'].append(row)
+  if timeout:
+   row['exception']={'class':'ReadTimeout','message':'synthetic original timeout'};raise httpx.ReadTimeout('synthetic original timeout',request=req)
+  response=case['response'];body=response.get('raw_body');raw=body.encode()if body is not None else json.dumps(response['json'],ensure_ascii=True,allow_nan=False,separators=(',',':')).encode();headers={'content-type':'application/json'};row['response']={'status':response['status'],'headers':list(headers.items()),'body_base64':base64.b64encode(raw).decode()};return httpx.Response(response['status'],content=raw,headers=headers,request=req)
+ transport=httpx.MockTransport(exchange);adapter.set_http_transport(transport)
+ try:
+  try:result=await adapter.search(case['query'],case['params'])
+  except Exception as exc:record['exception']={'class':type(exc).__name__,'message':str(exc)}
+  else:record['output']=safe(result);record['output'].pop('latency_ms',None)
+ finally:await adapter.shutdown();await transport.aclose()
+ return record
+async def main():
+ records=[]
+ for case in inputs['cases']:records.append(await capture(case))
+ return records
+records=asyncio.run(main());after={f:sha((root/f).read_bytes())for f in paths}
+if before!=after:raise RuntimeError('immutable inputs changed')
+result={'schema_version':1,'purpose':'immutable original-reference F05 representation supplement; not native acceptance','head':subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip(),'producer_sha256':producer,'source_sha256':before,'source_inputs_unchanged':True,'python':sys.version,'unicode':unicodedata.unidata_version,'real_network_allowed':False,'latency_normalization':'only search latency_ms removed','records':records};json.dump(result,stream,ensure_ascii=True,allow_nan=False,indent=2);stream.write('\n');stream.close();print(json.dumps({'records':len(records),'exceptions':sum('exception'in x for x in records),'output_sha256':sha(output.read_bytes())}))

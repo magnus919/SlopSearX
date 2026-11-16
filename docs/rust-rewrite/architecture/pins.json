@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "status": "candidate_not_compiled",
+  "verified_on": "2026-10-15",
+  "toolchain": {
+    "rust": "1.99.0",
+    "source": "https://blog.rust-lang.org/2026/10/01/Rust-1.99.0/"
+  },
+  "direct_dependencies": {
+    "tokio": {
+      "version": "=1.53.3",
+      "source": "https://docs.rs/tokio/1.53.3/tokio/",
+      "retrieval_source": "https://docs.rs/tokio/latest/tokio/",
+      "retrieved_identity": "docs.rs latest page displayed tokio 1.53.3 on 2026-10-15"
+    },
+    "axum": {
+      "version": "=0.8.9",
+      "source": "https://docs.rs/axum/0.8.9/axum/",
+      "retrieval_source": "https://docs.rs/axum/latest/axum/",
+      "retrieved_identity": "docs.rs latest page displayed axum 0.8.9 on 2026-10-15"
+    },
+    "tower": {
+      "version": "=0.5.3",
+      "source": "https://docs.rs/tower/0.5.3/tower/",
+      "retrieval_source": "https://docs.rs/tower/latest/tower/",
+      "retrieved_identity": "docs.rs latest page displayed tower 0.5.3 on 2026-10-15"
+    },
+    "tower-http": {
+      "version": "=0.7.1",
+      "source": "https://docs.rs/tower-http/0.7.1/tower_http/",
+      "retrieval_source": "https://docs.rs/tower-http/latest/tower_http/",
+      "retrieved_identity": "docs.rs latest page displayed tower-http 0.7.1 on 2026-10-15"
+    },
+    "reqwest": {
+      "version": "=0.13.5",
+      "source": "https://docs.rs/reqwest/0.13.5/reqwest/",
+      "retrieval_source": "https://docs.rs/reqwest/latest/reqwest/",
+      "retrieved_identity": "docs.rs latest page displayed reqwest 0.13.5 on 2026-10-15"
+    },
+    "rustls": {
+      "version": "=0.23.46",
+      "source": "https://docs.rs/rustls/0.23.46/rustls/",
+      "retrieval_source": "https://docs.rs/rustls/latest/rustls/",
+      "retrieved_identity": "docs.rs latest page displayed rustls 0.23.46 on 2026-10-15"
+    },
+    "tokio-rustls": {
+      "version": "=0.26.6",
+      "source": "https://docs.rs/tokio-rustls/0.26.6/tokio_rustls/",
+      "retrieval_source": "https://docs.rs/tokio-rustls/latest/tokio_rustls/",
+      "retrieved_identity": "docs.rs latest page displayed tokio-rustls 0.26.6 on 2026-10-15"
+    },
+    "rmcp": {
+      "version": "=3.5.1",
+      "source": "https://docs.rs/rmcp/3.5.1/rmcp/",
+      "retrieval_source": "https://docs.rs/rmcp/latest/rmcp/",
+      "retrieved_identity": "docs.rs latest page displayed rmcp 3.5.1 on 2026-10-15"
+    },
+    "redis": {
+      "version": "=1.7.1",
+      "source": "https://docs.rs/redis/1.7.1/redis/",
+      "retrieval_source": "https://docs.rs/redis/latest/redis/",
+      "retrieved_identity": "docs.rs latest page displayed redis 1.7.1 on 2026-10-15"
+    },
+    "serde": {
+      "version": "=1.0.229",
+      "source": "https://docs.rs/serde/1.0.229/serde/",
+      "retrieval_source": "https://docs.rs/serde/latest/serde/",
+      "retrieved_identity": "docs.rs latest page displayed serde 1.0.229 on 2026-10-15"
+    },
+    "serde_json": {
+      "version": "=1.0.154",
+      "source": "https://docs.rs/serde_json/1.0.154/serde_json/",
+      "retrieval_source": "https://docs.rs/serde_json/latest/serde_json/",
+      "retrieved_identity": "docs.rs latest page displayed serde_json 1.0.154 on 2026-10-15"
+    },
+    "schemars": {
+      "version": "=1.2.3",
+      "source": "https://docs.rs/schemars/1.2.3/schemars/",
+      "retrieval_source": "https://docs.rs/schemars/latest/schemars/",
+      "retrieved_identity": "docs.rs latest page displayed schemars 1.2.3 on 2026-10-15"
+    },
+    "scraper": {
+      "version": "=0.27.0",
+      "source": "https://docs.rs/scraper/0.27.0/scraper/",
+      "retrieval_source": "https://docs.rs/scraper/latest/scraper/",
+      "retrieved_identity": "docs.rs latest page displayed scraper 0.27.0 on 2026-10-15"
+    },
+    "quick-xml": {
+      "version": "=0.42.0",
+      "source": "https://docs.rs/quick-xml/0.42.0/quick_xml/",
+      "retrieval_source": "https://docs.rs/quick-xml/latest/quick_xml/",
+      "retrieved_identity": "docs.rs latest page displayed quick-xml 0.42.0 on 2026-10-15"
+    },
+    "clap": {
+      "version": "=4.6.7",
+      "source": "https://docs.rs/clap/4.6.7/clap/",
+      "retrieval_source": "https://docs.rs/clap/latest/clap/",
+      "retrieved_identity": "docs.rs latest page displayed clap 4.6.7 on 2026-10-15"
+    },
+    "sha2": {
+      "version": "=0.11.1",
+      "source": "https://docs.rs/sha2/0.11.1/sha2/",
+      "retrieval_source": "https://docs.rs/sha2/latest/sha2/",
+      "retrieved_identity": "docs.rs latest page displayed sha2 0.11.1 on 2026-10-15"
+    },
+    "ryu": {
+      "version": "=1.0.23",
+      "source": "https://docs.rs/ryu/1.0.23/ryu/",
+      "retrieval_source": "https://docs.rs/ryu/latest/ryu/",
+      "retrieved_identity": "docs.rs latest page displayed ryu 1.0.23 on 2026-10-15"
+    },
+    "url": {
+      "version": "=2.5.8",
+      "source": "https://docs.rs/url/2.5.8/url/",
+      "retrieval_source": "https://docs.rs/url/2.5.8/url/",
+      "retrieved_identity": "Pinned version already resolved in accepted Cargo.lock; inspected public form_urlencoded API 2026-10-15"
+    },
+    "indexmap": {
+      "version": "=2.14.2",
+      "source": "https://docs.rs/indexmap/2.14.2/indexmap/",
+      "retrieval_source": "https://docs.rs/indexmap/2.14.2/indexmap/",
+      "retrieved_identity": "Pinned version already resolved in accepted Cargo.lock; official docs verified insertion-order/serde API 2026-10-15"
+    },
+    "aws-lc-rs": {
+      "version": "=1.18.2",
+      "source": "https://docs.rs/aws-lc-rs/1.18.2/aws_lc_rs/",
+      "retrieval_source": "Cargo registry package aws-lc-rs-1.18.2/Cargo.toml (locked package, inspected locally 2026-10-16)",
+      "retrieved_identity": "T09 reuses accepted locked AWS-LC TLS backend; package metadata inspected locally; MSRV1.71; ISC AND (Apache-2.0 OR ISC)"
+    },
+    "base64": {
+      "version": "=0.23.1",
+      "source": "https://docs.rs/base64/0.23.1/base64/",
+      "retrieval_source": "https://docs.rs/base64/0.23.1/base64/",
+      "retrieved_identity": "T09 promotes existing locked encoding package to exact direct edge; MSRV1.71; MIT OR Apache-2.0"
+    }
+  },
+  "lock_gate": "F03 resolves Cargo.lock and compiles mandatory targets with --locked; T01 qualifies rmcp and SSE against real clients",
+  "t01_qualified_dependencies": {
+    "sse-stream": {
+      "version": "=0.2.6",
+      "source": "https://docs.rs/crate/sse-stream/0.2.6/source/Cargo.toml",
+      "registry_source": "registry+https://github.com/rust-lang/crates.io-index",
+      "package_checksum": "c25ac7aff0abd1dbc474536e40416e1102c7dd9bfba0b9861c6d357f835dcfb4",
+      "license": "MIT OR Apache-2.0",
+      "msrv": "not declared by package; compiled on accepted Rust 1.99.0",
+      "reason": "Existing rmcp transitive parser made direct so bounded POST SSE bytes can retain the same parser; no new resolved package or version"
+    }
+  },
+  "test_dependencies": {
+    "rcgen": {
+      "version": "=0.14.10",
+      "source": "https://docs.rs/rcgen/0.14.10/rcgen/",
+      "purpose": "F08 in-memory CA/leaf generation, no static expiry; aws_lc_rs and pem features only"
+    },
+    "time": {
+      "version": "=0.3.55",
+      "source": "https://docs.rs/time/0.3.55/time/",
+      "purpose": "F08 runtime test certificate validity; already resolved transitively"
+    }
+  }
+}

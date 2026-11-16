@@ -208,10 +208,15 @@ def _parse_registration(raw: bytes) -> dict:
         "navigation_skip_reasons",
         "task_ids",
     }
-    if type(value) is not dict or set(value) != required:
+    companion_shape = required | {"band_companion_sha256"}
+    if type(value) is not dict or set(value) not in (required, companion_shape):
         raise StudyError("registration-schema")
     if value["schema"] != REGISTRATION_SCHEMA:
         raise StudyError("registration-schema-version")
+    if "band_companion_sha256" in value and (
+        type(value["band_companion_sha256"]) is not str or not _SHA256.fullmatch(value["band_companion_sha256"])
+    ):
+        raise StudyError("registration-companion-pin-invalid")
     return value
 
 
@@ -330,21 +335,48 @@ def _verify_qualified_source_closure(
     *,
     expected_revision: str,
     expected_pins: Mapping[str, str],
+    expected_source_pins: Mapping[str, str] | None = None,
+    expected_band_companion_sha256: str | None = None,
 ) -> None:
     doc = _strict_json(raw, "qualified-source-closure")
-    required = {"schema", "source_revision", "material_pins"}
-    if type(doc) is not dict or set(doc) != required:
+    required_v1 = {"schema", "source_revision", "material_pins"}
+    required_v2 = required_v1 | {"source_pins"}
+    if type(doc) is not dict or set(doc) not in (required_v1, required_v2):
         raise StudyError("qualified-source-closure-schema")
-    if doc["schema"] != "coverage-study-qualified-source-closure/1":
+    if doc["schema"] not in {"coverage-study-qualified-source-closure/1", "coverage-study-qualified-source-closure/2"}:
+        raise StudyError("qualified-source-closure-version")
+    if (doc["schema"].endswith("/1")) != (set(doc) == required_v1):
         raise StudyError("qualified-source-closure-version")
     if doc["source_revision"] != expected_revision:
         raise StudyError("qualified-source-revision-mismatch")
     source_keys = {"coverage_source", "production_rerank_source", "dependency_lock"}
+    if doc["schema"].endswith("/2"):
+        source_keys.add("band_companion")
+        if type(expected_band_companion_sha256) is not str or not _SHA256.fullmatch(expected_band_companion_sha256):
+            raise StudyError("qualified-source-companion-pin-required")
+    elif expected_band_companion_sha256 is not None:
+        raise StudyError("qualified-source-companion-closure-required")
     pins = doc["material_pins"]
-    if type(pins) is not dict or set(pins) != source_keys:
+    externally_pinned_keys = source_keys - {"band_companion"}
+    if type(pins) is not dict or set(pins) != source_keys or not externally_pinned_keys.issubset(expected_pins):
         raise StudyError("qualified-source-material-pin-shape")
-    if any(pins[key] != expected_pins[key] for key in source_keys):
+    if any(
+        pins[key] != (expected_band_companion_sha256 if key == "band_companion" else expected_pins.get(key))
+        for key in source_keys
+    ):
         raise StudyError("qualified-source-material-pin-mismatch")
+    if doc["schema"].endswith("/2"):
+        source_pins = doc["source_pins"]
+        if (
+            type(source_pins) is not dict
+            or type(expected_source_pins) is not dict
+            or set(source_pins) != set(expected_source_pins)
+        ):
+            raise StudyError("qualified-source-code-pin-shape")
+        if any(source_pins[key] != expected_source_pins[key] for key in source_pins):
+            raise StudyError("qualified-source-code-pin-mismatch")
+    elif expected_source_pins is not None:
+        raise StudyError("qualified-source-code-pins-required")
 
 
 def validate_acquisition_plan(
@@ -499,6 +531,9 @@ def preflight_stage(
     development_receipt_bytes: bytes | None = None,
     expected_development_receipt_sha256: str | None = None,
     expected_development_stage_uuid: str | None = None,
+    band_companion_bytes: bytes | None = None,
+    expected_band_companion_sha256: str | None = None,
+    expected_source_pins: Mapping[str, str] | None = None,
 ) -> PreparedStage:
     """Verify sealed registration and supplied bytes without granting authority.
 
@@ -534,10 +569,12 @@ def preflight_stage(
     if _canonical_uuid(registration["stage_uuid"], "registration-stage-uuid") != stage_uuid:
         raise StudyError("registration-stage-mismatch")
     stage_kind = registration["stage_kind"]
-    if stage_kind not in {"development", "confirmation"}:
+    if type(stage_kind) is not str or stage_kind not in {"development", "confirmation"}:
         raise StudyError("stage-kind-invalid")
     if registration["source_revision"] != expected_source_revision:
         raise StudyError("registration-source-revision-mismatch")
+    if registration.get("band_companion_sha256") != expected_band_companion_sha256:
+        raise StudyError("registration-companion-binding-mismatch")
     if _task_ids(registration["task_ids"], "registration-task-ids", expected_count=13) != tuple(task_ids):
         raise StudyError("registration-task-inventory-mismatch")
 
@@ -564,7 +601,14 @@ def preflight_stage(
         materials["qualified_source_closure"],
         expected_revision=expected_source_revision,
         expected_pins=verified_pins,
+        expected_source_pins=expected_source_pins,
+        expected_band_companion_sha256=expected_band_companion_sha256,
     )
+    if (band_companion_bytes is None) != (expected_band_companion_sha256 is None):
+        raise StudyError("band-companion-binding-incomplete")
+    if band_companion_bytes is not None:
+        if type(band_companion_bytes) is not bytes or _sha(band_companion_bytes) != expected_band_companion_sha256:
+            raise StudyError("band-companion-material-pin-mismatch")
 
     if materials["task_input_manifest"] != _canonical(_strict_json(materials["task_input_manifest"], "input-manifest")):
         # Input manifest bytes are canonical by contract; this avoids accepting
@@ -587,9 +631,10 @@ def preflight_stage(
         }:
             raise StudyError("selector-input-map-schema-unsupported")
         selector_input_map_required = True
-        if selector_input_map_schema.endswith("/2-registered") and protocol_document.get(
-            "selector_input_map_status"
-        ) != "registered":
+        if (
+            selector_input_map_schema.endswith("/2-registered")
+            and protocol_document.get("selector_input_map_status") != "registered"
+        ):
             raise StudyError("selector-input-map-registration-status-required")
     _verify_input_manifest(materials["task_input_manifest"], stage_uuid=stage_uuid, expected_tasks=tuple(task_ids))
     for material_name in ("source_capture_manifest", "reference_manifest", "answer_assessment_plan"):

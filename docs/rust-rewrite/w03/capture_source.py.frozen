@@ -1,0 +1,108 @@
+"""Manual, offline W03 oracle. Never a native runtime or mandatory gate."""
+from __future__ import annotations
+import asyncio
+import hashlib
+import importlib.metadata
+import json
+import os
+from pathlib import Path
+import socket
+import subprocess
+import sys
+
+ROOT=Path(__file__).resolve().parents[3]
+DIRECTORY=Path(__file__).resolve().parent
+
+def require(condition,message):
+    if not condition: raise RuntimeError(message)
+
+def main():
+    require(len(sys.argv)==3 and sys.argv[1]=="--allow-original-oracle","explicit --allow-original-oracle required before imports")
+    output=Path(sys.argv[2]);require(not os.path.lexists(output),"refusing existing output before imports")
+    require(output.parent.is_dir(),"output parent must exist")
+    sys.dont_write_bytecode=True
+    require(sys.version_info[:3]==(3,14,7),"requires pinned CPython3.14.7")
+    require(importlib.metadata.version("fastmcp")=="4.0.11","wrong FastMCP")
+    require(importlib.metadata.version("mcp")=="2.3.0","wrong MCP SDK")
+    pins=json.loads((DIRECTORY/"oracle-pins.json").read_text())
+    require(subprocess.check_output(["git","rev-parse","HEAD"],cwd=ROOT,text=True).strip()==pins["baseline"],"wrong source revision")
+    for row in pins["sources"]:
+        require(hashlib.sha256((ROOT/row["path"]).read_bytes()).hexdigest()==row["sha256"],"source drift before imports: "+row["path"])
+    require(hashlib.sha256(Path(__file__).read_bytes()).hexdigest()==pins["producer_sha256"],"producer drift")
+    require(not Path("/etc/slopsearx/config.yaml").exists(),"ambient config forbidden before backend import")
+    require(os.environ.get("HOME")=="/private/tmp/w03-oracle-home","isolated HOME required")
+    allowed={k:v for k,v in os.environ.items() if k in ("PATH","HOME","TMPDIR","LANG","LC_ALL")}
+    os.environ.clear();os.environ.update(allowed)
+    # No public, private, loopback or Unix network connection is allowed.
+    def denied(*args,**kwargs):raise RuntimeError("W03 offline oracle forbids sockets")
+    socket.socket.connect=denied;socket.socket.connect_ex=denied;socket.create_connection=denied
+    socket.getaddrinfo=denied;socket.gethostbyname=denied;socket.gethostbyname_ex=denied;socket.gethostbyaddr=denied
+    socket.socket.bind=denied;socket.socket.sendto=denied
+    def audit(event,args):
+        if event.startswith("subprocess.") or event in {"os.system","os.posix_spawn","os.fork","os.forkpty","pty.spawn","socket.connect","socket.bind","socket.sendto","socket.getaddrinfo","socket.gethostbyname","socket.gethostbyaddr"}:
+            raise RuntimeError("W03 oracle forbids subprocesses after preimport git guard")
+    sys.addaudithook(audit)
+    sys.path.insert(0,str(ROOT))
+    from slopsearx import research_planning as rp
+    from slopsearx.mcp import planning_tools as p
+    from slopsearx.mcp import tools as t
+    from slopsearx.mcp.state import set_state
+    from tests.test_research_retry_followup import _build_state
+    async def capture():
+        state=_build_state(["wikipedia"]);set_state(state)
+        try:
+            counts={"writes":0}
+            for store in (state.job_store._store,state.ctx.cache):
+                for name in ("set","save_if_lease_owner"):
+                    original=getattr(store,name)
+                    async def counted(*args,_original=original,**kwargs):
+                        counts["writes"]+=1
+                        return await _original(*args,**kwargs)
+                    setattr(store,name,counted)
+            observations=[]
+            inputs=[
+                ("decomposition",{"question":"Compare maintenance and alternatives","engines":["wikipedia"],"max_queries":3,"max_attempts":3,"max_engine_attempts":3,"subquestions":[{"id":"a","question":"maintenance"},{"id":"b","question":"alternatives"}]}),
+                ("variants",{"question":"Find CVE-2026-12345 10.1000/example 2303.07678v2 @scope/package 雪","variants":["Evidence CVE-2026-12345 10.1000/example 2303.07678v2 @scope/package 雪"],"engines":["wikipedia"],"max_queries":2}),
+                ("variants",{"question":"Straße\u001cA","variants":["STRASSE A"],"engines":["wikipedia"]}),
+                ("variants",{"question":"CVE-2026-1234","variants":["CVE-2026-12345"],"engines":["wikipedia"]}),
+            ]
+            for name,args in inputs:
+                before=json.dumps(state.job_store._store._data,sort_keys=True)
+                result=await (p.slopsearx_plan_query_variants(**args) if name=="variants" else p.slopsearx_plan_research(**args))
+                require(json.dumps(state.job_store._store._data,sort_keys=True)==before,"preview persisted")
+                require(state.ctx.active_engines["wikipedia"].calls==0,"preview dispatched")
+                observations.append({"kind":name,"arguments":args,"output":result,"provider_calls":state.ctx.active_engines["wikipedia"].calls,"writes":counts["writes"]})
+            identifier_cases=[("CVE-2026-1234","CVE-2026-12345"),("10.1000/example.","10.1000/example"),("2303.07678v2","2303.07678v3"),("@ſcope/Kit","@scope/kit"),("CVE-٢٠٢٦-١٢٣٤","cve-٢٠٢٦-١٢٣٤"),("aCVE-2026-1234","changed"),("10.1000/a,b","10.1000/a,b"),("2303.0767v2x","2303.0767"),("CVE-2026-1234 2303.07678","CVE-2026-1234"),("@scope/pkg)","@scope/pkg")]
+            for question,variant in identifier_cases:
+                try:rp.validate_variant(question,variant);error=None
+                except ValueError as exc:error=str(exc)
+                observations.append({"kind":"identifier","question":question,"variant":variant,"error":error})
+            for method,ids,parent,rationale in [(None,[],None,None),("evidence_followup",[],"p","why"),("bad",[],None,None),("evidence_followup",["a:0"],"p","why"),(None,["a:0","a:0"],"p","why"),(None,[True],"p","why"),(None,["a:0"],None,"why")]:
+                try:out=rp.validate_planning_metadata(method,ids,parent,rationale);error=None
+                except ValueError as exc:out=None;error=str(exc)
+                observations.append({"kind":"metadata","method":method,"ids":ids,"parent":parent,"rationale":rationale,"output":out,"error":error})
+            # Capture complete current descriptors without creating a server or provider.
+            # Registry entries are plain authoring specs; use current FastMCP registration
+            # only for exact schema serialization when available below.
+            catalog=[]
+            from slopsearx.mcp.server import create_server
+            server=create_server()
+            for tool in await server.list_tools():
+                if tool.name in {"slopsearx_plan_research","slopsearx_plan_query_variants","slopsearx_plan_research_followup","slopsearx_start_research","slopsearx_get_job","slopsearx_extend_research","slopsearx_update_research","slopsearx_retry_research","slopsearx_cancel_job"}:
+                    catalog.append(tool.to_mcp_tool().model_dump(mode="json",by_alias=True,exclude_none=True))
+            require(counts["writes"]==0,"preview attempted a write")
+            return {"contract":"slopsearx.rust.w03.oracle","baseline":pins["baseline"],"python":sys.version,"observations":observations,"tools":catalog,"provider_calls":0,"writes":0}
+        finally:
+            for engine in state.ctx.active_engines.values():await engine.shutdown()
+            set_state(None)
+    try:
+        result=asyncio.run(capture())
+    finally:
+        set_state(None)
+    for row in pins["sources"]:
+        require(hashlib.sha256((ROOT/row["path"]).read_bytes()).hexdigest()==row["sha256"],"source drift after capture: "+row["path"])
+    data=(json.dumps(result,indent=2,ensure_ascii=True)+"\n").encode()
+    fd=os.open(output,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
+    with os.fdopen(fd,"wb") as stream:stream.write(data);stream.flush();os.fsync(stream.fileno())
+
+if __name__=="__main__":main()

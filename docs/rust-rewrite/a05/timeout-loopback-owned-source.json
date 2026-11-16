@@ -1,0 +1,5247 @@
+{
+  "status": "actual original adapter HTTPX sockets to private loopback; raw timing telemetry",
+  "source_files": [
+    {
+      "path": "slopsearx/adapter.py",
+      "sha256": "5883a35c48d0dad1077306fbda21997ee1d32116a8c03633a6b762de0c26d6f3"
+    },
+    {
+      "path": "engines/duckduckgo.py",
+      "sha256": "e3203f5d4a39546df743a415609d45ec15a92eb2ebfb3f62b19324861cb74bd0"
+    },
+    {
+      "path": "engines/google.py",
+      "sha256": "8fea6f735ecb1d3ee6e6e19b694869ac67337a9a88e0cc2631502f281587c272"
+    }
+  ],
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "case_count": 48,
+  "cases": [
+    {
+      "id": "duckduckgo_positive_immediate",
+      "timeout_repr": "1000",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "1000",
+        "base_url": "http://127.0.0.1:55716/primary",
+        "bootstrap_url": "http://127.0.0.1:55716/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55716/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 184611500,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/bootstrap",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55716"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "none"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332439937789791,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "52"
+              ]
+            ],
+            "body_hex": "3c68746d6c3e3c626f64793e3c6120687265663d272f273e4475636b4475636b476f3c2f613e3c2f626f64793e3c2f68746d6c3e"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332439937972041
+        },
+        {
+          "method": "POST",
+          "path": "/primary",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55716"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Referer",
+              "http://127.0.0.1/"
+            ],
+            [
+              "Origin",
+              "http://127.0.0.1"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "same-origin"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ],
+            [
+              "Content-Length",
+              "26"
+            ],
+            [
+              "Content-Type",
+              "application/x-www-form-urlencoded"
+            ]
+          ],
+          "body_hex": "713d6c6f6f706261636b2b74696d656f75742b636f6e74726f6c",
+          "received_monotonic_ns": 332439939437500,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "247"
+              ]
+            ],
+            "body_hex": "3c21444f43545950452068746d6c3e0a3c68746d6c3e3c626f64793e0a3c64697620636c6173733d22726573756c74223e0a20203c64697620636c6173733d22726573756c745f5f61223e0a202020203c7370616e20636c6173733d22726573756c745f5f75726c223e68747470733a2f2f6578616d706c652e636f6d2f6f6e653c2f7370616e3e0a202020203c68323e5072696d617279204869743c2f68323e0a20203c2f6469763e0a20203c64697620636c6173733d22726573756c745f5f736e6970706574223e5072696d61727920736e69707065742e3c2f6469763e0a3c2f6469763e0a3c2f626f64793e3c2f68746d6c3e0a"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332439939471625
+        }
+      ],
+      "server_closed_monotonic_ns": 332439975129958,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [{\"url\": \"https://example.com/one\", \"title\": \"https://example.com/one\\n    Primary Hit\", \"content\": \"Primary snippet.\", \"engine\": \"duckduckgo\", \"engines\": [], \"score\": 0.0, \"position\": 1, \"category\": \"general\", \"published_date\": null, \"thumbnail\": null, \"img_src\": null, \"tier\": 1, \"media\": null, \"payload\": null, \"work_group\": null}], \"status\": \"ok\", \"error_message\": null, \"latency_ms\": 54.40600001020357, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [
+            {
+              "url": "https://example.com/one",
+              "title": "https://example.com/one\n    Primary Hit",
+              "content": "Primary snippet.",
+              "engine": "duckduckgo",
+              "engines": [],
+              "score": 0.0,
+              "position": 1,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": null,
+              "work_group": null
+            }
+          ],
+          "status": "ok",
+          "error_message": null,
+          "latency_ms": 54.40600001020357,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "duckduckgo_positive_slow_primary",
+      "timeout_repr": "1000",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "1000",
+        "base_url": "http://127.0.0.1:55722/primary",
+        "bootstrap_url": "http://127.0.0.1:55722/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55722/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 256105000,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/bootstrap",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55722"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "none"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332440112856875,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "52"
+              ]
+            ],
+            "body_hex": "3c68746d6c3e3c626f64793e3c6120687265663d272f273e4475636b4475636b476f3c2f613e3c2f626f64793e3c2f68746d6c3e"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332440112928875
+        },
+        {
+          "method": "POST",
+          "path": "/primary",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55722"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Referer",
+              "http://127.0.0.1/"
+            ],
+            [
+              "Origin",
+              "http://127.0.0.1"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "same-origin"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ],
+            [
+              "Content-Length",
+              "26"
+            ],
+            [
+              "Content-Type",
+              "application/x-www-form-urlencoded"
+            ]
+          ],
+          "body_hex": "713d6c6f6f706261636b2b74696d656f75742b636f6e74726f6c",
+          "received_monotonic_ns": 332440114128083,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "247"
+              ]
+            ],
+            "body_hex": "3c21444f43545950452068746d6c3e0a3c68746d6c3e3c626f64793e0a3c64697620636c6173733d22726573756c74223e0a20203c64697620636c6173733d22726573756c745f5f61223e0a202020203c7370616e20636c6173733d22726573756c745f5f75726c223e68747470733a2f2f6578616d706c652e636f6d2f6f6e653c2f7370616e3e0a202020203c68323e5072696d617279204869743c2f68323e0a20203c2f6469763e0a20203c64697620636c6173733d22726573756c745f5f736e6970706574223e5072696d61727920736e69707065742e3c2f6469763e0a3c2f6469763e0a3c2f626f64793e3c2f68746d6c3e0a"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332440204218208
+        }
+      ],
+      "server_closed_monotonic_ns": 332440232478958,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [{\"url\": \"https://example.com/one\", \"title\": \"https://example.com/one\\n    Primary Hit\", \"content\": \"Primary snippet.\", \"engine\": \"duckduckgo\", \"engines\": [], \"score\": 0.0, \"position\": 1, \"category\": \"general\", \"published_date\": null, \"thumbnail\": null, \"img_src\": null, \"tier\": 1, \"media\": null, \"payload\": null, \"work_group\": null}], \"status\": \"ok\", \"error_message\": null, \"latency_ms\": 121.12508399877697, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [
+            {
+              "url": "https://example.com/one",
+              "title": "https://example.com/one\n    Primary Hit",
+              "content": "Primary snippet.",
+              "engine": "duckduckgo",
+              "engines": [],
+              "score": 0.0,
+              "position": 1,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": null,
+              "work_group": null
+            }
+          ],
+          "status": "ok",
+          "error_message": null,
+          "latency_ms": 121.12508399877697,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "duckduckgo_positive_slow_bootstrap",
+      "timeout_repr": "1000",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "1000",
+        "base_url": "http://127.0.0.1:55726/primary",
+        "bootstrap_url": "http://127.0.0.1:55726/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55726/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 160093208,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/bootstrap",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55726"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "none"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332440362357083,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "52"
+              ]
+            ],
+            "body_hex": "3c68746d6c3e3c626f64793e3c6120687265663d272f273e4475636b4475636b476f3c2f613e3c2f626f64793e3c2f68746d6c3e"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332440452455500
+        },
+        {
+          "method": "POST",
+          "path": "/primary",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55726"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Referer",
+              "http://127.0.0.1/"
+            ],
+            [
+              "Origin",
+              "http://127.0.0.1"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "same-origin"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ],
+            [
+              "Content-Length",
+              "26"
+            ],
+            [
+              "Content-Type",
+              "application/x-www-form-urlencoded"
+            ]
+          ],
+          "body_hex": "713d6c6f6f706261636b2b74696d656f75742b636f6e74726f6c",
+          "received_monotonic_ns": 332440369694666,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "247"
+              ]
+            ],
+            "body_hex": "3c21444f43545950452068746d6c3e0a3c68746d6c3e3c626f64793e0a3c64697620636c6173733d22726573756c74223e0a20203c64697620636c6173733d22726573756c745f5f61223e0a202020203c7370616e20636c6173733d22726573756c745f5f75726c223e68747470733a2f2f6578616d706c652e636f6d2f6f6e653c2f7370616e3e0a202020203c68323e5072696d617279204869743c2f68323e0a20203c2f6469763e0a20203c64697620636c6173733d22726573756c745f5f736e6970706574223e5072696d61727920736e69707065742e3c2f6469763e0a3c2f6469763e0a3c2f626f64793e3c2f68746d6c3e0a"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332440369753250
+        }
+      ],
+      "server_closed_monotonic_ns": 332440452520166,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [{\"url\": \"https://example.com/one\", \"title\": \"https://example.com/one\\n    Primary Hit\", \"content\": \"Primary snippet.\", \"engine\": \"duckduckgo\", \"engines\": [], \"score\": 0.0, \"position\": 1, \"category\": \"general\", \"published_date\": null, \"thumbnail\": null, \"img_src\": null, \"tier\": 1, \"media\": null, \"payload\": null, \"work_group\": null}], \"status\": \"ok\", \"error_message\": null, \"latency_ms\": 35.55516601772979, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [
+            {
+              "url": "https://example.com/one",
+              "title": "https://example.com/one\n    Primary Hit",
+              "content": "Primary snippet.",
+              "engine": "duckduckgo",
+              "engines": [],
+              "score": 0.0,
+              "position": 1,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": null,
+              "work_group": null
+            }
+          ],
+          "status": "ok",
+          "error_message": null,
+          "latency_ms": 35.55516601772979,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "duckduckgo_positive_fallback",
+      "timeout_repr": "1000",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "1000",
+        "base_url": "http://127.0.0.1:55730/primary",
+        "bootstrap_url": "http://127.0.0.1:55730/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55730/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 153343166,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/bootstrap",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55730"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "none"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332440582836375,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "52"
+              ]
+            ],
+            "body_hex": "3c68746d6c3e3c626f64793e3c6120687265663d272f273e4475636b4475636b476f3c2f613e3c2f626f64793e3c2f68746d6c3e"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332440582886833
+        },
+        {
+          "method": "POST",
+          "path": "/primary",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55730"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Referer",
+              "http://127.0.0.1/"
+            ],
+            [
+              "Origin",
+              "http://127.0.0.1"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "same-origin"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ],
+            [
+              "Content-Length",
+              "26"
+            ],
+            [
+              "Content-Type",
+              "application/x-www-form-urlencoded"
+            ]
+          ],
+          "body_hex": "713d6c6f6f706261636b2b74696d656f75742b636f6e74726f6c",
+          "received_monotonic_ns": 332440584257250,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "42"
+              ]
+            ],
+            "body_hex": "3c68746d6c3e3c626f64793e756e757361626c65207072696d6172793c2f626f64793e3c2f68746d6c3e"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332440584281791
+        },
+        {
+          "method": "POST",
+          "path": "/fallback",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55730"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Referer",
+              "http://127.0.0.1/"
+            ],
+            [
+              "Origin",
+              "http://127.0.0.1"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "same-origin"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ],
+            [
+              "Content-Length",
+              "26"
+            ],
+            [
+              "Content-Type",
+              "application/x-www-form-urlencoded"
+            ]
+          ],
+          "body_hex": "713d6c6f6f706261636b2b74696d656f75742b636f6e74726f6c",
+          "received_monotonic_ns": 332440587425750,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "247"
+              ]
+            ],
+            "body_hex": "3c21444f43545950452068746d6c3e0a3c68746d6c3e3c626f64793e0a3c64697620636c6173733d22726573756c74223e0a20203c64697620636c6173733d22726573756c745f5f61223e0a202020203c7370616e20636c6173733d22726573756c745f5f75726c223e68747470733a2f2f6578616d706c652e636f6d2f6f6e653c2f7370616e3e0a202020203c68323e5072696d617279204869743c2f68323e0a20203c2f6469763e0a20203c64697620636c6173733d22726573756c745f5f736e6970706574223e5072696d61727920736e69707065742e3c2f6469763e0a3c2f6469763e0a3c2f626f64793e3c2f68746d6c3e0a"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332440587445708
+        }
+      ],
+      "server_closed_monotonic_ns": 332440611330833,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [], \"status\": \"error\", \"error_message\": \"DuckDuckGo served no parsable results on any endpoint: http://127.0.0.1:55730/primary (http://127.0.0.1:55730/primary returned no parsable results); http://127.0.0.1:55730/fallback (http://127.0.0.1:55730/fallback returned no parsable results)\", \"latency_ms\": 28.20624999003485, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [],
+          "status": "error",
+          "error_message": "DuckDuckGo served no parsable results on any endpoint: http://127.0.0.1:55730/primary (http://127.0.0.1:55730/primary returned no parsable results); http://127.0.0.1:55730/fallback (http://127.0.0.1:55730/fallback returned no parsable results)",
+          "latency_ms": 28.20624999003485,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "duckduckgo_zero_immediate",
+      "timeout_repr": "0",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "0",
+        "base_url": "http://127.0.0.1:55735/primary",
+        "bootstrap_url": "http://127.0.0.1:55735/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55735/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 150495958,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/bootstrap",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55735"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "none"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332440739239041,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "52"
+              ]
+            ],
+            "body_hex": "3c68746d6c3e3c626f64793e3c6120687265663d272f273e4475636b4475636b476f3c2f613e3c2f626f64793e3c2f68746d6c3e"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332440739296291
+        }
+      ],
+      "server_closed_monotonic_ns": 332440764411000,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [], \"status\": \"timeout\", \"error_message\": null, \"latency_ms\": 25.81683301832527, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [],
+          "status": "timeout",
+          "error_message": null,
+          "latency_ms": 25.81683301832527,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "duckduckgo_zero_slow_primary",
+      "timeout_repr": "0",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "0",
+        "base_url": "http://127.0.0.1:55739/primary",
+        "bootstrap_url": "http://127.0.0.1:55739/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55739/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 154466333,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/bootstrap",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55739"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "none"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332440897202666,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "52"
+              ]
+            ],
+            "body_hex": "3c68746d6c3e3c626f64793e3c6120687265663d272f273e4475636b4475636b476f3c2f613e3c2f626f64793e3c2f68746d6c3e"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332440897256791
+        }
+      ],
+      "server_closed_monotonic_ns": 332440922367375,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [], \"status\": \"timeout\", \"error_message\": null, \"latency_ms\": 24.265000014565885, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [],
+          "status": "timeout",
+          "error_message": null,
+          "latency_ms": 24.265000014565885,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "duckduckgo_zero_slow_bootstrap",
+      "timeout_repr": "0",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "0",
+        "base_url": "http://127.0.0.1:55742/primary",
+        "bootstrap_url": "http://127.0.0.1:55742/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55742/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 165368291,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/bootstrap",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55742"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "none"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332441060214583,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "52"
+              ]
+            ],
+            "body_hex": "3c68746d6c3e3c626f64793e3c6120687265663d272f273e4475636b4475636b476f3c2f613e3c2f626f64793e3c2f68746d6c3e"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332441150330458
+        }
+      ],
+      "server_closed_monotonic_ns": 332441150390833,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [], \"status\": \"timeout\", \"error_message\": null, \"latency_ms\": 31.93529200507328, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [],
+          "status": "timeout",
+          "error_message": null,
+          "latency_ms": 31.93529200507328,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "duckduckgo_zero_fallback",
+      "timeout_repr": "0",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "0",
+        "base_url": "http://127.0.0.1:55747/primary",
+        "bootstrap_url": "http://127.0.0.1:55747/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55747/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 147387875,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/bootstrap",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55747"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "none"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332441278389750,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "52"
+              ]
+            ],
+            "body_hex": "3c68746d6c3e3c626f64793e3c6120687265663d272f273e4475636b4475636b476f3c2f613e3c2f626f64793e3c2f68746d6c3e"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332441278442750
+        }
+      ],
+      "server_closed_monotonic_ns": 332441303626833,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [], \"status\": \"timeout\", \"error_message\": null, \"latency_ms\": 24.36120802303776, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [],
+          "status": "timeout",
+          "error_message": null,
+          "latency_ms": 24.36120802303776,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "duckduckgo_negative_immediate",
+      "timeout_repr": "-1",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "-1",
+        "base_url": "http://127.0.0.1:55750/primary",
+        "bootstrap_url": "http://127.0.0.1:55750/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55750/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 160574334,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/bootstrap",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55750"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "none"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332441443581333,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "52"
+              ]
+            ],
+            "body_hex": "3c68746d6c3e3c626f64793e3c6120687265663d272f273e4475636b4475636b476f3c2f613e3c2f626f64793e3c2f68746d6c3e"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332441443645333
+        }
+      ],
+      "server_closed_monotonic_ns": 332441477894625,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [], \"status\": \"timeout\", \"error_message\": null, \"latency_ms\": 27.453874994535, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [],
+          "status": "timeout",
+          "error_message": null,
+          "latency_ms": 27.453874994535,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "duckduckgo_negative_slow_primary",
+      "timeout_repr": "-1",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "-1",
+        "base_url": "http://127.0.0.1:55753/primary",
+        "bootstrap_url": "http://127.0.0.1:55753/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55753/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 157672042,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/bootstrap",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55753"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "none"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332441615985041,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "52"
+              ]
+            ],
+            "body_hex": "3c68746d6c3e3c626f64793e3c6120687265663d272f273e4475636b4475636b476f3c2f613e3c2f626f64793e3c2f68746d6c3e"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332441616045583
+        }
+      ],
+      "server_closed_monotonic_ns": 332441639895375,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [], \"status\": \"timeout\", \"error_message\": null, \"latency_ms\": 23.66516599431634, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [],
+          "status": "timeout",
+          "error_message": null,
+          "latency_ms": 23.66516599431634,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "duckduckgo_negative_slow_bootstrap",
+      "timeout_repr": "-1",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "-1",
+        "base_url": "http://127.0.0.1:55758/primary",
+        "bootstrap_url": "http://127.0.0.1:55758/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55758/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 164690250,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/bootstrap",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55758"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "none"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332441780863958,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "52"
+              ]
+            ],
+            "body_hex": "3c68746d6c3e3c626f64793e3c6120687265663d272f273e4475636b4475636b476f3c2f613e3c2f626f64793e3c2f68746d6c3e"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332441871043291
+        }
+      ],
+      "server_closed_monotonic_ns": 332441871107708,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [], \"status\": \"timeout\", \"error_message\": null, \"latency_ms\": 30.34212498459965, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [],
+          "status": "timeout",
+          "error_message": null,
+          "latency_ms": 30.34212498459965,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "duckduckgo_negative_fallback",
+      "timeout_repr": "-1",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "-1",
+        "base_url": "http://127.0.0.1:55762/primary",
+        "bootstrap_url": "http://127.0.0.1:55762/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55762/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 155470125,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/bootstrap",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55762"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "none"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332442005109666,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "52"
+              ]
+            ],
+            "body_hex": "3c68746d6c3e3c626f64793e3c6120687265663d272f273e4475636b4475636b476f3c2f613e3c2f626f64793e3c2f68746d6c3e"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332442005170375
+        }
+      ],
+      "server_closed_monotonic_ns": 332442030434708,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [], \"status\": \"timeout\", \"error_message\": null, \"latency_ms\": 29.39129195874557, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [],
+          "status": "timeout",
+          "error_message": null,
+          "latency_ms": 29.39129195874557,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "duckduckgo_nan_immediate",
+      "timeout_repr": "nan",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "nan",
+        "base_url": "http://127.0.0.1:55766/primary",
+        "bootstrap_url": "http://127.0.0.1:55766/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55766/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 1,
+      "elapsed_ns": 150884500,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/bootstrap",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55766"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "none"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332442160018291,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "52"
+              ]
+            ],
+            "body_hex": "3c68746d6c3e3c626f64793e3c6120687265663d272f273e4475636b4475636b476f3c2f613e3c2f626f64793e3c2f68746d6c3e"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332442160067750
+        },
+        {
+          "method": "POST",
+          "path": "/primary",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55766"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Referer",
+              "http://127.0.0.1/"
+            ],
+            [
+              "Origin",
+              "http://127.0.0.1"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "same-origin"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ],
+            [
+              "Content-Length",
+              "26"
+            ],
+            [
+              "Content-Type",
+              "application/x-www-form-urlencoded"
+            ]
+          ],
+          "body_hex": "713d6c6f6f706261636b2b74696d656f75742b636f6e74726f6c",
+          "received_monotonic_ns": 332442161338541,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "247"
+              ]
+            ],
+            "body_hex": "3c21444f43545950452068746d6c3e0a3c68746d6c3e3c626f64793e0a3c64697620636c6173733d22726573756c74223e0a20203c64697620636c6173733d22726573756c745f5f61223e0a202020203c7370616e20636c6173733d22726573756c745f5f75726c223e68747470733a2f2f6578616d706c652e636f6d2f6f6e653c2f7370616e3e0a202020203c68323e5072696d617279204869743c2f68323e0a20203c2f6469763e0a20203c64697620636c6173733d22726573756c745f5f736e6970706574223e5072696d61727920736e69707065742e3c2f6469763e0a3c2f6469763e0a3c2f626f64793e3c2f68746d6c3e0a"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332442161364458
+        }
+      ],
+      "server_closed_monotonic_ns": 332442185101125,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/Users/magnus/.codex/worktrees/rust-a05-html-adapters/SlopSearX/docs/rust-rewrite/a05/oracle/timeout_loopback_source.py\", line 143, in <module>\n    child(json.loads(args.child))\n    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/magnus/.codex/worktrees/rust-a05-html-adapters/SlopSearX/docs/rust-rewrite/a05/oracle/timeout_loopback_source.py\", line 41, in child\n    print(json.dumps(asyncio.run(run()), allow_nan=False))\n                     ~~~~~~~~~~~^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py\", line 205, in run\n    return runner.run(main)\n           ~~~~~~~~~~^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py\", line 128, in run\n    return self._loop.run_until_complete(task)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py\", line 707, in run_until_complete\n    self.run_forever()\n    ~~~~~~~~~~~~~~~~^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py\", line 678, in run_forever\n    self._run_once()\n    ~~~~~~~~~~~~~~^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py\", line 2019, in _run_once\n    event_list = self._selector.select(timeout)\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/selectors.py\", line 548, in select\n    kev_list = self._selector.control(None, max_ev, timeout)\nTypeError: timeout argument must be a number or None, got float\n",
+      "outcome": null
+    },
+    {
+      "id": "duckduckgo_nan_slow_primary",
+      "timeout_repr": "nan",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "nan",
+        "base_url": "http://127.0.0.1:55769/primary",
+        "bootstrap_url": "http://127.0.0.1:55769/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55769/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 1,
+      "elapsed_ns": 146659250,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/bootstrap",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55769"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "none"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332442311940583,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "52"
+              ]
+            ],
+            "body_hex": "3c68746d6c3e3c626f64793e3c6120687265663d272f273e4475636b4475636b476f3c2f613e3c2f626f64793e3c2f68746d6c3e"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332442311995541
+        },
+        {
+          "method": "POST",
+          "path": "/primary",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55769"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Referer",
+              "http://127.0.0.1/"
+            ],
+            [
+              "Origin",
+              "http://127.0.0.1"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "same-origin"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ],
+            [
+              "Content-Length",
+              "26"
+            ],
+            [
+              "Content-Type",
+              "application/x-www-form-urlencoded"
+            ]
+          ],
+          "body_hex": "713d6c6f6f706261636b2b74696d656f75742b636f6e74726f6c",
+          "received_monotonic_ns": 332442313218958,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "247"
+              ]
+            ],
+            "body_hex": "3c21444f43545950452068746d6c3e0a3c68746d6c3e3c626f64793e0a3c64697620636c6173733d22726573756c74223e0a20203c64697620636c6173733d22726573756c745f5f61223e0a202020203c7370616e20636c6173733d22726573756c745f5f75726c223e68747470733a2f2f6578616d706c652e636f6d2f6f6e653c2f7370616e3e0a202020203c68323e5072696d617279204869743c2f68323e0a20203c2f6469763e0a20203c64697620636c6173733d22726573756c745f5f736e6970706574223e5072696d61727920736e69707065742e3c2f6469763e0a3c2f6469763e0a3c2f626f64793e3c2f68746d6c3e0a"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332442403291625
+        }
+      ],
+      "server_closed_monotonic_ns": 332442403338958,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/Users/magnus/.codex/worktrees/rust-a05-html-adapters/SlopSearX/docs/rust-rewrite/a05/oracle/timeout_loopback_source.py\", line 143, in <module>\n    child(json.loads(args.child))\n    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/magnus/.codex/worktrees/rust-a05-html-adapters/SlopSearX/docs/rust-rewrite/a05/oracle/timeout_loopback_source.py\", line 41, in child\n    print(json.dumps(asyncio.run(run()), allow_nan=False))\n                     ~~~~~~~~~~~^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py\", line 205, in run\n    return runner.run(main)\n           ~~~~~~~~~~^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py\", line 128, in run\n    return self._loop.run_until_complete(task)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py\", line 707, in run_until_complete\n    self.run_forever()\n    ~~~~~~~~~~~~~~~~^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py\", line 678, in run_forever\n    self._run_once()\n    ~~~~~~~~~~~~~~^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py\", line 2019, in _run_once\n    event_list = self._selector.select(timeout)\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/selectors.py\", line 548, in select\n    kev_list = self._selector.control(None, max_ev, timeout)\nTypeError: timeout argument must be a number or None, got float\n",
+      "outcome": null
+    },
+    {
+      "id": "duckduckgo_nan_slow_bootstrap",
+      "timeout_repr": "nan",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "nan",
+        "base_url": "http://127.0.0.1:55773/primary",
+        "bootstrap_url": "http://127.0.0.1:55773/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55773/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 1,
+      "elapsed_ns": 154828000,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/bootstrap",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55773"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "none"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332442531790291,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "52"
+              ]
+            ],
+            "body_hex": "3c68746d6c3e3c626f64793e3c6120687265663d272f273e4475636b4475636b476f3c2f613e3c2f626f64793e3c2f68746d6c3e"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332442621919541
+        },
+        {
+          "method": "POST",
+          "path": "/primary",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55773"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Referer",
+              "http://127.0.0.1/"
+            ],
+            [
+              "Origin",
+              "http://127.0.0.1"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "same-origin"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ],
+            [
+              "Content-Length",
+              "26"
+            ],
+            [
+              "Content-Type",
+              "application/x-www-form-urlencoded"
+            ]
+          ],
+          "body_hex": "713d6c6f6f706261636b2b74696d656f75742b636f6e74726f6c",
+          "received_monotonic_ns": 332442539171666,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "247"
+              ]
+            ],
+            "body_hex": "3c21444f43545950452068746d6c3e0a3c68746d6c3e3c626f64793e0a3c64697620636c6173733d22726573756c74223e0a20203c64697620636c6173733d22726573756c745f5f61223e0a202020203c7370616e20636c6173733d22726573756c745f5f75726c223e68747470733a2f2f6578616d706c652e636f6d2f6f6e653c2f7370616e3e0a202020203c68323e5072696d617279204869743c2f68323e0a20203c2f6469763e0a20203c64697620636c6173733d22726573756c745f5f736e6970706574223e5072696d61727920736e69707065742e3c2f6469763e0a3c2f6469763e0a3c2f626f64793e3c2f68746d6c3e0a"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332442539219666
+        }
+      ],
+      "server_closed_monotonic_ns": 332442622004000,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/Users/magnus/.codex/worktrees/rust-a05-html-adapters/SlopSearX/docs/rust-rewrite/a05/oracle/timeout_loopback_source.py\", line 143, in <module>\n    child(json.loads(args.child))\n    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/magnus/.codex/worktrees/rust-a05-html-adapters/SlopSearX/docs/rust-rewrite/a05/oracle/timeout_loopback_source.py\", line 41, in child\n    print(json.dumps(asyncio.run(run()), allow_nan=False))\n                     ~~~~~~~~~~~^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py\", line 205, in run\n    return runner.run(main)\n           ~~~~~~~~~~^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py\", line 128, in run\n    return self._loop.run_until_complete(task)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py\", line 707, in run_until_complete\n    self.run_forever()\n    ~~~~~~~~~~~~~~~~^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py\", line 678, in run_forever\n    self._run_once()\n    ~~~~~~~~~~~~~~^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py\", line 2019, in _run_once\n    event_list = self._selector.select(timeout)\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/selectors.py\", line 548, in select\n    kev_list = self._selector.control(None, max_ev, timeout)\nTypeError: timeout argument must be a number or None, got float\n",
+      "outcome": null
+    },
+    {
+      "id": "duckduckgo_nan_fallback",
+      "timeout_repr": "nan",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "nan",
+        "base_url": "http://127.0.0.1:55776/primary",
+        "bootstrap_url": "http://127.0.0.1:55776/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55776/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 1,
+      "elapsed_ns": 152727334,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/bootstrap",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55776"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "none"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332442753912041,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "52"
+              ]
+            ],
+            "body_hex": "3c68746d6c3e3c626f64793e3c6120687265663d272f273e4475636b4475636b476f3c2f613e3c2f626f64793e3c2f68746d6c3e"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332442753964541
+        },
+        {
+          "method": "POST",
+          "path": "/primary",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55776"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Referer",
+              "http://127.0.0.1/"
+            ],
+            [
+              "Origin",
+              "http://127.0.0.1"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "same-origin"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ],
+            [
+              "Content-Length",
+              "26"
+            ],
+            [
+              "Content-Type",
+              "application/x-www-form-urlencoded"
+            ]
+          ],
+          "body_hex": "713d6c6f6f706261636b2b74696d656f75742b636f6e74726f6c",
+          "received_monotonic_ns": 332442755224041,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "42"
+              ]
+            ],
+            "body_hex": "3c68746d6c3e3c626f64793e756e757361626c65207072696d6172793c2f626f64793e3c2f68746d6c3e"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332442755248916
+        }
+      ],
+      "server_closed_monotonic_ns": 332442777937500,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/Users/magnus/.codex/worktrees/rust-a05-html-adapters/SlopSearX/docs/rust-rewrite/a05/oracle/timeout_loopback_source.py\", line 143, in <module>\n    child(json.loads(args.child))\n    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/magnus/.codex/worktrees/rust-a05-html-adapters/SlopSearX/docs/rust-rewrite/a05/oracle/timeout_loopback_source.py\", line 41, in child\n    print(json.dumps(asyncio.run(run()), allow_nan=False))\n                     ~~~~~~~~~~~^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py\", line 205, in run\n    return runner.run(main)\n           ~~~~~~~~~~^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py\", line 128, in run\n    return self._loop.run_until_complete(task)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py\", line 707, in run_until_complete\n    self.run_forever()\n    ~~~~~~~~~~~~~~~~^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py\", line 678, in run_forever\n    self._run_once()\n    ~~~~~~~~~~~~~~^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py\", line 2019, in _run_once\n    event_list = self._selector.select(timeout)\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/selectors.py\", line 548, in select\n    kev_list = self._selector.control(None, max_ev, timeout)\nTypeError: timeout argument must be a number or None, got float\n",
+      "outcome": null
+    },
+    {
+      "id": "duckduckgo_infinity_immediate",
+      "timeout_repr": "inf",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "inf",
+        "base_url": "http://127.0.0.1:55779/primary",
+        "bootstrap_url": "http://127.0.0.1:55779/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55779/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 151128625,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/bootstrap",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55779"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "none"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332442906752416,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "52"
+              ]
+            ],
+            "body_hex": "3c68746d6c3e3c626f64793e3c6120687265663d272f273e4475636b4475636b476f3c2f613e3c2f626f64793e3c2f68746d6c3e"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332442906802166
+        },
+        {
+          "method": "POST",
+          "path": "/primary",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55779"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Referer",
+              "http://127.0.0.1/"
+            ],
+            [
+              "Origin",
+              "http://127.0.0.1"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "same-origin"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ],
+            [
+              "Content-Length",
+              "26"
+            ],
+            [
+              "Content-Type",
+              "application/x-www-form-urlencoded"
+            ]
+          ],
+          "body_hex": "713d6c6f6f706261636b2b74696d656f75742b636f6e74726f6c",
+          "received_monotonic_ns": 332442908061333,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "247"
+              ]
+            ],
+            "body_hex": "3c21444f43545950452068746d6c3e0a3c68746d6c3e3c626f64793e0a3c64697620636c6173733d22726573756c74223e0a20203c64697620636c6173733d22726573756c745f5f61223e0a202020203c7370616e20636c6173733d22726573756c745f5f75726c223e68747470733a2f2f6578616d706c652e636f6d2f6f6e653c2f7370616e3e0a202020203c68323e5072696d617279204869743c2f68323e0a20203c2f6469763e0a20203c64697620636c6173733d22726573756c745f5f736e6970706574223e5072696d61727920736e69707065742e3c2f6469763e0a3c2f6469763e0a3c2f626f64793e3c2f68746d6c3e0a"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332442908083541
+        }
+      ],
+      "server_closed_monotonic_ns": 332442931856291,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [{\"url\": \"https://example.com/one\", \"title\": \"https://example.com/one\\n    Primary Hit\", \"content\": \"Primary snippet.\", \"engine\": \"duckduckgo\", \"engines\": [], \"score\": 0.0, \"position\": 1, \"category\": \"general\", \"published_date\": null, \"thumbnail\": null, \"img_src\": null, \"tier\": 1, \"media\": null, \"payload\": null, \"work_group\": null}], \"status\": \"ok\", \"error_message\": null, \"latency_ms\": 26.93933399859816, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [
+            {
+              "url": "https://example.com/one",
+              "title": "https://example.com/one\n    Primary Hit",
+              "content": "Primary snippet.",
+              "engine": "duckduckgo",
+              "engines": [],
+              "score": 0.0,
+              "position": 1,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": null,
+              "work_group": null
+            }
+          ],
+          "status": "ok",
+          "error_message": null,
+          "latency_ms": 26.93933399859816,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "duckduckgo_infinity_slow_primary",
+      "timeout_repr": "inf",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "inf",
+        "base_url": "http://127.0.0.1:55782/primary",
+        "bootstrap_url": "http://127.0.0.1:55782/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55782/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 239130000,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/bootstrap",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55782"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "none"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332443058359000,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "52"
+              ]
+            ],
+            "body_hex": "3c68746d6c3e3c626f64793e3c6120687265663d272f273e4475636b4475636b476f3c2f613e3c2f626f64793e3c2f68746d6c3e"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332443058410000
+        },
+        {
+          "method": "POST",
+          "path": "/primary",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55782"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Referer",
+              "http://127.0.0.1/"
+            ],
+            [
+              "Origin",
+              "http://127.0.0.1"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "same-origin"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ],
+            [
+              "Content-Length",
+              "26"
+            ],
+            [
+              "Content-Type",
+              "application/x-www-form-urlencoded"
+            ]
+          ],
+          "body_hex": "713d6c6f6f706261636b2b74696d656f75742b636f6e74726f6c",
+          "received_monotonic_ns": 332443059806833,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "247"
+              ]
+            ],
+            "body_hex": "3c21444f43545950452068746d6c3e0a3c68746d6c3e3c626f64793e0a3c64697620636c6173733d22726573756c74223e0a20203c64697620636c6173733d22726573756c745f5f61223e0a202020203c7370616e20636c6173733d22726573756c745f5f75726c223e68747470733a2f2f6578616d706c652e636f6d2f6f6e653c2f7370616e3e0a202020203c68323e5072696d617279204869743c2f68323e0a20203c2f6469763e0a20203c64697620636c6173733d22726573756c745f5f736e6970706574223e5072696d61727920736e69707065742e3c2f6469763e0a3c2f6469763e0a3c2f626f64793e3c2f68746d6c3e0a"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332443143465083
+        }
+      ],
+      "server_closed_monotonic_ns": 332443179607166,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [{\"url\": \"https://example.com/one\", \"title\": \"https://example.com/one\\n    Primary Hit\", \"content\": \"Primary snippet.\", \"engine\": \"duckduckgo\", \"engines\": [], \"score\": 0.0, \"position\": 1, \"category\": \"general\", \"published_date\": null, \"thumbnail\": null, \"img_src\": null, \"tier\": 1, \"media\": null, \"payload\": null, \"work_group\": null}], \"status\": \"ok\", \"error_message\": null, \"latency_ms\": 111.21349997119978, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [
+            {
+              "url": "https://example.com/one",
+              "title": "https://example.com/one\n    Primary Hit",
+              "content": "Primary snippet.",
+              "engine": "duckduckgo",
+              "engines": [],
+              "score": 0.0,
+              "position": 1,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": null,
+              "work_group": null
+            }
+          ],
+          "status": "ok",
+          "error_message": null,
+          "latency_ms": 111.21349997119978,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "duckduckgo_infinity_slow_bootstrap",
+      "timeout_repr": "inf",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "inf",
+        "base_url": "http://127.0.0.1:55786/primary",
+        "bootstrap_url": "http://127.0.0.1:55786/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55786/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 158331208,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/bootstrap",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55786"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "none"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332443307629500,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "52"
+              ]
+            ],
+            "body_hex": "3c68746d6c3e3c626f64793e3c6120687265663d272f273e4475636b4475636b476f3c2f613e3c2f626f64793e3c2f68746d6c3e"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332443397804541
+        },
+        {
+          "method": "POST",
+          "path": "/primary",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55786"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Referer",
+              "http://127.0.0.1/"
+            ],
+            [
+              "Origin",
+              "http://127.0.0.1"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "same-origin"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ],
+            [
+              "Content-Length",
+              "26"
+            ],
+            [
+              "Content-Type",
+              "application/x-www-form-urlencoded"
+            ]
+          ],
+          "body_hex": "713d6c6f6f706261636b2b74696d656f75742b636f6e74726f6c",
+          "received_monotonic_ns": 332443314924500,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "247"
+              ]
+            ],
+            "body_hex": "3c21444f43545950452068746d6c3e0a3c68746d6c3e3c626f64793e0a3c64697620636c6173733d22726573756c74223e0a20203c64697620636c6173733d22726573756c745f5f61223e0a202020203c7370616e20636c6173733d22726573756c745f5f75726c223e68747470733a2f2f6578616d706c652e636f6d2f6f6e653c2f7370616e3e0a202020203c68323e5072696d617279204869743c2f68323e0a20203c2f6469763e0a20203c64697620636c6173733d22726573756c745f5f736e6970706574223e5072696d61727920736e69707065742e3c2f6469763e0a3c2f6469763e0a3c2f626f64793e3c2f68746d6c3e0a"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332443314980833
+        }
+      ],
+      "server_closed_monotonic_ns": 332443397879208,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [{\"url\": \"https://example.com/one\", \"title\": \"https://example.com/one\\n    Primary Hit\", \"content\": \"Primary snippet.\", \"engine\": \"duckduckgo\", \"engines\": [], \"score\": 0.0, \"position\": 1, \"category\": \"general\", \"published_date\": null, \"thumbnail\": null, \"img_src\": null, \"tier\": 1, \"media\": null, \"payload\": null, \"work_group\": null}], \"status\": \"ok\", \"error_message\": null, \"latency_ms\": 33.172667026519775, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [
+            {
+              "url": "https://example.com/one",
+              "title": "https://example.com/one\n    Primary Hit",
+              "content": "Primary snippet.",
+              "engine": "duckduckgo",
+              "engines": [],
+              "score": 0.0,
+              "position": 1,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": null,
+              "work_group": null
+            }
+          ],
+          "status": "ok",
+          "error_message": null,
+          "latency_ms": 33.172667026519775,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "duckduckgo_infinity_fallback",
+      "timeout_repr": "inf",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "inf",
+        "base_url": "http://127.0.0.1:55790/primary",
+        "bootstrap_url": "http://127.0.0.1:55790/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55790/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 151541834,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/bootstrap",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55790"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "none"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332443526513291,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "52"
+              ]
+            ],
+            "body_hex": "3c68746d6c3e3c626f64793e3c6120687265663d272f273e4475636b4475636b476f3c2f613e3c2f626f64793e3c2f68746d6c3e"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332443526563083
+        },
+        {
+          "method": "POST",
+          "path": "/primary",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55790"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Referer",
+              "http://127.0.0.1/"
+            ],
+            [
+              "Origin",
+              "http://127.0.0.1"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "same-origin"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ],
+            [
+              "Content-Length",
+              "26"
+            ],
+            [
+              "Content-Type",
+              "application/x-www-form-urlencoded"
+            ]
+          ],
+          "body_hex": "713d6c6f6f706261636b2b74696d656f75742b636f6e74726f6c",
+          "received_monotonic_ns": 332443527754166,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "42"
+              ]
+            ],
+            "body_hex": "3c68746d6c3e3c626f64793e756e757361626c65207072696d6172793c2f626f64793e3c2f68746d6c3e"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332443527781458
+        },
+        {
+          "method": "POST",
+          "path": "/fallback",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55790"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Referer",
+              "http://127.0.0.1/"
+            ],
+            [
+              "Origin",
+              "http://127.0.0.1"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "same-origin"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ],
+            [
+              "Content-Length",
+              "26"
+            ],
+            [
+              "Content-Type",
+              "application/x-www-form-urlencoded"
+            ]
+          ],
+          "body_hex": "713d6c6f6f706261636b2b74696d656f75742b636f6e74726f6c",
+          "received_monotonic_ns": 332443531057166,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "247"
+              ]
+            ],
+            "body_hex": "3c21444f43545950452068746d6c3e0a3c68746d6c3e3c626f64793e0a3c64697620636c6173733d22726573756c74223e0a20203c64697620636c6173733d22726573756c745f5f61223e0a202020203c7370616e20636c6173733d22726573756c745f5f75726c223e68747470733a2f2f6578616d706c652e636f6d2f6f6e653c2f7370616e3e0a202020203c68323e5072696d617279204869743c2f68323e0a20203c2f6469763e0a20203c64697620636c6173733d22726573756c745f5f736e6970706574223e5072696d61727920736e69707065742e3c2f6469763e0a3c2f6469763e0a3c2f626f64793e3c2f68746d6c3e0a"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332443531078833
+        }
+      ],
+      "server_closed_monotonic_ns": 332443554896666,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [], \"status\": \"error\", \"error_message\": \"DuckDuckGo served no parsable results on any endpoint: http://127.0.0.1:55790/primary (http://127.0.0.1:55790/primary returned no parsable results); http://127.0.0.1:55790/fallback (http://127.0.0.1:55790/fallback returned no parsable results)\", \"latency_ms\": 28.46166701056063, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [],
+          "status": "error",
+          "error_message": "DuckDuckGo served no parsable results on any endpoint: http://127.0.0.1:55790/primary (http://127.0.0.1:55790/primary returned no parsable results); http://127.0.0.1:55790/fallback (http://127.0.0.1:55790/fallback returned no parsable results)",
+          "latency_ms": 28.46166701056063,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "duckduckgo_negative_infinity_immediate",
+      "timeout_repr": "-inf",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "-inf",
+        "base_url": "http://127.0.0.1:55794/primary",
+        "bootstrap_url": "http://127.0.0.1:55794/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55794/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 144764833,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/bootstrap",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55794"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "none"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332443681182458,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "52"
+              ]
+            ],
+            "body_hex": "3c68746d6c3e3c626f64793e3c6120687265663d272f273e4475636b4475636b476f3c2f613e3c2f626f64793e3c2f68746d6c3e"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332443681237583
+        }
+      ],
+      "server_closed_monotonic_ns": 332443704851333,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [], \"status\": \"timeout\", \"error_message\": null, \"latency_ms\": 24.30687501328066, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [],
+          "status": "timeout",
+          "error_message": null,
+          "latency_ms": 24.30687501328066,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "duckduckgo_negative_infinity_slow_primary",
+      "timeout_repr": "-inf",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "-inf",
+        "base_url": "http://127.0.0.1:55797/primary",
+        "bootstrap_url": "http://127.0.0.1:55797/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55797/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 145215750,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/bootstrap",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55797"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "none"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332443831848291,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "52"
+              ]
+            ],
+            "body_hex": "3c68746d6c3e3c626f64793e3c6120687265663d272f273e4475636b4475636b476f3c2f613e3c2f626f64793e3c2f68746d6c3e"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332443831899000
+        }
+      ],
+      "server_closed_monotonic_ns": 332443854415125,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [], \"status\": \"timeout\", \"error_message\": null, \"latency_ms\": 23.129125009290874, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [],
+          "status": "timeout",
+          "error_message": null,
+          "latency_ms": 23.129125009290874,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "duckduckgo_negative_infinity_slow_bootstrap",
+      "timeout_repr": "-inf",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "-inf",
+        "base_url": "http://127.0.0.1:55801/primary",
+        "bootstrap_url": "http://127.0.0.1:55801/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55801/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 152985042,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/bootstrap",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55801"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "none"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332443981196333,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "52"
+              ]
+            ],
+            "body_hex": "3c68746d6c3e3c626f64793e3c6120687265663d272f273e4475636b4475636b476f3c2f613e3c2f626f64793e3c2f68746d6c3e"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332444071405250
+        }
+      ],
+      "server_closed_monotonic_ns": 332444071477541,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [], \"status\": \"timeout\", \"error_message\": null, \"latency_ms\": 29.953125049360096, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [],
+          "status": "timeout",
+          "error_message": null,
+          "latency_ms": 29.953125049360096,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "duckduckgo_negative_infinity_fallback",
+      "timeout_repr": "-inf",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "-inf",
+        "base_url": "http://127.0.0.1:55804/primary",
+        "bootstrap_url": "http://127.0.0.1:55804/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55804/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 150135000,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/bootstrap",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55804"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ],
+            [
+              "Sec-Fetch-Dest",
+              "document"
+            ],
+            [
+              "Sec-Fetch-Mode",
+              "navigate"
+            ],
+            [
+              "Sec-Fetch-Site",
+              "none"
+            ],
+            [
+              "Upgrade-Insecure-Requests",
+              "1"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332444203053375,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "52"
+              ]
+            ],
+            "body_hex": "3c68746d6c3e3c626f64793e3c6120687265663d272f273e4475636b4475636b476f3c2f613e3c2f626f64793e3c2f68746d6c3e"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332444203107291
+        }
+      ],
+      "server_closed_monotonic_ns": 332444228320166,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [], \"status\": \"timeout\", \"error_message\": null, \"latency_ms\": 24.193666991777718, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [],
+          "status": "timeout",
+          "error_message": null,
+          "latency_ms": 24.193666991777718,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "google_positive_immediate",
+      "timeout_repr": "1000",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "1000",
+        "base_url": "http://127.0.0.1:55807/primary",
+        "bootstrap_url": "http://127.0.0.1:55807/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55807/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 150802125,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/primary?q=loopback+timeout+control&hl=en&num=10",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55807"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332444356227791,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "327"
+              ]
+            ],
+            "body_hex": "0a3c68746d6c3e3c626f64793e0a3c64697620636c6173733d2267223e0a20203c68333e3c6120687265663d2268747470733a2f2f6578616d706c652e636f6d2f7061676531223e526573756c74204f6e653c2f613e3c2f68333e0a20203c6469763e3c7370616e20636c6173733d227374223e4465736372697074696f6e206f6620726573756c74206f6e652e3c2f7370616e3e3c2f6469763e0a3c2f6469763e0a3c64697620636c6173733d2267223e0a20203c68333e3c6120687265663d2268747470733a2f2f6578616d706c652e636f6d2f7061676532223e526573756c742054776f3c2f613e3c2f68333e0a20203c6469763e3c7370616e20636c6173733d227374223e4465736372697074696f6e206f6620726573756c742074776f2e3c2f7370616e3e3c2f6469763e0a3c2f6469763e0a3c2f626f64793e3c2f68746d6c3e0a"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332444356295041
+        }
+      ],
+      "server_closed_monotonic_ns": 332444391568083,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [{\"url\": \"https://example.com/page1\", \"title\": \"Result One\", \"content\": \"Description of result one.\", \"engine\": \"google\", \"engines\": [], \"score\": 0.0, \"position\": 1, \"category\": \"general\", \"published_date\": null, \"thumbnail\": null, \"img_src\": null, \"tier\": 1, \"media\": null, \"payload\": null, \"work_group\": null}, {\"url\": \"https://example.com/page2\", \"title\": \"Result Two\", \"content\": \"Description of result two.\", \"engine\": \"google\", \"engines\": [], \"score\": 0.0, \"position\": 2, \"category\": \"general\", \"published_date\": null, \"thumbnail\": null, \"img_src\": null, \"tier\": 1, \"media\": null, \"payload\": null, \"work_group\": null}], \"status\": \"ok\", \"error_message\": null, \"latency_ms\": 23.54254201054573, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [
+            {
+              "url": "https://example.com/page1",
+              "title": "Result One",
+              "content": "Description of result one.",
+              "engine": "google",
+              "engines": [],
+              "score": 0.0,
+              "position": 1,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": null,
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/page2",
+              "title": "Result Two",
+              "content": "Description of result two.",
+              "engine": "google",
+              "engines": [],
+              "score": 0.0,
+              "position": 2,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": null,
+              "work_group": null
+            }
+          ],
+          "status": "ok",
+          "error_message": null,
+          "latency_ms": 23.54254201054573,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "google_positive_slow_primary",
+      "timeout_repr": "1000",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "1000",
+        "base_url": "http://127.0.0.1:55809/primary",
+        "bootstrap_url": "http://127.0.0.1:55809/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55809/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 237809416,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/primary?q=loopback+timeout+control&hl=en&num=10",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55809"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332444517910833,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "327"
+              ]
+            ],
+            "body_hex": "0a3c68746d6c3e3c626f64793e0a3c64697620636c6173733d2267223e0a20203c68333e3c6120687265663d2268747470733a2f2f6578616d706c652e636f6d2f7061676531223e526573756c74204f6e653c2f613e3c2f68333e0a20203c6469763e3c7370616e20636c6173733d227374223e4465736372697074696f6e206f6620726573756c74206f6e652e3c2f7370616e3e3c2f6469763e0a3c2f6469763e0a3c64697620636c6173733d2267223e0a20203c68333e3c6120687265663d2268747470733a2f2f6578616d706c652e636f6d2f7061676532223e526573756c742054776f3c2f613e3c2f68333e0a20203c6469763e3c7370616e20636c6173733d227374223e4465736372697074696f6e206f6620726573756c742074776f2e3c2f7370616e3e3c2f6469763e0a3c2f6469763e0a3c2f626f64793e3c2f68746d6c3e0a"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332444601879291
+        }
+      ],
+      "server_closed_monotonic_ns": 332444637981583,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [{\"url\": \"https://example.com/page1\", \"title\": \"Result One\", \"content\": \"Description of result one.\", \"engine\": \"google\", \"engines\": [], \"score\": 0.0, \"position\": 1, \"category\": \"general\", \"published_date\": null, \"thumbnail\": null, \"img_src\": null, \"tier\": 1, \"media\": null, \"payload\": null, \"work_group\": null}, {\"url\": \"https://example.com/page2\", \"title\": \"Result Two\", \"content\": \"Description of result two.\", \"engine\": \"google\", \"engines\": [], \"score\": 0.0, \"position\": 2, \"category\": \"general\", \"published_date\": null, \"thumbnail\": null, \"img_src\": null, \"tier\": 1, \"media\": null, \"payload\": null, \"work_group\": null}], \"status\": \"ok\", \"error_message\": null, \"latency_ms\": 108.03499998291954, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [
+            {
+              "url": "https://example.com/page1",
+              "title": "Result One",
+              "content": "Description of result one.",
+              "engine": "google",
+              "engines": [],
+              "score": 0.0,
+              "position": 1,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": null,
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/page2",
+              "title": "Result Two",
+              "content": "Description of result two.",
+              "engine": "google",
+              "engines": [],
+              "score": 0.0,
+              "position": 2,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": null,
+              "work_group": null
+            }
+          ],
+          "status": "ok",
+          "error_message": null,
+          "latency_ms": 108.03499998291954,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "google_positive_slow_bootstrap",
+      "timeout_repr": "1000",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "1000",
+        "base_url": "http://127.0.0.1:55812/primary",
+        "bootstrap_url": "http://127.0.0.1:55812/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55812/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 157049417,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/primary?q=loopback+timeout+control&hl=en&num=10",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55812"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332444772742666,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "327"
+              ]
+            ],
+            "body_hex": "0a3c68746d6c3e3c626f64793e0a3c64697620636c6173733d2267223e0a20203c68333e3c6120687265663d2268747470733a2f2f6578616d706c652e636f6d2f7061676531223e526573756c74204f6e653c2f613e3c2f68333e0a20203c6469763e3c7370616e20636c6173733d227374223e4465736372697074696f6e206f6620726573756c74206f6e652e3c2f7370616e3e3c2f6469763e0a3c2f6469763e0a3c64697620636c6173733d2267223e0a20203c68333e3c6120687265663d2268747470733a2f2f6578616d706c652e636f6d2f7061676532223e526573756c742054776f3c2f613e3c2f68333e0a20203c6469763e3c7370616e20636c6173733d227374223e4465736372697074696f6e206f6620726573756c742074776f2e3c2f7370616e3e3c2f6469763e0a3c2f6469763e0a3c2f626f64793e3c2f68746d6c3e0a"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332444772796333
+        }
+      ],
+      "server_closed_monotonic_ns": 332444808652333,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [{\"url\": \"https://example.com/page1\", \"title\": \"Result One\", \"content\": \"Description of result one.\", \"engine\": \"google\", \"engines\": [], \"score\": 0.0, \"position\": 1, \"category\": \"general\", \"published_date\": null, \"thumbnail\": null, \"img_src\": null, \"tier\": 1, \"media\": null, \"payload\": null, \"work_group\": null}, {\"url\": \"https://example.com/page2\", \"title\": \"Result Two\", \"content\": \"Description of result two.\", \"engine\": \"google\", \"engines\": [], \"score\": 0.0, \"position\": 2, \"category\": \"general\", \"published_date\": null, \"thumbnail\": null, \"img_src\": null, \"tier\": 1, \"media\": null, \"payload\": null, \"work_group\": null}], \"status\": \"ok\", \"error_message\": null, \"latency_ms\": 24.15737498085946, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [
+            {
+              "url": "https://example.com/page1",
+              "title": "Result One",
+              "content": "Description of result one.",
+              "engine": "google",
+              "engines": [],
+              "score": 0.0,
+              "position": 1,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": null,
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/page2",
+              "title": "Result Two",
+              "content": "Description of result two.",
+              "engine": "google",
+              "engines": [],
+              "score": 0.0,
+              "position": 2,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": null,
+              "work_group": null
+            }
+          ],
+          "status": "ok",
+          "error_message": null,
+          "latency_ms": 24.15737498085946,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "google_positive_fallback",
+      "timeout_repr": "1000",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "1000",
+        "base_url": "http://127.0.0.1:55815/primary",
+        "bootstrap_url": "http://127.0.0.1:55815/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55815/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 151478459,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/primary?q=loopback+timeout+control&hl=en&num=10",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55815"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332444939321625,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "42"
+              ]
+            ],
+            "body_hex": "3c68746d6c3e3c626f64793e756e757361626c65207072696d6172793c2f626f64793e3c2f68746d6c3e"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332444939375500
+        }
+      ],
+      "server_closed_monotonic_ns": 332444973303583,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [], \"status\": \"ok\", \"error_message\": null, \"latency_ms\": 24.588875006884336, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [],
+          "status": "ok",
+          "error_message": null,
+          "latency_ms": 24.588875006884336,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "google_zero_immediate",
+      "timeout_repr": "0",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "0",
+        "base_url": "http://127.0.0.1:55818/primary",
+        "bootstrap_url": "http://127.0.0.1:55818/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55818/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 152598667,
+      "requests": [],
+      "server_closed_monotonic_ns": 332445130650541,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [], \"status\": \"timeout\", \"error_message\": null, \"latency_ms\": 23.511999985203147, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [],
+          "status": "timeout",
+          "error_message": null,
+          "latency_ms": 23.511999985203147,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "google_zero_slow_primary",
+      "timeout_repr": "0",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "0",
+        "base_url": "http://127.0.0.1:55820/primary",
+        "bootstrap_url": "http://127.0.0.1:55820/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55820/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 409753917,
+      "requests": [],
+      "server_closed_monotonic_ns": 332445549402375,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [], \"status\": \"timeout\", \"error_message\": null, \"latency_ms\": 93.3200410217978, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [],
+          "status": "timeout",
+          "error_message": null,
+          "latency_ms": 93.3200410217978,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "google_zero_slow_bootstrap",
+      "timeout_repr": "0",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "0",
+        "base_url": "http://127.0.0.1:55824/primary",
+        "bootstrap_url": "http://127.0.0.1:55824/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55824/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 268159625,
+      "requests": [],
+      "server_closed_monotonic_ns": 332445819613458,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [], \"status\": \"timeout\", \"error_message\": null, \"latency_ms\": 43.514124990906566, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [],
+          "status": "timeout",
+          "error_message": null,
+          "latency_ms": 43.514124990906566,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "google_zero_fallback",
+      "timeout_repr": "0",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "0",
+        "base_url": "http://127.0.0.1:55829/primary",
+        "bootstrap_url": "http://127.0.0.1:55829/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55829/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 383094584,
+      "requests": [],
+      "server_closed_monotonic_ns": 332446212655208,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [], \"status\": \"timeout\", \"error_message\": null, \"latency_ms\": 53.90350002562627, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [],
+          "status": "timeout",
+          "error_message": null,
+          "latency_ms": 53.90350002562627,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "google_negative_immediate",
+      "timeout_repr": "-1",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "-1",
+        "base_url": "http://127.0.0.1:55837/primary",
+        "bootstrap_url": "http://127.0.0.1:55837/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55837/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 295097583,
+      "requests": [],
+      "server_closed_monotonic_ns": 332446520428125,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [], \"status\": \"timeout\", \"error_message\": null, \"latency_ms\": 50.35550001775846, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [],
+          "status": "timeout",
+          "error_message": null,
+          "latency_ms": 50.35550001775846,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "google_negative_slow_primary",
+      "timeout_repr": "-1",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "-1",
+        "base_url": "http://127.0.0.1:55841/primary",
+        "bootstrap_url": "http://127.0.0.1:55841/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55841/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 322009333,
+      "requests": [],
+      "server_closed_monotonic_ns": 332446849835208,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [], \"status\": \"timeout\", \"error_message\": null, \"latency_ms\": 35.31104198191315, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [],
+          "status": "timeout",
+          "error_message": null,
+          "latency_ms": 35.31104198191315,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "google_negative_slow_bootstrap",
+      "timeout_repr": "-1",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "-1",
+        "base_url": "http://127.0.0.1:55846/primary",
+        "bootstrap_url": "http://127.0.0.1:55846/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55846/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 363054167,
+      "requests": [],
+      "server_closed_monotonic_ns": 332447226354833,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [], \"status\": \"timeout\", \"error_message\": null, \"latency_ms\": 63.63420799607411, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [],
+          "status": "timeout",
+          "error_message": null,
+          "latency_ms": 63.63420799607411,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "google_negative_fallback",
+      "timeout_repr": "-1",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "-1",
+        "base_url": "http://127.0.0.1:55851/primary",
+        "bootstrap_url": "http://127.0.0.1:55851/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55851/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 179566375,
+      "requests": [],
+      "server_closed_monotonic_ns": 332447408843916,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [], \"status\": \"timeout\", \"error_message\": null, \"latency_ms\": 25.07275005336851, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [],
+          "status": "timeout",
+          "error_message": null,
+          "latency_ms": 25.07275005336851,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "google_nan_immediate",
+      "timeout_repr": "nan",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "nan",
+        "base_url": "http://127.0.0.1:55854/primary",
+        "bootstrap_url": "http://127.0.0.1:55854/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55854/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 1,
+      "elapsed_ns": 165966291,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/primary?q=loopback+timeout+control&hl=en&num=10",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55854"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332447551221708,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "327"
+              ]
+            ],
+            "body_hex": "0a3c68746d6c3e3c626f64793e0a3c64697620636c6173733d2267223e0a20203c68333e3c6120687265663d2268747470733a2f2f6578616d706c652e636f6d2f7061676531223e526573756c74204f6e653c2f613e3c2f68333e0a20203c6469763e3c7370616e20636c6173733d227374223e4465736372697074696f6e206f6620726573756c74206f6e652e3c2f7370616e3e3c2f6469763e0a3c2f6469763e0a3c64697620636c6173733d2267223e0a20203c68333e3c6120687265663d2268747470733a2f2f6578616d706c652e636f6d2f7061676532223e526573756c742054776f3c2f613e3c2f68333e0a20203c6469763e3c7370616e20636c6173733d227374223e4465736372697074696f6e206f6620726573756c742074776f2e3c2f7370616e3e3c2f6469763e0a3c2f6469763e0a3c2f626f64793e3c2f68746d6c3e0a"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332447551304916
+        }
+      ],
+      "server_closed_monotonic_ns": 332447587050875,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/Users/magnus/.codex/worktrees/rust-a05-html-adapters/SlopSearX/docs/rust-rewrite/a05/oracle/timeout_loopback_source.py\", line 143, in <module>\n    child(json.loads(args.child))\n    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/magnus/.codex/worktrees/rust-a05-html-adapters/SlopSearX/docs/rust-rewrite/a05/oracle/timeout_loopback_source.py\", line 41, in child\n    print(json.dumps(asyncio.run(run()), allow_nan=False))\n                     ~~~~~~~~~~~^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py\", line 205, in run\n    return runner.run(main)\n           ~~~~~~~~~~^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py\", line 128, in run\n    return self._loop.run_until_complete(task)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py\", line 707, in run_until_complete\n    self.run_forever()\n    ~~~~~~~~~~~~~~~~^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py\", line 678, in run_forever\n    self._run_once()\n    ~~~~~~~~~~~~~~^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py\", line 2019, in _run_once\n    event_list = self._selector.select(timeout)\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/selectors.py\", line 548, in select\n    kev_list = self._selector.control(None, max_ev, timeout)\nTypeError: timeout argument must be a number or None, got float\n",
+      "outcome": null
+    },
+    {
+      "id": "google_nan_slow_primary",
+      "timeout_repr": "nan",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "nan",
+        "base_url": "http://127.0.0.1:55856/primary",
+        "bootstrap_url": "http://127.0.0.1:55856/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55856/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 1,
+      "elapsed_ns": 170567333,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/primary?q=loopback+timeout+control&hl=en&num=10",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55856"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332447733867666,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "327"
+              ]
+            ],
+            "body_hex": "0a3c68746d6c3e3c626f64793e0a3c64697620636c6173733d2267223e0a20203c68333e3c6120687265663d2268747470733a2f2f6578616d706c652e636f6d2f7061676531223e526573756c74204f6e653c2f613e3c2f68333e0a20203c6469763e3c7370616e20636c6173733d227374223e4465736372697074696f6e206f6620726573756c74206f6e652e3c2f7370616e3e3c2f6469763e0a3c2f6469763e0a3c64697620636c6173733d2267223e0a20203c68333e3c6120687265663d2268747470733a2f2f6578616d706c652e636f6d2f7061676532223e526573756c742054776f3c2f613e3c2f68333e0a20203c6469763e3c7370616e20636c6173733d227374223e4465736372697074696f6e206f6620726573756c742074776f2e3c2f7370616e3e3c2f6469763e0a3c2f6469763e0a3c2f626f64793e3c2f68746d6c3e0a"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332447824010541
+        }
+      ],
+      "server_closed_monotonic_ns": 332447824103708,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/Users/magnus/.codex/worktrees/rust-a05-html-adapters/SlopSearX/docs/rust-rewrite/a05/oracle/timeout_loopback_source.py\", line 143, in <module>\n    child(json.loads(args.child))\n    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/magnus/.codex/worktrees/rust-a05-html-adapters/SlopSearX/docs/rust-rewrite/a05/oracle/timeout_loopback_source.py\", line 41, in child\n    print(json.dumps(asyncio.run(run()), allow_nan=False))\n                     ~~~~~~~~~~~^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py\", line 205, in run\n    return runner.run(main)\n           ~~~~~~~~~~^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py\", line 128, in run\n    return self._loop.run_until_complete(task)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py\", line 707, in run_until_complete\n    self.run_forever()\n    ~~~~~~~~~~~~~~~~^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py\", line 678, in run_forever\n    self._run_once()\n    ~~~~~~~~~~~~~~^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py\", line 2019, in _run_once\n    event_list = self._selector.select(timeout)\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/selectors.py\", line 548, in select\n    kev_list = self._selector.control(None, max_ev, timeout)\nTypeError: timeout argument must be a number or None, got float\n",
+      "outcome": null
+    },
+    {
+      "id": "google_nan_slow_bootstrap",
+      "timeout_repr": "nan",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "nan",
+        "base_url": "http://127.0.0.1:55860/primary",
+        "bootstrap_url": "http://127.0.0.1:55860/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55860/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 1,
+      "elapsed_ns": 166777625,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/primary?q=loopback+timeout+control&hl=en&num=10",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55860"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332447963704166,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "327"
+              ]
+            ],
+            "body_hex": "0a3c68746d6c3e3c626f64793e0a3c64697620636c6173733d2267223e0a20203c68333e3c6120687265663d2268747470733a2f2f6578616d706c652e636f6d2f7061676531223e526573756c74204f6e653c2f613e3c2f68333e0a20203c6469763e3c7370616e20636c6173733d227374223e4465736372697074696f6e206f6620726573756c74206f6e652e3c2f7370616e3e3c2f6469763e0a3c2f6469763e0a3c64697620636c6173733d2267223e0a20203c68333e3c6120687265663d2268747470733a2f2f6578616d706c652e636f6d2f7061676532223e526573756c742054776f3c2f613e3c2f68333e0a20203c6469763e3c7370616e20636c6173733d227374223e4465736372697074696f6e206f6620726573756c742074776f2e3c2f7370616e3e3c2f6469763e0a3c2f6469763e0a3c2f626f64793e3c2f68746d6c3e0a"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332447963801791
+        }
+      ],
+      "server_closed_monotonic_ns": 332447997841375,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/Users/magnus/.codex/worktrees/rust-a05-html-adapters/SlopSearX/docs/rust-rewrite/a05/oracle/timeout_loopback_source.py\", line 143, in <module>\n    child(json.loads(args.child))\n    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/magnus/.codex/worktrees/rust-a05-html-adapters/SlopSearX/docs/rust-rewrite/a05/oracle/timeout_loopback_source.py\", line 41, in child\n    print(json.dumps(asyncio.run(run()), allow_nan=False))\n                     ~~~~~~~~~~~^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py\", line 205, in run\n    return runner.run(main)\n           ~~~~~~~~~~^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py\", line 128, in run\n    return self._loop.run_until_complete(task)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py\", line 707, in run_until_complete\n    self.run_forever()\n    ~~~~~~~~~~~~~~~~^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py\", line 678, in run_forever\n    self._run_once()\n    ~~~~~~~~~~~~~~^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py\", line 2019, in _run_once\n    event_list = self._selector.select(timeout)\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/selectors.py\", line 548, in select\n    kev_list = self._selector.control(None, max_ev, timeout)\nTypeError: timeout argument must be a number or None, got float\n",
+      "outcome": null
+    },
+    {
+      "id": "google_nan_fallback",
+      "timeout_repr": "nan",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "nan",
+        "base_url": "http://127.0.0.1:55862/primary",
+        "bootstrap_url": "http://127.0.0.1:55862/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55862/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 1,
+      "elapsed_ns": 170406834,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/primary?q=loopback+timeout+control&hl=en&num=10",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55862"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332448145134291,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "42"
+              ]
+            ],
+            "body_hex": "3c68746d6c3e3c626f64793e756e757361626c65207072696d6172793c2f626f64793e3c2f68746d6c3e"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332448145185583
+        }
+      ],
+      "server_closed_monotonic_ns": 332448179989333,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/Users/magnus/.codex/worktrees/rust-a05-html-adapters/SlopSearX/docs/rust-rewrite/a05/oracle/timeout_loopback_source.py\", line 143, in <module>\n    child(json.loads(args.child))\n    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/magnus/.codex/worktrees/rust-a05-html-adapters/SlopSearX/docs/rust-rewrite/a05/oracle/timeout_loopback_source.py\", line 41, in child\n    print(json.dumps(asyncio.run(run()), allow_nan=False))\n                     ~~~~~~~~~~~^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py\", line 205, in run\n    return runner.run(main)\n           ~~~~~~~~~~^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py\", line 128, in run\n    return self._loop.run_until_complete(task)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py\", line 707, in run_until_complete\n    self.run_forever()\n    ~~~~~~~~~~~~~~~~^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py\", line 678, in run_forever\n    self._run_once()\n    ~~~~~~~~~~~~~~^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py\", line 2019, in _run_once\n    event_list = self._selector.select(timeout)\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/selectors.py\", line 548, in select\n    kev_list = self._selector.control(None, max_ev, timeout)\nTypeError: timeout argument must be a number or None, got float\n",
+      "outcome": null
+    },
+    {
+      "id": "google_infinity_immediate",
+      "timeout_repr": "inf",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "inf",
+        "base_url": "http://127.0.0.1:55865/primary",
+        "bootstrap_url": "http://127.0.0.1:55865/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55865/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 271388000,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/primary?q=loopback+timeout+control&hl=en&num=10",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55865"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332448379513833,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "327"
+              ]
+            ],
+            "body_hex": "0a3c68746d6c3e3c626f64793e0a3c64697620636c6173733d2267223e0a20203c68333e3c6120687265663d2268747470733a2f2f6578616d706c652e636f6d2f7061676531223e526573756c74204f6e653c2f613e3c2f68333e0a20203c6469763e3c7370616e20636c6173733d227374223e4465736372697074696f6e206f6620726573756c74206f6e652e3c2f7370616e3e3c2f6469763e0a3c2f6469763e0a3c64697620636c6173733d2267223e0a20203c68333e3c6120687265663d2268747470733a2f2f6578616d706c652e636f6d2f7061676532223e526573756c742054776f3c2f613e3c2f68333e0a20203c6469763e3c7370616e20636c6173733d227374223e4465736372697074696f6e206f6620726573756c742074776f2e3c2f7370616e3e3c2f6469763e0a3c2f6469763e0a3c2f626f64793e3c2f68746d6c3e0a"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332448379640583
+        }
+      ],
+      "server_closed_monotonic_ns": 332448462147458,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [{\"url\": \"https://example.com/page1\", \"title\": \"Result One\", \"content\": \"Description of result one.\", \"engine\": \"google\", \"engines\": [], \"score\": 0.0, \"position\": 1, \"category\": \"general\", \"published_date\": null, \"thumbnail\": null, \"img_src\": null, \"tier\": 1, \"media\": null, \"payload\": null, \"work_group\": null}, {\"url\": \"https://example.com/page2\", \"title\": \"Result Two\", \"content\": \"Description of result two.\", \"engine\": \"google\", \"engines\": [], \"score\": 0.0, \"position\": 2, \"category\": \"general\", \"published_date\": null, \"thumbnail\": null, \"img_src\": null, \"tier\": 1, \"media\": null, \"payload\": null, \"work_group\": null}], \"status\": \"ok\", \"error_message\": null, \"latency_ms\": 63.10591596411541, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [
+            {
+              "url": "https://example.com/page1",
+              "title": "Result One",
+              "content": "Description of result one.",
+              "engine": "google",
+              "engines": [],
+              "score": 0.0,
+              "position": 1,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": null,
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/page2",
+              "title": "Result Two",
+              "content": "Description of result two.",
+              "engine": "google",
+              "engines": [],
+              "score": 0.0,
+              "position": 2,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": null,
+              "work_group": null
+            }
+          ],
+          "status": "ok",
+          "error_message": null,
+          "latency_ms": 63.10591596411541,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "google_infinity_slow_primary",
+      "timeout_repr": "inf",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "inf",
+        "base_url": "http://127.0.0.1:55869/primary",
+        "bootstrap_url": "http://127.0.0.1:55869/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55869/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 308751333,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/primary?q=loopback+timeout+control&hl=en&num=10",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55869"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332448658028083,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "327"
+              ]
+            ],
+            "body_hex": "0a3c68746d6c3e3c626f64793e0a3c64697620636c6173733d2267223e0a20203c68333e3c6120687265663d2268747470733a2f2f6578616d706c652e636f6d2f7061676531223e526573756c74204f6e653c2f613e3c2f68333e0a20203c6469763e3c7370616e20636c6173733d227374223e4465736372697074696f6e206f6620726573756c74206f6e652e3c2f7370616e3e3c2f6469763e0a3c2f6469763e0a3c64697620636c6173733d2267223e0a20203c68333e3c6120687265663d2268747470733a2f2f6578616d706c652e636f6d2f7061676532223e526573756c742054776f3c2f613e3c2f68333e0a20203c6469763e3c7370616e20636c6173733d227374223e4465736372697074696f6e206f6620726573756c742074776f2e3c2f7370616e3e3c2f6469763e0a3c2f6469763e0a3c2f626f64793e3c2f68746d6c3e0a"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332448748209666
+        }
+      ],
+      "server_closed_monotonic_ns": 332448777934750,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [{\"url\": \"https://example.com/page1\", \"title\": \"Result One\", \"content\": \"Description of result one.\", \"engine\": \"google\", \"engines\": [], \"score\": 0.0, \"position\": 1, \"category\": \"general\", \"published_date\": null, \"thumbnail\": null, \"img_src\": null, \"tier\": 1, \"media\": null, \"payload\": null, \"work_group\": null}, {\"url\": \"https://example.com/page2\", \"title\": \"Result Two\", \"content\": \"Description of result two.\", \"engine\": \"google\", \"engines\": [], \"score\": 0.0, \"position\": 2, \"category\": \"general\", \"published_date\": null, \"thumbnail\": null, \"img_src\": null, \"tier\": 1, \"media\": null, \"payload\": null, \"work_group\": null}], \"status\": \"ok\", \"error_message\": null, \"latency_ms\": 113.54874999960884, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [
+            {
+              "url": "https://example.com/page1",
+              "title": "Result One",
+              "content": "Description of result one.",
+              "engine": "google",
+              "engines": [],
+              "score": 0.0,
+              "position": 1,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": null,
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/page2",
+              "title": "Result Two",
+              "content": "Description of result two.",
+              "engine": "google",
+              "engines": [],
+              "score": 0.0,
+              "position": 2,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": null,
+              "work_group": null
+            }
+          ],
+          "status": "ok",
+          "error_message": null,
+          "latency_ms": 113.54874999960884,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "google_infinity_slow_bootstrap",
+      "timeout_repr": "inf",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "inf",
+        "base_url": "http://127.0.0.1:55872/primary",
+        "bootstrap_url": "http://127.0.0.1:55872/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55872/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 148795792,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/primary?q=loopback+timeout+control&hl=en&num=10",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55872"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332448904277750,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "327"
+              ]
+            ],
+            "body_hex": "0a3c68746d6c3e3c626f64793e0a3c64697620636c6173733d2267223e0a20203c68333e3c6120687265663d2268747470733a2f2f6578616d706c652e636f6d2f7061676531223e526573756c74204f6e653c2f613e3c2f68333e0a20203c6469763e3c7370616e20636c6173733d227374223e4465736372697074696f6e206f6620726573756c74206f6e652e3c2f7370616e3e3c2f6469763e0a3c2f6469763e0a3c64697620636c6173733d2267223e0a20203c68333e3c6120687265663d2268747470733a2f2f6578616d706c652e636f6d2f7061676532223e526573756c742054776f3c2f613e3c2f68333e0a20203c6469763e3c7370616e20636c6173733d227374223e4465736372697074696f6e206f6620726573756c742074776f2e3c2f7370616e3e3c2f6469763e0a3c2f6469763e0a3c2f626f64793e3c2f68746d6c3e0a"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332448904326958
+        }
+      ],
+      "server_closed_monotonic_ns": 332448940143458,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [{\"url\": \"https://example.com/page1\", \"title\": \"Result One\", \"content\": \"Description of result one.\", \"engine\": \"google\", \"engines\": [], \"score\": 0.0, \"position\": 1, \"category\": \"general\", \"published_date\": null, \"thumbnail\": null, \"img_src\": null, \"tier\": 1, \"media\": null, \"payload\": null, \"work_group\": null}, {\"url\": \"https://example.com/page2\", \"title\": \"Result Two\", \"content\": \"Description of result two.\", \"engine\": \"google\", \"engines\": [], \"score\": 0.0, \"position\": 2, \"category\": \"general\", \"published_date\": null, \"thumbnail\": null, \"img_src\": null, \"tier\": 1, \"media\": null, \"payload\": null, \"work_group\": null}], \"status\": \"ok\", \"error_message\": null, \"latency_ms\": 24.09020799677819, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [
+            {
+              "url": "https://example.com/page1",
+              "title": "Result One",
+              "content": "Description of result one.",
+              "engine": "google",
+              "engines": [],
+              "score": 0.0,
+              "position": 1,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": null,
+              "work_group": null
+            },
+            {
+              "url": "https://example.com/page2",
+              "title": "Result Two",
+              "content": "Description of result two.",
+              "engine": "google",
+              "engines": [],
+              "score": 0.0,
+              "position": 2,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": null,
+              "work_group": null
+            }
+          ],
+          "status": "ok",
+          "error_message": null,
+          "latency_ms": 24.09020799677819,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "google_infinity_fallback",
+      "timeout_repr": "inf",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "inf",
+        "base_url": "http://127.0.0.1:55875/primary",
+        "bootstrap_url": "http://127.0.0.1:55875/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55875/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 150510833,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/primary?q=loopback+timeout+control&hl=en&num=10",
+          "headers": [
+            [
+              "Host",
+              "127.0.0.1:55875"
+            ],
+            [
+              "Accept-Encoding",
+              "gzip, deflate"
+            ],
+            [
+              "Connection",
+              "keep-alive"
+            ],
+            [
+              "User-Agent",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ],
+            [
+              "Accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            [
+              "Accept-Language",
+              "en-US,en;q=0.9"
+            ]
+          ],
+          "body_hex": "",
+          "received_monotonic_ns": 332449069452125,
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "Content-Type",
+                "text/html; charset=utf-8"
+              ],
+              [
+                "Content-Length",
+                "42"
+              ]
+            ],
+            "body_hex": "3c68746d6c3e3c626f64793e756e757361626c65207072696d6172793c2f626f64793e3c2f68746d6c3e"
+          },
+          "write": "completed",
+          "completed_monotonic_ns": 332449069508208
+        }
+      ],
+      "server_closed_monotonic_ns": 332449103888500,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [], \"status\": \"ok\", \"error_message\": null, \"latency_ms\": 22.608667029999197, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [],
+          "status": "ok",
+          "error_message": null,
+          "latency_ms": 22.608667029999197,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "google_negative_infinity_immediate",
+      "timeout_repr": "-inf",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "-inf",
+        "base_url": "http://127.0.0.1:55885/primary",
+        "bootstrap_url": "http://127.0.0.1:55885/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55885/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 143993500,
+      "requests": [],
+      "server_closed_monotonic_ns": 332449252216458,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [], \"status\": \"timeout\", \"error_message\": null, \"latency_ms\": 22.732750046998262, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [],
+          "status": "timeout",
+          "error_message": null,
+          "latency_ms": 22.732750046998262,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "google_negative_infinity_slow_primary",
+      "timeout_repr": "-inf",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "-inf",
+        "base_url": "http://127.0.0.1:55888/primary",
+        "bootstrap_url": "http://127.0.0.1:55888/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55888/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 164138209,
+      "requests": [],
+      "server_closed_monotonic_ns": 332449426591125,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [], \"status\": \"timeout\", \"error_message\": null, \"latency_ms\": 23.993125010747463, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [],
+          "status": "timeout",
+          "error_message": null,
+          "latency_ms": 23.993125010747463,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "google_negative_infinity_slow_bootstrap",
+      "timeout_repr": "-inf",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "-inf",
+        "base_url": "http://127.0.0.1:55892/primary",
+        "bootstrap_url": "http://127.0.0.1:55892/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55892/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 151156084,
+      "requests": [],
+      "server_closed_monotonic_ns": 332449583834458,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [], \"status\": \"timeout\", \"error_message\": null, \"latency_ms\": 23.50300003308803, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [],
+          "status": "timeout",
+          "error_message": null,
+          "latency_ms": 23.50300003308803,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    },
+    {
+      "id": "google_negative_infinity_fallback",
+      "timeout_repr": "-inf",
+      "config": {
+        "enabled": true,
+        "timeout_ms": "-inf",
+        "base_url": "http://127.0.0.1:55894/primary",
+        "bootstrap_url": "http://127.0.0.1:55894/bootstrap",
+        "fallback_base_url": "http://127.0.0.1:55894/fallback"
+      },
+      "watchdog_seconds": 3,
+      "watchdog_killed_and_reaped": false,
+      "exit_code": 0,
+      "elapsed_ns": 148867417,
+      "requests": [],
+      "server_closed_monotonic_ns": 332449737160500,
+      "serve_forever_joined": true,
+      "handler_policy": {
+        "daemon_threads": false,
+        "block_on_close": true
+      },
+      "stdout": "{\"response\": {\"results\": [], \"status\": \"timeout\", \"error_message\": null, \"latency_ms\": 23.819874972105026, \"answers\": [], \"corrections\": [], \"infoboxes\": [], \"synthetic\": false}}\n",
+      "stderr": "",
+      "outcome": {
+        "response": {
+          "results": [],
+          "status": "timeout",
+          "error_message": null,
+          "latency_ms": 23.819874972105026,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "synthetic": false
+        }
+      }
+    }
+  ]
+}

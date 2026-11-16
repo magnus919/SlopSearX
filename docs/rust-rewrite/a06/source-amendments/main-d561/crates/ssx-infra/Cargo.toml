@@ -1,0 +1,44 @@
+[package]
+name = "ssx-infra"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+aws-lc-rs.workspace = true
+base64.workspace = true
+serde.workspace = true
+url.workspace = true
+ssx-domain.workspace = true
+ssx-config.workspace = true
+ssx-registry.workspace = true
+ssx-application.workspace = true
+tokio.workspace = true
+reqwest.workspace = true
+rustls.workspace = true
+tokio-rustls.workspace = true
+redis.workspace = true
+scraper.workspace = true
+html5ever.workspace = true
+encoding_rs.workspace = true
+libxml = { workspace = true, features = ["owned-budget-child"] }
+ssx-source-codecs.workspace = true
+ssx-owned-budget.workspace = true
+quick-xml.workspace = true
+flate2.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+ssx-json.workspace = true
+chrono = { version = "=0.4.45", default-features = false, features = ["clock", "std"] }
+
+[dev-dependencies]
+ssx-mcp.workspace = true
+ssx-wire.workspace = true
+tokio = { workspace = true, features = ["test-util"] }
+rcgen = { version = "=0.14.10", default-features = false, features = ["aws_lc_rs", "pem"] }
+time = "=0.3.55"

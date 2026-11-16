@@ -1,0 +1,122 @@
+{
+  "status": "isolated_candidate_not_workspace_adoption",
+  "new_packages": [
+    {
+      "name": "a05-binding-proposal",
+      "version": "0.0.0",
+      "dependencies": [
+        "bindgen",
+        "libc",
+        "libxml",
+        "pkg-config"
+      ]
+    },
+    {
+      "name": "aho-corasick",
+      "version": "1.1.5",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "c982642fa9e8606056828ee9a8505737230110bb1099153c79efe865c59d12ba",
+      "dependencies": [
+        "memchr"
+      ]
+    },
+    {
+      "name": "bindgen",
+      "version": "0.73.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "54be9a169b85a1bef39252af30bb6246a31b23c7e0f6a162520dd869f8dad33c",
+      "dependencies": [
+        "bitflags",
+        "cexpr",
+        "clang-sys",
+        "proc-macro2",
+        "quote",
+        "regex",
+        "rustc-hash",
+        "shlex",
+        "syn"
+      ]
+    },
+    {
+      "name": "cexpr",
+      "version": "0.6.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "6fac387a98bb7c37292057cffc56d62ecb629900026402633ae9160df93a8766",
+      "dependencies": [
+        "nom"
+      ]
+    },
+    {
+      "name": "clang-sys",
+      "version": "1.9.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "157a8ba7b480713b56f4c09fd13fc3e0a22a5dfab8097ba61cbc5feef950788a",
+      "dependencies": [
+        "glob",
+        "libc",
+        "libloading"
+      ]
+    },
+    {
+      "name": "glob",
+      "version": "0.3.4",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "e4eba85ea1d0a966a983acd07deee566e67395d2d96b6fb39e62b5a833f1eb0b"
+    },
+    {
+      "name": "libloading",
+      "version": "0.8.9",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "d7c4b02199fee7c5d21a5ae7d8cfa79a6ef5bb2fc834d6e9058e89c825efdc55",
+      "dependencies": [
+        "cfg-if",
+        "windows-link"
+      ]
+    },
+    {
+      "name": "libxml",
+      "version": "0.3.22",
+      "dependencies": [
+        "bindgen",
+        "libc",
+        "pkg-config",
+        "vcpkg"
+      ]
+    },
+    {
+      "name": "regex",
+      "version": "1.13.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "f020237b6c8eed93db2e2cb53c00c60a8e1bc73da7d073199a1180401450218d",
+      "dependencies": [
+        "aho-corasick",
+        "memchr",
+        "regex-automata",
+        "regex-syntax"
+      ]
+    },
+    {
+      "name": "regex-automata",
+      "version": "0.4.18",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "ad8553b9b26413251cbf30e620595c7a41b3887f03da04579c0e6b0d6a06b4b2",
+      "dependencies": [
+        "aho-corasick",
+        "memchr",
+        "regex-syntax"
+      ]
+    },
+    {
+      "name": "regex-syntax",
+      "version": "0.8.11",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "d6f6ff9a378485b298a5286656da665ba74413d36db0979633275d2e708145d4"
+    },
+    {
+      "name": "vcpkg",
+      "version": "0.2.15",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
+    }
+  ]
+}

@@ -1,0 +1,198 @@
+{
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "cases": [
+    {
+      "canonical": "big5",
+      "inputs": [
+        256,
+        65536
+      ],
+      "valid_counts": [
+        128,
+        30094
+      ],
+      "sha256": "201cfa80cfa171862275fb0fb563a6c00365ece9dcd33083f43ee658c9d845de"
+    },
+    {
+      "canonical": "big5hkscs",
+      "inputs": [
+        256,
+        65536
+      ],
+      "valid_counts": [
+        128,
+        34786
+      ],
+      "sha256": "3f9768f72d44d19d81fa457c7c665d32216a244b7abb48b2a6cf590dc70be427"
+    },
+    {
+      "canonical": "cp932",
+      "inputs": [
+        256,
+        65536
+      ],
+      "valid_counts": [
+        196,
+        48020
+      ],
+      "sha256": "a9a3ef55573d7b0b766dc7417909a545d88a93f7a1743c8e8895de579050b831"
+    },
+    {
+      "canonical": "cp949",
+      "inputs": [
+        256,
+        65536
+      ],
+      "valid_counts": [
+        128,
+        33432
+      ],
+      "sha256": "b06c8bc05fd5669196112a47d35cd94f66cfbb01d9fb0fb02ce7da677cdb2d78"
+    },
+    {
+      "canonical": "cp950",
+      "inputs": [
+        256,
+        65536
+      ],
+      "valid_counts": [
+        128,
+        30136
+      ],
+      "sha256": "c20ecf9596783f209e77fd46cf85eb487e123e82b3bb2e0028a98244611bba20"
+    },
+    {
+      "canonical": "euc_jis_2004",
+      "inputs": [
+        256,
+        65536
+      ],
+      "valid_counts": [
+        128,
+        25244
+      ],
+      "sha256": "db97d929e170a4ec6586af6a6fe861e302708281d78b1b883e2eaaa2ec4653ff"
+    },
+    {
+      "canonical": "euc_jisx0213",
+      "inputs": [
+        256,
+        65536
+      ],
+      "valid_counts": [
+        128,
+        25234
+      ],
+      "sha256": "016282e27fd801c079699617d157ccc4b42af2f94aa317f0ce0beeffa248bbee"
+    },
+    {
+      "canonical": "euc_jp",
+      "inputs": [
+        256,
+        65536
+      ],
+      "valid_counts": [
+        128,
+        23326
+      ],
+      "sha256": "c2dbaa67564b660ebf7f6354b27514ffae809d88aaf06914a3b1f7957576311d"
+    },
+    {
+      "canonical": "euc_kr",
+      "inputs": [
+        256,
+        65536
+      ],
+      "valid_counts": [
+        128,
+        24609
+      ],
+      "sha256": "fe13607d63c43b780ba123719992190b86d7a563128543c0799cd192a284de30"
+    },
+    {
+      "canonical": "gb18030",
+      "inputs": [
+        256,
+        65536
+      ],
+      "valid_counts": [
+        128,
+        40324
+      ],
+      "sha256": "386d2f7dc0a4bb1ed0986fb8fc1db5f24171271ea0c0458bd627fea6076d0de6"
+    },
+    {
+      "canonical": "gb2312",
+      "inputs": [
+        256,
+        65536
+      ],
+      "valid_counts": [
+        128,
+        23829
+      ],
+      "sha256": "e6b42fc00fdf3a4e0c84c12b55a8b6604fef8fae5d61ec59c3bf0a9efec0412d"
+    },
+    {
+      "canonical": "gbk",
+      "inputs": [
+        256,
+        65536
+      ],
+      "valid_counts": [
+        128,
+        38175
+      ],
+      "sha256": "97394e6cf8290be58e44ab558b9502abdee448115f0d76656f17817f5503a4c2"
+    },
+    {
+      "canonical": "johab",
+      "inputs": [
+        256,
+        65536
+      ],
+      "valid_counts": [
+        128,
+        33449
+      ],
+      "sha256": "130522f4a7d1c0f1c73b51f82ae51021329d025510b9e9e4e8627e735b555ceb"
+    },
+    {
+      "canonical": "shift_jis",
+      "inputs": [
+        256,
+        65536
+      ],
+      "valid_counts": [
+        191,
+        43360
+      ],
+      "sha256": "02c2dde4fe2ec12884b2c4662db56eae154c1ee8bab28c81b8ec1a20f6c48789"
+    },
+    {
+      "canonical": "shift_jis_2004",
+      "inputs": [
+        256,
+        65536
+      ],
+      "valid_counts": [
+        191,
+        47714
+      ],
+      "sha256": "48baf3ca251a7568f4f5c8633233cef3de66174d723409a274489cce80b06722"
+    },
+    {
+      "canonical": "shift_jisx0213",
+      "inputs": [
+        256,
+        65536
+      ],
+      "valid_counts": [
+        191,
+        47704
+      ],
+      "sha256": "ab13f21e2b3451626f206ca4761677c95f283ed0a34997039c03834526f71a50"
+    }
+  ],
+  "contents": "validity booleans only; no Unicode mapping values"
+}

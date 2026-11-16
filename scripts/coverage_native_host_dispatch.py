@@ -23,16 +23,24 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from jsonschema import Draft202012Validator  # type: ignore[import-untyped]
+
+from scripts.coverage_atomic_io import write_new as _atomic_write_new
 from scripts.coverage_native_grader_handoff import publish_native_tool_result
 
 MODEL = "gpt-6.1-sol"
-TRANSCRIPT_SCHEMA = "coverage-native-host-transcript/2"
+TRANSCRIPT_SCHEMA = "coverage-native-host-transcript/3"
 MAX_PACKET_BYTES = 384_000
 MAX_TRANSCRIPT_BYTES = 12_000_000
 MAX_EVENT_LINE_BYTES = 3_000_000
 _TRANSCRIPT_ENVELOPE_RESERVE_BYTES = 64_000
 _EVENT_MEMORY_OVERHEAD_BYTES = 512
 MAX_IN_FLIGHT = 2
+# OpenAI strict structured outputs support finite explicit schemas, not
+# JSON-Schema's propertyNames/schema-valued additionalProperties map form.
+# Expanding a bounded map with at most six keys produces at most 64 exact
+# object alternatives, which keeps this transport adaptation predictable.
+_MAX_BOUNDED_MAP_KEYS = 6
 DISABLED_FEATURES = (
     "apps",
     "browser_use",
@@ -51,7 +59,6 @@ DISABLED_FEATURES = (
     "remote_plugin",
     "shell_snapshot",
     "shell_tool",
-    "stable_environment_tools",
     "skill_mcp_dependency_install",
     "skill_search",
     "tool_call_mcp_elicitation",
@@ -66,6 +73,33 @@ _MCP_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,127}\Z")
 
 class NativeHostError(RuntimeError):
     """Native host dispatch failed; the reserved packet must not be retried."""
+
+
+def _safe_failure_classification(reason_code: str) -> str:
+    """Map internal failure codes to bounded, non-provider-derived labels."""
+    if reason_code == "native-turn-not-complete":
+        return "turn-reported-non-success"
+    if reason_code in {
+        "native-turn-event-chain-invalid",
+        "native-turn-start-event-mismatch",
+        "native-turn-completed-before-start",
+        "native-turn-start-response-invalid",
+        "native-turn-id-invalid",
+    }:
+        return "turn-event-chain-invalid"
+    if reason_code in {
+        "native-completed-items-missing",
+        "native-completed-items-not-full",
+        "native-assistant-response-missing",
+        "native-persisted-input-mismatch",
+        "native-tool-or-unsupported-item-present",
+    }:
+        return "turn-result-validation-failed"
+    if reason_code in {"native-stage-deadline-expired", "native-host-deadline-expired"}:
+        return "dispatch-deadline-expired"
+    if reason_code == "native-transcript-size-cap":
+        return "event-evidence-size-cap"
+    return "dispatch-protocol-failed"
 
 
 class _TranscriptEvents:
@@ -106,6 +140,363 @@ def _canonical(value: object) -> bytes:
         )
     except (TypeError, ValueError, UnicodeEncodeError) as exc:
         raise NativeHostError("native-transcript-canonical-json-invalid") from exc
+
+
+def _packet_output_schema(packet_bytes: bytes) -> dict[str, object]:
+    payload = _strict(packet_bytes, maximum=MAX_PACKET_BYTES)
+    schema = payload.get("output_schema") if type(payload) is dict else None
+    if type(schema) is not dict:
+        raise NativeHostError("native-output-schema-missing")
+    try:
+        Draft202012Validator.check_schema(schema)
+        if _has_external_ref(schema):
+            raise ValueError("external schema reference")
+    except Exception as exc:
+        raise NativeHostError("native-output-schema-invalid") from exc
+    return schema
+
+
+def _provider_output_schema(schema: dict[str, object]) -> dict[str, object]:
+    """Project a packet schema into strict Structured Outputs' supported subset.
+
+    This is a transport schema only. The packet bytes and the original schema
+    remain authoritative for local post-validation. Bounded maps are expanded
+    into exact closed-object alternatives. Optional declared fields are
+    rejected: the frozen packet families have none, and adding a null/omission
+    codec would weaken transcript fidelity without benefit. Unreachable local
+    definitions are pruned before projection, preserving the schema language
+    while avoiding irrelevant unsupported constructs. Subset and limits:
+    https://developers.openai.com/api/docs/guides/structured-outputs#supported-schemas
+    """
+    supported = {
+        "$defs",
+        "$id",
+        "$ref",
+        "$schema",
+        "additionalProperties",
+        "anyOf",
+        "const",
+        "description",
+        "enum",
+        "exclusiveMaximum",
+        "exclusiveMinimum",
+        "format",
+        "items",
+        "maximum",
+        "maxItems",
+        "maxLength",
+        "minimum",
+        "minItems",
+        "minLength",
+        "multipleOf",
+        "pattern",
+        "properties",
+        "propertyNames",
+        "required",
+        "title",
+        "type",
+        "uniqueItems",
+    }
+
+    def project(node: object, *, root: bool = False) -> dict[str, object]:
+        if type(node) is not dict:
+            raise NativeHostError("native-output-schema-unrepresentable")
+        if root and node.get("type") != "object":
+            raise NativeHostError("native-output-schema-root-not-object")
+        unknown = set(node) - supported
+        if unknown:
+            raise NativeHostError("native-output-schema-unsupported-keyword")
+        if "propertyNames" in node:
+            names = node.get("propertyNames")
+            extra = node.get("additionalProperties")
+            if (
+                node.get("type") != "object"
+                or type(names) is not dict
+                or set(names) != {"enum"}
+                or type(names.get("enum")) is not list
+                or not names["enum"]
+                or any(type(name) is not str or not name for name in names["enum"])
+                or len(set(names["enum"])) != len(names["enum"])
+                or type(extra) is not dict
+                or set(node) - {"type", "propertyNames", "additionalProperties", "description", "title"}
+                or len(names["enum"]) > _MAX_BOUNDED_MAP_KEYS
+            ):
+                raise NativeHostError("native-output-schema-unrepresentable-map")
+            keys = names["enum"]
+            value_schema = project(extra)
+            alternatives = []
+            for mask in range(1 << len(keys)):
+                properties = {key: value_schema for index, key in enumerate(keys) if mask & (1 << index)}
+                alternatives.append(
+                    {
+                        "type": "object",
+                        "properties": properties,
+                        "required": list(properties),
+                        "additionalProperties": False,
+                    }
+                )
+            result: dict[str, object] = {"anyOf": alternatives}
+            for key in ("description", "title"):
+                if key in node:
+                    result[key] = node[key]
+            return result
+
+        result: dict[str, object] = {}
+        props = node.get("properties")
+        if "properties" in node:
+            if node.get("type") != "object" or type(props) is not dict:
+                raise NativeHostError("native-output-schema-unrepresentable-object")
+            if set(node) - {
+                "type",
+                "properties",
+                "required",
+                "additionalProperties",
+                "$defs",
+                "$id",
+                "$schema",
+                "description",
+                "title",
+            }:
+                raise NativeHostError("native-output-schema-unsupported-object-keyword")
+            original_required = node.get("required", [])
+            if (
+                type(original_required) is not list
+                or any(type(name) is not str for name in original_required)
+                or len(set(original_required)) != len(original_required)
+                or set(original_required) != set(props)
+                or node.get("additionalProperties") is not False
+            ):
+                raise NativeHostError("native-output-schema-open-object")
+            projected_props: dict[str, object] = {}
+            for name, child in props.items():
+                projected_child = project(child)
+                projected_props[name] = projected_child
+            result["type"] = "object"
+            result["properties"] = projected_props
+            result["required"] = list(projected_props)
+            result["additionalProperties"] = False
+            for key in ("$defs", "description", "title"):
+                if key in node:
+                    value = node[key]
+                    if key == "$defs":
+                        if type(value) is not dict:
+                            raise NativeHostError("native-output-schema-unrepresentable")
+                        result[key] = {name: project(child) for name, child in value.items()}
+                    else:
+                        result[key] = value
+        else:
+            if node.get("type") == "object" and node.get("additionalProperties") is not False:
+                raise NativeHostError("native-output-schema-open-object")
+            for key, value in node.items():
+                if key in {"uniqueItems", "propertyNames", "additionalProperties"}:
+                    # uniqueItems remains enforced by the frozen local schema.
+                    # propertyNames is handled only by the exact bounded-map case.
+                    if key == "uniqueItems":
+                        continue
+                    if key == "additionalProperties" and node.get("type") == "object" and value is False:
+                        result[key] = False
+                        continue
+                    raise NativeHostError("native-output-schema-unrepresentable")
+                if key in {"items", "$defs"}:
+                    if key == "items":
+                        result[key] = project(value)
+                    elif type(value) is dict:
+                        result[key] = {name: project(child) for name, child in value.items()}
+                    else:
+                        raise NativeHostError("native-output-schema-unrepresentable")
+                elif key == "const":
+                    if "enum" in node:
+                        if value not in node["enum"]:
+                            raise NativeHostError("native-output-schema-contradictory-const")
+                        result["enum"] = [value]
+                    else:
+                        result["enum"] = [value]
+                elif key == "anyOf":
+                    if type(value) is not list or not value:
+                        raise NativeHostError("native-output-schema-invalid-anyof")
+                    result[key] = [project(child) for child in value]
+                elif key in {"$id", "$schema"}:
+                    # Draft declaration is meta-information, not a constraint.
+                    continue
+                elif key in {
+                    "type",
+                    "$ref",
+                    "enum",
+                    "description",
+                    "title",
+                    "format",
+                    "pattern",
+                    "minimum",
+                    "maximum",
+                    "exclusiveMinimum",
+                    "exclusiveMaximum",
+                    "multipleOf",
+                    "minItems",
+                    "maxItems",
+                    "minLength",
+                    "maxLength",
+                }:
+                    result[key] = value
+                else:
+                    raise NativeHostError("native-output-schema-unrepresentable")
+        if "const" in node:
+            value = node["const"]
+            if "enum" in node and value not in node["enum"]:
+                raise NativeHostError("native-output-schema-contradictory-const")
+            result["enum"] = [value]
+        if "type" not in result and "enum" in result:
+            inferred_types = {_provider_json_type(value) for value in result["enum"]}
+            if len(inferred_types) != 1:
+                raise NativeHostError("native-output-schema-heterogeneous-enum")
+            result["type"] = inferred_types.pop()
+        if root and result.get("type") != "object":
+            raise NativeHostError("native-output-schema-root-not-object")
+        return result
+
+    projected = project(_prune_unreachable_definitions(schema), root=True)
+    try:
+        Draft202012Validator.check_schema(projected)
+    except Exception as exc:
+        raise NativeHostError("native-output-schema-projection-invalid") from exc
+    _check_provider_schema_limits(projected)
+    return projected
+
+
+def _prune_unreachable_definitions(schema: dict[str, object]) -> dict[str, object]:
+    """Remove only definitions unreachable from the root through local refs."""
+    definitions = schema.get("$defs", {})
+    if type(definitions) is not dict:
+        raise NativeHostError("native-output-schema-invalid-definitions")
+    reachable: set[str] = set()
+
+    def scan(node: object) -> None:
+        if type(node) is dict:
+            ref = node.get("$ref")
+            if ref is not None:
+                if type(ref) is not str or not ref.startswith("#/$defs/"):
+                    raise NativeHostError("native-output-schema-reference-unsupported")
+                tokens = ref[2:].split("/")
+                if len(tokens) != 2:
+                    raise NativeHostError("native-output-schema-reference-unsupported")
+                name = tokens[1].replace("~1", "/").replace("~0", "~")
+                if name not in definitions:
+                    raise NativeHostError("native-output-schema-reference-invalid")
+                if name not in reachable:
+                    reachable.add(name)
+                    scan(definitions[name])
+            for key, value in node.items():
+                if key not in {"$defs", "$ref"}:
+                    scan(value)
+        elif type(node) is list:
+            for value in node:
+                scan(value)
+
+    scan({key: value for key, value in schema.items() if key != "$defs"})
+    cleaned: dict[str, object] = {key: value for key, value in schema.items() if key != "$defs"}
+    if reachable:
+        cleaned["$defs"] = {key: value for key, value in definitions.items() if key in reachable}
+    return cleaned
+
+
+def _provider_json_type(value: object) -> str:
+    if value is None:
+        return "null"
+    if type(value) is bool:
+        return "boolean"
+    if type(value) is int:
+        return "integer"
+    if type(value) is float:
+        return "number"
+    if type(value) is str:
+        return "string"
+    if type(value) is list:
+        return "array"
+    if type(value) is dict:
+        return "object"
+    raise NativeHostError("native-output-schema-enum-value-invalid")
+
+
+def _check_provider_schema_limits(schema: dict[str, object]) -> None:
+    """Enforce Structured Outputs shape/size limits before any batch dispatch."""
+    allowed = {
+        "$defs",
+        "$ref",
+        "additionalProperties",
+        "anyOf",
+        "description",
+        "enum",
+        "exclusiveMaximum",
+        "exclusiveMinimum",
+        "format",
+        "items",
+        "maximum",
+        "maxItems",
+        "maxLength",
+        "minimum",
+        "minItems",
+        "minLength",
+        "multipleOf",
+        "pattern",
+        "properties",
+        "required",
+        "title",
+        "type",
+    }
+    properties = 0
+    enum_values = 0
+    string_size = 0
+    largest_string_enum = 0
+
+    def walk(node: object, object_depth: int = 0) -> None:
+        nonlocal properties, enum_values, string_size, largest_string_enum
+        if type(node) is not dict:
+            raise NativeHostError("native-output-schema-projection-invalid")
+        if set(node) - allowed:
+            raise NativeHostError("native-output-schema-unsupported-keyword")
+        is_object = node.get("type") == "object"
+        depth = object_depth + int(is_object)
+        if depth > 10:
+            raise NativeHostError("native-output-schema-nesting-limit")
+        props = node.get("properties")
+        if is_object:
+            if type(props) is not dict or node.get("additionalProperties") is not False:
+                raise NativeHostError("native-output-schema-open-object")
+            required = node.get("required")
+            if type(required) is not list or set(required) != set(props):
+                raise NativeHostError("native-output-schema-required-fields")
+            properties += len(props)
+            string_size += sum(len(key) for key in props)
+            for child in props.values():
+                walk(child, depth)
+        elif "properties" in node or "required" in node or "additionalProperties" in node:
+            raise NativeHostError("native-output-schema-invalid-object-keywords")
+        if "enum" in node:
+            values = node["enum"]
+            if type(values) is not list or not values:
+                raise NativeHostError("native-output-schema-invalid-enum")
+            enum_values += len(values)
+            string_chars = sum(len(value) for value in values if type(value) is str)
+            string_size += string_chars
+            largest_string_enum = max(largest_string_enum, string_chars if len(values) > 250 else 0)
+        if "$defs" in node:
+            defs = node["$defs"]
+            if type(defs) is not dict:
+                raise NativeHostError("native-output-schema-invalid-definitions")
+            string_size += sum(len(key) for key in defs)
+            for child in defs.values():
+                walk(child, depth)
+        if "items" in node:
+            walk(node["items"], depth)
+        if "anyOf" in node:
+            variants = node["anyOf"]
+            if type(variants) is not list or not variants:
+                raise NativeHostError("native-output-schema-invalid-anyof")
+            for child in variants:
+                walk(child, depth)
+
+    walk(schema)
+    if properties > 5_000 or enum_values > 1_000 or string_size > 120_000 or largest_string_enum > 15_000:
+        raise NativeHostError("native-output-schema-provider-limit")
 
 
 def _tool_policy(mcp_server_ids: list[str]) -> dict[str, object]:
@@ -156,23 +547,10 @@ def _write_exclusive(path: Path, raw: bytes) -> None:
     path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
     if path.parent.is_symlink() or stat.S_IMODE(path.parent.stat(follow_symlinks=False).st_mode) & 0o077:
         raise NativeHostError("native-transcript-directory-not-private")
-    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0)
     try:
-        descriptor = os.open(path, flags, 0o600)
+        _atomic_write_new(path, raw)
     except FileExistsError as exc:
         raise NativeHostError("native-packet-already-claimed") from exc
-    try:
-        with os.fdopen(descriptor, "wb", closefd=False) as stream:
-            stream.write(raw)
-            stream.flush()
-            os.fsync(stream.fileno())
-    finally:
-        os.close(descriptor)
-    parent_fd = os.open(path.parent, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0))
-    try:
-        os.fsync(parent_fd)
-    finally:
-        os.close(parent_fd)
 
 
 def _read_private(path: Path, *, maximum: int) -> bytes:
@@ -337,10 +715,19 @@ def verify_transcript(
     ):
         raise NativeHostError("native-thread-start-policy")
     turn_params = start_turn.get("params")
+    output_schema = None
+    if (
+        type(turn_params) is dict
+        and type(turn_params.get("input")) is list
+        and len(turn_params["input"]) == 1
+        and type(turn_params["input"][0]) is dict
+        and type(turn_params["input"][0].get("text")) is str
+    ):
+        output_schema = _packet_output_schema(turn_params["input"][0]["text"].encode("utf-8"))
     if (
         start_turn.get("id") != 3
         or type(turn_params) is not dict
-        or set(turn_params) != {"threadId", "model", "input"}
+        or set(turn_params) != {"threadId", "model", "input", "outputSchema"}
         or turn_params.get("threadId") is None
         or turn_params.get("model") != expected_model
         or type(turn_params.get("input")) is not list
@@ -349,12 +736,13 @@ def verify_transcript(
         or set(turn_params["input"][0]) != {"type", "text"}
         or turn_params["input"][0].get("type") != "text"
         or type(turn_params["input"][0].get("text")) is not str
+        or type(output_schema) is not dict
+        or turn_params.get("outputSchema") != _provider_output_schema(output_schema)
     ):
         raise NativeHostError("native-turn-start-binding")
     input_bytes = turn_params["input"][0]["text"].encode("utf-8")
     if len(input_bytes) != value["packet_byte_count"] or _sha(input_bytes) != packet_sha256:
         raise NativeHostError("native-input-packet-bytes-mismatch")
-
     response_rows = [message for message in server_messages if "id" in message]
     response_ids = [message.get("id") for message in response_rows]
     if len(response_ids) != len(set(response_ids)):
@@ -402,15 +790,102 @@ def verify_transcript(
         raise NativeHostError("native-turn-event-chain-invalid")
     if type(started[0]) is not dict or started[0].get("id") != turn_id:
         raise NativeHostError("native-turn-start-event-mismatch")
-    turn = completed[0]
-    if type(turn) is not dict or turn.get("id") != turn_id or turn.get("status") != "completed":
+    completion = completed[0]
+    if type(completion) is not dict or completion.get("id") != turn_id or completion.get("status") != "completed":
         raise NativeHostError("native-turn-not-complete")
-    items_view = turn.get("itemsView", "full")
-    if items_view != "full":
-        raise NativeHostError("native-completed-items-not-full")
-    items = turn.get("items")
-    if type(items) is not list:
+    turn_started_positions = [
+        index
+        for index, event in enumerate(events)
+        if event["direction"] == "server" and event["message"].get("method") == "turn/started"
+    ]
+    turn_completed_positions = [
+        index
+        for index, event in enumerate(events)
+        if event["direction"] == "server" and event["message"].get("method") == "turn/completed"
+    ]
+    if len(turn_started_positions) != 1 or len(turn_completed_positions) != 1:
+        raise NativeHostError("native-turn-event-chain-invalid")
+    turn_started_position = turn_started_positions[0]
+    turn_completed_position = turn_completed_positions[0]
+    if turn_started_position >= turn_completed_position:
+        raise NativeHostError("native-turn-event-order-invalid")
+
+    started_items: dict[str, tuple[int, int, dict[str, Any]]] = {}
+    completed_items: dict[str, tuple[int, int, dict[str, Any]]] = {}
+    for index, event in enumerate(events):
+        if event["direction"] != "server":
+            continue
+        message = event["message"]
+        method = message.get("method")
+        if method not in {"item/started", "item/completed"}:
+            continue
+        params = message.get("params")
+        if (
+            type(params) is not dict
+            or params.get("threadId") != thread_id
+            or params.get("turnId") != turn_id
+            or type(params.get("item")) is not dict
+        ):
+            raise NativeHostError("native-item-lifecycle-binding")
+        item = params["item"]
+        item_id = item.get("id")
+        item_type = item.get("type")
+        timestamp_key = "startedAtMs" if method == "item/started" else "completedAtMs"
+        if type(item_id) is not str or not item_id or type(item_type) is not str:
+            raise NativeHostError("native-item-lifecycle-item-invalid")
+        if type(params.get(timestamp_key)) is not int or params[timestamp_key] < 0:
+            raise NativeHostError("native-item-lifecycle-timestamp-invalid")
+        if item_type not in {"userMessage", "agentMessage", "reasoning"}:
+            raise NativeHostError("native-tool-or-unsupported-item-present")
+        target = started_items if method == "item/started" else completed_items
+        if item_id in target:
+            raise NativeHostError("native-item-lifecycle-duplicate")
+        target[item_id] = (index, params[timestamp_key], item)
+
+    if not started_items or set(started_items) != set(completed_items):
+        raise NativeHostError("native-item-lifecycle-incomplete")
+    for item_id, (start_index, started_at, started_item) in started_items.items():
+        complete_index, completed_at, completed_item = completed_items[item_id]
+        if (
+            not turn_started_position < start_index < complete_index < turn_completed_position
+            or completed_at < started_at
+            or started_item.get("type") != completed_item.get("type")
+        ):
+            raise NativeHostError("native-item-lifecycle-order-invalid")
+    items = [item for _, _, item in sorted(completed_items.values(), key=lambda entry: entry[0])]
+    completion = completed[0]
+    completion_view = completion.get("itemsView", "full")
+    completion_items = completion.get("items")
+    if completion_view not in {"full", "summary", "notLoaded"}:
+        raise NativeHostError("native-completed-items-view-invalid")
+    if type(completion_items) is not list:
         raise NativeHostError("native-completed-items-missing")
+    if completion_view == "full" and completion_items != items:
+        raise NativeHostError("native-completed-items-mismatch")
+    if completion_view == "notLoaded" and completion_items:
+        raise NativeHostError("native-completed-items-mismatch")
+    if completion_view == "summary":
+        full_by_id = {item["id"]: item for item in items}
+
+        def is_consistent_summary(summary: Any, full: dict[str, Any]) -> bool:
+            if (
+                type(summary) is not dict
+                or summary.get("id") != full.get("id")
+                or summary.get("type") != full.get("type")
+            ):
+                return False
+            return all(full.get(key) == value for key, value in summary.items())
+
+        summary_ids: set[str] = set()
+        for summary_item in completion_items:
+            if type(summary_item) is not dict or type(summary_item.get("id")) is not str:
+                raise NativeHostError("native-completed-items-mismatch")
+            summary_id = summary_item["id"]
+            if summary_id in summary_ids or summary_id not in full_by_id:
+                raise NativeHostError("native-completed-items-mismatch")
+            summary_ids.add(summary_id)
+            if not is_consistent_summary(summary_item, full_by_id[summary_id]):
+                raise NativeHostError("native-completed-items-mismatch")
     user_items = [item for item in items if type(item) is dict and item.get("type") == "userMessage"]
     assistant_items = [item for item in items if type(item) is dict and item.get("type") == "agentMessage"]
     if len(user_items) != 1 or len(assistant_items) != 1:
@@ -428,13 +903,35 @@ def verify_transcript(
         or user_content[0].get("text") != turn_params["input"][0]["text"]
     ):
         raise NativeHostError("native-persisted-input-mismatch")
+    started_user_items = [item for _, _, item in started_items.values() if item.get("type") == "userMessage"]
+    if len(started_user_items) != 1 or started_user_items[0].get("content") != user_content:
+        raise NativeHostError("native-started-input-mismatch")
     response = assistant_items[0].get("text")
     if type(response) is not str or not response:
         raise NativeHostError("native-assistant-response-missing")
     response_bytes = response.encode("utf-8")
     if len(response_bytes) > 2_000_000:
         raise NativeHostError("native-assistant-response-over-cap")
+    response_value = _strict(response_bytes, maximum=2_000_000)
+    try:
+        if next(Draft202012Validator(output_schema).iter_errors(response_value), None) is not None:
+            raise NativeHostError("native-assistant-response-schema-invalid")
+    except NativeHostError:
+        raise
+    except Exception as exc:
+        raise NativeHostError("native-output-schema-invalid") from exc
     return VerifiedTranscript(thread_id, turn_id, thread_result["modelProvider"], response_bytes)
+
+
+def _has_external_ref(schema: object) -> bool:
+    if type(schema) is dict:
+        ref = schema.get("$ref")
+        return (ref is not None and (type(ref) is not str or not ref.startswith("#"))) or any(
+            _has_external_ref(value) for value in schema.values()
+        )
+    if type(schema) is list:
+        return any(_has_external_ref(value) for value in schema)
+    return False
 
 
 async def _read_message(reader: asyncio.StreamReader, *, deadline: float) -> dict[str, Any]:
@@ -477,6 +974,7 @@ async def _invoke_codex(
     cli_executable_sha256: str,
     cli_version: str,
     mcp_server_ids: list[str],
+    failure_events_path: Path,
     deadline: float,
 ) -> tuple[bytes, VerifiedTranscript]:
     try:
@@ -494,6 +992,7 @@ async def _invoke_codex(
             limit=MAX_EVENT_LINE_BYTES + 1,
         )
         assert process.stdin is not None and process.stdout is not None
+        turn_start_sent = False
         try:
             requests = [
                 {
@@ -548,14 +1047,21 @@ async def _invoke_codex(
                 "jsonrpc": "2.0",
                 "id": 3,
                 "method": "turn/start",
-                "params": {"threadId": thread_id, "model": MODEL, "input": [{"type": "text", "text": packet_text}]},
+                "params": {
+                    "threadId": thread_id,
+                    "model": MODEL,
+                    "input": [{"type": "text", "text": packet_text}],
+                    "outputSchema": _provider_output_schema(_packet_output_schema(packet_bytes)),
+                },
             }
             if time.monotonic() >= deadline:
                 raise NativeHostError("native-stage-deadline-expired-before-turn")
             events.append({"direction": "client", "message": turn_start})
             await _write_request(process.stdin, turn_start, deadline=deadline)
+            turn_start_sent = True
             turn_id = None
             turn_start_response = False
+            completion_notification = None
             while True:
                 message = await _read_message(process.stdout, deadline=deadline)
                 events.append({"direction": "server", "message": message})
@@ -569,7 +1075,14 @@ async def _invoke_codex(
                     if type(params) is dict and params.get("threadId") == thread_id:
                         if not turn_start_response or type(turn_id) is not str:
                             raise NativeHostError("native-turn-completed-before-start")
+                        completion_notification = params.get("turn")
                         break
+            if (
+                type(completion_notification) is not dict
+                or completion_notification.get("id") != turn_id
+                or completion_notification.get("status") != "completed"
+            ):
+                raise NativeHostError("native-turn-not-complete")
             transcript = {
                 "schema": TRANSCRIPT_SCHEMA,
                 "stage_uuid": stage_uuid,
@@ -599,6 +1112,31 @@ async def _invoke_codex(
                 expected_mcp_server_ids=mcp_server_ids,
             )
             return transcript_bytes, verified
+        except Exception as exc:
+            if turn_start_sent:
+                reason_code = exc.args[0] if isinstance(exc, NativeHostError) and exc.args else "native-dispatch-failed"
+                failure_evidence = {
+                    "schema": "coverage-native-host-failure-events/1",
+                    "stage_uuid": stage_uuid,
+                    "phase": phase,
+                    "packet_id": packet_id,
+                    "packet_sha256": _sha(packet_bytes),
+                    "model": MODEL,
+                    "cli_executable_sha256": cli_executable_sha256,
+                    "cli_version": cli_version,
+                    "reason_code": reason_code,
+                    "classification": _safe_failure_classification(reason_code),
+                    "event_count": len(events.events),
+                    "events": events.events,
+                }
+                try:
+                    failure_bytes = _canonical(failure_evidence)
+                    if len(failure_bytes) <= MAX_TRANSCRIPT_BYTES:
+                        _write_exclusive(failure_events_path, failure_bytes)
+                except (NativeHostError, OSError):
+                    # Diagnostic persistence must never change the terminal failure.
+                    pass
+            raise
         finally:
             process.stdin.close()
             if process.returncode is None:
@@ -697,7 +1235,7 @@ async def _run_mcp_list(
     remaining = deadline - time.monotonic()
     if remaining <= 0:
         raise NativeHostError("native-stage-deadline-expired")
-    command = [codex_executable, "mcp", "list"]
+    command = [codex_executable, "mcp", "list", "--json"]
     for feature in DISABLED_FEATURES:
         command.extend(("--disable", feature))
     command.extend(("-c", 'web_search="disabled"', "-c", "tools.view_image=false"))
@@ -722,27 +1260,36 @@ async def _run_mcp_list(
         raise NativeHostError("native-mcp-inventory-unavailable") from exc
     if process.returncode != 0 or len(stdout) > 1_000_000:
         raise NativeHostError("native-mcp-inventory-unavailable")
+
+    def unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
+        result: dict[str, object] = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("duplicate-key")
+            result[key] = value
+        return result
+
     try:
-        lines = stdout.decode("utf-8", "strict").splitlines()
-    except UnicodeDecodeError as exc:
+        inventory = json.loads(
+            stdout.decode("utf-8", "strict"),
+            object_pairs_hook=unique_object,
+            parse_constant=lambda _value: (_ for _ in ()).throw(ValueError("invalid-constant")),
+        )
+    except (UnicodeDecodeError, ValueError, RecursionError) as exc:
         raise NativeHostError("native-mcp-inventory-format-invalid") from exc
-    if not lines:
+    if type(inventory) is not list:
         raise NativeHostError("native-mcp-inventory-format-invalid")
-    if lines[0].startswith("No MCP servers configured yet."):
-        return {}, _sha(stdout)
-    if not lines[0].split() or lines[0].split()[0] != "Name":
-        raise NativeHostError("native-mcp-inventory-format-invalid")
-    rows = {}
-    for line in lines[1:]:
-        if not line.strip():
-            continue
-        columns = line.split()
-        name = columns[0]
-        if not _MCP_ID.fullmatch(name) or len(columns) < 3 or columns[-2] not in {"enabled", "disabled"}:
-            raise NativeHostError("native-mcp-server-id-unsupported")
-        rows[name] = columns[-2]
-    if len(rows) != sum(1 for line in lines[1:] if line.strip()):
-        raise NativeHostError("native-mcp-inventory-duplicate")
+    rows: dict[str, str] = {}
+    for row in inventory:
+        if type(row) is not dict:
+            raise NativeHostError("native-mcp-inventory-format-invalid")
+        name = row.get("name")
+        enabled = row.get("enabled")
+        if type(name) is not str or not _MCP_ID.fullmatch(name) or type(enabled) is not bool:
+            raise NativeHostError("native-mcp-inventory-format-invalid")
+        if name in rows:
+            raise NativeHostError("native-mcp-inventory-duplicate")
+        rows[name] = "enabled" if enabled else "disabled"
     return rows, _sha(stdout)
 
 
@@ -775,17 +1322,25 @@ def _read_phase_deadline(scope: Path, *, stage_uuid: str, phase: str) -> float:
     value = _strict(raw, maximum=16_384)
     if (
         type(value) is not dict
-        or set(value) != {"schema", "stage_uuid", "phase", "deadline_monotonic"}
+        or set(value) != {"schema", "stage_uuid", "phase", "created_at_utc", "deadline_at_utc"}
         or _canonical(value) != raw
-        or value.get("schema") != "coverage-native-phase-deadline/1"
+        or value.get("schema") != "coverage-native-phase-deadline/2"
         or value.get("stage_uuid") != stage_uuid
         or value.get("phase") != phase
-        or type(value.get("deadline_monotonic")) not in {int, float}
-        or not math.isfinite(value["deadline_monotonic"])
-        or value["deadline_monotonic"] <= 0
+        or type(value.get("created_at_utc")) not in {int, float}
+        or not math.isfinite(value["created_at_utc"])
+        or value["created_at_utc"] <= 0
+        or type(value.get("deadline_at_utc")) not in {int, float}
+        or not math.isfinite(value["deadline_at_utc"])
+        or value["deadline_at_utc"] <= value["created_at_utc"]
+        or value["deadline_at_utc"] - value["created_at_utc"] > 8 * 60 * 60
     ):
         raise NativeHostError("native-phase-deadline-binding-invalid")
-    return float(value["deadline_monotonic"])
+    wall_now = time.time()
+    if wall_now < value["created_at_utc"]:
+        raise NativeHostError("native-phase-deadline-clock-invalid")
+    remaining = max(0.0, float(value["deadline_at_utc"] - wall_now))
+    return time.monotonic() + remaining
 
 
 def _load_scope(
@@ -921,6 +1476,10 @@ async def dispatch_handoff_scope(
         raise NativeHostError("native-stage-deadline-expired")
     executable_path, cli_version = _cli_identity(codex_executable, expected_cli_sha256)
     manifest_raw, _manifest, requests = _load_scope(scope, stage_uuid=stage_uuid, phase=phase)
+    # Reject an unrepresentable packet anywhere in the immutable phase before
+    # reserving packets or making any app-server calls for the batch.
+    for request in requests:
+        _provider_output_schema(_packet_output_schema(request["bytes"]))
     mcp_server_ids, tool_policy_evidence = await _configured_mcp_server_ids(
         executable_path, deadline=deadline_monotonic
     )
@@ -1003,6 +1562,7 @@ async def dispatch_handoff_scope(
                     cli_executable_sha256=expected_cli_sha256,
                     cli_version=cli_version,
                     mcp_server_ids=mcp_server_ids,
+                    failure_events_path=failure_root / f"{packet_id}.events.json",
                     deadline=deadline_monotonic,
                 )
                 async with activity_lock:

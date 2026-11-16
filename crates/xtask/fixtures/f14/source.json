@@ -1,0 +1,2781 @@
+{
+  "schema_version": 1,
+  "plan_id": "F14",
+  "python": "3.14.7",
+  "provenance": "Actual Python source execution with synthetic local inputs; no upstream recordings or provider calls. Native runtime tests separately exercise private loopback HTTP and Valkey.",
+  "source_commit": "730c37a5f48b9830088594582cefb4c2f10a35e8",
+  "source_files": {
+    "slopsearx/service.py": {
+      "sha256": "aed455ccbefcfee5ffcf099876dc7230cead27527313269edc0f69b504c20922",
+      "git_blob": "8b45ce71efc3c7cc4a72b962968e146a63e135be"
+    },
+    "slopsearx/suggest.py": {
+      "sha256": "52da46168fa09208bba88a8e414e878ce9d2b6260b2aadea2306ff3e1e8b3dc1",
+      "git_blob": "09a8d1bced385507f2a0e1d689133ffa3da0e79f"
+    },
+    "slopsearx/adapter.py": {
+      "sha256": "5883a35c48d0dad1077306fbda21997ee1d32116a8c03633a6b762de0c26d6f3",
+      "git_blob": "664e853d9ab1330596d01899ebe015701de09e88"
+    },
+    "slopsearx/cache.py": {
+      "sha256": "88155d2060f19bcb7740c9498f8f82378e26c4c60ac4d013bee9913eb333c089",
+      "git_blob": "354dbc179c4ca6ebc4ac9f85dd66a40d07ba3c09"
+    },
+    "slopsearx/snapshot.py": {
+      "sha256": "85c88b483635003a4a395f40cf48eb83a564b8dd3965ed8a139ba65c1ea88377",
+      "git_blob": "fe0e62b9872b3d01cef6a8f843d9720f2cd50a42"
+    },
+    "slopsearx/filters.py": {
+      "sha256": "f0edd2f633cc9a42c49660ca74b225732cbc82937a15ad58a5b0dbeb76e103a9",
+      "git_blob": "e1a1cac35c5fcbbf2e6fb7728241953aa8047669"
+    },
+    "slopsearx/merger.py": {
+      "sha256": "5bb1a599ed8330aad02bd6567984d12c02f4ed735059c4f50cd6dfefd21e5eda",
+      "git_blob": "75585f5a7b285c9db5e7aee2c67b7ce177b636ee"
+    },
+    "slopsearx/scholarly.py": {
+      "sha256": "cfa7ab4c0326b0a3c3da97e527766a65c657a9865897193d3ae59964779b77d5",
+      "git_blob": "9d0fa36c8e9c7321d8c26270dbe466a171f00315"
+    },
+    "slopsearx/router.py": {
+      "sha256": "ef06ec73b7a94e8ae7880127d2974fc52050741e3a140d0407070d17cc925065",
+      "git_blob": "ef14e463d2d49bcdb2af60dd02691649cd80a639"
+    },
+    "slopsearx/capabilities.py": {
+      "sha256": "ed4e332a4df1de32d83b9dd2b62dddb622082ab4c236c0c9cef8d8d23336fd6f",
+      "git_blob": "5ef6f90750352fdadbc877561d3520c1fe774fdb"
+    },
+    "slopsearx/ratelimit.py": {
+      "sha256": "3f2a281ec40bb6b7639556e14ab394c10a9da20c6c215bdc1e07a188f397f751",
+      "git_blob": "5c7cd57a679591879b2a4e2d2bf2fb520d9d7eb5"
+    },
+    "slopsearx/payload.py": {
+      "sha256": "a44a95655566f9fadaf62da1bab8c975f71f3ead6c3cc57f48c411a9c093c40d",
+      "git_blob": "efa149d48bae401f7a0a9df6e50c8c614adecbb5"
+    },
+    "slopsearx/publication_metadata.py": {
+      "sha256": "0096ba4a3e8f24a1880fcde6d3aa91b9c88d318e3591c9dbe3071aad911ee323",
+      "git_blob": "c97fa68236b517af3531bdbabb20d0e49f4a89fc"
+    },
+    "slopsearx/routing.py": {
+      "sha256": "8a6abc8189ba7351274a55018575879d36d66d7a9685ed65201d60c3e1bc9e9f",
+      "git_blob": "ffa2afc58add323cc9d321505800c3f3ed038853"
+    },
+    "slopsearx/jev.py": {
+      "sha256": "abdf250eda6018155b700b2cc4d22fe57ec1ae39c148c1f942082540d34cfe03",
+      "git_blob": "2bbb5c01f20b4db16730cbe3460e625b3d27fa23"
+    },
+    "slopsearx/rerank.py": {
+      "sha256": "df518bac899fa457e713201192a65f8ee0c3599419382e5be221d5ac366b479e",
+      "git_blob": "0e462dbfe0520683e4b37980b8407f320b87a7d6"
+    },
+    "slopsearx/stats.py": {
+      "sha256": "04dd73d675394d3d0cea39a9841db4fad19d9de16515236d227c00bbc12d1169",
+      "git_blob": "2af5a474951944a39c134994e060aa8f5dacdb9e"
+    },
+    "slopsearx/audit.py": {
+      "sha256": "11896df807d77088ae4985540936705a8c27a463cd1aa4f7ecca5bbd4a1f5c32",
+      "git_blob": "b37ad2f3d2c9f60e2b109ff31fbc5f06de8426f6"
+    },
+    "slopsearx/metrics.py": {
+      "sha256": "2df238e07c692be05f73bdc3b1e7896dbae576df1d5128a445e6a9fe196c0edc",
+      "git_blob": "70d9a045d25bdbca6caf5b9491caa4a15071e453"
+    },
+    "slopsearx/config.py": {
+      "sha256": "1cf76b8732439782342a9d217fb2f7c423f688533f287dbf78729a1defc5236e",
+      "git_blob": "761db0521d74ec6d955aa8a84fd92a4a62533c43"
+    },
+    "slopsearx/logging.py": {
+      "sha256": "b4208d3c051914bea94404de16248959abee4ca61dffcaa641cc5b2e4d18652e",
+      "git_blob": "d9851d25c6b168cbd06c2088274bf135aefe36ae"
+    },
+    "tests/test_service.py": {
+      "sha256": "acdd4f1f38c5fa2feced0cad6c81d997565752440961e6052913a5b3b73ab8ea",
+      "git_blob": "ecfa8043b9e881b24c1bc0c5b63fbe318cc02aaa"
+    },
+    "tests/test_concurrency.py": {
+      "sha256": "4e6df1315939bf7e71762d8da8dabe1c111c9fa99a35102899afcc3fe18346f5",
+      "git_blob": "c85ccc5357cc64840c8514e70d1e0d3673356b2b"
+    },
+    "tests/test_interactive_deadline.py": {
+      "sha256": "51b4f7fff63fff701e233d957f58175c949d82f8ea448fe938ad0fd7ddb12552",
+      "git_blob": "d406af2adc49a11ee8de58f376a41b15e35ba956"
+    }
+  },
+  "normalizations": [
+    "query_id",
+    "response_time_ms"
+  ],
+  "cases": [
+    {
+      "id": "complete",
+      "kind": "service",
+      "request": {},
+      "statuses": [
+        "ok",
+        "ok"
+      ],
+      "output": {
+        "query": " café 🐙 ",
+        "results": [
+          {
+            "url": "https://example.test/brave/0",
+            "title": "brave 0",
+            "content": "body",
+            "engine": "brave",
+            "engines": [
+              "brave"
+            ],
+            "score": 1.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/brave/1",
+            "title": "brave 1",
+            "content": "body",
+            "engine": "brave",
+            "engines": [
+              "brave"
+            ],
+            "score": 1.0,
+            "position": 2,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/brave/2",
+            "title": "brave 2",
+            "content": "body",
+            "engine": "brave",
+            "engines": [
+              "brave"
+            ],
+            "score": 1.0,
+            "position": 3,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/wikipedia/0",
+            "title": "wikipedia 0",
+            "content": "body",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "score": 1.0,
+            "position": 4,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/wikipedia/1",
+            "title": "wikipedia 1",
+            "content": "body",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "score": 1.0,
+            "position": 5,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/wikipedia/2",
+            "title": "wikipedia 2",
+            "content": "body",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "score": 1.0,
+            "position": 6,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "scope": {
+          "selected_engines": [
+            "brave",
+            "wikipedia"
+          ],
+          "resolved_categories": [],
+          "routing_rule": "all active engines",
+          "matched_topic": null,
+          "warnings": [],
+          "excluded_engines": [],
+          "routing_fallback": true,
+          "routing_budget_applied": false,
+          "routing_tradeoffs": [],
+          "jev_added_engines": [],
+          "jev_scores": {}
+        },
+        "engine_outcomes": [
+          {
+            "engine": "brave",
+            "status": "ok",
+            "result_count": 3,
+            "latency_ms": 5.0,
+            "message": null
+          },
+          {
+            "engine": "wikipedia",
+            "status": "ok",
+            "result_count": 3,
+            "latency_ms": 5.0,
+            "message": null
+          }
+        ],
+        "suggestions": [],
+        "answers": [
+          {
+            "answer": "brave"
+          },
+          {
+            "answer": "wikipedia"
+          }
+        ],
+        "corrections": [
+          "brave",
+          "wikipedia"
+        ],
+        "infoboxes": [
+          {
+            "name": "brave"
+          },
+          {
+            "name": "wikipedia"
+          }
+        ],
+        "query_id": "<query-id>",
+        "cached": false,
+        "ranking_explanation": "tier_then_cross_engine_presence",
+        "response_time_ms": 0,
+        "partial": false,
+        "deadline_exceeded": false,
+        "all_unresponsive": false,
+        "empty_engines": [],
+        "cached_error": false,
+        "dispatched_engine_count": 2
+      },
+      "calls": {
+        "brave": [
+          [
+            " café 🐙 ",
+            {
+              "language": "en",
+              "safesearch": 0,
+              "pageno": 1,
+              "time_range": null,
+              "date_from": null,
+              "date_to": null,
+              "categories": [
+                "general"
+              ],
+              "media_type": null
+            }
+          ]
+        ],
+        "wikipedia": [
+          [
+            " café 🐙 ",
+            {
+              "language": "en",
+              "safesearch": 0,
+              "pageno": 1,
+              "time_range": null,
+              "date_from": null,
+              "date_to": null,
+              "categories": [
+                "general"
+              ],
+              "media_type": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "partial",
+      "kind": "service",
+      "request": {},
+      "statuses": [
+        "ok",
+        "error"
+      ],
+      "output": {
+        "query": " café 🐙 ",
+        "results": [
+          {
+            "url": "https://example.test/brave/0",
+            "title": "brave 0",
+            "content": "body",
+            "engine": "brave",
+            "engines": [
+              "brave"
+            ],
+            "score": 1.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/brave/1",
+            "title": "brave 1",
+            "content": "body",
+            "engine": "brave",
+            "engines": [
+              "brave"
+            ],
+            "score": 1.0,
+            "position": 2,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/brave/2",
+            "title": "brave 2",
+            "content": "body",
+            "engine": "brave",
+            "engines": [
+              "brave"
+            ],
+            "score": 1.0,
+            "position": 3,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "scope": {
+          "selected_engines": [
+            "brave",
+            "wikipedia"
+          ],
+          "resolved_categories": [],
+          "routing_rule": "all active engines",
+          "matched_topic": null,
+          "warnings": [],
+          "excluded_engines": [],
+          "routing_fallback": true,
+          "routing_budget_applied": false,
+          "routing_tradeoffs": [],
+          "jev_added_engines": [],
+          "jev_scores": {}
+        },
+        "engine_outcomes": [
+          {
+            "engine": "brave",
+            "status": "ok",
+            "result_count": 3,
+            "latency_ms": 5.0,
+            "message": null
+          },
+          {
+            "engine": "wikipedia",
+            "status": "error",
+            "result_count": 0,
+            "latency_ms": 5.0,
+            "message": "fixture failure"
+          }
+        ],
+        "suggestions": [],
+        "answers": [
+          {
+            "answer": "brave"
+          },
+          {
+            "answer": "wikipedia"
+          }
+        ],
+        "corrections": [
+          "brave",
+          "wikipedia"
+        ],
+        "infoboxes": [
+          {
+            "name": "brave"
+          },
+          {
+            "name": "wikipedia"
+          }
+        ],
+        "query_id": "<query-id>",
+        "cached": false,
+        "ranking_explanation": "tier_then_cross_engine_presence",
+        "response_time_ms": 0,
+        "partial": true,
+        "deadline_exceeded": false,
+        "all_unresponsive": false,
+        "empty_engines": [],
+        "cached_error": false,
+        "dispatched_engine_count": 2
+      },
+      "calls": {
+        "brave": [
+          [
+            " café 🐙 ",
+            {
+              "language": "en",
+              "safesearch": 0,
+              "pageno": 1,
+              "time_range": null,
+              "date_from": null,
+              "date_to": null,
+              "categories": [
+                "general"
+              ],
+              "media_type": null
+            }
+          ]
+        ],
+        "wikipedia": [
+          [
+            " café 🐙 ",
+            {
+              "language": "en",
+              "safesearch": 0,
+              "pageno": 1,
+              "time_range": null,
+              "date_from": null,
+              "date_to": null,
+              "categories": [
+                "general"
+              ],
+              "media_type": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "all-error",
+      "kind": "service",
+      "request": {},
+      "statuses": [
+        "error",
+        "timeout"
+      ],
+      "output": {
+        "query": " café 🐙 ",
+        "results": [],
+        "scope": {
+          "selected_engines": [
+            "brave",
+            "wikipedia"
+          ],
+          "resolved_categories": [],
+          "routing_rule": "all active engines",
+          "matched_topic": null,
+          "warnings": [],
+          "excluded_engines": [],
+          "routing_fallback": true,
+          "routing_budget_applied": false,
+          "routing_tradeoffs": [],
+          "jev_added_engines": [],
+          "jev_scores": {}
+        },
+        "engine_outcomes": [
+          {
+            "engine": "brave",
+            "status": "error",
+            "result_count": 0,
+            "latency_ms": 5.0,
+            "message": "fixture failure"
+          },
+          {
+            "engine": "wikipedia",
+            "status": "timeout",
+            "result_count": 0,
+            "latency_ms": 5.0,
+            "message": "fixture failure"
+          }
+        ],
+        "suggestions": [],
+        "answers": [
+          {
+            "answer": "brave"
+          },
+          {
+            "answer": "wikipedia"
+          }
+        ],
+        "corrections": [
+          "brave",
+          "wikipedia"
+        ],
+        "infoboxes": [
+          {
+            "name": "brave"
+          },
+          {
+            "name": "wikipedia"
+          }
+        ],
+        "query_id": "<query-id>",
+        "cached": false,
+        "ranking_explanation": "tier_then_cross_engine_presence",
+        "response_time_ms": 0,
+        "partial": false,
+        "deadline_exceeded": false,
+        "all_unresponsive": true,
+        "empty_engines": [],
+        "cached_error": false,
+        "dispatched_engine_count": 2
+      },
+      "calls": {
+        "brave": [
+          [
+            " café 🐙 ",
+            {
+              "language": "en",
+              "safesearch": 0,
+              "pageno": 1,
+              "time_range": null,
+              "date_from": null,
+              "date_to": null,
+              "categories": [
+                "general"
+              ],
+              "media_type": null
+            }
+          ]
+        ],
+        "wikipedia": [
+          [
+            " café 🐙 ",
+            {
+              "language": "en",
+              "safesearch": 0,
+              "pageno": 1,
+              "time_range": null,
+              "date_from": null,
+              "date_to": null,
+              "categories": [
+                "general"
+              ],
+              "media_type": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "blocked",
+      "kind": "service",
+      "request": {},
+      "statuses": [
+        "blocked",
+        "rate_limited"
+      ],
+      "output": {
+        "query": " café 🐙 ",
+        "results": [],
+        "scope": {
+          "selected_engines": [
+            "brave",
+            "wikipedia"
+          ],
+          "resolved_categories": [],
+          "routing_rule": "all active engines",
+          "matched_topic": null,
+          "warnings": [],
+          "excluded_engines": [],
+          "routing_fallback": true,
+          "routing_budget_applied": false,
+          "routing_tradeoffs": [],
+          "jev_added_engines": [],
+          "jev_scores": {}
+        },
+        "engine_outcomes": [
+          {
+            "engine": "brave",
+            "status": "blocked",
+            "result_count": 0,
+            "latency_ms": 5.0,
+            "message": "fixture failure"
+          },
+          {
+            "engine": "wikipedia",
+            "status": "rate_limited",
+            "result_count": 0,
+            "latency_ms": 5.0,
+            "message": "fixture failure"
+          }
+        ],
+        "suggestions": [],
+        "answers": [
+          {
+            "answer": "brave"
+          },
+          {
+            "answer": "wikipedia"
+          }
+        ],
+        "corrections": [
+          "brave",
+          "wikipedia"
+        ],
+        "infoboxes": [
+          {
+            "name": "brave"
+          },
+          {
+            "name": "wikipedia"
+          }
+        ],
+        "query_id": "<query-id>",
+        "cached": false,
+        "ranking_explanation": "tier_then_cross_engine_presence",
+        "response_time_ms": 0,
+        "partial": false,
+        "deadline_exceeded": false,
+        "all_unresponsive": true,
+        "empty_engines": [],
+        "cached_error": false,
+        "dispatched_engine_count": 2
+      },
+      "calls": {
+        "brave": [
+          [
+            " café 🐙 ",
+            {
+              "language": "en",
+              "safesearch": 0,
+              "pageno": 1,
+              "time_range": null,
+              "date_from": null,
+              "date_to": null,
+              "categories": [
+                "general"
+              ],
+              "media_type": null
+            }
+          ]
+        ],
+        "wikipedia": [
+          [
+            " café 🐙 ",
+            {
+              "language": "en",
+              "safesearch": 0,
+              "pageno": 1,
+              "time_range": null,
+              "date_from": null,
+              "date_to": null,
+              "categories": [
+                "general"
+              ],
+              "media_type": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "view-one",
+      "kind": "service",
+      "request": {
+        "max_results": 1,
+        "include": []
+      },
+      "statuses": [
+        "ok",
+        "ok"
+      ],
+      "output": {
+        "query": " café 🐙 ",
+        "results": [
+          {
+            "url": "https://example.test/brave/0",
+            "title": "brave 0",
+            "content": "body",
+            "engine": "brave",
+            "engines": [
+              "brave"
+            ],
+            "score": 1.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "scope": {
+          "selected_engines": [
+            "brave",
+            "wikipedia"
+          ],
+          "resolved_categories": [],
+          "routing_rule": "all active engines",
+          "matched_topic": null,
+          "warnings": [],
+          "excluded_engines": [],
+          "routing_fallback": true,
+          "routing_budget_applied": false,
+          "routing_tradeoffs": [],
+          "jev_added_engines": [],
+          "jev_scores": {}
+        },
+        "engine_outcomes": [],
+        "suggestions": [],
+        "answers": [
+          {
+            "answer": "brave"
+          },
+          {
+            "answer": "wikipedia"
+          }
+        ],
+        "corrections": [
+          "brave",
+          "wikipedia"
+        ],
+        "infoboxes": [
+          {
+            "name": "brave"
+          },
+          {
+            "name": "wikipedia"
+          }
+        ],
+        "query_id": "<query-id>",
+        "cached": false,
+        "ranking_explanation": "tier_then_cross_engine_presence",
+        "response_time_ms": 0,
+        "partial": false,
+        "deadline_exceeded": false,
+        "all_unresponsive": false,
+        "empty_engines": [],
+        "cached_error": false,
+        "dispatched_engine_count": 2
+      },
+      "calls": {
+        "brave": [
+          [
+            " café 🐙 ",
+            {
+              "language": "en",
+              "safesearch": 0,
+              "pageno": 1,
+              "time_range": null,
+              "date_from": null,
+              "date_to": null,
+              "categories": [
+                "general"
+              ],
+              "media_type": null
+            }
+          ]
+        ],
+        "wikipedia": [
+          [
+            " café 🐙 ",
+            {
+              "language": "en",
+              "safesearch": 0,
+              "pageno": 1,
+              "time_range": null,
+              "date_from": null,
+              "date_to": null,
+              "categories": [
+                "general"
+              ],
+              "media_type": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "view-zero",
+      "kind": "service",
+      "request": {
+        "max_results": 0
+      },
+      "statuses": [
+        "ok",
+        "ok"
+      ],
+      "output": {
+        "query": " café 🐙 ",
+        "results": [
+          {
+            "url": "https://example.test/brave/0",
+            "title": "brave 0",
+            "content": "body",
+            "engine": "brave",
+            "engines": [
+              "brave"
+            ],
+            "score": 1.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/brave/1",
+            "title": "brave 1",
+            "content": "body",
+            "engine": "brave",
+            "engines": [
+              "brave"
+            ],
+            "score": 1.0,
+            "position": 2,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/brave/2",
+            "title": "brave 2",
+            "content": "body",
+            "engine": "brave",
+            "engines": [
+              "brave"
+            ],
+            "score": 1.0,
+            "position": 3,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/wikipedia/0",
+            "title": "wikipedia 0",
+            "content": "body",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "score": 1.0,
+            "position": 4,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/wikipedia/1",
+            "title": "wikipedia 1",
+            "content": "body",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "score": 1.0,
+            "position": 5,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/wikipedia/2",
+            "title": "wikipedia 2",
+            "content": "body",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "score": 1.0,
+            "position": 6,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "scope": {
+          "selected_engines": [
+            "brave",
+            "wikipedia"
+          ],
+          "resolved_categories": [],
+          "routing_rule": "all active engines",
+          "matched_topic": null,
+          "warnings": [],
+          "excluded_engines": [],
+          "routing_fallback": true,
+          "routing_budget_applied": false,
+          "routing_tradeoffs": [],
+          "jev_added_engines": [],
+          "jev_scores": {}
+        },
+        "engine_outcomes": [
+          {
+            "engine": "brave",
+            "status": "ok",
+            "result_count": 3,
+            "latency_ms": 5.0,
+            "message": null
+          },
+          {
+            "engine": "wikipedia",
+            "status": "ok",
+            "result_count": 3,
+            "latency_ms": 5.0,
+            "message": null
+          }
+        ],
+        "suggestions": [],
+        "answers": [
+          {
+            "answer": "brave"
+          },
+          {
+            "answer": "wikipedia"
+          }
+        ],
+        "corrections": [
+          "brave",
+          "wikipedia"
+        ],
+        "infoboxes": [
+          {
+            "name": "brave"
+          },
+          {
+            "name": "wikipedia"
+          }
+        ],
+        "query_id": "<query-id>",
+        "cached": false,
+        "ranking_explanation": "tier_then_cross_engine_presence",
+        "response_time_ms": 0,
+        "partial": false,
+        "deadline_exceeded": false,
+        "all_unresponsive": false,
+        "empty_engines": [],
+        "cached_error": false,
+        "dispatched_engine_count": 2
+      },
+      "calls": {
+        "brave": [
+          [
+            " café 🐙 ",
+            {
+              "language": "en",
+              "safesearch": 0,
+              "pageno": 1,
+              "time_range": null,
+              "date_from": null,
+              "date_to": null,
+              "categories": [
+                "general"
+              ],
+              "media_type": null
+            }
+          ]
+        ],
+        "wikipedia": [
+          [
+            " café 🐙 ",
+            {
+              "language": "en",
+              "safesearch": 0,
+              "pageno": 1,
+              "time_range": null,
+              "date_from": null,
+              "date_to": null,
+              "categories": [
+                "general"
+              ],
+              "media_type": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "explicit-order",
+      "kind": "service",
+      "request": {
+        "engines": [
+          "wikipedia",
+          "brave"
+        ]
+      },
+      "statuses": [
+        "ok",
+        "ok"
+      ],
+      "output": {
+        "query": " café 🐙 ",
+        "results": [
+          {
+            "url": "https://example.test/wikipedia/0",
+            "title": "wikipedia 0",
+            "content": "body",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "score": 1.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/wikipedia/1",
+            "title": "wikipedia 1",
+            "content": "body",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "score": 1.0,
+            "position": 2,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/wikipedia/2",
+            "title": "wikipedia 2",
+            "content": "body",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "score": 1.0,
+            "position": 3,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/brave/0",
+            "title": "brave 0",
+            "content": "body",
+            "engine": "brave",
+            "engines": [
+              "brave"
+            ],
+            "score": 1.0,
+            "position": 4,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/brave/1",
+            "title": "brave 1",
+            "content": "body",
+            "engine": "brave",
+            "engines": [
+              "brave"
+            ],
+            "score": 1.0,
+            "position": 5,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/brave/2",
+            "title": "brave 2",
+            "content": "body",
+            "engine": "brave",
+            "engines": [
+              "brave"
+            ],
+            "score": 1.0,
+            "position": 6,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "scope": {
+          "selected_engines": [
+            "wikipedia",
+            "brave"
+          ],
+          "resolved_categories": [],
+          "routing_rule": "explicit engine",
+          "matched_topic": null,
+          "warnings": [],
+          "excluded_engines": [],
+          "routing_fallback": false,
+          "routing_budget_applied": false,
+          "routing_tradeoffs": [],
+          "jev_added_engines": [],
+          "jev_scores": {}
+        },
+        "engine_outcomes": [
+          {
+            "engine": "wikipedia",
+            "status": "ok",
+            "result_count": 3,
+            "latency_ms": 5.0,
+            "message": null
+          },
+          {
+            "engine": "brave",
+            "status": "ok",
+            "result_count": 3,
+            "latency_ms": 5.0,
+            "message": null
+          }
+        ],
+        "suggestions": [],
+        "answers": [
+          {
+            "answer": "wikipedia"
+          },
+          {
+            "answer": "brave"
+          }
+        ],
+        "corrections": [
+          "wikipedia",
+          "brave"
+        ],
+        "infoboxes": [
+          {
+            "name": "wikipedia"
+          },
+          {
+            "name": "brave"
+          }
+        ],
+        "query_id": "<query-id>",
+        "cached": false,
+        "ranking_explanation": "tier_then_cross_engine_presence",
+        "response_time_ms": 0,
+        "partial": false,
+        "deadline_exceeded": false,
+        "all_unresponsive": false,
+        "empty_engines": [],
+        "cached_error": false,
+        "dispatched_engine_count": 2
+      },
+      "calls": {
+        "brave": [
+          [
+            " café 🐙 ",
+            {
+              "language": "en",
+              "safesearch": 0,
+              "pageno": 1,
+              "time_range": null,
+              "date_from": null,
+              "date_to": null,
+              "categories": [
+                "general"
+              ],
+              "media_type": null
+            }
+          ]
+        ],
+        "wikipedia": [
+          [
+            " café 🐙 ",
+            {
+              "language": "en",
+              "safesearch": 0,
+              "pageno": 1,
+              "time_range": null,
+              "date_from": null,
+              "date_to": null,
+              "categories": [
+                "general"
+              ],
+              "media_type": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "duplicate",
+      "kind": "service",
+      "request": {
+        "engines": [
+          "brave",
+          "brave"
+        ]
+      },
+      "statuses": [
+        "ok",
+        "ok"
+      ],
+      "output": {
+        "query": " café 🐙 ",
+        "results": [
+          {
+            "url": "https://example.test/brave/0",
+            "title": "brave 0",
+            "content": "body",
+            "engine": "brave",
+            "engines": [
+              "brave"
+            ],
+            "score": 1.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/brave/1",
+            "title": "brave 1",
+            "content": "body",
+            "engine": "brave",
+            "engines": [
+              "brave"
+            ],
+            "score": 1.0,
+            "position": 2,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/brave/2",
+            "title": "brave 2",
+            "content": "body",
+            "engine": "brave",
+            "engines": [
+              "brave"
+            ],
+            "score": 1.0,
+            "position": 3,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "scope": {
+          "selected_engines": [
+            "brave",
+            "brave"
+          ],
+          "resolved_categories": [],
+          "routing_rule": "explicit engine",
+          "matched_topic": null,
+          "warnings": [],
+          "excluded_engines": [],
+          "routing_fallback": false,
+          "routing_budget_applied": false,
+          "routing_tradeoffs": [],
+          "jev_added_engines": [],
+          "jev_scores": {}
+        },
+        "engine_outcomes": [
+          {
+            "engine": "brave",
+            "status": "ok",
+            "result_count": 3,
+            "latency_ms": 5.0,
+            "message": null
+          }
+        ],
+        "suggestions": [],
+        "answers": [
+          {
+            "answer": "brave"
+          }
+        ],
+        "corrections": [
+          "brave"
+        ],
+        "infoboxes": [
+          {
+            "name": "brave"
+          }
+        ],
+        "query_id": "<query-id>",
+        "cached": false,
+        "ranking_explanation": "tier_then_cross_engine_presence",
+        "response_time_ms": 0,
+        "partial": false,
+        "deadline_exceeded": false,
+        "all_unresponsive": false,
+        "empty_engines": [],
+        "cached_error": false,
+        "dispatched_engine_count": 1
+      },
+      "calls": {
+        "brave": [
+          [
+            " café 🐙 ",
+            {
+              "language": "en",
+              "safesearch": 0,
+              "pageno": 1,
+              "time_range": null,
+              "date_from": null,
+              "date_to": null,
+              "categories": [
+                "general"
+              ],
+              "media_type": null
+            }
+          ]
+        ],
+        "wikipedia": []
+      }
+    },
+    {
+      "id": "category",
+      "kind": "service",
+      "request": {
+        "categories": [
+          "general"
+        ]
+      },
+      "statuses": [
+        "ok",
+        "ok"
+      ],
+      "output": {
+        "query": " café 🐙 ",
+        "results": [
+          {
+            "url": "https://example.test/brave/0",
+            "title": "brave 0",
+            "content": "body",
+            "engine": "brave",
+            "engines": [
+              "brave"
+            ],
+            "score": 1.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/brave/1",
+            "title": "brave 1",
+            "content": "body",
+            "engine": "brave",
+            "engines": [
+              "brave"
+            ],
+            "score": 1.0,
+            "position": 2,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/brave/2",
+            "title": "brave 2",
+            "content": "body",
+            "engine": "brave",
+            "engines": [
+              "brave"
+            ],
+            "score": 1.0,
+            "position": 3,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/wikipedia/0",
+            "title": "wikipedia 0",
+            "content": "body",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "score": 1.0,
+            "position": 4,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/wikipedia/1",
+            "title": "wikipedia 1",
+            "content": "body",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "score": 1.0,
+            "position": 5,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/wikipedia/2",
+            "title": "wikipedia 2",
+            "content": "body",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "score": 1.0,
+            "position": 6,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "scope": {
+          "selected_engines": [
+            "brave",
+            "wikipedia"
+          ],
+          "resolved_categories": [
+            "general"
+          ],
+          "routing_rule": "explicit category",
+          "matched_topic": null,
+          "warnings": [],
+          "excluded_engines": [],
+          "routing_fallback": true,
+          "routing_budget_applied": false,
+          "routing_tradeoffs": [],
+          "jev_added_engines": [],
+          "jev_scores": {}
+        },
+        "engine_outcomes": [
+          {
+            "engine": "brave",
+            "status": "ok",
+            "result_count": 3,
+            "latency_ms": 5.0,
+            "message": null
+          },
+          {
+            "engine": "wikipedia",
+            "status": "ok",
+            "result_count": 3,
+            "latency_ms": 5.0,
+            "message": null
+          }
+        ],
+        "suggestions": [],
+        "answers": [
+          {
+            "answer": "brave"
+          },
+          {
+            "answer": "wikipedia"
+          }
+        ],
+        "corrections": [
+          "brave",
+          "wikipedia"
+        ],
+        "infoboxes": [
+          {
+            "name": "brave"
+          },
+          {
+            "name": "wikipedia"
+          }
+        ],
+        "query_id": "<query-id>",
+        "cached": false,
+        "ranking_explanation": "tier_then_cross_engine_presence",
+        "response_time_ms": 0,
+        "partial": false,
+        "deadline_exceeded": false,
+        "all_unresponsive": false,
+        "empty_engines": [],
+        "cached_error": false,
+        "dispatched_engine_count": 2
+      },
+      "calls": {
+        "brave": [
+          [
+            " café 🐙 ",
+            {
+              "language": "en",
+              "safesearch": 0,
+              "pageno": 1,
+              "time_range": null,
+              "date_from": null,
+              "date_to": null,
+              "categories": [
+                "general"
+              ],
+              "media_type": null
+            }
+          ]
+        ],
+        "wikipedia": [
+          [
+            " café 🐙 ",
+            {
+              "language": "en",
+              "safesearch": 0,
+              "pageno": 1,
+              "time_range": null,
+              "date_from": null,
+              "date_to": null,
+              "categories": [
+                "general"
+              ],
+              "media_type": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "no-suggestions",
+      "kind": "service",
+      "request": {
+        "generate_suggestions": false
+      },
+      "statuses": [
+        "ok",
+        "ok"
+      ],
+      "output": {
+        "query": " café 🐙 ",
+        "results": [
+          {
+            "url": "https://example.test/brave/0",
+            "title": "brave 0",
+            "content": "body",
+            "engine": "brave",
+            "engines": [
+              "brave"
+            ],
+            "score": 1.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/brave/1",
+            "title": "brave 1",
+            "content": "body",
+            "engine": "brave",
+            "engines": [
+              "brave"
+            ],
+            "score": 1.0,
+            "position": 2,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/brave/2",
+            "title": "brave 2",
+            "content": "body",
+            "engine": "brave",
+            "engines": [
+              "brave"
+            ],
+            "score": 1.0,
+            "position": 3,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/wikipedia/0",
+            "title": "wikipedia 0",
+            "content": "body",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "score": 1.0,
+            "position": 4,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/wikipedia/1",
+            "title": "wikipedia 1",
+            "content": "body",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "score": 1.0,
+            "position": 5,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/wikipedia/2",
+            "title": "wikipedia 2",
+            "content": "body",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "score": 1.0,
+            "position": 6,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "scope": {
+          "selected_engines": [
+            "brave",
+            "wikipedia"
+          ],
+          "resolved_categories": [],
+          "routing_rule": "all active engines",
+          "matched_topic": null,
+          "warnings": [],
+          "excluded_engines": [],
+          "routing_fallback": true,
+          "routing_budget_applied": false,
+          "routing_tradeoffs": [],
+          "jev_added_engines": [],
+          "jev_scores": {}
+        },
+        "engine_outcomes": [
+          {
+            "engine": "brave",
+            "status": "ok",
+            "result_count": 3,
+            "latency_ms": 5.0,
+            "message": null
+          },
+          {
+            "engine": "wikipedia",
+            "status": "ok",
+            "result_count": 3,
+            "latency_ms": 5.0,
+            "message": null
+          }
+        ],
+        "suggestions": [],
+        "answers": [
+          {
+            "answer": "brave"
+          },
+          {
+            "answer": "wikipedia"
+          }
+        ],
+        "corrections": [
+          "brave",
+          "wikipedia"
+        ],
+        "infoboxes": [
+          {
+            "name": "brave"
+          },
+          {
+            "name": "wikipedia"
+          }
+        ],
+        "query_id": "<query-id>",
+        "cached": false,
+        "ranking_explanation": "tier_then_cross_engine_presence",
+        "response_time_ms": 0,
+        "partial": false,
+        "deadline_exceeded": false,
+        "all_unresponsive": false,
+        "empty_engines": [],
+        "cached_error": false,
+        "dispatched_engine_count": 2
+      },
+      "calls": {
+        "brave": [
+          [
+            " café 🐙 ",
+            {
+              "language": "en",
+              "safesearch": 0,
+              "pageno": 1,
+              "time_range": null,
+              "date_from": null,
+              "date_to": null,
+              "categories": [
+                "general"
+              ],
+              "media_type": null
+            }
+          ]
+        ],
+        "wikipedia": [
+          [
+            " café 🐙 ",
+            {
+              "language": "en",
+              "safesearch": 0,
+              "pageno": 1,
+              "time_range": null,
+              "date_from": null,
+              "date_to": null,
+              "categories": [
+                "general"
+              ],
+              "media_type": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "jev-promoted",
+      "kind": "jev-service",
+      "output": {
+        "query": " café 🐙 ",
+        "results": [
+          {
+            "url": "https://example.test/pubmed/0",
+            "title": "pubmed 0",
+            "content": "body",
+            "engine": "pubmed",
+            "engines": [],
+            "score": 0.0,
+            "position": 0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 2,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/brave/0",
+            "title": "brave 0",
+            "content": "body",
+            "engine": "brave",
+            "engines": [
+              "brave"
+            ],
+            "score": 1.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/brave/1",
+            "title": "brave 1",
+            "content": "body",
+            "engine": "brave",
+            "engines": [
+              "brave"
+            ],
+            "score": 1.0,
+            "position": 2,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/brave/2",
+            "title": "brave 2",
+            "content": "body",
+            "engine": "brave",
+            "engines": [
+              "brave"
+            ],
+            "score": 1.0,
+            "position": 3,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 1,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/pubmed/1",
+            "title": "pubmed 1",
+            "content": "body",
+            "engine": "pubmed",
+            "engines": [
+              "pubmed"
+            ],
+            "score": 1.0,
+            "position": 5,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 2,
+            "payload": null,
+            "work_group": null
+          },
+          {
+            "url": "https://example.test/pubmed/2",
+            "title": "pubmed 2",
+            "content": "body",
+            "engine": "pubmed",
+            "engines": [
+              "pubmed"
+            ],
+            "score": 1.0,
+            "position": 6,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 2,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "scope": {
+          "selected_engines": [
+            "brave",
+            "pubmed"
+          ],
+          "resolved_categories": [],
+          "routing_rule": "tier-1 fallback+jev specialists",
+          "matched_topic": null,
+          "warnings": [],
+          "excluded_engines": [],
+          "routing_fallback": true,
+          "routing_budget_applied": false,
+          "routing_tradeoffs": [],
+          "jev_added_engines": [
+            "pubmed"
+          ],
+          "jev_scores": {
+            "pubmed": 0.9
+          }
+        },
+        "engine_outcomes": [
+          {
+            "engine": "brave",
+            "status": "ok",
+            "result_count": 3,
+            "latency_ms": 5.0,
+            "message": null
+          },
+          {
+            "engine": "pubmed",
+            "status": "ok",
+            "result_count": 3,
+            "latency_ms": 5.0,
+            "message": null
+          }
+        ],
+        "suggestions": [],
+        "answers": [
+          {
+            "answer": "brave"
+          },
+          {
+            "answer": "pubmed"
+          }
+        ],
+        "corrections": [
+          "brave",
+          "pubmed"
+        ],
+        "infoboxes": [
+          {
+            "name": "brave"
+          },
+          {
+            "name": "pubmed"
+          }
+        ],
+        "query_id": "<query-id>",
+        "cached": false,
+        "ranking_explanation": "tier_then_cross_engine_presence",
+        "response_time_ms": 0,
+        "partial": false,
+        "deadline_exceeded": false,
+        "all_unresponsive": false,
+        "empty_engines": [],
+        "cached_error": false,
+        "dispatched_engine_count": 2
+      },
+      "calls": {
+        "brave": [
+          [
+            " café 🐙 ",
+            {
+              "language": "en",
+              "safesearch": 0,
+              "pageno": 1,
+              "time_range": null,
+              "date_from": null,
+              "date_to": null,
+              "categories": [
+                "general"
+              ],
+              "media_type": null
+            }
+          ]
+        ],
+        "pubmed": [
+          [
+            " café 🐙 ",
+            {
+              "language": "en",
+              "safesearch": 0,
+              "pageno": 1,
+              "time_range": null,
+              "date_from": null,
+              "date_to": null,
+              "categories": [
+                "general"
+              ],
+              "media_type": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "calendar-11",
+      "kind": "calendar",
+      "zone": "America/New_York",
+      "epoch": 1772945999,
+      "date": "2026-03-07",
+      "window": [
+        "2026-03-06",
+        "2026-03-07"
+      ]
+    },
+    {
+      "id": "calendar-12",
+      "kind": "calendar",
+      "zone": "America/New_York",
+      "epoch": 1772946000,
+      "date": "2026-03-08",
+      "window": [
+        "2026-03-07",
+        "2026-03-08"
+      ]
+    },
+    {
+      "id": "calendar-13",
+      "kind": "calendar",
+      "zone": "America/New_York",
+      "epoch": 1772953199,
+      "date": "2026-03-08",
+      "window": [
+        "2026-03-07",
+        "2026-03-08"
+      ]
+    },
+    {
+      "id": "calendar-14",
+      "kind": "calendar",
+      "zone": "America/New_York",
+      "epoch": 1772953200,
+      "date": "2026-03-08",
+      "window": [
+        "2026-03-07",
+        "2026-03-08"
+      ]
+    },
+    {
+      "id": "calendar-15",
+      "kind": "calendar",
+      "zone": "America/New_York",
+      "epoch": 1793512799,
+      "date": "2026-11-01",
+      "window": [
+        "2026-10-31",
+        "2026-11-01"
+      ]
+    },
+    {
+      "id": "calendar-16",
+      "kind": "calendar",
+      "zone": "America/New_York",
+      "epoch": 1793512800,
+      "date": "2026-11-01",
+      "window": [
+        "2026-10-31",
+        "2026-11-01"
+      ]
+    },
+    {
+      "id": "calendar-17",
+      "kind": "calendar",
+      "zone": "Asia/Tokyo",
+      "epoch": 1772982000,
+      "date": "2026-03-09",
+      "window": [
+        "2026-03-08",
+        "2026-03-09"
+      ]
+    },
+    {
+      "id": "calendar-18",
+      "kind": "calendar",
+      "zone": "UTC",
+      "epoch": 1772928000,
+      "date": "2026-03-08",
+      "window": [
+        "2026-03-07",
+        "2026-03-08"
+      ]
+    },
+    {
+      "id": "settings-19",
+      "kind": "settings",
+      "input": {},
+      "output": {
+        "max_parallel_engines": "10",
+        "rate": 30.0,
+        "window": 60.0,
+        "fail_closed": false,
+        "diagnostics": false
+      }
+    },
+    {
+      "id": "settings-20",
+      "kind": "settings",
+      "input": {
+        "MAX_CONCURRENT_ENGINES": "bad",
+        "PER_CLIENT_REQUESTS": "bad",
+        "PER_CLIENT_WINDOW_SECONDS": "bad"
+      },
+      "output": {
+        "max_parallel_engines": "10",
+        "rate": 30.0,
+        "window": 60.0,
+        "fail_closed": false,
+        "diagnostics": false
+      }
+    },
+    {
+      "id": "settings-21",
+      "kind": "settings",
+      "input": {
+        "MAX_CONCURRENT_ENGINES": "0",
+        "FEATURE_EMPTY_SCRAPE_DIAGNOSTICS": "TRUE"
+      },
+      "output": {
+        "max_parallel_engines": "1",
+        "rate": 30.0,
+        "window": 60.0,
+        "fail_closed": false,
+        "diagnostics": true
+      }
+    },
+    {
+      "id": "settings-22",
+      "kind": "settings",
+      "input": {
+        "MAX_CONCURRENT_ENGINES": "-999999999999999999999999999999999999"
+      },
+      "output": {
+        "max_parallel_engines": "1",
+        "rate": 30.0,
+        "window": 60.0,
+        "fail_closed": false,
+        "diagnostics": false
+      }
+    },
+    {
+      "id": "settings-23",
+      "kind": "settings",
+      "input": {
+        "MAX_CONCURRENT_ENGINES": " +１２ ",
+        "PER_CLIENT_REQUESTS": "٣.٥",
+        "PER_CLIENT_WINDOW_SECONDS": "1_0"
+      },
+      "output": {
+        "max_parallel_engines": "12",
+        "rate": 3.5,
+        "window": 10.0,
+        "fail_closed": false,
+        "diagnostics": false
+      }
+    },
+    {
+      "id": "settings-24",
+      "kind": "settings",
+      "input": {
+        "FAIL_CLOSED": " YeS ",
+        "FEATURE_EMPTY_SCRAPE_DIAGNOSTICS": " true "
+      },
+      "output": {
+        "max_parallel_engines": "10",
+        "rate": 30.0,
+        "window": 60.0,
+        "fail_closed": true,
+        "diagnostics": false
+      }
+    },
+    {
+      "id": "settings-25",
+      "kind": "settings",
+      "input": {
+        "FAIL_CLOSED": "on",
+        "FEATURE_EMPTY_SCRAPE_DIAGNOSTICS": "1"
+      },
+      "output": {
+        "max_parallel_engines": "10",
+        "rate": 30.0,
+        "window": 60.0,
+        "fail_closed": false,
+        "diagnostics": true
+      }
+    },
+    {
+      "id": "settings-26",
+      "kind": "settings",
+      "input": {
+        "PER_CLIENT_REQUESTS": "nan"
+      },
+      "output": {
+        "max_parallel_engines": "10",
+        "rate": "nan",
+        "window": 60.0,
+        "fail_closed": false,
+        "diagnostics": false
+      }
+    },
+    {
+      "id": "settings-27",
+      "kind": "settings",
+      "input": {
+        "PER_CLIENT_REQUESTS": "inf"
+      },
+      "output": {
+        "max_parallel_engines": "10",
+        "rate": "inf",
+        "window": 60.0,
+        "fail_closed": false,
+        "diagnostics": false
+      }
+    },
+    {
+      "id": "settings-28",
+      "kind": "settings",
+      "input": {
+        "PER_CLIENT_REQUESTS": "-1"
+      },
+      "output": {
+        "max_parallel_engines": "10",
+        "rate": -1.0,
+        "window": 60.0,
+        "fail_closed": false,
+        "diagnostics": false
+      }
+    },
+    {
+      "id": "settings-29",
+      "kind": "settings",
+      "input": {
+        "PER_CLIENT_WINDOW_SECONDS": "0"
+      },
+      "output": {
+        "max_parallel_engines": "10",
+        "rate": 30.0,
+        "window": 0.0,
+        "fail_closed": false,
+        "diagnostics": false
+      }
+    },
+    {
+      "id": "settings-30",
+      "kind": "settings",
+      "input": {
+        "PER_CLIENT_WINDOW_SECONDS": "0.0001"
+      },
+      "output": {
+        "max_parallel_engines": "10",
+        "rate": 30.0,
+        "window": 0.0001,
+        "fail_closed": false,
+        "diagnostics": false
+      }
+    },
+    {
+      "id": "settings-31",
+      "kind": "settings",
+      "input": {
+        "PER_CLIENT_WINDOW_SECONDS": "0.001"
+      },
+      "output": {
+        "max_parallel_engines": "10",
+        "rate": 30.0,
+        "window": 0.001,
+        "fail_closed": false,
+        "diagnostics": false
+      }
+    },
+    {
+      "id": "settings-32",
+      "kind": "settings",
+      "input": {
+        "MAX_CONCURRENT_ENGINES": "9999999999999999999999999999999999"
+      },
+      "output": {
+        "max_parallel_engines": "9999999999999999999999999999999999",
+        "rate": 30.0,
+        "window": 60.0,
+        "fail_closed": false,
+        "diagnostics": false
+      }
+    },
+    {
+      "id": "suggest-33",
+      "kind": "suggest",
+      "provider": "brave",
+      "input": {
+        "results": [
+          {
+            "q": "one"
+          },
+          {
+            "q": "two"
+          }
+        ]
+      },
+      "output": [
+        "one",
+        "two"
+      ]
+    },
+    {
+      "id": "suggest-34",
+      "kind": "suggest",
+      "provider": "brave",
+      "input": [
+        "one",
+        4,
+        null,
+        {
+          "other": [
+            true
+          ]
+        }
+      ],
+      "output": [
+        "one",
+        "4",
+        "None",
+        "{'other': [True]}"
+      ]
+    },
+    {
+      "id": "suggest-35",
+      "kind": "suggest",
+      "provider": "brave",
+      "input": {
+        "results": [
+          {
+            "q": "valid"
+          },
+          {
+            "q": null
+          }
+        ]
+      },
+      "output": [
+        "valid",
+        null
+      ]
+    },
+    {
+      "id": "suggest-36",
+      "kind": "suggest",
+      "provider": "brave",
+      "input": {
+        "results": [
+          {
+            "q": 4
+          }
+        ]
+      },
+      "output": [
+        4
+      ]
+    },
+    {
+      "id": "suggest-37",
+      "kind": "suggest",
+      "provider": "brave",
+      "input": {
+        "results": {}
+      },
+      "output": []
+    },
+    {
+      "id": "suggest-38",
+      "kind": "suggest",
+      "provider": "ddg",
+      "input": [
+        "query",
+        [
+          "one",
+          "",
+          false,
+          0,
+          null,
+          4,
+          {
+            "x": true
+          }
+        ]
+      ],
+      "output": [
+        "one",
+        "4",
+        "{'x': True}"
+      ]
+    },
+    {
+      "id": "suggest-39",
+      "kind": "suggest",
+      "provider": "ddg",
+      "input": [
+        "query",
+        []
+      ],
+      "output": []
+    },
+    {
+      "id": "suggest-40",
+      "kind": "suggest",
+      "provider": "ddg",
+      "input": {},
+      "output": []
+    },
+    {
+      "id": "suggest-key-41",
+      "kind": "suggest-key",
+      "query": "",
+      "output": "suggest:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "suggest-key-42",
+      "kind": "suggest-key",
+      "query": " café 🐙 ",
+      "output": "suggest:ff429784b85eb8946e726af8d63ce154c3f50608e96622390901b23171de4987"
+    },
+    {
+      "id": "suggest-key-43",
+      "kind": "suggest-key",
+      "query": "ABC",
+      "output": "suggest:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+    },
+    {
+      "id": "suggest-key-44",
+      "kind": "suggest-key",
+      "query": "\u001cABC\u001f",
+      "output": "suggest:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+    },
+    {
+      "id": "suggest-key-45",
+      "kind": "suggest-key",
+      "query": "İ",
+      "output": "suggest:fbbdb347060082cf4e72cdc5f02679dd809ebf4e6c601933e858d954a65f5e73"
+    },
+    {
+      "id": "availability-empty",
+      "kind": "availability",
+      "engines": [],
+      "output": {
+        "query": "availability",
+        "results": [],
+        "scope": {
+          "selected_engines": [],
+          "resolved_categories": [],
+          "routing_rule": "all active engines",
+          "matched_topic": null,
+          "warnings": [],
+          "excluded_engines": [],
+          "routing_fallback": true,
+          "routing_budget_applied": false,
+          "routing_tradeoffs": [],
+          "jev_added_engines": [],
+          "jev_scores": {}
+        },
+        "engine_outcomes": [],
+        "suggestions": [],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "query_id": "<query-id>",
+        "cached": false,
+        "ranking_explanation": "tier_then_cross_engine_presence",
+        "response_time_ms": 0,
+        "partial": false,
+        "deadline_exceeded": false,
+        "all_unresponsive": true,
+        "empty_engines": [],
+        "cached_error": false,
+        "dispatched_engine_count": 0
+      },
+      "quota_calls": 0,
+      "cache_reads": 0,
+      "cache_writes": 0,
+      "engine_calls": {}
+    },
+    {
+      "id": "availability-sensitive-only",
+      "kind": "availability",
+      "engines": [
+        "hibp"
+      ],
+      "output": {
+        "query": "availability",
+        "results": [],
+        "scope": {
+          "selected_engines": [],
+          "resolved_categories": [],
+          "routing_rule": "all active engines",
+          "matched_topic": null,
+          "warnings": [
+            "sensitive engine 'hibp' requires an explicit engines list or a policy grant"
+          ],
+          "excluded_engines": [
+            {
+              "engine": "hibp",
+              "reason": "sensitive engine excluded by policy",
+              "stage": "policy"
+            }
+          ],
+          "routing_fallback": true,
+          "routing_budget_applied": false,
+          "routing_tradeoffs": [],
+          "jev_added_engines": [],
+          "jev_scores": {}
+        },
+        "engine_outcomes": [],
+        "suggestions": [],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "query_id": "<query-id>",
+        "cached": false,
+        "ranking_explanation": "tier_then_cross_engine_presence",
+        "response_time_ms": 0,
+        "partial": false,
+        "deadline_exceeded": false,
+        "all_unresponsive": true,
+        "empty_engines": [],
+        "cached_error": false,
+        "dispatched_engine_count": 0
+      },
+      "quota_calls": 0,
+      "cache_reads": 0,
+      "cache_writes": 0,
+      "engine_calls": {
+        "hibp": 0
+      }
+    },
+    {
+      "id": "suggest-wire-48",
+      "kind": "suggest-wire",
+      "query": "q*~",
+      "provider": "brave",
+      "wire_queries": [
+        "q=q%2A~&count=5"
+      ],
+      "output": [
+        "x"
+      ]
+    },
+    {
+      "id": "suggest-wire-49",
+      "kind": "suggest-wire",
+      "query": "q*~",
+      "provider": "ddg-fallback",
+      "wire_queries": [
+        "q=q%2A~&count=5",
+        "q=q%2A~&type=list"
+      ],
+      "output": [
+        "x"
+      ]
+    },
+    {
+      "id": "suggest-wire-50",
+      "kind": "suggest-wire",
+      "query": " café 🐙 +%/?&= ",
+      "provider": "brave",
+      "wire_queries": [
+        "q=+caf%C3%A9+%F0%9F%90%99+%2B%25%2F%3F%26%3D+&count=5"
+      ],
+      "output": [
+        "x"
+      ]
+    },
+    {
+      "id": "suggest-wire-51",
+      "kind": "suggest-wire",
+      "query": " café 🐙 +%/?&= ",
+      "provider": "ddg-fallback",
+      "wire_queries": [
+        "q=+caf%C3%A9+%F0%9F%90%99+%2B%25%2F%3F%26%3D+&count=5",
+        "q=+caf%C3%A9+%F0%9F%90%99+%2B%25%2F%3F%26%3D+&type=list"
+      ],
+      "output": [
+        "x"
+      ]
+    },
+    {
+      "id": "suggest-wire-52",
+      "kind": "suggest-wire",
+      "query": "a\t\n\u0000",
+      "provider": "brave",
+      "wire_queries": [
+        "q=a%09%0A%00&count=5"
+      ],
+      "output": [
+        "x"
+      ]
+    },
+    {
+      "id": "suggest-wire-53",
+      "kind": "suggest-wire",
+      "query": "a\t\n\u0000",
+      "provider": "ddg-fallback",
+      "wire_queries": [
+        "q=a%09%0A%00&count=5",
+        "q=a%09%0A%00&type=list"
+      ],
+      "output": [
+        "x"
+      ]
+    },
+    {
+      "id": "suggest-wire-54",
+      "kind": "suggest-wire",
+      "query": "!*'()_-.",
+      "provider": "brave",
+      "wire_queries": [
+        "q=%21%2A%27%28%29_-.&count=5"
+      ],
+      "output": [
+        "x"
+      ]
+    },
+    {
+      "id": "suggest-wire-55",
+      "kind": "suggest-wire",
+      "query": "!*'()_-.",
+      "provider": "ddg-fallback",
+      "wire_queries": [
+        "q=%21%2A%27%28%29_-.&count=5",
+        "q=%21%2A%27%28%29_-.&type=list"
+      ],
+      "output": [
+        "x"
+      ]
+    }
+  ]
+}

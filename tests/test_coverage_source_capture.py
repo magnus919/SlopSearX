@@ -18,7 +18,7 @@ from typing import Mapping
 import httpx
 import pytest
 
-from scripts import intent_ranking_receipts
+from scripts import coverage_source_capture, intent_ranking_receipts
 from scripts.coverage_source_capture import (
     MAX_RESPONSE_BYTES,
     SourceCaptureError,
@@ -32,6 +32,20 @@ from scripts.coverage_source_capture import (
 def _canonical(value: object) -> bytes:
     encoded = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False) + "\n"
     return encoded.encode()
+
+
+def test_v4_protocol_capture_requires_explicit_diagnostic_count_role():
+    path = (
+        Path(__file__).parents[1]
+        / "docs/experiments/evidence/coverage-first-study/research-task-use-method-materials/protocol.json"
+    )
+    protocol = json.loads(path.read_bytes())
+    accepted, _ = coverage_source_capture._validate_protocol(_canonical(protocol).rstrip(b"\n"))
+    assert accepted["schema"] == "coverage-first-study-protocol/4"
+
+    protocol["quality"].pop("useful_count_role")
+    with pytest.raises(SourceCaptureError, match="protocol-useful-count-policy-invalid"):
+        coverage_source_capture._validate_protocol(_canonical(protocol).rstrip(b"\n"))
 
 
 def _sha(value: bytes) -> str:

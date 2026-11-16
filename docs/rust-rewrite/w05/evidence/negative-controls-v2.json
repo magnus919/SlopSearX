@@ -1,0 +1,76 @@
+{
+  "plan_id": "W05",
+  "controls": [
+    {
+      "name": "corpus-drift",
+      "exit_code": 1,
+      "status": "failed",
+      "error": "W05 frozen source/case/export identity changed: source.json",
+      "mutated_path": "docs/rust-rewrite/w05/source.json",
+      "before_sha256": "bfa6a97cc9912f97054e78b56fd3ead683f417d0da293440d5c173f5d579dccf",
+      "mutant_sha256": "fe584eb6c41915547b9a2e8cd4f24410d65ea4092210c3fe38c7e1022359b196",
+      "restoration": "byte_exact"
+    },
+    {
+      "name": "ignored-required-native",
+      "exit_code": 1,
+      "status": "failed",
+      "error": "W05 ssx-infra required tests missing, ignored or failed",
+      "mutated_path": "crates/ssx-infra/tests/w05.rs",
+      "before_sha256": "5011436986a17f7e34a27205f3f28205b6143712953668fba7bfb888c571a1c8",
+      "mutant_sha256": "3a79449a50cb3236089dfb1d71eba9719e8dd05c482b725292d807a61d341b0b",
+      "restoration": "byte_exact"
+    },
+    {
+      "name": "caseless-native-pass",
+      "exit_code": 1,
+      "status": "failed",
+      "error": "W05 native PASS without exact completed semantic case receipts",
+      "mutated_path": "crates/ssx-infra/tests/w05.rs",
+      "before_sha256": "5011436986a17f7e34a27205f3f28205b6143712953668fba7bfb888c571a1c8",
+      "mutant_sha256": "c574aedbbade32bbc8d5e2bda832a79ef7fd954c295164aeb0d158ea7303801c",
+      "restoration": "byte_exact"
+    },
+    {
+      "name": "capacity-semantic-mutation",
+      "exit_code": 1,
+      "status": "failed",
+      "error": "command failed: cargo test --locked -p ssx-infra --test w05 -- --nocapture --test-threads=1",
+      "mutated_path": "crates/ssx-infra/src/valkey/saved_scripts/events/commit.lua",
+      "before_sha256": "8ffe1be82626dd2d3a1d3d535d2ba77c51a0379a25bf7fb8917bc7d4ca826de9",
+      "mutant_sha256": "1c8ee9e62d413d09c9f6a5c7b4290f045dd41495beb19a8e9c81332e09122c27",
+      "restoration": "byte_exact"
+    },
+    {
+      "name": "legacy-colliding-key-reversion",
+      "exit_code": 1,
+      "status": "failed",
+      "error": "command failed: cargo test --locked -p ssx-infra --test w05 -- --nocapture --test-threads=1",
+      "mutated_path": "crates/ssx-infra/src/valkey/saved/events.rs",
+      "before_sha256": "341712759ec8e50d15884303b4cd586508472059a12189de72169c264560f5a1",
+      "mutant_sha256": "a0f7a547d1a4925ed037e2708030c08257469fa5350ccbdd004945436f822e22",
+      "restoration": "byte_exact"
+    },
+    {
+      "name": "registry-admission-released-before-create",
+      "exit_code": 1,
+      "status": "failed",
+      "error": "command failed: cargo test --locked -p ssx-mcp --test w05 -- --nocapture --test-threads=1",
+      "mutated_path": "crates/ssx-mcp/src/saved_events.rs",
+      "before_sha256": "02b48ce643b985f3b856c8656ce35271fd4831aa82ab70c0b582a17794c304f1",
+      "mutant_sha256": "b3fc57200cdde9599e0d99f8ee5730397cfbee234ca0b6526f1cc29e5f883251",
+      "restoration": "byte_exact"
+    },
+    {
+      "name": "scheduler-expiry-fallthrough-reversion",
+      "exit_code": 1,
+      "status": "failed",
+      "error": "command failed: cargo test --locked -p ssx-infra --test w05 -- --nocapture --test-threads=1",
+      "mutated_path": "crates/ssx-infra/src/saved_runner.rs",
+      "before_sha256": "8e8862d422232f96e9f48e8d838e19674a62b72f2a8f078562b103d9fafcde78",
+      "mutant_sha256": "b1a4e3de4fc89a03fe3b3974ab99ee00e61c026d6e16704fb8e3f1a045d7c362",
+      "restoration": "byte_exact"
+    }
+  ],
+  "provider_calls": 0
+}

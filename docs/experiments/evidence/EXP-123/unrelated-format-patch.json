@@ -1,0 +1,5 @@
+{
+  "restored": true,
+  "path": "tests/test_coverage_saved_method_materials.py",
+  "patch": "diff --git a/tests/test_coverage_saved_method_materials.py b/tests/test_coverage_saved_method_materials.py\nindex e5d97847..652d87ae 100644\n--- a/tests/test_coverage_saved_method_materials.py\n+++ b/tests/test_coverage_saved_method_materials.py\n@@ -91,9 +91,7 @@ def test_wire_float_method_changes_only_candidate_parser_pin_and_locks_exact_pai\n     raw = (SAVED_WIRE_FLOAT / \"protocol.json\").read_bytes()\n     protocol = json.loads(raw)\n     assert {key for key in previous if previous[key] != protocol.get(key)} == {\"candidate_source_sha256\"}\n-    assert protocol[\"candidate_source_sha256\"] == (\n-        \"3be05771ebd32fcf18433ee87db031bd190ee9615237a95e4bbd96108487067a\"\n-    )\n+    assert protocol[\"candidate_source_sha256\"] == (\"3be05771ebd32fcf18433ee87db031bd190ee9615237a95e4bbd96108487067a\")\n     cohort_bytes = (SAVED_WIRE_FLOAT / \"cohorts.json\").read_bytes()\n     assert cohort_bytes == (SAVED_WIRE_COMPAT / \"cohorts.json\").read_bytes()\n     contract_bytes = (SAVED_WIRE_FLOAT / \"band-companion-contract.json\").read_bytes()\n"
+}

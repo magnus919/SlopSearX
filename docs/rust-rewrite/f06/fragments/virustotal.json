@@ -1,0 +1,50 @@
+{
+  "api_key_env": "ENGINE_VIRUSTOTAL_API_KEY",
+  "api_secret_env": null,
+  "auth_class": "required",
+  "categories": [
+    "security",
+    "malware"
+  ],
+  "caveats": [],
+  "cost_class": "freemium",
+  "defaults": {
+    "base_url": "https://www.virustotal.com/api/v3",
+    "enabled": true,
+    "max_results": 10,
+    "rate_limit": 4,
+    "timeout_ms": 10000,
+    "type": "api",
+    "weight": 0.7
+  },
+  "display_name": "VirusTotal",
+  "enabled_by_default": true,
+  "enforced_filters": {},
+  "engine_type": "api",
+  "failure_classes": [
+    "rate_limited",
+    "blocked",
+    "error",
+    "timeout"
+  ],
+  "implementation": "unavailable",
+  "name": "virustotal",
+  "routing": {
+    "purpose": "file, URL, domain, and IP reputation",
+    "role": "specialist",
+    "use_when": "the query seeks multi-scanner malware reputation"
+  },
+  "sensitive": false,
+  "supported_filters": {
+    "date_from": false,
+    "date_to": false,
+    "language": false,
+    "pagination": false,
+    "safesearch": false,
+    "time_range": false
+  },
+  "supported_media_types": [],
+  "supported_result_types": [
+    "text"
+  ]
+}

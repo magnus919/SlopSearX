@@ -1,0 +1,106 @@
+import asyncio, copy, hashlib, json, pathlib, sys, uuid
+
+root = pathlib.Path("/private/tmp/slopsearx-w06")
+sys.path.insert(0, str(root))
+controls = json.loads((root / "docs/rust-rewrite/w06/source-controls.json").read_text())
+controls.update(
+    {
+        "slopsearx/service.py": "45903193ef89987f7be83c1e593e44b7752251a54eb8719eae15a241840102ac",
+        "slopsearx/cache.py": "88155d2060f19bcb7740c9498f8f82378e26c4c60ac4d013bee9913eb333c089",
+    }
+)
+for path, expected in controls.items():
+    if hashlib.sha256((root / path).read_bytes()).hexdigest() != expected:
+        raise RuntimeError("source drift: " + path)
+if sys.version_info[:3] != (3, 14, 7):
+    raise RuntimeError("unpinned interpreter")
+import pytest
+from slopsearx import staged, service
+from slopsearx.capabilities import MCPPolicy
+from slopsearx.mcp import staged_tools
+from slopsearx.mcp.state import set_state
+from tests.test_mcp_tools import _FakeStore, _build_state
+
+
+async def main():
+    rows = []
+    for name, language in [("null", None), ("bool", True), ("integer", 1), ("list", []), ("map", {})]:
+        policy = MCPPolicy()
+        policy.enabled_tools["staged_search"] = True
+        s = _build_state(["wikipedia"], policy=policy)
+        shared = _FakeStore()
+        s.ctx.cache = shared
+        s.snapshots._store = shared
+        s.staged_store = staged.StagedSearchStore(shared)
+        s.staged_runner = staged.StagedSearchRunner(s.service, s.staged_store, s.snapshots, staged_tools._policy_check)
+        set_state(s)
+        with pytest.MonkeyPatch.context() as patch:
+            counter = iter(range(1, 100))
+            patch.setattr(uuid, "uuid4", lambda: uuid.UUID(int=next(counter) << 80))
+            patch.setattr(staged.time, "time", lambda: 1000.0)
+            patch.setattr(staged.secrets, "token_hex", lambda _: "fixed-lease-token")
+            patch.setattr(service, "generate_query_id", lambda: "q-language-fixed")
+            args = dict(
+                query="language evidence",
+                objectives={"deadline_ms": 5000, "max_engine_calls": 1},
+                initial_scope={"engines": ["wikipedia"]},
+                fallback_scope=None,
+                allow_scope_expansion=False,
+                filters={"language": language},
+            )
+            plan, error = staged_tools._build_plan(**args)
+            row = dict(id="language." + name, input=args, plan=plan, plan_error=error)
+            try:
+                accepted = await staged_tools.slopsearx_search_staged(**args, idempotency_key="language-" + name)
+                row["admission"] = accepted
+                if "error" not in accepted:
+                    operation = accepted["operation_id"]
+                    await s.staged_runner.run_one("default", operation)
+                    record = (await s.staged_store.read("default", operation)).record
+                    row["record"] = copy.deepcopy(record)
+                    row["rendered"] = await staged_tools._render(record, None, None)
+            except Exception as exc:
+                row["exception"] = {"class": type(exc).__name__, "message": str(exc)}
+            row["fixture_engine_calls"] = s.ctx.active_engines["wikipedia"].calls
+            rows.append(row)
+    set_state(None)
+    value = dict(
+        schema_version=1,
+        plan_id="W06",
+        baseline="9b7d888da1ee3f7e2ed045c2185ea16f419381e9",
+        source_controls=controls,
+        additional_sources={
+            p: hashlib.sha256((root / p).read_bytes()).hexdigest()
+            for p in ["slopsearx/service.py", "slopsearx/cache.py"]
+        },
+        provider_calls=0,
+        execution="actual original StagedSearchRunner + SearchService with permissive _MockEngine; no provider/network",
+        nondeterminism={
+            "wall_time": 1000.0,
+            "uuid": "sequential integers left shifted80",
+            "query_id": "q-language-fixed",
+            "latency": "fixture engine outcomes2.0; no elapsed duration in records",
+        },
+        cases=rows,
+    )
+    output = root / "docs/rust-rewrite/w06/evidence/language-input-source-outcomes.json"
+    output.write_text(json.dumps(value, indent=2) + "\n")
+    print(
+        json.dumps(
+            [
+                {
+                    "id": r["id"],
+                    "plan_accepted": r["plan_error"] is None,
+                    "admission_error": r.get("admission", {}).get("error"),
+                    "record_state": r.get("record", {}).get("state"),
+                    "exception": r.get("exception"),
+                    "fixture_calls": r["fixture_engine_calls"],
+                }
+                for r in rows
+            ],
+            indent=2,
+        )
+    )
+
+
+asyncio.run(main())

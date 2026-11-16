@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Native rewrite acceptance evidence",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "plan_id",
+    "status",
+    "error",
+    "scope",
+    "source",
+    "toolchain",
+    "commands",
+    "identity_commands",
+    "output_path",
+    "started_unix_ms",
+    "finished_unix_ms"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "plan_id": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "passed",
+        "failed"
+      ]
+    },
+    "error": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "scope": {
+      "type": "string"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "head",
+        "working_tree",
+        "diff",
+        "files"
+      ],
+      "properties": {
+        "head": { "type": "string" },
+        "working_tree": { "type": "string" },
+        "diff": { "type": "string" },
+        "files": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/source_file" }
+        }
+      }
+    },
+    "toolchain": {
+      "type": "string"
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/command_record" },
+          { "$ref": "#/$defs/readiness_record" }
+        ]
+      }
+    },
+    "identity_commands": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/command_record" }
+    },
+    "output_path": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "started_unix_ms": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "finished_unix_ms": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "passed" } } },
+      "then": { "properties": { "error": { "type": "null" } } }
+    },
+    {
+      "if": { "properties": { "status": { "const": "failed" } } },
+      "then": { "properties": { "error": { "type": "string" } } }
+    }
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "source_file": {
+      "type": "object",
+      "required": ["path", "git_blob"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "git_blob": { "type": "string", "pattern": "^[0-9a-fA-F]{40}$" }
+      },
+      "additionalProperties": false
+    },
+    "command_record": {
+      "type": "object",
+      "required": ["program", "args", "exit_code", "stdout", "stderr"],
+      "properties": {
+        "program": { "type": "string", "minLength": 1 },
+        "args": { "type": "array", "items": { "type": "string" } },
+        "exit_code": { "type": ["integer", "null"] },
+        "stdout": { "type": "string" },
+        "stderr": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "readiness_record": {
+      "type": "object",
+      "required": ["program", "git_blob", "args", "environment", "startup", "request", "response", "status"],
+      "properties": {
+        "program": { "type": "string", "minLength": 1 },
+        "git_blob": { "type": "string", "pattern": "^[0-9a-fA-F]{40}$" },
+        "args": { "type": "array", "items": { "type": "string" } },
+        "environment": {
+          "type": "object",
+          "required": ["PATH"],
+          "properties": { "PATH": { "type": "string" } },
+          "additionalProperties": false
+        },
+        "startup": {
+          "type": "object",
+          "required": ["address", "mode"],
+          "properties": {
+            "address": { "type": "string", "minLength": 1 },
+            "mode": { "const": "foundation" }
+          },
+          "additionalProperties": false
+        },
+        "request": { "type": "string" },
+        "response": {
+          "type": "object",
+          "required": ["status", "mode"],
+          "properties": {
+            "status": { "const": "ok" },
+            "mode": { "const": "foundation" }
+          },
+          "additionalProperties": false
+        },
+        "status": { "const": "passed" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

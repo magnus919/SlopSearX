@@ -20,6 +20,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 
 from scripts.coverage_assessment_packets import MAX_GRADER_SUBMISSIONS
+from scripts.coverage_atomic_io import write_new as _atomic_write_new
 from scripts.coverage_grade_closure import GradeSubmission
 
 SCHEMA = "coverage-native-grader-handoff/1"
@@ -29,7 +30,8 @@ _SHA256 = re.compile(r"[0-9a-f]{64}\Z")
 _PACKET_ID = re.compile(r"[0-9a-f]{64}\Z")
 _MCP_SERVER_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,127}\Z")
 _PHASE = {"references": "reference", "answers": "answer"}
-PHASE_DEADLINE_SCHEMA = "coverage-native-phase-deadline/1"
+PHASE_DEADLINE_SCHEMA = "coverage-native-phase-deadline/2"
+MAX_PHASE_DEADLINE_SECONDS = 8 * 60 * 60
 
 
 class NativeHandoffError(RuntimeError):
@@ -88,20 +90,7 @@ def _private_root(root: str | os.PathLike[str]) -> Path:
 
 
 def _write_new(path: Path, raw: bytes) -> None:
-    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0)
-    descriptor = os.open(path, flags, 0o600)
-    try:
-        with os.fdopen(descriptor, "wb", closefd=False) as stream:
-            stream.write(raw)
-            stream.flush()
-            os.fsync(stream.fileno())
-    finally:
-        os.close(descriptor)
-    parent = os.open(path.parent, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0))
-    try:
-        os.fsync(parent)
-    finally:
-        os.close(parent)
+    _atomic_write_new(path, raw)
 
 
 def _read_private(path: Path, *, max_bytes: int) -> bytes:
@@ -368,6 +357,10 @@ class NativeGraderHandoff:
         except FileExistsError as exc:
             raise NativeHandoffError("grader-handoff-already-created-no-resume") from exc
         os.chmod(scope, 0o700)
+        receipt_created_utc = time.time()
+        receipt_remaining = max(0.0, float(deadline_monotonic) - time.monotonic())
+        if receipt_remaining <= 0 or receipt_remaining > MAX_PHASE_DEADLINE_SECONDS:
+            raise NativeHandoffError("grader-deadline-invalid")
         _write_new(
             scope / "phase-deadline.json",
             _canonical(
@@ -375,7 +368,8 @@ class NativeGraderHandoff:
                     "schema": PHASE_DEADLINE_SCHEMA,
                     "stage_uuid": stage_uuid,
                     "phase": phase,
-                    "deadline_monotonic": float(deadline_monotonic),
+                    "created_at_utc": receipt_created_utc,
+                    "deadline_at_utc": receipt_created_utc + receipt_remaining,
                 }
             ),
         )
@@ -431,7 +425,8 @@ class NativeGraderHandoff:
                 if audit_root.exists() or audit_root.is_symlink():
                     _private_directory(audit_root)
                     summary_path = audit_root / "dispatch-summary.json"
-                    if summary_path.exists():
+                    summary_claim = summary_path.with_name(f".{summary_path.name}.claim")
+                    if summary_path.exists() and not summary_claim.exists():
                         summary_bytes = _read_private(summary_path, max_bytes=1_000_000)
                         summary = _strict(summary_bytes)
                         if (
@@ -596,7 +591,7 @@ class NativeGraderHandoff:
                     },
                     **(
                         {
-                            "native_host_transcript_schema": "coverage-native-host-transcript/2",
+                            "native_host_transcript_schema": "coverage-native-host-transcript/3",
                             **native_host_evidence,
                         }
                         if self.require_native_host_transcripts

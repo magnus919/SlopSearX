@@ -1,0 +1,264 @@
+{
+  "schema": 1,
+  "source_sha256": "4c45e876fc79dffc0f7da8ccccc9c6ba67d4f4cc9e0bd9e8194f74184b96c65b",
+  "captures": [
+    {
+      "native_case": {
+        "id": "float-token-fraction",
+        "argv": [
+          "search",
+          "float",
+          "--json"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0,
+            "body_repeat": 4194305,
+            "body_kind": "float-fraction"
+          }
+        ],
+        "requests": [
+          {
+            "target": "/search?q=float&language=en&pageno=1&format=json",
+            "accept": "application/json"
+          }
+        ],
+        "status": 0,
+        "stdout": "1.0\n",
+        "stderr": "",
+        "reference": "additional-source-observations.json#float-token-fraction"
+      },
+      "python_stdout_hex": "312e300a",
+      "python_stderr_hex": "",
+      "python_status": 0,
+      "source_response_sha256": "104ba072abde22ca7dde0f762323cbf4057233734c3019e8ed097cd64aa4583a",
+      "source_response_bytes": 4194310
+    },
+    {
+      "native_case": {
+        "id": "float-token-exponent",
+        "argv": [
+          "search",
+          "float",
+          "--json"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0,
+            "body_repeat": 4194305,
+            "body_kind": "float-exponent"
+          }
+        ],
+        "requests": [
+          {
+            "target": "/search?q=float&language=en&pageno=1&format=json",
+            "accept": "application/json"
+          }
+        ],
+        "status": 0,
+        "stdout": "Infinity\n",
+        "stderr": "",
+        "reference": "additional-source-observations.json#float-token-exponent"
+      },
+      "python_stdout_hex": "496e66696e6974790a",
+      "python_stderr_hex": "",
+      "python_status": 0,
+      "source_response_sha256": "cc47603fd236cb241029674fad33d8a6fc14151015fc97f691eb01309a2f007c",
+      "source_response_bytes": 4194307
+    },
+    {
+      "native_case": {
+        "id": "integer-ascii-record-separator",
+        "argv": [
+          "search",
+          "x",
+          "--pageno",
+          "\u001c1"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [],
+        "status": 2,
+        "stdout": "",
+        "stderr": "usage",
+        "reference": "additional-source-observations.json#integer-ascii-record-separator"
+      },
+      "python_stdout_hex": "",
+      "python_stderr_hex": "75736167653a2073737820736561726368205b2d685d205b2d2d63617465676f726965732043415445474f524945535d205b2d2d656e67696e657320454e47494e45535d0a2020202020202020202020202020202020205b2d2d6c616e6775616765204c414e47554147455d205b2d2d74696d652d72616e67652054494d455f52414e47455d0a2020202020202020202020202020202020205b2d2d706167656e6f20504147454e4f5d205b2d2d6a736f6e5d0a2020202020202020202020202020202020207175657279205b7175657279202e2e2e5d0a737378207365617263683a206572726f723a20617267756d656e74202d2d706167656e6f3a20696e76616c696420696e742076616c75653a20275c78316331270a",
+      "python_status": 2
+    },
+    {
+      "native_case": {
+        "id": "integer-unicode-nbsp",
+        "argv": [
+          "search",
+          "x",
+          "--pageno",
+          "\u00a01\u00a0"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/search?q=x&language=en&pageno=1&format=yaml",
+            "accept": "text/vnd.yaml+markdown"
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-source-observations.json#integer-unicode-nbsp"
+      },
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "python_status": 0
+    },
+    {
+      "native_case": {
+        "id": "query-record-separator",
+        "argv": [
+          "search",
+          "\u001c"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [],
+        "status": 1,
+        "stdout": "",
+        "stderr": "error: ssx: unexpected JSON shape\n",
+        "reference": "additional-source-observations.json#query-record-separator"
+      },
+      "python_stdout_hex": "",
+      "python_stderr_hex": "6572726f723a2071756572792069732072657175697265640a",
+      "python_status": 1
+    },
+    {
+      "native_case": {
+        "id": "long-option-abbreviation",
+        "argv": [
+          "search",
+          "x",
+          "--cat",
+          "science",
+          "--j"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/search?q=x&categories=science&language=en&pageno=1&format=json",
+            "accept": "application/json"
+          }
+        ],
+        "status": 0,
+        "stdout": "{}\n",
+        "stderr": "",
+        "reference": "additional-source-observations.json#long-option-abbreviation"
+      },
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "python_status": 0
+    },
+    {
+      "native_case": {
+        "id": "query-after-bool-option",
+        "argv": [
+          "search",
+          "x",
+          "--json",
+          "y"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [],
+        "status": 2,
+        "stdout": "",
+        "stderr": "usage",
+        "reference": "additional-source-observations.json#query-after-bool-option"
+      },
+      "python_stdout_hex": "",
+      "python_stderr_hex": "75736167653a20737378205b2d685d207b7365617263682c656e67696e65732c6865616c74682c636f6e6669677d202e2e2e0a7373783a206572726f723a20756e7265636f676e697a656420617267756d656e74733a20790a",
+      "python_status": 2
+    },
+    {
+      "native_case": {
+        "id": "query-after-end-options",
+        "argv": [
+          "search",
+          "x",
+          "--json",
+          "--",
+          "y"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [],
+        "status": 2,
+        "stdout": "",
+        "stderr": "usage",
+        "reference": "additional-source-observations.json#query-after-end-options"
+      },
+      "python_stdout_hex": "",
+      "python_stderr_hex": "75736167653a20737378205b2d685d207b7365617263682c656e67696e65732c6865616c74682c636f6e6669677d202e2e2e0a7373783a206572726f723a20756e7265636f676e697a656420617267756d656e74733a202d2d20790a",
+      "python_status": 2
+    }
+  ]
+}

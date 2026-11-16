@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "kind": "A05_COLD_BOOTSTRAP_OWNER_CLOCK_RELOCATION_V1",
+  "predecessor_head": "3f1b9ccadb2a1f5ec072c64a2cd1dcd53d3b8dc8",
+  "frozen_coverage_sha256": "8a9f65dc267903f7fa07cc8b78ee7603c114c44b29ef0b2b6d2b7e0273cb323f",
+  "logical_native_tests": [
+    "admission_denies_both_engines_before_bootstrap",
+    "cancellation_during_bootstrap_sends_no_search_or_fallback",
+    "cold_bootstrap_expires_without_spending_search_deadline_or_leaking_cookies",
+    "helper_deadline_kills_and_reaps_before_releasing_slot",
+    "helper_future_cancellation_kills_and_reaps_before_releasing_slot",
+    "helper_shutdown_kills_and_reaps_and_closes_admission",
+    "html_factories_expose_live_availability_and_preserve_f06_metadata",
+    "loopback_proxy_rotation_keeps_one_route_per_search_and_applies_feedback",
+    "native_helper_rejects_noncanonical_frames",
+    "source_corpus_complete_outcomes_and_requests",
+    "stateful_codec_cancellation_kills_reaps_and_releases_permit",
+    "stateful_codec_deadline_kills_reaps_and_releases_permit",
+    "source_charset_pipeline_complete_outcomes_and_requests"
+  ],
+  "retained_helper_unit_tests": [
+    "adapters::html_helper_tests::actual_bounded_child_quota_and_non_emitting_codec_deadline_cancel_reap",
+    "adapters::html_helper_tests::actual_raw_header_selector_cancellation_retains_lease_until_reap",
+    "adapters::html_helper_tests::actual_rows_worker_quota_deadline_cancel_and_reap",
+    "adapters::html_helper_tests::held_decoder_handoff_deadline_retains_ownership_until_verified_reap",
+    "adapters::html_helper_tests::loopback_cookie_isolation_bootstrap_fallback_and_exact_order",
+    "adapters::html_helper_tests::registered_factories_share_owned_pool_and_await_teardown_after_caller_drop",
+    "adapters::html_helper_tests::typed_helper_terminal_outcomes_preserve_request_counts_feedback_and_reap"
+  ],
+  "relocation": {
+    "old_target": "a05_html",
+    "old_name": "cold_bootstrap_expires_without_spending_search_deadline_or_leaking_cookies",
+    "new_target": "ssx-infra --lib",
+    "new_name": "adapters::html_helper_tests::cold_bootstrap_expires_without_spending_search_deadline_or_leaking_cookies"
+  },
+  "frozen_control": {
+    "path": "docs/rust-rewrite/a05/source-amendments/3f1b9cca-cold-bootstrap.rs.frozen",
+    "sha256": "ff0629dc1935449ace8e19f9204e36973963f5b910e38841441fbc0a6f0fdc58",
+    "bytes": 4493,
+    "source_path": "crates/ssx-infra/tests/a05_html.rs",
+    "source_sha256": "20f401f60becbe475a578fe61c2fb20a9769b62cf319fa618c4175830d60d782",
+    "source_start_line": 461,
+    "boundary_ms": 6,
+    "classification": "historical Tokio timer-wheel witness; not current Manual evidence"
+  },
+  "current_boundary": {
+    "preexpiry_ms": 4,
+    "expiry_ms": 5,
+    "clock": "same private Manual HTTP owner; Tokio/parser clocks remain System",
+    "duration_override": false,
+    "production_behavior_change": false
+  },
+  "source_bindings": [
+    {
+      "path": "crates/ssx-infra/tests/a05_html.rs",
+      "sha256": "f362f6cc76018afcda82558650861916e7a3430988bf2b8b82c63bdf03aea700",
+      "bytes": 30114
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/duckduckgo.rs",
+      "sha256": "c29ca5baaad1c6562c3278b2602eee4f2e95fc5ac4c273eb62c0758b73029040",
+      "bytes": 30085
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/html_helper_tests.rs",
+      "sha256": "c215362a640ee9c057a88caed11c151bbba53b1687c110ceac98535d2dc588ab",
+      "bytes": 50799
+    }
+  ],
+  "cookie_limit": "Pending bootstrap never yields a response or Set-Cookie; no-cookie ordered requests do not prove late Set-Cookie disposal. Seven retained successful-bootstrap/helper controls remain mandatory."
+}

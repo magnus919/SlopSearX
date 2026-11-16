@@ -1,0 +1,829 @@
+{
+  "schema_version": 1,
+  "python": "3.14.7",
+  "yaml_version": "6.0.3",
+  "baseline": "7cc420f7ffb61127750e77bf6130e225925f9186",
+  "source": "slopsearx/config.py",
+  "source_blob": "761db0521d74ec6d955aa8a84fd92a4a62533c43",
+  "cases": [
+    {
+      "name": "yaml-00",
+      "yaml": "012",
+      "expected": {
+        "kind": "int",
+        "value": 10
+      }
+    },
+    {
+      "name": "yaml-01",
+      "yaml": "-012",
+      "expected": {
+        "kind": "int",
+        "value": -10
+      }
+    },
+    {
+      "name": "yaml-02",
+      "yaml": "+012",
+      "expected": {
+        "kind": "int",
+        "value": 10
+      }
+    },
+    {
+      "name": "yaml-03",
+      "yaml": "0o12",
+      "expected": {
+        "kind": "str",
+        "value": "0o12"
+      }
+    },
+    {
+      "name": "yaml-04",
+      "yaml": "08",
+      "expected": {
+        "kind": "str",
+        "value": "08"
+      }
+    },
+    {
+      "name": "yaml-05",
+      "yaml": "0xA",
+      "expected": {
+        "kind": "int",
+        "value": 10
+      }
+    },
+    {
+      "name": "yaml-06",
+      "yaml": "0b10",
+      "expected": {
+        "kind": "int",
+        "value": 2
+      }
+    },
+    {
+      "name": "yaml-07",
+      "yaml": "1_2",
+      "expected": {
+        "kind": "int",
+        "value": 12
+      }
+    },
+    {
+      "name": "yaml-08",
+      "yaml": "1:20",
+      "expected": {
+        "kind": "int",
+        "value": 80
+      }
+    },
+    {
+      "name": "yaml-09",
+      "yaml": "-1:20",
+      "expected": {
+        "kind": "int",
+        "value": -80
+      }
+    },
+    {
+      "name": "yaml-10",
+      "yaml": "1_0:20",
+      "expected": {
+        "kind": "int",
+        "value": 620
+      }
+    },
+    {
+      "name": "yaml-11",
+      "yaml": "0:01.5",
+      "expected": {
+        "kind": "float",
+        "value": 1.5
+      }
+    },
+    {
+      "name": "yaml-12",
+      "yaml": "0:1.2",
+      "expected": {
+        "kind": "float",
+        "value": 1.2
+      }
+    },
+    {
+      "name": "yaml-13",
+      "yaml": "1:20.5",
+      "expected": {
+        "kind": "float",
+        "value": 80.5
+      }
+    },
+    {
+      "name": "yaml-14",
+      "yaml": "1e3",
+      "expected": {
+        "kind": "str",
+        "value": "1e3"
+      }
+    },
+    {
+      "name": "yaml-15",
+      "yaml": "1.0e+3",
+      "expected": {
+        "kind": "float",
+        "value": 1000.0
+      }
+    },
+    {
+      "name": "yaml-16",
+      "yaml": "1.0e3",
+      "expected": {
+        "kind": "str",
+        "value": "1.0e3"
+      }
+    },
+    {
+      "name": "yaml-17",
+      "yaml": ".5",
+      "expected": {
+        "kind": "float",
+        "value": 0.5
+      }
+    },
+    {
+      "name": "yaml-18",
+      "yaml": "-.5",
+      "expected": {
+        "kind": "str",
+        "value": "-.5"
+      }
+    },
+    {
+      "name": "yaml-19",
+      "yaml": ".5e+2",
+      "expected": {
+        "kind": "float",
+        "value": 50.0
+      }
+    },
+    {
+      "name": "yaml-20",
+      "yaml": "yes",
+      "expected": {
+        "kind": "bool",
+        "value": true
+      }
+    },
+    {
+      "name": "yaml-21",
+      "yaml": "ON",
+      "expected": {
+        "kind": "bool",
+        "value": true
+      }
+    },
+    {
+      "name": "yaml-22",
+      "yaml": "TrUe",
+      "expected": {
+        "kind": "str",
+        "value": "TrUe"
+      }
+    },
+    {
+      "name": "yaml-23",
+      "yaml": "null",
+      "expected": {
+        "kind": "NoneType",
+        "value": null
+      }
+    },
+    {
+      "name": "yaml-24",
+      "yaml": "~",
+      "expected": {
+        "kind": "NoneType",
+        "value": null
+      }
+    },
+    {
+      "name": "yaml-25",
+      "yaml": "",
+      "expected": {
+        "kind": "NoneType",
+        "value": null
+      }
+    },
+    {
+      "name": "yaml-26",
+      "yaml": "'012'",
+      "expected": {
+        "kind": "str",
+        "value": "012"
+      }
+    },
+    {
+      "name": "yaml-27",
+      "yaml": "\"1e3\"",
+      "expected": {
+        "kind": "str",
+        "value": "1e3"
+      }
+    },
+    {
+      "name": "yaml-28",
+      "yaml": "'yes'",
+      "expected": {
+        "kind": "str",
+        "value": "yes"
+      }
+    },
+    {
+      "name": "yaml-29",
+      "yaml": "!!str 012",
+      "expected": {
+        "kind": "str",
+        "value": "012"
+      }
+    },
+    {
+      "name": "yaml-30",
+      "yaml": "!!int 012",
+      "expected": {
+        "kind": "int",
+        "value": 10
+      }
+    },
+    {
+      "name": "yaml-31",
+      "yaml": "!!int 08",
+      "expected": {
+        "source_error": true,
+        "native_error": true
+      }
+    },
+    {
+      "name": "yaml-32",
+      "yaml": "!!int 0o12",
+      "expected": {
+        "kind": "int",
+        "value": 10
+      }
+    },
+    {
+      "name": "yaml-33",
+      "yaml": "!!int 0x\u0661",
+      "expected": {
+        "kind": "int",
+        "value": 1
+      }
+    },
+    {
+      "name": "yaml-34",
+      "yaml": "!!int \u0661\u0662",
+      "expected": {
+        "kind": "int",
+        "value": 12
+      }
+    },
+    {
+      "name": "yaml-35",
+      "yaml": "!!float 1e3",
+      "expected": {
+        "kind": "float",
+        "value": 1000.0
+      }
+    },
+    {
+      "name": "yaml-36",
+      "yaml": "!!float \u0661:\u0662.\u0665",
+      "expected": {
+        "kind": "float",
+        "value": 62.5
+      }
+    },
+    {
+      "name": "yaml-37",
+      "yaml": "!!bool yes",
+      "expected": {
+        "kind": "bool",
+        "value": true
+      }
+    },
+    {
+      "name": "yaml-38",
+      "yaml": "!!bool maybe",
+      "expected": {
+        "source_error": true,
+        "native_error": true
+      }
+    },
+    {
+      "name": "yaml-39",
+      "yaml": "!!null anything",
+      "expected": {
+        "kind": "NoneType",
+        "value": null
+      }
+    },
+    {
+      "name": "yaml-40",
+      "yaml": "! \"012\"",
+      "expected": {
+        "kind": "int",
+        "value": 10
+      }
+    },
+    {
+      "name": "yaml-41",
+      "yaml": "! \"yes\"",
+      "expected": {
+        "kind": "bool",
+        "value": true
+      }
+    },
+    {
+      "name": "yaml-42",
+      "yaml": "! \"1e3\"",
+      "expected": {
+        "kind": "str",
+        "value": "1e3"
+      }
+    },
+    {
+      "name": "yaml-43",
+      "yaml": ".inf",
+      "expected": {
+        "kind": "float",
+        "native_error": true
+      }
+    },
+    {
+      "name": "yaml-44",
+      "yaml": "-.Inf",
+      "expected": {
+        "kind": "float",
+        "native_error": true
+      }
+    },
+    {
+      "name": "yaml-45",
+      "yaml": ".NaN",
+      "expected": {
+        "kind": "float",
+        "native_error": true
+      }
+    },
+    {
+      "name": "yaml-46",
+      "yaml": "2020-xx-yy",
+      "expected": {
+        "kind": "str",
+        "value": "2020-xx-yy"
+      }
+    },
+    {
+      "name": "yaml-47",
+      "yaml": "2020-12-31suffix",
+      "expected": {
+        "kind": "str",
+        "value": "2020-12-31suffix"
+      }
+    },
+    {
+      "name": "yaml-48",
+      "yaml": "2026-ab-cdef",
+      "expected": {
+        "kind": "str",
+        "value": "2026-ab-cdef"
+      }
+    },
+    {
+      "name": "yaml-49",
+      "yaml": "2020-12-31",
+      "expected": {
+        "kind": "date",
+        "native_error": true
+      }
+    },
+    {
+      "name": "yaml-50",
+      "yaml": "2020-1-2T1:02:03Z",
+      "expected": {
+        "kind": "datetime",
+        "native_error": true
+      }
+    },
+    {
+      "name": "yaml-51",
+      "yaml": "2020-12-31T12:30:00.1+02:00",
+      "expected": {
+        "kind": "datetime",
+        "native_error": true
+      }
+    },
+    {
+      "name": "yaml-52",
+      "yaml": "2020-12-31Tbad",
+      "expected": {
+        "kind": "str",
+        "value": "2020-12-31Tbad"
+      }
+    },
+    {
+      "name": "yaml-53",
+      "yaml": "!!timestamp 2020-12-31",
+      "expected": {
+        "kind": "date",
+        "native_error": true
+      }
+    },
+    {
+      "name": "yaml-54",
+      "yaml": "!!binary SGVsbG8=",
+      "expected": {
+        "kind": "bytes",
+        "native_error": true
+      }
+    },
+    {
+      "name": "yaml-55",
+      "yaml": "!unknown value",
+      "expected": {
+        "source_error": true,
+        "native_error": true
+      }
+    },
+    {
+      "name": "yaml-56",
+      "yaml": "<<",
+      "expected": {
+        "source_error": true,
+        "native_error": true
+      }
+    },
+    {
+      "name": "yaml-57",
+      "yaml": "=",
+      "expected": {
+        "source_error": true,
+        "native_error": true
+      }
+    },
+    {
+      "name": "yaml-58",
+      "yaml": "!!merge <<",
+      "expected": {
+        "source_error": true,
+        "native_error": true
+      }
+    },
+    {
+      "name": "yaml-59",
+      "yaml": "!!value =",
+      "expected": {
+        "source_error": true,
+        "native_error": true
+      }
+    },
+    {
+      "name": "yaml-60",
+      "yaml": "a: &x 012\nb: *x\n",
+      "expected": {
+        "kind": "dict",
+        "value": {
+          "a": 10,
+          "b": 10
+        }
+      }
+    },
+    {
+      "name": "yaml-61",
+      "yaml": "a: &x 1\nb: &x 2\nc: *x\n",
+      "expected": {
+        "source_error": true,
+        "native_error": true
+      }
+    },
+    {
+      "name": "yaml-62",
+      "yaml": "a: &a {self: *a}\n",
+      "expected": {
+        "kind": "dict",
+        "native_error": true
+      }
+    },
+    {
+      "name": "yaml-63",
+      "yaml": "a: 1\na: 2\n",
+      "expected": {
+        "kind": "dict",
+        "value": {
+          "a": 2
+        }
+      }
+    },
+    {
+      "name": "yaml-64",
+      "yaml": "a: &a {x: 1, z: 2}\nb: &b {x: 3, y: 4}\nout: {<<: [*a, *b], z: 9}\n",
+      "expected": {
+        "kind": "dict",
+        "value": {
+          "a": {
+            "x": 1,
+            "z": 2
+          },
+          "b": {
+            "x": 3,
+            "y": 4
+          },
+          "out": {
+            "x": 1,
+            "y": 4,
+            "z": 9
+          }
+        }
+      }
+    },
+    {
+      "name": "yaml-65",
+      "yaml": "base: &b {x: 1}\nout: {! \"<<\": *b}\n",
+      "expected": {
+        "kind": "dict",
+        "value": {
+          "base": {
+            "x": 1
+          },
+          "out": {
+            "x": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "yaml-66",
+      "yaml": "base: &b {x: 1}\nout: {\"<<\": *b}\n",
+      "expected": {
+        "kind": "dict",
+        "value": {
+          "base": {
+            "x": 1
+          },
+          "out": {
+            "<<": {
+              "x": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "yaml-67",
+      "yaml": "base: &b {x: 1}\nout: {!!merge any: *b}\n",
+      "expected": {
+        "kind": "dict",
+        "value": {
+          "base": {
+            "x": 1
+          },
+          "out": {
+            "x": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "yaml-68",
+      "yaml": "out: {!!value any: 1}\n",
+      "expected": {
+        "kind": "dict",
+        "value": {
+          "out": {
+            "any": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "yaml-69",
+      "yaml": "! [1,2]",
+      "expected": {
+        "kind": "list",
+        "value": [
+          1,
+          2
+        ]
+      }
+    },
+    {
+      "name": "yaml-70",
+      "yaml": "! {a: 1}",
+      "expected": {
+        "kind": "dict",
+        "value": {
+          "a": 1
+        }
+      }
+    },
+    {
+      "name": "yaml-71",
+      "yaml": "!!seq [1,2]",
+      "expected": {
+        "kind": "list",
+        "value": [
+          1,
+          2
+        ]
+      }
+    },
+    {
+      "name": "yaml-72",
+      "yaml": "!!map {a: 1}",
+      "expected": {
+        "kind": "dict",
+        "value": {
+          "a": 1
+        }
+      }
+    },
+    {
+      "name": "yaml-73",
+      "yaml": "!!int [1]",
+      "expected": {
+        "source_error": true,
+        "native_error": true
+      }
+    },
+    {
+      "name": "yaml-74",
+      "yaml": "1: numeric-key",
+      "expected": {
+        "kind": "dict",
+        "native_error": true
+      }
+    },
+    {
+      "name": "yaml-75",
+      "yaml": "---\na: 1\n---\nb: 2\n",
+      "expected": {
+        "source_error": true,
+        "native_error": true
+      }
+    },
+    {
+      "name": "yaml-76",
+      "yaml": "a: *missing",
+      "expected": {
+        "source_error": true,
+        "native_error": true
+      }
+    },
+    {
+      "name": "yaml-77",
+      "yaml": "a: |\n  012\n",
+      "expected": {
+        "kind": "dict",
+        "value": {
+          "a": "012\n"
+        }
+      }
+    },
+    {
+      "name": "yaml-78",
+      "yaml": "a: >\n  1e3\n",
+      "expected": {
+        "kind": "dict",
+        "value": {
+          "a": "1e3\n"
+        }
+      }
+    }
+  ],
+  "config_cases": [
+    {
+      "name": "octal",
+      "yaml": "engines:\n  brave:\n    max_results: 012\n",
+      "env": [],
+      "expected": {
+        "max_results": {
+          "kind": "int",
+          "value": 10
+        },
+        "weight": {
+          "kind": "float",
+          "value": 1.0
+        }
+      }
+    },
+    {
+      "name": "exponent-text",
+      "yaml": "engines:\n  brave:\n    weight: 1e3\n",
+      "env": [
+        [
+          "ENGINE_BRAVE_WEIGHT",
+          "2.5"
+        ]
+      ],
+      "expected": {
+        "max_results": {
+          "kind": "int",
+          "value": 20
+        },
+        "weight": {
+          "kind": "str",
+          "value": "2.5"
+        }
+      }
+    },
+    {
+      "name": "quoted-octal",
+      "yaml": "engines:\n  brave:\n    max_results: \"012\"\n",
+      "env": [
+        [
+          "ENGINE_BRAVE_MAX_RESULTS",
+          "11.5"
+        ]
+      ],
+      "expected": {
+        "max_results": {
+          "kind": "str",
+          "value": "11.5"
+        },
+        "weight": {
+          "kind": "float",
+          "value": 1.0
+        }
+      }
+    },
+    {
+      "name": "explicit-float",
+      "yaml": "engines:\n  brave:\n    weight: !!float 1e3\n",
+      "env": [
+        [
+          "ENGINE_BRAVE_WEIGHT",
+          "2.5"
+        ]
+      ],
+      "expected": {
+        "max_results": {
+          "kind": "int",
+          "value": 20
+        },
+        "weight": {
+          "kind": "float",
+          "value": 2.5
+        }
+      }
+    },
+    {
+      "name": "explicit-string",
+      "yaml": "engines:\n  brave:\n    max_results: !!str 012\n",
+      "env": [
+        [
+          "ENGINE_BRAVE_MAX_RESULTS",
+          "11.5"
+        ]
+      ],
+      "expected": {
+        "max_results": {
+          "kind": "str",
+          "value": "11.5"
+        },
+        "weight": {
+          "kind": "float",
+          "value": 1.0
+        }
+      }
+    },
+    {
+      "name": "alias",
+      "yaml": "a: &n 012\nengines:\n  brave:\n    max_results: *n\n",
+      "env": [],
+      "expected": {
+        "max_results": {
+          "kind": "int",
+          "value": 10
+        },
+        "weight": {
+          "kind": "float",
+          "value": 1.0
+        }
+      }
+    },
+    {
+      "name": "merge",
+      "yaml": "defaults: &d {max_results: 012, weight: 1e3}\nengines:\n  brave:\n    <<: *d\n",
+      "env": [],
+      "expected": {
+        "max_results": {
+          "kind": "int",
+          "value": 10
+        },
+        "weight": {
+          "kind": "str",
+          "value": "1e3"
+        }
+      }
+    }
+  ]
+}

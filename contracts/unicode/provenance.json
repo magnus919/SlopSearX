@@ -1,0 +1,26 @@
+{
+  "unicode_version": "16.0.0",
+  "python_version": "3.14.7",
+  "source": "https://www.unicode.org/Public/16.0.0/ucd/CaseFolding.txt",
+  "source_sha256": "6f1f9c588eb4a5c718d9e8f93b782685e5c7fec872cf05e8e6878053599e09bb",
+  "table_sha256": "53e8bd24021fff4b07206c8ac27e8bbf9e801dc4335656e4e97f4169d506981b",
+  "mapping_count": 1557,
+  "statuses": [
+    "C",
+    "F"
+  ],
+  "excluded_statuses": [
+    "S",
+    "T"
+  ],
+  "license": "Unicode-3.0",
+  "license_url": "https://www.unicode.org/license.txt",
+  "python_text": {
+    "path": "contracts/unicode/python-text-16.0.0.json",
+    "sha256": "9f6d9cb6e81031954d91cc03084237592e9d7bb2224f22cab5a5fba8cebefabd",
+    "generator": "CPython 3.14.7 Unicode16: decimal_zeroes = codepoints where str.isdecimal() and int(character)==0; nonprintable_ranges = maximal contiguous codepoint ranges where not str.isprintable(); nfkc_url_delimiters = non-ASCII codepoints whose Unicode16 NFKC expansion contains /?#@:",
+    "decimal_ranges": 76,
+    "nonprintable_ranges": 737,
+    "nfkc_url_delimiters": 19
+  }
+}

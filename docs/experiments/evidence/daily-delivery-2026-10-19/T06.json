@@ -1,0 +1,713 @@
+{
+  "schema_version": 1,
+  "plan_id": "T06",
+  "scope": "source-bound native search/discovery through shared authenticated HTTP, stdio and legacy with real service/snapshot authorities; exactly two accepted outer-params diagnostic differences; production startup T02/W09 separate",
+  "status": "passed",
+  "error": null,
+  "started_unix_ms": 1792414808768,
+  "finished_unix_ms": 1792414907543,
+  "toolchain": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: aarch64-apple-darwin\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+  "source_files": "source-blobs.json",
+  "commands": [
+    {
+      "args": [
+        "hash-object",
+        "--",
+        "slopsearx/service.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "82eb29d50c4ca98a237949d4d8994cfe3cbeca9f\n"
+    },
+    {
+      "args": [
+        "rev-parse",
+        "6c44976444340cc8f343fef61e2e8d723b189c19:slopsearx/service.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "82eb29d50c4ca98a237949d4d8994cfe3cbeca9f\n"
+    },
+    {
+      "args": [
+        "hash-object",
+        "--",
+        "slopsearx/snapshot.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "fe0e62b9872b3d01cef6a8f843d9720f2cd50a42\n"
+    },
+    {
+      "args": [
+        "rev-parse",
+        "6c44976444340cc8f343fef61e2e8d723b189c19:slopsearx/snapshot.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "fe0e62b9872b3d01cef6a8f843d9720f2cd50a42\n"
+    },
+    {
+      "args": [
+        "hash-object",
+        "--",
+        "slopsearx/capabilities.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "5ef6f90750352fdadbc877561d3520c1fe774fdb\n"
+    },
+    {
+      "args": [
+        "rev-parse",
+        "6c44976444340cc8f343fef61e2e8d723b189c19:slopsearx/capabilities.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "5ef6f90750352fdadbc877561d3520c1fe774fdb\n"
+    },
+    {
+      "args": [
+        "hash-object",
+        "--",
+        "slopsearx/filters.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "e1a1cac35c5fcbbf2e6fb7728241953aa8047669\n"
+    },
+    {
+      "args": [
+        "rev-parse",
+        "6c44976444340cc8f343fef61e2e8d723b189c19:slopsearx/filters.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "e1a1cac35c5fcbbf2e6fb7728241953aa8047669\n"
+    },
+    {
+      "args": [
+        "hash-object",
+        "--",
+        "slopsearx/payload.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "efa149d48bae401f7a0a9df6e50c8c614adecbb5\n"
+    },
+    {
+      "args": [
+        "rev-parse",
+        "6c44976444340cc8f343fef61e2e8d723b189c19:slopsearx/payload.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "efa149d48bae401f7a0a9df6e50c8c614adecbb5\n"
+    },
+    {
+      "args": [
+        "hash-object",
+        "--",
+        "slopsearx/mcp/tools.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "d06ecd475b9b523addf79781d2762eddd92f4911\n"
+    },
+    {
+      "args": [
+        "rev-parse",
+        "6c44976444340cc8f343fef61e2e8d723b189c19:slopsearx/mcp/tools.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "d06ecd475b9b523addf79781d2762eddd92f4911\n"
+    },
+    {
+      "args": [
+        "hash-object",
+        "--",
+        "slopsearx/mcp/tool_registry.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "7f56df7883662a8cff4cbc0e39c154bcffaa1187\n"
+    },
+    {
+      "args": [
+        "rev-parse",
+        "6c44976444340cc8f343fef61e2e8d723b189c19:slopsearx/mcp/tool_registry.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "7f56df7883662a8cff4cbc0e39c154bcffaa1187\n"
+    },
+    {
+      "args": [
+        "hash-object",
+        "--",
+        "slopsearx/mcp/result_serialization.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "d4b3b42b9a08caafd09d946dcae05fba59374ec1\n"
+    },
+    {
+      "args": [
+        "rev-parse",
+        "6c44976444340cc8f343fef61e2e8d723b189c19:slopsearx/mcp/result_serialization.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "d4b3b42b9a08caafd09d946dcae05fba59374ec1\n"
+    },
+    {
+      "args": [
+        "hash-object",
+        "--",
+        "slopsearx/mcp/entity_projection.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "07d63a5d842bbc815b0dab34c2c3f4bde01bf079\n"
+    },
+    {
+      "args": [
+        "rev-parse",
+        "6c44976444340cc8f343fef61e2e8d723b189c19:slopsearx/mcp/entity_projection.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "07d63a5d842bbc815b0dab34c2c3f4bde01bf079\n"
+    },
+    {
+      "args": [
+        "hash-object",
+        "--",
+        "slopsearx/mcp/resources.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "f9a1c499c1b3f07a8b372bb5c4be4249c868f7bb\n"
+    },
+    {
+      "args": [
+        "rev-parse",
+        "6c44976444340cc8f343fef61e2e8d723b189c19:slopsearx/mcp/resources.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "f9a1c499c1b3f07a8b372bb5c4be4249c868f7bb\n"
+    },
+    {
+      "args": [
+        "hash-object",
+        "--",
+        "slopsearx/mcp/prompts.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "7e00162d7bd346c942dc69ac202e9f2bcc1bfacf\n"
+    },
+    {
+      "args": [
+        "rev-parse",
+        "6c44976444340cc8f343fef61e2e8d723b189c19:slopsearx/mcp/prompts.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "7e00162d7bd346c942dc69ac202e9f2bcc1bfacf\n"
+    },
+    {
+      "args": [
+        "hash-object",
+        "--",
+        "slopsearx/mcp/state.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "b99bcc2574cb15dd14cc2844248e52b4c3d204ce\n"
+    },
+    {
+      "args": [
+        "rev-parse",
+        "6c44976444340cc8f343fef61e2e8d723b189c19:slopsearx/mcp/state.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "b99bcc2574cb15dd14cc2844248e52b4c3d204ce\n"
+    },
+    {
+      "args": [
+        "hash-object",
+        "--",
+        "slopsearx/mcp/server.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "f5f7c6c368e2b6dc3f8056090e978f3bd6243649\n"
+    },
+    {
+      "args": [
+        "rev-parse",
+        "6c44976444340cc8f343fef61e2e8d723b189c19:slopsearx/mcp/server.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "f5f7c6c368e2b6dc3f8056090e978f3bd6243649\n"
+    },
+    {
+      "args": [
+        "hash-object",
+        "--",
+        "slopsearx/mcp/harness.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "b661b6775315da47b462b0345da5cf6d61a78265\n"
+    },
+    {
+      "args": [
+        "rev-parse",
+        "6c44976444340cc8f343fef61e2e8d723b189c19:slopsearx/mcp/harness.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "b661b6775315da47b462b0345da5cf6d61a78265\n"
+    },
+    {
+      "args": [
+        "hash-object",
+        "--",
+        "slopsearx/mcp/security.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "a0d6300d0883f2cca19e3bbd70ce7126b33ee6a9\n"
+    },
+    {
+      "args": [
+        "rev-parse",
+        "6c44976444340cc8f343fef61e2e8d723b189c19:slopsearx/mcp/security.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "a0d6300d0883f2cca19e3bbd70ce7126b33ee6a9\n"
+    },
+    {
+      "args": [
+        "hash-object",
+        "--",
+        "slopsearx/mcp/oauth.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "6c29136856842ef57a2878d1a7651d30df40931b\n"
+    },
+    {
+      "args": [
+        "rev-parse",
+        "6c44976444340cc8f343fef61e2e8d723b189c19:slopsearx/mcp/oauth.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "6c29136856842ef57a2878d1a7651d30df40931b\n"
+    },
+    {
+      "args": [
+        "hash-object",
+        "--",
+        "slopsearx/research.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "6770daf3cbbaa160b6c6ee29583c72872cb07289\n"
+    },
+    {
+      "args": [
+        "rev-parse",
+        "6c44976444340cc8f343fef61e2e8d723b189c19:slopsearx/research.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "6770daf3cbbaa160b6c6ee29583c72872cb07289\n"
+    },
+    {
+      "args": [
+        "hash-object",
+        "--",
+        "slopsearx/jev.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "2bbb5c01f20b4db16730cbe3460e625b3d27fa23\n"
+    },
+    {
+      "args": [
+        "rev-parse",
+        "6c44976444340cc8f343fef61e2e8d723b189c19:slopsearx/jev.py"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "2bbb5c01f20b4db16730cbe3460e625b3d27fa23\n"
+    },
+    {
+      "args": [
+        "hash-object",
+        "--",
+        "uv.lock"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "24e92a80e8ecc761880fe603a01da41312dea180\n"
+    },
+    {
+      "args": [
+        "rev-parse",
+        "6c44976444340cc8f343fef61e2e8d723b189c19:uv.lock"
+      ],
+      "exit_code": 0,
+      "program": "git",
+      "stderr": "",
+      "stdout": "24e92a80e8ecc761880fe603a01da41312dea180\n"
+    },
+    {
+      "args": [
+        "--version"
+      ],
+      "exit_code": 0,
+      "program": "/private/tmp/ssx-f07-valkey-pinned/bin/valkey-server",
+      "stderr": "",
+      "stdout": "Valkey server v=8.1.10 sha=00000000:1 malloc=libc bits=64 build=1077e069f05e24b5\n"
+    },
+    {
+      "args": [
+        "test",
+        "--locked",
+        "-p",
+        "ssx-mcp",
+        "--bin",
+        "search-qualification",
+        "--",
+        "--list"
+      ],
+      "exit_code": 0,
+      "program": "cargo",
+      "stderr": "   Compiling ssx-infra v0.1.0 (/private/tmp/slopsearx-delivery-20261019/crates/ssx-infra)\n   Compiling ssx-mcp v0.1.0 (/private/tmp/slopsearx-delivery-20261019/crates/ssx-mcp)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 11.71s\n     Running unittests src/bin/search-qualification.rs (/Volumes/tank01/magnus/rust-builds/slopsearx/1010-warnings/debug/deps/search_qualification-fdf230b3cad72803)\n",
+      "stdout": "tests::receipt_write_latency_is_outside_the_ready_fake_engine_future: test\nwall_guard::tests::operation_errors_preserve_error_and_join_watchdog: test\nwall_guard::tests::real_wall_timeout_cancels_and_drains_operation: test\nwall_guard::tests::stuck_cancel_negative_is_failed_cleanup_with_finite_return: test\nwall_guard::tests::watchdog_drop_wakes_and_joins_actual_worker: test\n\n5 tests, 0 benchmarks\n"
+    },
+    {
+      "args": [
+        "test",
+        "--locked",
+        "-p",
+        "ssx-mcp",
+        "--bin",
+        "search-qualification"
+      ],
+      "exit_code": 0,
+      "program": "cargo",
+      "stderr": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.34s\n     Running unittests src/bin/search-qualification.rs (/Volumes/tank01/magnus/rust-builds/slopsearx/1010-warnings/debug/deps/search_qualification-fdf230b3cad72803)\n",
+      "stdout": "\nrunning 5 tests\ntest wall_guard::tests::watchdog_drop_wakes_and_joins_actual_worker ... ok\ntest wall_guard::tests::operation_errors_preserve_error_and_join_watchdog ... ok\ntest wall_guard::tests::real_wall_timeout_cancels_and_drains_operation ... ok\ntest wall_guard::tests::stuck_cancel_negative_is_failed_cleanup_with_finite_return ... ok\ntest tests::receipt_write_latency_is_outside_the_ready_fake_engine_future ... ok\n\ntest result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s\n\n"
+    },
+    {
+      "args": [
+        "test",
+        "--locked",
+        "-p",
+        "ssx-mcp",
+        "--lib",
+        "search_surface::",
+        "--",
+        "--list"
+      ],
+      "exit_code": 0,
+      "program": "cargo",
+      "stderr": "   Compiling ssx-mcp v0.1.0 (/private/tmp/slopsearx-delivery-20261019/crates/ssx-mcp)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.27s\n     Running unittests src/lib.rs (/Volumes/tank01/magnus/rust-builds/slopsearx/1010-warnings/debug/deps/ssx_mcp-4647dbcc9f950b14)\n",
+      "stdout": "search_surface::entities::tests::frozen_source_entity_grammar_conserves_indices_facts_edges_and_unicode16: test\nsearch_surface::validation::tests::actual_source_argument_matrix_preserves_validation_text_and_coercions: test\nsearch_surface::warning_tests::specialist_previews_preserve_scope_warning_order_and_multiplicity: test\n\n3 tests, 0 benchmarks\n"
+    },
+    {
+      "args": [
+        "test",
+        "--locked",
+        "-p",
+        "ssx-mcp",
+        "--lib",
+        "search_surface::"
+      ],
+      "exit_code": 0,
+      "program": "cargo",
+      "stderr": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.40s\n     Running unittests src/lib.rs (/Volumes/tank01/magnus/rust-builds/slopsearx/1010-warnings/debug/deps/ssx_mcp-4647dbcc9f950b14)\n",
+      "stdout": "\nrunning 3 tests\ntest search_surface::warning_tests::specialist_previews_preserve_scope_warning_order_and_multiplicity ... ok\ntest search_surface::validation::tests::actual_source_argument_matrix_preserves_validation_text_and_coercions ... ok\ntest search_surface::entities::tests::frozen_source_entity_grammar_conserves_indices_facts_edges_and_unicode16 ... ok\n\ntest result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 28 filtered out; finished in 1.20s\n\n"
+    },
+    {
+      "args": [
+        "test",
+        "--locked",
+        "-p",
+        "ssx-mcp",
+        "--test",
+        "t06_discovery",
+        "--",
+        "--list"
+      ],
+      "exit_code": 0,
+      "program": "cargo",
+      "stderr": "   Compiling ssx-mcp v0.1.0 (/private/tmp/slopsearx-delivery-20261019/crates/ssx-mcp)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.69s\n     Running tests/t06_discovery.rs (/Volumes/tank01/magnus/rust-builds/slopsearx/1010-warnings/debug/deps/t06_discovery-e62527056f1ec556)\n",
+      "stdout": "live_passive_health_categories_finite_diagnostics_and_secret_redaction: test\n\n1 test, 0 benchmarks\n"
+    },
+    {
+      "args": [
+        "test",
+        "--locked",
+        "-p",
+        "ssx-mcp",
+        "--test",
+        "t06_discovery"
+      ],
+      "exit_code": 0,
+      "program": "cargo",
+      "stderr": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.15s\n     Running tests/t06_discovery.rs (/Volumes/tank01/magnus/rust-builds/slopsearx/1010-warnings/debug/deps/t06_discovery-e62527056f1ec556)\n",
+      "stdout": "\nrunning 1 test\ntest live_passive_health_categories_finite_diagnostics_and_secret_redaction ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.21s\n\n"
+    },
+    {
+      "args": [
+        "test",
+        "--locked",
+        "-p",
+        "ssx-mcp",
+        "--test",
+        "t06_service",
+        "--",
+        "--list"
+      ],
+      "exit_code": 0,
+      "program": "cargo",
+      "stderr": "   Compiling ssx-mcp v0.1.0 (/private/tmp/slopsearx-delivery-20261019/crates/ssx-mcp)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.93s\n     Running tests/t06_service.rs (/Volumes/tank01/magnus/rust-builds/slopsearx/1010-warnings/debug/deps/t06_service-77d4f298e3fe9565)\n",
+      "stdout": "actual_legacy_rpc_cancellation_releases_owned_work_and_message_capacity_before_disconnect: test\nactual_stateless_http_disconnect_drains_inflight_optional_request: test\nactual_stdio_eof_during_optional_prepare_and_preview_drains_owned_process: test\nactual_stdio_rpc_cancellation_drains_prepare_and_preview_before_long_optional_timeout: test\ncaptured_snapshot_is_service_bound_full_include_independent_and_not_reexecuted: test\npre_cancelled_prepare_and_preview_never_contact_provider_or_dispatch: test\npreview_rejects_sensitive_and_disabled_before_optional_provider_and_never_dispatches: test\npreview_timeout_drop_busy_and_shutdown_drain_optional_http_ownership: test\nruntime_scope_warning_survives_native_mcp_and_snapshot_without_cache_admission: test\n\n9 tests, 0 benchmarks\n"
+    },
+    {
+      "args": [
+        "test",
+        "--locked",
+        "-p",
+        "ssx-mcp",
+        "--test",
+        "t06_service"
+      ],
+      "exit_code": 0,
+      "program": "cargo",
+      "stderr": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.10s\n     Running tests/t06_service.rs (/Volumes/tank01/magnus/rust-builds/slopsearx/1010-warnings/debug/deps/t06_service-77d4f298e3fe9565)\n",
+      "stdout": "\nrunning 9 tests\ntest pre_cancelled_prepare_and_preview_never_contact_provider_or_dispatch ... ok\ntest preview_rejects_sensitive_and_disabled_before_optional_provider_and_never_dispatches ... ok\ntest actual_stateless_http_disconnect_drains_inflight_optional_request ... ok\ntest captured_snapshot_is_service_bound_full_include_independent_and_not_reexecuted ... ok\ntest runtime_scope_warning_survives_native_mcp_and_snapshot_without_cache_admission ... ok\ntest preview_timeout_drop_busy_and_shutdown_drain_optional_http_ownership ... ok\ntest actual_stdio_eof_during_optional_prepare_and_preview_drains_owned_process ... ok\ntest actual_legacy_rpc_cancellation_releases_owned_work_and_message_capacity_before_disconnect ... ok\ntest actual_stdio_rpc_cancellation_drains_prepare_and_preview_before_long_optional_timeout ... ok\n\ntest result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.11s\n\n"
+    },
+    {
+      "args": [
+        "test",
+        "--locked",
+        "-p",
+        "ssx-mcp",
+        "--test",
+        "t06_source_bindings",
+        "--",
+        "--list"
+      ],
+      "exit_code": 0,
+      "program": "cargo",
+      "stderr": "   Compiling ssx-mcp v0.1.0 (/private/tmp/slopsearx-delivery-20261019/crates/ssx-mcp)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.28s\n     Running tests/t06_source_bindings.rs (/Volumes/tank01/magnus/rust-builds/slopsearx/1010-warnings/debug/deps/t06_source_bindings-fbe355c1479ef3df)\n",
+      "stdout": "original_profiles_strategies_tool_surface_and_observations_match_reviewed_source_bindings: test\n\n1 test, 0 benchmarks\n"
+    },
+    {
+      "args": [
+        "test",
+        "--locked",
+        "-p",
+        "ssx-mcp",
+        "--test",
+        "t06_source_bindings"
+      ],
+      "exit_code": 0,
+      "program": "cargo",
+      "stderr": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.10s\n     Running tests/t06_source_bindings.rs (/Volumes/tank01/magnus/rust-builds/slopsearx/1010-warnings/debug/deps/t06_source_bindings-fbe355c1479ef3df)\n",
+      "stdout": "\nrunning 1 test\ntest original_profiles_strategies_tool_surface_and_observations_match_reviewed_source_bindings ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s\n\n"
+    },
+    {
+      "args": [
+        "test",
+        "--locked",
+        "-p",
+        "ssx-mcp",
+        "--test",
+        "t06_transport",
+        "--",
+        "--list"
+      ],
+      "exit_code": 0,
+      "program": "cargo",
+      "stderr": "   Compiling ssx-mcp v0.1.0 (/private/tmp/slopsearx-delivery-20261019/crates/ssx-mcp)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.68s\n     Running tests/t06_transport.rs (/Volumes/tank01/magnus/rust-builds/slopsearx/1010-warnings/debug/deps/t06_transport-3796650878801d1c)\n",
+      "stdout": "actual_entity_payloads_survive_search_cache_snapshot_and_member_reads: test\ncomparison::comparator_preserves_literal_adapter_fields_and_requires_issued_cursor_identity: test\ncomparison::comparator_rejects_dynamic_protocol_type_and_shape_corruption: test\nfull_frozen_subset_and_argument_calls_over_authenticated_http: test\nfull_frozen_subset_and_argument_calls_over_authenticated_legacy: test\nfull_frozen_subset_and_argument_calls_over_native_stdio_process: test\nnative_policy_order_sensitive_authorization_precedes_runtime_availability_atomically: test\noauth_native_snapshots_and_legacy_sessions_follow_stable_client_ownership: test\nouter_scalar_array_prompt_params_are_rejected_before_dispatch_with_explicit_framework_difference: test\nsource_specialist_success_and_failure_envelopes_use_actual_pipeline: test\nwall_guard::tests::operation_errors_preserve_error_and_join_watchdog: test\nwall_guard::tests::real_wall_timeout_cancels_and_drains_operation: test\nwall_guard::tests::stuck_cancel_negative_is_failed_cleanup_with_finite_return: test\nwall_guard::tests::watchdog_drop_wakes_and_joins_actual_worker: test\n\n14 tests, 0 benchmarks\n"
+    },
+    {
+      "args": [
+        "test",
+        "--locked",
+        "-p",
+        "ssx-mcp",
+        "--test",
+        "t06_transport"
+      ],
+      "exit_code": 0,
+      "program": "cargo",
+      "stderr": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s\n     Running tests/t06_transport.rs (/Volumes/tank01/magnus/rust-builds/slopsearx/1010-warnings/debug/deps/t06_transport-3796650878801d1c)\n",
+      "stdout": "\nrunning 14 tests\ntest comparison::comparator_preserves_literal_adapter_fields_and_requires_issued_cursor_identity ... ok\ntest wall_guard::tests::operation_errors_preserve_error_and_join_watchdog ... ok\ntest comparison::comparator_rejects_dynamic_protocol_type_and_shape_corruption ... ok\ntest wall_guard::tests::real_wall_timeout_cancels_and_drains_operation ... ok\ntest wall_guard::tests::watchdog_drop_wakes_and_joins_actual_worker ... ok\ntest wall_guard::tests::stuck_cancel_negative_is_failed_cleanup_with_finite_return ... ok\ntest outer_scalar_array_prompt_params_are_rejected_before_dispatch_with_explicit_framework_difference ... ok\ntest source_specialist_success_and_failure_envelopes_use_actual_pipeline ... ok\ntest oauth_native_snapshots_and_legacy_sessions_follow_stable_client_ownership ... ok\ntest native_policy_order_sensitive_authorization_precedes_runtime_availability_atomically ... ok\ntest actual_entity_payloads_survive_search_cache_snapshot_and_member_reads ... ok\ntest full_frozen_subset_and_argument_calls_over_authenticated_http ... ok\ntest full_frozen_subset_and_argument_calls_over_authenticated_legacy ... ok\ntest full_frozen_subset_and_argument_calls_over_native_stdio_process ... ok\n\ntest result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.46s\n\n"
+    },
+    {
+      "args": [
+        "test",
+        "--locked",
+        "-p",
+        "ssx-mcp",
+        "--test",
+        "t06_wire",
+        "--",
+        "--list"
+      ],
+      "exit_code": 0,
+      "program": "cargo",
+      "stderr": "   Compiling ssx-mcp v0.1.0 (/private/tmp/slopsearx-delivery-20261019/crates/ssx-mcp)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.57s\n     Running tests/t06_wire.rs (/Volumes/tank01/magnus/rust-builds/slopsearx/1010-warnings/debug/deps/t06_wire-5024ab8214fc2066)\n",
+      "stdout": "actual_http_native_large_output_and_one_over_profile_fail_closed: test\nactual_legacy_native_large_output_releases_aggregate_budget_on_disconnect: test\nactual_legacy_pump_discards_late_malformed_sdk_generation_before_and_after_external_id_reuse: test\nactual_stdio_native_large_output_with_empty_process_environment: test\nactual_stdio_pump_discards_late_malformed_sdk_generation_before_and_after_external_id_reuse: test\ncancelled_native_generations_retain_capacity_until_drain_and_ignore_late_output: test\nlarge_deep_native_output_uses_raw_envelope_without_default_document_parser: test\nmarker_is_scrubbed_from_every_result_path_and_only_trusted_objects_restore: test\nnative_input_codec_is_opt_in_shape_preserving_and_owns_only_existing_pending_ids: test\nnative_prompt_input_profile_preserves_other_methods_nooptin_and_original_identity: test\ntrusted_admission_extracts_only_raw_name_not_arbitrary_argument_numbers: test\ntyped_output_budget_preserves_default_and_rejects_one_byte_over: test\nunknown_result_and_unmarked_metadata_remain_literal: test\n\n13 tests, 0 benchmarks\n"
+    },
+    {
+      "args": [
+        "test",
+        "--locked",
+        "-p",
+        "ssx-mcp",
+        "--test",
+        "t06_wire"
+      ],
+      "exit_code": 0,
+      "program": "cargo",
+      "stderr": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s\n     Running tests/t06_wire.rs (/Volumes/tank01/magnus/rust-builds/slopsearx/1010-warnings/debug/deps/t06_wire-5024ab8214fc2066)\n",
+      "stdout": "\nrunning 13 tests\ntest marker_is_scrubbed_from_every_result_path_and_only_trusted_objects_restore ... ok\ntest trusted_admission_extracts_only_raw_name_not_arbitrary_argument_numbers ... ok\ntest native_prompt_input_profile_preserves_other_methods_nooptin_and_original_identity ... ok\ntest unknown_result_and_unmarked_metadata_remain_literal ... ok\ntest native_input_codec_is_opt_in_shape_preserving_and_owns_only_existing_pending_ids ... ok\ntest cancelled_native_generations_retain_capacity_until_drain_and_ignore_late_output ... ok\ntest actual_legacy_pump_discards_late_malformed_sdk_generation_before_and_after_external_id_reuse ... ok\ntest actual_stdio_pump_discards_late_malformed_sdk_generation_before_and_after_external_id_reuse ... ok\ntest typed_output_budget_preserves_default_and_rejects_one_byte_over ... ok\ntest large_deep_native_output_uses_raw_envelope_without_default_document_parser ... ok\ntest actual_http_native_large_output_and_one_over_profile_fail_closed ... ok\ntest actual_stdio_native_large_output_with_empty_process_environment ... ok\ntest actual_legacy_native_large_output_releases_aggregate_budget_on_disconnect ... ok\n\ntest result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.71s\n\n"
+    },
+    {
+      "args": [
+        "test",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--lib",
+        "search::deadline_drain_tests::",
+        "--",
+        "--list"
+      ],
+      "exit_code": 0,
+      "program": "cargo",
+      "stderr": "   Compiling ssx-infra v0.1.0 (/private/tmp/slopsearx-delivery-20261019/crates/ssx-infra)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 10.49s\n     Running unittests src/lib.rs (/Volumes/tank01/magnus/rust-builds/slopsearx/1010-warnings/debug/deps/ssx_infra-81e8952c2b38544d)\n",
+      "stdout": "search::deadline_drain_tests::completed_task_panic_is_not_hidden_by_owner_abort: test\nsearch::deadline_drain_tests::cooldown_completed_after_service_deadline_is_truncated: test\nsearch::deadline_drain_tests::deadline_abort_drains_pending_without_internal_failure: test\nsearch::deadline_drain_tests::earlier_binding_timeout_completed_after_service_deadline_is_truncated: test\nsearch::deadline_drain_tests::manual_owner_clock_does_not_pause_unrelated_real_tokio_timeouts: test\nsearch::deadline_drain_tests::owner_manual_clock_preserves_completion_before_original_one_ms_deadline: test\nsearch::deadline_drain_tests::owner_manual_clock_rejects_completion_after_original_one_ms_deadline: test\nsearch::deadline_drain_tests::owner_manual_clock_rejects_completion_at_original_one_ms_deadline: test\nsearch::deadline_drain_tests::predeadline_completed_outputs_survive_delayed_owner_drain: test\nsearch::deadline_drain_tests::renewed_context_mutant_does_not_match_original_absolute_deadline: test\n\n10 tests, 0 benchmarks\n"
+    },
+    {
+      "args": [
+        "test",
+        "--locked",
+        "-p",
+        "ssx-infra",
+        "--lib",
+        "search::deadline_drain_tests::"
+      ],
+      "exit_code": 0,
+      "program": "cargo",
+      "stderr": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.10s\n     Running unittests src/lib.rs (/Volumes/tank01/magnus/rust-builds/slopsearx/1010-warnings/debug/deps/ssx_infra-81e8952c2b38544d)\n",
+      "stdout": "\nrunning 10 tests\ntest search::deadline_drain_tests::renewed_context_mutant_does_not_match_original_absolute_deadline ... ok\ntest search::deadline_drain_tests::owner_manual_clock_rejects_completion_at_original_one_ms_deadline ... ok\ntest search::deadline_drain_tests::owner_manual_clock_rejects_completion_after_original_one_ms_deadline ... ok\ntest search::deadline_drain_tests::cooldown_completed_after_service_deadline_is_truncated ... ok\ntest search::deadline_drain_tests::earlier_binding_timeout_completed_after_service_deadline_is_truncated ... ok\ntest search::deadline_drain_tests::predeadline_completed_outputs_survive_delayed_owner_drain ... ok\ntest search::deadline_drain_tests::deadline_abort_drains_pending_without_internal_failure ... ok\ntest search::deadline_drain_tests::completed_task_panic_is_not_hidden_by_owner_abort ... ok\ntest search::deadline_drain_tests::owner_manual_clock_preserves_completion_before_original_one_ms_deadline ... ok\ntest search::deadline_drain_tests::manual_owner_clock_does_not_pause_unrelated_real_tokio_timeouts ... ok\n\ntest result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 252 filtered out; finished in 0.02s\n\n"
+    },
+    {
+      "args": [
+        "test",
+        "--locked",
+        "-p",
+        "ssx-mcp",
+        "--lib",
+        "opaque::tests::owned_stdio_",
+        "--",
+        "--list"
+      ],
+      "exit_code": 0,
+      "program": "cargo",
+      "stderr": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.08s\n     Running unittests src/lib.rs (/Volumes/tank01/magnus/rust-builds/slopsearx/1010-warnings/debug/deps/ssx_mcp-4647dbcc9f950b14)\n",
+      "stdout": "opaque::tests::owned_stdio_eof_drops_held_sdk_initialization: test\nopaque::tests::owned_stdio_explicit_cancel_drops_held_sdk_initialization: test\nopaque::tests::owned_stdio_initialized_outer_abort_releases_idle_sdk_owner: test\nopaque::tests::owned_stdio_normal_eof_and_running_service_cancel_join: test\nopaque::tests::owned_stdio_outer_abort_drops_held_sdk_initialization: test\nopaque::tests::owned_stdio_pre_cancel_does_not_dispatch_initialize: test\n\n6 tests, 0 benchmarks\n"
+    },
+    {
+      "args": [
+        "test",
+        "--locked",
+        "-p",
+        "ssx-mcp",
+        "--lib",
+        "opaque::tests::owned_stdio_"
+      ],
+      "exit_code": 0,
+      "program": "cargo",
+      "stderr": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.08s\n     Running unittests src/lib.rs (/Volumes/tank01/magnus/rust-builds/slopsearx/1010-warnings/debug/deps/ssx_mcp-4647dbcc9f950b14)\n",
+      "stdout": "\nrunning 6 tests\ntest opaque::tests::owned_stdio_pre_cancel_does_not_dispatch_initialize ... ok\ntest opaque::tests::owned_stdio_eof_drops_held_sdk_initialization ... ok\ntest opaque::tests::owned_stdio_outer_abort_drops_held_sdk_initialization ... ok\ntest opaque::tests::owned_stdio_explicit_cancel_drops_held_sdk_initialization ... ok\ntest opaque::tests::owned_stdio_initialized_outer_abort_releases_idle_sdk_owner ... ok\ntest opaque::tests::owned_stdio_normal_eof_and_running_service_cancel_join ... ok\n\ntest result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 25 filtered out; finished in 0.03s\n\n"
+    },
+    {
+      "frozen_artifacts": 24,
+      "native_fixture_bindings_sha256": "16edd8d4c89f463a12e9c1bf4863086ed0268a42736c9a31df5a181b421284e2",
+      "native_fixture_files": 10,
+      "native_fixture_tests": 5,
+      "owner_clock_tests": 10,
+      "plan_id": "T06",
+      "prompts": 5,
+      "provider_calls": 0,
+      "resource_registrations": 4,
+      "scope": "actual native handler/service/snapshots/passive discovery through authenticated HTTP, stdio and legacy; bounded cancellation and lossless input/output; exactly two accepted outer-params diagnostic differences; production startup T02/W09 separate",
+      "source_baseline": "6c44976444340cc8f343fef61e2e8d723b189c19",
+      "source_bindings_sha256": "11660374ae3fd544590cb014b532eda4d6f3a95ef8f0bc062b308bd7911fc771",
+      "source_files": 19,
+      "status": "passed",
+      "stdio_owner_tests": 6,
+      "tools": 11
+    }
+  ],
+  "original_report_sha256": "79c256d913e654fffefac65cfce15d015ad0c140bc6bae67cbd67942fbd76c46",
+  "original_report_bytes": 7832116,
+  "reviewed_candidate": "e74eed7e2d01509905bcc18dbcf4e223905e6813",
+  "retention": "Derived receipt: T06/O06 command outputs verbatim; F01 outputs hashed. Git identity command bodies/diff omitted; all source blobs retained once; source independently verified against candidate."
+}

@@ -1,0 +1,206 @@
+/private/tmp/slopsearx-daily-20261014/.venv/lib/python3.12/site-packages/pydantic_settings/sources/utils.py:47: IncompleteFieldDefinitionWarning: Field 'lifespan' has an incomplete definition: its annotation contains an unresolved forward reference, so settings sources may fail to correctly resolve its value. Call `model_rebuild()` on the model where the field is defined, once all the referenced types are defined.
+  warnings.warn(
+[10/14/26 09:00:47] INFO     StreamableHTTP       streamable_http_manager.py:143
+                             session manager                                    
+                             started                                            
+                    INFO     HTTP Request: GET                   _client.py:1740
+                             http://127.0.0.1:52141/mcp                         
+                             "HTTP/1.1 401 Unauthorized"                        
+                    INFO     Created new          streamable_http_manager.py:301
+                             transport with                                     
+                             session ID:                                        
+                             c793ead6835c43e5bfe4                               
+                             095371c043e7                                       
+                    WARNING  MCP startup problem: intent 'images'  server.py:144
+                             has media types matching no enabled                
+                             engines: ['image']                                 
+                    WARNING  MCP startup problem: intent 'videos'  server.py:144
+                             has media types matching no enabled                
+                             engines: ['video']                                 
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:52141/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Received session ID:         streamable_http.py:181
+                             c793ead6835c43e5bfe4095371c0                       
+                             43e7                                               
+                    INFO     Negotiated protocol version: streamable_http.py:193
+                             2025-11-25                                         
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:52141/mcp                         
+                             "HTTP/1.1 202 Accepted"                            
+                    INFO     HTTP Request: GET                   _client.py:1740
+                             http://127.0.0.1:52141/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:52141/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Processing request of type            server.py:733
+                             ListToolsRequest                                   
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:52141/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:52141/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     Terminating session:         streamable_http.py:788
+                             c793ead6835c43e5bfe4095371c0                       
+                             43e7                                               
+                    INFO     HTTP Request: DELETE                _client.py:1740
+                             http://127.0.0.1:52141/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Created new          streamable_http_manager.py:301
+                             transport with                                     
+                             session ID:                                        
+                             f62b8b90b5394559835b                               
+                             795457227948                                       
+                    WARNING  MCP startup problem: intent 'images'  server.py:144
+                             has media types matching no enabled                
+                             engines: ['image']                                 
+                    WARNING  MCP startup problem: intent 'videos'  server.py:144
+                             has media types matching no enabled                
+                             engines: ['video']                                 
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:52141/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Received session ID:         streamable_http.py:181
+                             f62b8b90b5394559835b79545722                       
+                             7948                                               
+                    INFO     Negotiated protocol version: streamable_http.py:193
+                             2025-11-25                                         
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:52141/mcp                         
+                             "HTTP/1.1 202 Accepted"                            
+                    INFO     HTTP Request: GET                   _client.py:1740
+                             http://127.0.0.1:52141/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:52141/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Processing request of type            server.py:733
+                             ListToolsRequest                                   
+                    INFO     Remote gateway connected to          gateway.py:458
+                             http://127.0.0.1:52141/mcp (38 tools               
+                             registered)                                        
+                    INFO     StreamableHTTP       streamable_http_manager.py:143
+                             session manager                                    
+                             started                                            
+                    INFO     HTTP Request: GET                   _client.py:1740
+                             http://127.0.0.1:52151/mcp                         
+                             "HTTP/1.1 405 Method Not Allowed"                  
+                    INFO     Terminating session: None    streamable_http.py:788
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:52151/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Negotiated protocol version: streamable_http.py:193
+                             2025-11-25                                         
+                    INFO     Terminating session: None    streamable_http.py:788
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:52151/mcp                         
+                             "HTTP/1.1 202 Accepted"                            
+[10/14/26 09:00:48] INFO     Processing request of type            server.py:733
+                             ListToolsRequest                                   
+                    INFO     Terminating session: None    streamable_http.py:788
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:52151/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:52141/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     Terminating session: None    streamable_http.py:788
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:52151/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:52141/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     Terminating session: None    streamable_http.py:788
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:52151/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     StreamableHTTP       streamable_http_manager.py:147
+                             session manager                                    
+                             shutting down                                      
+                    INFO     Terminating session:         streamable_http.py:788
+                             f62b8b90b5394559835b79545722                       
+                             7948                                               
+                    INFO     HTTP Request: DELETE                _client.py:1740
+                             http://127.0.0.1:52141/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+ERROR:      + Exception Group Traceback (most recent call last):
+  |   File "/private/tmp/slopsearx-daily-20261014/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 799, in __aexit__
+  |     raise BaseExceptionGroup(
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Traceback (most recent call last):
+    |   File "/private/tmp/slopsearx-daily-20261014/.venv/lib/python3.12/site-packages/mcp/client/streamable_http.py", line 670, in streamable_http_client
+    |     yield (
+    |   File "/private/tmp/slopsearx-daily-20261014/slopsearx/mcp/gateway.py", line 440, in _gateway_lifespan
+    |     async with ClientSession(read, write) as session:
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/private/tmp/slopsearx-daily-20261014/.venv/lib/python3.12/site-packages/mcp/shared/session.py", line 238, in __aexit__
+    |     return await self._task_group.__aexit__(exc_type, exc_val, exc_tb)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/private/tmp/slopsearx-daily-20261014/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 810, in __aexit__
+    |     return self.cancel_scope.__exit__(exc_type, exc_val, exc_tb)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/private/tmp/slopsearx-daily-20261014/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 463, in __exit__
+    |     raise RuntimeError(
+    | RuntimeError: Attempted to exit a cancel scope that isn't the current tasks's current cancel scope
+    +------------------------------------
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/private/tmp/slopsearx-daily-20261014/.venv/lib/python3.12/site-packages/starlette/routing.py", line 638, in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/contextlib.py", line 217, in __aexit__
+    await anext(self.gen)
+  File "/private/tmp/slopsearx-daily-20261014/.venv/lib/python3.12/site-packages/fastmcp/server/http.py", line 666, in lifespan
+    server._lifespan_manager(),
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/contextlib.py", line 217, in __aexit__
+    await anext(self.gen)
+  File "/private/tmp/slopsearx-daily-20261014/.venv/lib/python3.12/site-packages/fastmcp/server/mixins/lifespan.py", line 232, in _lifespan_manager
+    await stack.aclose()
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/contextlib.py", line 696, in aclose
+    await self.__aexit__(None, None, None)
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/contextlib.py", line 754, in __aexit__
+    raise exc_details[1]
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/contextlib.py", line 737, in __aexit__
+    cb_suppress = await cb(*exc_details)
+                  ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/contextlib.py", line 217, in __aexit__
+    await anext(self.gen)
+  File "/private/tmp/slopsearx-daily-20261014/slopsearx/mcp/gateway.py", line 436, in _gateway_lifespan
+    async with streamable_http_client(remote_url, http_client=http_client) as streams:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/contextlib.py", line 231, in __aexit__
+    await self.gen.athrow(value)
+  File "/private/tmp/slopsearx-daily-20261014/.venv/lib/python3.12/site-packages/mcp/client/streamable_http.py", line 647, in streamable_http_client
+    async with anyio.create_task_group() as tg:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/slopsearx-daily-20261014/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 805, in __aexit__
+    if self.cancel_scope.__exit__(type(exc), exc, exc.__traceback__):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/slopsearx-daily-20261014/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 463, in __exit__
+    raise RuntimeError(
+RuntimeError: Attempted to exit a cancel scope that isn't the current tasks's current cancel scope
+
+ERROR:    Application shutdown failed. Exiting.
+                    INFO     StreamableHTTP       streamable_http_manager.py:147
+                             session manager                                    
+                             shutting down                                      
+{"primary_passed": 3, "primary_total": 3, "catalog_equal": 38, "catalog_total": 38, "provider_calls": 0}

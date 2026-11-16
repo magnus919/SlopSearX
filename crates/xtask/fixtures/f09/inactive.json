@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "source_revision": "3506f3c46281ea89cc64f69f37c8720004633ed8",
+  "runtime": "Python 3.14.7",
+  "functions": [
+    "slopsearx.mcp.tools._validate_engines",
+    "slopsearx.service.ScopeResolver.resolve"
+  ],
+  "input": {
+    "catalog_enabled": [
+      "alpha",
+      "beta"
+    ],
+    "active_engines": [
+      "alpha"
+    ],
+    "requested_engines": [
+      "alpha",
+      "beta"
+    ]
+  },
+  "source": {
+    "validation": null,
+    "selected_engines": [
+      "alpha"
+    ],
+    "excluded_engines": [
+      {
+        "engine": "beta",
+        "reason": "not an active engine",
+        "stage": "policy"
+      }
+    ]
+  },
+  "native_hardening": "MCP explicit inactive member rejects atomically; HTTP keeps source dropping behavior"
+}

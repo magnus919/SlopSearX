@@ -1,0 +1,562 @@
+{
+  "scope": "Checkpoint before final stable-tree T02 qualification and published-head image CI. Temporary full reports remain retained; CI emits independent retained artifacts.",
+  "current_main_revision": "a8a7b3e05ccb7ee2e536c0651163c429384f8738",
+  "original_assertion_map_sha256": "86d318ad5bd10b938781b7118723e7e3c66a98838146c63cf5e89ef6a6c94aa0",
+  "observed_native_preliminary": {
+    "log": "/private/tmp/t02-full-seventh-qualification.log",
+    "sha256": "37284d917ff2ac0ed0b01d4aa506b54c1cc81ad4ceed26faab2b89bbe3805e8b",
+    "exit_code": 0,
+    "completion_identities": 410,
+    "counts": {
+      "http": 270,
+      "fault": 27,
+      "date-proof": 24,
+      "family": 20,
+      "html-theme-group": 2,
+      "formatter-pure": 51,
+      "accept-pure": 16
+    },
+    "not_a_claim": "410 is not a physical HTTP request count; pure helpers and HTML groups are separate."
+  },
+  "current_main_regressions": [
+    {
+      "plan": "O01",
+      "status": "passed",
+      "report_path": "/private/tmp/T02-current-main-O01.json",
+      "report_sha256": "6f761f59dd179de173ca7b4109c6c2d0df0b682e3ad05d8170a459ab344d3dad",
+      "head": "a8a7b3e05ccb7ee2e536c0651163c429384f8738"
+    },
+    {
+      "plan": "F01",
+      "status": "passed",
+      "report_path": "/private/tmp/T02-current-main-F01.json",
+      "report_sha256": "bd540466e98f667e7ee231ff20994c16fb087e8fb1a9eb4af17ee12be48c7ecd",
+      "head": "a8a7b3e05ccb7ee2e536c0651163c429384f8738"
+    },
+    {
+      "plan": "O06",
+      "status": "passed",
+      "report_path": "/private/tmp/T02-current-main-O06.json",
+      "report_sha256": "93d88ffccb16870f0d38043969d2d897abf82cafef66176d7dad8517fcb04023",
+      "head": "a8a7b3e05ccb7ee2e536c0651163c429384f8738"
+    },
+    {
+      "plan": "F15",
+      "status": "passed",
+      "report_path": "/private/tmp/T02-current-main-F15.json",
+      "report_sha256": "6c928be03599789962556037144f6f959e05d49a5a2a61f3333bec5207d36205",
+      "head": "a8a7b3e05ccb7ee2e536c0651163c429384f8738"
+    },
+    {
+      "plan": "T06",
+      "status": "passed",
+      "report_path": "/private/tmp/T02-current-main-T06.json",
+      "report_sha256": "a46f0223de69e8e4bdbe25e6a25710c97eb1878185418bca67220b5472a0fd4d",
+      "head": "a8a7b3e05ccb7ee2e536c0651163c429384f8738"
+    }
+  ],
+  "retained_formal_gate_history": [
+    {
+      "path": "/private/tmp/T02-native-gate-first.json",
+      "status": "passed",
+      "limitation": "Pre-hardening verifier omitted mandatory absent-receipt rejection and persisted no whole response receipts; not final acceptance."
+    },
+    {
+      "path": "/private/tmp/T02-native-gate-second.json",
+      "status": "failed",
+      "reason": "Final global source guard rejected source-provenance document addition during run; full behavioral checks completed, not formal acceptance."
+    },
+    {
+      "path": "/Volumes/tank01/magnus/rust-evidence/slopsearx/t02/2026-10-17-native-http/T02-final.json",
+      "sha256": "aa4fd5a8f4ab19b3947663a2d52b735269c2f95e49cb89c30560065dc83c45d2",
+      "status": "passed gate evidence for prior410-binding tree; superseded by three confirmed review fixes; not publishable current acceptance"
+    }
+  ],
+  "material_failures_preserved": [
+    {
+      "log": "/private/tmp/t02-http-third.log",
+      "reason": "Actual250 replay found day-regex and Unicode offset-fraction bugs; fixed then replayed."
+    },
+    {
+      "log": "/private/tmp/t02-full-fifth-qualification.log",
+      "reason": "Negative cache fixture supplied invalid timestamp None to strict Valkey writer; fixed to actual captured timestamp Some, no source expectation changes."
+    },
+    {
+      "log": "/private/tmp/t02-fixture-build-tenth.log",
+      "reason": "Malformed CARGO_HOME prevented build; no sixth qualification execution occurred."
+    },
+    {
+      "log": "/private/tmp/t02-gate-unit-first.log",
+      "reason": "Gate compile error converting &str to String; fixed explicit conversion."
+    },
+    {
+      "directory": "/private/tmp/t02-source-http-faults-v2",
+      "reason": "Sandbox denied owned listener bind; zero HTTP rows, failed run retained; separately approved escalated v3 capture succeeded."
+    }
+  ],
+  "all_retained_logs": [
+    {
+      "path": "/private/tmp/t02-bindings-format.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-clippy-format-fixes.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-completion-fmt.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-current-main-F01.log",
+      "sha256": "e7787285b90deece36943e786672c2b359e59ba79a1b17d9ca529b600c88b72a",
+      "bytes": 3148533,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-current-main-F15.log",
+      "sha256": "8f3a42ac8df415060c995bf9fc3a22e7c715ee8bba5b61fcd91e8fd13f9d7c7f",
+      "bytes": 2077054,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-current-main-O01.log",
+      "sha256": "ceaf4aef866e29a0d9e674eb215147b18cb592b98759d681049059a4b9281be2",
+      "bytes": 2069723,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-current-main-O06.log",
+      "sha256": "5c891314febc7bc7e221fc2f8ee36f7ad8f405810305ce89012f1b867e3ca83a",
+      "bytes": 2019629,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-current-main-T06.log",
+      "sha256": "ea9011b3725f824445ba93548acafdb4ec65e7ee72958e9793ca34a49db1a141",
+      "bytes": 2042301,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-dateproof-fmt.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-examples-first-check.log",
+      "sha256": "5e6ed4ee0510dc68eb7dc0030b4d40b0c9b753f5a4da8ed9e9b12ef2f7fcd697",
+      "bytes": 2445,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-f15-regression-first.log",
+      "sha256": "d8a821c1506974b9efd7a0b71a505f9fab15712d0fd67bede08cbaf7a44a6516",
+      "bytes": 2031957,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-fault-first-test.log",
+      "sha256": "984a306ed37b49525fd5ee14ad4f8ef8403d68885e9923ccd7c9de5733ce614f",
+      "bytes": 473,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-fault-variants-first-check.log",
+      "sha256": "eedcf0fc6c022b068bcf0f864b8448f008636f830d316df409acc3fa68874b1c",
+      "bytes": 262,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-final-config-fmt.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-final-input-binding-fmt.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-final-owned-clippy.log",
+      "sha256": "013af751402fed9ddf29a6e000f9889dc955f365ce9f90e30c7cc8051b7fe15c",
+      "bytes": 3812,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-final-owned-fmt.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-first-check.log",
+      "sha256": "6f8f12a9fe3646fdd93b5482547c6c18c6d0cc98beb80d98c6e06676a3ec15b6",
+      "bytes": 18664,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-fixture-build-eighth.log",
+      "sha256": "3a79161ec1180e6ddc9fd2d0f7dc891d1dd549e31acf8b273ccb0de41da21b05",
+      "bytes": 166,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-fixture-build-eleventh.log",
+      "sha256": "5aa2b1bc9d1ee02a992c8ee5fdae4297a4f10a989ab60935cfe8390ef17055d2",
+      "bytes": 166,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-fixture-build-fifth.log",
+      "sha256": "56e67e9d6db1d056c4d98e12392d6342294b6b16b27ff1c45a628b126ed86c34",
+      "bytes": 166,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-fixture-build-first.log",
+      "sha256": "62a77eba6bf562bf1c1d4ade048ad2509c4ba3077bfba6cff2c1a291e2c8bbe2",
+      "bytes": 353,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-fixture-build-fourth.log",
+      "sha256": "06b5cd98a6c9f343dcb767c04bad60aff669658efaca12e6fd6f61140b7bb8ee",
+      "bytes": 262,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-fixture-build-ninth.log",
+      "sha256": "174adfe3780bb80e3d3989084f5b5dd999d414104301fec465f4553164849a3f",
+      "bytes": 166,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-fixture-build-second.log",
+      "sha256": "5633461a5e97d5e5f489169ab90518ed17e7ae0210f8aadf4613dc4b487fa5e0",
+      "bytes": 166,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-fixture-build-seventh.log",
+      "sha256": "21f1f02e886af96b78ed27011961929a4efee938676d4a161d1b35046f783171",
+      "bytes": 166,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-fixture-build-sixth.log",
+      "sha256": "c40f095800e4d66828930d63165f3b02395e8b5bad92045579208e6505c1ef77",
+      "bytes": 218,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-fixture-build-tenth.log",
+      "sha256": "ec59b36cb65b11accfcb906a6c0beb944657652ecc2d19d1409375d084ddcf09",
+      "bytes": 1286,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-fixture-build-third.log",
+      "sha256": "a8635a25d71d455088f879d23988aab371594f779560a925c316bd40fcaf7c38",
+      "bytes": 166,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-fixture-build-twelfth.log",
+      "sha256": "6f013a3cc7a08d6ff4fb24664ca6d1032d1575f2094924e931aa2d82e456e2e2",
+      "bytes": 166,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-fmt-first.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-format-current.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-format-families.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-formatter-first.log",
+      "sha256": "466cfe3d16dcae49265a9b9c130846900b24e7b39e8a7f0227b5f3293af9dd66",
+      "bytes": 7450,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-full-fifth-qualification.log",
+      "sha256": "0499b9504d917d2b15553f68792202fc0b263ec6a0060eceead6c483c7a1f815",
+      "bytes": 133466,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-full-first-qualification.log",
+      "sha256": "c92ad27573a2d3b8a663e627f79961a19376527e2a70d85e471ad7dd5f303a67",
+      "bytes": 2114,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-full-fourth-qualification.log",
+      "sha256": "7b9cd18b0b360f60fd71b0c0b1d29b59ca29d92703ae1d3fcd67a2d4033c32dd",
+      "bytes": 128683,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-full-second-qualification.log",
+      "sha256": "647f8c9c3c37d55e41f640cecc2e93d6bc4c7cdded18db695424a9c155def269",
+      "bytes": 1881,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-full-seventh-qualification.log",
+      "sha256": "37284d917ff2ac0ed0b01d4aa506b54c1cc81ad4ceed26faab2b89bbe3805e8b",
+      "bytes": 133675,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-full-third-qualification.log",
+      "sha256": "a5aeffc1748ebb5a113f43f76b36ceb86370cdf8897bd2ed932a4ccda3eb0fb4",
+      "bytes": 127491,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-gate-unit-first.log",
+      "sha256": "95bb156a122805fc50314184d01c05ae14b20d483ffacd927c180c06cab0bde1",
+      "bytes": 2189,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-gate-unit-second.log",
+      "sha256": "f9f9e4e3fab2c9cff444676fbbf144e8414b48460cc49e6a3fe5dda97c3067cd",
+      "bytes": 564,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-gate-unit-third.log",
+      "sha256": "1b4685ecfdfa1177eb82e43ad3e52e40eba82bb3317e16d3403bf9f8bc1f00dc",
+      "bytes": 689,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-http-first.log",
+      "sha256": "3f01a301ea9c65116b346b483bb4665427adef76893702ac6e40cce65ddf13bd",
+      "bytes": 1209,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-http-second.log",
+      "sha256": "ec05447cf9e98089c21debc3ac04d7627c19df2feb461b1d4f4a47309528172d",
+      "bytes": 669,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-http-third.log",
+      "sha256": "b299ea01ad047fc7597624af8f407fc98223fdaa68c95ff3d54f617df90d0660",
+      "bytes": 1233,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-image-client-check-first.log",
+      "sha256": "7d2cafee68891774b37110bb0f3e66d6c0bb0578567a989faeaddd0374d11bb0",
+      "bytes": 15706,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-image-client-check-second.log",
+      "sha256": "9630064d9dc6be879b172656339a5e616a46bb9c8d505d997e9cb36ff9335c77",
+      "bytes": 166,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-latin1-final-fmt.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-native-gate-first.log",
+      "sha256": "1b5d05b09c77de5489f976bf8f63844b4b01be89de06fc4bb1fb614a36341c43",
+      "bytes": 2264113,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-native-gate-second.log",
+      "sha256": "ada7e3eb2e4355086b673a3ae82f279639b51db294deca1fbd509780f13d16ff",
+      "bytes": 3986078,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-negative-fmt.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-owned-clippy-fifth.log",
+      "sha256": "daed630be7aec44c0f0121e8b4f3cb9fe439eab24088e647838694fb7f5e3275",
+      "bytes": 166,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-owned-clippy-first.log",
+      "sha256": "37b1eb9af64334e2e75029b352d27083ed467980505885edb116f65f46d18dad",
+      "bytes": 2990,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-owned-clippy-fourth.log",
+      "sha256": "1b938602bde0d731f0c1d7ea1512991396258804a75252e2a4188eedeef6cc38",
+      "bytes": 166,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-owned-clippy-second.log",
+      "sha256": "89ad3d30a61ceb11b30a865e28078804344f9eed31632121ff47f1be3f30883e",
+      "bytes": 1226,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-owned-clippy-third.log",
+      "sha256": "c83ee7fe102b2ac4a93076d5c3760f52146102bafee7ddca412be36a8cab7f97",
+      "bytes": 1120,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-provenance-final-fmt.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-second-check.log",
+      "sha256": "c963353ac4d7036a2e266cdc97cc31dccad827472ac27a1ad9e8edd486bc2458",
+      "bytes": 353,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-t06-regression-first.log",
+      "sha256": "700795afd69351d158e363b9da3ddc414137bf4b91311c5d422207507ea53046",
+      "bytes": 1999059,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-yaml-test-dependency-check.log",
+      "sha256": "6e7d2228e39f5e54dd4dccfde81ca3c27f9f16fe7bb36f9c10d4d85f2d4dff32",
+      "bytes": 534,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    },
+    {
+      "path": "/private/tmp/t02-yaml-test-dependency-second-check.log",
+      "sha256": "abc3e5f2604178e52ca3abd897d7959d5d203041f7d11c5e5de3ad6691b9e8f9",
+      "bytes": 262,
+      "interpretation": "Retained execution output; no pass inferred solely from file presence."
+    }
+  ],
+  "remaining_acceptance": [
+    "Stable-tree hardened T02 report including mandatory receipts and actual omitted-case rejection.",
+    "Published exact-head image workflow must execute final no-Python filesystem/process audit and22 actual wire controls.",
+    "Root semantic review of original assertion mapping."
+  ],
+  "explicit_boundaries": [
+    "Three positive page values above u64 are intentionally refused400 with zero dispatch; original Python accepts them.",
+    "Typed Rust String cannot ingest lone surrogate; actual canonical U+FFFD wire behavior is qualified, raw surrogate ingestion remains accepted F05 representation boundary.",
+    "Synthetic audited OpenAlex fixture verifies HTTP forwarding/shared proof only; actual A06/#984 remains separate and open.",
+    "T03 owns full browser/visual fidelity and the two explicitly mapped journeys.",
+    "Production service assembly and deployment/cutover remain O04/W09/O09/later; main Python deployment is unchanged."
+  ],
+  "post_review_corrections": {
+    "scope": "Root-confirmed independent review corrections after retained410-binding snapshot; final421-binding gate required.",
+    "findings": [
+      {
+        "id": "offset-extra-colons",
+        "source": "slopsearx/formatter.py:_iso_to_epoch datetime.strptime %z",
+        "fix": "Reject colons outside offset positions2/5 and reject a seconds colon without two seconds digits.",
+        "source_cases": [
+          "formatter_epoch:300",
+          "formatter_epoch:301"
+        ],
+        "native_tests": [
+          "reviewed_malformed_offsets_match_original_http_null_pubdates",
+          "reviewed_offsets_category_labels_and_duplicate_queries_match_original_http"
+        ],
+        "expected": "Both source and native actual JSON pubdate:null; pure Rust helper returnsNone cross-bound to original fullHTTP result."
+      },
+      {
+        "id": "mapped-category-deduplication",
+        "source": "slopsearx/server.py:899-902 maps unknown labels toother then deduplicates",
+        "fix": "Map metric category labels before collecting their unique set.",
+        "source_cases": [
+          "review_unknown_categories",
+          "review_metrics_initial",
+          "review_metrics_category"
+        ],
+        "expected": "Unknown1,unknown2 gives503/zeroadaptercalls and exactlyother+1."
+      },
+      {
+        "id": "duplicate-query-last-value",
+        "source": "Starlette request.query_params and search_impl select final duplicateq.",
+        "fix": "Completion middleware selects final duplicateq before deciding rootlanding exclusion.",
+        "source_cases": [
+          "review_duplicate_empty_then_test",
+          "review_duplicate_test_then_empty",
+          "review_metrics_category",
+          "review_metrics_duplicate_search",
+          "review_metrics_duplicate_landing"
+        ],
+        "expected": "Empty\u2192test JSONsearch increments server/completed-success/histogramcount once; reverse HTMLlanding leaves entire native metrics body byte-identical."
+      }
+    ],
+    "new_native_binding_counts": {
+      "review_wire": 9,
+      "formatter_review_pure_cross_bound": 2,
+      "total_added": 11,
+      "total_with_preserved410": 421
+    },
+    "retained_new_test_failures": [
+      {
+        "log": "/private/tmp/t02-review-http-first.log",
+        "reason": "Comparator required alloutcome histograms before any observation. Original/native complete samplemaps actually equal. Corrected to allow onlyjoint completeabsence, still rejectpartial/mismatchedseries."
+      },
+      {
+        "log": "/private/tmp/t02-review-http-second.log",
+        "reason": "New explicit delta test misspelled empty-label metric key without{}. Raw wholemetrics comparisons passed and actualcounter3\u21924; corrected literalkey, no expectation relaxation."
+      }
+    ],
+    "source_packet_sha256": "f716f95ecd009acb3c0332702ed9f6cdceacf3973c8647a6a37ba084b053b163",
+    "reviewed_source_manifest_sha256": "6c53531e4d4298f4603c16f3b6aca02bb0b6231484449af4fa077ddbe7428093",
+    "focused_native_http_pass_log": "/private/tmp/t02-review-http-third.log",
+    "focused_native_http_pass_log_sha256": "b05a9910546874973a3de07d470a9cec5aaaa8a07752a48611cdf24ec7096aa4",
+    "initial_comparator_failure_analysis": {
+      "native_receipt": "/var/folders/gn/gpr8z9bn72z5kqm_fmjndj180000gn/T/t02-http-review-0e7acd9ae47d7a89a8597c16810cbe81/review_metrics_initial.json",
+      "native_receipt_sha256": "b1f4fc876c54b53887dec22979128d0b2b4117e8e117fb0dad0c953b4f6e15f4",
+      "source_sample_map_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "native_sample_map_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "missing": [],
+      "extra": [],
+      "different_values": [],
+      "all_outcome_histogram_samples_absent": true
+    },
+    "post_fix_full_native": {
+      "log": "/private/tmp/t02-review-full-native-first.log",
+      "sha256": "82bcc41991cf42a441c627c02649870ec2362110aeb16ccf256825e11dfb77e9",
+      "exit_code": 0,
+      "unique_completion_bindings": 421
+    }
+  }
+}

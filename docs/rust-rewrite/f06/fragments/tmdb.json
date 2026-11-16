@@ -1,0 +1,50 @@
+{
+  "api_key_env": "ENGINE_TMDB_API_KEY",
+  "api_secret_env": null,
+  "auth_class": "required",
+  "categories": [
+    "movies",
+    "entertainment"
+  ],
+  "caveats": [],
+  "cost_class": "freemium",
+  "defaults": {
+    "base_url": "",
+    "enabled": true,
+    "max_results": 10,
+    "rate_limit": null,
+    "timeout_ms": 5000,
+    "type": "api",
+    "weight": 1.0
+  },
+  "display_name": "TMDB",
+  "enabled_by_default": true,
+  "enforced_filters": {},
+  "engine_type": "api",
+  "failure_classes": [
+    "rate_limited",
+    "error",
+    "timeout"
+  ],
+  "implementation": "unavailable",
+  "name": "tmdb",
+  "routing": {
+    "purpose": "movie and television metadata",
+    "role": "specialist",
+    "use_when": "the query seeks film, series, cast, or release information"
+  },
+  "sensitive": false,
+  "supported_filters": {
+    "date_from": false,
+    "date_to": false,
+    "language": false,
+    "pagination": false,
+    "safesearch": false,
+    "time_range": false
+  },
+  "supported_media_types": [],
+  "supported_result_types": [
+    "text",
+    "media"
+  ]
+}

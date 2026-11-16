@@ -509,9 +509,7 @@ def test_mock_fake_clock_cannot_qualify_or_report_pacing(tmp_path: Path):
             return self.elapsed
 
     manifest, acquisition_plan = make_manifest()
-    evidence, _verifier, _lease, _pacer, _calls = asyncio.run(
-        _run_acquisition(tmp_path, pacer=NoWaitPacer())
-    )
+    evidence, _verifier, _lease, _pacer, _calls = asyncio.run(_run_acquisition(tmp_path, pacer=NoWaitPacer()))
     observed = resource_evidence.collect_acquisition_observations(
         snapshots_directory=evidence.receipt_directory,
         receipt_directory=evidence.receipt_directory,
@@ -574,9 +572,7 @@ def test_rounded_gap_lower_bound_rejects_submicrosecond_shortfall(threshold_seco
     rounded_earlier_us = round(0.0)
     rounded_later_us = round(threshold_us - 0.5)
     assert rounded_later_us == threshold_us
-    lower_bound = resource_evidence._conservative_rounded_gap_lower_bound_us(
-        rounded_earlier_us, rounded_later_us
-    )
+    lower_bound = resource_evidence._conservative_rounded_gap_lower_bound_us(rounded_earlier_us, rounded_later_us)
     assert lower_bound == threshold_us - 1
     assert lower_bound < threshold_us
 
@@ -823,10 +819,17 @@ async def test_full_collector_binds_mock_stages_and_preserves_unknowns(tmp_path:
     stage_uuid = "f611a79a-9eef-46f4-b211-3d4d394e9e21"
     monkeypatch.setattr(study_fixtures, "SOURCE_REVISION", source_revision)
     selector_args, selector_materials, *_ = make_fixture(stage_uuid=stage_uuid)
-    selector_materials["protocol"] = protocol_bytes
     selector_materials["coverage_source"] = (
         Path(__file__).parents[1] / "scripts/intent_ranking_coverage.py"
     ).read_bytes()
+    # This test composes a synthetic registered stage using today's parser
+    # source while retaining the frozen study protocol as its structural
+    # template. Bind the candidate pin in that test-local protocol copy to the
+    # exact bytes executed below; never claim that the historical protocol
+    # executed this newer source.
+    protocol["candidate_source_sha256"] = _sha(selector_materials["coverage_source"])
+    protocol_bytes = study_core._canonical(protocol)
+    selector_materials["protocol"] = protocol_bytes
     selector_materials["production_rerank_source"] = (
         Path(__file__).parents[1] / "docs/experiments/evidence/coverage-first-study/w0-rerank-v1.py.txt"
     ).read_bytes()
@@ -857,6 +860,7 @@ async def test_full_collector_binds_mock_stages_and_preserves_unknowns(tmp_path:
         tmp_path=tmp_path / "capture",
         transport=httpx.MockTransport(capture_handler),
         sources=source_rows,
+        protocol_bytes_override=protocol_bytes,
     )
     capture_manifest_bytes = (capture.receipt_directory / "source-manifest.json").read_bytes()
     capture_manifest = json.loads(capture_manifest_bytes)
@@ -928,6 +932,11 @@ async def test_full_collector_binds_mock_stages_and_preserves_unknowns(tmp_path:
     # by an in-process mock transport; the full collector must derive usage and
     # elapsed values from these archived receipts, ignoring lookalike caller
     # fields passed below.
+    # This checks evidence joins, not the production one-second latency gate.
+    # Compilation and fsync can exceed one second under hosted-runner coverage.
+    # Keep real elapsed measurements and a finite fixture deadline; dedicated
+    # execution tests exercise the production deadline with controlled clocks.
+    monkeypatch.setattr(selector_execution, "SELECTOR_PHASE_SECONDS", 30.0)
     selector_ledger = study_core.StudyRun(prepared_selector)
     selector_roots = PrivateRoots()
     candidate_compiled = compile_small()
@@ -951,7 +960,8 @@ async def test_full_collector_binds_mock_stages_and_preserves_unknowns(tmp_path:
                 candidate_compiled,
                 transport,
             )
-        await selector_execution.execute_selector_call(**call)
+        result = await selector_execution.execute_selector_call(**call)
+        assert result.terminal_reason is None, (operation_id, result.status, result.terminal_reason)
     selector_terminal = selector_execution.close_stage(
         prepared=prepared_selector, ledger=selector_ledger, result_root=selector_roots.result
     )
@@ -1206,6 +1216,125 @@ async def test_full_collector_binds_mock_stages_and_preserves_unknowns(tmp_path:
         prepared_selector.operation_ids
     )
     assert registered_observed["w0_control_source_sha256"] == protocol["primary_control"]["rerank_source_sha256"]
+
+    # Saved maps carry the same execution rows plus eleven exact origin pins.
+    # The collector accepts this schema only when the caller supplies the
+    # corresponding provenance rebuilt from the independently verified import.
+    saved_map_doc = json.loads(registered_map)
+    saved_origin_bindings = {
+        "pool_input_mode": "saved-corpus/1",
+        "origin_pool_snapshot_index_sha256": "1" * 64,
+        "origin_pool_manifest_sha256": "2" * 64,
+        "origin_stage_uuid": "a1111111-1111-4111-8111-111111111111",
+        "origin_source_revision": "b" * 40,
+        "origin_source_closure_sha256": "3" * 64,
+        "origin_protocol_sha256": "4" * 64,
+        "origin_cohorts_sha256": "5" * 64,
+        "origin_acquisition_plan_sha256": "6" * 64,
+        "saved_import_receipt_sha256": "7" * 64,
+        "derived_capture_manifest_sha256": "8" * 64,
+    }
+    saved_map_doc.update(saved_origin_bindings)
+    saved_map = selector_execution._canonical(saved_map_doc)
+    saved_map_sha = _sha(saved_map)
+    saved_terminal = json.loads(registered_terminal_bytes)
+    for observation in saved_terminal["resource_observations"]:
+        operation_id = observation["operation_id"]
+        result_path = selector_roots.result / f"{stage_uuid}.{operation_id}.result.json"
+        result_doc = json.loads(result_path.read_bytes())
+        result_doc["execution_provenance"]["selector_input_map_sha256"] = saved_map_sha
+        result_bytes = selector_execution._canonical(result_doc)
+        result_path.write_bytes(result_bytes)
+        observation["result_receipt_sha256"] = _sha(result_bytes)
+    saved_terminal_bytes = selector_execution._canonical(saved_terminal)
+    (selector_roots.result / f"{stage_uuid}.terminal-inventory.json").write_bytes(saved_terminal_bytes)
+    saved_observed = resource_evidence._selector_observations(
+        stage_uuid=stage_uuid,
+        source_revision=source_revision,
+        protocol_sha256=prepared_selector.pins["protocol"],
+        source_closure_sha256=source_closure_sha256,
+        expected_terminal_sha256=_sha(saved_terminal_bytes),
+        terminal_inventory_bytes=saved_terminal_bytes,
+        result_root=selector_roots.result,
+        archive_root=selector_roots.archive,
+        expected_operation_ids=prepared_selector.operation_ids,
+        operation_rows=selector_operation_rows,
+        expected_registration_sha256=prepared_selector.registration_sha256,
+        expected_primary_control=protocol["primary_control"],
+        expected_candidate_source_sha256=protocol["candidate_source_sha256"],
+        expected_selector_input_map_schema="coverage-selector-input-map/2-registered",
+        selector_input_map_bytes=saved_map,
+        expected_selector_input_map_sha256=saved_map_sha,
+        expected_saved_import_map_bindings=saved_origin_bindings,
+    )
+    assert saved_observed["selector_transaction_proof"]["input_map_sha256"] == saved_map_sha
+    assert len(saved_observed["selector_transaction_proof"]["transactions"]) == len(prepared_selector.operation_ids)
+
+    with pytest.raises(resource_evidence.ResourceEvidenceError, match="saved-selector-input-map-expectation-invalid"):
+        resource_evidence._selector_observations(
+            stage_uuid=stage_uuid,
+            source_revision=source_revision,
+            protocol_sha256=prepared_selector.pins["protocol"],
+            source_closure_sha256=source_closure_sha256,
+            expected_terminal_sha256=_sha(saved_terminal_bytes),
+            terminal_inventory_bytes=saved_terminal_bytes,
+            result_root=selector_roots.result,
+            archive_root=selector_roots.archive,
+            expected_operation_ids=prepared_selector.operation_ids,
+            operation_rows=selector_operation_rows,
+            expected_registration_sha256=prepared_selector.registration_sha256,
+            expected_primary_control=protocol["primary_control"],
+            expected_candidate_source_sha256=protocol["candidate_source_sha256"],
+            expected_selector_input_map_schema="coverage-selector-input-map/2-draft",
+            selector_input_map_bytes=saved_map,
+            expected_selector_input_map_sha256=saved_map_sha,
+            expected_saved_import_map_bindings=saved_origin_bindings,
+        )
+
+    # Rehashing an altered saved-origin field does not pass the independent
+    # expected-binding comparison, and fresh mode cannot accept saved fields.
+    altered_saved_doc = json.loads(saved_map)
+    altered_saved_doc["saved_import_receipt_sha256"] = "9" * 64
+    altered_saved = selector_execution._canonical(altered_saved_doc)
+    with pytest.raises(resource_evidence.ResourceEvidenceError, match="selector-input-map-binding"):
+        resource_evidence._selector_observations(
+            stage_uuid=stage_uuid,
+            source_revision=source_revision,
+            protocol_sha256=prepared_selector.pins["protocol"],
+            source_closure_sha256=source_closure_sha256,
+            expected_terminal_sha256=_sha(saved_terminal_bytes),
+            terminal_inventory_bytes=saved_terminal_bytes,
+            result_root=selector_roots.result,
+            archive_root=selector_roots.archive,
+            expected_operation_ids=prepared_selector.operation_ids,
+            operation_rows=selector_operation_rows,
+            expected_registration_sha256=prepared_selector.registration_sha256,
+            expected_primary_control=protocol["primary_control"],
+            expected_candidate_source_sha256=protocol["candidate_source_sha256"],
+            expected_selector_input_map_schema="coverage-selector-input-map/2-registered",
+            selector_input_map_bytes=altered_saved,
+            expected_selector_input_map_sha256=_sha(altered_saved),
+            expected_saved_import_map_bindings=saved_origin_bindings,
+        )
+    with pytest.raises(resource_evidence.ResourceEvidenceError, match="selector-input-map-binding"):
+        resource_evidence._selector_observations(
+            stage_uuid=stage_uuid,
+            source_revision=source_revision,
+            protocol_sha256=prepared_selector.pins["protocol"],
+            source_closure_sha256=source_closure_sha256,
+            expected_terminal_sha256=_sha(saved_terminal_bytes),
+            terminal_inventory_bytes=saved_terminal_bytes,
+            result_root=selector_roots.result,
+            archive_root=selector_roots.archive,
+            expected_operation_ids=prepared_selector.operation_ids,
+            operation_rows=selector_operation_rows,
+            expected_registration_sha256=prepared_selector.registration_sha256,
+            expected_primary_control=protocol["primary_control"],
+            expected_candidate_source_sha256=protocol["candidate_source_sha256"],
+            expected_selector_input_map_schema="coverage-selector-input-map/2-registered",
+            selector_input_map_bytes=saved_map,
+            expected_selector_input_map_sha256=saved_map_sha,
+        )
     selector_roots.close()
 
 

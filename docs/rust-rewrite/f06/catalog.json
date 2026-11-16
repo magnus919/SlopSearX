@@ -1,0 +1,2586 @@
+[
+  {
+    "api_key_env": "ENGINE_ABUSEIPDB_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "required",
+    "categories": [
+      "security",
+      "threat-intel"
+    ],
+    "caveats": [],
+    "cost_class": "freemium",
+    "defaults": {
+      "base_url": "https://api.abuseipdb.com/api/v2",
+      "enabled": true,
+      "max_results": 5,
+      "rate_limit": 1,
+      "timeout_ms": 10000,
+      "type": "api",
+      "weight": 0.6
+    },
+    "display_name": "AbuseIPDB",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "blocked",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "abuseipdb",
+    "routing": {
+      "purpose": "IP reputation and abuse reports",
+      "role": "specialist",
+      "use_when": "an IP address or abuse reputation is central"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_ARXIV_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "science",
+      "reference"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "https://export.arxiv.org/api/query",
+      "enabled": true,
+      "max_results": 5,
+      "rate_limit": 0.33,
+      "timeout_ms": 10000,
+      "type": "api",
+      "weight": 0.8
+    },
+    "display_name": "arXiv",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "arxiv",
+    "routing": {
+      "purpose": "research preprints",
+      "role": "specialist",
+      "use_when": "the query seeks scientific papers or preprints"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_ASHBY_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "jobs"
+    ],
+    "caveats": [
+      "requires a company name in the query; returns no full job descriptions"
+    ],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "https://jobs.ashbyhq.com",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": 1,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 0.5
+    },
+    "display_name": "Ashby",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "ashby",
+    "routing": {
+      "purpose": "jobs hosted by Ashby",
+      "role": "specialist",
+      "use_when": "the query seeks current job openings"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_BRAVE_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "required",
+    "categories": [
+      "general",
+      "news",
+      "science",
+      "images"
+    ],
+    "caveats": [
+      "safesearch parameter not enforced"
+    ],
+    "cost_class": "freemium",
+    "defaults": {
+      "base_url": "https://api.search.brave.com/res/v1/web/search",
+      "enabled": true,
+      "max_results": 20,
+      "rate_limit": 15,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 1.0
+    },
+    "display_name": "Brave Search API",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "blocked",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "brave",
+    "routing": {
+      "purpose": null,
+      "role": "general",
+      "use_when": null
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [
+      "image",
+      "video"
+    ],
+    "supported_result_types": [
+      "text",
+      "answers",
+      "media"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_CENSYS_API_KEY",
+    "api_secret_env": "ENGINE_CENSYS_API_SECRET",
+    "auth_class": "required",
+    "categories": [
+      "it",
+      "security"
+    ],
+    "caveats": [],
+    "cost_class": "freemium",
+    "defaults": {
+      "base_url": "https://search.censys.io/api/v2",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": 0.5,
+      "timeout_ms": 10000,
+      "type": "api",
+      "weight": 0.7
+    },
+    "display_name": "Censys",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "blocked",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "censys",
+    "routing": {
+      "purpose": "internet hosts and certificates",
+      "role": "specialist",
+      "use_when": "the query targets exposed infrastructure or certificates"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_CLINICALTRIALS_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "medical",
+      "health",
+      "science"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": null,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 1.0
+    },
+    "display_name": "ClinicalTrials.gov",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "clinicaltrials",
+    "routing": {
+      "purpose": "registered clinical trials",
+      "role": "specialist",
+      "use_when": "the query seeks trials, interventions, or enrollment"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_CRATES_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "it",
+      "reference",
+      "packages"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": null,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 1.0
+    },
+    "display_name": "crates.io",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "crates",
+    "routing": {
+      "purpose": "Rust packages",
+      "role": "specialist",
+      "use_when": "the query names a Rust crate or package need"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_CRTSH_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "it",
+      "security"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": null,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 1.0
+    },
+    "display_name": "CRT.sh (Certificate Transparency)",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "blocked",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "crtsh",
+    "routing": {
+      "purpose": "certificate transparency records",
+      "role": "specialist",
+      "use_when": "the query concerns domains, subdomains, or certificates"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_CVE_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "it",
+      "security"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "https://cveawg.mitre.org/api",
+      "enabled": true,
+      "max_results": 5,
+      "rate_limit": 5,
+      "timeout_ms": 10000,
+      "type": "api",
+      "weight": 0.7
+    },
+    "display_name": "CVE Program (MITRE)",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "blocked",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "cve",
+    "routing": {
+      "purpose": "canonical CVE records",
+      "role": "specialist",
+      "use_when": "the query names a CVE or vulnerability identifier"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_DEHASHED_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "required",
+    "categories": [
+      "security",
+      "threat-intel"
+    ],
+    "caveats": [],
+    "cost_class": "paid",
+    "defaults": {
+      "base_url": "https://dehashed.com/api/v1",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": 1,
+      "timeout_ms": 10000,
+      "type": "api",
+      "weight": 0.5
+    },
+    "display_name": "DeHashed",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "blocked",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "dehashed",
+    "routing": {
+      "purpose": "paid breach-data lookup",
+      "role": "specialist",
+      "use_when": "authorized breach exposure lookup is explicitly requested"
+    },
+    "sensitive": true,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_DOCKERHUB_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "it",
+      "reference",
+      "packages"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": null,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 1.0
+    },
+    "display_name": "Docker Hub",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "dockerhub",
+    "routing": {
+      "purpose": "container images",
+      "role": "specialist",
+      "use_when": "the query seeks a Docker image or tag"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_DUCKDUCKGO_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "general",
+      "news",
+      "images"
+    ],
+    "caveats": [
+      "scrape adapter — subject to blocking and CAPTCHAs"
+    ],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "https://html.duckduckgo.com/html/",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": null,
+      "timeout_ms": 10000,
+      "type": "scrape",
+      "weight": 0.6
+    },
+    "display_name": "DuckDuckGo",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "scrape",
+    "failure_classes": [
+      "rate_limited",
+      "blocked",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "duckduckgo",
+    "routing": {
+      "purpose": null,
+      "role": "general",
+      "use_when": null
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [
+      "image"
+    ],
+    "supported_result_types": [
+      "text",
+      "media"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_EDGAR_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "finance",
+      "reference"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": null,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 1.0
+    },
+    "display_name": "SEC EDGAR",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "edgar",
+    "routing": {
+      "purpose": "US public-company filings",
+      "role": "specialist",
+      "use_when": "the query seeks SEC filings or company disclosures"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_EPSS_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "security",
+      "threat-intel"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": null,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 1.0
+    },
+    "display_name": "FIRST EPSS (Exploit Prediction)",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "blocked",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "epss",
+    "routing": {
+      "purpose": "vulnerability exploitation probability",
+      "role": "specialist",
+      "use_when": "the query seeks EPSS likelihood for a CVE"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_EUROPEPMC_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "science",
+      "reference",
+      "medical",
+      "health"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "https://www.ebi.ac.uk/europepmc/webservices/rest",
+      "enabled": false,
+      "max_results": 10,
+      "rate_limit": 0.5,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 0.8
+    },
+    "display_name": "Europe PMC (EMBL-EBI)",
+    "enabled_by_default": false,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "europepmc",
+    "routing": {
+      "purpose": "biomedical publication and preprint metadata",
+      "role": "specialist",
+      "use_when": "the query seeks biomedical literature including preprints beyond PubMed"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text",
+      "structured"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_EXPLOITDB_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "security",
+      "exploit"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": null,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 1.0
+    },
+    "display_name": "Exploit-DB",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "scrape",
+    "failure_classes": [
+      "rate_limited",
+      "blocked",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "exploitdb",
+    "routing": {
+      "purpose": "public exploit records",
+      "role": "specialist",
+      "use_when": "the query seeks a known exploit or proof of concept"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_FRED_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "required",
+    "categories": [
+      "finance",
+      "reference",
+      "economics"
+    ],
+    "caveats": [],
+    "cost_class": "freemium",
+    "defaults": {
+      "base_url": "",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": null,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 1.0
+    },
+    "display_name": "FRED",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "fred",
+    "routing": {
+      "purpose": "US economic time series",
+      "role": "specialist",
+      "use_when": "the query seeks macroeconomic data or indicators"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_GITHUB_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "reference",
+      "github:code",
+      "github:issues",
+      "github:prs"
+    ],
+    "caveats": [
+      "pagination hardcoded to page 1"
+    ],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "https://api.github.com",
+      "enabled": true,
+      "max_results": 5,
+      "rate_limit": 0.5,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 0.8
+    },
+    "display_name": "GitHub",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "blocked",
+      "error",
+      "timeout",
+      "unavailable"
+    ],
+    "implementation": "unavailable",
+    "name": "github",
+    "routing": {
+      "purpose": "source repositories, issues, and pull requests",
+      "role": "specialist",
+      "use_when": "the query seeks code or repository artifacts"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_GOOGLE_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "general",
+      "news"
+    ],
+    "caveats": [
+      "scrape adapter — subject to blocking and CAPTCHAs"
+    ],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "https://www.google.com/search",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": null,
+      "timeout_ms": 10000,
+      "type": "scrape",
+      "weight": 0.5
+    },
+    "display_name": "Google Search",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "scrape",
+    "failure_classes": [
+      "rate_limited",
+      "blocked",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "google",
+    "routing": {
+      "purpose": null,
+      "role": "general",
+      "use_when": null
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_GREENHOUSE_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "jobs"
+    ],
+    "caveats": [
+      "requires a company name in the query; returns no full job descriptions"
+    ],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "https://boards-api.greenhouse.io/v1/boards",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": 1,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 0.5
+    },
+    "display_name": "Greenhouse",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "greenhouse",
+    "routing": {
+      "purpose": "jobs hosted by Greenhouse",
+      "role": "specialist",
+      "use_when": "the query seeks current job openings"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_GREYNOISE_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "security",
+      "threat-intel"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": null,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 1.0
+    },
+    "display_name": "GreyNoise",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "blocked",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "greynoise",
+    "routing": {
+      "purpose": "internet scanner and IP intelligence",
+      "role": "specialist",
+      "use_when": "the query seeks context about an observed IP"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_HACKERNEWS_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "general",
+      "news"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "https://hn.algolia.com/api/v1/search",
+      "enabled": true,
+      "max_results": 5,
+      "rate_limit": 10,
+      "timeout_ms": 3000,
+      "type": "api",
+      "weight": 0.7
+    },
+    "display_name": "Hacker News",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "hackernews",
+    "routing": {
+      "purpose": null,
+      "role": "broad_support",
+      "use_when": null
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_HIBP_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "required",
+    "categories": [
+      "security",
+      "reference"
+    ],
+    "caveats": [],
+    "cost_class": "freemium",
+    "defaults": {
+      "base_url": "https://haveibeenpwned.com/api/v3",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": 1,
+      "timeout_ms": 10000,
+      "type": "api",
+      "weight": 0.6
+    },
+    "display_name": "Have I Been Pwned",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "blocked",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "hibp",
+    "routing": {
+      "purpose": "breach exposure status",
+      "role": "specialist",
+      "use_when": "authorized account or domain breach lookup is explicit"
+    },
+    "sensitive": true,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_HUGGINGFACE_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "science",
+      "huggingface:datasets",
+      "huggingface:papers"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "https://huggingface.co/api",
+      "enabled": true,
+      "max_results": 5,
+      "rate_limit": 1,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 0.7
+    },
+    "display_name": "HuggingFace",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "huggingface",
+    "routing": {
+      "purpose": "machine-learning datasets, models, and papers",
+      "role": "specialist",
+      "use_when": "the query seeks ML artifacts"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_INTELX_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "required",
+    "categories": [
+      "security",
+      "threat-intel"
+    ],
+    "caveats": [],
+    "cost_class": "freemium",
+    "defaults": {
+      "base_url": "https://2.intelx.io",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": 1,
+      "timeout_ms": 15000,
+      "type": "api",
+      "weight": 0.5
+    },
+    "display_name": "Intelligence X (IntelX)",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "blocked",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "intelx",
+    "routing": {
+      "purpose": "paid threat-intelligence search",
+      "role": "specialist",
+      "use_when": "authorized threat-intelligence lookup is explicit"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_INTERNETARCHIVE_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "reference",
+      "web:archive",
+      "historical"
+    ],
+    "caveats": [
+      "opt-in engine, disabled by default"
+    ],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "https://archive.org",
+      "enabled": false,
+      "max_results": 10,
+      "rate_limit": 5,
+      "timeout_ms": 10000,
+      "type": "api",
+      "weight": 0.6
+    },
+    "display_name": "Internet Archive",
+    "enabled_by_default": false,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "blocked",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "internetarchive",
+    "routing": {
+      "purpose": "archived web pages and historical media",
+      "role": "specialist",
+      "use_when": "the query seeks an older or removed version"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_LEVER_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "jobs"
+    ],
+    "caveats": [
+      "requires a company name in the query; returns no full job descriptions"
+    ],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "https://api.lever.co/v0/postings",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": 1,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 0.5
+    },
+    "display_name": "Lever",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "lever",
+    "routing": {
+      "purpose": "jobs hosted by Lever",
+      "role": "specialist",
+      "use_when": "the query seeks current job openings"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_MITREATTACK_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "security",
+      "reference"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": null,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 1.0
+    },
+    "display_name": "MITRE ATT&CK",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "blocked",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "mitreattack",
+    "routing": {
+      "purpose": "adversary tactics and techniques",
+      "role": "specialist",
+      "use_when": "the query seeks ATT&CK techniques, groups, or mitigations"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_MUSICBRAINZ_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "music",
+      "reference"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": null,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 1.0
+    },
+    "display_name": "MusicBrainz",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "musicbrainz",
+    "routing": {
+      "purpose": "music release and artist metadata",
+      "role": "specialist",
+      "use_when": "the query seeks structured music credits or releases"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_NOMINATIM_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "geography",
+      "reference"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": null,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 1.0
+    },
+    "display_name": "Nominatim (OSM)",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "nominatim",
+    "routing": {
+      "purpose": "OpenStreetMap place geocoding",
+      "role": "specialist",
+      "use_when": "the query seeks a place, address, or coordinates"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_NPM_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "it",
+      "reference",
+      "packages"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": null,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 1.0
+    },
+    "display_name": "npm",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "npm",
+    "routing": {
+      "purpose": "JavaScript packages",
+      "role": "specialist",
+      "use_when": "the query names a Node or JavaScript package need"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_NVD_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "it",
+      "security"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "https://services.nvd.nist.gov/rest/json/cves/2.0",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": 0.17,
+      "timeout_ms": 10000,
+      "type": "api",
+      "weight": 0.7
+    },
+    "display_name": "NVD (National Vulnerability Database)",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "blocked",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "nvd",
+    "routing": {
+      "purpose": "NIST vulnerability records",
+      "role": "specialist",
+      "use_when": "the query seeks CVE severity, affected products, or references"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_OPENALEX_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "science",
+      "reference"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "https://api.openalex.org",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": 10,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 0.8
+    },
+    "display_name": "OpenAlex",
+    "enabled_by_default": true,
+    "enforced_filters": {
+      "date_from": "upstream",
+      "date_to": "upstream",
+      "time_range": "local"
+    },
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "openalex",
+    "routing": {
+      "purpose": "scholarly works and authors",
+      "role": "specialist",
+      "use_when": "the query seeks research literature or citation metadata"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": true,
+      "date_to": true,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": true
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_OPENFDA_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "medical",
+      "health",
+      "science",
+      "government"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": null,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 1.0
+    },
+    "display_name": "openFDA",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "openfda",
+    "routing": {
+      "purpose": "FDA drugs, devices, labels, and adverse events",
+      "role": "specialist",
+      "use_when": "the query seeks regulated medical-product data"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_OPENLIBRARY_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "books",
+      "reference"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": null,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 1.0
+    },
+    "display_name": "Open Library",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "openlibrary",
+    "routing": {
+      "purpose": "books and editions",
+      "role": "specialist",
+      "use_when": "the query seeks a book, author, ISBN, or edition"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text",
+      "media"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_OTX_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "required",
+    "categories": [
+      "security",
+      "threat-intel"
+    ],
+    "caveats": [],
+    "cost_class": "freemium",
+    "defaults": {
+      "base_url": "https://otx.alienvault.com/api/v1",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": 5,
+      "timeout_ms": 10000,
+      "type": "api",
+      "weight": 0.7
+    },
+    "display_name": "AlienVault OTX",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "blocked",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "otx",
+    "routing": {
+      "purpose": "community threat indicators",
+      "role": "specialist",
+      "use_when": "the query seeks indicators, pulses, or threat context"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_OYEZ_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "reference",
+      "legal"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": null,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 1.0
+    },
+    "display_name": "Oyez (SCOTUS)",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "oyez",
+    "routing": {
+      "purpose": "US Supreme Court cases and audio",
+      "role": "specialist",
+      "use_when": "the query seeks a Supreme Court case or argument"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_PUBCHEM_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "science",
+      "reference",
+      "chemistry",
+      "medical"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": null,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 1.0
+    },
+    "display_name": "PubChem",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "pubchem",
+    "routing": {
+      "purpose": "chemical compounds and bioassays",
+      "role": "specialist",
+      "use_when": "the query seeks a compound, structure, or chemical identifier"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_PUBMED_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "science",
+      "reference",
+      "medical",
+      "health"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": null,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 1.0
+    },
+    "display_name": "PubMed",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "pubmed",
+    "routing": {
+      "purpose": "biomedical literature",
+      "role": "specialist",
+      "use_when": "the query seeks medical or life-science publications"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_PYPI_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "it",
+      "reference",
+      "packages"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": null,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 1.0
+    },
+    "display_name": "PyPI",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "pypi",
+    "routing": {
+      "purpose": "Python packages",
+      "role": "specialist",
+      "use_when": "the query names a Python package need"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_REDDIT_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "general",
+      "social",
+      "reddit:subreddit"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "https://www.reddit.com",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": 1,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 0.7
+    },
+    "display_name": "Reddit",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "blocked",
+      "error",
+      "timeout",
+      "unavailable"
+    ],
+    "implementation": "unavailable",
+    "name": "reddit",
+    "routing": {
+      "purpose": null,
+      "role": "broad_support",
+      "use_when": null
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text",
+      "media"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_RUBYGEMS_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "it",
+      "reference",
+      "packages"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": null,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 1.0
+    },
+    "display_name": "RubyGems",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "rubygems",
+    "routing": {
+      "purpose": "Ruby packages",
+      "role": "specialist",
+      "use_when": "the query names a Ruby gem or package need"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_SEMANTICSCHOLAR_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "science",
+      "reference"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "https://api.semanticscholar.org/graph/v1/paper/search",
+      "enabled": true,
+      "max_results": 5,
+      "rate_limit": 1,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 0.8
+    },
+    "display_name": "Semantic Scholar",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "semanticscholar",
+    "routing": {
+      "purpose": "scholarly papers and citations",
+      "role": "specialist",
+      "use_when": "the query seeks papers or citation relationships"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_SHODAN_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "required",
+    "categories": [
+      "it",
+      "security"
+    ],
+    "caveats": [],
+    "cost_class": "freemium",
+    "defaults": {
+      "base_url": "https://api.shodan.io",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": 1,
+      "timeout_ms": 10000,
+      "type": "api",
+      "weight": 0.7
+    },
+    "display_name": "Shodan",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "blocked",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "shodan",
+    "routing": {
+      "purpose": "internet-connected device search",
+      "role": "specialist",
+      "use_when": "the query targets exposed services or devices"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_STACKEXCHANGE_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "general",
+      "reference",
+      "science",
+      "stackexchange:code",
+      "stackexchange:serverfault"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "https://api.stackexchange.com/2.3",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": 30,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 0.9
+    },
+    "display_name": "Stack Exchange",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "error"
+    ],
+    "implementation": "unavailable",
+    "name": "stackexchange",
+    "routing": {
+      "purpose": null,
+      "role": "broad_support",
+      "use_when": null
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_TMDB_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "required",
+    "categories": [
+      "movies",
+      "entertainment"
+    ],
+    "caveats": [],
+    "cost_class": "freemium",
+    "defaults": {
+      "base_url": "",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": null,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 1.0
+    },
+    "display_name": "TMDB",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "tmdb",
+    "routing": {
+      "purpose": "movie and television metadata",
+      "role": "specialist",
+      "use_when": "the query seeks film, series, cast, or release information"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text",
+      "media"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_UNIPROT_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "science",
+      "reference",
+      "biology",
+      "medical"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": null,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 1.0
+    },
+    "display_name": "UniProt",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "uniprot",
+    "routing": {
+      "purpose": "protein sequences and annotations",
+      "role": "specialist",
+      "use_when": "the query seeks a protein, gene product, or accession"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_URLHAUS_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "required",
+    "categories": [
+      "security",
+      "threat-intel"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": null,
+      "timeout_ms": 5000,
+      "type": "api",
+      "weight": 1.0
+    },
+    "display_name": "URLhaus (abuse.ch)",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "blocked",
+      "error",
+      "timeout",
+      "unavailable"
+    ],
+    "implementation": "unavailable",
+    "name": "urlhaus",
+    "routing": {
+      "purpose": "malware URL intelligence",
+      "role": "specialist",
+      "use_when": "the query concerns a suspicious URL or malware distribution"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_VIRUSTOTAL_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "required",
+    "categories": [
+      "security",
+      "malware"
+    ],
+    "caveats": [],
+    "cost_class": "freemium",
+    "defaults": {
+      "base_url": "https://www.virustotal.com/api/v3",
+      "enabled": true,
+      "max_results": 10,
+      "rate_limit": 4,
+      "timeout_ms": 10000,
+      "type": "api",
+      "weight": 0.7
+    },
+    "display_name": "VirusTotal",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "blocked",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "virustotal",
+    "routing": {
+      "purpose": "file, URL, domain, and IP reputation",
+      "role": "specialist",
+      "use_when": "the query seeks multi-scanner malware reputation"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_VULNCHECK_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "required",
+    "categories": [
+      "security",
+      "threat-intel"
+    ],
+    "caveats": [],
+    "cost_class": "freemium",
+    "defaults": {
+      "base_url": "https://api.vulncheck.com/v3",
+      "enabled": true,
+      "max_results": 5,
+      "rate_limit": 5,
+      "timeout_ms": 10000,
+      "type": "api",
+      "weight": 0.6
+    },
+    "display_name": "VulnCheck Community",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "blocked",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "vulncheck",
+    "routing": {
+      "purpose": "vulnerability and exploitation intelligence",
+      "role": "specialist",
+      "use_when": "the query seeks exploitability or vulnerability enrichment"
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text"
+    ]
+  },
+  {
+    "api_key_env": "ENGINE_WIKIPEDIA_API_KEY",
+    "api_secret_env": null,
+    "auth_class": "none",
+    "categories": [
+      "general",
+      "science",
+      "reference"
+    ],
+    "caveats": [],
+    "cost_class": "free",
+    "defaults": {
+      "base_url": "https://en.wikipedia.org/w/api.php",
+      "enabled": true,
+      "max_results": 3,
+      "rate_limit": 200,
+      "timeout_ms": 3000,
+      "type": "api",
+      "weight": 0.9
+    },
+    "display_name": "Wikipedia",
+    "enabled_by_default": true,
+    "enforced_filters": {},
+    "engine_type": "api",
+    "failure_classes": [
+      "rate_limited",
+      "blocked",
+      "error",
+      "timeout"
+    ],
+    "implementation": "unavailable",
+    "name": "wikipedia",
+    "routing": {
+      "purpose": null,
+      "role": "broad_support",
+      "use_when": null
+    },
+    "sensitive": false,
+    "supported_filters": {
+      "date_from": false,
+      "date_to": false,
+      "language": false,
+      "pagination": false,
+      "safesearch": false,
+      "time_range": false
+    },
+    "supported_media_types": [],
+    "supported_result_types": [
+      "text",
+      "corrections",
+      "infoboxes",
+      "media"
+    ]
+  }
+]

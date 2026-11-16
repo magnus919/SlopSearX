@@ -1,0 +1,2231 @@
+{
+  "schema_version": 1,
+  "plan_id": "A05",
+  "baseline": "01876639fb8d87123f12293c02821981cff3f8b9",
+  "corpus_sha256": "4a83fb3db44894679213ba96941915dc12ad0bf00ad5cbfc691fb0410a86fc2e",
+  "source_tests": [
+    {
+      "source_test": "tests/test_duckduckgo_resilience.py::TestDuckDuckGoResilience::test_challenge_on_primary_falls_back_to_lite",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "ddg_wall_lite"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_duckduckgo_resilience.py::TestDuckDuckGoResilience::test_blocked_primary_403_falls_back_to_lite",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "ddg_wall_lite"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_duckduckgo_resilience.py::TestDuckDuckGoResilience::test_both_endpoints_challenged_report_blocked",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "ddg_wall_wall"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_duckduckgo_resilience.py::TestDuckDuckGoResilience::test_rate_limited_short_circuits_without_lite",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "duckduckgo_status_429"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_duckduckgo_resilience.py::TestDuckDuckGoResilience::test_timeout_does_not_fall_back",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "duckduckgo_timeout"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_duckduckgo_resilience.py::TestDuckDuckGoResilience::test_legitimate_no_results_marker_skips_lite",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "duckduckgo_valid_empty"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_duckduckgo_resilience.py::TestDuckDuckGoResilience::test_structurally_empty_primary_triggers_lite",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "duckduckgo_soft_empty"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_duckduckgo_resilience.py::TestDuckDuckGoResilience::test_all_endpoints_structurally_empty_reports_error",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "ddg_soft_soft"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_duckduckgo_resilience.py::TestDuckDuckGoResilience::test_headers_are_browser_realistic",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "duckduckgo_success"
+      ],
+      "disposition": "Complete adapter-owned headers asserted for every outbound request; transport-owned fields retained in source metadata and exercised by actual loopback coverage."
+    },
+    {
+      "source_test": "tests/test_duckduckgo_resilience.py::TestDuckDuckGoResilience::test_homepage_bootstrap_precedes_search_post",
+      "native_test": "adapters::html_helper_tests::loopback_cookie_isolation_bootstrap_fallback_and_exact_order",
+      "corpus_cases": [
+        "duckduckgo_success"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine. Warm-bootstrap success uses an engine-private cfg(test) 2s budget override with all six requests/cookies/results preserved; the independent cold test retains the production 5ms cap."
+    },
+    {
+      "source_test": "tests/test_duckduckgo_resilience.py::TestDuckDuckGoResilience::test_bootstrap_failure_does_not_break_search",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "ddg_bootstrap_failure"
+      ],
+      "disposition": "Source-swallowed warmup exception and preserved subsequent search; native cold-bootstrap deadline separately exercised."
+    },
+    {
+      "source_test": "tests/test_duckduckgo_resilience.py::TestDuckDuckGoResilience::test_parse_lite_html_extracts_results",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "ddg_wall_lite"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_duckduckgo_resilience.py::TestDuckDuckGoResilience::test_parse_lite_html_respects_max_results",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "ddg_lite_limit_one"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_duckduckgo_resilience.py::TestDuckDuckGoResilience::test_parse_lite_html_on_challenge_returns_empty",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "ddg_wall_lite"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_duckduckgo_resilience.py::TestDuckDuckGoResilience::test_strip_ddg_redirect_unwraps_uddg_target",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "ddg_lite_relative",
+        "ddg_lite_blank_uddg",
+        "ddg_image_alternates"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_duckduckgo_resilience.py::TestDuckDuckGoResilience::test_bot_wall_phrases_are_challenge_indicators",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "duckduckgo_marker_0",
+        "duckduckgo_wall"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_duckduckgo_resilience.py::TestDuckDuckGoResilience::test_image_search_challenge_blocked_without_lite",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "ddg_image_wall"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_google_adapter.py::TestGoogleAdapterRegistration::test_adapter_registered",
+      "native_test": "html_factories_expose_live_availability_and_preserve_f06_metadata",
+      "corpus_cases": [],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_google_adapter.py::TestGoogleAdapterRegistration::test_adapter_categories",
+      "native_test": "html_factories_expose_live_availability_and_preserve_f06_metadata",
+      "corpus_cases": [],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_google_adapter.py::TestGoogleAdapterSearch::test_search_returns_results",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "google_success"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_google_adapter.py::TestGoogleAdapterSearch::test_search_empty_html",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "google_soft_empty"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_google_adapter.py::TestGoogleAdapterSearch::test_search_challenge_page",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "google_marker_0",
+        "google_wall"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_google_adapter.py::TestGoogleAdapterSearch::test_search_rate_limited",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "google_status_429"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_google_adapter.py::TestGoogleAdapterSearch::test_search_blocked",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "google_status_503"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_google_adapter.py::TestGoogleAdapterSearch::test_search_timeout",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "google_timeout"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_google_adapter.py::TestGoogleAdapterSearch::test_search_error",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "google_status_500"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_google_adapter.py::TestGoogleAdapterSearch::test_search_sends_headers",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "google_success"
+      ],
+      "disposition": "Complete adapter-owned headers asserted for every outbound request; transport-owned fields retained in source metadata and exercised by actual loopback coverage."
+    },
+    {
+      "source_test": "tests/test_adapters.py::TestDuckDuckGoAdapter::test_parse_html",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "duckduckgo_success"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_adapters.py::TestDuckDuckGoAdapter::test_parse_html_respects_max_results",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "duckduckgo_limit_1"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_adapters.py::TestDuckDuckGoAdapter::test_parse_html_empty",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "duckduckgo_soft_empty"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_adapters.py::TestDuckDuckGoAdapter::test_captcha_detection",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "duckduckgo_marker_0",
+        "duckduckgo_wall"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_adapters.py::TestDuckDuckGoAdapter::test_captcha_indicators_match",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "duckduckgo_marker_0",
+        "duckduckgo_wall"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_adapters.py::TestDuckDuckGoAdapter::test_search_happy_path",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "duckduckgo_success"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_adapters.py::TestDuckDuckGoAdapter::test_search_rate_limited",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "duckduckgo_status_429"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_adapters.py::TestDuckDuckGoAdapter::test_search_captcha_blocked",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "duckduckgo_marker_0",
+        "duckduckgo_wall"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_adapters.py::TestGoogleAdapter::test_parse_html",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "google_success"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_adapters.py::TestGoogleAdapter::test_parse_html_respects_max_results",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "google_limit_1"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_adapters.py::TestGoogleAdapter::test_parse_html_empty",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "google_soft_empty"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_adapters.py::TestGoogleAdapter::test_captcha_detection",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "google_marker_0",
+        "google_wall"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_adapters.py::TestGoogleAdapter::test_captcha_indicators_match",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "google_marker_0",
+        "google_wall"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_media_contract.py::TestAdapterMediaRecords::test_duckduckgo_image_parse_attaches_image_media",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "ddg_image"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_media_contract.py::TestAdapterMediaRecords::test_duckduckgo_image_parse_omits_media_without_img_src",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "ddg_image_no_src"
+      ],
+      "disposition": "Complete normalized-output and exact outbound replay through registered native engine."
+    },
+    {
+      "source_test": "tests/test_http_pooling.py::test_connection_reuse_probe",
+      "native_test": "adapters::html_helper_tests::loopback_cookie_isolation_bootstrap_fallback_and_exact_order",
+      "corpus_cases": [],
+      "disposition": "Transport-owned regression retained by accepted F08 gate; A05 additionally proves per-search cookie isolation and exact bootstrap/fallback network sequence. Warm-bootstrap success uses an engine-private cfg(test) 2s budget override with all six requests/cookies/results preserved; the independent cold test retains the production 5ms cap."
+    },
+    {
+      "source_test": "tests/test_http_pooling.py::test_sessions_isolate_cookies_and_injected_transport_ownership",
+      "native_test": "adapters::html_helper_tests::loopback_cookie_isolation_bootstrap_fallback_and_exact_order",
+      "corpus_cases": [],
+      "disposition": "Transport-owned regression retained by accepted F08 gate; A05 additionally proves per-search cookie isolation and exact bootstrap/fallback network sequence. Warm-bootstrap success uses an engine-private cfg(test) 2s budget override with all six requests/cookies/results preserved; the independent cold test retains the production 5ms cap."
+    },
+    {
+      "source_test": "tests/test_http_pooling.py::test_proxy_pools_separate_bounded_and_closed",
+      "native_test": "adapters::html_helper_tests::loopback_cookie_isolation_bootstrap_fallback_and_exact_order",
+      "corpus_cases": [],
+      "disposition": "Transport-owned regression retained by accepted F08 gate; A05 additionally proves per-search cookie isolation and exact bootstrap/fallback network sequence. Warm-bootstrap success uses an engine-private cfg(test) 2s budget override with all six requests/cookies/results preserved; the independent cold test retains the production 5ms cap."
+    },
+    {
+      "source_test": "tests/test_http_pooling.py::test_environment_proxy_fallback_preserves_httpx_resolution",
+      "native_test": "adapters::html_helper_tests::loopback_cookie_isolation_bootstrap_fallback_and_exact_order",
+      "corpus_cases": [],
+      "disposition": "Transport-owned regression retained by accepted F08 gate; A05 additionally proves per-search cookie isolation and exact bootstrap/fallback network sequence. Warm-bootstrap success uses an engine-private cfg(test) 2s budget override with all six requests/cookies/results preserved; the independent cold test retains the production 5ms cap."
+    },
+    {
+      "source_test": "tests/test_http_pooling.py::test_no_proxy_alone_does_not_disable_pooling",
+      "native_test": "adapters::html_helper_tests::loopback_cookie_isolation_bootstrap_fallback_and_exact_order",
+      "corpus_cases": [],
+      "disposition": "Transport-owned regression retained by accepted F08 gate; A05 additionally proves per-search cookie isolation and exact bootstrap/fallback network sequence. Warm-bootstrap success uses an engine-private cfg(test) 2s budget override with all six requests/cookies/results preserved; the independent cold test retains the production 5ms cap."
+    },
+    {
+      "source_test": "tests/test_http_pooling.py::test_explicit_tls_options_are_not_silently_ignored",
+      "native_test": "adapters::html_helper_tests::loopback_cookie_isolation_bootstrap_fallback_and_exact_order",
+      "corpus_cases": [],
+      "disposition": "Transport-owned regression retained by accepted F08 gate; A05 additionally proves per-search cookie isolation and exact bootstrap/fallback network sequence. Warm-bootstrap success uses an engine-private cfg(test) 2s budget override with all six requests/cookies/results preserved; the independent cold test retains the production 5ms cap."
+    },
+    {
+      "source_test": "tests/test_http_pooling.py::test_explicit_pool_limits_are_forwarded",
+      "native_test": "adapters::html_helper_tests::loopback_cookie_isolation_bootstrap_fallback_and_exact_order",
+      "corpus_cases": [],
+      "disposition": "Transport-owned regression retained by accepted F08 gate; A05 additionally proves per-search cookie isolation and exact bootstrap/fallback network sequence. Warm-bootstrap success uses an engine-private cfg(test) 2s budget override with all six requests/cookies/results preserved; the independent cold test retains the production 5ms cap."
+    },
+    {
+      "source_test": "tests/test_adapter.py::TestEngineRegistry::test_register_valid_adapter",
+      "native_test": "html_factories_expose_live_availability_and_preserve_f06_metadata",
+      "corpus_cases": [],
+      "disposition": "A05 verifies executable DuckDuckGo/Google factories and unchanged descriptors; accepted F06 registry gate retains full built-in registration completeness."
+    }
+  ],
+  "native_tests": [
+    "admission_denies_both_engines_before_bootstrap",
+    "cancellation_during_bootstrap_sends_no_search_or_fallback",
+    "cold_bootstrap_expires_without_spending_search_deadline_or_leaking_cookies",
+    "helper_deadline_kills_and_reaps_before_releasing_slot",
+    "helper_future_cancellation_kills_and_reaps_before_releasing_slot",
+    "helper_shutdown_kills_and_reaps_and_closes_admission",
+    "html_factories_expose_live_availability_and_preserve_f06_metadata",
+    "loopback_proxy_rotation_keeps_one_route_per_search_and_applies_feedback",
+    "native_helper_rejects_noncanonical_frames",
+    "source_corpus_complete_outcomes_and_requests",
+    "stateful_codec_cancellation_kills_reaps_and_releases_permit",
+    "stateful_codec_deadline_kills_reaps_and_releases_permit",
+    "source_charset_pipeline_complete_outcomes_and_requests"
+  ],
+  "case_ids": [
+    "ddg_bootstrap_failure",
+    "ddg_context_image_link",
+    "ddg_context_image_src",
+    "ddg_context_result",
+    "ddg_context_snippet",
+    "ddg_context_url",
+    "ddg_cookie_continuity",
+    "ddg_cookie_same_host",
+    "ddg_cookie_unrelated_host",
+    "ddg_cross_site_headers",
+    "ddg_domain_cookie",
+    "ddg_encoded",
+    "ddg_fallback_500",
+    "ddg_fallback_rate",
+    "ddg_fallback_timeout",
+    "ddg_image",
+    "ddg_image_'<a'",
+    "ddg_image_'<html'",
+    "ddg_image_'\\x00'",
+    "ddg_image_alternates",
+    "ddg_image_empty",
+    "ddg_image_media_sanitization",
+    "ddg_image_no_src",
+    "ddg_image_positions",
+    "ddg_image_query_encoding",
+    "ddg_image_wall",
+    "ddg_lite_blank_uddg",
+    "ddg_lite_invalid_links",
+    "ddg_lite_limit_one",
+    "ddg_lite_relative",
+    "ddg_nested",
+    "ddg_positions",
+    "ddg_same_origin_headers",
+    "ddg_soft_empty",
+    "ddg_soft_soft",
+    "ddg_wall_empty",
+    "ddg_wall_lite",
+    "ddg_wall_wall",
+    "duckduckgo_charset_ascii",
+    "duckduckgo_charset_bogus",
+    "duckduckgo_charset_iso-8859-1",
+    "duckduckgo_charset_windows-1252",
+    "duckduckgo_comment_only",
+    "duckduckgo_comment_prefix_valid",
+    "duckduckgo_config_max_false",
+    "duckduckgo_config_max_float",
+    "duckduckgo_config_max_list",
+    "duckduckgo_config_max_null",
+    "duckduckgo_config_max_object",
+    "duckduckgo_config_max_string",
+    "duckduckgo_config_max_true",
+    "duckduckgo_doctype_comment",
+    "duckduckgo_doctype_only",
+    "duckduckgo_empty_document",
+    "duckduckgo_html_comment",
+    "duckduckgo_limit_-1",
+    "duckduckgo_limit_0",
+    "duckduckgo_limit_1",
+    "duckduckgo_limit_2",
+    "duckduckgo_malformed",
+    "duckduckgo_marker_0",
+    "duckduckgo_marker_1",
+    "duckduckgo_marker_2",
+    "duckduckgo_marker_3",
+    "duckduckgo_marker_4",
+    "duckduckgo_marker_5",
+    "duckduckgo_marker_6",
+    "duckduckgo_marker_7",
+    "duckduckgo_max_null_empty",
+    "duckduckgo_network",
+    "duckduckgo_plain_text",
+    "duckduckgo_query_review_133",
+    "duckduckgo_query_review_134",
+    "duckduckgo_query_review_135",
+    "duckduckgo_review_comment_entity",
+    "duckduckgo_review_declaration",
+    "duckduckgo_review_declaration_entity_inside",
+    "duckduckgo_review_declaration_entity_space",
+    "duckduckgo_review_declaration_valid_empty",
+    "duckduckgo_review_entity_markup",
+    "duckduckgo_review_entity_nbsp",
+    "duckduckgo_review_entity_space",
+    "duckduckgo_review_entity_text",
+    "duckduckgo_review_processing_instruction",
+    "duckduckgo_review_processing_instruction_text",
+    "duckduckgo_review_unclosed_comment",
+    "duckduckgo_review_utf-32",
+    "duckduckgo_review_utf-32-be",
+    "duckduckgo_review_utf-32-le",
+    "duckduckgo_soft_empty",
+    "duckduckgo_status_403",
+    "duckduckgo_status_429",
+    "duckduckgo_status_500",
+    "duckduckgo_status_503",
+    "duckduckgo_success",
+    "duckduckgo_timeout",
+    "duckduckgo_valid_empty",
+    "duckduckgo_wall",
+    "duckduckgo_whitespace",
+    "google_cdata",
+    "google_charset_ascii",
+    "google_charset_bogus",
+    "google_charset_iso-8859-1",
+    "google_charset_windows-1252",
+    "google_comment_only",
+    "google_comment_prefix_valid",
+    "google_config_max_false",
+    "google_config_max_float",
+    "google_config_max_list",
+    "google_config_max_null",
+    "google_config_max_object",
+    "google_config_max_string",
+    "google_config_max_true",
+    "google_config_query",
+    "google_context_snippet",
+    "google_cp437",
+    "google_deflate",
+    "google_doctype_comment",
+    "google_doctype_only",
+    "google_empty_document",
+    "google_formfeed",
+    "google_gzip",
+    "google_head",
+    "google_html_comment",
+    "google_incomplete_a",
+    "google_incomplete_html",
+    "google_limit_-1",
+    "google_limit_0",
+    "google_limit_1",
+    "google_limit_2",
+    "google_malformed",
+    "google_marker_0",
+    "google_marker_1",
+    "google_marker_2",
+    "google_marker_3",
+    "google_marker_4",
+    "google_marker_5",
+    "google_max_null_empty",
+    "google_nested_markup",
+    "google_network",
+    "google_nul",
+    "google_plain_text",
+    "google_plaintext",
+    "google_positions_dedup",
+    "google_query_review_151",
+    "google_query_review_152",
+    "google_query_review_153",
+    "google_review_comment_entity",
+    "google_review_declaration",
+    "google_review_declaration_entity_inside",
+    "google_review_declaration_entity_space",
+    "google_review_declaration_valid_empty",
+    "google_review_entity_markup",
+    "google_review_entity_nbsp",
+    "google_review_entity_space",
+    "google_review_entity_text",
+    "google_review_processing_instruction",
+    "google_review_processing_instruction_text",
+    "google_review_unclosed_comment",
+    "google_review_utf-32",
+    "google_review_utf-32-be",
+    "google_review_utf-32-le",
+    "google_select",
+    "google_soft_empty",
+    "google_status_403",
+    "google_status_429",
+    "google_status_500",
+    "google_status_503",
+    "google_strip_controls",
+    "google_success",
+    "google_svg",
+    "google_table",
+    "google_template",
+    "google_timeout",
+    "google_utf-16-be",
+    "google_utf-16-le",
+    "google_utf-7",
+    "google_valid_empty",
+    "google_verticaltab",
+    "google_wall",
+    "google_whitespace",
+    "google_xhtml",
+    "google_xml",
+    "image_utf7",
+    "lite_rows_no_table",
+    "lite_table_div",
+    "long_query_ddg-images_16385",
+    "long_query_ddg-images_4097",
+    "long_query_ddg-images_501",
+    "long_query_ddg-text_16385",
+    "long_query_ddg-text_4097",
+    "long_query_ddg-text_501",
+    "long_query_google_16385",
+    "long_query_google_4097",
+    "long_query_google_501",
+    "nul_duckduckgo_images_ascii_all_nul",
+    "nul_duckduckgo_images_ascii_attribute",
+    "nul_duckduckgo_images_ascii_before_declaration",
+    "nul_duckduckgo_images_ascii_comment",
+    "nul_duckduckgo_images_ascii_embedded_text",
+    "nul_duckduckgo_images_ascii_empty",
+    "nul_duckduckgo_images_ascii_inside_declaration",
+    "nul_duckduckgo_images_ascii_inside_encoding",
+    "nul_duckduckgo_images_ascii_leading",
+    "nul_duckduckgo_images_ascii_meta_iso-8859-1",
+    "nul_duckduckgo_images_ascii_meta_not-a-codec",
+    "nul_duckduckgo_images_ascii_meta_utf-16le",
+    "nul_duckduckgo_images_ascii_meta_utf-32le",
+    "nul_duckduckgo_images_ascii_meta_utf-8",
+    "nul_duckduckgo_images_ascii_trailing",
+    "nul_duckduckgo_images_astral_all_nul",
+    "nul_duckduckgo_images_astral_attribute",
+    "nul_duckduckgo_images_astral_before_declaration",
+    "nul_duckduckgo_images_astral_comment",
+    "nul_duckduckgo_images_astral_embedded_text",
+    "nul_duckduckgo_images_astral_empty",
+    "nul_duckduckgo_images_astral_inside_declaration",
+    "nul_duckduckgo_images_astral_inside_encoding",
+    "nul_duckduckgo_images_astral_leading",
+    "nul_duckduckgo_images_astral_meta_iso-8859-1",
+    "nul_duckduckgo_images_astral_meta_not-a-codec",
+    "nul_duckduckgo_images_astral_meta_utf-16le",
+    "nul_duckduckgo_images_astral_meta_utf-32le",
+    "nul_duckduckgo_images_astral_meta_utf-8",
+    "nul_duckduckgo_images_astral_trailing",
+    "nul_duckduckgo_images_bmp_all_nul",
+    "nul_duckduckgo_images_bmp_attribute",
+    "nul_duckduckgo_images_bmp_before_declaration",
+    "nul_duckduckgo_images_bmp_comment",
+    "nul_duckduckgo_images_bmp_embedded_text",
+    "nul_duckduckgo_images_bmp_empty",
+    "nul_duckduckgo_images_bmp_inside_declaration",
+    "nul_duckduckgo_images_bmp_inside_encoding",
+    "nul_duckduckgo_images_bmp_leading",
+    "nul_duckduckgo_images_bmp_meta_iso-8859-1",
+    "nul_duckduckgo_images_bmp_meta_not-a-codec",
+    "nul_duckduckgo_images_bmp_meta_utf-16le",
+    "nul_duckduckgo_images_bmp_meta_utf-32le",
+    "nul_duckduckgo_images_bmp_meta_utf-8",
+    "nul_duckduckgo_images_bmp_trailing",
+    "nul_duckduckgo_images_latin1_all_nul",
+    "nul_duckduckgo_images_latin1_attribute",
+    "nul_duckduckgo_images_latin1_before_declaration",
+    "nul_duckduckgo_images_latin1_comment",
+    "nul_duckduckgo_images_latin1_embedded_text",
+    "nul_duckduckgo_images_latin1_empty",
+    "nul_duckduckgo_images_latin1_inside_declaration",
+    "nul_duckduckgo_images_latin1_inside_encoding",
+    "nul_duckduckgo_images_latin1_leading",
+    "nul_duckduckgo_images_latin1_meta_iso-8859-1",
+    "nul_duckduckgo_images_latin1_meta_not-a-codec",
+    "nul_duckduckgo_images_latin1_meta_utf-16le",
+    "nul_duckduckgo_images_latin1_meta_utf-32le",
+    "nul_duckduckgo_images_latin1_meta_utf-8",
+    "nul_duckduckgo_images_latin1_trailing",
+    "nul_duckduckgo_text_ascii_all_nul",
+    "nul_duckduckgo_text_ascii_attribute",
+    "nul_duckduckgo_text_ascii_before_declaration",
+    "nul_duckduckgo_text_ascii_comment",
+    "nul_duckduckgo_text_ascii_embedded_text",
+    "nul_duckduckgo_text_ascii_empty",
+    "nul_duckduckgo_text_ascii_inside_declaration",
+    "nul_duckduckgo_text_ascii_inside_encoding",
+    "nul_duckduckgo_text_ascii_leading",
+    "nul_duckduckgo_text_ascii_meta_iso-8859-1",
+    "nul_duckduckgo_text_ascii_meta_not-a-codec",
+    "nul_duckduckgo_text_ascii_meta_utf-16le",
+    "nul_duckduckgo_text_ascii_meta_utf-32le",
+    "nul_duckduckgo_text_ascii_meta_utf-8",
+    "nul_duckduckgo_text_ascii_trailing",
+    "nul_duckduckgo_text_astral_all_nul",
+    "nul_duckduckgo_text_astral_attribute",
+    "nul_duckduckgo_text_astral_before_declaration",
+    "nul_duckduckgo_text_astral_comment",
+    "nul_duckduckgo_text_astral_embedded_text",
+    "nul_duckduckgo_text_astral_empty",
+    "nul_duckduckgo_text_astral_inside_declaration",
+    "nul_duckduckgo_text_astral_inside_encoding",
+    "nul_duckduckgo_text_astral_leading",
+    "nul_duckduckgo_text_astral_meta_iso-8859-1",
+    "nul_duckduckgo_text_astral_meta_not-a-codec",
+    "nul_duckduckgo_text_astral_meta_utf-16le",
+    "nul_duckduckgo_text_astral_meta_utf-32le",
+    "nul_duckduckgo_text_astral_meta_utf-8",
+    "nul_duckduckgo_text_astral_trailing",
+    "nul_duckduckgo_text_bmp_all_nul",
+    "nul_duckduckgo_text_bmp_attribute",
+    "nul_duckduckgo_text_bmp_before_declaration",
+    "nul_duckduckgo_text_bmp_comment",
+    "nul_duckduckgo_text_bmp_embedded_text",
+    "nul_duckduckgo_text_bmp_empty",
+    "nul_duckduckgo_text_bmp_inside_declaration",
+    "nul_duckduckgo_text_bmp_inside_encoding",
+    "nul_duckduckgo_text_bmp_leading",
+    "nul_duckduckgo_text_bmp_meta_iso-8859-1",
+    "nul_duckduckgo_text_bmp_meta_not-a-codec",
+    "nul_duckduckgo_text_bmp_meta_utf-16le",
+    "nul_duckduckgo_text_bmp_meta_utf-32le",
+    "nul_duckduckgo_text_bmp_meta_utf-8",
+    "nul_duckduckgo_text_bmp_trailing",
+    "nul_duckduckgo_text_latin1_all_nul",
+    "nul_duckduckgo_text_latin1_attribute",
+    "nul_duckduckgo_text_latin1_before_declaration",
+    "nul_duckduckgo_text_latin1_comment",
+    "nul_duckduckgo_text_latin1_embedded_text",
+    "nul_duckduckgo_text_latin1_empty",
+    "nul_duckduckgo_text_latin1_inside_declaration",
+    "nul_duckduckgo_text_latin1_inside_encoding",
+    "nul_duckduckgo_text_latin1_leading",
+    "nul_duckduckgo_text_latin1_meta_iso-8859-1",
+    "nul_duckduckgo_text_latin1_meta_not-a-codec",
+    "nul_duckduckgo_text_latin1_meta_utf-16le",
+    "nul_duckduckgo_text_latin1_meta_utf-32le",
+    "nul_duckduckgo_text_latin1_meta_utf-8",
+    "nul_duckduckgo_text_latin1_trailing",
+    "nul_expanded_duckduckgo_images_ascii_attribute_name",
+    "nul_expanded_duckduckgo_images_ascii_bogus_comment",
+    "nul_expanded_duckduckgo_images_ascii_cdata",
+    "nul_expanded_duckduckgo_images_ascii_doctype",
+    "nul_expanded_duckduckgo_images_ascii_pi",
+    "nul_expanded_duckduckgo_images_ascii_plaintext",
+    "nul_expanded_duckduckgo_images_ascii_script",
+    "nul_expanded_duckduckgo_images_ascii_style",
+    "nul_expanded_duckduckgo_images_ascii_tag_name",
+    "nul_expanded_duckduckgo_images_ascii_textarea",
+    "nul_expanded_duckduckgo_images_ascii_title",
+    "nul_expanded_duckduckgo_images_ascii_unclosed_comment",
+    "nul_expanded_duckduckgo_images_ascii_unquoted_attribute",
+    "nul_expanded_duckduckgo_images_ascii_xmp",
+    "nul_expanded_duckduckgo_images_astral_attribute_name",
+    "nul_expanded_duckduckgo_images_astral_bogus_comment",
+    "nul_expanded_duckduckgo_images_astral_cdata",
+    "nul_expanded_duckduckgo_images_astral_doctype",
+    "nul_expanded_duckduckgo_images_astral_pi",
+    "nul_expanded_duckduckgo_images_astral_plaintext",
+    "nul_expanded_duckduckgo_images_astral_script",
+    "nul_expanded_duckduckgo_images_astral_style",
+    "nul_expanded_duckduckgo_images_astral_tag_name",
+    "nul_expanded_duckduckgo_images_astral_textarea",
+    "nul_expanded_duckduckgo_images_astral_title",
+    "nul_expanded_duckduckgo_images_astral_unclosed_comment",
+    "nul_expanded_duckduckgo_images_astral_unquoted_attribute",
+    "nul_expanded_duckduckgo_images_astral_xmp",
+    "nul_expanded_duckduckgo_images_bmp_attribute_name",
+    "nul_expanded_duckduckgo_images_bmp_bogus_comment",
+    "nul_expanded_duckduckgo_images_bmp_cdata",
+    "nul_expanded_duckduckgo_images_bmp_doctype",
+    "nul_expanded_duckduckgo_images_bmp_pi",
+    "nul_expanded_duckduckgo_images_bmp_plaintext",
+    "nul_expanded_duckduckgo_images_bmp_script",
+    "nul_expanded_duckduckgo_images_bmp_style",
+    "nul_expanded_duckduckgo_images_bmp_tag_name",
+    "nul_expanded_duckduckgo_images_bmp_textarea",
+    "nul_expanded_duckduckgo_images_bmp_title",
+    "nul_expanded_duckduckgo_images_bmp_unclosed_comment",
+    "nul_expanded_duckduckgo_images_bmp_unquoted_attribute",
+    "nul_expanded_duckduckgo_images_bmp_xmp",
+    "nul_expanded_duckduckgo_images_latin1_attribute_name",
+    "nul_expanded_duckduckgo_images_latin1_bogus_comment",
+    "nul_expanded_duckduckgo_images_latin1_cdata",
+    "nul_expanded_duckduckgo_images_latin1_doctype",
+    "nul_expanded_duckduckgo_images_latin1_pi",
+    "nul_expanded_duckduckgo_images_latin1_plaintext",
+    "nul_expanded_duckduckgo_images_latin1_script",
+    "nul_expanded_duckduckgo_images_latin1_style",
+    "nul_expanded_duckduckgo_images_latin1_tag_name",
+    "nul_expanded_duckduckgo_images_latin1_textarea",
+    "nul_expanded_duckduckgo_images_latin1_title",
+    "nul_expanded_duckduckgo_images_latin1_unclosed_comment",
+    "nul_expanded_duckduckgo_images_latin1_unquoted_attribute",
+    "nul_expanded_duckduckgo_images_latin1_xmp",
+    "nul_expanded_duckduckgo_text_ascii_attribute_name",
+    "nul_expanded_duckduckgo_text_ascii_bogus_comment",
+    "nul_expanded_duckduckgo_text_ascii_cdata",
+    "nul_expanded_duckduckgo_text_ascii_doctype",
+    "nul_expanded_duckduckgo_text_ascii_pi",
+    "nul_expanded_duckduckgo_text_ascii_plaintext",
+    "nul_expanded_duckduckgo_text_ascii_script",
+    "nul_expanded_duckduckgo_text_ascii_style",
+    "nul_expanded_duckduckgo_text_ascii_tag_name",
+    "nul_expanded_duckduckgo_text_ascii_textarea",
+    "nul_expanded_duckduckgo_text_ascii_title",
+    "nul_expanded_duckduckgo_text_ascii_unclosed_comment",
+    "nul_expanded_duckduckgo_text_ascii_unquoted_attribute",
+    "nul_expanded_duckduckgo_text_ascii_xmp",
+    "nul_expanded_duckduckgo_text_astral_attribute_name",
+    "nul_expanded_duckduckgo_text_astral_bogus_comment",
+    "nul_expanded_duckduckgo_text_astral_cdata",
+    "nul_expanded_duckduckgo_text_astral_doctype",
+    "nul_expanded_duckduckgo_text_astral_pi",
+    "nul_expanded_duckduckgo_text_astral_plaintext",
+    "nul_expanded_duckduckgo_text_astral_script",
+    "nul_expanded_duckduckgo_text_astral_style",
+    "nul_expanded_duckduckgo_text_astral_tag_name",
+    "nul_expanded_duckduckgo_text_astral_textarea",
+    "nul_expanded_duckduckgo_text_astral_title",
+    "nul_expanded_duckduckgo_text_astral_unclosed_comment",
+    "nul_expanded_duckduckgo_text_astral_unquoted_attribute",
+    "nul_expanded_duckduckgo_text_astral_xmp",
+    "nul_expanded_duckduckgo_text_bmp_attribute_name",
+    "nul_expanded_duckduckgo_text_bmp_bogus_comment",
+    "nul_expanded_duckduckgo_text_bmp_cdata",
+    "nul_expanded_duckduckgo_text_bmp_doctype",
+    "nul_expanded_duckduckgo_text_bmp_pi",
+    "nul_expanded_duckduckgo_text_bmp_plaintext",
+    "nul_expanded_duckduckgo_text_bmp_script",
+    "nul_expanded_duckduckgo_text_bmp_style",
+    "nul_expanded_duckduckgo_text_bmp_tag_name",
+    "nul_expanded_duckduckgo_text_bmp_textarea",
+    "nul_expanded_duckduckgo_text_bmp_title",
+    "nul_expanded_duckduckgo_text_bmp_unclosed_comment",
+    "nul_expanded_duckduckgo_text_bmp_unquoted_attribute",
+    "nul_expanded_duckduckgo_text_bmp_xmp",
+    "nul_expanded_duckduckgo_text_latin1_attribute_name",
+    "nul_expanded_duckduckgo_text_latin1_bogus_comment",
+    "nul_expanded_duckduckgo_text_latin1_cdata",
+    "nul_expanded_duckduckgo_text_latin1_doctype",
+    "nul_expanded_duckduckgo_text_latin1_pi",
+    "nul_expanded_duckduckgo_text_latin1_plaintext",
+    "nul_expanded_duckduckgo_text_latin1_script",
+    "nul_expanded_duckduckgo_text_latin1_style",
+    "nul_expanded_duckduckgo_text_latin1_tag_name",
+    "nul_expanded_duckduckgo_text_latin1_textarea",
+    "nul_expanded_duckduckgo_text_latin1_title",
+    "nul_expanded_duckduckgo_text_latin1_unclosed_comment",
+    "nul_expanded_duckduckgo_text_latin1_unquoted_attribute",
+    "nul_expanded_duckduckgo_text_latin1_xmp",
+    "nul_expanded_google_text_ascii_attribute_name",
+    "nul_expanded_google_text_ascii_bogus_comment",
+    "nul_expanded_google_text_ascii_cdata",
+    "nul_expanded_google_text_ascii_doctype",
+    "nul_expanded_google_text_ascii_pi",
+    "nul_expanded_google_text_ascii_plaintext",
+    "nul_expanded_google_text_ascii_script",
+    "nul_expanded_google_text_ascii_style",
+    "nul_expanded_google_text_ascii_tag_name",
+    "nul_expanded_google_text_ascii_textarea",
+    "nul_expanded_google_text_ascii_title",
+    "nul_expanded_google_text_ascii_unclosed_comment",
+    "nul_expanded_google_text_ascii_unquoted_attribute",
+    "nul_expanded_google_text_ascii_xmp",
+    "nul_expanded_google_text_astral_attribute_name",
+    "nul_expanded_google_text_astral_bogus_comment",
+    "nul_expanded_google_text_astral_cdata",
+    "nul_expanded_google_text_astral_doctype",
+    "nul_expanded_google_text_astral_pi",
+    "nul_expanded_google_text_astral_plaintext",
+    "nul_expanded_google_text_astral_script",
+    "nul_expanded_google_text_astral_style",
+    "nul_expanded_google_text_astral_tag_name",
+    "nul_expanded_google_text_astral_textarea",
+    "nul_expanded_google_text_astral_title",
+    "nul_expanded_google_text_astral_unclosed_comment",
+    "nul_expanded_google_text_astral_unquoted_attribute",
+    "nul_expanded_google_text_astral_xmp",
+    "nul_expanded_google_text_bmp_attribute_name",
+    "nul_expanded_google_text_bmp_bogus_comment",
+    "nul_expanded_google_text_bmp_cdata",
+    "nul_expanded_google_text_bmp_doctype",
+    "nul_expanded_google_text_bmp_pi",
+    "nul_expanded_google_text_bmp_plaintext",
+    "nul_expanded_google_text_bmp_script",
+    "nul_expanded_google_text_bmp_style",
+    "nul_expanded_google_text_bmp_tag_name",
+    "nul_expanded_google_text_bmp_textarea",
+    "nul_expanded_google_text_bmp_title",
+    "nul_expanded_google_text_bmp_unclosed_comment",
+    "nul_expanded_google_text_bmp_unquoted_attribute",
+    "nul_expanded_google_text_bmp_xmp",
+    "nul_expanded_google_text_latin1_attribute_name",
+    "nul_expanded_google_text_latin1_bogus_comment",
+    "nul_expanded_google_text_latin1_cdata",
+    "nul_expanded_google_text_latin1_doctype",
+    "nul_expanded_google_text_latin1_pi",
+    "nul_expanded_google_text_latin1_plaintext",
+    "nul_expanded_google_text_latin1_script",
+    "nul_expanded_google_text_latin1_style",
+    "nul_expanded_google_text_latin1_tag_name",
+    "nul_expanded_google_text_latin1_textarea",
+    "nul_expanded_google_text_latin1_title",
+    "nul_expanded_google_text_latin1_unclosed_comment",
+    "nul_expanded_google_text_latin1_unquoted_attribute",
+    "nul_expanded_google_text_latin1_xmp",
+    "nul_google_text_ascii_all_nul",
+    "nul_google_text_ascii_attribute",
+    "nul_google_text_ascii_before_declaration",
+    "nul_google_text_ascii_comment",
+    "nul_google_text_ascii_embedded_text",
+    "nul_google_text_ascii_empty",
+    "nul_google_text_ascii_inside_declaration",
+    "nul_google_text_ascii_inside_encoding",
+    "nul_google_text_ascii_leading",
+    "nul_google_text_ascii_meta_iso-8859-1",
+    "nul_google_text_ascii_meta_not-a-codec",
+    "nul_google_text_ascii_meta_utf-16le",
+    "nul_google_text_ascii_meta_utf-32le",
+    "nul_google_text_ascii_meta_utf-8",
+    "nul_google_text_ascii_trailing",
+    "nul_google_text_astral_all_nul",
+    "nul_google_text_astral_attribute",
+    "nul_google_text_astral_before_declaration",
+    "nul_google_text_astral_comment",
+    "nul_google_text_astral_embedded_text",
+    "nul_google_text_astral_empty",
+    "nul_google_text_astral_inside_declaration",
+    "nul_google_text_astral_inside_encoding",
+    "nul_google_text_astral_leading",
+    "nul_google_text_astral_meta_iso-8859-1",
+    "nul_google_text_astral_meta_not-a-codec",
+    "nul_google_text_astral_meta_utf-16le",
+    "nul_google_text_astral_meta_utf-32le",
+    "nul_google_text_astral_meta_utf-8",
+    "nul_google_text_astral_trailing",
+    "nul_google_text_bmp_all_nul",
+    "nul_google_text_bmp_attribute",
+    "nul_google_text_bmp_before_declaration",
+    "nul_google_text_bmp_comment",
+    "nul_google_text_bmp_embedded_text",
+    "nul_google_text_bmp_empty",
+    "nul_google_text_bmp_inside_declaration",
+    "nul_google_text_bmp_inside_encoding",
+    "nul_google_text_bmp_leading",
+    "nul_google_text_bmp_meta_iso-8859-1",
+    "nul_google_text_bmp_meta_not-a-codec",
+    "nul_google_text_bmp_meta_utf-16le",
+    "nul_google_text_bmp_meta_utf-32le",
+    "nul_google_text_bmp_meta_utf-8",
+    "nul_google_text_bmp_trailing",
+    "nul_google_text_latin1_all_nul",
+    "nul_google_text_latin1_attribute",
+    "nul_google_text_latin1_before_declaration",
+    "nul_google_text_latin1_comment",
+    "nul_google_text_latin1_embedded_text",
+    "nul_google_text_latin1_empty",
+    "nul_google_text_latin1_inside_declaration",
+    "nul_google_text_latin1_inside_encoding",
+    "nul_google_text_latin1_leading",
+    "nul_google_text_latin1_meta_iso-8859-1",
+    "nul_google_text_latin1_meta_not-a-codec",
+    "nul_google_text_latin1_meta_utf-16le",
+    "nul_google_text_latin1_meta_utf-32le",
+    "nul_google_text_latin1_meta_utf-8",
+    "nul_google_text_latin1_trailing",
+    "surrogate_punycode_image_alt_high",
+    "surrogate_punycode_image_alt_high_astral",
+    "surrogate_punycode_isolated_high",
+    "surrogate_punycode_isolated_low",
+    "surrogate_punycode_isolated_pair",
+    "surrogate_punycode_title_high",
+    "surrogate_punycode_title_high_astral",
+    "surrogate_punycode_title_high_bmp",
+    "surrogate_punycode_title_low",
+    "surrogate_punycode_title_pair",
+    "surrogate_punycode_url_high",
+    "surrogate_raw_unicode_escape_image_alt_high",
+    "surrogate_raw_unicode_escape_image_alt_high_astral",
+    "surrogate_raw_unicode_escape_isolated_high",
+    "surrogate_raw_unicode_escape_isolated_low",
+    "surrogate_raw_unicode_escape_isolated_pair",
+    "surrogate_raw_unicode_escape_title_high",
+    "surrogate_raw_unicode_escape_title_high_astral",
+    "surrogate_raw_unicode_escape_title_high_bmp",
+    "surrogate_raw_unicode_escape_title_low",
+    "surrogate_raw_unicode_escape_title_pair",
+    "surrogate_raw_unicode_escape_url_high",
+    "surrogate_unicode_escape_image_alt_high",
+    "surrogate_unicode_escape_image_alt_high_astral",
+    "surrogate_unicode_escape_isolated_high",
+    "surrogate_unicode_escape_isolated_low",
+    "surrogate_unicode_escape_isolated_pair",
+    "surrogate_unicode_escape_title_high",
+    "surrogate_unicode_escape_title_high_astral",
+    "surrogate_unicode_escape_title_high_bmp",
+    "surrogate_unicode_escape_title_low",
+    "surrogate_unicode_escape_title_pair",
+    "surrogate_unicode_escape_url_high",
+    "surrogate_utf-7_image_alt_high",
+    "surrogate_utf-7_image_alt_high_astral",
+    "surrogate_utf-7_isolated_high",
+    "surrogate_utf-7_isolated_low",
+    "surrogate_utf-7_isolated_pair",
+    "surrogate_utf-7_title_high",
+    "surrogate_utf-7_title_high_astral",
+    "surrogate_utf-7_title_high_bmp",
+    "surrogate_utf-7_title_low",
+    "surrogate_utf-7_title_pair",
+    "surrogate_utf-7_url_high",
+    "charset_pipeline_duckduckgo_quoted",
+    "charset_pipeline_duckduckgo_extended",
+    "charset_pipeline_duckduckgo_continued",
+    "charset_pipeline_duckduckgo_mixed_case",
+    "charset_pipeline_duckduckgo_duplicate_first",
+    "charset_pipeline_duckduckgo_duplicate_reverse",
+    "charset_pipeline_duckduckgo_param_duplicate",
+    "charset_pipeline_duckduckgo_unknown",
+    "charset_pipeline_duckduckgo_module_dotted",
+    "charset_pipeline_duckduckgo_strict_fallback",
+    "charset_pipeline_duckduckgo_nonascii_parameter",
+    "charset_pipeline_duckduckgo_empty",
+    "charset_pipeline_duckduckgo_integer_limit",
+    "charset_pipeline_google_quoted",
+    "charset_pipeline_google_extended",
+    "charset_pipeline_google_continued",
+    "charset_pipeline_google_mixed_case",
+    "charset_pipeline_google_duplicate_first",
+    "charset_pipeline_google_duplicate_reverse",
+    "charset_pipeline_google_param_duplicate",
+    "charset_pipeline_google_unknown",
+    "charset_pipeline_google_module_dotted",
+    "charset_pipeline_google_strict_fallback",
+    "charset_pipeline_google_nonascii_parameter",
+    "charset_pipeline_google_empty",
+    "charset_pipeline_google_integer_limit"
+  ],
+  "inherited_transport_gate": "F08",
+  "oracle_retirement": {
+    "path": "docs/rust-rewrite/a05/oracle/export.py",
+    "owner": "G08",
+    "kind": "temporary isolated offline source oracle; never called by native gates"
+  },
+  "review_corpus_sha256": "63bb5265fbc7e2228b121d44823a476b544a1968bbfd823791f50cdad515e81e",
+  "review_findings": [
+    {
+      "source_review": "/private/tmp/a05-independent-full-review.md",
+      "native_test": "source_corpus_complete_outcomes_and_requests",
+      "corpus_cases": [
+        "ddg_context_result",
+        "ddg_context_image_link",
+        "ddg_context_image_src",
+        "ddg_context_snippet",
+        "ddg_context_url",
+        "google_context_snippet",
+        "duckduckgo_review_declaration",
+        "duckduckgo_review_processing_instruction",
+        "duckduckgo_review_unclosed_comment",
+        "duckduckgo_review_declaration_valid_empty",
+        "duckduckgo_review_processing_instruction_text",
+        "duckduckgo_review_comment_entity",
+        "duckduckgo_review_entity_text",
+        "duckduckgo_review_entity_space",
+        "duckduckgo_review_entity_nbsp",
+        "duckduckgo_review_entity_markup",
+        "duckduckgo_review_declaration_entity_space",
+        "duckduckgo_review_declaration_entity_inside",
+        "duckduckgo_query_review_133",
+        "duckduckgo_query_review_134",
+        "duckduckgo_query_review_135",
+        "duckduckgo_review_utf-32",
+        "duckduckgo_review_utf-32-le",
+        "duckduckgo_review_utf-32-be",
+        "google_review_declaration",
+        "google_review_processing_instruction",
+        "google_review_unclosed_comment",
+        "google_review_declaration_valid_empty",
+        "google_review_processing_instruction_text",
+        "google_review_comment_entity",
+        "google_review_entity_text",
+        "google_review_entity_space",
+        "google_review_entity_nbsp",
+        "google_review_entity_markup",
+        "google_review_declaration_entity_space",
+        "google_review_declaration_entity_inside",
+        "google_query_review_151",
+        "google_query_review_152",
+        "google_query_review_153",
+        "google_review_utf-32",
+        "google_review_utf-32-le",
+        "google_review_utf-32-be",
+        "ddg_image_query_encoding"
+      ],
+      "disposition": "Append-only actual-source full-outcome/request captures for context-inclusive CSS, declaration/PI/comment classification, Python request encoding, UTF32 decoding and nearby valid cases."
+    }
+  ],
+  "review_2_corpus_sha256": "fa247104d9829f24ec5d3ddd62c1c47cfb640e9dedd5e7edd8823fc4900302d2",
+  "review_2_status": "mandatory replay; unresolved parser/decoder mismatches remain",
+  "unicode_boundary_corpus_sha256": "69e4594300a116e547a3eeca1b98a47a3f57dd3eade381bf083c1c7c57e97b4c",
+  "codec_evidence": [
+    {
+      "path": "crates/ssx-source-codecs/CHANGES",
+      "sha256": "38dbac0f19d8394fc45cba9f2cad9f586bd69577e12f65cc3843ab73322addb6"
+    },
+    {
+      "path": "crates/ssx-source-codecs/CJK-MAPPING-NOTICES.txt",
+      "sha256": "2aa198773a616eafb200a17d6cf1070093aa51d87cd2f503841940fba536c804"
+    },
+    {
+      "path": "crates/ssx-source-codecs/LICENSE-ICU-DATA",
+      "sha256": "f72db45707e93c90c4bf400edfa5d38ce44fe692789e385548e627459c1bf6c9"
+    },
+    {
+      "path": "crates/ssx-source-codecs/LICENSE-PYTHON",
+      "sha256": "b0e25a78cffb43f4d92de8b61ccfa1f1f98ecbc22330b54b5251e7b6ba010231"
+    },
+    {
+      "path": "crates/ssx-source-codecs/LICENSE-UNICODE",
+      "sha256": "e7a93b009565cfce55919a381437ac4db883e9da2126fa28b91d12732bc53d96"
+    },
+    {
+      "path": "crates/ssx-source-codecs/LICENSE-WHATWG",
+      "sha256": "85dc6f5ccb57a6fe8c33d158f9fc8fc7ee5655a5d3db2cdd131c6a3d0f48a864"
+    },
+    {
+      "path": "crates/ssx-source-codecs/MAPPING-SOURCE-NOTICES.txt",
+      "sha256": "9c4513edac4afbe1c2f462c29a059b51c558ea1f215e35321b088c61fc7755ff"
+    },
+    {
+      "path": "crates/ssx-source-codecs/MAPPING-UPSTREAM-NOTICES.txt",
+      "sha256": "72578f1999953b73be6145b872eacad1f6d9477591bb85edcf225d3ee0acbc54"
+    },
+    {
+      "path": "crates/ssx-source-codecs/MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "sha256": "606bfddb61c9d0c3a2f88d4172bf4d5fa8c0d88c535b6bfd558484cb40bc076d"
+    },
+    {
+      "path": "crates/ssx-source-codecs/PYTHON-SOURCE-NOTICES.txt",
+      "sha256": "eef8248191b178ab558bb4a2832afe9b2d452b30ed26f9ec7a107f8868b0b996"
+    },
+    {
+      "path": "crates/ssx-source-codecs/attribution.json",
+      "sha256": "b6f8eff7edad7cb1b85c733bd0e55c0b346a58cbabfe4d26fbc9bef412091342"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/hkscs/icu-java-Big5-1.3_P.xml",
+      "sha256": "6cdaa4f545baf91372ce0a063b5751fc222a9dde2d3bcc87bffd08f7e5a85de6"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/hkscs/manifest.json",
+      "sha256": "20ce5df28fb7e82d07865f8c30add63f151ea051641dba4a863e50a8e38b22e2"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/hkscs/source-validity-only.bin",
+      "sha256": "9109699c47243cbcd085314c5e7c2bb81646f2d3397375a35a52fcc62533381b"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/hkscs/whatwg-index-big5.txt",
+      "sha256": "08e24270c8e95d998c994c03f907e972480dc01f58743e078654cc466203c8ff"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/mapping-source-chain.json",
+      "sha256": "8702a41c7d29ba34abcd09522695f312e3ee26053fb33933d0c00cd29e2f7607"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/singlebyte-icu/hp-roman8.ucm",
+      "sha256": "631da16f5b63ea77a6eee1ece7500f835d61754855aae5d9ec5d0b9e8b15acf7"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/singlebyte-icu/koi8-t.ucm",
+      "sha256": "171d77bcba2343f7e3fecba7bec4da625b079c5f27f24c4e54aae15a66e96802"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/singlebyte-icu/manifest.json",
+      "sha256": "cf13ed5aa39e7bcf3ef916bfeefbd09c31678ac7a109e7fc990b95b421928f1f"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/singlebyte-native-input.json",
+      "sha256": "634dac6dfb1034ba03bf26d437a03315c4b4d38333081ef446c655b393666bde"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/big5.pairs.bin",
+      "sha256": "603594bb1e79752f25b50d72ff5ce0f3ae88a942e8c81a36f82e3daa2b4ca3dc"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/big5.single.bin",
+      "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/big5hkscs.pairs.bin",
+      "sha256": "fc9461564284bac32fca61da4fb07b5b8a144b6943092425f0ac51876d1b344a"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/big5hkscs.single.bin",
+      "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/cp932.pairs.bin",
+      "sha256": "b51e5e105b1e9b777b5fc0ddc080860a8444881ac40533e2b1669d1b414007ac"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/cp932.single.bin",
+      "sha256": "f5f3981063d66814ca8db6f94f7fa973fa4826dbb5ac3fa7ce8e02ea3600f99f"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/cp949.pairs.bin",
+      "sha256": "53d7b966f810d955efb6cb92f3280126ae412e0688a4e46b444ee662626a95d4"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/cp949.single.bin",
+      "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/cp950.pairs.bin",
+      "sha256": "89af3c2176761d1bb76b8c61fed4877ab467f3b552bcd9c3bc99a28f6139da89"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/cp950.single.bin",
+      "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/euc_jis_2004.pairs.bin",
+      "sha256": "68d20bf66d1aa2f509e9e2b1dc1401a3dd9e1ef7219674a4076cf8ec45f004fc"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/euc_jis_2004.single.bin",
+      "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/euc_jis_2004.triples.bin",
+      "sha256": "57e77b5703e6a040ccd08be4322fbf05f9b35bdfcebfa65819aa95849a9d0d2b"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/euc_jisx0213.pairs.bin",
+      "sha256": "1cc39aebc4c4bf90d9b7e431bdf0a306104437d98a7e3b159c6b28765535c7a8"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/euc_jisx0213.single.bin",
+      "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/euc_jisx0213.triples.bin",
+      "sha256": "8ff036f49e9de9ebdcd8c055528d7df007dec8b116dec50469cb40523664cd87"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/euc_jp.pairs.bin",
+      "sha256": "ff25787a4fd0f23e987023188444cbdeb494ec6985eacaace939afbdc71c12f5"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/euc_jp.single.bin",
+      "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/euc_jp.triples.bin",
+      "sha256": "4bc2f48ecae2307bff49571d531cf45e28da43d3a4886a09bdc0c5902dcb8d2c"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/euc_kr.pairs.bin",
+      "sha256": "4c113fb80dd7ff04e62417887f0d61241083ad47becae4bfab78dc22736157df"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/euc_kr.single.bin",
+      "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/gb18030.pairs.bin",
+      "sha256": "ccc6e1e022d66c88cc16ac18de3d94595095b496d866d30136c2097b100cb566"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/gb18030.single.bin",
+      "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/gb2312.pairs.bin",
+      "sha256": "0c62f0718d021cc5f7d0f9aebe12c62813db620673b17477d00b295ee5c55339"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/gb2312.single.bin",
+      "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/gbk.pairs.bin",
+      "sha256": "5ef8bf4c9643a792ddfc6dc0e6f70fc99453afd8d846a31009dd5f89988572fb"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/gbk.single.bin",
+      "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/johab.pairs.bin",
+      "sha256": "864edf098cefd7e2f6c3eb6ee4e936f315e7c1314c9049cd809dec5d2b73ecc9"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/johab.single.bin",
+      "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/shift_jis.pairs.bin",
+      "sha256": "76cc259c1fd8eb8e39d668d72422a9180e6c533a81ed2967c6202d5c0205c4c0"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/shift_jis.single.bin",
+      "sha256": "29fdf4b03f25fb9cfae0d5ceba9b658497268a7f043d3e13d7a152e9124fca6e"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/shift_jis_2004.pairs.bin",
+      "sha256": "559304f05cf5d6ff468c6169f2222c67d2653f669a6282494d2c3ca2c4f1b927"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/shift_jis_2004.single.bin",
+      "sha256": "dde9ffb93d76fb44b4e6e3c209b021baabb51644934def3c14e7d167790dce5d"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/shift_jisx0213.pairs.bin",
+      "sha256": "59d22cc9f01036288d8640d3ed643df25aea1611ac86b29367500cc428cbfb2b"
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/shift_jisx0213.single.bin",
+      "sha256": "dde9ffb93d76fb44b4e6e3c209b021baabb51644934def3c14e7d167790dce5d"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/big5.source-pairs.bin",
+      "sha256": "e812a2ee2a62abd95028c194e6688225c45109ee9a16d56ecc91fd7abbe6061f"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/big5.source-streams.json",
+      "sha256": "594f3ad7d8b1fd2837e4eb9e6d24f0fa62d6b752023528cf96c4adddcd183db6"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/big5hkscs.source-pairs.bin",
+      "sha256": "1da375a3aa6756ef8dbb804032bc43f9181037c493a4118d684089b239e711a2"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/big5hkscs.source-streams.json",
+      "sha256": "a9a51ad7d825a06b9c2ae9eeae4b190143f6b01eca89469953951ec0070810af"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/cp932.source-pairs.bin",
+      "sha256": "be525c1a938157ea209114f794de4e79591a242177d0cbdcd3b8b46386d21dc3"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/cp932.source-streams.json",
+      "sha256": "857ed988bc60072789e3512f7210515c7a8b658fddee4e71fd3648098bf255b4"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/cp949.source-pairs.bin",
+      "sha256": "31a71fa88ca2e9dd3837dd56b50b4c59770c9779cf01166aa183eee053487f80"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/cp949.source-streams.json",
+      "sha256": "82f8b224782f1ce9ad3c4279db674670461c8c425051ad436716eb69e63b1276"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/cp950.source-pairs.bin",
+      "sha256": "6444109b7c58f71b3c3b1c50f8d06891959e2b694cb3dd268368d0480c945743"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/cp950.source-streams.json",
+      "sha256": "457dde2803fa31209c5662933eaf0660d760766f412fdfd0068d64f13ce72edf"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/euc_jis_2004.source-pairs.bin",
+      "sha256": "211479ab2c0a60512b9fb1c8f704c424d6c569e36118ea344be8f000c33a526b"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/euc_jis_2004.source-streams.json",
+      "sha256": "9c8bc257b866ba743f4b51dc59a0f98a60a825c44e198fb749dd5323590234fa"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/euc_jis_2004.source-triples.bin",
+      "sha256": "2270de649600cb096524fc30415b3e6e0cbdf68ed42653d1df8a26d085343081"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/euc_jisx0213.source-pairs.bin",
+      "sha256": "621b6959265b251242cde6c44d20c68635aec7b85c00c8599a8021660161d3f0"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/euc_jisx0213.source-streams.json",
+      "sha256": "313561aaa398402dd278a7dd711bf89feb44c20c45434b69753e7981072584b9"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/euc_jisx0213.source-triples.bin",
+      "sha256": "689e11c5f17c6b5601a05797e1a76ef467e2a947bc9706a96da9208e60cec518"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/euc_jp.source-pairs.bin",
+      "sha256": "23fba6ab8140220e2677c9d71d058d31c1e9d43b9c2efedaee765d32beb11ba7"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/euc_jp.source-streams.json",
+      "sha256": "0de5eba3cae265ad48a70072bbaf2f79ac20838b57f41787981d01e3e44edd03"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/euc_jp.source-triples.bin",
+      "sha256": "039f22d4e03fa294a9d00cbfa7184ab56effd7d67ac3b8af236a21d5487052e8"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/euc_kr.source-pairs.bin",
+      "sha256": "82d437db5c65d183917b724ab04b1ee3f80130ed640e149e16e0ce3cea16d3f6"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/euc_kr.source-streams.json",
+      "sha256": "89a0d2f7588b00558f3d05c767a6fb1d63bfa8c65ea5cf50c404008f9abeb36a"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/gb18030.source-pairs.bin",
+      "sha256": "2686bc1b1bed5649e6fca7b11a928d4d564355785f92ddf139ddd1c6258600e5"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/gb18030.source-streams.json",
+      "sha256": "2f6a4ee95ba03010baaf2947a36845b300625847059f7da997de22f24b9e5ea4"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/gb2312.source-pairs.bin",
+      "sha256": "21bba014d012e268395ac0dfb860a6c1cbb56eea5215e5690d596d83958cf255"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/gb2312.source-streams.json",
+      "sha256": "a1eeb6917d40e4347b155a7f99af9225e663f4125d7f24c0b4b7ec2b0b05ff3e"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/gbk.source-pairs.bin",
+      "sha256": "9980831a34dc913b26e479b39e2b8ebf9ef7cfab5bdfaf5342d4b52d2dc4ecaf"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/gbk.source-streams.json",
+      "sha256": "9bd946eca0605f2400037020ff80cab38125e2b51720f609151d910a14ba4eaf"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/johab.source-pairs.bin",
+      "sha256": "72b73de329b80038c80d8f644e5475f10880cf00d38cba6ebdd3afb19518f211"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/johab.source-streams.json",
+      "sha256": "e399427be8081e205c3806044f73a4ed899dd9a5f94b5a481c2f688fd7f61b63"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/shift_jis.source-pairs.bin",
+      "sha256": "7fd1f65971c90e228c328457c74a53c35efb1deec006cca0aac37ecaec3ad8f8"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/shift_jis.source-streams.json",
+      "sha256": "836a5d293a87b8f8d33f4efe4b6b81df8798e150f37ec49b7dc88bc2911a0e25"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/shift_jis_2004.source-pairs.bin",
+      "sha256": "1d8b8d4ef8ca14533c6106b2d74a1c9b688563dbc7b38ddad5022f9919449838"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/shift_jis_2004.source-streams.json",
+      "sha256": "1ca70c1fe531df835592f1a1adba0913ac07ac44b92c5855d4c091d830623c91"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/shift_jisx0213.source-pairs.bin",
+      "sha256": "2fc128f633ae10fa1f177fa3b6e30e6a56a95db201b378ecef11d5de5689b6b1"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/shift_jisx0213.source-streams.json",
+      "sha256": "c178e46a381969d4ecd02e61e9c1dca469c7e7dc6c49c1a116c51d2fec58bba7"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/euc-kr-source.json",
+      "sha256": "067a4e98f0cda8a2b96305bba94eb8d18a7b80055254620fa45203537bf94dcd"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/gb18030-4byte-source.zlib",
+      "sha256": "00af70299a8d75e1c620ef80bb86d25dedb04b9b246d5ad81fc55e586367c117"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/hz-source.zlib",
+      "sha256": "4d98ac0e4c1d1667ca374e4318b4de6fb649bb2fa863195365f680e2b4b833a2"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp-0.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp-0.zlib",
+      "sha256": "f2bc8d3ddc6191b6d3b2b3392b5711a5294a89193631fd6f670754a7945e827a"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp-1.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp-1.zlib",
+      "sha256": "11947ae70a06ca3241e7d671f010904033cf78a55e342040f4e0f1960c1d2499"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp-2.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp-2.zlib",
+      "sha256": "11947ae70a06ca3241e7d671f010904033cf78a55e342040f4e0f1960c1d2499"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp-3.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp-3.zlib",
+      "sha256": "8673f3c7d7e6221ef01bcc8235fc8d9c2a629bdf264296887353c5f28a4b3534"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_1-0.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_1-0.zlib",
+      "sha256": "f2bc8d3ddc6191b6d3b2b3392b5711a5294a89193631fd6f670754a7945e827a"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_1-1.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_1-1.zlib",
+      "sha256": "11947ae70a06ca3241e7d671f010904033cf78a55e342040f4e0f1960c1d2499"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_1-2.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_1-2.zlib",
+      "sha256": "11947ae70a06ca3241e7d671f010904033cf78a55e342040f4e0f1960c1d2499"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_1-3.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_1-3.zlib",
+      "sha256": "8673f3c7d7e6221ef01bcc8235fc8d9c2a629bdf264296887353c5f28a4b3534"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_1-4.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_1-4.zlib",
+      "sha256": "5cf592f78e9308beae38089254921f5fc02cc53d9f830fc6ba281e21e2b85c6e"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-0.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-0.zlib",
+      "sha256": "ce30e57c40ffba0e937a2b92749059929bdfc8e0c7744f4d32d8fc60c93103ff"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-1.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-1.zlib",
+      "sha256": "4a741ca1d6dce15466679e837b2a0c084b07d1ea02e9b3ce2dd9a9e1b90d9b2d"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-10.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-10.zlib",
+      "sha256": "5ff8dc5b08132f15e6d24e94f9ca4d202885cdce5cb80bd834d1c7c3dce23bee"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-11.errors.json",
+      "sha256": "ffe66d62c46f892631704842c96c7b2205e93f91ea15c353cb293bf3b25e2fc9"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-11.zlib",
+      "sha256": "fbadbdfa0a47be5c20cc7d16626130d34f3f0784b7fe7e8a9e03bd759781524f"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-2.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-2.zlib",
+      "sha256": "4a741ca1d6dce15466679e837b2a0c084b07d1ea02e9b3ce2dd9a9e1b90d9b2d"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-3.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-3.zlib",
+      "sha256": "fa9ac8f2085c4bd2c7053d11b9d1b7f0cad59886baeb7ec3c80f7c43fd384951"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-4.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-4.zlib",
+      "sha256": "dfdb90f6d141e3bb02cda779a254dbaacfdf49a93fce223e74e7b3efa4c4f685"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-5.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-5.zlib",
+      "sha256": "611ead2d9629d44d87cd0e0a1cc03015dc66fe57be7e3d458366fdb8ff7a363d"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-6.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-6.zlib",
+      "sha256": "b06d01c20e8dbec80ded2a79cf3cf9aeb734e37c197c671785cab56fe56e2228"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-7.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-7.zlib",
+      "sha256": "71824b21db609513f99387788b38e2c9380d7cee14bcdc17cace8fa64cbc3332"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-8.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-8.zlib",
+      "sha256": "71824b21db609513f99387788b38e2c9380d7cee14bcdc17cace8fa64cbc3332"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-9.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-9.zlib",
+      "sha256": "5ff8dc5b08132f15e6d24e94f9ca4d202885cdce5cb80bd834d1c7c3dce23bee"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2004-0.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2004-0.zlib",
+      "sha256": "f2bc8d3ddc6191b6d3b2b3392b5711a5294a89193631fd6f670754a7945e827a"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2004-1.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2004-1.zlib",
+      "sha256": "11947ae70a06ca3241e7d671f010904033cf78a55e342040f4e0f1960c1d2499"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2004-2.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2004-2.zlib",
+      "sha256": "65f12dffb5af31be862086d01b6d351761c37043de2df5f43c528811a7a84bd9"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2004-3.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2004-3.zlib",
+      "sha256": "38cc3b85be9a9e5779f5687a77ae96a41ebddd8491acca6cfd2b6f7b20ba9134"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_3-0.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_3-0.zlib",
+      "sha256": "f2bc8d3ddc6191b6d3b2b3392b5711a5294a89193631fd6f670754a7945e827a"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_3-1.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_3-1.zlib",
+      "sha256": "11947ae70a06ca3241e7d671f010904033cf78a55e342040f4e0f1960c1d2499"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_3-2.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_3-2.zlib",
+      "sha256": "0833a728e61006b3006490b4f0bb44e6bd6fcd736090d48c526238a85cef066d"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_3-3.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_3-3.zlib",
+      "sha256": "38cc3b85be9a9e5779f5687a77ae96a41ebddd8491acca6cfd2b6f7b20ba9134"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_ext-0.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_ext-0.zlib",
+      "sha256": "f2bc8d3ddc6191b6d3b2b3392b5711a5294a89193631fd6f670754a7945e827a"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_ext-1.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_ext-1.zlib",
+      "sha256": "11947ae70a06ca3241e7d671f010904033cf78a55e342040f4e0f1960c1d2499"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_ext-2.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_ext-2.zlib",
+      "sha256": "11947ae70a06ca3241e7d671f010904033cf78a55e342040f4e0f1960c1d2499"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_ext-3.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_ext-3.zlib",
+      "sha256": "8673f3c7d7e6221ef01bcc8235fc8d9c2a629bdf264296887353c5f28a4b3534"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_ext-4.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_ext-4.zlib",
+      "sha256": "0183046448d6b420d4d61e509c686b1633b4960a98ff0f763dbf96f07cc5f293"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_ext-5.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_ext-5.zlib",
+      "sha256": "5cf592f78e9308beae38089254921f5fc02cc53d9f830fc6ba281e21e2b85c6e"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_kr-0.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_kr-0.zlib",
+      "sha256": "fc4fd45c298276e670993fcde3bdf8a2899584d65d527e634f00101ac75308e7"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_kr-1.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_kr-1.zlib",
+      "sha256": "fc4fd45c298276e670993fcde3bdf8a2899584d65d527e634f00101ac75308e7"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_kr-2.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_kr-2.zlib",
+      "sha256": "630fc4aff137759373cae9074af7ad638ed298914a230999e47423ad0a23bae7"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_kr-3.errors.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_kr-3.zlib",
+      "sha256": "bf4342acf0fa311c5930ec83aa194e6caa4b5b3346f66492b0d7c71619ac0aab"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/manifest.json",
+      "sha256": "57fe4849a880e6a4c38c74b40e4902c2354766fb2f4c3f93b6fe21de6e0c9f22"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/targeted.json",
+      "sha256": "a826a2e510b754b8ca03ce82024c34c01653d4ff97a8cab7fca1ea9a457fe199"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/lower-ascii-source.json",
+      "sha256": "d5c5c97071b8700213c2c4a078fdde3217f9f706cda9c28e4eeaef65fc071679"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/punycode-source.json",
+      "sha256": "27bf55786beefe0b8545b4bf4585fbfee62b2f4b9c7d8ad9c5c5f64b32dc925c"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/raw-unicode-escape-source.json",
+      "sha256": "63425d0a87921e1a64af7a1e30472f03264d30495c08fcf8c6b95910f53c675d"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/singlebyte-source.json",
+      "sha256": "8328ee11495ff728c0bcc0a3355faeb0ef2c94d378ce3d9e884bae50219457fb"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/unicode-escape-source.json",
+      "sha256": "b707048a3943128a985ef76bddada3ac153d7c75b3b6208200d01a0dde70ea45"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/unicode-name-source.json",
+      "sha256": "d4af24adcbe1aba41380e983ab29f549178b98df58926c5b2dedad9e53735f66"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/unicode/manifest.json",
+      "sha256": "dacbe890c339fd7564268d97b2304e67f0900772420b3ec946f21944d599d5a6"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/unicode/utf-16-be.json.zlib",
+      "sha256": "a57c3a013f052c7740855bc0e6d33e1941ffe16ef0ac49e9a6f47460f4ecfa91"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/unicode/utf-16-le.json.zlib",
+      "sha256": "cdcbd54d51785868c406467a3d484de1226132f08b9a39b3d94982ee9538ed59"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/unicode/utf-16.json.zlib",
+      "sha256": "215e4975f002172136e9f88bad955690b005580d307fc3f632e7e9495fab92fd"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/unicode/utf-32-be.json.zlib",
+      "sha256": "2eb3fddeb7bb7abfc30add605bdaaaf762ea7da5ba1e504dc0a8de2855b5ba0e"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/unicode/utf-32-le.json.zlib",
+      "sha256": "0af2ea7e373f03abc58671d793f3bdf9ecf817e7676055709e7123691c798ff6"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/unicode/utf-32.json.zlib",
+      "sha256": "91a70f4dab80be58834981ced03f9b7d40df467868fee4e445abfb6e3cebf0a7"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/unicode/utf-7.json.zlib",
+      "sha256": "54452e9d49add51279ce05fa0dc523dc96469bcd75a69c7b4b2924a06914b044"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/unicode/utf-8-sig.json.zlib",
+      "sha256": "b840eb5e95cc4c5204af50f9cafbc59c17a7d2d6a6b127a26ea669f010b8ca9c"
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/unicode/utf-8.json.zlib",
+      "sha256": "5d760463dbc4ac62d9aa73854a2f539fa9ae6e62d9cc8a1e312b58c04a84810a"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/source-codec-policy.json",
+      "sha256": "4951aac7dc41d9a92b1d6fdeaf6d1888307ff7fc84f878d9c0dbab216215fcf6"
+    },
+    {
+      "path": "docs/rust-rewrite/a06/source-charset.json",
+      "sha256": "27381a35e734546bb7ea894309d44e16e7e20103b526a5f25151688f0edc0a34"
+    },
+    {
+      "path": "docs/rust-rewrite/a06/source-charset-boundaries.json",
+      "sha256": "9af6da5d3834564e5b809538b880724fc01a1a8775f19698c42df2a473fa604e"
+    }
+  ],
+  "codec_native_tests": [
+    "all_byte_pairs_in_every_iso2022_designated_state_match_complete_source",
+    "all_euc_jp_three_byte_inputs_match_actual_source",
+    "all_euc_kr_makeup_syllables_and_malformed_controls_match_source",
+    "all_two_byte_inputs_and_full_streams_match_actual_source",
+    "borrowed_search_rejects_short_scratch_non_ascii_and_deadline_without_ownership_escape",
+    "bounded::tests::ascii_collector_moves_output_charge_and_propagates_late_deadline",
+    "bounded::tests::ascii_collector_tracks_insertions_after_non_ascii_and_releases_storage",
+    "bounded::tests::ascii_result_owns_charge_and_resource_failure_is_not_unicode_failure",
+    "bounded::tests::insertion_preserves_fixed_capacity_charge_and_validates_before_shift",
+    "bounded::tests::preallocation_shortage_overflow_invalid_points_and_early_drop_fail_closed",
+    "bounded::tests::returned_codepoints_keep_exact_capacity_charge_and_preserve_surrogates",
+    "bounded_http::tests::charged_aliases_match_all_retained_source_registry_observations",
+    "bounded_parameter::tests::all_2574_complete_source_strict_outcomes_and_2255_overflow_precedence",
+    "bounded_parameter::tests::empty_nul_lookup_resource_and_deadline_are_distinct",
+    "cjk::all_euc_jp_three_byte_inputs_match_actual_source",
+    "cjk::all_euc_kr_makeup_syllables_and_malformed_controls_match_source",
+    "cjk::all_two_byte_inputs_and_full_streams_match_actual_source",
+    "cjk::every_formed_gb18030_four_byte_input_matches_complete_source_output",
+    "complete117_codec_policy_aliases_and_applicability_use_charged_dispatch",
+    "complete_httpx_unicode_malformed_bmp_and_truncation_source_vectors",
+    "complete_punycode_source_vectors",
+    "complete_raw_unicode_escape_source_vectors",
+    "complete_source_codec_policy_and_applicability",
+    "complete_unicode_escape_source_vectors",
+    "doublebyte::output_failure_tests::emission_failure_is_typed_before_later_source_error",
+    "doublebyte::strict_tests::every_single_and_pair_strict_outcome_matches_actual_source_and_complete_valid_text",
+    "escape::complete_unicode_escape_source_vectors",
+    "every_byte_pair_in_both_hz_states_matches_complete_source_output",
+    "every_captured_single_byte_and_alias_matches_complete_source_output",
+    "every_formed_gb18030_four_byte_input_matches_complete_source_output",
+    "every_source_name_alias_sequence_case_and_range_control",
+    "hz::bounded_tests::charged_hz_matches_all_source_state_pairs_and_releases_output",
+    "hz::every_byte_pair_in_both_hz_states_matches_complete_source_output",
+    "idna::tests::charged_nameprep_mid_growth_failure_and_deadline_release_all_scratch",
+    "idna::tests::charged_nfkc_matches_all_84960_official_sequences_and_releases_output",
+    "idna::tests::native_nfkc_matches_every_official_unicode_3_2_sequence",
+    "idna::tests::strict_idna_all_source_parameters_preserve_unicode_failure_and_ascii_outcome",
+    "idna::tests::strict_idna_complete_source_ace_bytes_and_outcomes_for_every_codepoint",
+    "iso2022::bounded_tests::charged_all_byte_pairs_in_every_iso2022_designated_state_match_complete_source",
+    "iso2022::bounded_tests::charged_iso2022_escape_g2_malformed_and_full_streams_match_source",
+    "iso2022::bounded_tests::output_failure_is_distinct_from_source_runtime_and_unicode_failure",
+    "iso2022_escape_g2_malformed_and_full_streams_match_source",
+    "iso::all_byte_pairs_in_every_iso2022_designated_state_match_complete_source",
+    "iso::iso2022_escape_g2_malformed_and_full_streams_match_source",
+    "label_alnum::tests::every_unicode_codepoint_matches_actual_source_isalnum_for_codec_labels",
+    "label_alnum::tests::source_alias_normalization_retains_unicode16_separator_and_ignored_letter_semantics",
+    "label_alnum::tests::source_dotted_alias_fallback_preserves_dictionary_and_module_precedence",
+    "names::every_source_name_alias_sequence_case_and_range_control",
+    "punycode::bounded_tests::charged_replacement_and_strict_results_match_complete_original_source",
+    "punycode::bounded_tests::every_adaptation_checkpoint_propagates_deadline_without_leaking_scratch",
+    "punycode::bounded_tests::prefix_source_failure_precedes_output_admission_and_checkpoints_stop_limb_work",
+    "punycode::bounded_tests::scratch_copy_growth_and_output_keep_independent_charges",
+    "punycode::complete_punycode_source_vectors",
+    "raw_escape::complete_raw_unicode_escape_source_vectors",
+    "raw_unicode_escape::bounded_tests::charged_raw_escape_matches_complete_source_vectors_and_preserves_failure_stage",
+    "source_ascii_substring_lowering_preimages_and_complete_controls",
+    "source_error_empty_output_quota_and_deadline_stay_distinct",
+    "strict_parameter::tests::all_iso2022_strict_states_and_targeted_sequences_preserve_complete_outcome_and_precedence",
+    "strict_parameter::tests::all_non_idna_strict_modes_match_complete_source_text_and_error_outcomes",
+    "strict_parameter::tests::all_registered_parameter_codecs_match_complete_source_selector_outcomes",
+    "strict_parameter::tests::all_singlebyte_strict_validity_bits_match_complete_actual_source",
+    "strict_parameter::tests::both_hz_strict_states_match_all_source_pairs_and_complete_valid_text",
+    "strict_parameter::tests::strict_punycode_and_idna_preserve_overflow_offsets_caps_and_first_error_precedence",
+    "strict_parameter::tests::strict_utf7_escape_and_name_vectors_match_complete_source_mode_and_valid_text",
+    "typed_http_facade_retains_source_empty_unknown_rejection_and_surrogate_semantics",
+    "unicode::bounded_tests::charged_unicode_sink_matches_every_complete_source_vector_without_string_overlap",
+    "unicode::bounded_tests::emission_failure_remains_typed_and_stops_before_later_source_actions",
+    "unicode::complete_httpx_unicode_malformed_bmp_and_truncation_source_vectors",
+    "unicode_escape::bounded_tests::complete_unicode_escape_source_vectors",
+    "unicode_escape::bounded_tests::emission_failure_does_not_become_source_unicode_failure",
+    "unicode_escape::bounded_tests::every_source_name_alias_sequence_case_and_range_control"
+  ],
+  "nul_corpus_sha256": "e2b2f7f7585a4e26b05f7bd915596396299b4305e30d691651af4b98f1c765fa",
+  "nul_expanded_corpus_sha256": "a91ae76db2474398bcc3ffce492a0a36c01c4788287fc9c59890e75453460737",
+  "long_query_corpus_sha256": "7cafe30cb6f30fc045e6212b5680e2ddefd0d2435a7e6e770ec928d1728116d2",
+  "native_unit_tests": [
+    "html_budget::tests::overlap_is_charged_until_owner_drop_and_invalid_limits_fail_closed"
+  ],
+  "native_helper_unit_tests": [
+    "adapters::html_helper_tests::actual_bounded_child_quota_and_non_emitting_codec_deadline_cancel_reap",
+    "adapters::html_helper_tests::actual_raw_header_selector_cancellation_retains_lease_until_reap",
+    "adapters::html_helper_tests::actual_rows_worker_quota_deadline_cancel_and_reap",
+    "adapters::html_helper_tests::held_decoder_handoff_deadline_retains_ownership_until_verified_reap",
+    "adapters::html_helper_tests::loopback_cookie_isolation_bootstrap_fallback_and_exact_order",
+    "adapters::html_helper_tests::registered_factories_share_owned_pool_and_await_teardown_after_caller_drop",
+    "adapters::html_helper_tests::typed_helper_terminal_outcomes_preserve_request_counts_feedback_and_reap"
+  ],
+  "helper_scenario_ids": [
+    "duckduckgo/Deadline",
+    "duckduckgo/Resource",
+    "duckduckgo/Shutdown",
+    "duckduckgo/Source",
+    "duckduckgo/Quota",
+    "google/Deadline",
+    "google/Resource",
+    "google/Shutdown",
+    "google/Source",
+    "google/Quota"
+  ],
+  "bounded_cpu_scenario_ids": [
+    "quota",
+    "deadline",
+    "cancel"
+  ],
+  "rows_cpu_scenario_ids": [
+    "quota",
+    "deadline",
+    "cancel"
+  ],
+  "native_html_phase_tests": [
+    "html::bounded_decode::parent_phase_tests::actual_header_worker_composes_all_source_selector_boundaries",
+    "html::bounded_decode::parent_phase_tests::cancellation_during_actual_header_sizing_keeps_owner_until_drop",
+    "html::bounded_decode::parent_phase_tests::cancellation_during_validation_and_projection_releases_owned_phase",
+    "html::charged_flatten::tests::charged_lossy_conversion_matches_all_byte_pairs_and_releases_capacity",
+    "html::charged_flatten::tests::flat_backing_refusal_retains_existing_storage_until_owner_drop",
+    "html::child_rows::tests::charged_redirect_decoder_matches_previous_full_form_semantics",
+    "html::child_rows::tests::charged_text_trims_across_segments_with_python_whitespace_only",
+    "html::child_rows::tests::google_row_and_borrowed_key_capacity_sweep_keeps_full_output_or_resource",
+    "html::child_rows::tests::redirect_resource_failure_is_typed_and_releases_temporary_bytes",
+    "html::decode_wire::tests::asynchronous_validation_preserves_closed_frame_errors_and_deadline",
+    "html::decode_wire::tests::closed_source_diagnostics_resource_deadline_and_validation_expiry_stay_distinct",
+    "html::decode_wire::tests::complete_frame_preserves_surrogates_and_rejects_every_truncation_and_trailing_byte",
+    "html::decode_wire::tests::selector_stage_codes_are_closed_and_tied_to_header_envelope",
+    "html::http_headers::tests::preserves_order_empty_bytes_and_rejects_every_truncation_and_trailing_byte",
+    "html::row_wire::tests::cancellation_checks_cover_encode_full_validation_and_projection",
+    "html::row_wire::tests::complete_rows_roundtrip_preserves_raw_fields_and_explicit_fallback",
+    "html::row_wire::tests::full_frame_validation_rejects_truncation_trailing_tags_counts_and_utf8",
+    "html::row_wire::tests::size_counting_checks_deadline_and_whole_field_work_has_a_frame_bound",
+    "html::row_wire::tests::streaming_legacy_rows_are_byte_identical_to_checked_buffer_encoder",
+    "html::rows_borrowed::tests::cooperative_fields_preserve_split_utf8_and_reject_malformed_complete_frames",
+    "html::rows_borrowed::tests::image_raw_sanitized_and_optional_empty_fields_are_distinct_and_closed",
+    "html::rows_projection::tests::cancellation_during_private_result_projection_releases_frame_and_batch",
+    "html::rows_projection::tests::produced_batch_retains_fields_until_named_handoff_and_refusal_drops_partial_copy",
+    "html::rows_worker::tests::actual_affine_tree_resource_refusal_and_next_worker_success",
+    "html::rows_worker::tests::closed_row_request_preserves_raw_limit_bits_and_rejects_malformed_fields",
+    "html::rows_worker::tests::hostile_sanitizer_workload_cancel_and_deadline_reap_owned_child"
+  ],
+  "native_selector_tests": [
+    "adapters::http_charset::tests::actual_httpx_charset_corpus",
+    "adapters::http_charset::tests::empty_precedes_headers_checkpoint_and_nul",
+    "adapters::http_charset::tests::resource_deadline_and_parameter_errors_are_terminal_and_release",
+    "adapters::http_charset::tests::actual_source_boundaries_preserve_success_and_exact_errors",
+    "adapters::http_charset::tests::every_checkpoint_and_scarce_budget_propagates_without_source_fallback"
+  ],
+  "held_handoff_scenario_ids": [
+    "deadline"
+  ],
+  "charset_pipeline_corpus_sha256": "1d91dfdcf14a1e0d63bdeb0624849e144facaf473c4dae0478ffbe8fa6100d46",
+  "header_cpu_scenario_ids": [
+    "cancel"
+  ],
+  "selector_worker_case_ids": [
+    "boundary.000",
+    "boundary.001",
+    "boundary.002",
+    "boundary.003",
+    "boundary.004",
+    "boundary.005",
+    "boundary.006",
+    "boundary.007",
+    "boundary.008",
+    "boundary.009",
+    "boundary.010",
+    "boundary.011",
+    "boundary.012",
+    "boundary.013",
+    "boundary.014",
+    "boundary.015",
+    "boundary.016",
+    "boundary.017",
+    "boundary.018",
+    "boundary.019",
+    "boundary.020",
+    "boundary.021",
+    "boundary.022",
+    "boundary.023",
+    "boundary.024",
+    "boundary.025",
+    "boundary.026",
+    "boundary.027",
+    "boundary.028",
+    "boundary.029",
+    "boundary.030",
+    "boundary.031",
+    "boundary.032",
+    "boundary.033",
+    "boundary.034",
+    "boundary.035",
+    "boundary.036",
+    "boundary.037",
+    "boundary.038",
+    "boundary.039",
+    "boundary.040",
+    "boundary.041",
+    "boundary.042",
+    "boundary.043",
+    "boundary.044",
+    "boundary.045",
+    "boundary.046",
+    "boundary.047",
+    "boundary.048",
+    "boundary.049",
+    "boundary.050",
+    "boundary.051",
+    "boundary.052",
+    "boundary.053",
+    "boundary.054",
+    "boundary.055",
+    "boundary.056",
+    "boundary.057",
+    "boundary.058",
+    "boundary.059",
+    "boundary.060",
+    "boundary.061",
+    "boundary.062",
+    "boundary.063",
+    "boundary.064",
+    "boundary.065",
+    "boundary.066",
+    "boundary.067",
+    "boundary.068",
+    "boundary.069",
+    "boundary.070",
+    "boundary.071",
+    "boundary.072",
+    "boundary.073",
+    "boundary.074",
+    "boundary.075",
+    "boundary.076",
+    "boundary.077",
+    "boundary.078",
+    "boundary.079",
+    "boundary.080",
+    "boundary.081",
+    "boundary.082",
+    "boundary.083",
+    "boundary.084",
+    "boundary.085",
+    "boundary.086",
+    "boundary.087",
+    "boundary.088",
+    "boundary.089",
+    "boundary.090",
+    "boundary.091",
+    "boundary.092",
+    "boundary.093",
+    "boundary.094",
+    "boundary.095",
+    "boundary.096",
+    "boundary.097",
+    "boundary.098",
+    "boundary.099",
+    "boundary.100",
+    "boundary.101",
+    "boundary.102",
+    "boundary.103",
+    "boundary.104",
+    "boundary.105",
+    "boundary.106",
+    "boundary.107",
+    "boundary.108",
+    "boundary.109",
+    "boundary.110",
+    "boundary.111",
+    "boundary.112",
+    "boundary.113",
+    "boundary.114",
+    "boundary.115",
+    "boundary.116",
+    "boundary.117",
+    "boundary.118",
+    "boundary.119",
+    "boundary.120",
+    "boundary.121",
+    "boundary.122",
+    "boundary.123",
+    "boundary.124",
+    "boundary.125",
+    "boundary.126",
+    "boundary.127",
+    "boundary.128",
+    "boundary.129",
+    "boundary.130",
+    "boundary.131",
+    "boundary.132",
+    "boundary.133",
+    "boundary.134",
+    "boundary.135",
+    "boundary.136",
+    "boundary.137",
+    "boundary.138",
+    "boundary.139",
+    "boundary.140",
+    "boundary.141",
+    "boundary.142",
+    "boundary.143",
+    "boundary.144",
+    "boundary.145",
+    "boundary.146",
+    "boundary.147",
+    "boundary.148",
+    "boundary.149",
+    "boundary.150",
+    "boundary.151",
+    "boundary.152",
+    "boundary.153",
+    "boundary.154",
+    "boundary.155",
+    "boundary.156",
+    "boundary.157",
+    "boundary.158",
+    "boundary.159",
+    "boundary.160",
+    "boundary.161",
+    "boundary.162",
+    "boundary.163",
+    "boundary.164",
+    "boundary.165",
+    "boundary.166",
+    "boundary.167",
+    "boundary.168",
+    "boundary.169",
+    "boundary.170",
+    "boundary.171",
+    "boundary.172",
+    "boundary.173",
+    "boundary.174",
+    "boundary.175",
+    "boundary.176",
+    "boundary.177",
+    "boundary.178"
+  ],
+  "native_header_reader_tests": [
+    "adapters::http_headers::tests::both_drivers_match_all_frozen_httpx_named_header_values",
+    "adapters::http_headers::tests::charged_empty_duplicate_copy_has_repeated_pending_then_cancellation_or_real_deadline",
+    "adapters::http_headers::tests::global_decode_duplicate_empty_and_utf8_chunk_boundaries_are_exact",
+    "adapters::http_headers::tests::output_is_precharged_and_failures_release_exact_capacity"
+  ],
+  "native_process_unit_tests": [
+    "process_pool::cleanup_tests::both_shutdown_waiters_observe_injected_supervisor_panic",
+    "process_pool::cleanup_tests::cancelled_caller_lease_survives_blocked_cleanup_until_real_reap",
+    "process_pool::cleanup_tests::charged_payload_releases_after_write_and_read_failures",
+    "process_pool::cleanup_tests::charged_payload_survives_supervisor_panic_without_false_drain",
+    "process_pool::cleanup_tests::closed_receiver_during_success_delivery_retains_lease_until_reply_drop",
+    "process_pool::cleanup_tests::concurrent_fixtures_with_identical_clock_have_exclusive_identities",
+    "process_pool::cleanup_tests::incomplete_pid_record_is_not_child_readiness",
+    "process_pool::cleanup_tests::missing_direct_helper_returns_spawn_error_and_releases_payload_and_lease",
+    "process_pool::cleanup_tests::missing_request_readiness_releases_gate_before_bounded_shutdown",
+    "process_pool::cleanup_tests::unknown_cleanup_closes_reuse_and_reports_shutdown_failure",
+    "process_pool::cleanup_tests::unknown_cleanup_retains_lease_and_permit_and_reports_failed_drain",
+    "process_pool::cleanup_tests::verified_success_and_protocol_error_release_lease_after_cleanup"
+  ],
+  "native_media_tests": [
+    "storage::media_url::tests::fixed_carry_decoder_preserves_invalid_partition_and_final_suffix",
+    "storage::media_url::tests::nested_distinct_and_duplicate_group_lists_charge_growth_overlap_and_drop",
+    "storage::media_url::tests::sanitizer_quota_sweep_never_turns_refusal_into_source_fallback",
+    "storage::media_url::tests::shared_plain_and_bounded_sanitizer_match_previous_full_algorithm",
+    "storage::media_url::tests::static_nfkc_subset_matches_entire_accepted_membership_domain"
+  ],
+  "native_process_integration_tests": [
+    "deadline_cancel_saturation_and_concurrent_shutdown_reap",
+    "delayed_supervisor_cannot_spawn_after_shutdown",
+    "duplex_backpressure_reads_output_before_input_is_consumed",
+    "exact_frame_eof_and_nonzero_exit",
+    "impossible_allocation_is_typed_and_child_reaped",
+    "oversized_capacity_is_typed_instead_of_panicking"
+  ],
+  "producer_maintenance_sha256": "1ebe1ca20e3d7a76aacfa6e5e1a907c7d07047af6a4b14e22d91a73847a3ad62",
+  "native_linux_process_unit_tests": [
+    "process_pool::cleanup_tests::held_writer_refuses_direct_exec_but_script_interpreter_preserves_protocol_and_cleanup"
+  ]
+}

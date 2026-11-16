@@ -1,0 +1,18 @@
+{
+  "stdout_sha256": "94c3e3f6bcd4f847b52b0fa276b3c4b7ba1e05a1a158a30b122470b795c2ce67",
+  "stdout": "   Compiling ssx-mcp v0.1.0 (/Volumes/tank01/magnus/git/slopsearx-w05/crates/ssx-mcp)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.20s\n     Running tests/w05.rs (/Volumes/tank01/magnus/rust-builds/slopsearx/w05/debug/deps/w05-2b9b4760ea10281c)\n\nrunning 1 test\n\nthread 'actual_valid_maximum_batch_raw_http_characterization' (33662150) panicked at crates/ssx-infra/src/saved_events/mod.rs:238:27:\ncalled `Result::unwrap()` on an `Err` value: Error(\"JSON byte limit exceeded\", line: 0, column: 0)\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\ntest actual_valid_maximum_batch_raw_http_characterization has been running for over 60 seconds\nerror: test failed, to rerun pass `-p ssx-mcp --test w05`\n\nCaused by:\n  process didn't exit successfully: `/Volumes/tank01/magnus/rust-builds/slopsearx/w05/debug/deps/w05-2b9b4760ea10281c actual_valid_maximum_batch_raw_http_characterization --nocapture` (signal: 15, SIGTERM: termination signal)\n",
+  "receipt": {
+    "exit_code": 101,
+    "kind": "current focused helper valid max-batch private HTTP characterization; not final shared-seam qualification",
+    "test_before_sha256": "2412f0c884268b080bf09319ea478e97aea6bdbb27bb416d598e261658c4a67b",
+    "restoration": "byte_exact"
+  },
+  "explicit_cleanup": {
+    "reason": "confirmed EventService panic left raw HTTP request pending; explicit termination of exact owned fixture only",
+    "test_pid": 20423,
+    "valkey_pid": 20424,
+    "signals": "SIGTERM",
+    "evidence": "native.log",
+    "qualification": "failure characterization; never PASS"
+  }
+}

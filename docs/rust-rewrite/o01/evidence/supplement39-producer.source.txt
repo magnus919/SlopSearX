@@ -1,0 +1,117 @@
+"""Temporary O01 source oracle; offline synthetic values only; retire at G08.
+Not a backend/helper dependency. Native gates will consume frozen JSON only.
+"""
+import asyncio
+import hashlib
+import importlib.util
+import json
+import logging
+import os
+from pathlib import Path
+import socket
+import sys
+from types import SimpleNamespace
+from unittest.mock import patch
+
+ROOT = Path('/Volumes/tank01/magnus/worktrees/slopsearx-o01')
+PINS = json.loads(Path(__file__).with_name('source-pins.json').read_text())
+for row in PINS:
+    if hashlib.sha256((ROOT / row['path']).read_bytes()).hexdigest() != row['sha256']:
+        raise RuntimeError('source preimage drift: ' + row['path'])
+# Importing modules and actual helper calls may not contact any endpoint.
+def forbidden(*args, **kwargs):
+    raise RuntimeError('offline source oracle forbids network connection')
+socket.socket.connect = forbidden
+socket.create_connection = forbidden
+sys.path.insert(0, str(ROOT))
+from slopsearx.adapter import AdapterResponse, EngineStatus
+from slopsearx.audit import QueryAuditLogger
+import slopsearx.audit as audit_source
+audit_source._iso_timestamp = lambda: '2026-10-17T12:00:00.000Z'
+from slopsearx.stats import EngineStatsTracker
+from slopsearx import logging as source_logging
+spec = importlib.util.spec_from_file_location('source_metrics', ROOT / 'slopsearx/metrics.py')
+metrics = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = metrics
+spec.loader.exec_module(metrics)
+rows = []
+def record(case_id, inputs, output):
+    rows.append({'id': case_id, 'input': inputs, 'output': output})
+class Pipeline:
+    def __init__(self, fail=False):
+        self.commands = []
+        self.fail = fail
+        self.awaited = 0
+    def __getattr__(self, name):
+        def call(*args):
+            self.commands.append([name, *args])
+            return self
+        return call
+    async def execute(self):
+        self.awaited += 1
+        if self.fail:
+            raise RuntimeError('synthetic offline failure')
+class Cache:
+    is_connected = True
+    def __init__(self, fail=False):
+        self.pipe = Pipeline(fail)
+        self._client = self
+    def pipeline(self):
+        return self.pipe
+async def capture():
+    for kind, cls in [('audit', QueryAuditLogger), ('stats', EngineStatsTracker)]:
+        for state in ['none', 'disconnected', 'no-client', 'failed']:
+            cache = None if state == 'none' else Cache(state == 'failed')
+            if state == 'disconnected':
+                cache.is_connected = False
+            if state == 'no-client':
+                cache._client = None
+            instance = cls(cache)
+            if kind == 'audit':
+                instance._stream_key = lambda: 'query_audit:2026-10-17'
+                await instance.record_query('synthetic query', '192.0.2.12', {}, 1.0)
+            else:
+                instance._daily_key = lambda engine: 'engine_stats:fixture:2026-10-17'
+                await instance.record_query('fixture', 0, 1.0, EngineStatus.OK)
+            record(f'{kind}.{state}', {}, {'returned': True, 'commands': cache.pipe.commands if cache else [], 'awaited': cache.pipe.awaited if cache else 0})
+    for status in EngineStatus:
+        cache = Cache()
+        tracker = EngineStatsTracker(cache)
+        tracker._daily_key = lambda engine: 'engine_stats:fixture:2026-10-17'
+        await tracker.record_query('fixture', 4, 12.7, status, 0.75)
+        record('stats.status.' + status.value, {'status': status.value}, {'commands': cache.pipe.commands, 'awaited': cache.pipe.awaited})
+    import slopsearx.audit as audit_module
+    audit_module._iso_timestamp = lambda: '2026-10-17T12:00:00.000Z'
+    for value in [0, 1, 123, 0.0, -0.0, 1.05, 1.15, 1.25, 1.35, 123.4, 123.45, 123.55, 999999999999.95]:
+        cache = Cache()
+        audit = QueryAuditLogger(cache)
+        audit._stream_key = lambda: 'query_audit:2026-10-17'
+        await audit.record_query('synthetic query', '192.0.2.12', {}, value)
+        record('audit.latency.' + repr(value), {'repr': repr(value), 'type': type(value).__name__}, {'commands': cache.pipe.commands})
+    for representation in ['object', 'dict']:
+        cache = Cache()
+        audit = QueryAuditLogger(cache)
+        audit._stream_key = lambda: 'query_audit:2026-10-17'
+        results = {status.value: AdapterResponse(results=[], status=status) if representation == 'object' else {'results': [], 'status': status} for status in EngineStatus}
+        await audit.record_query('synthetic query', '192.0.2.12', results, 0)
+        record('audit.statuses.' + representation, {}, {'commands': cache.pipe.commands})
+asyncio.run(capture())
+for explicit, environment in [(None, None), ('', None), (None, 'https://publickey@monitor.invalid/12'), ('', 'https://publickey@monitor.invalid/12'), ('https://explicitkey@monitor.invalid/13', 'https://publickey@monitor.invalid/12')]:
+    calls = []
+    fake = SimpleNamespace(init=lambda **kwargs: calls.append(kwargs))
+    with patch.dict(sys.modules, {'sentry_sdk': fake}), patch.dict(os.environ, {}, clear=False):
+        os.environ.pop('SENTRY_DSN', None)
+        if environment is not None:
+            os.environ['SENTRY_DSN'] = environment
+        source_logging.setup_logging(sentry_dsn=explicit)
+    record('logging.config.' + str(len(rows)), {'explicit': explicit, 'environment': environment}, calls)
+for buckets in [(1.0, 1.0), (2.0, 1.0), (-1.0,), (float('inf'),), (0.1, 0.5, 5.0)]:
+    try:
+        histogram = metrics.Histogram('custom', 'custom histogram', buckets)
+        for value in [0, .1, .2, .5, 6]:
+            histogram.observe({'engine': 'fixture'}, value)
+        output = {'render': histogram.render()}
+    except ValueError as error:
+        output = {'error': type(error).__name__, 'message': str(error)}
+    record('histogram.buckets.' + str(len(rows)), {'buckets': [repr(v) for v in buckets]}, output)
+print(json.dumps({'schema_version': 1, 'scope': 'offline-source-supplement-not-native-qualification', 'python': sys.version, 'source_pins': PINS, 'cases': rows}, indent=2, sort_keys=True))

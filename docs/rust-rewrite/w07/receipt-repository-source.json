@@ -1,0 +1,132 @@
+{
+  "scope": "storage-only W07/#913 increment, no issue closure",
+  "baseline": "2c7de9c3628c5e5bb61255dff45e019e94019e68",
+  "predecessor_head": "1317e3b9e5e5538075c6e79ef32e807bc3d46270",
+  "predecessor_seal_sha256": "9fe463796392a169cd9336fadc678a8ee66f02cfc9cdacd9eba1a69f9d1ff4bd",
+  "reconciliation": "explicit named source transfer; existing predecessor and seals untouched; upstream workflow already has binary/hash qualification",
+  "prerequisites": {
+    "F07": {
+      "revision": "cfd7a0af61a22cfd040a7fcd41ad950f82005959",
+      "merged_ancestor": true
+    },
+    "F13": {
+      "revision": "730c37a5f48b9830088594582cefb4c2f10a35e8",
+      "merged_ancestor": true
+    }
+  },
+  "native_sources": [
+    {
+      "path": "crates/ssx-infra/src/valkey/mod.rs",
+      "current_sha256": "b2a717e1f5da41572ff68bf61cb3357414fa16392031edca0ac81a0e1d888c04",
+      "current_bytes": 10332,
+      "preserved_predecessor_sha256": "93e57943fc559abeae658fe476d68c35b3197e9baaecd00027339f1dd6527728",
+      "preserved_predecessor_bytes": 10334,
+      "byte_identical_to_predecessor": false
+    },
+    {
+      "path": "crates/ssx-infra/src/valkey/retrieval.rs",
+      "current_sha256": "770e0463438a505c5a66faef152d569b8e48e7eddcf298724feca1d5bbe40938",
+      "current_bytes": 11299,
+      "preserved_predecessor_sha256": "5bf601e6cac97dc49a136fef76f6539b4fbd38ffdc652c301276ebe894b7f780",
+      "preserved_predecessor_bytes": 11101,
+      "byte_identical_to_predecessor": false
+    },
+    {
+      "path": "crates/ssx-infra/src/valkey/retrieval_scripts/insert.lua",
+      "current_sha256": "e5785173a45d983f35d3ae2ce7f333ff235c8b284c36c87a0026e7ac468882e8",
+      "current_bytes": 4396,
+      "preserved_predecessor_sha256": "e5785173a45d983f35d3ae2ce7f333ff235c8b284c36c87a0026e7ac468882e8",
+      "preserved_predecessor_bytes": 4396,
+      "byte_identical_to_predecessor": true
+    },
+    {
+      "path": "crates/ssx-infra/tests/w07_receipts.rs",
+      "current_sha256": "a9ffbdd040b04e177ddf206740aadc2ca55caa902a4308cb35ad80339bcc354b",
+      "current_bytes": 31004,
+      "preserved_predecessor_sha256": "49597adeea1c10906a7ae8a00b67b338954684595f9d1b0bfa2ef1499e12d541",
+      "preserved_predecessor_bytes": 22874,
+      "byte_identical_to_predecessor": false
+    },
+    {
+      "path": "crates/ssx-infra/tests/w07_support/valkey.rs",
+      "current_sha256": "ed4e2e544ff40856f46810532a17cf5fb9a3b393eb35d09a75907c4585b6b699",
+      "current_bytes": 6221,
+      "preserved_predecessor_sha256": "ed4e2e544ff40856f46810532a17cf5fb9a3b393eb35d09a75907c4585b6b699",
+      "preserved_predecessor_bytes": 6221,
+      "byte_identical_to_predecessor": true
+    }
+  ],
+  "current_contract_sources": [
+    {
+      "path": "slopsearx/retrieval_receipts.py",
+      "git_blob": "f3fe56bd172f084cc26aa02bff67c4f6b1350fa9",
+      "sha256": "f2f11f5652acecdeb4d490ff7fda2523968749518b103428ceff3586c7dcb471",
+      "bytes": 9060,
+      "role": "read-only current source/contract; not executed"
+    },
+    {
+      "path": "tests/test_retrieval_receipts_valkey.py",
+      "git_blob": "b4f868c72a2d1536007df5cfccbc2c63039b106a",
+      "sha256": "8b5de4dded01b0547e8184cad9123354bee2eef148370192febe8584f012a0e6",
+      "bytes": 3363,
+      "role": "read-only current source/contract; not executed"
+    },
+    {
+      "path": "crates/ssx-application/src/receipts.rs",
+      "git_blob": "42b3fd6a25c225e2ca97cabb70ca71d919ff2217",
+      "sha256": "f1603e5c7bc25da89e2d8fda38177cc16f704384de6b3a6456d51222d145d583",
+      "bytes": 3404,
+      "role": "read-only current source/contract; not executed"
+    },
+    {
+      "path": "crates/ssx-application/src/receipts/service.rs",
+      "git_blob": "685a2b5f9fa04d91c6701d051496886947ff955e",
+      "sha256": "c67ed8a85bf2893642e3d7c3633ba8fe75b3c57c4800627d9a5885bd5b8265a4",
+      "bytes": 31823,
+      "role": "read-only current source/contract; not executed"
+    },
+    {
+      "path": "crates/ssx-application/src/receipts/source.rs",
+      "git_blob": "a951d1093ae0a081e6fcaf68296c9d68ee051f9b",
+      "sha256": "d97af9cfe2a2e015d50d0c33c517870bdc78346c10ce7c54671ff17065c69bdf",
+      "bytes": 11791,
+      "role": "read-only current source/contract; not executed"
+    }
+  ],
+  "test_identities": [
+    "atomic_replay_conflict_capacity_fixed_horizon_and_tenant_isolation",
+    "oversize_is_rejected_without_fresh_writes_and_store_close_is_terminal",
+    "corrupt_index_preflight_preserves_expired_idempotency_without_partial_cleanup",
+    "same_id_collision_never_overwrites_and_valid_replay_precedes_corrupt_unrelated_index",
+    "every_known_corrupt_preflight_is_atomic_and_never_renews_retention",
+    "capacity_and_size_rejections_preserve_expired_idempotency_and_its_ttl",
+    "dispatched_timeout_is_unknown_and_never_retries_with_another_id",
+    "fixed_script_fresh_record_identity_faults_are_rejected_before_mutation",
+    "competing_different_digests_commit_one_receipt_without_orphan_keys",
+    "missing_receipts_preserve_index_count_and_malformed_references_fail_without_mutation",
+    "bounded_inputs_fail_before_ids_or_writes_and_unavailable_is_not_missing"
+  ],
+  "native_executed": true,
+  "historical_results_are_current_acceptance": false,
+  "two_owner_review_delta": {
+    "prior_test_sha256": "7760f708869eafc3bcc9c1b654e8053161b80432aa3b1f303c7a8fae5a15adb4",
+    "new_test_sha256": "a9ffbdd040b04e177ddf206740aadc2ca55caa902a4308cb35ad80339bcc354b",
+    "source_review_of_prior_seal": "accepted; no P1/P2",
+    "original_eight_test_bodies_preserved": true,
+    "production_lua_and_repository_changed": false
+  },
+  "focused_qualification": {
+    "source_seal_sha256": "64ed3c1e7743c5bf4e16d3ea3f6afcbff1ae93d9f67b462ca4051cc02bc8f335",
+    "evidence_seal_sha256": "2478d9ce0a735db5bb4c4c9c2836868b075079f7905970caee4d7900a88e8b4c",
+    "runtime_native_source_hashes_unchanged": true,
+    "passed_tests": {
+      "real_valkey_receipts": 11,
+      "application_receipts": 18,
+      "application_lineage": 13,
+      "total": 42
+    },
+    "format_and_strict_infra_application_all_targets_clippy": "passed",
+    "full_workspace_or_W07_gate_claim": false,
+    "documentation_delta_only_after_qualification": true
+  }
+}

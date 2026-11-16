@@ -1,0 +1,2687 @@
+{
+  "schema_version": 1,
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "unicode": "16.0.0",
+  "producer_sha256": "181891f1a87dbe9d8d6ef148d7e7349800a0001b349b2e9d8e5260bdcbf117b2",
+  "results": [
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterRegistration::test_adapter_registered",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterRegistration::test_adapter_categories_excludes_general",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveWaybackSearch::test_domain_query_routes_to_wayback",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveWaybackSearch::test_wayback_returns_snapshots",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveWaybackSearch::test_domain_query_rejects_regular_text",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveGeneralSearch::test_general_search_returns_results",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveGeneralSearch::test_general_search_content_from_description",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveGeneralSearch::test_general_search_empty_results",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_wayback_error",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_general_error",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_timeout",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_cdx_timeout_falls_back_to_one_validated_closest_snapshot",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_reports_no_snapshot_without_fabricating_history",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_false_is_an_honest_empty_result",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_malformed_json_is_error",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_rejects_untrusted_snapshot_url[closest0]",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_rejects_untrusted_snapshot_url[closest1]",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_rejects_untrusted_snapshot_url[closest2]",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_blocked_is_preserved",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_timeout_is_preserved",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterHelpers::test_is_domain_query_detects_domain",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterHelpers::test_is_domain_query_rejects_text",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_openlibrary_url_contract.py::test_identifier_urls_prefer_work_then_edition_then_isbn_and_omit_unknown",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_openlibrary_url_contract.py::test_identifier_free_records_are_omitted",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_openlibrary_url_contract.py::test_invalid_isbn_shapes_are_omitted[12345678901]",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_openlibrary_url_contract.py::test_invalid_isbn_shapes_are_omitted[123456789012]",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_openlibrary_url_contract.py::test_invalid_isbn_shapes_are_omitted[1234X67890]",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_openlibrary_url_contract.py::test_invalid_isbn_shapes_are_omitted[978044117271X]",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_openlibrary_url_contract.py::test_isbn_ten_allows_terminal_x_check_character",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_openlibrary_url_contract.py::test_distinct_urls_survive_merger_and_json_formatting",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_tmdb.py::TestTMDBAdapterRegistration::test_adapter_registered",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_search_returns_results",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_uses_bearer_auth_header",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_missing_api_key_returns_not_configured",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_empty_key_treated_as_not_configured",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_whitespace_key_treated_as_not_configured",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_http_status_error_sanitized",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_broad_exception_sanitized",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_rate_limited",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_timeout",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_new_engines.py::TestMusicBrainzAdapter::test_search_returns_results",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_new_engines.py::TestMusicBrainzAdapter::test_adapter_registered",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_new_engines.py::TestOpenLibraryAdapter::test_search_returns_results",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_new_engines.py::TestOpenLibraryAdapter::test_search_empty",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_new_engines.py::TestOpenLibraryAdapter::test_adapter_registered",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_new_engines.py::TestTMDBAdapter::test_search_returns_results",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_new_engines.py::TestTMDBAdapter::test_search_missing_key",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_new_engines.py::TestTMDBAdapter::test_adapter_registered",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_new_engines.py::TestNominatimAdapter::test_search_returns_results",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_new_engines.py::TestNominatimAdapter::test_adapter_registered",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_adapter_registered",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_adapter_categories_excludes_general",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_adapter_default_disabled",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_detects_domain",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_rejects_regular_text",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_payload.py::TestMediaPayload::test_tmdb_payload",
+      "outcome": "passed"
+    }
+  ],
+  "consumer_records": [
+    {
+      "node": "tests/test_openlibrary_url_contract.py::test_distinct_urls_survive_merger_and_json_formatting",
+      "output": {
+        "query": "Dune Frank Herbert",
+        "results": [
+          {
+            "url": "https://openlibrary.org/works/OL166894W",
+            "title": "Dune",
+            "content": "",
+            "engine": "openlibrary",
+            "engines": [
+              "openlibrary"
+            ],
+            "score": 1.0,
+            "positions": [
+              1
+            ],
+            "category": "general",
+            "publishedDate": null,
+            "pubdate": null,
+            "tier": 1,
+            "length": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null,
+            "iframe_src": null,
+            "audio_src": null,
+            "views": null,
+            "author": null,
+            "metadata": null,
+            "template": "default.html",
+            "parsed_url": [
+              "https",
+              "openlibrary.org",
+              "/works/OL166894W",
+              "",
+              "",
+              ""
+            ],
+            "open_group": false,
+            "close_group": false,
+            "priority": ""
+          },
+          {
+            "url": "https://openlibrary.org/works/OL321123W",
+            "title": "Dune Messiah",
+            "content": "",
+            "engine": "openlibrary",
+            "engines": [
+              "openlibrary"
+            ],
+            "score": 1.0,
+            "positions": [
+              2
+            ],
+            "category": "general",
+            "publishedDate": null,
+            "pubdate": null,
+            "tier": 1,
+            "length": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null,
+            "iframe_src": null,
+            "audio_src": null,
+            "views": null,
+            "author": null,
+            "metadata": null,
+            "template": "default.html",
+            "parsed_url": [
+              "https",
+              "openlibrary.org",
+              "/works/OL321123W",
+              "",
+              "",
+              ""
+            ],
+            "open_group": false,
+            "close_group": false,
+            "priority": ""
+          }
+        ],
+        "number_of_results": 2,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "suggestions": [],
+        "unresponsive_engines": []
+      }
+    }
+  ],
+  "original_adapter_invocations": 42,
+  "helper_derived_adapter_invocations": 10,
+  "helper_assertions": [
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterHelpers::test_is_domain_query_detects_domain",
+      "value": "example.com",
+      "output": true
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterHelpers::test_is_domain_query_detects_domain",
+      "value": "sub.example.org",
+      "output": true
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterHelpers::test_is_domain_query_rejects_text",
+      "value": "python programming",
+      "output": false
+    },
+    {
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterHelpers::test_is_domain_query_rejects_text",
+      "value": "hello world",
+      "output": false
+    },
+    {
+      "node": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_detects_domain",
+      "value": "example.com",
+      "output": true
+    },
+    {
+      "node": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_detects_domain",
+      "value": "sub.example.org",
+      "output": true
+    },
+    {
+      "node": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_detects_domain",
+      "value": "my-site.co.uk",
+      "output": true
+    },
+    {
+      "node": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_rejects_regular_text",
+      "value": "python async programming",
+      "output": false
+    },
+    {
+      "node": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_rejects_regular_text",
+      "value": "hello world",
+      "output": false
+    },
+    {
+      "node": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_rejects_regular_text",
+      "value": "test",
+      "output": false
+    }
+  ],
+  "records": [
+    {
+      "id": "tests/test_internetarchive_adapter.py::TestInternetArchiveWaybackSearch::test_domain_query_routes_to_wayback#0",
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveWaybackSearch::test_domain_query_routes_to_wayback",
+      "engine": "internetarchive",
+      "query": "whitehouse.gov",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "[[\"urlkey\",\"timestamp\",\"original\",\"mimetype\",\"statuscode\",\"digest\",\"length\"],[\"com,example)/\",\"20250101000000\",\"https://example.com/page1\",\"text/html\",\"200\",\"abc\",\"1234\"],[\"com,example)/\",\"20250201000000\",\"https://example.com/page2\",\"text/html\",\"200\",\"def\",\"5678\"]]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://web.archive.org/cdx/search/cdx?url=whitehouse.gov&output=json&limit=10&filter=statuscode:200&collapse=timestamp:6",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://web.archive.org/web/20250101000000/https://example.com/page1",
+            "title": "whitehouse.gov \u2014 2025-01-01 (text/html)",
+            "content": "Archived snapshot of https://example.com/page1 from 2025-01-01",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.5,
+            "category": "general",
+            "published_date": "2025-01-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://web.archive.org/web/20250201000000/https://example.com/page2",
+            "title": "whitehouse.gov \u2014 2025-02-01 (text/html)",
+            "content": "Archived snapshot of https://example.com/page2 from 2025-02-01",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.5,
+            "category": "general",
+            "published_date": "2025-02-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_internetarchive_adapter.py::TestInternetArchiveWaybackSearch::test_wayback_returns_snapshots#0",
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveWaybackSearch::test_wayback_returns_snapshots",
+      "engine": "internetarchive",
+      "query": "whitehouse.gov",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "[[\"urlkey\",\"timestamp\",\"original\",\"mimetype\",\"statuscode\",\"digest\",\"length\"],[\"com,example)/\",\"20250101000000\",\"https://example.com/page1\",\"text/html\",\"200\",\"abc\",\"1234\"],[\"com,example)/\",\"20250201000000\",\"https://example.com/page2\",\"text/html\",\"200\",\"def\",\"5678\"]]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://web.archive.org/cdx/search/cdx?url=whitehouse.gov&output=json&limit=10&filter=statuscode:200&collapse=timestamp:6",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://web.archive.org/web/20250101000000/https://example.com/page1",
+            "title": "whitehouse.gov \u2014 2025-01-01 (text/html)",
+            "content": "Archived snapshot of https://example.com/page1 from 2025-01-01",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.5,
+            "category": "general",
+            "published_date": "2025-01-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://web.archive.org/web/20250201000000/https://example.com/page2",
+            "title": "whitehouse.gov \u2014 2025-02-01 (text/html)",
+            "content": "Archived snapshot of https://example.com/page2 from 2025-02-01",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.5,
+            "category": "general",
+            "published_date": "2025-02-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_internetarchive_adapter.py::TestInternetArchiveWaybackSearch::test_domain_query_rejects_regular_text#0",
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveWaybackSearch::test_domain_query_rejects_regular_text",
+      "engine": "internetarchive",
+      "query": "python programming",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"response\":{\"docs\":[{\"identifier\":\"book123\",\"title\":\"The Great Book\",\"description\":\"A fantastic book about everything.\",\"downloads\":5000,\"date\":\"2024-01-15\"},{\"identifier\":\"book456\",\"title\":\"Another Book\",\"description\":\"A sequel with more content.\",\"downloads\":1200,\"date\":\"2023-06-01\"}]}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://archive.org/advancedsearch.php?q=python%20programming&output=json&rows=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://archive.org/details/book123",
+            "title": "The Great Book",
+            "content": "A fantastic book about everything.",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.5,
+            "category": "general",
+            "published_date": "2024-01-15",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://archive.org/details/book456",
+            "title": "Another Book",
+            "content": "A sequel with more content.",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.12,
+            "category": "general",
+            "published_date": "2023-06-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_internetarchive_adapter.py::TestInternetArchiveGeneralSearch::test_general_search_returns_results#0",
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveGeneralSearch::test_general_search_returns_results",
+      "engine": "internetarchive",
+      "query": "books about history",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"response\":{\"docs\":[{\"identifier\":\"book123\",\"title\":\"The Great Book\",\"description\":\"A fantastic book about everything.\",\"downloads\":5000,\"date\":\"2024-01-15\"},{\"identifier\":\"book456\",\"title\":\"Another Book\",\"description\":\"A sequel with more content.\",\"downloads\":1200,\"date\":\"2023-06-01\"}]}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://archive.org/advancedsearch.php?q=books%20about%20history&output=json&rows=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://archive.org/details/book123",
+            "title": "The Great Book",
+            "content": "A fantastic book about everything.",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.5,
+            "category": "general",
+            "published_date": "2024-01-15",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://archive.org/details/book456",
+            "title": "Another Book",
+            "content": "A sequel with more content.",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.12,
+            "category": "general",
+            "published_date": "2023-06-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_internetarchive_adapter.py::TestInternetArchiveGeneralSearch::test_general_search_content_from_description#0",
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveGeneralSearch::test_general_search_content_from_description",
+      "engine": "internetarchive",
+      "query": "books",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"response\":{\"docs\":[{\"identifier\":\"book123\",\"title\":\"The Great Book\",\"description\":\"A fantastic book about everything.\",\"downloads\":5000,\"date\":\"2024-01-15\"},{\"identifier\":\"book456\",\"title\":\"Another Book\",\"description\":\"A sequel with more content.\",\"downloads\":1200,\"date\":\"2023-06-01\"}]}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://archive.org/advancedsearch.php?q=books&output=json&rows=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://archive.org/details/book123",
+            "title": "The Great Book",
+            "content": "A fantastic book about everything.",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.5,
+            "category": "general",
+            "published_date": "2024-01-15",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://archive.org/details/book456",
+            "title": "Another Book",
+            "content": "A sequel with more content.",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.12,
+            "category": "general",
+            "published_date": "2023-06-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_internetarchive_adapter.py::TestInternetArchiveGeneralSearch::test_general_search_empty_results#0",
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveGeneralSearch::test_general_search_empty_results",
+      "engine": "internetarchive",
+      "query": "nothing",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"response\":{\"docs\":[]}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://archive.org/advancedsearch.php?q=nothing&output=json&rows=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_wayback_error#0",
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_wayback_error",
+      "engine": "internetarchive",
+      "query": "whitehouse.gov",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 500,
+          "wire_body": ""
+        },
+        {
+          "status": 500,
+          "wire_body": ""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://web.archive.org/cdx/search/cdx?url=whitehouse.gov&output=json&limit=10&filter=statuscode:200&collapse=timestamp:6",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://archive.org/wayback/available?url=whitehouse.gov",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "Availability API returned HTTP 500",
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_general_error#0",
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_general_error",
+      "engine": "internetarchive",
+      "query": "books",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 500,
+          "wire_body": ""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://archive.org/advancedsearch.php?q=books&output=json&rows=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "Server error '500 Internal Server Error' for url 'https://archive.org/advancedsearch.php?q=books&output=json&rows=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500",
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_timeout#0",
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_timeout",
+      "engine": "internetarchive",
+      "query": "whitehouse.gov",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "exception": "timeout"
+        },
+        {
+          "status": 200,
+          "exception": "timeout"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://web.archive.org/cdx/search/cdx?url=whitehouse.gov&output=json&limit=10&filter=statuscode:200&collapse=timestamp:6",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://archive.org/wayback/available?url=whitehouse.gov",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "timeout",
+        "error_message": "Availability API timed out: timeout",
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_cdx_timeout_falls_back_to_one_validated_closest_snapshot#0",
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_cdx_timeout_falls_back_to_one_validated_closest_snapshot",
+      "engine": "internetarchive",
+      "query": "whitehouse.gov",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "exception": "timeout"
+        },
+        {
+          "status": 200,
+          "wire_body": "{\"archived_snapshots\":{\"closest\":{\"available\":true,\"status\":\"200\",\"timestamp\":\"20240102123456\",\"url\":\"http://web.archive.org/web/20240102123456/https://whitehouse.gov/\"}}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://web.archive.org/cdx/search/cdx?url=whitehouse.gov&output=json&limit=10&filter=statuscode:200&collapse=timestamp:6",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://archive.org/wayback/available?url=whitehouse.gov",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": "CDX unavailable (timeout); returned one closest snapshot from the Availability API, not a CDX history",
+        "results": [
+          {
+            "url": "https://web.archive.org/web/20240102123456/https://whitehouse.gov/",
+            "title": "whitehouse.gov \u2014 closest archived snapshot (2024-01-02)",
+            "content": "One closest archived snapshot of https://whitehouse.gov/ from 2024-01-02; the Availability API does not provide a full CDX history.",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.5,
+            "category": "general",
+            "published_date": "2024-01-02",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_reports_no_snapshot_without_fabricating_history#0",
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_reports_no_snapshot_without_fabricating_history",
+      "engine": "internetarchive",
+      "query": "whitehouse.gov",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 500,
+          "wire_body": ""
+        },
+        {
+          "status": 200,
+          "wire_body": "{\"archived_snapshots\":{}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://web.archive.org/cdx/search/cdx?url=whitehouse.gov&output=json&limit=10&filter=statuscode:200&collapse=timestamp:6",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://archive.org/wayback/available?url=whitehouse.gov",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": "No archived snapshot available",
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_false_is_an_honest_empty_result#0",
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_false_is_an_honest_empty_result",
+      "engine": "internetarchive",
+      "query": "whitehouse.gov",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 500,
+          "wire_body": ""
+        },
+        {
+          "status": 200,
+          "wire_body": "{\"archived_snapshots\":{\"closest\":{\"available\":false,\"status\":\"404\",\"timestamp\":\"\",\"url\":\"\"}}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://web.archive.org/cdx/search/cdx?url=whitehouse.gov&output=json&limit=10&filter=statuscode:200&collapse=timestamp:6",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://archive.org/wayback/available?url=whitehouse.gov",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": "No archived snapshot available",
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_malformed_json_is_error#0",
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_malformed_json_is_error",
+      "engine": "internetarchive",
+      "query": "whitehouse.gov",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 500,
+          "wire_body": ""
+        },
+        {
+          "status": 200,
+          "wire_body": "not-json"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://web.archive.org/cdx/search/cdx?url=whitehouse.gov&output=json&limit=10&filter=statuscode:200&collapse=timestamp:6",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://archive.org/wayback/available?url=whitehouse.gov",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "Availability API failed: Expecting value: line 1 column 1 (char 0)",
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_rejects_untrusted_snapshot_url[closest0]#0",
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_rejects_untrusted_snapshot_url[closest0]",
+      "engine": "internetarchive",
+      "query": "whitehouse.gov",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 500,
+          "wire_body": ""
+        },
+        {
+          "status": 200,
+          "wire_body": "{\"archived_snapshots\":{\"closest\":{\"available\":true,\"status\":\"200\",\"timestamp\":\"20240102123456\",\"url\":\"https://evil.example/web/20240102123456/https://whitehouse.gov/\"}}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://web.archive.org/cdx/search/cdx?url=whitehouse.gov&output=json&limit=10&filter=statuscode:200&collapse=timestamp:6",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://archive.org/wayback/available?url=whitehouse.gov",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "Availability API returned an untrusted snapshot URL",
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_rejects_untrusted_snapshot_url[closest1]#0",
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_rejects_untrusted_snapshot_url[closest1]",
+      "engine": "internetarchive",
+      "query": "whitehouse.gov",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 500,
+          "wire_body": ""
+        },
+        {
+          "status": 200,
+          "wire_body": "{\"archived_snapshots\":{\"closest\":{\"available\":true,\"status\":\"200\",\"timestamp\":\"20240102123456\",\"url\":\"http://web.archive.org/web/20240102123455/https://whitehouse.gov/\"}}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://web.archive.org/cdx/search/cdx?url=whitehouse.gov&output=json&limit=10&filter=statuscode:200&collapse=timestamp:6",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://archive.org/wayback/available?url=whitehouse.gov",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "Availability API returned an untrusted snapshot URL",
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_rejects_untrusted_snapshot_url[closest2]#0",
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_rejects_untrusted_snapshot_url[closest2]",
+      "engine": "internetarchive",
+      "query": "whitehouse.gov",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 500,
+          "wire_body": ""
+        },
+        {
+          "status": 200,
+          "wire_body": "{\"archived_snapshots\":{\"closest\":{\"available\":true,\"status\":\"200\",\"timestamp\":\"20240102123456\",\"url\":\"http://web.archive.org/web/20240102123456/https://other.example/\"}}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://web.archive.org/cdx/search/cdx?url=whitehouse.gov&output=json&limit=10&filter=statuscode:200&collapse=timestamp:6",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://archive.org/wayback/available?url=whitehouse.gov",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "Availability API returned an untrusted snapshot URL",
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_blocked_is_preserved#0",
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_blocked_is_preserved",
+      "engine": "internetarchive",
+      "query": "whitehouse.gov",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "exception": "timeout"
+        },
+        {
+          "status": 403,
+          "wire_body": ""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://web.archive.org/cdx/search/cdx?url=whitehouse.gov&output=json&limit=10&filter=statuscode:200&collapse=timestamp:6",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://archive.org/wayback/available?url=whitehouse.gov",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "blocked",
+        "error_message": "Availability API returned HTTP 403",
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_timeout_is_preserved#0",
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_timeout_is_preserved",
+      "engine": "internetarchive",
+      "query": "whitehouse.gov",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "exception": "timeout"
+        },
+        {
+          "status": 200,
+          "exception": "timeout"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://web.archive.org/cdx/search/cdx?url=whitehouse.gov&output=json&limit=10&filter=statuscode:200&collapse=timestamp:6",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://archive.org/wayback/available?url=whitehouse.gov",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "timeout",
+        "error_message": "Availability API timed out: timeout",
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_openlibrary_url_contract.py::test_identifier_urls_prefer_work_then_edition_then_isbn_and_omit_unknown#0",
+      "node": "tests/test_openlibrary_url_contract.py::test_identifier_urls_prefer_work_then_edition_then_isbn_and_omit_unknown",
+      "engine": "openlibrary",
+      "query": "Dune Frank Herbert",
+      "config": {
+        "max_results": 10
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"docs\":[{\"title\":\"Dune\",\"key\":\"/works/OL166894W\",\"edition_key\":[\"OL24370548M\"],\"isbn\":[\"9780441172719\"]},{\"title\":\"Dune Messiah\",\"edition_key\":[\"OL7353617M\"]},{\"title\":\"Unknown identity\",\"author_name\":[\"Unknown author\"]},{\"title\":\"God Emperor of Dune\",\"isbn\":[\"9780441103250\"]}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://openlibrary.org/search.json?q=Dune+Frank+Herbert&limit=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://openlibrary.org/works/OL166894W",
+            "title": "Dune",
+            "content": "",
+            "engine": "openlibrary",
+            "position": 1,
+            "score": 0.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://openlibrary.org/books/OL7353617M",
+            "title": "Dune Messiah",
+            "content": "",
+            "engine": "openlibrary",
+            "position": 2,
+            "score": 0.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://openlibrary.org/isbn/9780441103250",
+            "title": "God Emperor of Dune",
+            "content": "",
+            "engine": "openlibrary",
+            "position": 3,
+            "score": 0.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_openlibrary_url_contract.py::test_identifier_free_records_are_omitted#0",
+      "node": "tests/test_openlibrary_url_contract.py::test_identifier_free_records_are_omitted",
+      "engine": "openlibrary",
+      "query": "Dune Frank Herbert",
+      "config": {
+        "max_results": 10
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"docs\":[{\"title\":\"The Left Hand of Darkness\",\"author_name\":[\"Ursula K. Le Guin\"],\"first_publish_year\":1969},{\"title\":\"The Dispossessed\",\"author_name\":[\"Ursula K. Le Guin\"],\"first_publish_year\":1974}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://openlibrary.org/search.json?q=Dune+Frank+Herbert&limit=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_openlibrary_url_contract.py::test_invalid_isbn_shapes_are_omitted[12345678901]#0",
+      "node": "tests/test_openlibrary_url_contract.py::test_invalid_isbn_shapes_are_omitted[12345678901]",
+      "engine": "openlibrary",
+      "query": "Dune Frank Herbert",
+      "config": {
+        "max_results": 10
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"docs\":[{\"title\":\"Invalid ISBN\",\"isbn\":[\"12345678901\"]}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://openlibrary.org/search.json?q=Dune+Frank+Herbert&limit=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_openlibrary_url_contract.py::test_invalid_isbn_shapes_are_omitted[123456789012]#0",
+      "node": "tests/test_openlibrary_url_contract.py::test_invalid_isbn_shapes_are_omitted[123456789012]",
+      "engine": "openlibrary",
+      "query": "Dune Frank Herbert",
+      "config": {
+        "max_results": 10
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"docs\":[{\"title\":\"Invalid ISBN\",\"isbn\":[\"123456789012\"]}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://openlibrary.org/search.json?q=Dune+Frank+Herbert&limit=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_openlibrary_url_contract.py::test_invalid_isbn_shapes_are_omitted[1234X67890]#0",
+      "node": "tests/test_openlibrary_url_contract.py::test_invalid_isbn_shapes_are_omitted[1234X67890]",
+      "engine": "openlibrary",
+      "query": "Dune Frank Herbert",
+      "config": {
+        "max_results": 10
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"docs\":[{\"title\":\"Invalid ISBN\",\"isbn\":[\"1234X67890\"]}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://openlibrary.org/search.json?q=Dune+Frank+Herbert&limit=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_openlibrary_url_contract.py::test_invalid_isbn_shapes_are_omitted[978044117271X]#0",
+      "node": "tests/test_openlibrary_url_contract.py::test_invalid_isbn_shapes_are_omitted[978044117271X]",
+      "engine": "openlibrary",
+      "query": "Dune Frank Herbert",
+      "config": {
+        "max_results": 10
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"docs\":[{\"title\":\"Invalid ISBN\",\"isbn\":[\"978044117271X\"]}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://openlibrary.org/search.json?q=Dune+Frank+Herbert&limit=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_openlibrary_url_contract.py::test_isbn_ten_allows_terminal_x_check_character#0",
+      "node": "tests/test_openlibrary_url_contract.py::test_isbn_ten_allows_terminal_x_check_character",
+      "engine": "openlibrary",
+      "query": "Dune Frank Herbert",
+      "config": {
+        "max_results": 10
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"docs\":[{\"title\":\"Valid ISBN-10\",\"isbn\":[\"030640615X\"]}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://openlibrary.org/search.json?q=Dune+Frank+Herbert&limit=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://openlibrary.org/isbn/030640615X",
+            "title": "Valid ISBN-10",
+            "content": "",
+            "engine": "openlibrary",
+            "position": 1,
+            "score": 0.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_openlibrary_url_contract.py::test_distinct_urls_survive_merger_and_json_formatting#0",
+      "node": "tests/test_openlibrary_url_contract.py::test_distinct_urls_survive_merger_and_json_formatting",
+      "engine": "openlibrary",
+      "query": "Dune Frank Herbert",
+      "config": {
+        "max_results": 10
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"docs\":[{\"title\":\"Dune\",\"key\":\"/works/OL166894W\"},{\"title\":\"Dune Messiah\",\"key\":\"/works/OL321123W\"},{\"title\":\"Unidentified book\",\"author_name\":[\"Unknown author\"]}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://openlibrary.org/search.json?q=Dune+Frank+Herbert&limit=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://openlibrary.org/works/OL166894W",
+            "title": "Dune",
+            "content": "",
+            "engine": "openlibrary",
+            "position": 1,
+            "score": 0.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://openlibrary.org/works/OL321123W",
+            "title": "Dune Messiah",
+            "content": "",
+            "engine": "openlibrary",
+            "position": 2,
+            "score": 0.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_search_returns_results#0",
+      "node": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_search_returns_results",
+      "engine": "tmdb",
+      "query": "test",
+      "config": {
+        "enabled": true,
+        "api_key": "synthetic-tmdb-key"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"results\":[{\"media_type\":\"movie\",\"title\":\"Test Movie\",\"release_date\":\"2024-01-15\",\"overview\":\"A test movie about testing.\",\"vote_average\":7.5,\"poster_path\":\"/testposter.jpg\",\"id\":12345},{\"media_type\":\"tv\",\"name\":\"Test TV Show\",\"first_air_date\":\"2023-06-01\",\"overview\":\"A test TV show.\",\"vote_average\":8.0,\"id\":67890}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.themoviedb.org/3/search/multi?query=test&page=1",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1",
+            "authorization": "Bearer <synthetic-key>"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.themoviedb.org/movie/12345",
+            "title": "Test Movie",
+            "content": "[Movie] (2024) A test movie about testing.",
+            "engine": "tmdb",
+            "position": 1,
+            "score": 7.5,
+            "category": "general",
+            "published_date": "2024-01-15",
+            "thumbnail": "https://image.tmdb.org/t/p/w200/testposter.jpg",
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "media",
+              "type": "media_item",
+              "schema_version": 1,
+              "data": {
+                "media_type": "movie",
+                "title": "Test Movie",
+                "release_date": "2024-01-15",
+                "overview": "A test movie about testing.",
+                "vote_average": 7.5
+              },
+              "provenance": {
+                "engine": "tmdb",
+                "adapter_fields": [
+                  "media_type",
+                  "title",
+                  "release_date",
+                  "overview",
+                  "vote_average"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          },
+          {
+            "url": "https://www.themoviedb.org/tv/67890",
+            "title": "Test TV Show",
+            "content": "[TV] (2023) A test TV show.",
+            "engine": "tmdb",
+            "position": 2,
+            "score": 8.0,
+            "category": "general",
+            "published_date": "2023-06-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "media",
+              "type": "media_item",
+              "schema_version": 1,
+              "data": {
+                "media_type": "tv",
+                "title": "Test TV Show",
+                "release_date": "2023-06-01",
+                "overview": "A test TV show.",
+                "vote_average": 8.0
+              },
+              "provenance": {
+                "engine": "tmdb",
+                "adapter_fields": [
+                  "media_type",
+                  "title",
+                  "release_date",
+                  "overview",
+                  "vote_average"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_uses_bearer_auth_header#0",
+      "node": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_uses_bearer_auth_header",
+      "engine": "tmdb",
+      "query": "test",
+      "config": {
+        "enabled": true,
+        "api_key": "synthetic-tmdb-key"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"results\":[]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.themoviedb.org/3/search/multi?query=test&page=1",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1",
+            "authorization": "Bearer <synthetic-key>"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_missing_api_key_returns_not_configured#0",
+      "node": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_missing_api_key_returns_not_configured",
+      "engine": "tmdb",
+      "query": "test",
+      "config": {
+        "enabled": true,
+        "api_key": ""
+      },
+      "responses": [],
+      "requests": [],
+      "output": {
+        "status": "error",
+        "error_message": "TMDB API key not configured. Set ENGINE_TMDB_API_KEY env var.",
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_empty_key_treated_as_not_configured#0",
+      "node": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_empty_key_treated_as_not_configured",
+      "engine": "tmdb",
+      "query": "test",
+      "config": {
+        "enabled": true,
+        "api_key": ""
+      },
+      "responses": [],
+      "requests": [],
+      "output": {
+        "status": "error",
+        "error_message": "TMDB API key not configured. Set ENGINE_TMDB_API_KEY env var.",
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_whitespace_key_treated_as_not_configured#0",
+      "node": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_whitespace_key_treated_as_not_configured",
+      "engine": "tmdb",
+      "query": "test",
+      "config": {
+        "enabled": true,
+        "api_key": "   "
+      },
+      "responses": [],
+      "requests": [],
+      "output": {
+        "status": "error",
+        "error_message": "TMDB API key not configured. Set ENGINE_TMDB_API_KEY env var.",
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_http_status_error_sanitized#0",
+      "node": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_http_status_error_sanitized",
+      "engine": "tmdb",
+      "query": "test",
+      "config": {
+        "enabled": true,
+        "api_key": "synthetic-tmdb-key"
+      },
+      "responses": [
+        {
+          "status": 500,
+          "wire_body": ""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.themoviedb.org/3/search/multi?query=test&page=1",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1",
+            "authorization": "Bearer <synthetic-key>"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "Server error '500 Internal Server Error' for url 'https://api.themoviedb.org/3/search/multi?query=test&page=1%27For+more+information+check%3A+https%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FHTTP%2FStatus%2F500",
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_broad_exception_sanitized#0",
+      "node": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_broad_exception_sanitized",
+      "engine": "tmdb",
+      "query": "test",
+      "config": {
+        "enabled": true,
+        "api_key": "synthetic-tmdb-key"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "exception": "RuntimeError",
+          "diagnostic": "https://api.themoviedb.org/3/search/multi?api_key=<synthetic-key>&query=test&page=1"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.themoviedb.org/3/search/multi?query=test&page=1",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1",
+            "authorization": "Bearer <synthetic-key>"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "https://api.themoviedb.org/3/search/multi?query=test&page=1",
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_rate_limited#0",
+      "node": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_rate_limited",
+      "engine": "tmdb",
+      "query": "test",
+      "config": {
+        "enabled": true,
+        "api_key": "synthetic-tmdb-key"
+      },
+      "responses": [
+        {
+          "status": 429,
+          "wire_body": ""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.themoviedb.org/3/search/multi?query=test&page=1",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1",
+            "authorization": "Bearer <synthetic-key>"
+          }
+        }
+      ],
+      "output": {
+        "status": "rate_limited",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_timeout#0",
+      "node": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_timeout",
+      "engine": "tmdb",
+      "query": "test",
+      "config": {
+        "enabled": true,
+        "api_key": "synthetic-tmdb-key"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "exception": "timeout"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.themoviedb.org/3/search/multi?query=test&page=1",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1",
+            "authorization": "Bearer <synthetic-key>"
+          }
+        }
+      ],
+      "output": {
+        "status": "timeout",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_new_engines.py::TestMusicBrainzAdapter::test_search_returns_results#0",
+      "node": "tests/test_new_engines.py::TestMusicBrainzAdapter::test_search_returns_results",
+      "engine": "musicbrainz",
+      "query": "radiohead",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"artists\":[{\"id\":\"b10bbbf0-c98f-4d8b-8c0a-1f5a0a3d8c9d\",\"name\":\"Radiohead\",\"type\":\"Group\",\"country\":\"GB\",\"life-span\":{\"begin\":\"1985\"}},{\"id\":\"a74b1b7f-71a5-4011-9441-d0b5e412ea11\",\"name\":\"Thom Yorke\",\"type\":\"Person\",\"country\":\"GB\",\"life-span\":{\"begin\":\"1968\"}}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://musicbrainz.org/ws/2/artist/?query=radiohead&limit=10&fmt=json",
+          "body": "",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://musicbrainz.org/artist/b10bbbf0-c98f-4d8b-8c0a-1f5a0a3d8c9d",
+            "title": "Radiohead",
+            "content": "Group \u2014 GB \u2014 Active since 1985",
+            "engine": "musicbrainz",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://musicbrainz.org/artist/a74b1b7f-71a5-4011-9441-d0b5e412ea11",
+            "title": "Thom Yorke",
+            "content": "Person \u2014 GB \u2014 Active since 1968",
+            "engine": "musicbrainz",
+            "position": 2,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_new_engines.py::TestOpenLibraryAdapter::test_search_returns_results#0",
+      "node": "tests/test_new_engines.py::TestOpenLibraryAdapter::test_search_returns_results",
+      "engine": "openlibrary",
+      "query": "classic novels",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"docs\":[{\"title\":\"The Great Gatsby\",\"author_name\":[\"F. Scott Fitzgerald\"],\"first_publish_year\":1925,\"isbn\":[\"9780743273565\"],\"cover_i\":1000000,\"ratings_count\":5000},{\"title\":\"1984\",\"author_name\":[\"George Orwell\"],\"first_publish_year\":1949,\"isbn\":[\"9780451524935\"],\"cover_i\":2000000,\"ratings_count\":8000}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://openlibrary.org/search.json?q=classic+novels&limit=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://openlibrary.org/isbn/9780743273565",
+            "title": "The Great Gatsby",
+            "content": "By F. Scott Fitzgerald (1925)",
+            "engine": "openlibrary",
+            "position": 1,
+            "score": 5000.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": "https://covers.openlibrary.org/b/id/1000000-M.jpg",
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://openlibrary.org/isbn/9780451524935",
+            "title": "1984",
+            "content": "By George Orwell (1949)",
+            "engine": "openlibrary",
+            "position": 2,
+            "score": 8000.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": "https://covers.openlibrary.org/b/id/2000000-M.jpg",
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_new_engines.py::TestOpenLibraryAdapter::test_search_empty#0",
+      "node": "tests/test_new_engines.py::TestOpenLibraryAdapter::test_search_empty",
+      "engine": "openlibrary",
+      "query": "nonexistent",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"docs\":[]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://openlibrary.org/search.json?q=nonexistent&limit=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_new_engines.py::TestTMDBAdapter::test_search_returns_results#0",
+      "node": "tests/test_new_engines.py::TestTMDBAdapter::test_search_returns_results",
+      "engine": "tmdb",
+      "query": "fight club",
+      "config": {
+        "enabled": true,
+        "api_key": "synthetic-tmdb-key"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"results\":[{\"media_type\":\"movie\",\"id\":550,\"title\":\"Fight Club\",\"release_date\":\"1999-10-15\",\"overview\":\"A ticking time bomb of a film.\",\"vote_average\":8.4,\"poster_path\":\"/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg\"},{\"media_type\":\"tv\",\"id\":1396,\"name\":\"Breaking Bad\",\"first_air_date\":\"2008-01-20\",\"overview\":\"A high school chemistry teacher turned meth producer.\",\"vote_average\":8.9,\"poster_path\":\"/ggFHVNu6YYI5L9yRmJ2AGkX6D4.jpg\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.themoviedb.org/3/search/multi?query=fight+club&page=1",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1",
+            "authorization": "Bearer <synthetic-key>"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.themoviedb.org/movie/550",
+            "title": "Fight Club",
+            "content": "[Movie] (1999) A ticking time bomb of a film.",
+            "engine": "tmdb",
+            "position": 1,
+            "score": 8.4,
+            "category": "general",
+            "published_date": "1999-10-15",
+            "thumbnail": "https://image.tmdb.org/t/p/w200/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg",
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "media",
+              "type": "media_item",
+              "schema_version": 1,
+              "data": {
+                "media_type": "movie",
+                "title": "Fight Club",
+                "release_date": "1999-10-15",
+                "overview": "A ticking time bomb of a film.",
+                "vote_average": 8.4
+              },
+              "provenance": {
+                "engine": "tmdb",
+                "adapter_fields": [
+                  "media_type",
+                  "title",
+                  "release_date",
+                  "overview",
+                  "vote_average"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          },
+          {
+            "url": "https://www.themoviedb.org/tv/1396",
+            "title": "Breaking Bad",
+            "content": "[TV] (2008) A high school chemistry teacher turned meth producer.",
+            "engine": "tmdb",
+            "position": 2,
+            "score": 8.9,
+            "category": "general",
+            "published_date": "2008-01-20",
+            "thumbnail": "https://image.tmdb.org/t/p/w200/ggFHVNu6YYI5L9yRmJ2AGkX6D4.jpg",
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "media",
+              "type": "media_item",
+              "schema_version": 1,
+              "data": {
+                "media_type": "tv",
+                "title": "Breaking Bad",
+                "release_date": "2008-01-20",
+                "overview": "A high school chemistry teacher turned meth producer.",
+                "vote_average": 8.9
+              },
+              "provenance": {
+                "engine": "tmdb",
+                "adapter_fields": [
+                  "media_type",
+                  "title",
+                  "release_date",
+                  "overview",
+                  "vote_average"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_new_engines.py::TestTMDBAdapter::test_search_missing_key#0",
+      "node": "tests/test_new_engines.py::TestTMDBAdapter::test_search_missing_key",
+      "engine": "tmdb",
+      "query": "test",
+      "config": {
+        "enabled": true,
+        "api_key": ""
+      },
+      "responses": [],
+      "requests": [],
+      "output": {
+        "status": "error",
+        "error_message": "TMDB API key not configured. Set ENGINE_TMDB_API_KEY env var.",
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_new_engines.py::TestNominatimAdapter::test_search_returns_results#0",
+      "node": "tests/test_new_engines.py::TestNominatimAdapter::test_search_returns_results",
+      "engine": "nominatim",
+      "query": "Paris",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "[{\"place_id\":\"123\",\"display_name\":\"Paris, \u00cele-de-France, France\",\"type\":\"city\",\"category\":\"place\",\"lat\":\"48.8566\",\"lon\":\"2.3522\",\"osm_type\":\"relation\",\"osm_id\":12345,\"importance\":0.9}]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://nominatim.openstreetmap.org/search?q=Paris&format=json&limit=10&addressdetails=1",
+          "body": "",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.openstreetmap.org/relation/12345",
+            "title": "Paris, \u00cele-de-France, France",
+            "content": "Paris, \u00cele-de-France, France \u2014 [place/city]",
+            "engine": "nominatim",
+            "position": 1,
+            "score": 0.9,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_payload.py::TestMediaPayload::test_tmdb_payload#0",
+      "node": "tests/test_payload.py::TestMediaPayload::test_tmdb_payload",
+      "engine": "tmdb",
+      "query": "test",
+      "config": {
+        "enabled": true,
+        "api_key": "synthetic-tmdb-key"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"results\":[{\"media_type\":\"movie\",\"title\":\"Test Movie\",\"release_date\":\"2024-01-15\",\"overview\":\"A test movie about testing.\",\"vote_average\":7.5,\"poster_path\":\"/testposter.jpg\",\"id\":12345},{\"media_type\":\"person\",\"name\":\"Jane Director\",\"id\":999}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.themoviedb.org/3/search/multi?query=test&page=1",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1",
+            "authorization": "Bearer <synthetic-key>"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.themoviedb.org/movie/12345",
+            "title": "Test Movie",
+            "content": "[Movie] (2024) A test movie about testing.",
+            "engine": "tmdb",
+            "position": 1,
+            "score": 7.5,
+            "category": "general",
+            "published_date": "2024-01-15",
+            "thumbnail": "https://image.tmdb.org/t/p/w200/testposter.jpg",
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "media",
+              "type": "media_item",
+              "schema_version": 1,
+              "data": {
+                "media_type": "movie",
+                "title": "Test Movie",
+                "release_date": "2024-01-15",
+                "overview": "A test movie about testing.",
+                "vote_average": 7.5
+              },
+              "provenance": {
+                "engine": "tmdb",
+                "adapter_fields": [
+                  "media_type",
+                  "title",
+                  "release_date",
+                  "overview",
+                  "vote_average"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          },
+          {
+            "url": "https://www.themoviedb.org/person/999",
+            "title": "Jane Director",
+            "content": "[Person] ",
+            "engine": "tmdb",
+            "position": 2,
+            "score": 0.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "media",
+              "type": "media_item",
+              "schema_version": 1,
+              "data": {
+                "media_type": "person",
+                "title": "Jane Director"
+              },
+              "provenance": {
+                "engine": "tmdb",
+                "adapter_fields": [
+                  "media_type",
+                  "title"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterHelpers::test_is_domain_query_detects_domain#0",
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterHelpers::test_is_domain_query_detects_domain",
+      "engine": "internetarchive",
+      "query": "example.com",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "[[\"timestamp\"]]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://web.archive.org/cdx/search/cdx?url=example.com&output=json&limit=10&filter=statuscode:200&collapse=timestamp:6",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      },
+      "helper_assertion": {
+        "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterHelpers::test_is_domain_query_detects_domain",
+        "value": "example.com",
+        "output": true
+      }
+    },
+    {
+      "id": "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterHelpers::test_is_domain_query_detects_domain#1",
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterHelpers::test_is_domain_query_detects_domain",
+      "engine": "internetarchive",
+      "query": "sub.example.org",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "[[\"timestamp\"]]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://web.archive.org/cdx/search/cdx?url=sub.example.org&output=json&limit=10&filter=statuscode:200&collapse=timestamp:6",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      },
+      "helper_assertion": {
+        "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterHelpers::test_is_domain_query_detects_domain",
+        "value": "sub.example.org",
+        "output": true
+      }
+    },
+    {
+      "id": "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterHelpers::test_is_domain_query_rejects_text#0",
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterHelpers::test_is_domain_query_rejects_text",
+      "engine": "internetarchive",
+      "query": "python programming",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"response\":{\"docs\":[]}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://archive.org/advancedsearch.php?q=python%20programming&output=json&rows=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      },
+      "helper_assertion": {
+        "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterHelpers::test_is_domain_query_rejects_text",
+        "value": "python programming",
+        "output": false
+      }
+    },
+    {
+      "id": "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterHelpers::test_is_domain_query_rejects_text#1",
+      "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterHelpers::test_is_domain_query_rejects_text",
+      "engine": "internetarchive",
+      "query": "hello world",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"response\":{\"docs\":[]}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://archive.org/advancedsearch.php?q=hello%20world&output=json&rows=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      },
+      "helper_assertion": {
+        "node": "tests/test_internetarchive_adapter.py::TestInternetArchiveAdapterHelpers::test_is_domain_query_rejects_text",
+        "value": "hello world",
+        "output": false
+      }
+    },
+    {
+      "id": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_detects_domain#0",
+      "node": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_detects_domain",
+      "engine": "internetarchive",
+      "query": "example.com",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "[[\"timestamp\"]]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://web.archive.org/cdx/search/cdx?url=example.com&output=json&limit=10&filter=statuscode:200&collapse=timestamp:6",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      },
+      "helper_assertion": {
+        "node": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_detects_domain",
+        "value": "example.com",
+        "output": true
+      }
+    },
+    {
+      "id": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_detects_domain#1",
+      "node": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_detects_domain",
+      "engine": "internetarchive",
+      "query": "sub.example.org",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "[[\"timestamp\"]]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://web.archive.org/cdx/search/cdx?url=sub.example.org&output=json&limit=10&filter=statuscode:200&collapse=timestamp:6",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      },
+      "helper_assertion": {
+        "node": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_detects_domain",
+        "value": "sub.example.org",
+        "output": true
+      }
+    },
+    {
+      "id": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_detects_domain#2",
+      "node": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_detects_domain",
+      "engine": "internetarchive",
+      "query": "my-site.co.uk",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "[[\"timestamp\"]]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://web.archive.org/cdx/search/cdx?url=my-site.co.uk&output=json&limit=10&filter=statuscode:200&collapse=timestamp:6",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      },
+      "helper_assertion": {
+        "node": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_detects_domain",
+        "value": "my-site.co.uk",
+        "output": true
+      }
+    },
+    {
+      "id": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_rejects_regular_text#0",
+      "node": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_rejects_regular_text",
+      "engine": "internetarchive",
+      "query": "python async programming",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"response\":{\"docs\":[]}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://archive.org/advancedsearch.php?q=python%20async%20programming&output=json&rows=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      },
+      "helper_assertion": {
+        "node": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_rejects_regular_text",
+        "value": "python async programming",
+        "output": false
+      }
+    },
+    {
+      "id": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_rejects_regular_text#1",
+      "node": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_rejects_regular_text",
+      "engine": "internetarchive",
+      "query": "hello world",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"response\":{\"docs\":[]}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://archive.org/advancedsearch.php?q=hello%20world&output=json&rows=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      },
+      "helper_assertion": {
+        "node": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_rejects_regular_text",
+        "value": "hello world",
+        "output": false
+      }
+    },
+    {
+      "id": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_rejects_regular_text#2",
+      "node": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_rejects_regular_text",
+      "engine": "internetarchive",
+      "query": "test",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"response\":{\"docs\":[]}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://archive.org/advancedsearch.php?q=test&output=json&rows=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      },
+      "helper_assertion": {
+        "node": "tests/test_tier1_adapters.py::TestInternetArchiveAdapter::test_is_domain_query_rejects_regular_text",
+        "value": "test",
+        "output": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,828 @@
+"""Manual W06 review supplement: exact original public errors and replay behavior.
+
+No provider, production, network or native-gate dependency. G08 retires this
+external executable; its frozen non-executable source and outcomes remain.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import copy
+import dataclasses
+import hashlib
+import json
+import sys
+import uuid
+from pathlib import Path
+from types import SimpleNamespace
+
+ROOT = Path("/private/tmp/slopsearx-w06")
+CONTROL = ROOT / "docs/rust-rewrite/w06/source-controls.json"
+if sys.version_info[:3] != (3, 14, 7):
+    raise RuntimeError("requires CPython3.14.7")
+if (
+    hashlib.sha256(CONTROL.read_bytes()).hexdigest()
+    != "444859bb1772f50f57fe6a163d1d4a49a0a095595c196e08d83e994a0d7e319e"
+):
+    raise RuntimeError("original source-control identity drift")
+GUARDS = json.loads(CONTROL.read_text()) | {
+    "slopsearx/service.py": "45903193ef89987f7be83c1e593e44b7752251a54eb8719eae15a241840102ac",
+    "slopsearx/cache.py": "88155d2060f19bcb7740c9498f8f82378e26c4c60ac4d013bee9913eb333c089",
+    "slopsearx/capabilities.py": "ed4e332a4df1de32d83b9dd2b62dddb622082ab4c236c0c9cef8d8d23336fd6f",
+    "slopsearx/mcp/tools.py": "6bbbdb270f14fda7d90ae8dbe1983aae33526df430f76a960f0c7483417eb35a",
+}
+if "--wrong-source-hash" in sys.argv:
+    GUARDS["slopsearx/service.py"] = "0" * 64
+if (
+    hashlib.sha256((ROOT / "docs/rust-rewrite/w06/source.json").read_bytes()).hexdigest()
+    != "98116bc1010da4390d2b4e48775d6b3c8e1df63a41568a344013f4746c2fcbd3"
+):
+    raise RuntimeError("immutable source corpus drift before import")
+for path, expected in GUARDS.items():
+    if hashlib.sha256((ROOT / path).read_bytes()).hexdigest() != expected:
+        raise RuntimeError("source guard rejected before import: " + path)
+sys.path.insert(0, str(ROOT))
+import pytest
+from slopsearx import service, staged
+from slopsearx.artifacts import artifact_ref, composite_artifact_id
+from slopsearx.capabilities import MCPPolicy
+from slopsearx.mcp import composition, staged_tools
+from slopsearx.mcp.state import set_state
+from tests.test_mcp_tools import _FakeStore, _build_state
+
+
+def require(value, message):
+    if not value:
+        raise RuntimeError(message)
+
+
+def safe(value):
+    if dataclasses.is_dataclass(value):
+        return safe(dataclasses.asdict(value))
+    if isinstance(value, dict):
+        return {key: safe(item) for key, item in value.items()}
+    if isinstance(value, (tuple, list)):
+        return [safe(item) for item in value]
+    if isinstance(value, set):
+        return sorted(safe(item) for item in value)
+    return value
+
+
+SAVED_DEFINITION = {"engines": ["wikipedia"]}
+SAVED_REPORTS = [
+    {
+        "run_id": run,
+        "status": "changed",
+        "revision": 3,
+        "incomparable_reasons": [],
+        "observation": {"window": {"query": "historical public query", "engines": ["wikipedia"]}},
+    }
+    for run in ["run-a", "run-b"]
+]
+
+
+class SavedSourceFixture:
+    available = True
+
+    def __init__(self, trace):
+        self.trace = trace
+
+    def for_tenant(self, tenant):
+        self.trace.append({"method": "saved.for_tenant", "tenant": tenant})
+        return self
+
+    async def load(self, search_id):
+        self.trace.append({"method": "saved.load", "search_id": search_id})
+        return SimpleNamespace(**copy.deepcopy(SAVED_DEFINITION)) if search_id == "saved" else None
+
+    async def reports(self, search_id, **kwargs):
+        self.trace.append({"method": "saved.reports", "search_id": search_id, "arguments": kwargs})
+        return copy.deepcopy(SAVED_REPORTS)
+
+
+def new_state():
+    policy = MCPPolicy()
+    policy.enabled_tools.update({"staged_search": True, "saved_searches": True})
+    state = _build_state(["wikipedia", "brave"], policy=policy)
+    shared = _FakeStore()
+    state.ctx.cache = shared
+    state.snapshots._store = shared
+    state.staged_store = staged.StagedSearchStore(shared)
+    state.staged_runner = SimpleNamespace(enqueue=lambda *_: asyncio.sleep(0))
+    trace = []
+    state.saved_store = SavedSourceFixture(trace)
+    set_state(state)
+    return state, shared, trace
+
+
+def args(**changes):
+    return {
+        "query": "public replay evidence",
+        "objectives": {"deadline_ms": 5000, "max_engine_calls": 2},
+        "initial_scope": {"engines": ["wikipedia"]},
+        "fallback_scope": {"engines": ["brave"]},
+        "allow_scope_expansion": True,
+        "filters": None,
+    } | changes
+
+
+def source(run="run-a"):
+    return artifact_ref("saved_report", composite_artifact_id("saved", run))
+
+
+def instrument(state, trace, patch):
+    original_resolve = composition.resolve_source
+
+    async def resolved(source, destination):
+        result = await original_resolve(source, destination)
+        trace.append(
+            {
+                "method": "resolve_source",
+                "source": safe(source),
+                "destination": destination,
+                "result": safe(result.stored() if isinstance(result, composition.ResolvedSource) else result),
+            }
+        )
+        return result
+
+    patch.setattr(staged_tools, "resolve_source", resolved)
+    for name in ["find_by_idempotency", "admit", "read", "request_retry", "save_owned"]:
+        original = getattr(state.staged_store, name)
+
+        async def wrapped(*pos, _name=name, _original=original, **kw):
+            trace.append({"method": _name, "phase": "called", "arguments": safe(pos)})
+            result = await _original(*pos, **kw)
+            trace.append({"method": _name, "phase": "returned", "result": safe(result)})
+            return result
+
+        patch.setattr(state.staged_store, name, wrapped)
+
+
+async def outcome(awaitable):
+    try:
+        result = safe(await awaitable)
+        captured = {"output": result}
+        if isinstance(result, dict) and isinstance(result.get("operation_id"), str):
+            state = staged_tools.get_state()
+            key = state.staged_store._key("default", result["operation_id"])
+            captured["after_record"] = copy.deepcopy(state.staged_store._store._data.get(key))
+        return captured
+    except Exception as exc:
+        return {"exception": {"class": type(exc).__name__, "message": str(exc)}}
+
+
+async def capture():
+    cases = []
+    number = 0
+
+    def enter():
+        nonlocal number
+        number += 1
+        patch = pytest.MonkeyPatch()
+        counter = iter(range(number * 1000 + 1, number * 1000 + 1000))
+        patch.setattr(uuid, "uuid4", lambda: uuid.UUID(int=next(counter) << 80))
+        patch.setattr(staged.secrets, "token_hex", lambda _: "review-fixed-lease-token")
+        patch.setattr(staged.time, "time", lambda: 1000.0)
+        patch.setattr(service, "generate_query_id", lambda: "q-review-fixed")
+        return patch
+
+    malformed = [
+        ("empty", []),
+        ("string", "wikipedia"),
+        ("blank_item", [""]),
+        ("integer_item", [1]),
+        ("null_item", [None]),
+        ("oversize", ["wikipedia"] * 65),
+    ]
+    for position in ["initial_scope", "fallback_scope"]:
+        for label, value in malformed:
+            patch = enter()
+            try:
+                state, _, trace = new_state()
+                inputs = args(**{position: {"engines": value}})
+                plan, error = staged_tools._build_plan(**inputs)
+                require(
+                    error is not None and error["error"]["field"] == "scope.engines",
+                    "malformed engines did not reach audited branch",
+                )
+                cases.append(
+                    {
+                        "id": f"review.plan.{position}.{label}",
+                        "review_ids": ["W06-R03"],
+                        "kind": "plan",
+                        "input": inputs,
+                        "output": {"plan": plan, "error": error},
+                        "trace": trace,
+                    }
+                )
+            finally:
+                patch.undo()
+    for label, value in [
+        ("list", []),
+        ("false", False),
+        ("zero", 0),
+        ("zero_float", 0.0),
+        ("string", ""),
+        ("map", {}),
+        ("null", None),
+    ]:
+        for consent in [False, True]:
+            patch = enter()
+            try:
+                new_state()
+                inputs = args(fallback_scope=value, allow_scope_expansion=consent)
+                plan, error = staged_tools._build_plan(**inputs)
+                cases.append(
+                    {
+                        "id": f"review.plan.falsey_{label}.{str(consent).lower()}",
+                        "review_ids": ["W06-R04"],
+                        "kind": "plan",
+                        "input": inputs,
+                        "output": {"plan": plan, "error": error},
+                    }
+                )
+            finally:
+                patch.undo()
+    for label, include, maximum in [
+        ("include_string", "results", None),
+        ("include_integer_item", [1], None),
+        ("include_unknown", ["bogus"], None),
+        ("include_map", {}, None),
+        ("include_empty", [], None),
+        ("default", None, None),
+        ("max_false", None, False),
+        ("max_float", None, 1.0),
+        ("max_zero", None, 0),
+        ("max_negative", None, -1),
+        ("max_one", None, 1),
+    ]:
+        patch = enter()
+        try:
+            state, _, _ = new_state()
+            result = staged_tools._validate_view(include, maximum)
+            cases.append(
+                {
+                    "id": "review.view." + label,
+                    "review_ids": ["W06-R08"],
+                    "kind": "view",
+                    "input": {
+                        "include": include,
+                        "max_results": maximum,
+                        "policy_max_results": state.policy.max_results,
+                    },
+                    "output": safe(result),
+                }
+            )
+        finally:
+            patch.undo()
+    invalid = [
+        ("objectives_null", {"objectives": None}),
+        ("objectives_list", {"objectives": []}),
+        ("scope_null", {"initial_scope": None}),
+        ("scope_list", {"initial_scope": []}),
+        ("both_null", {"objectives": None, "initial_scope": None}),
+        ("shape_and_scope_null", {"objectives": {}, "initial_scope": None}),
+        ("objectives_shape", {"objectives": {}}),
+        ("scope_empty", {"initial_scope": {}}),
+        ("query_null_first", {"query": None, "objectives": None, "initial_scope": None}),
+        ("query_blank", {"query": " "}),
+        ("invalid_include", {"include": ["bogus"]}),
+    ]
+    for mode in ["missing", "existing", "unavailable"]:
+        for label, changes in invalid:
+            patch = enter()
+            try:
+                state, shared, trace = new_state()
+                instrument(state, trace, patch)
+                seed = None
+                if mode == "existing":
+                    seeded = await staged_tools.slopsearx_search_staged(**args(), idempotency_key="public-key")
+                    seed = copy.deepcopy((await state.staged_store.read("default", seeded["operation_id"])).record)
+                shared.is_connected = mode != "unavailable"
+                trace.clear()
+                inputs = args() | changes | {"idempotency_key": "public-key"}
+                result = await outcome(staged_tools.slopsearx_search_staged(**inputs))
+                calls = sum(engine.calls for engine in state.ctx.active_engines.values())
+                require(calls == 0, "public precondition dispatched")
+                cases.append(
+                    {
+                        "id": f"review.submit.precondition.{mode}.{label}",
+                        "review_ids": ["W06-R05"],
+                        "kind": "submit",
+                        "setup": {"store_mode": mode, "existing_record": seed},
+                        "input": inputs,
+                        **result,
+                        "trace": trace,
+                        "fixture_engine_calls": calls,
+                    }
+                )
+            finally:
+                patch.undo()
+    for label, key in [
+        ("blank", " "),
+        ("oversize", "x" * 129),
+        ("trimmed_oversize", " " + "x" * 129 + " "),
+        ("trimmed_valid", " public-key "),
+    ]:
+        patch = enter()
+        try:
+            state, _, trace = new_state()
+            instrument(state, trace, patch)
+            inputs = args() | {"idempotency_key": key}
+            result = await outcome(staged_tools.slopsearx_search_staged(**inputs))
+            cases.append(
+                {
+                    "id": "review.submit.key." + label,
+                    "review_ids": ["W06-R05"],
+                    "kind": "submit",
+                    "input": inputs,
+                    **result,
+                    "trace": trace,
+                }
+            )
+        finally:
+            patch.undo()
+    conflicts = [
+        ("query", {"query": "changed"}),
+        ("objectives", {"objectives": {"deadline_ms": 4999, "max_engine_calls": 2}}),
+        ("scope", {"initial_scope": {"engines": ["brave"]}}),
+        ("filters", {"filters": {"language": "fr"}}),
+        ("fallback", {"fallback_scope": None}),
+        ("consent", {"allow_scope_expansion": False}),
+    ]
+    for label, changes in conflicts:
+        patch = enter()
+        try:
+            state, _, trace = new_state()
+            instrument(state, trace, patch)
+            seeded = await staged_tools.slopsearx_search_staged(**args(), idempotency_key="public-key")
+            record = copy.deepcopy((await state.staged_store.read("default", seeded["operation_id"])).record)
+            trace.clear()
+            inputs = args() | changes | {"idempotency_key": "public-key"}
+            result = await outcome(staged_tools.slopsearx_search_staged(**inputs))
+            cases.append(
+                {
+                    "id": "review.submit.conflict." + label,
+                    "review_ids": ["W06-R05"],
+                    "kind": "submit",
+                    "setup": {"existing_record": record},
+                    "input": inputs,
+                    **result,
+                    "trace": trace,
+                }
+            )
+        finally:
+            patch.undo()
+    for label, seed_composed, new_source, query in [
+        ("changed_source", True, source("run-b"), None),
+        ("source_omitted", True, None, "historical public query"),
+        ("source_added", False, source(), None),
+        ("query_and_source", True, source(), "explicit query"),
+    ]:
+        patch = enter()
+        try:
+            state, _, trace = new_state()
+            instrument(state, trace, patch)
+            seeded_inputs = args(query=None) | {"source": source()} if seed_composed else args()
+            seeded = await staged_tools.slopsearx_search_staged(**seeded_inputs, idempotency_key="public-key")
+            require("error" not in seeded, "composition setup failed")
+            record = copy.deepcopy((await state.staged_store.read("default", seeded["operation_id"])).record)
+            trace.clear()
+            inputs = args(query=query) | {"source": new_source, "idempotency_key": "public-key"}
+            result = await outcome(staged_tools.slopsearx_search_staged(**inputs))
+            cases.append(
+                {
+                    "id": "review.submit.composition." + label,
+                    "review_ids": ["W06-R05"],
+                    "kind": "submit",
+                    "setup": {"existing_record": record, "saved_reports": ["run-a", "run-b"]},
+                    "input": inputs,
+                    **result,
+                    "trace": trace,
+                }
+            )
+        finally:
+            patch.undo()
+    base_ref = source()
+    references = [
+        ("shape_empty", {}),
+        ("shape_extra", base_ref | {"extra": True}),
+        ("kind_integer", base_ref | {"kind": 1}),
+        ("id_integer", base_ref | {"id": 1}),
+        ("unknown_kind", base_ref | {"kind": "unknown"}),
+        ("empty_id", base_ref | {"id": ""}),
+        ("control_id", base_ref | {"id": "bad\x01id"}),
+        ("oversize_id", base_ref | {"id": "x" * 1025}),
+        ("wrong_contract", base_ref | {"contract": "wrong"}),
+        ("wrong_version", base_ref | {"version": 0}),
+        ("unsupported_transition", artifact_ref("snapshot", "snap-fixed")),
+        ("composite_colon_run", artifact_ref("saved_report", composite_artifact_id("saved", "bad:run"))),
+        ("malformed_composite", artifact_ref("saved_report", "bad-composite")),
+    ]
+    for label, reference in references:
+        patch = enter()
+        try:
+            state, _, trace = new_state()
+            result = await outcome(composition.resolve_source(reference, "staged_search"))
+            cases.append(
+                {
+                    "id": "review.source." + label,
+                    "review_ids": ["W06-R07"] if label == "composite_colon_run" else ["W06-R06"],
+                    "kind": "source",
+                    "input": {"source": reference, "destination": "staged_search"},
+                    **result,
+                    "setup": {"saved_reports": ["run-a", "run-b"], "saved_definition_engines": ["wikipedia"]},
+                    "trace": trace,
+                }
+            )
+        finally:
+            patch.undo()
+    for endpoint in ["submit", "get", "retry"]:
+        for mode in ["unavailable", "missing", "expired"]:
+            patch = enter()
+            try:
+                state, shared, trace = new_state()
+                instrument(state, trace, patch)
+                seeded = await staged_tools.slopsearx_search_staged(**args(), idempotency_key="public-key")
+                operation = seeded["operation_id"]
+                record = copy.deepcopy((await state.staged_store.read("default", operation)).record)
+                shared.is_connected = mode != "unavailable"
+                if mode == "expired":
+                    patch.setattr(staged.time, "time", lambda: 5001.0)
+                if mode == "missing":
+                    operation = "unknown-operation"
+                trace.clear()
+                if endpoint == "submit":
+                    inputs = args() | {"idempotency_key": "unknown-key" if mode == "missing" else "public-key"}
+                    result = await outcome(staged_tools.slopsearx_search_staged(**inputs))
+                elif endpoint == "get":
+                    inputs = {"operation_id": operation}
+                    result = await outcome(staged_tools.slopsearx_get_staged_search(**inputs))
+                else:
+                    inputs = {"operation_id": operation, "retry_key": "retry-key"}
+                    result = await outcome(staged_tools.slopsearx_retry_staged_search(**inputs))
+                cases.append(
+                    {
+                        "id": f"review.{endpoint}.store.{mode}",
+                        "review_ids": ["W06-R05"],
+                        "kind": endpoint,
+                        "setup": {
+                            "store_mode": mode,
+                            "existing_record": record,
+                            "now": 5001.0 if mode == "expired" else 1000.0,
+                        },
+                        "input": inputs,
+                        **result,
+                        "trace": trace,
+                    }
+                )
+            finally:
+                patch.undo()
+    for label, key in [("blank", " "), ("oversize", "x" * 129)]:
+        patch = enter()
+        try:
+            state, shared, trace = new_state()
+            instrument(state, trace, patch)
+            shared.is_connected = False
+            inputs = {"operation_id": "unknown-operation", "retry_key": key}
+            result = await outcome(staged_tools.slopsearx_retry_staged_search(**inputs))
+            cases.append(
+                {
+                    "id": "review.retry.key." + label,
+                    "review_ids": ["W06-R05"],
+                    "kind": "retry",
+                    "setup": {"store_mode": "unavailable"},
+                    "input": inputs,
+                    **result,
+                    "trace": trace,
+                }
+            )
+        finally:
+            patch.undo()
+    replay = [
+        ("deadline_float", {"deadline_ms": 1000.0, "max_engine_calls": 2}, None, 1000, 2),
+        ("calls_float", {"deadline_ms": 1000, "max_engine_calls": 2.0}, None, 1000, 2),
+        ("both_float", {"deadline_ms": 1000.0, "max_engine_calls": 2.0}, None, 1000, 2),
+        ("deadline_true", {"deadline_ms": True, "max_engine_calls": 1}, None, 1, 1),
+        ("calls_true", {"deadline_ms": 1, "max_engine_calls": True}, None, 1, 1),
+        ("both_true", {"deadline_ms": True, "max_engine_calls": True}, None, 1, 1),
+    ]
+    replay += [
+        ("filters_" + label, {"deadline_ms": 1000, "max_engine_calls": 2}, value, 1000, 2)
+        for label, value in [
+            ("empty_list", []),
+            ("false", False),
+            ("empty_string", ""),
+            ("number", 4),
+            ("nonempty_string", "ignored"),
+            ("empty_map", {}),
+        ]
+    ]
+    for label, objectives, filters, deadline, calls in replay:
+        patch = enter()
+        try:
+            state, _, trace = new_state()
+            instrument(state, trace, patch)
+            seed_input = args(
+                objectives={"deadline_ms": deadline, "max_engine_calls": calls},
+                fallback_scope=None,
+                allow_scope_expansion=False,
+            )
+            seeded = await staged_tools.slopsearx_search_staged(**seed_input, idempotency_key="public-key")
+            require("error" not in seeded, "numeric replay seed rejected")
+            record = copy.deepcopy((await state.staged_store.read("default", seeded["operation_id"])).record)
+            trace.clear()
+            inputs = seed_input | {"objectives": objectives, "filters": filters}
+            equivalent = staged_tools._replay_equivalent(record, **inputs)
+            fresh_plan, fresh_error = staged_tools._build_plan(**inputs)
+            result = await outcome(staged_tools.slopsearx_search_staged(**inputs, idempotency_key="public-key"))
+            require(
+                equivalent and result.get("output", {}).get("operation_id") == seeded["operation_id"],
+                "source replay did not preserve Python equality/default filter branch",
+            )
+            cases.append(
+                {
+                    "id": "review.replay." + label,
+                    "review_ids": ["W06-R09"],
+                    "kind": "replay",
+                    "setup": {"existing_record": record, "seed_input": seed_input},
+                    "input": inputs | {"idempotency_key": "public-key"},
+                    "equivalent": equivalent,
+                    "fresh_plan": fresh_plan,
+                    "fresh_error": fresh_error,
+                    **result,
+                    "trace": trace,
+                }
+            )
+        finally:
+            patch.undo()
+    # Real admission collision after both authoritative lookups observed absence.
+    patch = enter()
+    try:
+        state, _, trace = new_state()
+        original_find = state.staged_store.find_by_idempotency
+        seen = {name: asyncio.Event() for name in ["race-a", "race-b"]}
+        release = {name: asyncio.Event() for name in ["race-a", "race-b"]}
+
+        async def held_find(*pos):
+            name = asyncio.current_task().get_name()
+            read = await original_find(*pos)
+            trace.append({"method": "find_by_idempotency", "task": name, "result": safe(read)})
+            seen[name].set()
+            await release[name].wait()
+            return read
+
+        patch.setattr(state.staged_store, "find_by_idempotency", held_find)
+        original_admit = state.staged_store.admit
+
+        async def admission(*pos):
+            result = await original_admit(*pos)
+            trace.append({"method": "admit", "task": asyncio.current_task().get_name(), "result": safe(result)})
+            return result
+
+        patch.setattr(state.staged_store, "admit", admission)
+        inputs = [args(query=name) | {"idempotency_key": "race-key"} for name in ["race-a", "race-b"]]
+        tasks = [
+            asyncio.create_task(staged_tools.slopsearx_search_staged(**data), name=data["query"]) for data in inputs
+        ]
+        await asyncio.gather(*(event.wait() for event in seen.values()))
+        release["race-a"].set()
+        first = await tasks[0]
+        release["race-b"].set()
+        second = await tasks[1]
+        require(second.get("error", {}).get("code") == "idempotency_conflict", "real admission collision did not fail")
+        cases.append(
+            {
+                "id": "review.submit.admission_collision",
+                "review_ids": ["W06-R05"],
+                "kind": "admission_race",
+                "input": inputs,
+                "schedule": "both real lookups observed missing; race-a admitted before race-b continued",
+                "output": [first, second],
+                "after_record": copy.deepcopy(
+                    state.staged_store._store._data.get(state.staged_store._key("default", first["operation_id"]))
+                ),
+                "trace": trace,
+            }
+        )
+    finally:
+        patch.undo()
+    # Original runner rechecks the absolute deadline after a definite renewal.
+    patch = enter()
+    try:
+        state, _, trace = new_state()
+        inputs = args()
+        accepted = await staged_tools.slopsearx_search_staged(**inputs, idempotency_key="deadline-after-renewal")
+        before = copy.deepcopy((await state.staged_store.read("default", accepted["operation_id"])).record)
+        original_renew = state.staged_store.renew
+
+        async def renew_then_expire(*pos):
+            renewed = await original_renew(*pos)
+            trace.append({"method": "actual_renew_ack", "acknowledged": renewed, "at": 1000.0})
+            require(renewed, "source renewal control was not acknowledged")
+            patch.setattr(staged.time, "time", lambda: 1006.0)
+            return renewed
+
+        patch.setattr(state.staged_store, "renew", renew_then_expire)
+        runner = staged.StagedSearchRunner(
+            state.service, state.staged_store, state.snapshots, staged_tools._policy_check
+        )
+        await runner.run_one("default", accepted["operation_id"])
+        record = copy.deepcopy((await state.staged_store.read("default", accepted["operation_id"])).record)
+        require(
+            record["stages"][0]["attempts"][0]["error"]
+            == {"code": "deadline_exceeded", "message": "deadline expired before dispatch"},
+            "source renewal deadline message changed",
+        )
+        require(
+            sum(engine.calls for engine in state.ctx.active_engines.values()) == 0,
+            "renewal deadline control dispatched",
+        )
+        cases.append(
+            {
+                "id": "review.runner.deadline_after_acknowledged_renewal",
+                "review_ids": ["W06-R02"],
+                "kind": "runner",
+                "input": inputs,
+                "before": before,
+                "record": record,
+                "trace": trace,
+                "control": "real source renewal returns true before clock advances from1000 to1006; actual original Runner+SearchService; zero dispatch",
+                "fixture_engine_calls": 0,
+            }
+        )
+    finally:
+        patch.undo()
+    # Genuine shared-service exception rather than a stub returning fixture failure.
+    patch = enter()
+    try:
+        state, _, trace = new_state()
+
+        class DeniedClientWindow:
+            async def acquire(self, client, cost=1):
+                trace.append({"method": "client_rate_window.acquire", "client": client, "cost": cost, "allowed": False})
+                return False
+
+        state.ctx.client_rate_window = DeniedClientWindow()
+        inputs = args()
+        accepted = await staged_tools.slopsearx_search_staged(**inputs, idempotency_key="actual-service-error")
+        before = copy.deepcopy((await state.staged_store.read("default", accepted["operation_id"])).record)
+        exceptions = []
+        original_search = state.service.search
+
+        async def observed_search(request):
+            trace.append({"method": "actual_SearchService.search", "request": safe(request)})
+            try:
+                return await original_search(request)
+            except Exception as exc:
+                exceptions.append({"class": type(exc).__name__, "message": str(exc)})
+                raise
+
+        patch.setattr(state.service, "search", observed_search)
+        runner = staged.StagedSearchRunner(
+            state.service, state.staged_store, state.snapshots, staged_tools._policy_check
+        )
+        await runner.run_one("default", accepted["operation_id"])
+        record = copy.deepcopy((await state.staged_store.read("default", accepted["operation_id"])).record)
+        require(
+            exceptions == [{"class": "RateLimitExceededError", "message": ""}], "actual source exception path changed"
+        )
+        require(
+            record["budget"]["observed"] is None and record["state"] == "failed",
+            "unknown actual service failure not preserved",
+        )
+        require(sum(engine.calls for engine in state.ctx.active_engines.values()) == 0, "denied source dispatched")
+        cases.append(
+            {
+                "id": "review.runner.actual_shared_rate_denial",
+                "review_ids": ["W06-R10"],
+                "kind": "runner",
+                "input": inputs,
+                "control": "actual SearchService with client_rate_window.acquire=False; no closed-service equivalent asserted",
+                "before": before,
+                "record": record,
+                "exceptions": exceptions,
+                "trace": trace,
+                "rendered": await staged_tools._render(record, None, None),
+                "fixture_engine_calls": 0,
+            }
+        )
+    finally:
+        patch.undo()
+    for revoked in ["sensitive", "staged_grant"]:
+        patch = enter()
+        try:
+            state, shared, trace = new_state()
+            inputs = args()
+            accepted = await staged_tools.slopsearx_search_staged(**inputs, idempotency_key="presave-" + revoked)
+            before = copy.deepcopy((await state.staged_store.read("default", accepted["operation_id"])).record)
+            original_set = shared.set
+
+            async def observed_set(key, value, ttl=300):
+                await original_set(key, value, ttl)
+                if key.startswith("mcp:snapshot:"):
+                    if revoked == "sensitive":
+                        state.policy.sensitive_engines.add("wikipedia")
+                        state.policy.targeted_sensitive_allowed = False
+                    else:
+                        state.policy.enabled_tools["staged_search"] = False
+                    trace.append(
+                        {"method": "snapshot_persisted_then_authority_revoked", "key": key, "revocation": revoked}
+                    )
+
+            patch.setattr(shared, "set", observed_set)
+
+            def checked(record):
+                result = staged_tools._policy_check(record)
+                trace.append({"method": "actual_runner_policy_check", "output": result})
+                return result
+
+            original_save = state.staged_store.save_owned
+
+            async def save(*pos):
+                trace.append({"method": "actual_save_owned", "record": copy.deepcopy(pos[1])})
+                result = await original_save(*pos)
+                trace.append({"method": "actual_save_owned_ack", "acknowledged": result})
+                return result
+
+            patch.setattr(state.staged_store, "save_owned", save)
+            runner = staged.StagedSearchRunner(state.service, state.staged_store, state.snapshots, checked)
+            await runner.run_one("default", accepted["operation_id"])
+            record = copy.deepcopy((await state.staged_store.read("default", accepted["operation_id"])).record)
+            public = await staged_tools.slopsearx_get_staged_search(accepted["operation_id"])
+            require(
+                record["state"] == "completed" and record["selected_result_attempt_id"],
+                "original presave revocation fixture did not publish",
+            )
+            require(
+                sum(row["method"] == "actual_runner_policy_check" for row in trace) == 1,
+                "source added another policy boundary",
+            )
+            cases.append(
+                {
+                    "id": "review.runner.presave_revocation." + revoked,
+                    "review_ids": ["additional_presave_authority"],
+                    "kind": "runner",
+                    "input": inputs,
+                    "control": "authority flips after actual SnapshotStore persistence before original runner final save",
+                    "before": before,
+                    "record": record,
+                    "public_read": public,
+                    "trace": trace,
+                    "current_policy_result": staged_tools._policy_check(record),
+                    "fixture_engine_calls": sum(engine.calls for engine in state.ctx.active_engines.values()),
+                    "disposition": "original source publishes; approved native final-presave authority hardening must intentionally differ",
+                }
+            )
+        finally:
+            patch.undo()
+    set_state(None)
+    require(len({row["id"] for row in cases}) == len(cases), "duplicate review case IDs")
+    for row in cases:
+        row["qualification_role"] = "reference_control" if row["kind"] == "runner" else "source_case"
+    return cases
+
+
+async def main():
+    cases = await capture()
+    context = json.loads((ROOT / "docs/rust-rewrite/w06/source.json").read_text())["context"]
+    packet = {
+        "schema_version": 1,
+        "plan_id": "W06",
+        "review_receipt_sha256": "86f59f6839dda415849d1a2f8526324f185336d3b0cba9311a47b072fd134ccd",
+        "baseline": "9b7d888da1ee3f7e2ed045c2185ea16f419381e9",
+        "source_controls": GUARDS,
+        "context": context,
+        "saved_fixture": {"definition_id": "saved", "definition": SAVED_DEFINITION, "reports": SAVED_REPORTS},
+        "provider_calls": 0,
+        "network_calls": 0,
+        "nondeterminism": {
+            "wall_time": "1000.0 except explicit logical-expiry cases5001.0",
+            "uuid": "sequential fixed integers shifted80 per case",
+            "query_id": "q-review-fixed",
+            "lease_token": "review-fixed-lease-token",
+            "engine_latency_ms": 2.0,
+        },
+        "source_fixture": "actual original public functions/staged store memory seam; actual shared service for operational-error and presave controls; bounded saved resolver source fixture only",
+        "cases": cases,
+    }
+    destination = ROOT / "docs/rust-rewrite/w06/evidence/review-public-source-outcomes.json"
+    destination.write_text(json.dumps(safe(packet), ensure_ascii=True, indent=2) + "\n")
+    print(
+        json.dumps(
+            {
+                "plan_id": "W06",
+                "cases": len(cases),
+                "provider_calls": 0,
+                "network_calls": 0,
+                "case_groups": {
+                    kind: sum(row["kind"] == kind for row in cases) for kind in sorted({row["kind"] for row in cases})
+                },
+            },
+            sort_keys=True,
+        )
+    )
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

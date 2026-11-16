@@ -1,0 +1,49 @@
+{
+  "kind": "A14_ACCEPTED_HELPER_CURRENT_AMENDMENT_V1",
+  "dependency_revision": "7877a99df4cc2a8ffe9b5fe7e51a41de5955e41f",
+  "source_path": "crates/ssx-infra/src/adapters/clinicaltrials.rs",
+  "approved_cases": {
+    "path": "docs/rust-rewrite/a14/cases.json",
+    "sha256": "4d7e4d4208a514c0f2b7b9b137651d07c9953fdaa3836d8c3a30490b6f0cd5c5",
+    "original_approval_and_all_captures": "unchanged"
+  },
+  "historical": {
+    "archive_path": "docs/rust-rewrite/a13/source-amendments/clinicaltrials.rs.9f1a.frozen",
+    "git_blob": "f4cc578e117b3f75b56cd6a7994c3ae38eb61dae",
+    "sha256": "f7f74938aafe9ce7560f74fbddf907baf8ead53b8b6c0f22a7435de66372c5b7",
+    "bytes": 33943
+  },
+  "current": {
+    "git_blob": "632e3048064ec92c6290754966abe0130c0753fd",
+    "sha256": "2baaac73ee64f63192ec9c35ad44577d42cf4c314d1b6d3c57c7447086319485",
+    "bytes": 42996
+  },
+  "strict_delegate": {
+    "manifest_path": "docs/rust-rewrite/a13/source-amendments/a13-current-source-amendment-v4.json",
+    "manifest_sha256": "0126da6005a6cbab910d07779a8c2a3d9076d4823d49c08f8cca64b7e791207a",
+    "container_path": "docs/rust-rewrite/a13/qualification-v1.json",
+    "container_sha256": "e2d9249fbadd0eca06a10215f796defc5845722c63fcf9f409ab9eac8a85f74e",
+    "historical_sha256": "f7f74938aafe9ce7560f74fbddf907baf8ead53b8b6c0f22a7435de66372c5b7",
+    "historical_bytes": 33943
+  },
+  "preserved_reference_sections": [
+    {
+      "start": "pub(super) fn network_deadline(",
+      "end": "/// Only direct non-PubMed requests",
+      "bytes": 1235,
+      "sha256": "6355e34c8fcf0cd820a5b792bb3c48764bfd0b7450b72a1cea3150c48599fba0"
+    },
+    {
+      "start": "pub(super) fn numeric(",
+      "end": "pub(super) fn slice_end(",
+      "bytes": 553,
+      "sha256": "0c570dcc9a35a81fe7e754547b572c446d0799d8c691552c349cefbd8f30a02f"
+    }
+  ],
+  "owned_jobs_source": {
+    "path": "crates/ssx-infra/src/adapters/jobs.rs",
+    "sha256": "ec206a92016763f7510f4393e0f14a38429a7950e8bf22118c60c422dbe46a6c",
+    "relationship": "A14 owns its timeout algorithm and does not call ClinicalTrials; ClinicalTrials is accepted comparison provenance"
+  },
+  "semantic_review": "Whole helper changed in owner-clock admission/get/check wrappers and deterministic queue controls; not described as test-only. The exact network_deadline/network_deadline_using and numeric reference sections remain unchanged. Original A14 jobs implementation and18 tests/178 subcases remain exact. Fresh combined native qualification is required."
+}

@@ -1,0 +1,1326 @@
+{
+  "records": [
+    {
+      "id": "openlibrary-atomic-title-0",
+      "individual_boundary_ref": "openlibrary-title-0",
+      "bad_field": "title",
+      "bad_value": null,
+      "source_input": {
+        "id": "openlibrary-atomic-title-0",
+        "engine": "openlibrary",
+        "query": "test",
+        "config": {},
+        "responses": [
+          {
+            "status": 200,
+            "body": {
+              "docs": [
+                {
+                  "key": "/works/OL166894W",
+                  "title": "Dune",
+                  "author_name": [
+                    "Frank Herbert"
+                  ],
+                  "first_publish_year": 1965,
+                  "edition_count": 8,
+                  "cover_i": 123,
+                  "ratings_count": 7
+                },
+                {
+                  "key": "/works/OL166894W",
+                  "title": null,
+                  "author_name": [
+                    "Frank Herbert"
+                  ],
+                  "first_publish_year": 1965,
+                  "edition_count": 8,
+                  "cover_i": 123,
+                  "ratings_count": 7
+                }
+              ]
+            },
+            "wire_body": "{\"docs\":[{\"key\":\"/works/OL166894W\",\"title\":\"Dune\",\"author_name\":[\"Frank Herbert\"],\"first_publish_year\":1965,\"edition_count\":8,\"cover_i\":123,\"ratings_count\":7},{\"key\":\"/works/OL166894W\",\"title\":null,\"author_name\":[\"Frank Herbert\"],\"first_publish_year\":1965,\"edition_count\":8,\"cover_i\":123,\"ratings_count\":7}]}"
+          }
+        ],
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://openlibrary.org/search.json?q=test&limit=10",
+            "body": "",
+            "headers": {
+              "accept": "*/*",
+              "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+            }
+          }
+        ],
+        "output": {
+          "status": "ok",
+          "error_message": null,
+          "results": [
+            {
+              "url": "https://openlibrary.org/works/OL166894W",
+              "title": "Dune",
+              "content": "By Frank Herbert (1965) \u2014 8 editions",
+              "engine": "openlibrary",
+              "position": 1,
+              "score": 7.0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": "https://covers.openlibrary.org/b/id/123-M.jpg",
+              "img_src": null,
+              "media": null,
+              "payload": null
+            },
+            {
+              "url": "https://openlibrary.org/works/OL166894W",
+              "title": null,
+              "content": "By Frank Herbert (1965) \u2014 8 editions",
+              "engine": "openlibrary",
+              "position": 2,
+              "score": 7.0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": "https://covers.openlibrary.org/b/id/123-M.jpg",
+              "img_src": null,
+              "media": null,
+              "payload": null
+            }
+          ]
+        }
+      },
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://openlibrary.org/works/OL166894W",
+            "title": "Dune",
+            "content": "By Frank Herbert (1965) \u2014 8 editions",
+            "engine": "openlibrary",
+            "position": 1,
+            "score": 7.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": "https://covers.openlibrary.org/b/id/123-M.jpg",
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://openlibrary.org/works/OL166894W",
+            "title": null,
+            "content": "By Frank Herbert (1965) \u2014 8 editions",
+            "engine": "openlibrary",
+            "position": 2,
+            "score": 7.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": "https://covers.openlibrary.org/b/id/123-M.jpg",
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_native_requests_equal": true,
+      "ownership_control": "Current actual source replay asserts atomic empty Error. Existing valid_then_invalid unit releases SAME caller budget and next call succeeds, but currently uses null title/name only; preparing exact nine frozen-input ownership variants rather than overclaiming numeric/date resource proof."
+    },
+    {
+      "id": "openlibrary-atomic-title-1",
+      "individual_boundary_ref": "openlibrary-title-1",
+      "bad_field": "title",
+      "bad_value": 42,
+      "source_input": {
+        "id": "openlibrary-atomic-title-1",
+        "engine": "openlibrary",
+        "query": "test",
+        "config": {},
+        "responses": [
+          {
+            "status": 200,
+            "body": {
+              "docs": [
+                {
+                  "key": "/works/OL166894W",
+                  "title": "Dune",
+                  "author_name": [
+                    "Frank Herbert"
+                  ],
+                  "first_publish_year": 1965,
+                  "edition_count": 8,
+                  "cover_i": 123,
+                  "ratings_count": 7
+                },
+                {
+                  "key": "/works/OL166894W",
+                  "title": 42,
+                  "author_name": [
+                    "Frank Herbert"
+                  ],
+                  "first_publish_year": 1965,
+                  "edition_count": 8,
+                  "cover_i": 123,
+                  "ratings_count": 7
+                }
+              ]
+            },
+            "wire_body": "{\"docs\":[{\"key\":\"/works/OL166894W\",\"title\":\"Dune\",\"author_name\":[\"Frank Herbert\"],\"first_publish_year\":1965,\"edition_count\":8,\"cover_i\":123,\"ratings_count\":7},{\"key\":\"/works/OL166894W\",\"title\":42,\"author_name\":[\"Frank Herbert\"],\"first_publish_year\":1965,\"edition_count\":8,\"cover_i\":123,\"ratings_count\":7}]}"
+          }
+        ],
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://openlibrary.org/search.json?q=test&limit=10",
+            "body": "",
+            "headers": {
+              "accept": "*/*",
+              "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+            }
+          }
+        ],
+        "output": {
+          "status": "ok",
+          "error_message": null,
+          "results": [
+            {
+              "url": "https://openlibrary.org/works/OL166894W",
+              "title": "Dune",
+              "content": "By Frank Herbert (1965) \u2014 8 editions",
+              "engine": "openlibrary",
+              "position": 1,
+              "score": 7.0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": "https://covers.openlibrary.org/b/id/123-M.jpg",
+              "img_src": null,
+              "media": null,
+              "payload": null
+            },
+            {
+              "url": "https://openlibrary.org/works/OL166894W",
+              "title": 42,
+              "content": "By Frank Herbert (1965) \u2014 8 editions",
+              "engine": "openlibrary",
+              "position": 2,
+              "score": 7.0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": "https://covers.openlibrary.org/b/id/123-M.jpg",
+              "img_src": null,
+              "media": null,
+              "payload": null
+            }
+          ]
+        }
+      },
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://openlibrary.org/works/OL166894W",
+            "title": "Dune",
+            "content": "By Frank Herbert (1965) \u2014 8 editions",
+            "engine": "openlibrary",
+            "position": 1,
+            "score": 7.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": "https://covers.openlibrary.org/b/id/123-M.jpg",
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://openlibrary.org/works/OL166894W",
+            "title": 42,
+            "content": "By Frank Herbert (1965) \u2014 8 editions",
+            "engine": "openlibrary",
+            "position": 2,
+            "score": 7.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": "https://covers.openlibrary.org/b/id/123-M.jpg",
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_native_requests_equal": true,
+      "ownership_control": "Current actual source replay asserts atomic empty Error. Existing valid_then_invalid unit releases SAME caller budget and next call succeeds, but currently uses null title/name only; preparing exact nine frozen-input ownership variants rather than overclaiming numeric/date resource proof."
+    },
+    {
+      "id": "musicbrainz-atomic-name-0",
+      "individual_boundary_ref": "musicbrainz-name-0",
+      "bad_field": "name",
+      "bad_value": null,
+      "source_input": {
+        "id": "musicbrainz-atomic-name-0",
+        "engine": "musicbrainz",
+        "query": "test",
+        "config": {},
+        "responses": [
+          {
+            "status": 200,
+            "body": {
+              "artists": [
+                {
+                  "id": "artist-1",
+                  "name": "Artist",
+                  "type": "Group",
+                  "country": "GB",
+                  "life-span": {
+                    "begin": "1985"
+                  }
+                },
+                {
+                  "id": "artist-1",
+                  "name": null,
+                  "type": "Group",
+                  "country": "GB",
+                  "life-span": {
+                    "begin": "1985"
+                  }
+                }
+              ]
+            },
+            "wire_body": "{\"artists\":[{\"id\":\"artist-1\",\"name\":\"Artist\",\"type\":\"Group\",\"country\":\"GB\",\"life-span\":{\"begin\":\"1985\"}},{\"id\":\"artist-1\",\"name\":null,\"type\":\"Group\",\"country\":\"GB\",\"life-span\":{\"begin\":\"1985\"}}]}"
+          }
+        ],
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://musicbrainz.org/ws/2/artist/?query=test&limit=10&fmt=json",
+            "body": "",
+            "headers": {
+              "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+              "accept": "application/json"
+            }
+          }
+        ],
+        "output": {
+          "status": "ok",
+          "error_message": null,
+          "results": [
+            {
+              "url": "https://musicbrainz.org/artist/artist-1",
+              "title": "Artist",
+              "content": "Group \u2014 GB \u2014 Active since 1985",
+              "engine": "musicbrainz",
+              "position": 1,
+              "score": 1.0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "payload": null
+            },
+            {
+              "url": "https://musicbrainz.org/artist/artist-1",
+              "title": null,
+              "content": "Group \u2014 GB \u2014 Active since 1985",
+              "engine": "musicbrainz",
+              "position": 2,
+              "score": 1.0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "payload": null
+            }
+          ]
+        }
+      },
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://musicbrainz.org/artist/artist-1",
+            "title": "Artist",
+            "content": "Group \u2014 GB \u2014 Active since 1985",
+            "engine": "musicbrainz",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://musicbrainz.org/artist/artist-1",
+            "title": null,
+            "content": "Group \u2014 GB \u2014 Active since 1985",
+            "engine": "musicbrainz",
+            "position": 2,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_native_requests_equal": true,
+      "ownership_control": "Current actual source replay asserts atomic empty Error. Existing valid_then_invalid unit releases SAME caller budget and next call succeeds, but currently uses null title/name only; preparing exact nine frozen-input ownership variants rather than overclaiming numeric/date resource proof."
+    },
+    {
+      "id": "musicbrainz-atomic-name-1",
+      "individual_boundary_ref": "musicbrainz-name-1",
+      "bad_field": "name",
+      "bad_value": 42,
+      "source_input": {
+        "id": "musicbrainz-atomic-name-1",
+        "engine": "musicbrainz",
+        "query": "test",
+        "config": {},
+        "responses": [
+          {
+            "status": 200,
+            "body": {
+              "artists": [
+                {
+                  "id": "artist-1",
+                  "name": "Artist",
+                  "type": "Group",
+                  "country": "GB",
+                  "life-span": {
+                    "begin": "1985"
+                  }
+                },
+                {
+                  "id": "artist-1",
+                  "name": 42,
+                  "type": "Group",
+                  "country": "GB",
+                  "life-span": {
+                    "begin": "1985"
+                  }
+                }
+              ]
+            },
+            "wire_body": "{\"artists\":[{\"id\":\"artist-1\",\"name\":\"Artist\",\"type\":\"Group\",\"country\":\"GB\",\"life-span\":{\"begin\":\"1985\"}},{\"id\":\"artist-1\",\"name\":42,\"type\":\"Group\",\"country\":\"GB\",\"life-span\":{\"begin\":\"1985\"}}]}"
+          }
+        ],
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://musicbrainz.org/ws/2/artist/?query=test&limit=10&fmt=json",
+            "body": "",
+            "headers": {
+              "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+              "accept": "application/json"
+            }
+          }
+        ],
+        "output": {
+          "status": "ok",
+          "error_message": null,
+          "results": [
+            {
+              "url": "https://musicbrainz.org/artist/artist-1",
+              "title": "Artist",
+              "content": "Group \u2014 GB \u2014 Active since 1985",
+              "engine": "musicbrainz",
+              "position": 1,
+              "score": 1.0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "payload": null
+            },
+            {
+              "url": "https://musicbrainz.org/artist/artist-1",
+              "title": 42,
+              "content": "Group \u2014 GB \u2014 Active since 1985",
+              "engine": "musicbrainz",
+              "position": 2,
+              "score": 1.0,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "payload": null
+            }
+          ]
+        }
+      },
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://musicbrainz.org/artist/artist-1",
+            "title": "Artist",
+            "content": "Group \u2014 GB \u2014 Active since 1985",
+            "engine": "musicbrainz",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://musicbrainz.org/artist/artist-1",
+            "title": 42,
+            "content": "Group \u2014 GB \u2014 Active since 1985",
+            "engine": "musicbrainz",
+            "position": 2,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_native_requests_equal": true,
+      "ownership_control": "Current actual source replay asserts atomic empty Error. Existing valid_then_invalid unit releases SAME caller budget and next call succeeds, but currently uses null title/name only; preparing exact nine frozen-input ownership variants rather than overclaiming numeric/date resource proof."
+    },
+    {
+      "id": "tmdb-atomic-title-0",
+      "individual_boundary_ref": "tmdb-title-0",
+      "bad_field": "title",
+      "bad_value": null,
+      "source_input": {
+        "id": "tmdb-atomic-title-0",
+        "engine": "tmdb",
+        "query": "test",
+        "config": {
+          "api_key": "synthetic-tmdb-key"
+        },
+        "responses": [
+          {
+            "status": 200,
+            "body": {
+              "results": [
+                {
+                  "media_type": "movie",
+                  "id": 42,
+                  "title": "Movie",
+                  "release_date": "2024-02-03",
+                  "overview": "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+                  "vote_average": 7.5,
+                  "poster_path": "/poster.jpg"
+                },
+                {
+                  "media_type": "movie",
+                  "id": 42,
+                  "title": null,
+                  "release_date": "2024-02-03",
+                  "overview": "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+                  "vote_average": 7.5,
+                  "poster_path": "/poster.jpg"
+                }
+              ]
+            },
+            "wire_body": "{\"results\":[{\"media_type\":\"movie\",\"id\":42,\"title\":\"Movie\",\"release_date\":\"2024-02-03\",\"overview\":\"OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO\",\"vote_average\":7.5,\"poster_path\":\"/poster.jpg\"},{\"media_type\":\"movie\",\"id\":42,\"title\":null,\"release_date\":\"2024-02-03\",\"overview\":\"OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO\",\"vote_average\":7.5,\"poster_path\":\"/poster.jpg\"}]}"
+          }
+        ],
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://api.themoviedb.org/3/search/multi?query=test&page=1",
+            "body": "",
+            "headers": {
+              "accept": "*/*",
+              "user-agent": "python-httpx/0.28.1",
+              "authorization": "Bearer synthetic-tmdb-key"
+            }
+          }
+        ],
+        "output": {
+          "status": "ok",
+          "error_message": null,
+          "results": [
+            {
+              "url": "https://www.themoviedb.org/movie/42",
+              "title": "Movie",
+              "content": "[Movie] (2024) OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+              "engine": "tmdb",
+              "position": 1,
+              "score": 7.5,
+              "category": "general",
+              "published_date": "2024-02-03",
+              "thumbnail": "https://image.tmdb.org/t/p/w200/poster.jpg",
+              "img_src": null,
+              "media": null,
+              "payload": {
+                "domain": "media",
+                "type": "media_item",
+                "schema_version": 1,
+                "data": {
+                  "media_type": "movie",
+                  "title": "Movie",
+                  "release_date": "2024-02-03",
+                  "overview": "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+                  "vote_average": 7.5
+                },
+                "provenance": {
+                  "engine": "tmdb",
+                  "adapter_fields": [
+                    "media_type",
+                    "title",
+                    "release_date",
+                    "overview",
+                    "vote_average"
+                  ],
+                  "normalized_fields": [],
+                  "inferred_fields": []
+                }
+              }
+            },
+            {
+              "url": "https://www.themoviedb.org/movie/42",
+              "title": null,
+              "content": "[Movie] (2024) OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+              "engine": "tmdb",
+              "position": 2,
+              "score": 7.5,
+              "category": "general",
+              "published_date": "2024-02-03",
+              "thumbnail": "https://image.tmdb.org/t/p/w200/poster.jpg",
+              "img_src": null,
+              "media": null,
+              "payload": {
+                "domain": "media",
+                "type": "media_item",
+                "schema_version": 1,
+                "data": {
+                  "media_type": "movie",
+                  "release_date": "2024-02-03",
+                  "overview": "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+                  "vote_average": 7.5
+                },
+                "provenance": {
+                  "engine": "tmdb",
+                  "adapter_fields": [
+                    "media_type",
+                    "release_date",
+                    "overview",
+                    "vote_average"
+                  ],
+                  "normalized_fields": [],
+                  "inferred_fields": []
+                }
+              }
+            }
+          ]
+        }
+      },
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.themoviedb.org/movie/42",
+            "title": "Movie",
+            "content": "[Movie] (2024) OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+            "engine": "tmdb",
+            "position": 1,
+            "score": 7.5,
+            "category": "general",
+            "published_date": "2024-02-03",
+            "thumbnail": "https://image.tmdb.org/t/p/w200/poster.jpg",
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "media",
+              "type": "media_item",
+              "schema_version": 1,
+              "data": {
+                "media_type": "movie",
+                "title": "Movie",
+                "release_date": "2024-02-03",
+                "overview": "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+                "vote_average": 7.5
+              },
+              "provenance": {
+                "engine": "tmdb",
+                "adapter_fields": [
+                  "media_type",
+                  "title",
+                  "release_date",
+                  "overview",
+                  "vote_average"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          },
+          {
+            "url": "https://www.themoviedb.org/movie/42",
+            "title": null,
+            "content": "[Movie] (2024) OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+            "engine": "tmdb",
+            "position": 2,
+            "score": 7.5,
+            "category": "general",
+            "published_date": "2024-02-03",
+            "thumbnail": "https://image.tmdb.org/t/p/w200/poster.jpg",
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "media",
+              "type": "media_item",
+              "schema_version": 1,
+              "data": {
+                "media_type": "movie",
+                "release_date": "2024-02-03",
+                "overview": "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+                "vote_average": 7.5
+              },
+              "provenance": {
+                "engine": "tmdb",
+                "adapter_fields": [
+                  "media_type",
+                  "release_date",
+                  "overview",
+                  "vote_average"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_native_requests_equal": true,
+      "ownership_control": "Current actual source replay asserts atomic empty Error. Existing valid_then_invalid unit releases SAME caller budget and next call succeeds, but currently uses null title/name only; preparing exact nine frozen-input ownership variants rather than overclaiming numeric/date resource proof."
+    },
+    {
+      "id": "tmdb-atomic-title-1",
+      "individual_boundary_ref": "tmdb-title-1",
+      "bad_field": "title",
+      "bad_value": 42,
+      "source_input": {
+        "id": "tmdb-atomic-title-1",
+        "engine": "tmdb",
+        "query": "test",
+        "config": {
+          "api_key": "synthetic-tmdb-key"
+        },
+        "responses": [
+          {
+            "status": 200,
+            "body": {
+              "results": [
+                {
+                  "media_type": "movie",
+                  "id": 42,
+                  "title": "Movie",
+                  "release_date": "2024-02-03",
+                  "overview": "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+                  "vote_average": 7.5,
+                  "poster_path": "/poster.jpg"
+                },
+                {
+                  "media_type": "movie",
+                  "id": 42,
+                  "title": 42,
+                  "release_date": "2024-02-03",
+                  "overview": "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+                  "vote_average": 7.5,
+                  "poster_path": "/poster.jpg"
+                }
+              ]
+            },
+            "wire_body": "{\"results\":[{\"media_type\":\"movie\",\"id\":42,\"title\":\"Movie\",\"release_date\":\"2024-02-03\",\"overview\":\"OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO\",\"vote_average\":7.5,\"poster_path\":\"/poster.jpg\"},{\"media_type\":\"movie\",\"id\":42,\"title\":42,\"release_date\":\"2024-02-03\",\"overview\":\"OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO\",\"vote_average\":7.5,\"poster_path\":\"/poster.jpg\"}]}"
+          }
+        ],
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://api.themoviedb.org/3/search/multi?query=test&page=1",
+            "body": "",
+            "headers": {
+              "accept": "*/*",
+              "user-agent": "python-httpx/0.28.1",
+              "authorization": "Bearer synthetic-tmdb-key"
+            }
+          }
+        ],
+        "output": {
+          "status": "ok",
+          "error_message": null,
+          "results": [
+            {
+              "url": "https://www.themoviedb.org/movie/42",
+              "title": "Movie",
+              "content": "[Movie] (2024) OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+              "engine": "tmdb",
+              "position": 1,
+              "score": 7.5,
+              "category": "general",
+              "published_date": "2024-02-03",
+              "thumbnail": "https://image.tmdb.org/t/p/w200/poster.jpg",
+              "img_src": null,
+              "media": null,
+              "payload": {
+                "domain": "media",
+                "type": "media_item",
+                "schema_version": 1,
+                "data": {
+                  "media_type": "movie",
+                  "title": "Movie",
+                  "release_date": "2024-02-03",
+                  "overview": "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+                  "vote_average": 7.5
+                },
+                "provenance": {
+                  "engine": "tmdb",
+                  "adapter_fields": [
+                    "media_type",
+                    "title",
+                    "release_date",
+                    "overview",
+                    "vote_average"
+                  ],
+                  "normalized_fields": [],
+                  "inferred_fields": []
+                }
+              }
+            },
+            {
+              "url": "https://www.themoviedb.org/movie/42",
+              "title": 42,
+              "content": "[Movie] (2024) OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+              "engine": "tmdb",
+              "position": 2,
+              "score": 7.5,
+              "category": "general",
+              "published_date": "2024-02-03",
+              "thumbnail": "https://image.tmdb.org/t/p/w200/poster.jpg",
+              "img_src": null,
+              "media": null,
+              "payload": {
+                "domain": "media",
+                "type": "media_item",
+                "schema_version": 1,
+                "data": {
+                  "media_type": "movie",
+                  "title": 42,
+                  "release_date": "2024-02-03",
+                  "overview": "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+                  "vote_average": 7.5
+                },
+                "provenance": {
+                  "engine": "tmdb",
+                  "adapter_fields": [
+                    "media_type",
+                    "title",
+                    "release_date",
+                    "overview",
+                    "vote_average"
+                  ],
+                  "normalized_fields": [],
+                  "inferred_fields": []
+                }
+              }
+            }
+          ]
+        }
+      },
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.themoviedb.org/movie/42",
+            "title": "Movie",
+            "content": "[Movie] (2024) OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+            "engine": "tmdb",
+            "position": 1,
+            "score": 7.5,
+            "category": "general",
+            "published_date": "2024-02-03",
+            "thumbnail": "https://image.tmdb.org/t/p/w200/poster.jpg",
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "media",
+              "type": "media_item",
+              "schema_version": 1,
+              "data": {
+                "media_type": "movie",
+                "title": "Movie",
+                "release_date": "2024-02-03",
+                "overview": "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+                "vote_average": 7.5
+              },
+              "provenance": {
+                "engine": "tmdb",
+                "adapter_fields": [
+                  "media_type",
+                  "title",
+                  "release_date",
+                  "overview",
+                  "vote_average"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          },
+          {
+            "url": "https://www.themoviedb.org/movie/42",
+            "title": 42,
+            "content": "[Movie] (2024) OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+            "engine": "tmdb",
+            "position": 2,
+            "score": 7.5,
+            "category": "general",
+            "published_date": "2024-02-03",
+            "thumbnail": "https://image.tmdb.org/t/p/w200/poster.jpg",
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "media",
+              "type": "media_item",
+              "schema_version": 1,
+              "data": {
+                "media_type": "movie",
+                "title": 42,
+                "release_date": "2024-02-03",
+                "overview": "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+                "vote_average": 7.5
+              },
+              "provenance": {
+                "engine": "tmdb",
+                "adapter_fields": [
+                  "media_type",
+                  "title",
+                  "release_date",
+                  "overview",
+                  "vote_average"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_native_requests_equal": true,
+      "ownership_control": "Current actual source replay asserts atomic empty Error. Existing valid_then_invalid unit releases SAME caller budget and next call succeeds, but currently uses null title/name only; preparing exact nine frozen-input ownership variants rather than overclaiming numeric/date resource proof."
+    },
+    {
+      "id": "internetarchive-atomic-title-0",
+      "individual_boundary_ref": "internetarchive-title-0",
+      "bad_field": "title",
+      "bad_value": null,
+      "source_input": {
+        "id": "internetarchive-atomic-title-0",
+        "engine": "internetarchive",
+        "query": "test",
+        "config": {},
+        "responses": [
+          {
+            "status": 200,
+            "body": {
+              "response": {
+                "docs": [
+                  {
+                    "identifier": "book-1",
+                    "title": "Book",
+                    "description": "Description",
+                    "downloads": 5000,
+                    "date": "2024-01-01"
+                  },
+                  {
+                    "identifier": "book-1",
+                    "title": null,
+                    "description": "Description",
+                    "downloads": 5000,
+                    "date": "2024-01-01"
+                  }
+                ]
+              }
+            },
+            "wire_body": "{\"response\":{\"docs\":[{\"identifier\":\"book-1\",\"title\":\"Book\",\"description\":\"Description\",\"downloads\":5000,\"date\":\"2024-01-01\"},{\"identifier\":\"book-1\",\"title\":null,\"description\":\"Description\",\"downloads\":5000,\"date\":\"2024-01-01\"}]}}"
+          }
+        ],
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://archive.org/advancedsearch.php?q=test&output=json&rows=10",
+            "body": "",
+            "headers": {
+              "accept": "*/*",
+              "user-agent": "python-httpx/0.28.1"
+            }
+          }
+        ],
+        "output": {
+          "status": "ok",
+          "error_message": null,
+          "results": [
+            {
+              "url": "https://archive.org/details/book-1",
+              "title": "Book",
+              "content": "Description",
+              "engine": "internetarchive",
+              "position": 0,
+              "score": 0.5,
+              "category": "general",
+              "published_date": "2024-01-01",
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "payload": null
+            },
+            {
+              "url": "https://archive.org/details/book-1",
+              "title": null,
+              "content": "Description",
+              "engine": "internetarchive",
+              "position": 0,
+              "score": 0.5,
+              "category": "general",
+              "published_date": "2024-01-01",
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "payload": null
+            }
+          ]
+        }
+      },
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://archive.org/details/book-1",
+            "title": "Book",
+            "content": "Description",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.5,
+            "category": "general",
+            "published_date": "2024-01-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://archive.org/details/book-1",
+            "title": null,
+            "content": "Description",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.5,
+            "category": "general",
+            "published_date": "2024-01-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_native_requests_equal": true,
+      "ownership_control": "Current actual source replay asserts atomic empty Error. Existing valid_then_invalid unit releases SAME caller budget and next call succeeds, but currently uses null title/name only; preparing exact nine frozen-input ownership variants rather than overclaiming numeric/date resource proof."
+    },
+    {
+      "id": "internetarchive-atomic-title-1",
+      "individual_boundary_ref": "internetarchive-title-1",
+      "bad_field": "title",
+      "bad_value": 42,
+      "source_input": {
+        "id": "internetarchive-atomic-title-1",
+        "engine": "internetarchive",
+        "query": "test",
+        "config": {},
+        "responses": [
+          {
+            "status": 200,
+            "body": {
+              "response": {
+                "docs": [
+                  {
+                    "identifier": "book-1",
+                    "title": "Book",
+                    "description": "Description",
+                    "downloads": 5000,
+                    "date": "2024-01-01"
+                  },
+                  {
+                    "identifier": "book-1",
+                    "title": 42,
+                    "description": "Description",
+                    "downloads": 5000,
+                    "date": "2024-01-01"
+                  }
+                ]
+              }
+            },
+            "wire_body": "{\"response\":{\"docs\":[{\"identifier\":\"book-1\",\"title\":\"Book\",\"description\":\"Description\",\"downloads\":5000,\"date\":\"2024-01-01\"},{\"identifier\":\"book-1\",\"title\":42,\"description\":\"Description\",\"downloads\":5000,\"date\":\"2024-01-01\"}]}}"
+          }
+        ],
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://archive.org/advancedsearch.php?q=test&output=json&rows=10",
+            "body": "",
+            "headers": {
+              "accept": "*/*",
+              "user-agent": "python-httpx/0.28.1"
+            }
+          }
+        ],
+        "output": {
+          "status": "ok",
+          "error_message": null,
+          "results": [
+            {
+              "url": "https://archive.org/details/book-1",
+              "title": "Book",
+              "content": "Description",
+              "engine": "internetarchive",
+              "position": 0,
+              "score": 0.5,
+              "category": "general",
+              "published_date": "2024-01-01",
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "payload": null
+            },
+            {
+              "url": "https://archive.org/details/book-1",
+              "title": 42,
+              "content": "Description",
+              "engine": "internetarchive",
+              "position": 0,
+              "score": 0.5,
+              "category": "general",
+              "published_date": "2024-01-01",
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "payload": null
+            }
+          ]
+        }
+      },
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://archive.org/details/book-1",
+            "title": "Book",
+            "content": "Description",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.5,
+            "category": "general",
+            "published_date": "2024-01-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://archive.org/details/book-1",
+            "title": 42,
+            "content": "Description",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.5,
+            "category": "general",
+            "published_date": "2024-01-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_native_requests_equal": true,
+      "ownership_control": "Current actual source replay asserts atomic empty Error. Existing valid_then_invalid unit releases SAME caller budget and next call succeeds, but currently uses null title/name only; preparing exact nine frozen-input ownership variants rather than overclaiming numeric/date resource proof."
+    },
+    {
+      "id": "internetarchive-atomic-date-0",
+      "individual_boundary_ref": "internetarchive-date-1",
+      "bad_field": "date",
+      "bad_value": 42,
+      "source_input": {
+        "id": "internetarchive-atomic-date-0",
+        "engine": "internetarchive",
+        "query": "test",
+        "config": {},
+        "responses": [
+          {
+            "status": 200,
+            "body": {
+              "response": {
+                "docs": [
+                  {
+                    "identifier": "book-1",
+                    "title": "Book",
+                    "description": "Description",
+                    "downloads": 5000,
+                    "date": "2024-01-01"
+                  },
+                  {
+                    "identifier": "book-1",
+                    "title": "Book",
+                    "description": "Description",
+                    "downloads": 5000,
+                    "date": 42
+                  }
+                ]
+              }
+            },
+            "wire_body": "{\"response\":{\"docs\":[{\"identifier\":\"book-1\",\"title\":\"Book\",\"description\":\"Description\",\"downloads\":5000,\"date\":\"2024-01-01\"},{\"identifier\":\"book-1\",\"title\":\"Book\",\"description\":\"Description\",\"downloads\":5000,\"date\":42}]}}"
+          }
+        ],
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://archive.org/advancedsearch.php?q=test&output=json&rows=10",
+            "body": "",
+            "headers": {
+              "accept": "*/*",
+              "user-agent": "python-httpx/0.28.1"
+            }
+          }
+        ],
+        "output": {
+          "status": "ok",
+          "error_message": null,
+          "results": [
+            {
+              "url": "https://archive.org/details/book-1",
+              "title": "Book",
+              "content": "Description",
+              "engine": "internetarchive",
+              "position": 0,
+              "score": 0.5,
+              "category": "general",
+              "published_date": "2024-01-01",
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "payload": null
+            },
+            {
+              "url": "https://archive.org/details/book-1",
+              "title": "Book",
+              "content": "Description",
+              "engine": "internetarchive",
+              "position": 0,
+              "score": 0.5,
+              "category": "general",
+              "published_date": 42,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "payload": null
+            }
+          ]
+        }
+      },
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://archive.org/details/book-1",
+            "title": "Book",
+            "content": "Description",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.5,
+            "category": "general",
+            "published_date": "2024-01-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://archive.org/details/book-1",
+            "title": "Book",
+            "content": "Description",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.5,
+            "category": "general",
+            "published_date": 42,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_native_requests_equal": true,
+      "ownership_control": "Current actual source replay asserts atomic empty Error. Existing valid_then_invalid unit releases SAME caller budget and next call succeeds, but currently uses null title/name only; preparing exact nine frozen-input ownership variants rather than overclaiming numeric/date resource proof."
+    }
+  ]
+}

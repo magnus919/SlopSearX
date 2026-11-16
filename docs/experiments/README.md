@@ -6,10 +6,19 @@ The objective is material, evidenced improvements delivered to the repository.
 Every experiment also produces evidence and a decision; weak candidates are
 rejected. Follow [the loop design](DESIGN.md) for opportunity selection, evidence
 standards and delivery accounting. Production operation belongs to operators.
+The active tooling and prospective native receipt boundary is documented in
+the [Rust rewrite O03 contract](../rust-rewrite/O03-tooling-and-evidence.md);
+that contract defines migration work and does not authorize or perform runs.
 
 Before implementing the complete-pool selector, follow the [v0.6.0 release
 reconciliation](slopsearx-v0.6-release-reconciliation.md): reuse shipped Jev,
 grouping, service and snapshot behavior; confirm only the remaining extension.
+
+The coverage-first study is preparing the [saved-development method](evidence/coverage-first-study/saved-development-method-materials/README.md).
+It will grade the complete real development archive afresh, then use separate
+fresh confirmation cases only if development passes. The [engine replay tool](coverage-engine-replay.md)
+tests plumbing offline and does not count as quality evidence. Ranking quality
+and product delivery remain unproven.
 
 ## Run one cycle
 
@@ -154,6 +163,9 @@ no runtime improvement or quality measurement is claimed.
 
 | ID | Hypothesis / question | State | Decision / evidence | Implementation PR |
 | --- | --- | --- | --- | --- |
+| [EXP-123](EXP-123-gateway-initialization-timeout.md) | Bound the upstream MCP initialization phase | supported; merged (noninteractive) | Timely fail-closed rejection0/2→2/2; healthy catalog/raw control and cleanup unchanged. OAuth budget preserved after review; implementation CI passed, failed review-publication replaced by substantive fallback. | [#865](https://github.com/magnus919/SlopSearX/pull/865), merged `9a73fef0`; no deployment |
+| [EXP-122](EXP-122-gateway-session-lifecycle.md) | Preserve gateway upstream cancel-scope ownership | supported; merged | Clean shutdown0/1→3/3; full catalog and raw controls unchanged. Final CI passed with substantive fallback review; local baseline failures retained. | [#841](https://github.com/magnus919/SlopSearX/pull/841), merged `06cdb7b9`; no deployment |
+| [EXP-121](EXP-121-gateway-schema-guard-closure.md) | Close full gateway metadata guards and preserve input schemas | supported; merged | Authenticated catalog0/38→38/38; exact baseline/candidate other metadata and raw controls unchanged. Zero scientific provider calls. All hosted CI passed; review resolved. | [#826](https://github.com/magnus919/SlopSearX/pull/826), merged `c3dd5058` |
 | [EXP-120](EXP-120-gateway-input-contracts.md) | Preserve remote tool input contracts | primary supported; delivery inconclusive/blocked | Authenticated MCP schema equality0/3→3/3, full catalog0/38→38/38; response controls unchanged. Final metadata guard unclosed; failed attempt and blocked normal merge retained. | [#802](https://github.com/magnus919/SlopSearX/pull/802), unmerged; no runtime adoption |
 | [EXP-108](EXP-108-gateway-catalog-pagination.md) | Preserve tools beyond the first remote discovery page | supported; merged | Authenticated MCP HTTP: later-page discoverable/callable 0/2 → 2/2; first-page control unchanged. Bounded fail-closed discovery; fresh CI and runner review pass. Failed fixture/CI and local full-suite limitations retained. | [#779](https://github.com/magnus919/SlopSearX/pull/779), merged `0f6aa18`; no deployment |
 | [EXP-107](EXP-107-gateway-structured-results.md) | Preserve upstream structured objects through the remote gateway | supported; merged | Real authenticated MCP HTTP proxy: 0/4 → 4/4 structured equality; all four legacy/error controls unchanged. CI/review pass; baseline environment and replay shutdown diagnostics retained. No UI/agent-task uplift claim. | [#759](https://github.com/magnus919/SlopSearX/pull/759), merged `032c56c`; no deployment |
@@ -286,3 +298,29 @@ Ten-paper campaign readout: EXP-113/114/115/117 not-supported; EXP-112 inconclus
 [EXP-119](EXP-119-heterogeneous-resource-selection.md): registered prospective historical-source-quality screen against development-trained fixed and lexical controls; prior EXP-112 remains inconclusive. Retrospective fixed-control audit is explanatory only. No provider calls or new corpus quality metrics yet.
 
 EXP-119 readout:not-supported at development. Metadata-conditioned selector nP@5 .27985 versus fixed .80539 (fitted on development) and lexical .02033; min effect−.52554,95% interval[−.62843,−.41409]. All88 responses valid and guards pass; confirmation uninvoked. [Evidence](evidence/EXP-119/readout.md). Retrospective EXP-112 audit finds constant fulltext reproduces24/24 previous lists; no adaptive-gain credit or outcome reclassification. No current feature/adoption.
+
+## Daily delivery records
+
+- [2026-10-16](daily-delivery-2026-10-16.md): completed existing bounded-date HTTP fix [#874](https://github.com/magnus919/SlopSearX/pull/874), merged `d207d449`; 319 contract tests pass on candidate and merged main. No new experiment or production uplift estimate; zero provider calls.
+
+- [2026-10-17 readiness](daily-readiness-2026-10-17.md): no new experiment or product change; native date parity is in active component integration, ranking replacement exhausted its input-collection retry, and no independent measured candidate was qualified. Zero provider calls.
+
+- [2026-10-18 delivery](daily-delivery-2026-10-18.md): refreshed and reviewed existing warning fix [#1014](https://github.com/magnus919/SlopSearX/pull/1014); local T06/F01/O06 passed, fresh ARM CI reproduced the unresolved tiny-deadline mismatch [#1010](https://github.com/magnus919/SlopSearX/issues/1010). Implementation remains open/unmerged; no product change claimed.
+
+- [2026-10-19 delivery](daily-delivery-2026-10-19.md): integrated the accepted deadline/session qualification corrections into [#1014](https://github.com/magnus919/SlopSearX/pull/1014). Prior failure gates passed on both architectures; full AMD64 CI passed, ARM hit the60-minute job timeout. [CI prerequisite1030](https://github.com/magnus919/SlopSearX/issues/1030); implementation retained/open, no runtime change to main.
+
+- [2026-10-20 delivery closeout](daily-delivery-2026-10-20.md): verified #1014 merged as `ff3a6ede` after #1033 resolved the CI budget prerequisite; both architecture jobs and applicable checks passed. Prior blocked records remain historical. No new implementation or trial today.
+
+- [2026-10-21 prerequisite delivery](daily-delivery-2026-10-21.md): #1035 merged `4548a4f1` with exact-head green architecture checks and substantive review. Quota-fixture qualification only; no production improvement claimed. #1034 remains blocked by its distinct cold-bootstrap ARM failure; existing owner corrections preserved.
+
+- [2026-10-22 initial publication audit](publication-audit-2026-10-22.md): #995 source-backed coverage inventory; no observed missed fault or new checker justified. #1034 unchanged failed ARM qualification preserved; no repeated CI or product improvement claimed.
+
+- [2026-10-23 delivery verification](daily-delivery-2026-10-23.md): #1034 merged50de34d8 after complete architecture checks; actual source rejects expired startup before client checkout. #1024 needs fresh integration/qualification; existing dirty owner work preserved. No new trial or runtime change by this cycle.
+
+- [2026-10-24 exact-head readiness](daily-readiness-2026-10-24.md): #1021 has only analysis/probe records, not complete CI; #1024 requires fresh integration and #1007 has failed checks. No implementation merged or new benefit measured by this cycle.
+
+- [2026-11-08 readiness](daily-readiness-2026-11-08.md): preserves the corrected #1111 evidence boundary and ranks qualification prerequisites; no new trial or product improvement.
+
+- [PREREQ-1111](PREREQ-1111-permission-readback.md), 2026-11-09: finite permission-input diagnostic qualified21/21 immediate readbacks; writes cleared setuid/setgid bits. Actual Rust custody failure remains unproven by this probe; no product uplift or sealed-source change.
+
+- [PREREQ-1111 Rust boundary](PREREQ-1111-rust-boundary.md), 2026-11-10: unchanged extracted leaf checker produced12/12 expected permission decisions; full-suite context remains unresolved. Prerequisite only, no implementation change.

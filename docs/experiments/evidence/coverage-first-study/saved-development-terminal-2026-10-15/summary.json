@@ -1,0 +1,60 @@
+{
+  "schema": "coverage-study-terminal-summary/1",
+  "status": "development-terminal-incomplete",
+  "source_revision": "ebeb9cee521612e6a868730812b154933d4863f2",
+  "source_closure_sha256": "0ffd4f8fea03e6503cc6d6a5e66b78929553fb8a5a334673035bd6142ea471ca",
+  "stage_uuid": "1a183c7e-4c03-4973-b5d6-74d19157f402",
+  "packet_stage_uuid": "632f6cc7-606d-4d7d-aeba-34ca63850792",
+  "native_reference_grading": {
+    "registered_calls": 54,
+    "returned_responses": 54,
+    "independent_grade_closure": "completed"
+  },
+  "failed_phase": "selector",
+  "selector_result_produced": false,
+  "selector_request": {
+    "frozen_request_match": true,
+    "request_field_count": 27,
+    "verifier_expected_field_count": 16,
+    "extra_saved_mode_field_count": 11,
+    "verifier_expected_fields": [
+      "schema",
+      "status",
+      "stage_uuid",
+      "source_revision",
+      "original_registration_sha256",
+      "coverage_source_sha256",
+      "production_rerank_source_sha256",
+      "execution_source_sha256",
+      "legacy_control_source_sha256",
+      "current_service_source_sha256",
+      "acquisition_snapshot_index_sha256",
+      "acquisition_manifest_sha256",
+      "task_input_manifest_sha256",
+      "neutral_fixture_sha256",
+      "builder_source_sha256",
+      "operations"
+    ],
+    "saved_map_fields_not_accepted": [
+      "pool_input_mode",
+      "origin_pool_snapshot_index_sha256",
+      "origin_pool_manifest_sha256",
+      "origin_stage_uuid",
+      "origin_source_revision",
+      "origin_source_closure_sha256",
+      "origin_protocol_sha256",
+      "origin_cohorts_sha256",
+      "origin_acquisition_plan_sha256",
+      "saved_import_receipt_sha256",
+      "derived_capture_manifest_sha256"
+    ],
+    "refusal_before_permit_claim_archive_or_transport": true
+  },
+  "jev_network_calls": 0,
+  "answer_calls": "not_invoked",
+  "new_search_calls": 0,
+  "new_capture_calls": 0,
+  "confirmation_invoked": false,
+  "quality_result": "none",
+  "quality_credit": false
+}

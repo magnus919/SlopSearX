@@ -1,0 +1,862 @@
+//! Tenant-scoped research authority built on F07. No worker loop or provider calls.
+use super::{
+    Failure, Ownership, Read, TokenSource, Valkey, keys,
+    scripts::{Reply, Script},
+};
+use ssx_domain::{
+    AttemptId, DomainError, FiniteF64, JobId, LeaseToken, TenantId, WallClockTimestamp,
+    research::ResearchJob,
+};
+use std::{num::NonZeroU64, sync::Arc};
+const RETENTION: NonZeroU64 = NonZeroU64::new(86_400).unwrap();
+/// Unlike a token-only write, CAS prevents two callers sharing one token from
+/// validating against one history and overwriting each other's evidence.
+const OWNED_CAS: &str = "if redis.call('GET',KEYS[1]) ~= ARGV[1] then return 0 end\nif redis.call('GET',KEYS[2]) ~= ARGV[2] then return -1 end\nlocal cancel = redis.call('GET',KEYS[3])\nif (ARGV[5] == '0' and cancel) or (ARGV[5] == '1' and cancel ~= ARGV[6]) then return -1 end\nredis.call('SETEX',KEYS[2],ARGV[3],ARGV[4])\nreturn 1";
+const CREATE: &str = "if redis.call('EXISTS',KEYS[1]) ~= 0 then return 0 end\nredis.call('SETEX',KEYS[1],ARGV[1],ARGV[2])\nreturn 1";
+
+const READY_SCOPED: &str = include_str!("research_scripts/ready_scoped.lua");
+const LEGACY_IDEMPOTENCY_LOOKUP: &str =
+    include_str!("research_scripts/legacy_idempotency_lookup.lua");
+// F07 legacy script/key bytes remain untouched. Native writes use this disjoint
+// namespace; legacy aliases are adopted only through their exact source record.
+const IDEMPOTENT_CREATE_V2: &str = r#"
+local function verified_id(raw)
+    local ok, mapping = pcall(cjson.decode, raw)
+    if not ok or type(mapping) ~= 'table' or type(mapping.job_id) ~= 'string' or mapping.job_id == '' or string.find(mapping.job_id, ':', 1, true) then return nil end
+    local record = redis.pcall('GET', ARGV[5] .. mapping.job_id)
+    if type(record) ~= 'string' then return nil end
+    local good, job = pcall(cjson.decode, record)
+    if good and type(job) == 'table' and job.job_id == mapping.job_id and job.tenant == ARGV[6] and job.idempotency_key == ARGV[7] then return mapping.job_id end
+    return nil
+end
+local existing = redis.call('GET', KEYS[1])
+if existing then
+    local id = verified_id(existing)
+    if not id then return {-1, ''} end
+    return {0, id}
+end
+local legacy = redis.pcall('GET', KEYS[3])
+if type(legacy) == 'string' then
+    local id = verified_id(legacy)
+    if id then
+        local remaining = math.min(redis.call('PTTL', KEYS[3]), redis.call('PTTL', ARGV[5] .. id))
+        if remaining > 0 then
+            redis.call('PSETEX', KEYS[1], remaining, cjson.encode({job_id=id}))
+            return {0, id}
+        end
+    end
+end
+if redis.call('EXISTS', KEYS[2]) ~= 0 then return {-2, ''} end
+redis.call('SETEX', KEYS[2], ARGV[1], ARGV[2])
+redis.call('SETEX', KEYS[1], ARGV[1], ARGV[3])
+return {1, ARGV[4]}
+"#;
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Error {
+    Store(Failure),
+    Invalid(DomainError),
+    OwnershipLost,
+    Conflict,
+    Missing,
+    Expired,
+}
+impl From<Failure> for Error {
+    fn from(e: Failure) -> Self {
+        Self::Store(e)
+    }
+}
+impl From<DomainError> for Error {
+    fn from(e: DomainError) -> Self {
+        Self::Invalid(e)
+    }
+}
+#[derive(Debug, PartialEq)]
+pub enum JobRead {
+    Found(Box<ResearchJob>),
+    Missing,
+    Unavailable,
+    Malformed,
+    Closed,
+}
+#[derive(Debug)]
+pub struct Claim {
+    pub job: ResearchJob,
+    pub token: LeaseToken<JobId>,
+}
+#[derive(Clone)]
+pub struct ResearchStore {
+    store: Arc<Valkey>,
+    tenant: TenantId,
+    #[cfg(test)]
+    completion_probe: Option<Arc<crate::research_runner::completion_tests::Probe>>,
+}
+impl ResearchStore {
+    pub fn new(store: Arc<Valkey>, tenant: TenantId) -> Self {
+        Self {
+            store,
+            tenant,
+            #[cfg(test)]
+            completion_probe: None,
+        }
+    }
+    pub fn for_tenant(&self, tenant: TenantId) -> Self {
+        #[cfg(test)]
+        {
+            let mut scoped = Self::new(self.store.clone(), tenant);
+            scoped.completion_probe = self.completion_probe.clone();
+            scoped
+        }
+        #[cfg(not(test))]
+        Self::new(self.store.clone(), tenant)
+    }
+    #[cfg(test)]
+    pub(crate) fn with_completion_probe(
+        mut self,
+        probe: Arc<crate::research_runner::completion_tests::Probe>,
+    ) -> Self {
+        self.completion_probe = Some(probe);
+        self
+    }
+    #[cfg(test)]
+    pub(crate) fn completion_probe(
+        &self,
+    ) -> Option<&Arc<crate::research_runner::completion_tests::Probe>> {
+        self.completion_probe.as_ref()
+    }
+    pub fn tenant(&self) -> &TenantId {
+        &self.tenant
+    }
+    fn key(&self, kind: &str, id: &str) -> String {
+        keys::research(kind, &self.tenant, id).expect("fixed kind")
+    }
+    fn validate(&self, job: &ResearchJob) -> Result<(), Error> {
+        job.validate()?;
+        if job.tenant != self.tenant.as_str() {
+            return Err(Error::Invalid(DomainError("research tenant mismatch")));
+        }
+        // IDs generated by the source contain no colons; rejecting an ambiguous
+        // supplied ID prevents tenant:id key collisions while literal tenants retain colons.
+        if job.job_id.contains(':') {
+            return Err(Error::Invalid(DomainError(
+                "ambiguous research job identity",
+            )));
+        }
+        Ok(())
+    }
+    fn validate_id(&self, id: &JobId) -> Result<(), Error> {
+        if id.as_str().contains(':') {
+            return Err(Error::Invalid(DomainError(
+                "ambiguous research job identity",
+            )));
+        }
+        Ok(())
+    }
+    async fn raw(&self, id: &JobId) -> Result<(Vec<u8>, ResearchJob), Error> {
+        if id.as_str().contains(':') {
+            return Err(Error::Invalid(DomainError(
+                "ambiguous research job identity",
+            )));
+        }
+        let raw = match self.store.get(&self.key("job", id.as_str())).await {
+            Read::Found(v) => v,
+            Read::Missing => return Err(Error::Missing),
+            Read::Unavailable => return Err(Failure::Unavailable.into()),
+            Read::Closed => return Err(Failure::Closed.into()),
+            Read::Malformed => return Err(Failure::Malformed.into()),
+        };
+        let job =
+            ResearchJob::from_payload(ssx_json::from_slice(&raw).map_err(|_| Failure::Malformed)?)
+                .map_err(|_| Failure::Malformed)?;
+        self.validate(&job)
+            .map_err(|_| Error::Store(Failure::Malformed))?;
+        if job.job_id != id.as_str() {
+            return Err(Failure::Malformed.into());
+        }
+        Ok((raw, job))
+    }
+    async fn merge_cancel(&self, job: &mut ResearchJob) -> Result<Option<Vec<u8>>, Error> {
+        match self.store.get(&self.key("cancel", &job.job_id)).await {
+            Read::Missing => Ok(None),
+            Read::Found(raw) => {
+                let value: ssx_json::Value =
+                    ssx_json::from_slice(&raw).map_err(|_| Failure::Malformed)?;
+                match value["cancel_requested"].as_bool() {
+                    Some(true) => job.cancel_requested = true,
+                    Some(false) => (),
+                    None => return Err(Failure::Malformed.into()),
+                }
+                Ok(Some(raw))
+            }
+            Read::Malformed => Err(Failure::Malformed.into()),
+            Read::Unavailable => Err(Failure::Unavailable.into()),
+            Read::Closed => Err(Failure::Closed.into()),
+        }
+    }
+    pub async fn load(&self, id: &JobId) -> JobRead {
+        match self.raw(id).await {
+            Ok((_, mut job)) => match self.merge_cancel(&mut job).await {
+                Ok(_) => JobRead::Found(Box::new(job)),
+                Err(e) => read_error(e),
+            },
+            Err(e) => read_error(e),
+        }
+    }
+    /// Create-only: an existing job record can never be overwritten by admission.
+    pub async fn create(&self, job: &ResearchJob) -> Result<(ResearchJob, bool), Error> {
+        self.validate(job)?;
+        if job.owner_id.is_some() || job.lease_token.is_some() {
+            return Err(Error::Invalid(DomainError(
+                "new research job has ownership",
+            )));
+        }
+        let body = ssx_json::to_string(&job.to_payload()?).map_err(|_| Failure::InvalidInput)?;
+        let (id, created) =
+            if let Some(idem) = job.idempotency_key.as_ref().filter(|s| !s.is_empty()) {
+                let mut cmd = redis::cmd("EVAL");
+                cmd.arg(IDEMPOTENT_CREATE_V2)
+                    .arg(3)
+                    .arg(keys::research_idempotency_v2(&self.tenant, idem))
+                    .arg(self.key("job", &job.job_id))
+                    .arg(self.key("idem", idem))
+                    .arg(RETENTION.get())
+                    .arg(body)
+                    .arg(
+                        ssx_json::to_string(&ssx_json::json!({"job_id":job.job_id}))
+                            .map_err(|_| Failure::InvalidInput)?,
+                    )
+                    .arg(&job.job_id)
+                    .arg(self.key("job", ""))
+                    .arg(self.tenant.as_str())
+                    .arg(idem);
+                let raw = self.store.execute(cmd, true).await?;
+                if raw
+                    == redis::Value::Array(vec![
+                        redis::Value::Int(-2),
+                        redis::Value::BulkString(vec![]),
+                    ])
+                {
+                    return Err(Error::Conflict);
+                }
+                match Script::ResearchIdempotentCreate.decode(raw)? {
+                    Reply::ResearchCreated { created, job_id } => (job_id, created),
+                    _ => return Err(Failure::Malformed.into()),
+                }
+            } else {
+                let mut cmd = redis::cmd("EVAL");
+                cmd.arg(CREATE)
+                    .arg(1)
+                    .arg(self.key("job", &job.job_id))
+                    .arg(RETENTION.get())
+                    .arg(body);
+                let created = match self.store.execute(cmd, true).await? {
+                    redis::Value::Int(1) => true,
+                    redis::Value::Int(0) => false,
+                    _ => return Err(Failure::Malformed.into()),
+                };
+                (job.job_id.clone(), created)
+            };
+        let (_, job) = self.raw(&JobId::new(id)?).await?;
+        self.refresh_indexes(&job).await;
+        Ok((job, created))
+    }
+    pub async fn find_by_idempotency(&self, idempotency: &str) -> JobRead {
+        if idempotency.is_empty() {
+            return JobRead::Missing;
+        }
+        let key = keys::research_idempotency_v2(&self.tenant, idempotency);
+        let (mapping, legacy) = match self.store.get_object(&key).await {
+            Read::Found(value) => (value, false),
+            Read::Missing => {
+                let mut cmd = redis::cmd("EVAL");
+                cmd.arg(LEGACY_IDEMPOTENCY_LOOKUP)
+                    .arg(1)
+                    .arg(self.key("idem", idempotency))
+                    .arg(self.key("job", ""))
+                    .arg(self.tenant.as_str())
+                    .arg(idempotency);
+                match self.store.execute(cmd, false).await {
+                    Ok(redis::Value::Nil) => return JobRead::Missing,
+                    Ok(redis::Value::BulkString(id)) => {
+                        let Ok(id) = String::from_utf8(id) else {
+                            return JobRead::Malformed;
+                        };
+                        (ssx_json::json!({"job_id": id}), true)
+                    }
+                    Ok(_) => return JobRead::Malformed,
+                    Err(error) => return read_error(error.into()),
+                }
+            }
+            Read::Malformed => return JobRead::Malformed,
+            Read::Unavailable => return JobRead::Unavailable,
+            Read::Closed => return JobRead::Closed,
+        };
+        let invalid = if legacy {
+            JobRead::Missing
+        } else {
+            JobRead::Malformed
+        };
+        let Some(id) = mapping["job_id"]
+            .as_str()
+            .filter(|id| !id.contains(':'))
+            .and_then(|id| JobId::new(id).ok())
+        else {
+            return invalid;
+        };
+        match self.load(&id).await {
+            JobRead::Found(job) if job.idempotency_key.as_deref() == Some(idempotency) => {
+                JobRead::Found(job)
+            }
+            JobRead::Found(_) | JobRead::Malformed | JobRead::Missing => invalid,
+            other => other,
+        }
+    }
+    async fn cas(
+        &self,
+        id: &JobId,
+        token: &LeaseToken<JobId>,
+        before: &[u8],
+        cancel_snapshot: Option<&[u8]>,
+        next: &ResearchJob,
+    ) -> Result<(), Error> {
+        self.validate(next)?;
+        let mut cmd = redis::cmd("EVAL");
+        cmd.arg(OWNED_CAS)
+            .arg(3)
+            .arg(self.key("lease", id.as_str()))
+            .arg(self.key("job", id.as_str()))
+            .arg(self.key("cancel", id.as_str()))
+            .arg(token.as_str())
+            .arg(before)
+            .arg(RETENTION.get())
+            .arg(ssx_json::to_string(&next.to_payload()?).map_err(|_| Failure::InvalidInput)?)
+            .arg(if cancel_snapshot.is_some() { "1" } else { "0" })
+            .arg(cancel_snapshot.unwrap_or_default());
+        match self.store.execute(cmd, true).await? {
+            redis::Value::Int(1) => {
+                #[cfg(test)]
+                if next.lease_token.is_none()
+                    && let Some(probe) = self.completion_probe()
+                {
+                    probe.clear_saw_joined.store(
+                        probe
+                            .monitor_joined
+                            .load(std::sync::atomic::Ordering::SeqCst),
+                        std::sync::atomic::Ordering::SeqCst,
+                    );
+                    probe.clear_committed.add_permits(1);
+                    probe
+                        .release_clear
+                        .acquire()
+                        .await
+                        .expect("owned fixture gate")
+                        .forget();
+                }
+                self.refresh_indexes(next).await;
+                Ok(())
+            }
+            redis::Value::Int(0) => Err(Error::OwnershipLost),
+            redis::Value::Int(-1) => Err(Error::Conflict),
+            _ => Err(Failure::Malformed.into()),
+        }
+    }
+    /// Reload authoritative state, validate retained evidence, then compare raw bytes
+    /// and the lease atomically. Errors/unknown completion never dispatch or retry.
+    pub async fn mutate(
+        &self,
+        id: &JobId,
+        token: &LeaseToken<JobId>,
+        mutate: impl FnOnce(&mut ResearchJob) -> Result<(), DomainError>,
+    ) -> Result<ResearchJob, Error> {
+        let (raw, old) = self.raw(id).await?;
+        if old.lease_token.as_deref() != Some(token.as_str()) {
+            return Err(Error::OwnershipLost);
+        }
+        let mut observed = old.clone();
+        let cancel_snapshot = self.merge_cancel(&mut observed).await?;
+        let mut next = observed.clone();
+        mutate(&mut next)?;
+        if !(next.lease_token == old.lease_token && next.owner_id == old.owner_id
+            || next.lease_token.is_none()
+                && next.owner_id.is_none()
+                && next.lease_expires_at.get() == 0.0)
+        {
+            return Err(Error::OwnershipLost);
+        }
+        observed.validate_transition(&next)?;
+        self.cas(id, token, &raw, cancel_snapshot.as_deref(), &next)
+            .await?;
+        Ok(next)
+    }
+    /// Acquire and recover a queued/orphaned job. Absolute deadline equality expires.
+    /// No running attempt is discarded or refunded. No worker is started here.
+    pub async fn claim(
+        &self,
+        id: &JobId,
+        owner: &str,
+        ttl: NonZeroU64,
+        tokens: &mut impl TokenSource<JobId>,
+        now: WallClockTimestamp,
+        mut attempt_id: impl FnMut() -> AttemptId,
+    ) -> Result<Option<Claim>, Error> {
+        let (_, pre) = self.raw(id).await?;
+        if !["queued", "running"].contains(&pre.state.as_str()) {
+            return Ok(None);
+        }
+        let Some(token) = self
+            .store
+            .acquire(&self.key("lease", id.as_str()), tokens, ttl)
+            .await?
+        else {
+            return Ok(None);
+        };
+        let outcome = async {
+            let (raw, old) = self.raw(id).await?;
+            if !["queued", "running"].contains(&old.state.as_str()) {
+                return Ok(None);
+            }
+            let mut next = old.clone();
+            let cancel_snapshot = self.merge_cancel(&mut next).await?;
+            next.normalize_legacy_evidence();
+            next.recover_orphan_attempts(now, &mut attempt_id)?;
+            next.owner_id = Some(owner.into());
+            next.lease_token = Some(token.as_str().into());
+            next.lease_expires_at = FiniteF64::new(now.seconds() + ttl.get() as f64)?;
+            if now.seconds() >= next.deadline.get() {
+                expire(&mut next);
+            } else if next.cancel_requested {
+                cancel(&mut next);
+            } else {
+                next.state = "running".into();
+                for q in &mut next.queries {
+                    if q.state == "running" {
+                        q.state = "pending".into();
+                    }
+                }
+            }
+            old.validate_transition(&next)?;
+            self.cas(id, &token, &raw, cancel_snapshot.as_deref(), &next)
+                .await?;
+            if ["expired", "cancelled"].contains(&next.state.as_str()) {
+                return Ok(None);
+            }
+            Ok(Some(next))
+        }
+        .await;
+        match outcome {
+            Ok(Some(job)) => Ok(Some(Claim { job, token })),
+            Ok(None) => {
+                self.store
+                    .release(&self.key("lease", id.as_str()), &token)
+                    .await?;
+                Ok(None)
+            }
+            Err(error) => {
+                let _ = self
+                    .store
+                    .release(&self.key("lease", id.as_str()), &token)
+                    .await;
+                Err(error)
+            }
+        }
+    }
+    /// Direct retry/extension/completion admission. Re-applies the mutation to the
+    /// authoritative record under a fresh lease, never to a caller's stale copy.
+    #[allow(clippy::too_many_arguments)]
+    pub async fn claim_prepared(
+        &self,
+        id: &JobId,
+        owner: &str,
+        ttl: NonZeroU64,
+        tokens: &mut impl TokenSource<JobId>,
+        now: WallClockTimestamp,
+        mut attempt_id: impl FnMut() -> AttemptId,
+        metadata_only: bool,
+        mutation: impl FnOnce(&mut ResearchJob) -> Result<(), DomainError>,
+    ) -> Result<Option<Claim>, Error> {
+        self.validate_id(id)?;
+        let Some(token) = self
+            .store
+            .acquire(&self.key("lease", id.as_str()), tokens, ttl)
+            .await?
+        else {
+            return Ok(None);
+        };
+        let outcome = async {
+            let (raw, old) = self.raw(id).await?;
+            let mut observed = old.clone();
+            let cancel_snapshot = self.merge_cancel(&mut observed).await?;
+            let mut next = observed.clone();
+            next.normalize_legacy_evidence();
+            next.recover_orphan_attempts(now, &mut attempt_id)?;
+            next.owner_id = Some(owner.into());
+            next.lease_token = Some(token.as_str().into());
+            next.lease_expires_at = FiniteF64::new(now.seconds() + ttl.get() as f64)?;
+            let budget_terminal = next.stop_reason.as_deref().is_some_and(|s| {
+                [
+                    "result_budget_exhausted",
+                    "query_budget_exhausted",
+                    "attempt_budget_exhausted",
+                    "engine_budget_exhausted",
+                ]
+                .contains(&s)
+            });
+            if ["cancelled", "expired"].contains(&next.state.as_str()) {
+                // Terminal cancellation/expiry never resurrects or applies a mutation.
+            } else if next.caller_completed && metadata_only || metadata_only && budget_terminal {
+                mutation(&mut next)?;
+            } else if next.caller_completed {
+                // Preserve completed evidence and caller judgement.
+            } else if now.seconds() >= next.deadline.get() {
+                if metadata_only {
+                    return Err(Error::Invalid(DomainError(
+                        "metadata-only completion exceeds deadline",
+                    )));
+                }
+                expire(&mut next);
+            } else if next.cancel_requested {
+                cancel(&mut next);
+            } else {
+                mutation(&mut next)?;
+                for q in &mut next.queries {
+                    if q.state == "running" {
+                        q.state = "pending".into();
+                    }
+                }
+                if next.queries.iter().any(|q| q.state == "pending") {
+                    next.state = "running".into();
+                }
+            }
+            if next.lease_token.as_deref() != Some(token.as_str())
+                || next.owner_id.as_deref() != Some(owner)
+            {
+                return Err(Error::OwnershipLost);
+            }
+            observed.validate_transition(&next)?;
+            self.cas(id, &token, &raw, cancel_snapshot.as_deref(), &next)
+                .await?;
+            Ok(next)
+        }
+        .await;
+        match outcome {
+            Ok(job) => Ok(Some(Claim { job, token })),
+            Err(e) => {
+                let _ = self
+                    .store
+                    .release(&self.key("lease", id.as_str()), &token)
+                    .await;
+                Err(e)
+            }
+        }
+    }
+    pub async fn renew(
+        &self,
+        id: &JobId,
+        token: &LeaseToken<JobId>,
+        ttl: NonZeroU64,
+    ) -> Result<Ownership, Error> {
+        self.validate_id(id)?;
+        Ok(self
+            .store
+            .renew(&self.key("lease", id.as_str()), token, ttl)
+            .await?)
+    }
+    pub async fn release(&self, id: &JobId, token: &LeaseToken<JobId>) -> Result<Ownership, Error> {
+        self.validate_id(id)?;
+        let result = self
+            .store
+            .release(&self.key("lease", id.as_str()), token)
+            .await?;
+        self.refresh_ready(id.as_str()).await;
+        Ok(result)
+    }
+    pub async fn clear_ownership(
+        &self,
+        id: &JobId,
+        token: &LeaseToken<JobId>,
+    ) -> Result<ResearchJob, Error> {
+        self.mutate(id, token, |job| {
+            job.owner_id = None;
+            job.lease_token = None;
+            job.lease_expires_at = FiniteF64::default();
+            Ok(())
+        })
+        .await
+    }
+    /// Durable cancellation signal cannot be clobbered by record writes. A live
+    /// owner observes it on its next authoritative mutation/read.
+    pub async fn request_cancel(
+        &self,
+        id: &JobId,
+        now: WallClockTimestamp,
+        tokens: &mut impl TokenSource<JobId>,
+        mut attempt_id: impl FnMut() -> AttemptId,
+    ) -> Result<String, Error> {
+        let (_, old) = self.raw(id).await?;
+        if !["queued", "running"].contains(&old.state.as_str()) {
+            return Ok(old.state);
+        }
+        self.store
+            .put(
+                &self.key("cancel", id.as_str()),
+                ssx_json::to_string(
+                    &ssx_json::json!({"cancel_requested":true,"requested_at":now.seconds()}),
+                )
+                .map_err(|_| Failure::InvalidInput)?
+                .as_bytes(),
+                RETENTION,
+            )
+            .await?;
+        let Some(token) = self
+            .store
+            .acquire(
+                &self.key("lease", id.as_str()),
+                tokens,
+                NonZeroU64::new(60).unwrap(),
+            )
+            .await?
+        else {
+            return Ok("running".into());
+        };
+        let result = async {
+            let (raw, old) = self.raw(id).await?;
+            let mut next = old.clone();
+            let cancel_snapshot = self.merge_cancel(&mut next).await?;
+            next.normalize_legacy_evidence();
+            next.recover_orphan_attempts(now, &mut attempt_id)?;
+            if ["queued", "running"].contains(&next.state.as_str()) {
+                next.cancel_requested = true;
+                if now.seconds() >= next.deadline.get() {
+                    expire(&mut next);
+                } else {
+                    cancel(&mut next);
+                }
+            }
+            next.owner_id = None;
+            next.lease_token = None;
+            next.lease_expires_at = FiniteF64::default();
+            old.validate_transition(&next)?;
+            self.cas(id, &token, &raw, cancel_snapshot.as_deref(), &next)
+                .await?;
+            Ok(next.state)
+        }
+        .await;
+        let released = self.release(id, &token).await;
+        match result {
+            Err(e) => Err(e),
+            Ok(state) => {
+                released?;
+                Ok(state)
+            }
+        }
+    }
+    /// Deterministic recent page ordered by source (created_at, job_id) descending.
+    /// Missing records are pruned; authoritative failure is never treated as missing.
+    pub async fn list_recent(
+        &self,
+        before: Option<(f64, &str)>,
+        limit: usize,
+    ) -> Result<Vec<ResearchJob>, Error> {
+        if !(1..=200).contains(&limit) {
+            return Err(Failure::InvalidInput.into());
+        }
+        let mut cmd = redis::cmd("ZREVRANGE");
+        cmd.arg(keys::research_recent(&self.tenant))
+            .arg(0)
+            .arg(199)
+            .arg("WITHSCORES");
+        let entries: Vec<(String, f64)> =
+            redis::from_redis_value(self.store.execute(cmd, false).await?)
+                .map_err(|_| Failure::Malformed)?;
+        let mut jobs = vec![];
+        for (id, score) in entries {
+            if before.is_some_and(|(time, name)| (score, id.as_str()) >= (time, name)) {
+                continue;
+            }
+            match self.raw(&JobId::new(&id)?).await {
+                Ok((_, mut job)) => {
+                    self.merge_cancel(&mut job).await?;
+                    jobs.push(job);
+                    if jobs.len() == limit {
+                        break;
+                    }
+                }
+                Err(Error::Missing) => {
+                    let mut cmd = redis::cmd("ZREM");
+                    cmd.arg(keys::research_recent(&self.tenant)).arg(id);
+                    self.store.execute(cmd, true).await?;
+                }
+                Err(e) => return Err(e),
+            }
+        }
+        Ok(jobs)
+    }
+    /// Repair a bounded scan page. Persist cursor after indexing so crashes repeat
+    /// rather than skip records. Ready/recent indexes remain derived discovery aids.
+    pub async fn reconcile(&self) -> Result<(), Error> {
+        let mut lock = redis::cmd("SET");
+        lock.arg("mcp:ready:v1:reconcile-lock")
+            .arg("1")
+            .arg("NX")
+            .arg("EX")
+            .arg(10);
+        if self.store.execute(lock, true).await? == redis::Value::Nil {
+            return Ok(());
+        }
+        let cursor = match self.store.get("mcp:ready:v1:cursor").await {
+            Read::Found(v) => String::from_utf8(v).map_err(|_| Failure::Malformed)?,
+            Read::Missing => "0".into(),
+            _ => return Err(Failure::Unavailable.into()),
+        };
+        let mut scan = redis::cmd("SCAN");
+        scan.arg(cursor)
+            .arg("MATCH")
+            .arg("mcp:job:*")
+            .arg("COUNT")
+            .arg(128);
+        let (next, names): (u64, Vec<String>) =
+            redis::from_redis_value(self.store.execute(scan, false).await?)
+                .map_err(|_| Failure::Malformed)?;
+        for name in names {
+            let Some((tenant, id)) = name
+                .strip_prefix("mcp:job:")
+                .and_then(|v| v.rsplit_once(':'))
+            else {
+                continue;
+            };
+            let (Ok(tenant), Ok(id)) = (TenantId::new(tenant), JobId::new(id)) else {
+                continue;
+            };
+            let scoped = self.for_tenant(tenant);
+            match scoped.raw(&id).await {
+                Ok((_, job)) => scoped.refresh_indexes(&job).await,
+                Err(Error::Missing | Error::Store(Failure::Malformed)) => (),
+                Err(e) => return Err(e),
+            }
+        }
+        let mut set = redis::cmd("SET");
+        set.arg("mcp:ready:v1:cursor").arg(next);
+        self.store.execute(set, true).await?;
+        Ok(())
+    }
+    pub async fn claim_next(
+        &self,
+        owner: &str,
+        ttl: NonZeroU64,
+        tokens: &mut impl TokenSource<JobId>,
+        now: WallClockTimestamp,
+        mut attempt_id: impl FnMut() -> AttemptId,
+    ) -> Result<Option<Claim>, Error> {
+        self.reconcile().await?;
+        let mut cmd = redis::cmd("EVAL");
+        cmd.arg(READY_SCOPED)
+            .arg(1)
+            .arg(keys::research_ready(&self.tenant));
+        let ids: Vec<String> = redis::from_redis_value(self.store.execute(cmd, false).await?)
+            .map_err(|_| Failure::Malformed)?;
+        for id in ids {
+            let id = JobId::new(id)?;
+            let outcome = self
+                .claim(&id, owner, ttl, tokens, now, &mut attempt_id)
+                .await;
+            self.refresh_ready(id.as_str()).await;
+            match outcome {
+                Ok(Some(v)) => return Ok(Some(v)),
+                Ok(None) | Err(Error::Missing) => (),
+                Err(e) => return Err(e),
+            }
+        }
+        Ok(None)
+    }
+    pub async fn claim_next_any_tenant(
+        &self,
+        owner: &str,
+        ttl: NonZeroU64,
+        tokens: &mut impl TokenSource<JobId>,
+        now: WallClockTimestamp,
+        attempt_id: impl FnMut() -> AttemptId,
+    ) -> Result<Option<Claim>, Error> {
+        self.reconcile().await?;
+        let Some((tenant, id)) = (match self
+            .store
+            .run(
+                Script::ResearchReadyTake,
+                &[keys::RESEARCH_READY_TENANTS, keys::RESEARCH_READY_SEQUENCE],
+                &["mcp:ready:v1".into()],
+            )
+            .await?
+        {
+            Reply::Ready(v) => v,
+            _ => return Err(Failure::Malformed.into()),
+        }) else {
+            return Ok(None);
+        };
+        let scoped = self.for_tenant(TenantId::new(tenant)?);
+        let id = JobId::new(id)?;
+        let outcome = scoped.claim(&id, owner, ttl, tokens, now, attempt_id).await;
+        scoped.refresh_ready(id.as_str()).await;
+        match outcome {
+            Err(Error::Missing) => Ok(None),
+            other => other,
+        }
+    }
+    async fn refresh_indexes(&self, job: &ResearchJob) {
+        self.refresh_ready(&job.job_id).await;
+        // Derived indexes never invalidate authoritative success. Repair is public.
+        let _ = self
+            .store
+            .run(
+                Script::ResearchRecentRecord,
+                &[&keys::research_recent(&self.tenant)],
+                &[
+                    job.created_at.get().to_string(),
+                    job.job_id.clone(),
+                    "200".into(),
+                    RETENTION.to_string(),
+                ],
+            )
+            .await;
+    }
+    pub async fn repair_indexes(&self, id: &JobId) -> Result<(), Error> {
+        let (_, job) = self.raw(id).await?;
+        self.refresh_indexes(&job).await;
+        Ok(())
+    }
+    async fn refresh_ready(&self, id: &str) {
+        let _ = self
+            .store
+            .run(
+                Script::ResearchReadyRefresh,
+                &[
+                    &self.key("job", id),
+                    &self.key("lease", id),
+                    &keys::research_ready(&self.tenant),
+                    keys::RESEARCH_READY_TENANTS,
+                ],
+                &[self.tenant.as_str().into(), id.into()],
+            )
+            .await;
+    }
+}
+fn read_error(e: Error) -> JobRead {
+    match e {
+        Error::Missing => JobRead::Missing,
+        Error::Store(Failure::Unavailable | Failure::CompletionUnknown) => JobRead::Unavailable,
+        Error::Store(Failure::Closed) => JobRead::Closed,
+        _ => JobRead::Malformed,
+    }
+}
+fn cancel(job: &mut ResearchJob) {
+    job.state = "cancelled".into();
+    job.stop_reason = Some("cancelled".into());
+    for q in &mut job.queries {
+        if ["pending", "running"].contains(&q.state.as_str()) {
+            q.state = "cancelled".into();
+        }
+    }
+}
+fn expire(job: &mut ResearchJob) {
+    cancel(job);
+    job.state = "expired".into();
+    job.stop_reason = Some("deadline_expired".into());
+}

@@ -1,0 +1,23 @@
+{
+  "pypi": {
+    "status": "error",
+    "error": "unknown url type: '/pypi/python/json'",
+    "requests": [
+      "/pypi/python/json"
+    ]
+  },
+  "rubygems": {
+    "status": "error",
+    "error": "unknown url type: '/?query=python'",
+    "requests": [
+      "/?query=python"
+    ]
+  },
+  "dockerhub": {
+    "status": "ok",
+    "error": null,
+    "requests": [
+      "https://hub.docker.com/v2/namespaces/library/repositories?name=python&page_size=30"
+    ]
+  }
+}

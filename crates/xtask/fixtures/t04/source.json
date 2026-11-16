@@ -1,0 +1,311 @@
+{
+  "schema_version": 1,
+  "baseline": "1f3f5bc85083f4fd24bd9a2b07f161626e6bfef5",
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "versions": {
+    "mcp": "2.3.0",
+    "fastmcp": "4.0.11"
+  },
+  "sources": {
+    "slopsearx/mcp/oauth.py": "6c29136856842ef57a2878d1a7651d30df40931b",
+    "slopsearx/mcp/security.py": "a0d6300d0883f2cca19e3bbd70ce7126b33ee6a9",
+    "tests/test_mcp_oauth.py": "f889dbe1f3b9890bd1b6f7c08474c7a9759ae75a",
+    "uv.lock": "24e92a80e8ecc761880fe603a01da41312dea180"
+  },
+  "clients": [
+    {
+      "input": {
+        "client_id": "minimal"
+      },
+      "expected": {
+        "response_types": [
+          "code"
+        ],
+        "scope": null,
+        "client_name": null,
+        "client_uri": null,
+        "logo_uri": null,
+        "contacts": null,
+        "tos_uri": null,
+        "policy_uri": null,
+        "jwks_uri": null,
+        "jwks": null,
+        "software_id": null,
+        "software_version": null,
+        "redirect_uris": null,
+        "token_endpoint_auth_method": null,
+        "grant_types": [
+          "authorization_code",
+          "refresh_token"
+        ],
+        "application_type": null,
+        "client_id": "minimal",
+        "client_secret": null,
+        "client_id_issued_at": null,
+        "client_secret_expires_at": null,
+        "issuer": null
+      }
+    },
+    {
+      "input": {
+        "client_id": "null",
+        "redirect_uris": null,
+        "token_endpoint_auth_method": null
+      },
+      "expected": {
+        "response_types": [
+          "code"
+        ],
+        "scope": null,
+        "client_name": null,
+        "client_uri": null,
+        "logo_uri": null,
+        "contacts": null,
+        "tos_uri": null,
+        "policy_uri": null,
+        "jwks_uri": null,
+        "jwks": null,
+        "software_id": null,
+        "software_version": null,
+        "redirect_uris": null,
+        "token_endpoint_auth_method": null,
+        "grant_types": [
+          "authorization_code",
+          "refresh_token"
+        ],
+        "application_type": null,
+        "client_id": "null",
+        "client_secret": null,
+        "client_id_issued_at": null,
+        "client_secret_expires_at": null,
+        "issuer": null
+      }
+    },
+    {
+      "input": {
+        "client_id": "empty",
+        "redirect_uris": [],
+        "token_endpoint_auth_method": ""
+      },
+      "expected": {
+        "response_types": [
+          "code"
+        ],
+        "scope": null,
+        "client_name": null,
+        "client_uri": null,
+        "logo_uri": null,
+        "contacts": null,
+        "tos_uri": null,
+        "policy_uri": null,
+        "jwks_uri": null,
+        "jwks": null,
+        "software_id": null,
+        "software_version": null,
+        "redirect_uris": [],
+        "token_endpoint_auth_method": null,
+        "grant_types": [
+          "authorization_code",
+          "refresh_token"
+        ],
+        "application_type": null,
+        "client_id": "empty",
+        "client_secret": null,
+        "client_id_issued_at": null,
+        "client_secret_expires_at": null,
+        "issuer": null
+      }
+    },
+    {
+      "input": {
+        "client_id": "complete",
+        "client_secret": "synthetic-secret",
+        "redirect_uris": [
+          "http://localhost/cb"
+        ],
+        "token_endpoint_auth_method": "client_secret_post",
+        "scope": "read write",
+        "client_name": "Synthetic client",
+        "client_uri": "https://example.com/client",
+        "logo_uri": "https://example.com/logo",
+        "contacts": [
+          "synthetic@example.com"
+        ],
+        "tos_uri": "https://example.com/tos",
+        "policy_uri": "https://example.com/policy",
+        "jwks_uri": "https://example.com/jwks",
+        "jwks": {
+          "keys": [
+            {
+              "kty": "RSA",
+              "kid": "synthetic"
+            }
+          ]
+        },
+        "software_id": "software",
+        "software_version": "1",
+        "application_type": "web",
+        "issuer": "https://example.com",
+        "client_id_issued_at": 1,
+        "client_secret_expires_at": 99
+      },
+      "expected": {
+        "response_types": [
+          "code"
+        ],
+        "scope": "read write",
+        "client_name": "Synthetic client",
+        "client_uri": "https://example.com/client",
+        "logo_uri": "https://example.com/logo",
+        "contacts": [
+          "synthetic@example.com"
+        ],
+        "tos_uri": "https://example.com/tos",
+        "policy_uri": "https://example.com/policy",
+        "jwks_uri": "https://example.com/jwks",
+        "jwks": {
+          "keys": [
+            {
+              "kty": "RSA",
+              "kid": "synthetic"
+            }
+          ]
+        },
+        "software_id": "software",
+        "software_version": "1",
+        "redirect_uris": [
+          "http://localhost/cb"
+        ],
+        "token_endpoint_auth_method": "client_secret_post",
+        "grant_types": [
+          "authorization_code",
+          "refresh_token"
+        ],
+        "application_type": "web",
+        "client_id": "complete",
+        "client_secret": "synthetic-secret",
+        "client_id_issued_at": 1,
+        "client_secret_expires_at": 99,
+        "issuer": "https://example.com"
+      }
+    }
+  ],
+  "settings": [
+    {
+      "enabled": false,
+      "issuer": "",
+      "expected": null
+    },
+    {
+      "enabled": true,
+      "issuer": "",
+      "expected": {
+        "error": true
+      }
+    },
+    {
+      "enabled": true,
+      "issuer": "HTTPS://EXAMPLE.COM:443/",
+      "expected": {
+        "issuer_url": "https://example.com",
+        "resource_server_url": "https://example.com/mcp"
+      }
+    },
+    {
+      "enabled": true,
+      "issuer": "https://éxample.com",
+      "expected": {
+        "issuer_url": "https://xn--xample-9ua.com",
+        "resource_server_url": "https://xn--xample-9ua.com/mcp"
+      }
+    },
+    {
+      "enabled": true,
+      "issuer": "https://example.com/a/../b/",
+      "expected": {
+        "issuer_url": "https://example.com/b",
+        "resource_server_url": "https://example.com/b/mcp"
+      }
+    },
+    {
+      "enabled": true,
+      "issuer": "http://localhost/",
+      "expected": {
+        "issuer_url": "http://localhost",
+        "resource_server_url": "http://localhost/mcp"
+      }
+    },
+    {
+      "enabled": true,
+      "issuer": "https://example.com/a/..",
+      "expected": {
+        "issuer_url": "https://example.com/",
+        "resource_server_url": "https://example.com/mcp"
+      }
+    },
+    {
+      "enabled": true,
+      "issuer": "https://example.com/a/.",
+      "expected": {
+        "issuer_url": "https://example.com/a/",
+        "resource_server_url": "https://example.com/a/mcp"
+      }
+    },
+    {
+      "enabled": true,
+      "issuer": "https://example.com/a/%2e%2e",
+      "expected": {
+        "issuer_url": "https://example.com/",
+        "resource_server_url": "https://example.com/mcp"
+      }
+    }
+  ],
+  "flow": {
+    "code": {
+      "code": "source-code",
+      "scopes": [
+        "read",
+        "write"
+      ],
+      "expires_at": 1600.0,
+      "client_id": "flow",
+      "code_challenge": "pkce-challenge",
+      "redirect_uri": "http://localhost/cb",
+      "redirect_uri_provided_explicitly": true,
+      "resource": "https://example.com/mcp",
+      "subject": "operator"
+    },
+    "access": {
+      "token": "source-access",
+      "client_id": "flow",
+      "scopes": [
+        "read",
+        "write"
+      ],
+      "expires_at": 4600,
+      "resource": null,
+      "subject": "operator",
+      "claims": {}
+    },
+    "refresh": {
+      "token": "source-refresh",
+      "client_id": "flow",
+      "scopes": [
+        "read",
+        "write"
+      ],
+      "expires_at": 2593000,
+      "resource": null,
+      "subject": "operator"
+    },
+    "token_response": {
+      "access_token": "source-access",
+      "token_type": "Bearer",
+      "expires_in": 3600,
+      "scope": "read write",
+      "refresh_token": "source-refresh"
+    },
+    "rotation_old_access_missing": true,
+    "revoked_refresh_missing": true
+  }
+}

@@ -1,0 +1,972 @@
+{
+  "schema_version": 1,
+  "baseline": "1f3f5bc85083f4fd24bd9a2b07f161626e6bfef5",
+  "python": "3.14.7",
+  "provider_calls": 0,
+  "exporter_sha256": "fbebf885dcda9fef308b9102480593fa3e3f7c5e02d6af03083f0b7b78b76395",
+  "sources": [
+    {
+      "path": "slopsearx/portal_oidc.py",
+      "sha256": "cf8e930ea0b6921c2702993bca3c8f293689794fd243e881f3cba0917f2bf16f"
+    },
+    {
+      "path": "slopsearx/portal_auth.py",
+      "sha256": "e7738f1d7dc75787d5e0305ac3153e857a5074519d4587ddc0132b6e740efc14"
+    },
+    {
+      "path": "slopsearx/portal_rate_limit.py",
+      "sha256": "d55e5ad720b816830b5dd0e7283f6bdb7c9e3f61a3f774d61b50dfac29bc8c00"
+    },
+    {
+      "path": "slopsearx/portal_audit.py",
+      "sha256": "b23d6eaa76b9620a11104beb53ce6c51667d9be224ebf4e223ec6bb121ef7bcf"
+    },
+    {
+      "path": "slopsearx/workflow_portal.py",
+      "sha256": "6745b20350fa2c109228bcf64dcf8c07c5ed958e110ec0f41fe839b8ff2bf75b"
+    },
+    {
+      "path": "tests/test_portal_oidc.py",
+      "sha256": "2f54cae834cfd7662a17fca958fb18c0fb92ab1f7708f5057732c196bf6a17b7"
+    },
+    {
+      "path": "tests/test_portal_auth.py",
+      "sha256": "8efd6a6c3d49be54d983c30f7a9d26248c4a4732c8fb859d9b52c0e38bb5a0a2"
+    },
+    {
+      "path": "tests/test_portal_rate_limit.py",
+      "sha256": "2281c76b82bb51b03b2b2a177ec4bb8435f5b11441634f860ed36f9bfcb9947c"
+    },
+    {
+      "path": "tests/test_portal_audit.py",
+      "sha256": "9e1fab51c1507a89e48b42aa8282728a91aadceaf97149827055fc12209a399a"
+    },
+    {
+      "path": "tests/test_workflow_portal.py",
+      "sha256": "991059e0ffe259baaa7828829de25ce7487e50853500db1fc4aea6a5a8ac154b"
+    },
+    {
+      "path": "tests/test_workflow_portal_config.py",
+      "sha256": "58d459d1ad47216d26de825cddd20b608048766dc2478534359fe8d827ad73c4"
+    }
+  ],
+  "claims": [
+    {
+      "id": "valid",
+      "claims": {
+        "iss": "https://id.example",
+        "sub": "subject",
+        "aud": "client",
+        "nonce": "nonce",
+        "iat": 1000,
+        "exp": 2000
+      },
+      "now": 1100,
+      "source": {
+        "accepted": true,
+        "identity": [
+          "https://id.example",
+          "subject"
+        ]
+      }
+    },
+    {
+      "id": "issuer_trailing_slash",
+      "claims": {
+        "iss": "https://id.example/",
+        "sub": "subject",
+        "aud": "client",
+        "nonce": "nonce",
+        "iat": 1000,
+        "exp": 2000
+      },
+      "now": 1100,
+      "source": {
+        "accepted": true,
+        "identity": [
+          "https://id.example",
+          "subject"
+        ]
+      }
+    },
+    {
+      "id": "wrong_issuer",
+      "claims": {
+        "iss": "https://attacker",
+        "sub": "subject",
+        "aud": "client",
+        "nonce": "nonce",
+        "iat": 1000,
+        "exp": 2000
+      },
+      "now": 1100,
+      "source": {
+        "accepted": false
+      }
+    },
+    {
+      "id": "expired",
+      "claims": {
+        "iss": "https://id.example",
+        "sub": "subject",
+        "aud": "client",
+        "nonce": "nonce",
+        "iat": 1000,
+        "exp": 1000
+      },
+      "now": 1100,
+      "source": {
+        "accepted": false
+      }
+    },
+    {
+      "id": "skew_inside",
+      "claims": {
+        "iss": "https://id.example",
+        "sub": "subject",
+        "aud": "client",
+        "nonce": "nonce",
+        "iat": 1000,
+        "exp": 2000
+      },
+      "now": 2029.999,
+      "source": {
+        "accepted": true,
+        "identity": [
+          "https://id.example",
+          "subject"
+        ]
+      }
+    },
+    {
+      "id": "skew_boundary",
+      "claims": {
+        "iss": "https://id.example",
+        "sub": "subject",
+        "aud": "client",
+        "nonce": "nonce",
+        "iat": 1000,
+        "exp": 2000
+      },
+      "now": 2030,
+      "source": {
+        "accepted": false
+      }
+    },
+    {
+      "id": "iat_future",
+      "claims": {
+        "iss": "https://id.example",
+        "sub": "subject",
+        "aud": "client",
+        "nonce": "nonce",
+        "iat": 1131,
+        "exp": 2000
+      },
+      "now": 1100,
+      "source": {
+        "accepted": false
+      }
+    },
+    {
+      "id": "nbf_future",
+      "claims": {
+        "iss": "https://id.example",
+        "sub": "subject",
+        "aud": "client",
+        "nonce": "nonce",
+        "iat": 1000,
+        "exp": 2000,
+        "nbf": 1131
+      },
+      "now": 1100,
+      "source": {
+        "accepted": false
+      }
+    },
+    {
+      "id": "wrong_nonce",
+      "claims": {
+        "iss": "https://id.example",
+        "sub": "subject",
+        "aud": "client",
+        "nonce": "wrong",
+        "iat": 1000,
+        "exp": 2000
+      },
+      "now": 1100,
+      "source": {
+        "accepted": false
+      }
+    },
+    {
+      "id": "empty_subject",
+      "claims": {
+        "iss": "https://id.example",
+        "sub": "",
+        "aud": "client",
+        "nonce": "nonce",
+        "iat": 1000,
+        "exp": 2000
+      },
+      "now": 1100,
+      "source": {
+        "accepted": false
+      }
+    },
+    {
+      "id": "wrong_audience",
+      "claims": {
+        "iss": "https://id.example",
+        "sub": "subject",
+        "aud": "wrong",
+        "nonce": "nonce",
+        "iat": 1000,
+        "exp": 2000
+      },
+      "now": 1100,
+      "source": {
+        "accepted": false
+      }
+    },
+    {
+      "id": "multiple_azp",
+      "claims": {
+        "iss": "https://id.example",
+        "sub": "subject",
+        "aud": [
+          "client",
+          "other"
+        ],
+        "nonce": "nonce",
+        "iat": 1000,
+        "exp": 2000,
+        "azp": "client"
+      },
+      "now": 1100,
+      "source": {
+        "accepted": true,
+        "identity": [
+          "https://id.example",
+          "subject"
+        ]
+      }
+    },
+    {
+      "id": "multiple_missing_azp",
+      "claims": {
+        "iss": "https://id.example",
+        "sub": "subject",
+        "aud": [
+          "client",
+          "other"
+        ],
+        "nonce": "nonce",
+        "iat": 1000,
+        "exp": 2000
+      },
+      "now": 1100,
+      "source": {
+        "accepted": false
+      }
+    },
+    {
+      "id": "single_wrong_azp",
+      "claims": {
+        "iss": "https://id.example",
+        "sub": "subject",
+        "aud": "client",
+        "nonce": "nonce",
+        "iat": 1000,
+        "exp": 2000,
+        "azp": "wrong"
+      },
+      "now": 1100,
+      "source": {
+        "accepted": true,
+        "identity": [
+          "https://id.example",
+          "subject"
+        ]
+      }
+    },
+    {
+      "id": "mixed_audience",
+      "claims": {
+        "iss": "https://id.example",
+        "sub": "subject",
+        "aud": [
+          "client",
+          false
+        ],
+        "nonce": "nonce",
+        "iat": 1000,
+        "exp": 2000,
+        "azp": "client"
+      },
+      "now": 1100,
+      "source": {
+        "accepted": true,
+        "identity": [
+          "https://id.example",
+          "subject"
+        ]
+      }
+    },
+    {
+      "id": "nan_exp",
+      "claims": {
+        "iss": "https://id.example",
+        "sub": "subject",
+        "aud": "client",
+        "nonce": "nonce",
+        "iat": 1000,
+        "exp": "NaN"
+      },
+      "now": 1100,
+      "source": {
+        "accepted": true,
+        "identity": [
+          "https://id.example",
+          "subject"
+        ]
+      }
+    },
+    {
+      "id": "nan_iat",
+      "claims": {
+        "iss": "https://id.example",
+        "sub": "subject",
+        "aud": "client",
+        "nonce": "nonce",
+        "iat": "NaN",
+        "exp": 2000
+      },
+      "now": 1100,
+      "source": {
+        "accepted": true,
+        "identity": [
+          "https://id.example",
+          "subject"
+        ]
+      }
+    },
+    {
+      "id": "nan_nbf",
+      "claims": {
+        "iss": "https://id.example",
+        "sub": "subject",
+        "aud": "client",
+        "nonce": "nonce",
+        "iat": 1000,
+        "exp": 2000,
+        "nbf": "NaN"
+      },
+      "now": 1100,
+      "source": {
+        "accepted": true,
+        "identity": [
+          "https://id.example",
+          "subject"
+        ]
+      }
+    },
+    {
+      "id": "infinite_exp",
+      "claims": {
+        "iss": "https://id.example",
+        "sub": "subject",
+        "aud": "client",
+        "nonce": "nonce",
+        "iat": 1000,
+        "exp": "Infinity"
+      },
+      "now": 1100,
+      "source": {
+        "accepted": true,
+        "identity": [
+          "https://id.example",
+          "subject"
+        ]
+      }
+    },
+    {
+      "id": "bool_iat",
+      "claims": {
+        "iss": "https://id.example",
+        "sub": "subject",
+        "aud": "client",
+        "nonce": "nonce",
+        "iat": true,
+        "exp": 2000
+      },
+      "now": 1100,
+      "source": {
+        "accepted": true,
+        "identity": [
+          "https://id.example",
+          "subject"
+        ]
+      }
+    },
+    {
+      "id": "numeric_string_iat",
+      "claims": {
+        "iss": "https://id.example",
+        "sub": "subject",
+        "aud": "client",
+        "nonce": "nonce",
+        "iat": "1000",
+        "exp": 2000
+      },
+      "now": 1100,
+      "source": {
+        "accepted": true,
+        "identity": [
+          "https://id.example",
+          "subject"
+        ]
+      }
+    },
+    {
+      "id": "numeric_string_exp",
+      "claims": {
+        "iss": "https://id.example",
+        "sub": "subject",
+        "aud": "client",
+        "nonce": "nonce",
+        "iat": 1000,
+        "exp": "2000"
+      },
+      "now": 1100,
+      "source": {
+        "accepted": true,
+        "identity": [
+          "https://id.example",
+          "subject"
+        ]
+      }
+    }
+  ],
+  "return_paths": [
+    {
+      "input": null,
+      "source": "/workflows"
+    },
+    {
+      "input": "",
+      "source": "/workflows"
+    },
+    {
+      "input": "/workflows",
+      "source": "/workflows"
+    },
+    {
+      "input": "/workflows/research/a",
+      "source": "/workflows/research/a"
+    },
+    {
+      "input": "/workflows/research/a?x=1",
+      "source": "/workflows/research/a?x=1"
+    },
+    {
+      "input": "https://evil.example",
+      "source": "/workflows"
+    },
+    {
+      "input": "//evil.example/workflows",
+      "source": "/workflows"
+    },
+    {
+      "input": "/workflowsevil",
+      "source": "/workflows"
+    },
+    {
+      "input": "/workflows\\evil",
+      "source": "/workflows"
+    },
+    {
+      "input": "/workflows/a%5cb",
+      "source": "/workflows/a%5cb"
+    },
+    {
+      "input": "/workflows/%252f",
+      "source": "/workflows/%252f"
+    },
+    {
+      "input": "/workflows/../search",
+      "source": "/workflows/../search"
+    },
+    {
+      "input": "/workflows/a\n",
+      "source": "/workflows"
+    }
+  ],
+  "sessions": [
+    {
+      "id": "pending",
+      "source": {
+        "active": null,
+        "generation": 1,
+        "grants": null,
+        "expired": false,
+        "revoked": false,
+        "unavailable": false
+      }
+    },
+    {
+      "id": "rotated",
+      "source": {
+        "active": "a",
+        "generation": 2,
+        "grants": [
+          "workflow.read"
+        ],
+        "expired": false,
+        "revoked": false,
+        "unavailable": false
+      }
+    },
+    {
+      "id": "old_missing",
+      "source": {
+        "active": null,
+        "generation": null,
+        "grants": null,
+        "expired": false,
+        "revoked": false,
+        "unavailable": false
+      }
+    },
+    {
+      "id": "absolute_expired",
+      "source": {
+        "active": null,
+        "generation": null,
+        "grants": null,
+        "expired": true,
+        "revoked": false,
+        "unavailable": false
+      }
+    },
+    {
+      "id": "revision_revoked",
+      "source": {
+        "active": null,
+        "generation": null,
+        "grants": null,
+        "expired": false,
+        "revoked": true,
+        "unavailable": false
+      }
+    },
+    {
+      "id": "revocation_missing",
+      "source": {
+        "active": null,
+        "generation": null,
+        "grants": null,
+        "expired": false,
+        "revoked": false,
+        "unavailable": false
+      }
+    },
+    {
+      "id": "unavailable",
+      "source": {
+        "active": null,
+        "generation": null,
+        "grants": null,
+        "expired": false,
+        "revoked": false,
+        "unavailable": true
+      }
+    }
+  ],
+  "signatures": [
+    {
+      "id": "valid",
+      "token": "eyJhbGciOiJSUzI1NiIsImtpZCI6InRlc3QiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2lkLmV4YW1wbGUiLCJhdWQiOiJjbGllbnQiLCJzdWIiOiJzdWJqZWN0Iiwibm9uY2UiOiJub25jZSIsImlhdCI6MTAwMCwiZXhwIjoyMDAwfQ.vwRodz902dFGrcblAYUGuZaPyG2DM4oDD4P0qmrXevtP8shDqjcIiUlQ27SOnr6LvVaf6-RhRvoTwOuHaHg_lH_zJndj7GohUKc7v8GPE4p03p8lQvFrgDJ2FA5P1yKcRyuaoBA3Z4szKuyTwcS1W_zaYzPVsnnvoUazWfM4CYa26f_-Kc5AMIIEk-Wz2ROSArLx-GEaOiqXUxsfSdYTzoc9sRCU3Fgjna1GsX86ql3r1NOMRszKcWnJBNanXFNm7PNBXWaKDAjCH8WRaMiE1-2CbFjw3_dLt2nFobMDt086Z0j9DKdbW7zERzlw8We3gmqkoopSvys8mEbNB1aZxw",
+      "jwks": {
+        "keys": [
+          {
+            "kty": "RSA",
+            "kid": "test",
+            "use": "sig",
+            "n": "3OFy4SYFCE4erT6hGfGmW9ruy2-Yty_0aUy6TGATQPcceUBwAyEELZr0dkSIpVziwnSAAj3Rxe8c6eHPnM7PSQzA6q5wNVey93uvzssVaAdVdisks0-yc3FKLFW5Z5olk8ozzHJ5CU9zh-WDPhmjSvKFnrsUlxyAAWC7RK8r9mNsprgJIq0jJfwb-q0rL53YmmLlTuyro1JF8HoYgA1-eVGBKhbIgOS6356VqxRwjfKDcmMmFMz9YC7Awch-bYlgH3p9tSeHxw66LQx-p_r_Ww0WiYi1XR2yS8SI9MiSnzW4JwjF3pI6Ns2kPWrDGd4qaBpw0v_MvvNxN9iZbdkPnw",
+            "e": "AQAB"
+          }
+        ]
+      },
+      "source": {
+        "accepted": true,
+        "claims": {
+          "iss": "https://id.example",
+          "aud": "client",
+          "sub": "subject",
+          "nonce": "nonce",
+          "iat": 1000,
+          "exp": 2000
+        }
+      }
+    },
+    {
+      "id": "tampered",
+      "token": "eyJhbGciOiJSUzI1NiIsImtpZCI6InRlc3QiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2lkLmV4YW1wbGUiLCJhdWQiOiJjbGllbnQiLCJzdWIiOiJzdWJqZWN0Iiwibm9uY2UiOiJub25jZSIsImlhdCI6MTAwMCwiZXhwIjoyMDAwfQ.vwRodz902dFGrcblAYUGuZaPyG2DM4oDD4P0qmrXevtP8shDqjcIiUlQ27SOnr6LvVaf6-RhRvoTwOuHaHg_lH_zJndj7GohUKc7v8GPE4p03p8lQvFrgDJ2FA5P1yKcRyuaoBA3Z4szKuyTwcS1W_zaYzPVsnnvoUazWfM4CYa26f_-Kc5AMIIEk-Wz2ROSArLx-GEaOiqXUxsfSdYTzoc9sRCU3Fgjna1GsX86ql3r1NOMRszKcWnJBNanXFNm7PNBXWaKDAjCH8WRaMiE1-2CbFjw3_dLt2nFobMDt086Z0j9DKdbW7zERzlw8We3gmqkoopSvys8mEbNB1aZxA",
+      "jwks": {
+        "keys": [
+          {
+            "kty": "RSA",
+            "kid": "test",
+            "use": "sig",
+            "n": "3OFy4SYFCE4erT6hGfGmW9ruy2-Yty_0aUy6TGATQPcceUBwAyEELZr0dkSIpVziwnSAAj3Rxe8c6eHPnM7PSQzA6q5wNVey93uvzssVaAdVdisks0-yc3FKLFW5Z5olk8ozzHJ5CU9zh-WDPhmjSvKFnrsUlxyAAWC7RK8r9mNsprgJIq0jJfwb-q0rL53YmmLlTuyro1JF8HoYgA1-eVGBKhbIgOS6356VqxRwjfKDcmMmFMz9YC7Awch-bYlgH3p9tSeHxw66LQx-p_r_Ww0WiYi1XR2yS8SI9MiSnzW4JwjF3pI6Ns2kPWrDGd4qaBpw0v_MvvNxN9iZbdkPnw",
+            "e": "AQAB"
+          }
+        ]
+      },
+      "source": {
+        "accepted": false
+      }
+    }
+  ],
+  "directories": [
+    {
+      "id": "known_mixed",
+      "input": {
+        "principals": [
+          {
+            "principal_id": "principal",
+            "issuer": "https://id.example",
+            "subject": "subject",
+            "memberships": [
+              {
+                "tenant_id": "a",
+                "display_name": "A",
+                "grants": [
+                  "workflow.read",
+                  "workflow.research.cancel",
+                  "workflow.saved.control"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "source": {
+        "accepted": true,
+        "grants": [
+          "workflow.read",
+          "workflow.research.cancel",
+          "workflow.saved.control"
+        ]
+      }
+    },
+    {
+      "id": "unknown_grant",
+      "input": {
+        "principals": [
+          {
+            "principal_id": "principal",
+            "issuer": "https://id.example",
+            "subject": "subject",
+            "memberships": [
+              {
+                "tenant_id": "a",
+                "display_name": "A",
+                "grants": [
+                  "workflow.unknown"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "source": {
+        "accepted": true,
+        "grants": [
+          "workflow.unknown"
+        ]
+      }
+    },
+    {
+      "id": "duplicate_grants",
+      "input": {
+        "principals": [
+          {
+            "principal_id": "principal",
+            "issuer": "https://id.example",
+            "subject": "subject",
+            "memberships": [
+              {
+                "tenant_id": "a",
+                "display_name": "A",
+                "grants": [
+                  "workflow.read",
+                  "workflow.read"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "source": {
+        "accepted": false
+      }
+    },
+    {
+      "id": "bool_revision",
+      "input": {
+        "principals": [
+          {
+            "principal_id": "principal",
+            "issuer": "https://id.example",
+            "subject": "subject",
+            "memberships": [
+              {
+                "tenant_id": "a",
+                "display_name": "A",
+                "grants": [
+                  "workflow.read",
+                  "workflow.research.cancel",
+                  "workflow.saved.control"
+                ],
+                "revision": true
+              }
+            ]
+          }
+        ]
+      },
+      "source": {
+        "accepted": false
+      }
+    },
+    {
+      "id": "zero_revision",
+      "input": {
+        "principals": [
+          {
+            "principal_id": "principal",
+            "issuer": "https://id.example",
+            "subject": "subject",
+            "memberships": [
+              {
+                "tenant_id": "a",
+                "display_name": "A",
+                "grants": [
+                  "workflow.read",
+                  "workflow.research.cancel",
+                  "workflow.saved.control"
+                ],
+                "revision": 0
+              }
+            ]
+          }
+        ]
+      },
+      "source": {
+        "accepted": false
+      }
+    },
+    {
+      "id": "empty_grants",
+      "input": {
+        "principals": [
+          {
+            "principal_id": "principal",
+            "issuer": "https://id.example",
+            "subject": "subject",
+            "memberships": [
+              {
+                "tenant_id": "a",
+                "display_name": "A",
+                "grants": []
+              }
+            ]
+          }
+        ]
+      },
+      "source": {
+        "accepted": false
+      }
+    }
+  ],
+  "settings": [
+    {
+      "id": "valid",
+      "issuer": "https://id.example",
+      "callback": "https://portal.example/auth/callback",
+      "source": {
+        "accepted": true
+      }
+    },
+    {
+      "id": "issuer_http",
+      "issuer": "http://id.example",
+      "callback": "https://portal.example/auth/callback",
+      "source": {
+        "accepted": false
+      }
+    },
+    {
+      "id": "callback_http",
+      "issuer": "https://id.example",
+      "callback": "http://portal.example/auth/callback",
+      "source": {
+        "accepted": false
+      }
+    },
+    {
+      "id": "callback_wrong_path",
+      "issuer": "https://id.example",
+      "callback": "https://portal.example/other",
+      "source": {
+        "accepted": false
+      }
+    },
+    {
+      "id": "callback_query",
+      "issuer": "https://id.example",
+      "callback": "https://portal.example/auth/callback?x=1",
+      "source": {
+        "accepted": false
+      }
+    },
+    {
+      "id": "issuer_userinfo",
+      "issuer": "https://user@id.example",
+      "callback": "https://portal.example/auth/callback",
+      "source": {
+        "accepted": true
+      }
+    }
+  ],
+  "mutation_digests": [
+    {
+      "id": "default",
+      "input": {
+        "kind": "research",
+        "object_id": "a-object",
+        "action": "cancel",
+        "revision": 1,
+        "cursor": "",
+        "question": "",
+        "strategy": "triangulate"
+      },
+      "source": "c5c589119c82216b98ae2c0c8c7e7a4e851c3497a1113c506701007ab9019ce8"
+    },
+    {
+      "id": "explicit_default",
+      "input": {
+        "kind": "research",
+        "object_id": "a-object",
+        "action": "cancel",
+        "revision": 1,
+        "cursor": "",
+        "question": "",
+        "strategy": "triangulate"
+      },
+      "source": "c5c589119c82216b98ae2c0c8c7e7a4e851c3497a1113c506701007ab9019ce8"
+    },
+    {
+      "id": "question_changed",
+      "input": {
+        "kind": "research",
+        "object_id": "a-object",
+        "action": "cancel",
+        "revision": 1,
+        "cursor": "",
+        "question": "changed",
+        "strategy": "triangulate"
+      },
+      "source": "1011dfbb7306e4427273924ea27e800c0782b78d1497b70311a736a449cb772e"
+    },
+    {
+      "id": "unicode",
+      "input": {
+        "kind": "research",
+        "object_id": "δοκιμή",
+        "action": "cancel",
+        "revision": 1,
+        "cursor": "",
+        "question": "évidence",
+        "strategy": "triangulate"
+      },
+      "source": "4d3cabd69dc71f22b60de61af894f5ba05bf28f62417da06595dcdcaec6714ae"
+    },
+    {
+      "id": "cursor",
+      "input": {
+        "kind": "research",
+        "object_id": "a-object",
+        "action": "cancel",
+        "revision": 1,
+        "cursor": "opaque-cursor",
+        "question": "",
+        "strategy": "triangulate"
+      },
+      "source": "e08c80330b5c62920ffba9c9ee7c4e021fb350cd7b5d66e8e58b41dca41d8e7b"
+    }
+  ],
+  "previous_key_drain": [
+    {
+      "raw": "60",
+      "source": 60
+    },
+    {
+      "raw": " 60 ",
+      "source": 60
+    },
+    {
+      "raw": "+60",
+      "source": 60
+    },
+    {
+      "raw": "6_0",
+      "source": 60
+    },
+    {
+      "raw": "٦٠",
+      "source": 60
+    },
+    {
+      "raw": "６０",
+      "source": 60
+    },
+    {
+      "raw": " 60 ",
+      "source": 60
+    },
+    {
+      "raw": "\u001c60\u001c",
+      "source": null
+    },
+    {
+      "raw": "60.0",
+      "source": null
+    },
+    {
+      "raw": "6e1",
+      "source": null
+    },
+    {
+      "raw": "6__0",
+      "source": null
+    },
+    {
+      "raw": "_60",
+      "source": null
+    },
+    {
+      "raw": "59",
+      "source": null
+    },
+    {
+      "raw": "601",
+      "source": null
+    },
+    {
+      "raw": "NaN",
+      "source": null
+    }
+  ]
+}

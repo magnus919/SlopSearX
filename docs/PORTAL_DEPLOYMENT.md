@@ -117,10 +117,10 @@ docker buildx imagetools inspect ghcr.io/magnus919/slopsearx:<short-sha> \
   --format '{{json .Manifest.Digest}}'
 ```
 
-The repository's Docker workflow runs the portable release smoke check:
+The repository's Docker workflow uses the native release smoke helper:
 
 ```bash
-python3 scripts/portal_release_smoke.py \
+cargo xtask ci-helper portal-release-smoke \
   --base-url http://127.0.0.1:8080 \
   --expected-theme dark
 ```
@@ -128,7 +128,14 @@ python3 scripts/portal_release_smoke.py \
 The check verifies the landing form, default theme, CSP, readiness response,
 and a JSON search envelope. A search returning 503 is accepted when upstream
 sources are unavailable, provided it remains a valid response with the
-requested query and result list.
+requested query and result list. Each probe has a 30-second deadline, a 64 KiB
+response-header limit, and a 1 MiB body limit; it follows at most ten HTTP(S)
+redirects. The helper rejects credentials, queries, and fragments in its base
+URL, and its diagnostics omit URLs and query text.
+
+The helper invokes a trusted `curl` available in `PATH`, with its default curl
+configuration file disabled. Loopback targets bypass proxy settings; other
+targets retain the caller's configured proxy behavior.
 
 ## Upgrade, canary, and rollback
 

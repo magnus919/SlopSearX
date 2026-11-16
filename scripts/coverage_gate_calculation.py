@@ -23,6 +23,27 @@ from scripts.coverage_study_core import selector_inventory
 SCHEMA = "coverage-first-gate-calculation/1"
 FROZEN_QUALITY_TASK_USE_SHA256 = "b6353b480fd88543da530ef6b03129d26743f8f273e8a80d543320167399f7dd"
 FROZEN_EXECUTION_CONTRACT_SHA256 = "44cee41bc453581d4d0e00e9d3081332dc0467d64a73b9fd70a1ef3515548858"
+REGISTERED_V2_PROTOCOL_SHA256 = "567e337d41268f380348abc70ab1bf4a0249852f237797fa361295f1e34afb06"
+REGISTERED_V2_COHORTS_SHA256 = "36d4cbff9c93555d35d7269525616f009a21727c8d1141a8a2a61934791038f0"
+REGISTERED_FROZEN_POOL_PROTOCOL_SHA256 = "e4f7a7eaf7b78c9e662e02b48f9672eac368db7bef2992fe4e4c11443500b604"
+REGISTERED_SAVED_PROTOCOL_SHA256 = "647d1a09b9594f04798a9b891e609ed710c37111da62ecbf3e8e34d1b183c2bb"
+REGISTERED_SAVED_WIRE_COMPAT_PROTOCOL_SHA256 = "5b40c497b0871a575c07eff18b8c8f8a54dcb417d1028e61815ab9a77887a604"
+REGISTERED_SAVED_WIRE_COMPAT_EXECUTION_CONTRACT_SHA256 = (
+    "cd468faf4a4e99e248a9bc9a90e176c356e912017351ce34330b027cc64767ce"
+)
+REGISTERED_SAVED_WIRE_FLOAT_PROTOCOL_SHA256 = "65b5515eb161c849c54f196c300f03b3965cbdbd4162682131b13ccecd0911a8"
+REGISTERED_SAVED_WIRE_FLOAT_EXECUTION_CONTRACT_SHA256 = (
+    "9d800d31fa8054e5500d8cdba4d9f35781287ab6b8fa75e210abd18f0e6ce60a"
+)
+TASK_USE_V4_QUALITY_TASK_USE_SHA256 = "7d3038ec9409f0f3178f02f0afa731a0df0ed6d7c6630ec52a3debd3660012d3"
+TASK_USE_V4_PROTOCOL_SHA256 = "9278fa98aa0de47fcb9a83a0f7067ef002671012e7995a6907b144ce66ecd37f"
+TASK_USE_V4_COHORTS_SHA256 = "4ae302eaebd54d9fe2c3bbd49d243811d07ffd2135c207698db1742644355b72"
+TASK_USE_V4_EXECUTION_CONTRACT_SHA256 = "cd1b06727b7d740750cf2694e232e345d3b4c49cdd66c33dd389fdc6e964b2ee"
+TASK_USE_V4_INPUT_CORRECTED_PROTOCOL_SHA256 = "cfac29e7d406dc4c7e45030fafeb6ba466923cfeb19b34e427d344507c9d9ba9"
+TASK_USE_V4_INPUT_CORRECTED_COHORTS_SHA256 = "ad731b5d99907242dbc7c6be0c671049e179df76d50a2148886e7e34b6b28b30"
+REGISTERED_FROZEN_POOL_COHORTS_SHA256 = "377450c59f2b8498c8a7f923bb7b6d05a0b780300467cc9b9f8ef0bd69522595"
+REGISTERED_FROZEN_POOL_EXECUTION_CONTRACT_SHA256 = "f00916c32a52ded954967db15f82427dfbaffa57f5c8a24416408885a31ad3ff"
+REGISTERED_V2_EXECUTION_CONTRACT_SHA256 = "e114b172d4eba352897ea8dfe3fc83568097bf154425aaecfaa6690f6c3e8bf3"
 GATE_NAMES = frozenset(
     {
         "complete_eligible_membership",
@@ -66,6 +87,29 @@ def _sha(raw: bytes) -> str:
     return hashlib.sha256(raw).hexdigest()
 
 
+def quality_task_use_sha256(protocol: Mapping[str, object]) -> str:
+    """Return the immutable quality/task-use digest for a protocol version."""
+    if protocol.get("schema") == "coverage-first-study-protocol/4":
+        return TASK_USE_V4_QUALITY_TASK_USE_SHA256
+    if protocol.get("schema") in {
+        "coverage-first-study-protocol/1",
+        "coverage-first-study-protocol/2",
+        "coverage-first-study-protocol/3",
+    }:
+        return FROZEN_QUALITY_TASK_USE_SHA256
+    raise GateCalculationError("frozen-protocol-required")
+
+
+def _validated_useful_count_role(protocol: Mapping[str, object], quality: Mapping[str, object]) -> str:
+    if protocol.get("schema") == "coverage-first-study-protocol/4":
+        if quality.get("useful_count_role") != "diagnostic_only" or "useful_count_loss_allowed" in quality:
+            raise GateCalculationError("frozen-useful-count-policy-invalid")
+        return "diagnostic_only"
+    if "useful_count_role" in quality:
+        raise GateCalculationError("frozen-useful-count-policy-invalid")
+    return "noninferiority_gate"
+
+
 def _finite(value: object) -> bool:
     return type(value) in {int, float} and math.isfinite(value)
 
@@ -93,8 +137,16 @@ def _dcg(order: Sequence[str], grades: Mapping[str, int]) -> float:
 
 
 def _ranking_case(
-    task: Mapping[str, object], orders: Mapping[str, object], records: object, *, useful_min: int, case_min: float
+    task: Mapping[str, object],
+    orders: Mapping[str, object],
+    records: object,
+    *,
+    useful_min: int,
+    case_min: float,
+    useful_count_role: str = "noninferiority_gate",
 ) -> Endpoint:
+    if useful_count_role not in {"noninferiority_gate", "diagnostic_only"}:
+        return Endpoint(None, {"reason": "useful-count-role-invalid"})
     task_id = task["task_id"]
     ids = task.get("card_ids")
     if (
@@ -146,17 +198,27 @@ def _ranking_case(
     w0, candidate = view(orders["w0"]), view(orders["candidate"])
     delta = float(candidate["ndcg10"]) - float(w0["ndcg10"])
     lost = sorted(set(w0["useful_facets"]) - set(candidate["useful_facets"]))
-    passed = delta >= case_min and candidate["useful_count"] >= w0["useful_count"] and not lost
+    count_lost = candidate["useful_count"] < w0["useful_count"]
+    passed = delta >= case_min and not lost and (useful_count_role == "diagnostic_only" or not count_lost)
+    metrics = {
+        "task_id": task_id,
+        "w0": w0,
+        "candidate": candidate,
+        "delta": delta,
+        "lost_facets": lost,
+        "per_case_pass": passed,
+    }
+    if useful_count_role == "diagnostic_only":
+        metrics.update(
+            {
+                "useful_count_role": useful_count_role,
+                "useful_count_delta": candidate["useful_count"] - w0["useful_count"],
+                "useful_count_loss": count_lost,
+            }
+        )
     return Endpoint(
         passed,
-        {
-            "task_id": task_id,
-            "w0": w0,
-            "candidate": candidate,
-            "delta": delta,
-            "lost_facets": lost,
-            "per_case_pass": passed,
-        },
+        metrics,
     )
 
 
@@ -166,7 +228,9 @@ def _bootstrap(values: Sequence[float], draws: int, seed: int) -> tuple[float, l
     return statistics.mean(values), [samples[249], samples[9749]]
 
 
-def _ranking_endpoint(assessor, tasks, orders, records_by_task, quality) -> Endpoint:
+def _ranking_endpoint(
+    assessor, tasks, orders, records_by_task, quality, *, useful_count_role="noninferiority_gate"
+) -> Endpoint:
     if type(records_by_task) is not dict:
         return Endpoint(None, {"assessor": assessor, "reason": "independent-reference-missing"})
     result = []
@@ -181,6 +245,7 @@ def _ranking_endpoint(assessor, tasks, orders, records_by_task, quality) -> Endp
             task_records[assessor],
             useful_min=quality["useful_lead_grade_minimum"],
             case_min=quality["per_case_delta_minimum"],
+            useful_count_role=useful_count_role,
         )
         if case.passed is None:
             return Endpoint(None, {"assessor": assessor, **case.metrics})
@@ -622,6 +687,10 @@ def calculate_coverage_gate_report(
     navigation_observations: object,
     resource_evidence: object,
     input_manifest_sha256: str,
+    band_companion_bytes: bytes | None = None,
+    stage_kind: str = "development",
+    cohorts_sha256: str | None = None,
+    protocol_sha256: str | None = None,
 ) -> CoverageGateReport:
     """Calculate frozen mixed-workload gates from closed grades and observations.
 
@@ -633,6 +702,8 @@ def calculate_coverage_gate_report(
     if type(protocol) is not dict or protocol.get("schema") not in {
         "coverage-first-study-protocol/1",
         "coverage-first-study-protocol/2",
+        "coverage-first-study-protocol/3",
+        "coverage-first-study-protocol/4",
     }:
         raise GateCalculationError("frozen-protocol-required")
     if protocol.get("status") not in {"draft_not_registered_not_admitted", "registered"}:
@@ -646,7 +717,8 @@ def calculate_coverage_gate_report(
     quality, task_use = protocol.get("quality"), protocol.get("task_use")
     if type(quality) is not dict or type(task_use) is not dict:
         raise GateCalculationError("frozen-gate-contract-missing")
-    if _sha(_canonical({"quality": quality, "task_use": task_use})) != FROZEN_QUALITY_TASK_USE_SHA256:
+    useful_count_role = _validated_useful_count_role(protocol, quality)
+    if _sha(_canonical({"quality": quality, "task_use": task_use})) != quality_task_use_sha256(protocol):
         raise GateCalculationError("frozen-quality-task-use-contract-mismatch")
     execution_contract_keys = (
         "quality",
@@ -664,8 +736,105 @@ def calculate_coverage_gate_report(
         execution_contract = {key: protocol[key] for key in execution_contract_keys}
     except KeyError as exc:
         raise GateCalculationError("frozen-execution-contract-missing") from exc
-    if _sha(_canonical(execution_contract)) != FROZEN_EXECUTION_CONTRACT_SHA256:
-        raise GateCalculationError("frozen-execution-contract-mismatch")
+    execution_contract_sha256 = _sha(_canonical(execution_contract))
+    # Schema 4 always uses its exact registration path, even if a future
+    # refactor happens to make its execution tuple hash equal the legacy hash.
+    if (
+        protocol.get("schema") == "coverage-first-study-protocol/4"
+        or execution_contract_sha256 != FROZEN_EXECUTION_CONTRACT_SHA256
+    ):
+        registered_v2_allowed = (
+            execution_contract_sha256 == REGISTERED_V2_EXECUTION_CONTRACT_SHA256
+            and protocol_sha256 == REGISTERED_V2_PROTOCOL_SHA256
+            and cohorts_sha256 == REGISTERED_V2_COHORTS_SHA256
+            and protocol.get("schema") == "coverage-first-study-protocol/2"
+            and protocol.get("status") == "registered"
+            and protocol.get("cohorts_sha256") == REGISTERED_V2_COHORTS_SHA256
+            and type(protocol.get("acquisition")) is dict
+            and protocol["acquisition"].get("execution_profile") == "coverage-acquisition-profile/2"
+        )
+        registered_frozen_pool_allowed = (
+            execution_contract_sha256 == REGISTERED_FROZEN_POOL_EXECUTION_CONTRACT_SHA256
+            and protocol_sha256 == REGISTERED_FROZEN_POOL_PROTOCOL_SHA256
+            and cohorts_sha256 == REGISTERED_FROZEN_POOL_COHORTS_SHA256
+            and protocol.get("schema") == "coverage-first-study-protocol/2"
+            and protocol.get("status") == "registered"
+            and protocol.get("cohorts_sha256") == REGISTERED_FROZEN_POOL_COHORTS_SHA256
+            and protocol.get("pool_input_mode") == "frozen-pool/1"
+            and type(protocol.get("acquisition")) is dict
+            and protocol["acquisition"].get("execution_profile") == "coverage-acquisition-profile/2"
+        )
+        registered_saved_allowed = (
+            execution_contract_sha256 == REGISTERED_FROZEN_POOL_EXECUTION_CONTRACT_SHA256
+            and protocol_sha256 == REGISTERED_SAVED_PROTOCOL_SHA256
+            and cohorts_sha256 == REGISTERED_FROZEN_POOL_COHORTS_SHA256
+            and protocol.get("schema") == "coverage-first-study-protocol/3"
+            and protocol.get("status") == "registered"
+            and protocol.get("cohorts_sha256") == REGISTERED_FROZEN_POOL_COHORTS_SHA256
+            and protocol.get("pool_input_mode_by_stage")
+            == {"development": "saved-corpus/1", "confirmation": "frozen-pool/1"}
+            and stage_kind in {"development", "confirmation"}
+        )
+        registered_saved_wire_compat_allowed = (
+            execution_contract_sha256 == REGISTERED_SAVED_WIRE_COMPAT_EXECUTION_CONTRACT_SHA256
+            and protocol_sha256 == REGISTERED_SAVED_WIRE_COMPAT_PROTOCOL_SHA256
+            and cohorts_sha256 == REGISTERED_FROZEN_POOL_COHORTS_SHA256
+            and protocol.get("schema") == "coverage-first-study-protocol/3"
+            and protocol.get("status") == "registered"
+            and protocol.get("cohorts_sha256") == REGISTERED_FROZEN_POOL_COHORTS_SHA256
+            and protocol.get("pool_input_mode_by_stage")
+            == {"development": "saved-corpus/1", "confirmation": "frozen-pool/1"}
+            and stage_kind in {"development", "confirmation"}
+        )
+        registered_saved_wire_float_allowed = (
+            execution_contract_sha256 == REGISTERED_SAVED_WIRE_FLOAT_EXECUTION_CONTRACT_SHA256
+            and protocol_sha256 == REGISTERED_SAVED_WIRE_FLOAT_PROTOCOL_SHA256
+            and cohorts_sha256 == REGISTERED_FROZEN_POOL_COHORTS_SHA256
+            and protocol.get("schema") == "coverage-first-study-protocol/3"
+            and protocol.get("status") == "registered"
+            and protocol.get("cohorts_sha256") == REGISTERED_FROZEN_POOL_COHORTS_SHA256
+            and protocol.get("pool_input_mode_by_stage")
+            == {"development": "saved-corpus/1", "confirmation": "frozen-pool/1"}
+            and stage_kind in {"development", "confirmation"}
+        )
+        registered_task_use_v4_allowed = (
+            execution_contract_sha256 == TASK_USE_V4_EXECUTION_CONTRACT_SHA256
+            and protocol_sha256 == TASK_USE_V4_PROTOCOL_SHA256
+            and cohorts_sha256 == TASK_USE_V4_COHORTS_SHA256
+            and protocol.get("schema") == "coverage-first-study-protocol/4"
+            and protocol.get("status") == "registered"
+            and protocol.get("cohorts_sha256") == TASK_USE_V4_COHORTS_SHA256
+            and protocol.get("pool_input_mode") == "frozen-pool/1"
+            and protocol.get("pool_input_mode_by_stage")
+            == {"development": "frozen-pool/1", "confirmation": "frozen-pool/1"}
+            and quality.get("useful_count_role") == "diagnostic_only"
+            and "useful_count_loss_allowed" not in quality
+            and stage_kind in {"development", "confirmation"}
+        )
+        registered_task_use_v4_input_corrected_allowed = (
+            execution_contract_sha256 == TASK_USE_V4_EXECUTION_CONTRACT_SHA256
+            and protocol_sha256 == TASK_USE_V4_INPUT_CORRECTED_PROTOCOL_SHA256
+            and cohorts_sha256 == TASK_USE_V4_INPUT_CORRECTED_COHORTS_SHA256
+            and protocol.get("schema") == "coverage-first-study-protocol/4"
+            and protocol.get("status") == "registered"
+            and protocol.get("cohorts_sha256") == TASK_USE_V4_INPUT_CORRECTED_COHORTS_SHA256
+            and protocol.get("pool_input_mode") == "frozen-pool/1"
+            and protocol.get("pool_input_mode_by_stage")
+            == {"development": "frozen-pool/1", "confirmation": "frozen-pool/1"}
+            and quality.get("useful_count_role") == "diagnostic_only"
+            and "useful_count_loss_allowed" not in quality
+            and stage_kind in {"development", "confirmation"}
+        )
+        if not (
+            registered_v2_allowed
+            or registered_frozen_pool_allowed
+            or registered_saved_allowed
+            or registered_saved_wire_compat_allowed
+            or registered_saved_wire_float_allowed
+            or registered_task_use_v4_allowed
+            or registered_task_use_v4_input_corrected_allowed
+        ):
+            raise GateCalculationError("frozen-execution-contract-mismatch")
     refs, answers = _closed_outputs(reference_closure, answer_closure)
     source_stage_uuid = getattr(prepared_assessments, "source_stage_uuid", None)
     packet_stage_uuid = getattr(prepared_assessments, "packet_stage_uuid", None)
@@ -731,7 +900,7 @@ def calculate_coverage_gate_report(
 
     cards = refs.get("cards") if type(refs.get("cards")) is dict else {}
     ranking = {
-        assessor: _ranking_endpoint(assessor, task_inputs, orders, cards, quality)
+        assessor: _ranking_endpoint(assessor, task_inputs, orders, cards, quality, useful_count_role=useful_count_role)
         for assessor in quality["independent_references"]
     }
     answer_scores = answers.get("answers")
@@ -816,6 +985,34 @@ def calculate_coverage_gate_report(
         "exact_navigation_top1": nav_gate,
         "resource_and_terminal_guards": resource.passed,
     }
+    companion = None
+    if band_companion_bytes is not None:
+        if (
+            type(band_companion_bytes) is not bytes
+            or type(cohorts_sha256) is not str
+            or type(protocol_sha256) is not str
+        ):
+            raise GateCalculationError("band-companion-binding-invalid")
+        try:
+            contract = json.loads(band_companion_bytes)
+            from scripts.coverage_band_companion import calculate as calculate_band_companion
+
+            companion = calculate_band_companion(
+                contract=contract,
+                stage_kind=stage_kind,
+                protocol_sha256=protocol_sha256,
+                cohorts_sha256=cohorts_sha256,
+                quality=quality,
+                task_use=task_use,
+                protocol=protocol,
+                task_inputs=task_inputs,
+                orders=orders,
+                records_by_task=cards,
+                answer_scores=answer_scores,
+                prepared_assessments=prepared_assessments,
+            )
+        except Exception as exc:
+            raise GateCalculationError("band-companion-contract-invalid") from exc
     status = (
         "inconclusive"
         if any(value is None for value in gates.values())
@@ -852,6 +1049,12 @@ def calculate_coverage_gate_report(
         "resources": resource.metrics,
         "status": status,
     }
+    if companion is not None:
+        metrics["band_companion"] = {
+            "status": companion.status,
+            "gates": companion.gates,
+            "groups": companion.groups,
+        }
     metrics_sha = _sha(_canonical(metrics))
     threshold_sha = _sha(_canonical({"quality": quality, "task_use": task_use}))
     receipt = {
@@ -866,6 +1069,14 @@ def calculate_coverage_gate_report(
         "quality_credit": False,
         "admission_created": False,
     }
+    if companion is not None:
+        receipt.update(
+            {
+                "band_companion_sha256": _sha(band_companion_bytes),
+                "band_companion_status": companion.status,
+                "band_companion_gates": companion.gates,
+            }
+        )
     receipt_bytes = _canonical(receipt)
     evaluation = GateEvaluation(
         status=status,
@@ -876,6 +1087,8 @@ def calculate_coverage_gate_report(
         band_diagnostics=metrics["bands_and_intents"],
         metrics_sha256=metrics_sha,
         calculation_receipt_sha256=_sha(receipt_bytes),
+        companion_status=companion.status if companion is not None else None,
+        companion_sha256=_sha(band_companion_bytes) if band_companion_bytes is not None else None,
     )
     return CoverageGateReport(evaluation=evaluation, metrics=metrics, receipt_bytes=receipt_bytes)
 

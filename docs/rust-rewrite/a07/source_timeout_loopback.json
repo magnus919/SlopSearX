@@ -1,0 +1,236 @@
+{
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "sources": {
+    "slopsearx/adapter.py": "5883a35c48d0dad1077306fbda21997ee1d32116a8c03633a6b762de0c26d6f3",
+    "engines/clinicaltrials.py": "28d1981607b05988a264c0950bd3b151608c7992d7fa0d543421a8577a2295c7",
+    "engines/europepmc.py": "c8811e83b2117eb53011e96a8e9462a30462da43bebb6a8cea6cb7a8dc702dbf",
+    "engines/pubchem.py": "aa57ea70db504d260ef3d295fafc344e8d911341bbb1bbe3bee5f1880aa2b0c1",
+    "engines/uniprot.py": "03887fe7af9da041cb2185e7c21d85d57adc8acd343629af613191b36e55944c"
+  },
+  "cases": [
+    {
+      "engine": "clinicaltrials",
+      "timeout": "negative",
+      "requests": [],
+      "exit": 0,
+      "watchdog_killed_reaped": false,
+      "stdout": "{\"status\": \"timeout\", \"error_message\": null, \"result_count\": 0}\n",
+      "stderr": "",
+      "closed_ns": 336866643276750,
+      "joined": true
+    },
+    {
+      "engine": "clinicaltrials",
+      "timeout": "negative_infinity",
+      "requests": [],
+      "exit": 0,
+      "watchdog_killed_reaped": false,
+      "stdout": "{\"status\": \"timeout\", \"error_message\": null, \"result_count\": 0}\n",
+      "stderr": "",
+      "closed_ns": 336866792495791,
+      "joined": true
+    },
+    {
+      "engine": "clinicaltrials",
+      "timeout": "infinity",
+      "requests": [
+        {
+          "path": "/?query.term=test&pageSize=10&format=json&sort=%40relevance",
+          "received_ns": 336866916358583,
+          "completed_ns": 336866947703041
+        }
+      ],
+      "exit": 0,
+      "watchdog_killed_reaped": false,
+      "stdout": "{\"status\": \"ok\", \"error_message\": null, \"result_count\": 0}\n",
+      "stderr": "",
+      "closed_ns": 336866972645041,
+      "joined": true
+    },
+    {
+      "engine": "clinicaltrials",
+      "timeout": "huge",
+      "requests": [
+        {
+          "path": "/?query.term=test&pageSize=10&format=json&sort=%40relevance",
+          "received_ns": 336867104292041,
+          "completed_ns": 336867134770458
+        }
+      ],
+      "exit": 0,
+      "watchdog_killed_reaped": false,
+      "stdout": "{\"status\": \"ok\", \"error_message\": null, \"result_count\": 0}\n",
+      "stderr": "",
+      "closed_ns": 336867160376208,
+      "joined": true
+    },
+    {
+      "engine": "europepmc",
+      "timeout": "negative",
+      "requests": [],
+      "exit": 0,
+      "watchdog_killed_reaped": false,
+      "stdout": "{\"status\": \"timeout\", \"error_message\": \"\", \"result_count\": 0}\n",
+      "stderr": "",
+      "closed_ns": 336867305232125,
+      "joined": true
+    },
+    {
+      "engine": "europepmc",
+      "timeout": "negative_infinity",
+      "requests": [],
+      "exit": 0,
+      "watchdog_killed_reaped": false,
+      "stdout": "{\"status\": \"timeout\", \"error_message\": \"\", \"result_count\": 0}\n",
+      "stderr": "",
+      "closed_ns": 336867449390333,
+      "joined": true
+    },
+    {
+      "engine": "europepmc",
+      "timeout": "infinity",
+      "requests": [
+        {
+          "path": "/search?query=test&format=json&resultType=lite&pageSize=10",
+          "received_ns": 336867573454791,
+          "completed_ns": 336867608542833
+        }
+      ],
+      "exit": 0,
+      "watchdog_killed_reaped": false,
+      "stdout": "{\"status\": \"ok\", \"error_message\": null, \"result_count\": 0}\n",
+      "stderr": "",
+      "closed_ns": 336867629654125,
+      "joined": true
+    },
+    {
+      "engine": "europepmc",
+      "timeout": "huge",
+      "requests": [
+        {
+          "path": "/search?query=test&format=json&resultType=lite&pageSize=10",
+          "received_ns": 336867751961666,
+          "completed_ns": 336867783160000
+        }
+      ],
+      "exit": 0,
+      "watchdog_killed_reaped": false,
+      "stdout": "{\"status\": \"ok\", \"error_message\": null, \"result_count\": 0}\n",
+      "stderr": "",
+      "closed_ns": 336867807818000,
+      "joined": true
+    },
+    {
+      "engine": "pubchem",
+      "timeout": "negative",
+      "requests": [],
+      "exit": 0,
+      "watchdog_killed_reaped": false,
+      "stdout": "{\"status\": \"timeout\", \"error_message\": null, \"result_count\": 0}\n",
+      "stderr": "",
+      "closed_ns": 336867956070166,
+      "joined": true
+    },
+    {
+      "engine": "pubchem",
+      "timeout": "negative_infinity",
+      "requests": [],
+      "exit": 0,
+      "watchdog_killed_reaped": false,
+      "stdout": "{\"status\": \"timeout\", \"error_message\": null, \"result_count\": 0}\n",
+      "stderr": "",
+      "closed_ns": 336868107468625,
+      "joined": true
+    },
+    {
+      "engine": "pubchem",
+      "timeout": "infinity",
+      "requests": [
+        {
+          "path": "/compound/name/test/cids/JSON",
+          "received_ns": 336868234806625,
+          "completed_ns": 336868265983291
+        }
+      ],
+      "exit": 0,
+      "watchdog_killed_reaped": false,
+      "stdout": "{\"status\": \"ok\", \"error_message\": null, \"result_count\": 0}\n",
+      "stderr": "",
+      "closed_ns": 336868291031500,
+      "joined": true
+    },
+    {
+      "engine": "pubchem",
+      "timeout": "huge",
+      "requests": [
+        {
+          "path": "/compound/name/test/cids/JSON",
+          "received_ns": 336868418093916,
+          "completed_ns": 336868453237708
+        }
+      ],
+      "exit": 0,
+      "watchdog_killed_reaped": false,
+      "stdout": "{\"status\": \"ok\", \"error_message\": null, \"result_count\": 0}\n",
+      "stderr": "",
+      "closed_ns": 336868474195375,
+      "joined": true
+    },
+    {
+      "engine": "uniprot",
+      "timeout": "negative",
+      "requests": [],
+      "exit": 0,
+      "watchdog_killed_reaped": false,
+      "stdout": "{\"status\": \"timeout\", \"error_message\": null, \"result_count\": 0}\n",
+      "stderr": "",
+      "closed_ns": 336868619362375,
+      "joined": true
+    },
+    {
+      "engine": "uniprot",
+      "timeout": "negative_infinity",
+      "requests": [],
+      "exit": 0,
+      "watchdog_killed_reaped": false,
+      "stdout": "{\"status\": \"timeout\", \"error_message\": null, \"result_count\": 0}\n",
+      "stderr": "",
+      "closed_ns": 336868762827291,
+      "joined": true
+    },
+    {
+      "engine": "uniprot",
+      "timeout": "infinity",
+      "requests": [
+        {
+          "path": "/?query=%28test%29+OR+%28gene%3Atest%29&size=30&format=json",
+          "received_ns": 336868889663625,
+          "completed_ns": 336868924824750
+        }
+      ],
+      "exit": 0,
+      "watchdog_killed_reaped": false,
+      "stdout": "{\"status\": \"ok\", \"error_message\": null, \"result_count\": 0}\n",
+      "stderr": "",
+      "closed_ns": 336868945844166,
+      "joined": true
+    },
+    {
+      "engine": "uniprot",
+      "timeout": "huge",
+      "requests": [
+        {
+          "path": "/?query=%28test%29+OR+%28gene%3Atest%29&size=30&format=json",
+          "received_ns": 336869073950666,
+          "completed_ns": 336869105157916
+        }
+      ],
+      "exit": 0,
+      "watchdog_killed_reaped": false,
+      "stdout": "{\"status\": \"ok\", \"error_message\": null, \"result_count\": 0}\n",
+      "stderr": "",
+      "closed_ns": 336869130218875,
+      "joined": true
+    }
+  ]
+}

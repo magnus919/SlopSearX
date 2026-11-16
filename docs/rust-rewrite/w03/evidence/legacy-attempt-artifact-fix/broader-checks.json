@@ -1,0 +1,109 @@
+{
+  "same_frozen_candidate_source": true,
+  "W03_native_tests": 133,
+  "MCP_transport_tests": 6,
+  "checks": [
+    {
+      "check": "MCP-six-inventory",
+      "actual_exit": 0,
+      "normalized_reproduction_argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "ssx-mcp",
+        "--test",
+        "w03",
+        "--",
+        "--list"
+      ],
+      "raw_stdout_sha256": "2f9c47ae248af90500a970198454a2c7de6a0dc546fdf743c1131b1c32c01a1d",
+      "raw_stderr_sha256": "7b87cc7399c0a36f5234e783ec89dc5a7ebf41f98000e7b6cbc07024c327c78a",
+      "raw_retention": "private qualification archive; no inherited environment receipt published"
+    },
+    {
+      "check": "MCP-six-positives",
+      "actual_exit": 0,
+      "normalized_reproduction_argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "ssx-mcp",
+        "--test",
+        "w03",
+        "--",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "raw_stdout_sha256": "3382d48111c51193b8212b6161c6d8820448a18fab924d135ae0fa9fa44c5d22",
+      "raw_stderr_sha256": "7aba2776248f85fc772b6222c70ac49d30cbcd12512a34ffbb0f67b1785df771",
+      "raw_retention": "private qualification archive; no inherited environment receipt published"
+    },
+    {
+      "check": "full-W03",
+      "actual_exit": 0,
+      "normalized_reproduction_argv": [
+        "cargo",
+        "xtask",
+        "check",
+        "W03",
+        "--output",
+        "<private-output>/W03.json"
+      ],
+      "raw_stdout_sha256": "98b20553b343b9d84ba7089d3b6362e933c9743f311e13df5714c65da9878d88",
+      "raw_stderr_sha256": "0b22c571aa03b41f1d162518b4ce644d43db8b36b8422758892af03311d6e1cf",
+      "raw_retention": "private qualification archive; no inherited environment receipt published"
+    },
+    {
+      "check": "fmt",
+      "actual_exit": 0,
+      "normalized_reproduction_argv": [
+        "cargo",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "raw_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_retention": "private qualification archive; no inherited environment receipt published"
+    },
+    {
+      "check": "workspace-all-target-build",
+      "actual_exit": 0,
+      "normalized_reproduction_argv": [
+        "cargo",
+        "build",
+        "--locked",
+        "--offline",
+        "--workspace",
+        "--all-targets"
+      ],
+      "raw_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_stderr_sha256": "5d509689bbad648da3ac9132fb61d358b310b5d2f79fb7571e5bd9b5715c5e6a",
+      "raw_retention": "private qualification archive; no inherited environment receipt published"
+    },
+    {
+      "check": "workspace-all-target-strict-Clippy",
+      "actual_exit": 0,
+      "normalized_reproduction_argv": [
+        "cargo",
+        "clippy",
+        "--locked",
+        "--offline",
+        "--workspace",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "raw_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_stderr_sha256": "5c72bfbc02ba3b6089a3c03f38e0814d8d26e344f304ed15322f08ffc8a9f9fc",
+      "raw_retention": "private qualification archive; no inherited environment receipt published"
+    }
+  ],
+  "scope": "bounded fix qualification; fresh publication-head CI remains separate"
+}

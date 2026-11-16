@@ -674,6 +674,8 @@ async def _run_search(
         enforcement=enforcement,
         include_payload=include_payload,
     )
+    if response.date_filter is not None:
+        envelope.setdefault("meta", {})["date_filter"] = response.date_filter
     advisories = search_advisories(
         request,
         response.scope,
@@ -1189,6 +1191,9 @@ async def slopsearx_search_science(
         error_response = _error("invalid_input", str(exc), field=exc.field)
         error_response["enforcement"] = rejected
         return error_response
+
+    if (date_from is not None or date_to is not None) and engines != ["openalex"]:
+        return _error("invalid_input", "absolute dates require explicit engines=['openalex']", field="engines")
 
     warnings = [SCIENCE_LIMITATION_NOTE, f"resolved source_types: {', '.join(source_types)}"]
     enforcement: dict[str, Any] = {}

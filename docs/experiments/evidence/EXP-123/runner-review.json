@@ -1,0 +1,35 @@
+{
+  "head": "3b27897f89fa642105b5f4c14df590c4d541892a",
+  "reviewer": "Codex runner fallback",
+  "disposition": "positive",
+  "open_blocking_findings": [],
+  "resolved_findings": [
+    {
+      "id": "runner-oauth-budget",
+      "initial_head": "ab8a241541ee2bc748e43443628bc6db76aaf1e8",
+      "problem": "Interactive OAuth runs within initialize; generic short deadline could truncate its existing authorization budget.",
+      "resolution": "Final head excludes OAuth mode from the short deadline and documents the narrower noninteractive scope. Dedicated guard allows40ms OAuth initialize with10ms connection budget while forwarding500ms OAuth timeout; seven real local OAuth client compatibility tests pass."
+    }
+  ],
+  "analysis": [
+    "The new asyncio deadline surrounds only noninteractive session.initialize. HTTP client/session setup, tool registration, structured calls and separate bounded discovery are unchanged. TimeoutError is wrapped by existing connection-error logic and surfaced through the SDK exception group.",
+    "Initialization failure occurs before catalog discovery, proxy registration or _state publication. Owner task unwinds stream/client/session scopes, clears state and is awaited. Normal and optimized verifier plus actual HTTP regression reject publication/leaks and inspect nested connection error.",
+    "Frozen bearer observations show both delayed initializations rejected below300ms, no published tools/state/owner leak, and unchanged healthy38 names/descriptions/schemas/raw control. The final false branch uses the identical connect_timeout timer body; OAuth scope correction does not rerun or tune primary metrics. Timing observations belong to the original measured candidate, with final compatibility checks separately disclosed.",
+    "OAuth preserves pre-existing initialization behavior and its independent authorization timeout. Discovery remains separately bounded for every mode. This does not promise the new shorter deadline for OAuth, which remains explicitly outside the improvement claim.",
+    "No search/engine/cache/policy/result/portal wire change. Initial146 API/browser/gateway and mypy121 pass; final covered timeout/OAuth guard2 and OAuth client7 pass; changed-file hooks pass. Unrelated all-file formatting retained/restored. New HTTP module follows CI fresh-process isolation.",
+    "Intervening main7a1a0e6f changes only two documentation/evidence files; no runtime compatibility changes require altering the frozen baseline. Exact-head normal implementation CI remains required."
+  ],
+  "review_job_failure": {
+    "run": 38740632500,
+    "job": "analyze / analysis",
+    "reason": "github_default_branch_identity_mismatch at publication after unrelated documentation merge",
+    "report": "retained current-head INCOMPLETE/PARTIAL with no findings; not approval",
+    "authorization": "standing substantive runner fallback replaces unavailable/broken review only; no other failed implementation checks accepted; normal branch protection enforced"
+  },
+  "limits": [
+    "No production frequency, deployment, SLO or agent-task uplift measured.",
+    "Local full suite remains two baseline-reproduced environment failures; not relabeled green.",
+    "Frozen timings measured ab8a2415; final3b27897f preserves the identical noninteractive timeout body and excludes OAuth after compatibility review."
+  ],
+  "final_validation": "All normal implementation CI passed on3b27897f89fa642105b5f4c14df590c4d541892a. Only failed PR Review Analysis publication replaced by positive substantive runner review under standing authorization. Both local environment failures reproduced on unchanged6cf8a573. Normal merge succeeded with no protection bypass."
+}

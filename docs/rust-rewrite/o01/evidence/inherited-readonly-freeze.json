@@ -1,0 +1,115 @@
+{
+  "scope": "Same-goal historical O01 stagedcandidate read-only freeze; not accepted or executed here; no oldcheckout mutations",
+  "head": "1e9dd82d62456fe6f511cc5ade88bae619fac027",
+  "side_commits": 0,
+  "files": [
+    {
+      "path": ".github/workflows/rust.yml",
+      "sha256": "d9060d8cc8830ead1ec1b32accaa3c8b8da75ac52ae0b2b57a83375eeb57b932",
+      "bytes": 9666,
+      "staged_git_blob": "04bb06f1db17ec626f9f80f30ac5404caa6cc393"
+    },
+    {
+      "path": "crates/ssx-application/src/lib.rs",
+      "sha256": "db2b643353f6f8468156361cd9dc822bda219504ad44030e950ad2b86691e977",
+      "bytes": 4174,
+      "staged_git_blob": "0e7a545004e60ac8369afe35ccd2ea84eb29b971"
+    },
+    {
+      "path": "crates/ssx-infra/src/lib.rs",
+      "sha256": "10fee3e5bf2a915907da95f304b885a18c48a857dcb39718b3193a5e77f2e788",
+      "bytes": 3733,
+      "staged_git_blob": "c9a0eb43d94eb53e0fcd055f7cdc57e2f8f92d25"
+    },
+    {
+      "path": "crates/ssx-infra/src/observability/logging.rs",
+      "sha256": "e75601de5eaed0056faaf1a2dd46ee8387832ca827b3fb13677d2d50d9038482",
+      "bytes": 9412,
+      "staged_git_blob": "816cca4e4d68fd07abb38d0bc8d1b57dcb91a70e"
+    },
+    {
+      "path": "crates/ssx-infra/src/observability/metrics.rs",
+      "sha256": "4053c80172507ae50f9f4ed37e06b7cc50bb6c18c006d8ce924d9a7cfd7fd6d4",
+      "bytes": 41416,
+      "staged_git_blob": "3d3fae00824c7768e8112e452e583449c5d2aa38"
+    },
+    {
+      "path": "crates/ssx-infra/src/observability/mod.rs",
+      "sha256": "7d15477066f77c4fd1f80bb82888bea540a3a4684ff281736f4412f7aca48aa6",
+      "bytes": 17478,
+      "staged_git_blob": "ab7bdc19b1588f9230ae5ffad93bb24f4cc2596d"
+    },
+    {
+      "path": "crates/ssx-infra/src/search.rs",
+      "sha256": "9d949d3ac295a4b4f1577d1eba16443e37afa0f8432f26ceb92a96f7cfcf1ed7",
+      "bytes": 56773,
+      "staged_git_blob": "8223024b268efa9237eeafe5dd0f3cd3556de8f9"
+    },
+    {
+      "path": "crates/ssx-infra/tests/o01.rs",
+      "sha256": "1c4a6f7ea3c7a03c1f552bda1b46be7eeb4d5d17de6c208fdef47f1753cdcc10",
+      "bytes": 24682,
+      "staged_git_blob": "9a018be8d2da2be0a867845d857b4fab45bc1368"
+    },
+    {
+      "path": "crates/xtask/fixtures/F01.json",
+      "sha256": "f2dd4a5ae8e1d91d010bda5b3681a305a5bf640d0f92d86e968f5cec37a0515e",
+      "bytes": 48141,
+      "staged_git_blob": "587f87a01157ab36ccee984628f4e1b4b7983305"
+    },
+    {
+      "path": "crates/xtask/fixtures/o01/source.json",
+      "sha256": "01a380d3f90f38468cdd3fd3208d47c3dddc4287f527633c3040353fafe624a4",
+      "bytes": 41608,
+      "staged_git_blob": "dbdd75f7be2b04edfb9831df3dfcfe64eec1012c"
+    },
+    {
+      "path": "crates/xtask/fixtures/o01/sources.json",
+      "sha256": "55a7917cc6a0ea77d46e8988e0f11ff4ba1ba5628036e8d2cab6d18437562de2",
+      "bytes": 1291,
+      "staged_git_blob": "6cd90663c2241dd3e041e10fe2f6c29555e6cab0"
+    },
+    {
+      "path": "crates/xtask/src/main.rs",
+      "sha256": "2dbea33c83fc96165b5c1100cddbabe8a2731e1d568cb25fe10fc3248f7096d9",
+      "bytes": 34635,
+      "staged_git_blob": "7fa0fed24b5ae7513706c5c142d063834b7383c3"
+    },
+    {
+      "path": "crates/xtask/src/o01.rs",
+      "sha256": "62e6059940247d8178542e5f956ce15171444521afd9533f4be02d40f5ba10c3",
+      "bytes": 4875,
+      "staged_git_blob": "ac04877f5acfca0a03409dc705ed9a8f0a6a220d"
+    },
+    {
+      "path": "docs/rust-rewrite/inventory/python-disposition.json",
+      "sha256": "20bd9387ee5ec9fa55a7d4899fcf003eedb6d0942445f691cee10127e33e07de",
+      "bytes": 284215,
+      "staged_git_blob": "8873fbe72b50611393b427674889c1c436f1cf1a"
+    },
+    {
+      "path": "docs/rust-rewrite/o01/README.md",
+      "sha256": "0b690e91a4f1e7e9e36b697196df269a93fd6809e30cca8a7578b360005e34fa",
+      "bytes": 7280,
+      "staged_git_blob": "24a6eb1c46e2080befe25a1832247914cbacf048"
+    },
+    {
+      "path": "docs/rust-rewrite/o01/capture.py",
+      "sha256": "64459ca8f8f052e4e11ecfd685d0b64fbec3d67eb6bb94fd9a4eec94e397c50f",
+      "bytes": 5772,
+      "staged_git_blob": "13c7e8a684c2dded0de111329ab71b28c483e9ba"
+    },
+    {
+      "path": "docs/rust-rewrite/o01/parity.json",
+      "sha256": "2c353d7af8b6668f3141510fd4f30861c705c3cb2ddcd156b00c138e8ccef262",
+      "bytes": 1303,
+      "staged_git_blob": "f9d3a2e259efe611c668f701a4472f43df38787a"
+    }
+  ],
+  "unstaged_tracked": true,
+  "owner_evidence": "Root list_artifacts samechat attachment; liveagenttree root/thislane/T06/A10, no oldO01agent",
+  "artifact_sha256": {
+    "staged_patch": "7dae0e556e309f5241f93992a71270fdfb53ae8880b566e1ddc5df2c68ede379",
+    "status": "07e355ce9350cc8c31e42a8a498d7be6041f23cd78448cff3cf75d83c374d81e"
+  }
+}

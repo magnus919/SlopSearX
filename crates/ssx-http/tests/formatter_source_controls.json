@@ -1,0 +1,342 @@
+{
+  "scope": "pure original formatter functions only; no HTTP/transport acceptance",
+  "source_path": "slopsearx/formatter.py",
+  "source_sha256": "8eaf74e1215ebaebc7a9d81438e02512aa56b9f5a7929ebb2df35e5b2f632e7a",
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "records": [
+    {
+      "id": "epoch:000",
+      "input": null,
+      "output": null
+    },
+    {
+      "id": "epoch:001",
+      "input": "",
+      "output": null
+    },
+    {
+      "id": "epoch:002",
+      "input": "2026-10-17",
+      "output": 1792195200
+    },
+    {
+      "id": "epoch:003",
+      "input": "2026-1-2",
+      "output": 1767312000
+    },
+    {
+      "id": "epoch:004",
+      "input": "2026-01-02T03:04:05Z",
+      "output": 1767323045
+    },
+    {
+      "id": "epoch:005",
+      "input": "2026-01-02T03:04:05z",
+      "output": 1767323045
+    },
+    {
+      "id": "epoch:006",
+      "input": "2026-01-02t03:04:05Z",
+      "output": 1767323045
+    },
+    {
+      "id": "epoch:007",
+      "input": "2026-01-02T3:4:5Z",
+      "output": 1767323045
+    },
+    {
+      "id": "epoch:008",
+      "input": "2026-01-02T03:04:05+05:30",
+      "output": 1767303245
+    },
+    {
+      "id": "epoch:009",
+      "input": "2026-01-02T03:04:05-0430",
+      "output": 1767339245
+    },
+    {
+      "id": "epoch:010",
+      "input": "2026-01-02T03:04:05+05:30:20.123456",
+      "output": 1767303224
+    },
+    {
+      "id": "epoch:011",
+      "input": "2026-01-02T03:04:05.123Z",
+      "output": null
+    },
+    {
+      "id": "epoch:012",
+      "input": "2026-01-02T03:04:05",
+      "output": null
+    },
+    {
+      "id": "epoch:013",
+      "input": "1969-12-31T23:59:59+00:00:00.5",
+      "output": -1
+    },
+    {
+      "id": "epoch:014",
+      "input": "0001-01-01",
+      "output": -62135596800
+    },
+    {
+      "id": "epoch:015",
+      "input": "9999-12-31T23:59:59-23:59",
+      "output": 253402387139
+    },
+    {
+      "id": "epoch:016",
+      "input": "2024-02-29",
+      "output": 1709164800
+    },
+    {
+      "id": "epoch:017",
+      "input": "2025-02-29",
+      "output": null
+    },
+    {
+      "id": "epoch:018",
+      "input": "2026-02-30",
+      "output": null
+    },
+    {
+      "id": "epoch:019",
+      "input": "2026-13-01",
+      "output": null
+    },
+    {
+      "id": "epoch:020",
+      "input": "2026-00-01",
+      "output": null
+    },
+    {
+      "id": "epoch:021",
+      "input": " 2026-01-01",
+      "output": null
+    },
+    {
+      "id": "epoch:022",
+      "input": "2026-01-01 ",
+      "output": null
+    },
+    {
+      "id": "epoch:023",
+      "input": "\u0662\u0660\u0662\u0666-01-02",
+      "output": 1767312000
+    },
+    {
+      "id": "epoch:024",
+      "input": "\uff12\uff10\uff12\uff16-01-02",
+      "output": 1767312000
+    },
+    {
+      "id": "epoch:025",
+      "input": "2026-\u0660\u0661-02",
+      "output": null
+    },
+    {
+      "id": "epoch:026",
+      "input": "2026-01-\u0660\u0662",
+      "output": null
+    },
+    {
+      "id": "epoch:027",
+      "input": "2026-01- 2",
+      "output": 1767312000
+    },
+    {
+      "id": "epoch:028",
+      "input": "2026-01-02T24:00:00Z",
+      "output": null
+    },
+    {
+      "id": "epoch:029",
+      "input": "2026-01-02T03:04:60Z",
+      "output": null
+    },
+    {
+      "id": "epoch:030",
+      "input": "2026-01-02T03:04:05+24:00",
+      "output": null
+    },
+    {
+      "id": "epoch:031",
+      "input": "2026-01-02T03:04:05+00:30:00.5",
+      "output": 1767321244
+    },
+    {
+      "id": "parsed_url:000",
+      "input": null,
+      "output": null
+    },
+    {
+      "id": "parsed_url:001",
+      "input": "",
+      "output": null
+    },
+    {
+      "id": "parsed_url:002",
+      "input": "relative/path",
+      "output": null
+    },
+    {
+      "id": "parsed_url:003",
+      "input": "https://example.test/a;p?q=one#f",
+      "output": [
+        "https",
+        "example.test",
+        "/a",
+        "p",
+        "q=one",
+        "f"
+      ]
+    },
+    {
+      "id": "parsed_url:004",
+      "input": "HTTPS://EXAMPLE.test/A;B?Q=1#F",
+      "output": [
+        "https",
+        "EXAMPLE.test",
+        "/A",
+        "B",
+        "Q=1",
+        "F"
+      ]
+    },
+    {
+      "id": "parsed_url:005",
+      "input": "http://x/a;b/c;d",
+      "output": [
+        "http",
+        "x",
+        "/a;b/c",
+        "d",
+        "",
+        ""
+      ]
+    },
+    {
+      "id": "parsed_url:006",
+      "input": "http://x/a;b/c",
+      "output": [
+        "http",
+        "x",
+        "/a;b/c",
+        "",
+        "",
+        ""
+      ]
+    },
+    {
+      "id": "parsed_url:007",
+      "input": "mailto:user@example.test",
+      "output": null
+    },
+    {
+      "id": "parsed_url:008",
+      "input": "//example.test/path",
+      "output": null
+    },
+    {
+      "id": "parsed_url:009",
+      "input": "https:///path",
+      "output": null
+    },
+    {
+      "id": "parsed_url:010",
+      "input": "https://[::1]/p",
+      "output": [
+        "https",
+        "[::1]",
+        "/p",
+        "",
+        "",
+        ""
+      ]
+    },
+    {
+      "id": "parsed_url:011",
+      "input": "https://[broken/p",
+      "output": null
+    },
+    {
+      "id": "parsed_url:012",
+      "input": "https://\u96ea.example/\u8def\u5f84;\u53c2\u6570?q=\u96ea#\u7247\u6bb5",
+      "output": [
+        "https",
+        "\u96ea.example",
+        "/\u8def\u5f84",
+        "\u53c2\u6570",
+        "q=\u96ea",
+        "\u7247\u6bb5"
+      ]
+    },
+    {
+      "id": "parsed_url:013",
+      "input": "https://example.test/a\tb",
+      "output": [
+        "https",
+        "example.test",
+        "/ab",
+        "",
+        "",
+        ""
+      ]
+    },
+    {
+      "id": "parsed_url:014",
+      "input": "https://example.test/\np",
+      "output": [
+        "https",
+        "example.test",
+        "/p",
+        "",
+        "",
+        ""
+      ]
+    },
+    {
+      "id": "parsed_url:015",
+      "input": "\u0000https://example.test/a",
+      "output": [
+        "https",
+        "example.test",
+        "/a",
+        "",
+        "",
+        ""
+      ]
+    },
+    {
+      "id": "parsed_url:016",
+      "input": "https://example.test:bad/a",
+      "output": [
+        "https",
+        "example.test:bad",
+        "/a",
+        "",
+        "",
+        ""
+      ]
+    },
+    {
+      "id": "parsed_url:017",
+      "input": "1https://x/a",
+      "output": null
+    },
+    {
+      "id": "parsed_url:018",
+      "input": "https://user:secret@example.test/a",
+      "output": [
+        "https",
+        "user:secret@example.test",
+        "/a",
+        "",
+        "",
+        ""
+      ]
+    }
+  ],
+  "real_network_allowed": false,
+  "source_unchanged": true
+}

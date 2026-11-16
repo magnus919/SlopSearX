@@ -1,0 +1,59 @@
+{
+  "kind": "parent_owned_inventory_proposal_not_applied",
+  "plan_id": "W03",
+  "source_rows": [
+    {
+      "path": "docs/rust-rewrite/w03/capture_contract_map.py.frozen",
+      "sha256": "64bc20910dfe15656568215bec125d44aef016da73a0c6ad5cf94b855617b611",
+      "classification": "historical AST-only authoring bytes, hash-only native evidence",
+      "migration_owners": [
+        "W03",
+        "G08"
+      ],
+      "runtime_invocation": false,
+      "mandatory_gate_invocation": false,
+      "disposition": "retire runnable Python authoring before backend removal; retain immutable JSON and approved data-only historical bytes"
+    },
+    {
+      "path": "docs/rust-rewrite/w03/capture_source.py.frozen",
+      "sha256": "601060feda97d852cf4e9d3a5ead688b66c4efd24a7c38fd1a521785c7323fc4",
+      "classification": "historical executed producer, hash-only data archive",
+      "migration_owners": [
+        "W03",
+        "G08"
+      ],
+      "runtime_invocation": false,
+      "mandatory_gate_invocation": false,
+      "disposition": "retire runnable Python authoring before backend removal; retain immutable JSON and approved data-only historical bytes"
+    },
+    {
+      "path": "docs/rust-rewrite/w03/capture_templates.py.frozen",
+      "sha256": "2964020598aed26efd79b1a9fa956810d2a1a6c6175de32108cc8367ebb44ce7",
+      "classification": "historical executed producer, hash-only data archive",
+      "migration_owners": [
+        "W03",
+        "G08"
+      ],
+      "runtime_invocation": false,
+      "mandatory_gate_invocation": false,
+      "disposition": "retire runnable Python authoring before backend removal; retain immutable JSON and approved data-only historical bytes"
+    },
+    {
+      "path": "docs/rust-rewrite/w03/capture_deadlines.py.frozen",
+      "sha256": "a622a0192d858197d0603665d03a76e0e8d4e7a29469019d5eace42d86cb9513",
+      "classification": "historical executed producer, hash-only data archive",
+      "migration_owners": [
+        "W03",
+        "G08"
+      ],
+      "runtime_invocation": false,
+      "mandatory_gate_invocation": false,
+      "disposition": "retire runnable Python authoring before backend removal; retain immutable JSON and approved data-only historical bytes"
+    }
+  ],
+  "tracked_python_delta": 0,
+  "historical_archive_delta": 4,
+  "backend_runtime_delta": 0,
+  "native_gate": "Rust-only; archives hashed as data, never imported/compiled/executed",
+  "invocation_note": "Historical source capture was explicit one-time offline authorization, not a supported run command. No native runtime/tool invokes it."
+}

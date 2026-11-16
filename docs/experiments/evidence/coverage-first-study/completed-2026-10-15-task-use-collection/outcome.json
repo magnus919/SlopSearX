@@ -1,0 +1,239 @@
+{
+  "schema": "coverage-public-collection-outcome/1",
+  "stage_kind": "development",
+  "stage_uuid": "5646bd75-6c61-42ca-afc7-e0023993f582",
+  "source_revision": "943f0b7ef670b3ffe4a3abb03b2aee54570e6a0c",
+  "registration_merge_commit": "2a995f964757df77693747b232aa47738c0c58cc",
+  "protocol_sha256": "9278fa98aa0de47fcb9a83a0f7067ef002671012e7995a6907b144ce66ecd37f",
+  "cohorts_sha256": "4ae302eaebd54d9fe2c3bbd49d243811d07ffd2135c207698db1742644355b72",
+  "status": "terminal-incomplete",
+  "terminal_reason": "frozen_pool_input-failed",
+  "collection_status": "inconclusive",
+  "physical_requests": 26,
+  "responses_by_engine_status": [
+    {
+      "engine": "arxiv",
+      "http_status": 429,
+      "count": 1
+    },
+    {
+      "engine": "github",
+      "http_status": 200,
+      "count": 11
+    },
+    {
+      "engine": "openalex",
+      "http_status": 200,
+      "count": 7
+    },
+    {
+      "engine": "wikipedia",
+      "http_status": 200,
+      "count": 7
+    }
+  ],
+  "operations": [
+    {
+      "failure_reasons": [],
+      "operation_id": "D27-R01",
+      "status": "complete",
+      "card_count": 33,
+      "pool_status": "complete"
+    },
+    {
+      "failure_reasons": [],
+      "operation_id": "D27-R02",
+      "status": "complete",
+      "card_count": 20,
+      "pool_status": "complete"
+    },
+    {
+      "failure_reasons": [],
+      "operation_id": "D27-R03",
+      "status": "complete",
+      "card_count": 8,
+      "pool_status": "complete"
+    },
+    {
+      "failure_reasons": [
+        "engine_failures:arxiv"
+      ],
+      "operation_id": "D27-R04",
+      "status": "inconclusive",
+      "card_count": 20,
+      "pool_status": "complete"
+    },
+    {
+      "failure_reasons": [
+        "engine_failures:arxiv",
+        "natural_pool_band_mismatch"
+      ],
+      "operation_id": "D27-R05",
+      "status": "inconclusive",
+      "card_count": 40,
+      "pool_status": "inconclusive"
+    },
+    {
+      "failure_reasons": [
+        "engine_failures:arxiv",
+        "natural_pool_band_mismatch"
+      ],
+      "operation_id": "D27-R06",
+      "status": "inconclusive",
+      "card_count": 40,
+      "pool_status": "inconclusive"
+    },
+    {
+      "failure_reasons": [
+        "engine_failures:arxiv"
+      ],
+      "operation_id": "D27-R07",
+      "status": "inconclusive",
+      "card_count": 41,
+      "pool_status": "complete"
+    },
+    {
+      "failure_reasons": [
+        "engine_failures:arxiv",
+        "natural_pool_band_mismatch"
+      ],
+      "operation_id": "D27-R08",
+      "status": "inconclusive",
+      "card_count": 40,
+      "pool_status": "inconclusive"
+    },
+    {
+      "failure_reasons": [],
+      "operation_id": "D27-N01",
+      "status": "complete",
+      "card_count": 20,
+      "pool_status": "complete"
+    },
+    {
+      "failure_reasons": [],
+      "operation_id": "D27-N02",
+      "status": "complete",
+      "card_count": 20,
+      "pool_status": "complete"
+    },
+    {
+      "failure_reasons": [
+        "exact_target_not_rank1"
+      ],
+      "operation_id": "D27-N03",
+      "status": "inconclusive",
+      "card_count": 20,
+      "pool_status": "inconclusive"
+    },
+    {
+      "failure_reasons": [],
+      "operation_id": "D27-N04",
+      "status": "complete",
+      "card_count": 20,
+      "pool_status": "complete"
+    },
+    {
+      "failure_reasons": [],
+      "operation_id": "D27-N05",
+      "status": "complete",
+      "card_count": 20,
+      "pool_status": "complete"
+    }
+  ],
+  "phases": [
+    {
+      "error_class": "OrchestrationError",
+      "phase": "frozen_pool_input",
+      "status": "terminal-failure"
+    },
+    {
+      "phase": "pipeline_inputs",
+      "status": "not-invoked"
+    },
+    {
+      "phase": "late_preflight",
+      "status": "not-invoked"
+    },
+    {
+      "phase": "capture",
+      "status": "not-invoked"
+    },
+    {
+      "phase": "reference_packet_preparation",
+      "status": "not-invoked"
+    },
+    {
+      "phase": "reference_grading",
+      "status": "not-invoked"
+    },
+    {
+      "phase": "reference_grade_closure",
+      "status": "not-invoked"
+    },
+    {
+      "phase": "selector",
+      "status": "not-invoked"
+    },
+    {
+      "phase": "paired_answer_inputs",
+      "status": "not-invoked"
+    },
+    {
+      "phase": "answerer",
+      "status": "not-invoked"
+    },
+    {
+      "phase": "answerer_dispatch_verification",
+      "status": "not-invoked"
+    },
+    {
+      "phase": "answer_packet_preparation",
+      "status": "not-invoked"
+    },
+    {
+      "phase": "answer_grading",
+      "status": "not-invoked"
+    },
+    {
+      "phase": "answer_grade_closure",
+      "status": "not-invoked"
+    },
+    {
+      "phase": "resource_evidence_collection",
+      "status": "not-invoked"
+    },
+    {
+      "phase": "gate_calculation",
+      "status": "not-invoked"
+    }
+  ],
+  "elapsed_seconds": 112.05890326900408,
+  "brave_requests": 0,
+  "source_capture_calls": 0,
+  "reference_grades": 0,
+  "jev_calls": 0,
+  "answer_calls": 0,
+  "answer_grades": 0,
+  "confirmation_invocations": 0,
+  "retry": false,
+  "quality_result": "not_measured",
+  "product_authorized": false,
+  "navigation_failure": {
+    "operation_id": "D27-N03",
+    "query": "backstage platform",
+    "expected_url": "https://github.com/backstage/backstage",
+    "returned_card_count": 20,
+    "expected_url_present": false,
+    "stage": "input collection before W0 or candidate ranking"
+  },
+  "retention": {
+    "private_raw_archive_sha256": "9a8997c6c9a97f43b65e783ef0daf86eb35fd62989cdeed5f1b2476eb434dff4",
+    "private_raw_archive_bytes": 2344960,
+    "raw_bodies_and_operational_metadata_published": false
+  },
+  "identity_disposition": {
+    "development_and_confirmation_pairs_retired": true,
+    "retired_identity_count": 125,
+    "retired_identity_ledger_sha256": "ebcf85107141e024a416161d5f83208e32de73dd9427de4f147a4e1607d97c0e"
+  }
+}

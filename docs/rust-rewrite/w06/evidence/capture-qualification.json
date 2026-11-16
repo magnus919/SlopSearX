@@ -1,0 +1,42 @@
+{
+  "plan_id": "W06",
+  "provider_calls": 0,
+  "exporter_sha256": "e7426b72d8a70a1668a9e5a123f3e821ab34b81c926b8f5f824dbf6be40f2594",
+  "source_sha256": "98116bc1010da4390d2b4e48775d6b3c8e1df63a41568a344013f4746c2fcbd3",
+  "source_controls_sha256": "444859bb1772f50f57fe6a163d1d4a49a0a095595c196e08d83e994a0d7e319e",
+  "records": [
+    {
+      "command": [
+        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+        "/private/tmp/slopsearx-w06/docs/rust-rewrite/w06/capture_source.py"
+      ],
+      "exit_code": 0,
+      "stdout": "W06 captured 85 complete source cases; providers=0\n",
+      "stderr": "",
+      "source_sha256": "98116bc1010da4390d2b4e48775d6b3c8e1df63a41568a344013f4746c2fcbd3"
+    },
+    {
+      "command": [
+        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+        "-O",
+        "/private/tmp/slopsearx-w06/docs/rust-rewrite/w06/capture_source.py"
+      ],
+      "exit_code": 0,
+      "stdout": "W06 captured 85 complete source cases; providers=0\n",
+      "stderr": "",
+      "source_sha256": "98116bc1010da4390d2b4e48775d6b3c8e1df63a41568a344013f4746c2fcbd3"
+    },
+    {
+      "negative": "actual_wrong_source_guard_under_optimized_interpreter",
+      "command": [
+        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+        "-O",
+        "/private/tmp/slopsearx-w06/docs/rust-rewrite/w06/capture_source.py"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/private/tmp/slopsearx-w06/docs/rust-rewrite/w06/capture_source.py\", line 28, in <module>\n    raise RuntimeError(f\"source hash guard rejected drift before import: {source_path}\")\nRuntimeError: source hash guard rejected drift before import: slopsearx/staged.py\n",
+      "source_sha256": "98116bc1010da4390d2b4e48775d6b3c8e1df63a41568a344013f4746c2fcbd3"
+    }
+  ]
+}

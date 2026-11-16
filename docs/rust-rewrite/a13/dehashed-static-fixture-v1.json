@@ -1,0 +1,11 @@
+{
+  "kind": "STATIC_SOURCE_DERIVATION_NOT_PYTHON_OBSERVATION",
+  "source_base": "80ecfcf5bcd7393bbe1457fa5f406d439525e4f8",
+  "source": "engines/dehashed.py",
+  "original_test": "tests/test_dehashed.py::TestDeHashedAdapter::test_search_returns_entries",
+  "source_executed": false,
+  "provider_calls": 0,
+  "provenance": "Authored synthetic substitutions of the inline source fixture. Expected values are a static reading of _parse_entries; no original runtime observation, fixture replay or provider yield is claimed.",
+  "body_json": "{\"entries\":[{\"email\":\"person@example.test\",\"username\":\"fixture-user\",\"password\":\"abcd-never-return-this\",\"hashed_password\":\"0123456789ab-never-return-this\",\"ip_address\":\"192.0.2.4\",\"name\":\"Unused\",\"database_name\":\"FixtureDB\",\"obtained_from\":\"SyntheticSource\"}]}",
+  "native_expected_content": "Email: person@example.test | Username: fixture-user | Password: abcd*** | Hash: 0123456789ab... | IP: 192.0.2.4 | DB: FixtureDB | Source: SyntheticSource"
+}

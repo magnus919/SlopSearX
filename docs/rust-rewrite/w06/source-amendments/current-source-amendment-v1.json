@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "plan_id": "W06",
+  "purpose": "Narrow amendment for the reviewed W07 application module exports; historical W06 captures and source identity packets remain unchanged.",
+  "source_path": "crates/ssx-application/src/lib.rs",
+  "historical_pin": {
+    "sha256": "a7102f8c75244e74680cf8773c527d21fb2dcd177a29f0bd27abeef2beeb880e",
+    "bytes": 5525,
+    "git_revision": "de04ab2e4263616dfd22ad6c9dc45aeb94f9bea4",
+    "git_blob": "14df2ec4ba0f1f03e18bb7071c5646536a45a773",
+    "archive_path": "docs/rust-rewrite/w06/source-amendments/de04-pre-w07/crates/ssx-application/src/lib.rs"
+  },
+  "successor": {
+    "parent_revision": "de04ab2e4263616dfd22ad6c9dc45aeb94f9bea4",
+    "parent_archive_path": "docs/rust-rewrite/w06/source-amendments/de04-pre-w07/crates/ssx-application/src/lib.rs",
+    "parent_sha256": "a7102f8c75244e74680cf8773c527d21fb2dcd177a29f0bd27abeef2beeb880e",
+    "parent_bytes": 5525,
+    "parent_git_blob": "14df2ec4ba0f1f03e18bb7071c5646536a45a773",
+    "allowed_append_utf8": "\npub mod lineage;\npub mod receipts;\n",
+    "allowed_append_bytes": 36,
+    "allowed_append_sha256": "26992bdaba787453c7f02d34c8fc43ff1efbc872f013f8420965b2b969baa157",
+    "sha256": "1ff0647013d66e6711587bbd103659959ab860bd3bd2d2b42d10b7a640a5544e",
+    "bytes": 5561,
+    "git_blob": "45dbed9d4d1f3ee84709c1f73026e19ac9dcb64d"
+  }
+}

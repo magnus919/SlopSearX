@@ -1,0 +1,32 @@
+{
+  "schema": "coverage-study-terminal-summary/1",
+  "status": "stopped-before-selector-execution",
+  "source_revision": "d01c335615906f28e6f28dff5b9cd6eb5534d5ff",
+  "stage_uuid": "546fed70-71b6-486c-965c-097555a4ceb7",
+  "packet_stage_uuid": "0c730184-5578-454b-9134-96f391648e8e",
+  "failed_phase": "selector-map-admission",
+  "controller_exit_code": 1,
+  "controller_error_class": "LocalAuthorityError",
+  "native_reference_grading": {
+    "registered_calls": 54,
+    "successful_responses": 54,
+    "independent_grade_closure": "completed"
+  },
+  "selector_calls": 0,
+  "answer_calls": 0,
+  "new_search_calls": 0,
+  "new_capture_calls": 0,
+  "confirmation_invoked": false,
+  "waiting_worker_stop_signal": "SIGTERM",
+  "supervisor_exit_code": -15,
+  "coordinator_inventory_status": "in-progress",
+  "coordinator_inventory_finalized": false,
+  "final_stage_decision": null,
+  "quality_result": "none",
+  "quality_credit": false,
+  "retired_identity_count": 95,
+  "root_cause": "exact-source replay rebuilt the selector map byte-for-byte and matched all six public bindings; the request included origin_package_sha256 and saved_corpus_import_receipt_sha256, but the verifier expected-binding map omitted them and rejected the mismatch with phase-artifact-selector-map-request-binding-mismatch",
+  "replay_selector_map_bytes": 11981,
+  "replay_selector_map_sha256": "7d007c27cdb97aa18842b4265e1e9a8967df35ad57ac8da0ee3dc1e2ebe8b0e0",
+  "map_or_ranking_quality_failure": false
+}

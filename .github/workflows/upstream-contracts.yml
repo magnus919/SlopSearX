@@ -1,23 +1,33 @@
 name: Upstream contracts (opt-in)
 on:
   workflow_dispatch:
+    inputs:
+      run_live:
+        description: Run the bounded probes against public upstreams
+        required: false
+        type: boolean
+        default: false
   schedule:
     - cron: '17 8 * * 1'
 permissions:
   contents: read
 jobs:
   live-contracts:
-    if: github.event_name == 'workflow_dispatch' || vars.LIVE_UPSTREAM_CONTRACTS == 'true'
+    if: (github.event_name == 'workflow_dispatch' && inputs.run_live == true) || (github.event_name == 'schedule' && vars.LIVE_UPSTREAM_CONTRACTS == 'true')
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: '3.12'
-      - run: pip install -e .
+      - name: Install repository-pinned Rust toolchain
+        run: |
+          set -euo pipefail
+          toolchain="$(sed -n 's/^channel = "\([^"\]*\)"/\1/p' rust-toolchain.toml)"
+          test "$toolchain" = "1.99.0"
+          rustup toolchain install "$toolchain" --profile minimal
+      - name: Confirm pinned Rust toolchain
+        run: rustup run 1.99.0 rustc --version --verbose
       - name: Probe three public upstreams
-        run: python -m scripts.upstream_contracts --output upstream-report.json
+        run: cargo xtask upstream-contracts --live --output upstream-report.json
       - uses: actions/upload-artifact@v7
         if: always()
         with:

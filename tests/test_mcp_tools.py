@@ -523,12 +523,13 @@ class TestSpecialistGrants:
         assert "error" not in result
         assert any("peer-review" in w for w in result["warnings"])
 
-    async def test_science_date_range_warns(self, state: McpState) -> None:
+    async def test_science_date_range_rejects_unsupported_scope(self, state: McpState) -> None:
         state.policy.enabled_tools["science"] = True
         state.ctx.active_engines = _make_engines(["arxiv"])
         result = await t.slopsearx_search_science("transformers", date_from="2024-01-01")
 
-        assert any("date_from" in w for w in result["warnings"])
+        assert result["error"]["code"] == "invalid_input"
+        assert result["error"]["field"] == "engines"
 
     async def test_security_intent_requires_grant_in_search(self, state: McpState) -> None:
         result = await t.slopsearx_search("log4j", intent="security")

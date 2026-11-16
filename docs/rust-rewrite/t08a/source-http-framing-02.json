@@ -1,0 +1,92 @@
+{
+  "schema": 1,
+  "runtime": "CPython3.13.6 http.client",
+  "source_sha256": "4c45e876fc79dffc0f7da8ccccc9c6ba67d4f4cc9e0bd9e8194f74184b96c65b",
+  "captures": [
+    {
+      "id": "chunk-extension-single-20000",
+      "profile": {
+        "kind": "one-extension",
+        "bytes": 20000
+      },
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "requests": [
+        "474554202f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a203132372e302e302e313a35363934300d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "response": {
+        "path": "chunk-extension-single-20000.bin.gz",
+        "original_sha256": "93c00bed8ee593e8ad25067494514e48e5e10a675df9771b89fd8a44f504eb5b",
+        "original_bytes": 20079,
+        "gzip_sha256": "0814ae3b86a28b209bb89fdb0fbd540f3830ef4653a91b05188b213a182a47c4",
+        "roundtrip": true
+      },
+      "fixture_errors": []
+    },
+    {
+      "id": "chunk-extensions-total-20000",
+      "profile": {
+        "kind": "many-extensions",
+        "chunks": 200,
+        "extension_bytes": 100
+      },
+      "python_status": 0,
+      "python_stdout_hex": "300a",
+      "python_stderr_hex": "",
+      "requests": [
+        "474554202f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a203132372e302e302e313a35363934340d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "response": {
+        "path": "chunk-extensions-total-20000.bin.gz",
+        "original_sha256": "8c7f61bfe636f0683d1d8327a7ef6776d396f870a65be05bc60da048e402cb83",
+        "original_bytes": 21471,
+        "gzip_sha256": "76a37962f78c31fbd250946c9ae8ebd1be34535d0f1a7182dd970c68ad417088",
+        "roundtrip": true
+      },
+      "fixture_errors": []
+    },
+    {
+      "id": "chunk-size-line-65536",
+      "profile": {
+        "kind": "leading-zero-size",
+        "zeros": 65533
+      },
+      "python_status": 0,
+      "python_stdout_hex": "7b7d0a",
+      "python_stderr_hex": "",
+      "requests": [
+        "474554202f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a203132372e302e302e313a35363934360d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "response": {
+        "path": "chunk-size-line-65536.bin.gz",
+        "original_sha256": "83ce626577cf41a09496cb64bec9b5e0397c18c6b79e0ac781773b5b575bdccd",
+        "original_bytes": 65611,
+        "gzip_sha256": "3184a4bc791aac78676dbbb8e971c2bdf3acbbe800b9c8f454b217418b3b105e",
+        "roundtrip": true
+      },
+      "fixture_errors": []
+    },
+    {
+      "id": "chunk-size-line-65537",
+      "profile": {
+        "kind": "leading-zero-size",
+        "zeros": 65534
+      },
+      "python_status": 1,
+      "python_stdout_hex": "",
+      "python_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e2809420676f74206d6f7265207468616e203635353336206279746573207768656e2072656164696e67206368756e6b2073697a650a",
+      "requests": [
+        "474554202f6865616c746820485454502f312e310d0a4163636570742d456e636f64696e673a206964656e746974790d0a486f73743a203132372e302e302e313a35363934380d0a557365722d4167656e743a20507974686f6e2d75726c6c69622f332e31330d0a4163636570743a206170706c69636174696f6e2f6a736f6e0d0a436f6e6e656374696f6e3a20636c6f73650d0a0d0a"
+      ],
+      "response": {
+        "path": "chunk-size-line-65537.bin.gz",
+        "original_sha256": "e9c8f526957e4ebf8614beea19518da01796b6f9318ac3ad16b6c27777c4be01",
+        "original_bytes": 65612,
+        "gzip_sha256": "f62c6e258949ce3024e7da42f2e10cbc95b68729d34e7c36301887d2e0e544de",
+        "roundtrip": true
+      },
+      "fixture_errors": []
+    }
+  ]
+}

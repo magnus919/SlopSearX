@@ -1,0 +1,170 @@
+{
+  "plan_id": "W11",
+  "issue": 911,
+  "baseline": "1e9dd82d62456fe6f511cc5ade88bae619fac027",
+  "status": "implemented_pending_independent_review_and_delivery",
+  "parity": [
+    "F05 exact ASCII compact plan identity/digest, immutable IDs and source record extras",
+    "F07 unchanged staged Lua admission/idempotency/quota32, hashed tenant/idempotency keys, lease60, physical retention margin300",
+    "source retry-key replay precedence and reserve-only-on-claim accounting",
+    "ready/running hint selection, bounded orphan interruption, deterministic cursor repair",
+    "legacy exact-tenant full-record-key recent index members, idem slot exclusion and stable accepted_at/ID page order"
+  ],
+  "intentional_differences": [
+    {
+      "contract": "logical expiry equality",
+      "source": "read accepts now == expires_at, while claim/retry reject at equality",
+      "native": "all logical reads reject expires_at <= now",
+      "evidence": "source-controls.json executes actual source read and real Valkey retry; native equality checked in admission_conflict_quota_and_lost_tenant_index",
+      "reason": "one fail-closed F07-compatible authorization horizon"
+    },
+    {
+      "contract": "malformed array maps",
+      "source": "_normalize_record discards any dict at named array paths, including nonempty dictionaries",
+      "native": "only empty dictionaries normalize; nonempty malformed containers reject",
+      "evidence": "corpus.json actual AST normalize outputs retained for both empty/nonempty retry maps",
+      "reason": "preserve meaningful dictionaries and refuse malformed authoritative records"
+    },
+    {
+      "contract": "record schema and conservation",
+      "source": "generic store trusts arbitrary caller dictionaries and partial test records",
+      "native": "full v1 public record schema/digest, unique attempts, coherent lifecycle and conserved reservations required",
+      "reason": "no uncharged attempt or silent reconstruction/refund; partial injected legacy fixtures require explicit repair/migration"
+    },
+    {
+      "contract": "owned completion",
+      "source": "source token-only whole-record replacement trusts caller-mutated identity/history",
+      "native": "immutable schema/identity/charged-history validation plus exact raw compare before original token fence",
+      "reason": "stale or arbitrary caller replacement cannot erase reservations or earlier evidence"
+    },
+    {
+      "contract": "claim snapshot race",
+      "source": "raw script can claim any currently queued record after stale pre-read",
+      "native": "compare exact observed raw bytes before unchanged original script; changed observation makes no claim or charge",
+      "reason": "reused attempt IDs and newer queued records cannot inherit stale validation"
+    },
+    {
+      "contract": "failure semantics",
+      "source": "some errors collapse to unavailable or false",
+      "native": "F07 unavailable/malformed/closed/completion-unknown/partial-script outcomes remain distinct; never automatically retry writes",
+      "reason": "Lua errors and lost replies can follow committed writes"
+    },
+    {
+      "contract": "admission authority",
+      "source": "direct store accepts supplied digest/record without policy binding",
+      "native": "F09 fresh revalidation binds query/filters/MCP origin, selected engines and enforcement",
+      "reason": "persisted record alone grants no execution authority; W06 staged grant/operator ceilings remain mandatory"
+    }
+  ],
+  "source_regression_mapping": [
+    {
+      "source": "tests/test_staged_valkey_integration.py::test_atomic_admission_claim_fencing_and_retry",
+      "native": [
+        "admission_conflict_quota_and_lost_tenant_index",
+        "competing_claims_stale_tokens_and_immutable_completion",
+        "interruptions_retry_replay_budget_conservation_and_index_repair"
+      ],
+      "disposition": "ported distributed store invariants with full public records; source partial injected operation fixtures superseded"
+    },
+    {
+      "source": "tests/test_staged_valkey_integration.py::test_reconcile_orphan_preserves_unknown_accounting_and_array_shapes",
+      "native": [
+        "interruptions_retry_replay_budget_conservation_and_index_repair",
+        "deadline_terminalization_and_live_orphan_recovery_preserve_charge"
+      ],
+      "disposition": "ported actual stored cjson arrays, durable charges and lost-index repair"
+    },
+    {
+      "source": "tests/test_staged_search.py::test_preview_has_no_dispatch_and_stable_digest",
+      "native": [
+        "source_identity_and_schema_array_normalization",
+        "admission_rejects_unbound_query_filters_http_origin_and_revoked_scope"
+      ],
+      "disposition": "W11 canonical identity and no-provider boundary; public preview integration W06/W09"
+    },
+    {
+      "source": "tests/test_staged_search.py::test_nonempty_initial_stage_skips_fallback_and_replays",
+      "native": [
+        "two_stage_owned_completion_and_skipped_fallback_keep_immutable_history",
+        "admission_conflict_quota_and_lost_tenant_index"
+      ],
+      "disposition": "W11 commit representation/admission replay; result-dependent skip decision and execution W06"
+    },
+    {
+      "source": "tests/test_staged_search.py::test_clean_empty_runs_disjoint_fallback",
+      "native": [
+        "two_stage_owned_completion_and_skipped_fallback_keep_immutable_history"
+      ],
+      "disposition": "W11 two-stage queued/claim/completed persistence and immutable charges; clean-empty judgment/provider requests W06"
+    },
+    {
+      "source": "tests/test_staged_search.py::test_retry_preserves_unknown_aggregate_accounting",
+      "native": [
+        "stale_prepared_claim_cannot_reuse_attempt_after_complete_retry_cycle",
+        "interruptions_retry_replay_budget_conservation_and_index_repair"
+      ],
+      "disposition": "real charged attempt/unknown aggregate retained through retry completion; source artificial reserved=1/no-attempt fixture rejected as malformed, not refunded"
+    },
+    {
+      "source": "tests/test_staged_search.py::test_orphan_recovery_records_interrupted_outcome",
+      "native": [
+        "deadline_terminalization_and_live_orphan_recovery_preserve_charge",
+        "interruptions_retry_replay_budget_conservation_and_index_repair"
+      ],
+      "disposition": "ported real orphan classification and no automatic retry"
+    },
+    {
+      "source": "tests/test_staged_search.py::test_valkey_claim_terminal_status_balances_queued_metrics",
+      "native": [
+        "deadline_terminalization_and_live_orphan_recovery_preserve_charge"
+      ],
+      "disposition": "W11 deadline durable terminal status; metrics W06/O01"
+    },
+    {
+      "source": "tests/test_staged_search.py::test_validation_rejects_overlap_and_strict_safesearch",
+      "native": [
+        "malformed_records_never_panic_or_invent_budget",
+        "admission_rejects_unbound_query_filters_http_origin_and_revoked_scope"
+      ],
+      "disposition": "W11 disjoint/schema/authorization binding; shared strict SafeSearch remains accepted F09; public validation W06"
+    },
+    {
+      "source": "tests/test_staged_search.py::test_partial_empty_initial_stage_does_not_dispatch_fallback",
+      "native": [],
+      "disposition": "W06 runner/public-output contract; W11 provides fenced completion/renewal and no-provider storage API, no execution parity claimed"
+    },
+    {
+      "source": "tests/test_staged_search.py::test_cached_empty_initial_stage_does_not_authorize_fallback",
+      "native": [],
+      "disposition": "W06 runner/public-output contract; W11 provides fenced completion/renewal and no-provider storage API, no execution parity claimed"
+    },
+    {
+      "source": "tests/test_staged_search.py::test_background_queue_executes_once",
+      "native": [],
+      "disposition": "W06 runner/public-output contract; W11 provides fenced completion/renewal and no-provider storage API, no execution parity claimed"
+    },
+    {
+      "source": "tests/test_staged_search.py::test_absolute_deadline_terminalizes_claimed_attempt",
+      "native": [],
+      "disposition": "W06 runner/public-output contract; W11 provides fenced completion/renewal and no-provider storage API, no execution parity claimed"
+    },
+    {
+      "source": "tests/test_staged_search.py::test_deadline_after_renewal_records_terminal_metrics",
+      "native": [],
+      "disposition": "W06 runner/public-output contract; W11 provides fenced completion/renewal and no-provider storage API, no execution parity claimed"
+    },
+    {
+      "source": "tests/test_staged_search.py::test_policy_revocation_hides_retained_results_and_replay",
+      "native": [],
+      "disposition": "W06 runner/public-output contract; W11 provides fenced completion/renewal and no-provider storage API, no execution parity claimed"
+    }
+  ],
+  "new_fault_regressions": [
+    "fenced_save_storage_loss_and_partial_script_writes_require_reconciliation",
+    "completion_unknown_and_durable_restart_reconcile_without_refund",
+    "stale_prepared_claim_cannot_reuse_attempt_after_complete_retry_cycle",
+    "legacy_index_ids_and_stable_cursor_ordering"
+  ],
+  "portal_impact": "native state primitives; existing portal/runtime unchanged; W06/W09/W10 surface qualification remains required",
+  "downstream": "W06"
+}

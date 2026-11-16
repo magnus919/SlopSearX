@@ -145,3 +145,13 @@ Be excellent to each other. This is a small project — disagreements happen, bu
 ## AI-Assisted Contributions
 
 AI-assisted code generation and editing tools are welcome. Disclose the tool used in the PR description and take responsibility for the output — review it, test it, and own it. The contributor is the human, not the tool.
+
+## Rust Build Artifacts
+
+Rust contributors must use a configured persistent build root outside the
+checkout for builds and temporary inputs/evidence. CI may use its designated
+ephemeral job directory when the job cleans it up. Record ownership and
+retention in the root's persistent task ledger and complete the post-merge
+cleanup audit for each PR. Follow
+[`docs/RUST_BUILD_FOOTPRINT.md`](docs/RUST_BUILD_FOOTPRINT.md) for placement,
+measurement, preservation, and cleanup steps.

@@ -1,0 +1,68 @@
+{
+  "purpose": "Current formatting only; actual original invocation claims retain observed executed bytes and immutable captured JSON. No recapture.",
+  "created": 1792226870.6416059,
+  "command": [
+    "/Volumes/tank01/magnus/rust-builds/slopsearx/pre-commit-cache/repo7dgyo0vq/py_env-python3.12/bin/ruff",
+    "format",
+    "/Volumes/tank01/magnus/git/slopsearx-a11/docs/rust-rewrite/a11/capture_regressions.py",
+    "/Volumes/tank01/magnus/git/slopsearx-a11/docs/rust-rewrite/a11/capture_boundaries.py",
+    "/Volumes/tank01/magnus/git/slopsearx-a11/docs/rust-rewrite/a11/capture_supplement.py",
+    "/Volumes/tank01/magnus/git/slopsearx-a11/docs/rust-rewrite/a11/capture_representation.py",
+    "/Volumes/tank01/magnus/git/slopsearx-a11/docs/rust-rewrite/a11/capture_config_reachability.py"
+  ],
+  "actual_exit_code": 0,
+  "python_AST_analysis": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "rows": [
+    {
+      "path": "docs/rust-rewrite/a11/capture_regressions.py",
+      "actual_executed_source_sha256": "f4b231dd531b705736ba388cf38393de50da16e53a45b70adc65b1cc4aecfc8a",
+      "current_producer_sha256": "f4b231dd531b705736ba388cf38393de50da16e53a45b70adc65b1cc4aecfc8a",
+      "source_archive": "docs/rust-rewrite/a11/evidence/executed-capture_regressions-f4b231dd.py.txt",
+      "source_archive_sha256": "f4b231dd531b705736ba388cf38393de50da16e53a45b70adc65b1cc4aecfc8a",
+      "semantic_ast_sha256": "6454ee4fe1eb61068b35b9116af559dc00675d6359e31305129da3ea5c5390a8",
+      "semantic_ast_equal": true,
+      "current_formatted_producer_executed": false
+    },
+    {
+      "path": "docs/rust-rewrite/a11/capture_boundaries.py",
+      "actual_executed_source_sha256": "542a67a3533fc6cab6e4cb43ca0f882ef0bc7049ad93cf26dd9459cedb758e7c",
+      "current_producer_sha256": "2a50f3127c8f817f89da0f93f6ada35cf67c73760441f36ff8b9b74cebc34da8",
+      "source_archive": "docs/rust-rewrite/a11/evidence/executed-capture_boundaries-542a67a3.py.txt",
+      "source_archive_sha256": "542a67a3533fc6cab6e4cb43ca0f882ef0bc7049ad93cf26dd9459cedb758e7c",
+      "semantic_ast_sha256": "2874180604c618fce4759bda99f083c4127bc680b2691b8112c4416964d0ce72",
+      "semantic_ast_equal": true,
+      "current_formatted_producer_executed": false
+    },
+    {
+      "path": "docs/rust-rewrite/a11/capture_supplement.py",
+      "actual_executed_source_sha256": "fe1117a0d180ae60b7a588d74788222c0ce8c680359c90d9f5f39247abd6268f",
+      "current_producer_sha256": "56c70f33381c94bb3a3e3f1b123998ede674d0bbfff6f5dbc0678edc505e74eb",
+      "source_archive": "docs/rust-rewrite/a11/evidence/executed-capture_supplement-fe1117a0.py.txt",
+      "source_archive_sha256": "fe1117a0d180ae60b7a588d74788222c0ce8c680359c90d9f5f39247abd6268f",
+      "semantic_ast_sha256": "93e10c7d84b536a353f7bd97b593ccd264edf50e4ef0297b451f620f999ab0ba",
+      "semantic_ast_equal": true,
+      "current_formatted_producer_executed": false
+    },
+    {
+      "path": "docs/rust-rewrite/a11/capture_representation.py",
+      "actual_executed_source_sha256": "c648efd82a8ef107e9df0e18b69210193543173a6405c3a5eed3267653152e33",
+      "current_producer_sha256": "6b733fadb09e3574698a09ce5c88a0afff1afa2d7c41129cfbea9edfd1b6f500",
+      "source_archive": "docs/rust-rewrite/a11/evidence/executed-capture_representation-c648efd8.py.txt",
+      "source_archive_sha256": "c648efd82a8ef107e9df0e18b69210193543173a6405c3a5eed3267653152e33",
+      "semantic_ast_sha256": "987db35cea2b6fe2bf6421529e6ff38622d10c9cb7aca4c8084bec6316beed8c",
+      "semantic_ast_equal": true,
+      "current_formatted_producer_executed": false
+    },
+    {
+      "path": "docs/rust-rewrite/a11/capture_config_reachability.py",
+      "actual_executed_source_sha256": "668244f72859a2c2c29e689c3e24cbc15708cf3607e2322e687ea22877feb0a2",
+      "current_producer_sha256": "689977208ea868b34d0a93065d1ff3fa0d8fb894e521c3e1a1c936e53e64ad32",
+      "source_archive": "docs/rust-rewrite/a11/evidence/executed-capture_config_reachability-668244f7.py.txt",
+      "source_archive_sha256": "668244f72859a2c2c29e689c3e24cbc15708cf3607e2322e687ea22877feb0a2",
+      "semantic_ast_sha256": "97b4258fbc499b98db2875a9aad5cc90874cbd59c12d61dcea0c8e2704d09ac0",
+      "semantic_ast_equal": true,
+      "current_formatted_producer_executed": false
+    }
+  ],
+  "log_sha256": "0e3227a0576bf4b1300048e70321b65f0c0078106a8c61ad1f3e4e7a641e0bd2"
+}

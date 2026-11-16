@@ -1,0 +1,9 @@
+Substantive runner fallback review of exact head `3b27897f89fa642105b5f4c14df590c4d541892a`: positive; no open blocking findings.
+
+Review caught and resolved an OAuth regression risk in the initial generic timeout: interactive authorization occurs inside initialize and may exceed the connection budget. Final code preserves OAuth initialization/authorization behavior and applies the shorter deadline only to static-token/unauthenticated startup. The explicit OAuth budget guard and seven affected local OAuth client tests pass; discovery remains separately bounded. Scope and evidence limits are documented.
+
+Reviewed timeout/cancellation/error propagation, fail-closed publication, owner cleanup and schema/call compatibility. Timeout is inside the existing initialization error wrapper and before any discovery/proxy/state publication; the existing owner task unwinds and is awaited. Actual HTTP regression checks nested connection-error text, no tools/state and no pending owner. Frozen bearer primary/control observations remain unchanged: the final noninteractive branch retains the measured timer body; no primary reruns, exclusions or threshold tuning.
+
+Native Droid jobs skipped. Current automated report is INCOMPLETE/PARTIAL with no findings; its publication job failed `github_default_branch_identity_mismatch` after main advanced through unrelated documentation#866. That failed review is replaced by this substantive fallback under the standing rule; it is not relabeled green. Every normal implementation CI check must pass before merge. No admin/protection bypass authorized.
+
+Intervening main changes only two documentation/evidence files. No runtime/search/auth-policy/portal contract changes beyond the stated noninteractive startup correction. Production availability/adoption unmeasured.

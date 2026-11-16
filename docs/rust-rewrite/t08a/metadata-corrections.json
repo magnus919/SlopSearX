@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "rows": [
+    {
+      "case": "health-http-404",
+      "source_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e280942048545450204572726f72203430343a204e6f7420466f756e640a",
+      "source_stderr_sha256": "ab9190990aef088f86c749e387b5f2e74089793d75a87e072409345ddbf59996",
+      "correction": "native derived error label corrected from shape to HTTP404; original source artifact unchanged"
+    },
+    {
+      "case": "config-http-404",
+      "source_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e280942048545450204572726f72203430343a204e6f7420466f756e640a",
+      "source_stderr_sha256": "ab9190990aef088f86c749e387b5f2e74089793d75a87e072409345ddbf59996",
+      "correction": "native derived error label corrected from shape to HTTP404; original source artifact unchanged"
+    },
+    {
+      "case": "engines-http-404",
+      "source_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e280942048545450204572726f72203430343a204e6f7420466f756e640a",
+      "source_stderr_sha256": "ab9190990aef088f86c749e387b5f2e74089793d75a87e072409345ddbf59996",
+      "correction": "native derived error label corrected from shape to HTTP404; original source artifact unchanged"
+    }
+  ],
+  "usage_assertion": "Native Clap argument errors require status2, no requests/stdout, error prefix and usage/help guidance; portable Python argparse bytes are an explicit difference."
+}

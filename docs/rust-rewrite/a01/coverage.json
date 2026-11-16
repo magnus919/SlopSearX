@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "plan_id": "A01",
+  "baseline": "1f3f5bc85083f4fd24bd9a2b07f161626e6bfef5",
+  "provenance": "Offline observations from source adapters and existing tests at the pinned Python baseline; no live provider calls.",
+  "source_observations": [
+    {"path":"engines/npm.py","git_blob":"8ef11a1ad4e71437c1fcb0d88c35b4e4140c7c06"},
+    {"path":"engines/crates.py","git_blob":"89308bdf1ff037b924003b7c2c6283006744e621"},
+    {"path":"docs/rust-rewrite/f06/fragments/npm.json","git_blob":"6d7b391ec908ed2e24f6665b060f29ceaabdee7f"},
+    {"path":"docs/rust-rewrite/f06/fragments/crates.json","git_blob":"de5a8a025731e0b5c9d1bd6d33120d9534704ef8"},
+    {"path":"tests/test_new_engines.py","git_blob":"4e5293d694bb40332584a9541b6ad41326a01cc0"},
+    {"path":"tests/test_upstream_contracts.py","git_blob":"38890808971958c1322b502a885d71f5db5d8d64"},
+    {"path":"tests/fixtures/upstream_contracts/npm.json","git_blob":"76fb9a81b01db87cd001434ef6b93010bb10dbfc"},
+    {"path":"tests/fixtures/upstream_contracts/crates.json","git_blob":"1409df4adc780242212ea65f17f5abf75d76b878"}
+  ],
+  "native_identity_sources": [
+    "docs/rust-rewrite/a01/README.md",
+    "docs/rust-rewrite/a01/cases.json",
+    "docs/adr/003-rust-workspace-and-contract-boundaries.md",
+    "crates/ssx-application/src/lib.rs",
+    "crates/ssx-application/src/rate.rs",
+    "crates/ssx-domain/src/lib.rs",
+    "crates/ssx-domain/src/storage.rs",
+    "crates/ssx-domain/src/records.rs",
+    "crates/ssx-domain/src/rate.rs",
+    "crates/ssx-registry/Cargo.toml",
+    "crates/ssx-registry/src/lib.rs",
+    "crates/ssx-infra/Cargo.toml",
+    "crates/ssx-infra/src/lib.rs",
+    "crates/ssx-infra/src/http.rs",
+    "crates/ssx-infra/src/adapters/mod.rs",
+    "crates/ssx-infra/src/adapters/npm.rs",
+    "crates/ssx-infra/src/adapters/crates_io.rs",
+    "crates/ssx-infra/tests/a01_pilots.rs",
+    "crates/xtask/src/a01.rs",
+    "crates/xtask/src/main.rs",
+    ".github/workflows/rust.yml",
+    "docs/rust-rewrite/ci/gates.json"
+  ]
+}

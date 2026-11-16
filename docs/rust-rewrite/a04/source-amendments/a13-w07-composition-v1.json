@@ -1,0 +1,26 @@
+{
+  "kind": "PR1034_W07_A13_EXACT_COMPOSITION_V1",
+  "frozen_http_manifest": {
+    "path": "docs/rust-rewrite/a04/source-amendments/scoped-successor-v1.json",
+    "sha256": "31d418472c38c2bf5182f7deb76fafab4876cbd3dd58d332fa2e64fc9bb6b18c"
+  },
+  "historical_revision": "c253e60438a4750512089fb11fae412ca28a4f8a",
+  "historical_premerge": {
+    "path": "crates/xtask/src/a13.rs",
+    "sha256": "81b358ff63a0dceb773cdd353f99fb9322d017897af007e290409ac598a10465",
+    "bytes": 35360,
+    "mode": "0644"
+  },
+  "current": {
+    "path": "crates/xtask/src/a13.rs",
+    "sha256": "f90285db53450d98443ce4f6b7edba54f70a6a3ac382a08d92f8beb4572a468a",
+    "bytes": 35588,
+    "mode": "0644"
+  },
+  "insertion": {
+    "at": 1944,
+    "bytes": 228,
+    "sha256": "cef15812e3da4f4a481591821642ba8a55dcb9012e77d24777e77f32db77f32c",
+    "utf8": "    if let Some(result) = crate::w06_source_amendment::verify_shared(\n        root,\n        container_path,\n        container_sha,\n        path,\n        expected_sha,\n        expected_bytes,\n    ) {\n        return result;\n    }\n"
+  }
+}

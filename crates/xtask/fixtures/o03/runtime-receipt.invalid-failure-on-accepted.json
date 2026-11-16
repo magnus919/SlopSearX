@@ -1,0 +1,79 @@
+{
+  "schema_version": "1.0.0",
+  "receipt_kind": "native_runtime",
+  "run_id": "run-fixture-failure-details-on-accepted-outcome",
+  "plan_id": "EXP-TEST",
+  "binary": {
+    "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "size_bytes": 10,
+    "path": "target/release/ssx-experiment"
+  },
+  "source": {
+    "git_commit": "3333333333333333333333333333333333333333",
+    "dirty": false,
+    "tree_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "files": [
+      {
+        "path": "src/main.rs",
+        "git_blob": "2222222222222222222222222222222222222222",
+        "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+      }
+    ]
+  },
+  "toolchain": {
+    "rustc": "1.99.0",
+    "cargo": "1.99.0",
+    "target": "aarch64-apple-darwin",
+    "lockfile_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "configuration": {
+    "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "redacted": true,
+    "effective_keys": [
+      "limit",
+      "mode"
+    ]
+  },
+  "authority": {
+    "issuer": "fixture-issuer",
+    "reservation_id": "reservation-1",
+    "authorization_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "scope": [
+      "offline-replay"
+    ],
+    "status": "authorized"
+  },
+  "clock": {
+    "source": "fixed",
+    "started_unix_ms": 100,
+    "finished_unix_ms": 200,
+    "monotonic_elapsed_ms": 100,
+    "deadline_unix_ms": 1000
+  },
+  "reservation": {
+    "max_requests": 2,
+    "max_cost_microusd": 100,
+    "deadline_unix_ms": 1000
+  },
+  "accounting": {
+    "requests_reserved": 2,
+    "requests_dispatched": 2,
+    "requests_settled": 2,
+    "requests_unresolved": 0,
+    "requests_released": 0,
+    "cost_microusd_reserved": 100,
+    "actual_cost": {
+      "status": "known",
+      "microusd": 0
+    }
+  },
+  "outcome": "accepted",
+  "failure": {
+    "reason_code": "unexpected",
+    "terminal_evidence": {
+      "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+      "size_bytes": 16,
+      "path": "evidence/provider-terminal.json"
+    }
+  }
+}

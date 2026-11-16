@@ -1,0 +1,16 @@
+{
+  "status": "parent-verified source classifier integrated only for codec labels; full package qualification pending",
+  "source": "inputs/UnicodeData-16.0.0.txt",
+  "source_sha256": "ff58e5823bd095166564a006e47d111130813dcf8bf234ef79fa51a870edb48f",
+  "license": "Unicode-3.0; complete original notice retained",
+  "generator": "docs/rust-rewrite/a05/oracle/label_alnum_generate.py",
+  "source_oracle": "docs/rust-rewrite/a05/oracle/label_alnum_source.py",
+  "normalization_oracle": "docs/rust-rewrite/a05/oracle/label_alias_source.py",
+  "range_count": 770,
+  "point_comparisons": 1114112,
+  "alias_and_whole_httpx_cases": 479,
+  "scope": "Only ssx-source-codecs canonical() replaces Rust is_alphanumeric with source Unicode16 L*/N* classifier. No global Unicode behavior changes.",
+  "runtime_output": "src/label_alnum.rs",
+  "rust_formatter": "docs/rust-rewrite/a05/oracle/label_alnum_rust.py",
+  "generated_production_prefix_sha256": "2aa409422d6e52881d6263fee11472d351c4c2334088cb4a79d1eebaa2b378de"
+}

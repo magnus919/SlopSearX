@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "kind": "A10_CLOSED_ADMISSION_CLOCK_SOURCE_SUCCESSOR",
+  "baseline": "9111f7d5c7a4d243544fd51fa11d34c93a12546e",
+  "path": "crates/ssx-infra/tests/a10_factories.rs",
+  "mode": "0644",
+  "before_sha256": "8d00e116b3871b1397bdfc5ec4fdd6ba6662fd417b7b394787de80354ddf3335",
+  "after_sha256": "efad66ae0085fa4f5ae39b5100eec5fe27a4c8155c17d8f23e9434651d5b8ab5",
+  "before_bytes": 24574,
+  "after_bytes": 24784,
+  "edits": [
+    {
+      "before": "        for (admission, status) in [\n            (\n                Arc::new(Denied) as Arc<dyn SearchAdmission>,\n                EngineStatus::RateLimited,\n            ),\n            (Arc::new(Pending), EngineStatus::Timeout),\n            (Arc::new(Unavailable), EngineStatus::Error),\n",
+      "after": "        for (admission, status, deadline) in [\n            (\n                Arc::new(Denied) as Arc<dyn SearchAdmission>,\n                EngineStatus::RateLimited,\n                Duration::from_secs(1),\n            ),\n            (\n                Arc::new(Pending),\n                EngineStatus::Timeout,\n                Duration::from_millis(20),\n            ),\n            (\n                Arc::new(Unavailable),\n                EngineStatus::Error,\n                Duration::from_secs(1),\n            ),\n"
+    },
+    {
+      "before": "                        deadline: Instant::now() + Duration::from_millis(20),\n",
+      "after": "                        deadline: Instant::now() + deadline,\n"
+    }
+  ]
+}

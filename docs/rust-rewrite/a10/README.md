@@ -1,0 +1,11 @@
+# A10 vulnerability adapters
+
+This lane implements native Rust adapters for CVE, NVD, EPSS, ExploitDB and MITRE ATT&CK. The source baseline is `0a0743904264b0054e14cb19cdd78af7d31eb60c`. The original Python engine and test files remain immutable reference inputs; the native runtime does not invoke Python.
+
+The adapters preserve the recorded full requests, public results, additional payloads and classified failures through the actual adapter factories and storage consumer. ExploitDB and MITRE use the existing charged HTML parser worker, admission lease and projection path. The five production settings factories consume the existing F06 typed settings. Raw settings controls separately exercise source values that F06 cannot produce.
+
+Run `cargo xtask check A10` with Rust 1.99.0. The gate binds 54 source and fixture files, all ten original engine/test files, 74 original parameterized test identities, and 545 completion cases across 23 named native tests. It checks actual test execution and post-assertion completion markers, including named fixture subprocesses; missing, ignored, duplicate or caseless execution fails. The first local source-bound gate passed all 38 actual commands and all 545 unique completion markers; affected A09/O06, formatting, strict Clippy and shared worker/payload regressions also passed. These are local candidate proofs at the recorded baseline. Normal accepted-main integration, final evidence, hooks and both architecture exact-head CI remain required; this is not final publication acceptance.
+
+The immutable reference sets contain 133 original observations, 308 boundary observations and 30 supplemental observations. The native comparison checks complete requests and outputs against the exact identity-bound differences in `native-differences-v1.json`. `nondeterminism-v1.json` permits only four specified short-positive-deadline cases to take one of three correlated outcomes; all other identities remain strict.
+
+Read PARITY.md for the explicit representation, diagnostic, HTTP identity and deadline differences, PORTAL_IMPACT.md for the browser boundary, and HANDOFF.md for remaining composition work. No public provider or production endpoint is contacted by qualification.

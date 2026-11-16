@@ -1,0 +1,45 @@
+{
+  "preflights": [
+    {
+      "boundary": "runner",
+      "config_sha256": "1dea7a223fce5be710264d2d060208c0cdb52b7da2c9a272cc3117dbae196103",
+      "stage_execution_directories_exist": false,
+      "stage_kind": "development",
+      "status": "static-preflight-passed",
+      "stdout_sha256": "eaa84832d365d4024a125773513e6c0a3c5f22d0b0923105170765e2a240dd9f"
+    },
+    {
+      "boundary": "issuer",
+      "config_sha256": "1dea7a223fce5be710264d2d060208c0cdb52b7da2c9a272cc3117dbae196103",
+      "stage_execution_directories_exist": false,
+      "stage_kind": "development",
+      "status": "issuer-static-preflight-passed",
+      "stdout_sha256": "532c3ccfda2e99f4fd76cc716d4d8d62adbb03af83efc8a6b295492ed6535ec1"
+    },
+    {
+      "boundary": "runner",
+      "config_sha256": "9a5ab4e85bf41bab7eb95a723970c4e8e077a094945b51e36e511ce3655e933d",
+      "stage_execution_directories_exist": false,
+      "stage_kind": "confirmation",
+      "status": "static-preflight-passed",
+      "stdout_sha256": "b67272b2d1162f1806251e83a4d3778d34fe70ecc47226d82e891b8ee6213554"
+    },
+    {
+      "boundary": "issuer",
+      "config_sha256": "9a5ab4e85bf41bab7eb95a723970c4e8e077a094945b51e36e511ce3655e933d",
+      "stage_execution_directories_exist": false,
+      "stage_kind": "confirmation",
+      "status": "issuer-static-preflight-passed",
+      "stdout_sha256": "532c3ccfda2e99f4fd76cc716d4d8d62adbb03af83efc8a6b295492ed6535ec1"
+    }
+  ],
+  "schema": "coverage-retry-static-preflight-summary/1",
+  "scientific_calls": 0,
+  "setup_diagnostics": [
+    "Initial health reads lacked the existing CA or required authentication; corrected without weakening TLS.",
+    "Initial offline builder used an interpreter without locked dependencies; corrected to the existing locked environment.",
+    "Initial issuer command used a missing path; retained.",
+    "External script directory rejected by locked environment; corrected with Python safe-path mode."
+  ],
+  "source_revision": "943f0b7ef670b3ffe4a3abb03b2aee54570e6a0c"
+}

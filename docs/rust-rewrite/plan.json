@@ -1,0 +1,2250 @@
+{
+  "schema_version": 1,
+  "baseline_sha": "2a995f964757df77693747b232aa47738c0c58cc",
+  "approved_requirement": "Maintainer requested a complete Rust rewrite plan on 2026-10-15: no backend Python; optional client-only Python permitted; native gateway and ssx included. This publication authorizes planning, not production deployment.",
+  "dependency_semantics": "Every depends_on edge is a hard finish-to-start gate: predecessor implementation/decision/evidence must be accepted and merged before dependent implementation starts. Analysis may happen early but cannot claim readiness. Epic hierarchy is not a dependency.",
+  "delivery_cadence": {
+    "purpose": "Make steady, reviewable progress through the Rust Rewrite milestone without weakening its capability, quality, hosted-acceptance, or Python-removal requirements.",
+    "work_in_progress_limit": "Keep at most two implementation PRs actively changing code. Other available capacity should unblock a named blocker, perform an independent review, or prepare a separately mergeable next slice. Do not start work whose hard prerequisites are incomplete.",
+    "slice_definition": "Prefer small independently mergeable slices, each with one observable user or operator outcome, an exact plan item or issue, explicit acceptance commands/evidence, and cleanup obligations. Keep issue dependencies hard finish-to-start; parallelize only independent items or analysis that does not claim implementation readiness.",
+    "integration_rule": "Identify shared-file and shared-interface overlap before expensive builds. Integrate dependent work through its reviewed parent/head, then run the affected acceptance gates against the exact integrated revision. Reuse prior evidence only when its source, fixtures, environment, and required scope are unchanged; hosted required checks must still pass on the exact proposed merge head.",
+    "stuck_work_rule": "After two equivalent failures of the same gate, stop replaying it or increasing timeouts without new evidence. Record the failing revision, preserved output, common-cause hypothesis, owner, next diagnostic action, and a bounded stopping condition; switch to independent ready work while the blocker is investigated.",
+    "progress_reporting": [
+      "accepted and merged issues since the previous report",
+      "capabilities with completed acceptance evidence",
+      "active implementation streams and the oldest blocker with its next action",
+      "work completed versus work waiting on CI, review, integration, or external access",
+      "measured build-footprint changes and cleanup disposition for completed PRs"
+    ],
+    "queue_policy": "Prioritize completing and accepting the oldest ready delivery before expanding implementation. Keep the next user-visible capability queued with prerequisites and an acceptance plan; when a lane is blocked, advance independent ready work without reporting the blocked lane as progress.",
+    "completion_rule": "Each PR's acceptance includes exact-head required checks, review disposition, merge verification, local main synchronization when applicable, and the repository's post-merge artifact and worktree cleanup audit. These delivery practices do not waive any plan acceptance criterion or authorize production activation.",
+    "communication_rule": "Send user-facing updates when requested or when a material state change needs attention. While work is waiting, continue useful independent work and avoid repeating unchanged status.",
+    "authorization_rule": "Apply the user's existing authorization to routine work without asking again. Ask only when a distinct permission or approval is genuinely required, state the exact action and boundary, and do not broaden an earlier bounded authorization.",
+    "superseded_run_policy": "Preserve current-head and main runs. After a PR head advances, cancel only queued pull_request runs whose recorded head SHA is superseded and whose workflow cannot publish, deploy, or cause another external side effect. Never cancel in-progress or current-head required checks. Record every affected run ID. If no queued run meets all criteria, leave it queued and continue independent ready work."
+  },
+  "items": [
+    {
+      "id": "F01",
+      "title": "Freeze parity inventory and the Python removal boundary",
+      "lane": "contracts",
+      "depends_on": [],
+      "problem": "The rewrite needs an executable definition of complete; source counts and old AGENTS descriptions are insufficient.",
+      "scope": [
+        "Inventory every runtime entrypoint, adapter, route/format, MCP tool/resource/prompt, config default, state record, CLI and deployment command at a pinned SHA",
+        "Classify every tracked Python file and inline interpreter call as backend/runtime, backend-coupled tooling/test, client-only, or historical evidence; assign a migration owner",
+        "Create a change ledger for main changes during the rewrite and a per-capability parity matrix"
+      ],
+      "acceptance": [
+        "All 51 registered adapters and all current MCP registry entries are accounted for, with zero unowned production capabilities",
+        "Each Python file has a disposition; client-only means no backend imports, embedded server or FFI/subprocess fallback",
+        "Record omitted/null/empty/error semantics and mandatory tests; new upstream changes cannot silently fall outside the matrix"
+      ],
+      "sources": [
+        "engines/__init__.py",
+        "slopsearx/mcp/tool_registry.py",
+        "slopsearx/server.py",
+        "ssx",
+        "Dockerfile",
+        "docker/healthcheck.py",
+        "scripts",
+        ".github/workflows",
+        "AGENTS.md"
+      ],
+      "handoff": "Versioned capability and Python-disposition manifests, baseline SHA and drift-update procedure; prerequisite for architecture sign-off."
+    },
+    {
+      "id": "F02",
+      "title": "Decide Rust crate boundaries, storage compatibility and transport policy",
+      "lane": "contracts",
+      "depends_on": [
+        "F01"
+      ],
+      "problem": "Cold implementers need one agreed application boundary rather than incompatible Rust designs in each lane.",
+      "scope": [
+        "Write ADRs for domain/application/infrastructure/HTTP/MCP/native-client boundaries; retain Valkey as the only shared authority",
+        "Pin candidate toolchain/crates and decide adapter registration, dependency injection, schema representation, TLS and supported platforms",
+        "Preserve all advertised transports including SSE unless a separate maintainer decision explicitly retires it; choose mixed-version records versus drain-and-migrate",
+        "Document immutable evidence ownership, mutable execution state and validated dispatch/commit authority"
+      ],
+      "acceptance": [
+        "ADRs enumerate compatibility decisions and unresolved risks with owner roles and decision gates",
+        "No Python runtime, PyO3 backend, Python sidecar or hidden interpreter fallback is part of the final design",
+        "Wire compatibility is independent of internal Rust types; storage rollback readers/writers have an explicit strategy"
+      ],
+      "sources": [
+        "pyproject.toml",
+        "slopsearx/service.py",
+        "slopsearx/mcp/server.py",
+        "slopsearx/mcp/gateway.py",
+        "slopsearx/research_store.py",
+        "docs/adr"
+      ],
+      "handoff": "Accepted interface/storage/transport ADRs and version pins used by all implementation lanes."
+    },
+    {
+      "id": "F03",
+      "title": "Add Cargo workspace and minimal native CI smoke",
+      "lane": "foundation",
+      "depends_on": [
+        "F02"
+      ],
+      "problem": "Every port needs a shared buildable workspace and fast feedback before feature work diverges.",
+      "scope": [
+        "Create agreed crates, native server/worker/client entrypoints and fake-engine/store/clock injection traits",
+        "Add fmt, clippy, cargo test, locked dependency build and supply-chain checks without deleting Python gates",
+        "Add a native readiness smoke that runs with no Python executable on PATH",
+        "Define documented cargo xtask check <plan-id> entrypoints for each lane; acceptance must fail for missing fixtures/unimplemented cases and produce machine-readable evidence, not count-only success.",
+        "Define minimal metrics/audit/supervisor interfaces with no-op/test sinks. F14/workflows own task lifecycles and emit through these seams; O01 adds production exporters/retention; G01/G02 verify complete integration."
+      ],
+      "acceptance": [
+        "Clean checkout builds and tests the Rust skeleton on supported development/CI targets",
+        "Smoke invokes a compiled executable and proves no Python subprocess/import bridge",
+        "Existing Python paths stay operational until explicit cutover; crate ownership and developer commands are documented"
+      ],
+      "sources": [
+        "pyproject.toml",
+        ".github/workflows/ci.yml",
+        "slopsearx/mcp/harness.py"
+      ],
+      "handoff": "Buildable Rust workspace, CI commands and injection seams; not a claim of feature parity."
+    },
+    {
+      "id": "F04",
+      "title": "Build portable fixture and differential replay harness",
+      "lane": "contracts",
+      "depends_on": [
+        "F03"
+      ],
+      "problem": "Existing Python tests often embed fixtures or import internals; they cannot alone certify an independent Rust backend.",
+      "scope": [
+        "Export pinned input/output and outbound HTTP exchanges into language-neutral fixtures with provenance and redaction",
+        "Build deterministic local upstream replay plus fixed-clock/ID seams; compare methods/URLs/request counts/results/errors and complete schemas",
+        "Keep the temporary Python oracle isolated from the Rust runtime and define how its fixture outputs replace backend imports before removal"
+      ],
+      "acceptance": [
+        "Comparator exits nonzero for intentional mutations to status, enforcement, schema, provenance, request count and ordering",
+        "Only explicitly volatile fields are normalized; null versus omission and numeric validation remain checked",
+        "No live/paid providers are called; corpus licensing/redaction and fixture refresh procedure are recorded"
+      ],
+      "sources": [
+        "tests/fixtures",
+        "tests/test_adapters.py",
+        "tests/test_mcp_harness.py",
+        "docs/UPSTREAM_CONTRACTS.md",
+        "docs/SEARXNG_API_CONTRACT.md"
+      ],
+      "handoff": "Portable replay format, failing-on-difference comparator and documented Rust/Python oracle commands."
+    },
+    {
+      "id": "F05",
+      "title": "Implement typed domain records and stable serialization",
+      "lane": "foundation",
+      "depends_on": [
+        "F04"
+      ],
+      "problem": "Rust types can enforce valid states but careless derives would break the wire and durable records.",
+      "scope": [
+        "Port SearchRequest/SearchResult/AdapterResponse and typed IDs, media/domain payloads, publication metadata, provenance and lifecycle outcomes",
+        "Separate wire/storage DTOs from internal enums; implement deterministic engine sets and required legacy readers",
+        "Bound payloads and reject malformed/nonfinite values according to recorded contracts",
+        "Freeze canonical bytes used by cache keys, artifact IDs and staged plan digests; Python ASCII/UTF-8 JSON options, escaping and ordering differ across call sites. Preserve Unicode casefold semantics where required rather than substituting lowercase.",
+        "Distinguish monotonic execution deadlines from persisted wall-clock expiry and Valkey-authoritative quota time; never serialize process-local monotonic epochs as portable expiry."
+      ],
+      "acceptance": [
+        "Round-trip all canonical and legacy fixtures including work_group exposure rules and absent/null fields",
+        "Invalid snapshot states and mismatched ID/lease types cannot be constructed through public APIs",
+        "Golden JSON/YAML-facing DTO projections match the frozen corpus without default string serialization",
+        "Golden canonical bytes include Unicode, escaping and numeric cases for durable artifact IDs, composite references and staged plan digests. Internal runtime-specific cache fingerprints may use a new namespace under F02 rather than reproducing Python object identities."
+      ],
+      "sources": [
+        "slopsearx/adapter.py",
+        "slopsearx/payload.py",
+        "slopsearx/publication_metadata.py",
+        "slopsearx/service.py",
+        "tests/test_result_contract.py"
+      ],
+      "handoff": "Public domain/DTO crate and serialization fixtures for adapters, stores and transports."
+    },
+    {
+      "id": "F06",
+      "title": "Port configuration and generate the adapter capability registry",
+      "lane": "foundation",
+      "depends_on": [
+        "F05"
+      ],
+      "problem": "Capabilities, operator configuration, routing cards and docs must describe the same built-in sources.",
+      "scope": [
+        "Port environment/file/default precedence, validation, secret redaction and engine category overrides",
+        "Create typed registration that requires no orchestrator edits per adapter; preserve enabled/auth/cost/sensitive/filter-layer metadata",
+        "Generate or validate catalog/docs/Jev completeness from one manifest while allowing unimplemented ports to remain explicitly unavailable",
+        "Define engine-local metadata/registration fragments and generated aggregates so adapter batches do not concurrently hand-edit shared registry/Jev/docs files; assign one integration owner for aggregate changes."
+      ],
+      "acceptance": [
+        "Config precedence, invalid inputs and secret-redacted discovery match fixtures",
+        "Registry completeness detects missing/duplicate adapters and routing cards",
+        "Adding a fixture adapter changes no orchestration code; API keys never appear in logs or capability output"
+      ],
+      "sources": [
+        "slopsearx/config.py",
+        "slopsearx/capabilities.py",
+        "slopsearx/jev.py",
+        "engines/__init__.py",
+        "tests/test_capabilities.py",
+        "tests/test_jev.py"
+      ],
+      "handoff": "Typed config and catalog API with documented adapter registration contract."
+    },
+    {
+      "id": "F07",
+      "title": "Implement Valkey access, atomic ownership and failure types",
+      "lane": "state",
+      "depends_on": [
+        "F05"
+      ],
+      "problem": "Workflow correctness depends on distributed ownership rather than in-process Rust memory safety.",
+      "scope": [
+        "Port connection lifecycle, namespacing and atomic scripts; expose cache-miss versus unavailable versus malformed states explicitly",
+        "Implement reusable claim/renew/release/fenced-write primitives with injectable clock/token sources",
+        "Preserve tenant-key encoding and TTL contracts; scope shared primitives without collapsing distinct workflow transitions"
+      ],
+      "acceptance": [
+        "Real disposable Valkey tests cover competing claims, expiry, stale-owner fencing, reconnect and shutdown",
+        "Authoritative writes fail closed on ownership/storage loss and never fall back silently to local state",
+        "No global flush or production store is used; script results and malformed cjson shapes are handled deliberately",
+        "Clock-jump/restart fixtures prove persisted expiry survives process changes; server quota time and local execution deadlines remain distinct."
+      ],
+      "sources": [
+        "slopsearx/cache.py",
+        "slopsearx/research_store.py",
+        "slopsearx/saved_store.py",
+        "slopsearx/staged.py",
+        "tests/test_cache_integration.py",
+        "tests/test_research_queue_integration.py"
+      ],
+      "handoff": "Tested Valkey/store and ownership APIs for caches, jobs, identity and migration tooling."
+    },
+    {
+      "id": "F08",
+      "title": "Implement pooled HTTP transport with isolated search sessions",
+      "lane": "adapters",
+      "depends_on": [
+        "F05"
+      ],
+      "problem": "Reusing a cookie-enabled client globally would regress the existing separation of connection pools and search sessions.",
+      "scope": [
+        "Build async HTTP abstraction with reusable bounded pools, per-search cookie/auth/header isolation, proxy routing and test-owned transports",
+        "Preserve TLS/environment-proxy/redirect settings, deadline propagation and classified upstream outcomes",
+        "Define compressed/decompressed body, redirect and request-count bounds without inventing unsupported filters"
+      ],
+      "acceptance": [
+        "Socket-level tests prove reuse plus no cookie/auth leakage between searches or tenants",
+        "Cancellation, body timeout, 429, proxy churn, injected transport cleanup and idempotent shutdown pass",
+        "Malformed HTML/XML/JSON can be replayed without network; bounds and intentional behavior differences are documented"
+      ],
+      "sources": [
+        "slopsearx/adapter.py",
+        "slopsearx/proxypool.py",
+        "tests/test_http_pooling.py",
+        "tests/test_duckduckgo_resilience.py"
+      ],
+      "handoff": "Stable transport/session interface and provider replay runner; releases independent adapter work."
+    },
+    {
+      "id": "F09",
+      "title": "Port fail-closed policy, filter reports and scope resolution",
+      "lane": "search",
+      "depends_on": [
+        "F06"
+      ],
+      "problem": "Every dispatching surface must enforce the same sensitive-engine and filter contract.",
+      "scope": [
+        "Port engine/category/topic precedence, specialist grants and live eligibility into one shared policy service",
+        "Return validated scope and per-filter requested/status/reason/enforced_by reports",
+        "Keep mixed sensitive lists atomic, SafeSearch rejection before dispatch and consumed-filter versus enforced-filter distinctions"
+      ],
+      "acceptance": [
+        "Policy matrix rejects bypass via generic/specialist/preview/worker paths; scope-only operations cannot dispatch accidentally",
+        "Recorded exclusions, category OR semantics, strict SafeSearch and publication bounds match the oracle",
+        "Validated scope construction is restricted and delayed work can revalidate policy at execution/commit"
+      ],
+      "sources": [
+        "slopsearx/filters.py",
+        "slopsearx/capabilities.py",
+        "slopsearx/service.py",
+        "slopsearx/mcp/tools.py",
+        "tests/test_mcp_enforcement.py",
+        "tests/test_workflow_console_policy.py"
+      ],
+      "handoff": "One policy/resolver API used by HTTP, MCP, preview and workers with negative-test matrix."
+    },
+    {
+      "id": "F10",
+      "title": "Port distributed rate limits, cooldowns and circuit health",
+      "lane": "search",
+      "depends_on": [
+        "F07",
+        "F08"
+      ],
+      "problem": "Cross-host rate accounting and observed health must remain correct under overload and cancellation.",
+      "scope": [
+        "Reproduce current quotas, fail-closed settings, upstream Retry-After/cooldowns and circuit behavior",
+        "Use Valkey-authoritative time and atomic increment/expiry for shared quotas; record this as an intentional hardening change with regression evidence",
+        "Separate actual upstream measurements from undispatched/cancelled/synthetic outcomes"
+      ],
+      "acceptance": [
+        "Two-process tests with different local clock origins enforce one quota; interruption cannot leave an immortal bucket",
+        "No timeout before dispatch is counted as an upstream failure or fabricated latency",
+        "Boundary behavior and recovery are documented; quota algorithm changes beyond the accepted correction require explicit tests and decision"
+      ],
+      "sources": [
+        "slopsearx/ratelimit.py",
+        "slopsearx/adapter.py",
+        "tests/test_observed_health.py",
+        "tests/test_interactive_deadline.py"
+      ],
+      "handoff": "Rate/circuit APIs, cross-process fault evidence and exact semantic delta record."
+    },
+    {
+      "id": "F11",
+      "title": "Port deterministic ranking and scholarly grouping",
+      "lane": "search",
+      "depends_on": [
+        "F05"
+      ],
+      "problem": "Ranking parity includes provenance and work/version relationships, not only sorted URLs.",
+      "scope": [
+        "Port URL normalization, presence ranking, optional RRF, deduplication and stable tie rules",
+        "Port bounded scholarly identifier/version grouping, conflict rejection, same-manifestation metadata and representative selection",
+        "Keep immutable evidence distinct from views and preserve all source-member attribution",
+        "Port the complete structural retrieval URL classifier from slopsearx/retrieval_url.py; provide preclassified retrieval metadata to surface projections without embedding partial classifiers in DTO code."
+      ],
+      "acceptance": [
+        "Golden ordered results and provenance match for default/RRF modes and conflicting/partial identifiers",
+        "Grouping respects member/byte bounds and declines lossy merges",
+        "No new relevance policy is bundled into the port; identity versus version relationships remain distinct",
+        "Retrieval classification matches source fixtures for unsafe/non-HTTP schemes, malformed authorities and ports, canonical and WHATWG numeric IP forms, IPv6 transition/site-local ranges, and eligible hostnames. Preserve exact status/reason/URL output and perform no DNS or fetch; downstream post-resolution checks remain a separate responsibility."
+      ],
+      "sources": [
+        "slopsearx/merger.py",
+        "slopsearx/scholarly.py",
+        "slopsearx/retrieval_url.py",
+        "tests/test_rank_fusion.py",
+        "tests/test_scholarly.py",
+        "tests/test_scholarly_arxiv_html_identity.py",
+        "tests/test_retrieval_handoff.py"
+      ],
+      "handoff": "Pure ranking/grouping APIs and deterministic corpus for core execution."
+    },
+    {
+      "id": "F12",
+      "title": "Port optional Jev routing and deterministic fallback",
+      "lane": "search",
+      "depends_on": [
+        "F08",
+        "F09",
+        "F07"
+      ],
+      "problem": "Jev routing is optional advice constrained by current eligibility and policy.",
+      "scope": [
+        "Port candidate cards, score thresholds/order, bounded batched calls, decision cache identity and fallback",
+        "Use pooled clients while preserving request timeout, data disclosure and provider policy",
+        "Keep keyless mode and current scope-preview behavior, including any explicitly allowed decision calls"
+      ],
+      "acceptance": [
+        "Keyless and enhanced paths match replayed choices and exclusion explanations",
+        "Malformed/out-of-range scores, provider failure and deadline exhaustion fall back exactly as specified",
+        "Sensitive or ineligible sources cannot be admitted by model output; no live model calls required"
+      ],
+      "sources": [
+        "slopsearx/jev.py",
+        "slopsearx/routing.py",
+        "slopsearx/router.py",
+        "tests/test_jev.py",
+        "tests/test_routing_eval.py"
+      ],
+      "handoff": "Optional routing adapter and frozen keyless/enhanced decision fixtures."
+    },
+    {
+      "id": "F13",
+      "title": "Port canonical cache and tenant-bound snapshots",
+      "lane": "state",
+      "depends_on": [
+        "F07",
+        "F09"
+      ],
+      "problem": "Caching the first caller view would corrupt later requests and truncate stored evidence.",
+      "scope": [
+        "Port full unsliced canonical response caching, key identity, freshness/TTL rules and request-specific projections",
+        "Port snapshots/cursors, logical versus physical expiry, tenant binding and legacy decoding",
+        "Use immutable shared responses; distinguish store outage from missing state at authoritative boundaries"
+      ],
+      "acceptance": [
+        "Different include/max_results requests reuse identical canonical evidence without contamination",
+        "Expired/unknown/unavailable/malformed and cross-tenant cases produce prescribed outcomes without upstream requery",
+        "Storage tests inject explicit cache-admission decisions. F14 proves deadline truncation integration; F15 proves rerank fallback integration. Mixed-version durable fixtures pass."
+      ],
+      "sources": [
+        "slopsearx/cache.py",
+        "slopsearx/snapshot.py",
+        "slopsearx/service.py",
+        "tests/test_mcp_snapshots.py",
+        "tests/test_cache_integration.py"
+      ],
+      "handoff": "Cache/snapshot APIs and view-parity fixtures; records documented for migration."
+    },
+    {
+      "id": "F14",
+      "title": "Deliver integrated search execution with native fake engines",
+      "lane": "search",
+      "depends_on": [
+        "F10",
+        "F11",
+        "F12",
+        "F13"
+      ],
+      "problem": "The shared service must preserve concurrency, deadlines and caller isolation across all surfaces.",
+      "scope": [
+        "Compose routing/policy/rate/transport/ranking/cache into the Rust SearchService",
+        "Implement bounded admission/fanout, per-engine/overall budgets, partial failures, suggestions and singleflight",
+        "Supervise tasks and immutable canonical responses; preserve last-waiter cancellation and fresh/workflow isolation"
+      ],
+      "acceptance": [
+        "End-to-end replay proves identical routing/results/enforcement/errors and no accidental dispatch under rejection",
+        "Queue time counts toward interactive deadline; one cancelled waiter does not kill other callers; last waiter cleans work up",
+        "Metrics distinguish observed versus synthetic outcomes; repeated shutdown leaves no tasks or connections behind"
+      ],
+      "sources": [
+        "slopsearx/service.py",
+        "slopsearx/suggest.py",
+        "tests/test_service.py",
+        "tests/test_concurrency.py",
+        "tests/test_interactive_deadline.py"
+      ],
+      "handoff": "Native shared search service usable by HTTP/MCP/workers, with concurrency evidence."
+    },
+    {
+      "id": "F15",
+      "title": "Port bounded semantic reranking and result advisories",
+      "lane": "search",
+      "depends_on": [
+        "F14"
+      ],
+      "problem": "Current semantic reranking can reorder across tiers and has safety/fallback/cache rules that must survive.",
+      "scope": [
+        "Port bounded candidate projections, exact-ID permutation validation, duplicate-key/nonfinite rejection and provider identity",
+        "Preserve sensitive-result exclusions, remaining-time budget, stable scoring and fallback cache rules",
+        "Port truthful advisories and interactions with specialist promotion; keep quality policy unchanged"
+      ],
+      "acceptance": [
+        "All existing rerank/advisory fixtures pass including malformed responses and injection-like content",
+        "Provider output cannot introduce result content or IDs; sensitive evidence is not sent",
+        "Provider absence/error preserves the recorded fallback and does not poison the canonical cache",
+        "Advisories remain read-boundary output rather than cached/snapshot evidence; operator-reported benefits are never relabeled as measurements."
+      ],
+      "sources": [
+        "slopsearx/rerank.py",
+        "slopsearx/advisories.py",
+        "slopsearx/service.py",
+        "tests/test_rerank.py"
+      ],
+      "handoff": "Optional reranker/advisory integration with bounded replay and no provider calls."
+    },
+    {
+      "id": "T01",
+      "title": "Qualify Rust MCP SDK schemas, transports and lifecycle",
+      "lane": "protocol",
+      "depends_on": [
+        "F04"
+      ],
+      "problem": "MCP framework mismatch should be exposed before porting the entire public tool surface.",
+      "scope": [
+        "Pin rmcp and exercise synthetic tools with captured nested schemas, nullable/default fields, errors, resources and prompts",
+        "Test stdio/streamable HTTP/client proxy and implement the F02 transport set including legacy SSE; retirement requires an explicit separately reviewed amendment to F02, not SDK convenience.",
+        "Define preserved descriptors and intentional normalization boundaries; test initialization/discovery pagination and process shutdown"
+      ],
+      "acceptance": [
+        "Complete descriptor comparison fails on nested/schema/metadata mutations, not just tool counts",
+        "Real loopback/subprocess tests cover unsupported versions, disconnect, cancellation, discovery limits and clean teardown",
+        "Published SDK support is verified on the pinned crate; OAuth server work remains explicitly separate"
+      ],
+      "sources": [
+        "slopsearx/mcp/server.py",
+        "slopsearx/mcp/gateway.py",
+        "tests/test_mcp_gateway_initialization.py",
+        "tests/test_mcp_gateway_lifecycle.py",
+        "docs/MCP_CONTRACT.md"
+      ],
+      "handoff": "MCP compatibility report, selected transport implementation and reusable native test harness."
+    },
+    {
+      "id": "O01",
+      "title": "Port metrics, audit, tracing and graceful service supervision",
+      "lane": "operations",
+      "depends_on": [
+        "F14",
+        "F06"
+      ],
+      "problem": "Native operation must retain observability and privacy while bounding background work.",
+      "scope": [
+        "Port metric names/labels, passive engine health, logs/Sentry configuration and audit stream retention/redaction",
+        "Add bounded task supervision for telemetry and request/job lifecycle spans",
+        "Expose shutdown hooks used by worker and transport integrations; preserve existing audit behavior or explicitly document intentional changes"
+      ],
+      "acceptance": [
+        "Metric/monitoring fixtures pass without raw secrets or unbounded label cardinality",
+        "Overloaded telemetry cannot grow memory indefinitely or block shutdown",
+        "Enabled/disabled audit and monitoring modes behave consistently; query/privacy semantics are not silently changed"
+      ],
+      "sources": [
+        "slopsearx/metrics.py",
+        "slopsearx/stats.py",
+        "slopsearx/audit.py",
+        "slopsearx/logging.py",
+        "tests/test_metrics.py",
+        "tests/test_saved_event_metrics.py",
+        "tests/test_workflow_metrics.py"
+      ],
+      "handoff": "Native observability and supervision APIs, compatibility fixtures and operational failure tests."
+    },
+    {
+      "id": "T02",
+      "title": "Serve compatible HTTP routes and machine formats in Rust",
+      "lane": "http",
+      "depends_on": [
+        "F14",
+        "F15",
+        "O01"
+      ],
+      "problem": "A successful search response does not establish SearXNG or operational endpoint compatibility.",
+      "scope": [
+        "Port GET/form POST on root/search, format negotiation/allowlist, validation errors and HTTP middleware",
+        "Implement JSON, YAML+Markdown, CSV and RSS projections plus health/healthz/config/metrics route contracts",
+        "Preserve parsed_url, headers, redaction and readiness-versus-upstream-health distinction",
+        "Complete formatter derivation as well as DTO serialization: preserve Python _iso_to_epoch and _parsed_url behavior, including accepted date/time grammars, timezone offsets and six-part URL tuples."
+      ],
+      "acceptance": [
+        "Pinned SearXNG corpus passes on a real Rust HTTP server for success and all error classes",
+        "Invalid filters and disabled formats have matching status/media/body behavior; sensitive paths never dispatch",
+        "Independent client smoke runs without Python installed in the server image",
+        "Actual HTTP responses preserve time-of-day and timezone offsets, invalid-date/null behavior, non-ASCII input handling, scheme normalization and final-segment URL parameters. Reuse accepted F05 projections but do not treat injected/precomputed fields or limited golden examples as a complete formatter implementation."
+      ],
+      "sources": [
+        "slopsearx/server.py",
+        "slopsearx/formatter.py",
+        "slopsearx/middleware.py",
+        "tests/test_searxng_api_contract.py",
+        "tests/test_server.py",
+        "docs/SEARXNG_API_CONTRACT.md"
+      ],
+      "handoff": "Native HTTP boundary and all machine-format contract tests."
+    },
+    {
+      "id": "T03",
+      "title": "Port public search portal and browser acceptance journeys",
+      "lane": "portal",
+      "depends_on": [
+        "T02"
+      ],
+      "problem": "The portal is a first-class consumer of the shared service and must remain accessible and truthful.",
+      "scope": [
+        "Port landing/results rendering with escaped templates, safe URLs, security headers and existing Dark/Darker theme behavior",
+        "Preserve forms, scope/filter explanations, pagination/history, empty/partial/error views and progressive disclosures",
+        "Retain browser assets without introducing a mandatory client framework; document any CSP hardening"
+      ],
+      "acceptance": [
+        "Keyboard, narrow viewport, reflow, theme/storage failure, malicious-content and pagination journeys pass",
+        "Browser result/enforcement fields match machine views and no cookie changes public search semantics",
+        "Record visual/accessibility evidence and portal budgets separately from upstream latency"
+      ],
+      "sources": [
+        "slopsearx/formatter.py",
+        "tests/test_portal_browser.py",
+        "tests/test_formatter.py",
+        "docs/PORTAL_ACCEPTANCE.md",
+        "docs/PORTAL_UX_SPEC.md",
+        "docs/PORTAL_VISUAL_SYSTEM.md"
+      ],
+      "handoff": "Rust-rendered public portal with browser/visual acceptance evidence."
+    },
+    {
+      "id": "T04",
+      "title": "Implement authoritative OAuth state and atomic token transitions",
+      "lane": "identity",
+      "depends_on": [
+        "F07",
+        "F06"
+      ],
+      "problem": "Per-process fallback and multi-step token transitions need an explicit multi-replica contract.",
+      "scope": [
+        "Port client/grant/code/access/refresh records, TTLs and configured auth modes",
+        "Implement atomic single-use code exchange and refresh rotation/revocation with existing client/resource/scope/subject binding; tenant binding requires an explicit accepted ADR, not a porting assumption.",
+        "Make storage unavailability explicit; production durable mode fails closed, any memory-only development mode is named and isolated"
+      ],
+      "acceptance": [
+        "Two instances cannot redeem one code or refresh grant twice; stale/revoked/expired records deny consistently",
+        "Valkey failure does not silently issue process-local production credentials",
+        "Token and secret values stay out of logs; migration record schema and compatibility are documented"
+      ],
+      "sources": [
+        "slopsearx/mcp/oauth.py",
+        "tests/test_mcp_oauth.py",
+        "slopsearx/mcp/security.py"
+      ],
+      "handoff": "Atomic OAuth state service and real-Valkey concurrency tests for protocol integration."
+    },
+    {
+      "id": "T05",
+      "title": "Implement OAuth authorization endpoints and bearer enforcement",
+      "lane": "identity",
+      "depends_on": [
+        "T01",
+        "T04"
+      ],
+      "problem": "rmcp client support does not replace FastMCP authorization-server behavior.",
+      "scope": [
+        "Port discovery, dynamic registration, authorize/token/revoke routes, PKCE and client/redirect/scope checks",
+        "Preserve current authorization policy and static bearer mode; enforce auth on every MCP transport request",
+        "Use maintained protocol/crypto dependencies and explicit error mappings"
+      ],
+      "acceptance": [
+        "Independent clients complete static-bearer and OAuth flows including discovery/refresh/revocation",
+        "Replay, bad verifier/redirect/client/scope, expired grants and transport bypass cases fail closed",
+        "Wire fixtures and current real-client requirements pass; no new login/consent policy is silently introduced"
+      ],
+      "sources": [
+        "slopsearx/mcp/oauth.py",
+        "slopsearx/mcp/security.py",
+        "slopsearx/mcp/server.py",
+        "tests/test_mcp_oauth.py",
+        "tests/test_mcp_security.py"
+      ],
+      "handoff": "Native OAuth server and protected MCP transport with negative security evidence."
+    },
+    {
+      "id": "T06",
+      "title": "Expose search, discovery and snapshot MCP contracts",
+      "lane": "protocol",
+      "depends_on": [
+        "T05",
+        "F15"
+      ],
+      "problem": "Public tool parity includes schemas and failures as well as successful searches.",
+      "scope": [
+        "Port generic/specialist search, scope preview, capabilities, snapshot/entity views and relevant resources/prompts",
+        "Wire the shared service and sole policy gate through the real MCP runtime with fake-state injection",
+        "Preserve names/descriptions/annotations/input-output schemas, compact projections, structured content and error envelopes"
+      ],
+      "acceptance": [
+        "Compare complete descriptors and calls against the frozen registry subset over stdio and HTTP",
+        "Sensitive mixed lists, strict filters, missing grants and malformed arguments cannot dispatch",
+        "State injection keeps transport and auth identical; final full registry completion belongs to W09"
+      ],
+      "sources": [
+        "slopsearx/mcp/tool_registry.py",
+        "slopsearx/mcp/tools.py",
+        "slopsearx/mcp/result_serialization.py",
+        "slopsearx/mcp/entity_projection.py",
+        "slopsearx/mcp/resources.py",
+        "slopsearx/mcp/prompts.py",
+        "tests/test_mcp_harness.py"
+      ],
+      "handoff": "Native search/discovery MCP surface with exact subset coverage manifest."
+    },
+    {
+      "id": "T07",
+      "title": "Ship native MCP gateway and OAuth client",
+      "lane": "clients",
+      "depends_on": [
+        "T06",
+        "S01"
+      ],
+      "problem": "The gateway should install and run without a local Python runtime while preserving existing client configuration.",
+      "scope": [
+        "Port remote stdio-to-HTTP proxy, static token/OAuth flows, browser callback, refresh and secure token persistence",
+        "Preserve full supported remote schemas, structured results, discovery bounds, timeouts and owned connection lifetime",
+        "Provide command/env compatibility or a tested migration wrapper that invokes only native code"
+      ],
+      "acceptance": [
+        "Direct-versus-gateway tool/resource/prompt and error comparisons pass",
+        "Startup failure, cancellation, disconnect and shutdown are tested in fresh processes; multiple instances do not share global session state",
+        "Client installs on supported targets without Python and does not receive server engine keys; auth material is protected/redacted"
+      ],
+      "sources": [
+        "slopsearx/mcp/gateway.py",
+        "slopsearx/mcp/oauth_client.py",
+        "tests/test_mcp_gateway.py",
+        "tests/test_mcp_gateway_lifecycle.py",
+        "tests/test_mcp_oauth_client.py"
+      ],
+      "handoff": "Native gateway executable, OAuth client tests and installation/config migration notes."
+    },
+    {
+      "id": "T08A",
+      "title": "Implement native ssx against the frozen external HTTP contract",
+      "lane": "clients",
+      "depends_on": [
+        "F04"
+      ],
+      "problem": "A standalone external HTTP client can be implemented against the pinned ssx wire contract while complete native HTTP acceptance remains a separate prerequisite for T08 integration.",
+      "scope": [
+        "Start only after the reviewed CLI_AUTHORING_SPLIT decision is accepted and merged, accepted F02/F03/F04 handoffs are available and freshly fetched main contains merged PR1007 e12744511013bd05370173e777daaef471bf9527",
+        "Implement all native ssx commands, flags, environment defaults, request encoding, response projections and source-derived failure behavior without server implementation imports or shared page/domain changes",
+        "Own crates/ssx-cli, deterministic external-child HTTP fixtures, t08a evidence/install documentation and coordinated native T08A gate/CI registration; preserve exact arbitrary integer requests, output semantics, redirect/order and proxy/CA behavior or explicitly review differences",
+        "Provide supported-target native build/install commands and Python-free client/runtime/dependency evidence without replacing deployment/required gates or adding an O04 reverse dependency"
+      ],
+      "acceptance": [
+        "Source-bound golden argv/stdout/stderr/exit and ordered request corpus passes in real native external children, including every command/format, Unicode, arbitrary page integers, unavailable server, redirects, non-2xx, invalid UTF-8, malformed JSON and wrong shapes",
+        "Native T08A xtask check executes its finite inventory, rejects missing/changed cases and binds final source/binary/raw outcomes/cleanup; locked build, formatting, strict Clippy and scoped tests pass",
+        "Supported-target source-build/install instructions produce a working executable without Python/PyPy/libpython, backend imports, embedded server, FFI bridge, sidecar or remote fallback; optional Python-client separation is audited",
+        "Reviewed component PR hands exact native source/binary/corpus/install identities to T08; it does not establish actual native-server integration, close T08/T02 or switch deployment/mandatory gates"
+      ],
+      "sources": [
+        "ssx",
+        "crates/ssx-cli",
+        "README.md",
+        "tests/test_packaging.py",
+        "docs/rust-rewrite/inventory/surface-contracts.md",
+        "crates/xtask/src/main.rs",
+        "docs/rust-rewrite/ci/gates.json",
+        "docs/rust-rewrite/CLI_AUTHORING_SPLIT.md"
+      ],
+      "handoff": "Accepted native wire-only ssx executable, external-child compatibility corpus, native component gate and supported-target Python-free installation evidence for T08 integration."
+    },
+    {
+      "id": "T08",
+      "title": "Replace ssx with a native Rust CLI",
+      "lane": "clients",
+      "depends_on": [
+        "T02",
+        "T08A"
+      ],
+      "problem": "Native wire-client qualification does not establish integration with the accepted Rust HTTP service or final CLI delivery.",
+      "scope": [
+        "Consume accepted T08A source/binary, black-box argv/request/output/error corpus, native gate and supported-target installation handoff; retain every original compatibility obligation",
+        "Integrate native ssx against an actual separately launched native HTTP service after accepted T02 and lossless-page restoration #1049; keep server implementation imports out of the client",
+        "Verify ordinary and arbitrary-precision page requests end to end through native HTTP/service/adapter paths, distinct high-page cache identities and repeat-hit behavior without provider calls",
+        "Requalify final clean client/server identities, supported-target install/runtime separation and cargo xtask check T08; deliver the accepted CLI handoff to O04"
+      ],
+      "acceptance": [
+        "Golden argv/stdout/stderr/exit status corpus passes including Unicode, unavailable server and malformed replies",
+        "Native CLI works in an environment without Python; installation instructions cover supported platforms",
+        "Any optional Python client remains a separately packaged thin wire client and is never required by server or CLI",
+        "Accepted T08A artifacts pass actual native-server integration for all commands/formats and relevant failures, exact high-page propagation and distinct cache/repeat-hit behavior; final T08 gate/install evidence and O04 handoff are complete, not inferred from external-fixture success"
+      ],
+      "sources": [
+        "ssx",
+        "README.md",
+        "tests/test_packaging.py"
+      ],
+      "handoff": "Native ssx executable and black-box corpus qualified against accepted native HTTP, with final source/binary/install identities and O04 delivery handoff."
+    },
+    {
+      "id": "T09",
+      "title": "Port browser OIDC, sessions and tenant authorization",
+      "lane": "identity",
+      "depends_on": [
+        "F07",
+        "F06"
+      ],
+      "problem": "The authenticated workflow portal has identity and browser protections beyond machine MCP auth.",
+      "scope": [
+        "Port OIDC discovery/callback using maintained signature-verification components; preserve issuer/audience/nonce/state/PKCE checks",
+        "Port membership/principal revisions, session rotation/expiry/revocation, tenant switching and cookie policy",
+        "Port CSRF/same-origin/rate-limit/audit boundaries and uniform unavailable-object denial"
+      ],
+      "acceptance": [
+        "Fake identity provider tests exercise real middleware/cookies and reject replay, forged claims and unsafe redirects",
+        "Two-tenant and revoked/stale membership cases cannot observe or mutate each other; Valkey failure denies protected access",
+        "Public search remains equivalent with absent/valid/invalid cookies; hand-written RSA implementation is not translated"
+      ],
+      "sources": [
+        "slopsearx/portal_oidc.py",
+        "slopsearx/portal_auth.py",
+        "slopsearx/portal_rate_limit.py",
+        "slopsearx/portal_audit.py",
+        "tests/test_portal_oidc.py",
+        "tests/test_portal_auth.py",
+        "docs/adr/002-browser-identity-and-tenant-isolation.md"
+      ],
+      "handoff": "Native browser identity/session boundary and security matrix for workflow routes."
+    },
+    {
+      "id": "W01",
+      "title": "Port research records and conserved budget accounting",
+      "lane": "workflows",
+      "depends_on": [
+        "F07",
+        "F05"
+      ],
+      "problem": "Retries and crashes must not erase historical evidence or refund uncertain provider work.",
+      "scope": [
+        "Port research states/attempts, retained evidence, per-tenant record schema and atomic mutation rules",
+        "Port budget reservation-before-dispatch, settlement, monotone ceilings and conservative crash accounting",
+        "Represent immutable completed evidence separately from mutable execution ownership"
+      ],
+      "acceptance": [
+        "Golden/legacy research records round-trip with stable IDs and provenance",
+        "Crash between reserve/dispatch/settle retains conservative accounting; retries cannot exceed ceilings",
+        "Real Valkey tests reject stale-owner/tenant writes and preserve completed attempts"
+      ],
+      "sources": [
+        "slopsearx/research_models.py",
+        "slopsearx/research_budget.py",
+        "slopsearx/research_store.py",
+        "tests/test_research_durability.py"
+      ],
+      "handoff": "Research store and budget APIs with crash-point evidence and migration fixtures."
+    },
+    {
+      "id": "W02",
+      "title": "Run durable research jobs and recovery in Rust",
+      "lane": "workflows",
+      "depends_on": [
+        "W01",
+        "F15"
+      ],
+      "problem": "A job queue must preserve ownership, evidence and cancellation across replicas and restarts.",
+      "scope": [
+        "Port claim/renew/dispatch/finish loop, deadlines, cancellation, retries/extensions and orphan recovery",
+        "Revalidate policy before dispatch and guarded commit; use isolated search execution and conserved budgets",
+        "Supervise renewals/workers and document shutdown/recovery behavior"
+      ],
+      "acceptance": [
+        "Competing-worker, lost lease, process-kill, duplicate delivery and late commit tests pass against Valkey",
+        "Cancellation/expiry surface truthful terminal states and completed evidence survives retry/extension",
+        "No in-memory queue becomes authoritative; restart recovers admitted work within recorded bounds"
+      ],
+      "sources": [
+        "slopsearx/research.py",
+        "tests/test_research_queue_integration.py",
+        "tests/test_research_durability.py",
+        "tests/test_research_retry_followup.py"
+      ],
+      "handoff": "Native research worker with multi-process recovery and policy evidence."
+    },
+    {
+      "id": "W03",
+      "title": "Port caller-directed adaptive research planning",
+      "lane": "workflows",
+      "depends_on": [
+        "W02",
+        "T06"
+      ],
+      "problem": "Planning accepts caller decisions under bounded evidence rules; a rewrite must not introduce an autonomous planner.",
+      "scope": [
+        "Port decomposition/terminology/evidence-followup previews and execution admission metadata",
+        "Preserve exact CVE/DOI/arXiv/scoped-package identifiers, parent terminal-state checks and admitted evidence references",
+        "Prevent duplicate query+scope/followup resolutions and revalidate current evidence eligibility"
+      ],
+      "acceptance": [
+        "Preview versus execution fixtures agree without unintended persistence or provider dispatch",
+        "Forged/stale/cross-tenant evidence and repeated plans reject before budget spend",
+        "Adaptive transport and Valkey tests pass with bounded references and preserved historical attempts"
+      ],
+      "sources": [
+        "slopsearx/research_planning.py",
+        "slopsearx/mcp/planning_tools.py",
+        "slopsearx/mcp/tools.py",
+        "tests/test_adaptive_research.py",
+        "tests/test_adaptive_valkey.py",
+        "tests/test_adaptive_transport.py"
+      ],
+      "handoff": "Native planning tools and admission contracts; caller retains sufficiency/stopping decisions."
+    },
+    {
+      "id": "W00",
+      "title": "Port saved definitions, revisions and schedule claims",
+      "lane": "workflows",
+      "depends_on": [
+        "F07",
+        "F09"
+      ],
+      "problem": "Saved definitions and due-slot claims should be stable before the execution runner is implemented.",
+      "scope": [
+        "Port saved definition validation, quotas, pause/delete/tombstones and optimistic revision conflicts.",
+        "Port tenant enumeration, due indexes, missed-slot calculations and deterministic run identity without executing providers.",
+        "Expose atomic claim/update interfaces for the runner and document record/index compatibility."
+      ],
+      "acceptance": [
+        "Concurrent revision updates and duplicate due claims produce one valid owner without losing definitions.",
+        "Cross-tenant reads/listing/mutations and stale revisions reject consistently; expiry/tombstone behavior matches fixtures.",
+        "Real-Valkey restart/index-reconciliation tests pass; no search dispatch occurs in model/store tests."
+      ],
+      "sources": [
+        "slopsearx/saved_models.py",
+        "slopsearx/saved_store.py",
+        "tests/test_saved_models.py",
+        "tests/test_saved_valkey.py"
+      ],
+      "handoff": "Saved-definition and schedule-claim API plus fixtures for W04 runner."
+    },
+    {
+      "id": "W04",
+      "title": "Port saved execution, observations and atomic reports",
+      "lane": "workflows",
+      "depends_on": [
+        "W00",
+        "F15"
+      ],
+      "problem": "Saved searches combine revisioned definitions, scheduled execution and comparable evidence baselines.",
+      "scope": [
+        "Port runner, comparable/incomparable observations, change classification and missed-slot reporting using W00 definition/claim interfaces.",
+        "Revalidate policy before dispatch and commit; fence stale owners and atomically publish report plus baseline",
+        "Preserve comparable-observation semantics and lifecycle retention",
+        "Runner owns lease renewals, policy checks before dispatch/commit, missed slots, shutdown and recovery. W09 integrates report publication with W05 outbox atomically."
+      ],
+      "acceptance": [
+        "Concurrent updates, duplicate slots, lease loss and restart cannot double-publish or overwrite newer definitions",
+        "Malformed/stale/cross-tenant reads and mutations fail with matching contract",
+        "Golden saved reports/baselines and real-Valkey publication tests pass"
+      ],
+      "sources": [
+        "slopsearx/saved_models.py",
+        "slopsearx/saved_store.py",
+        "slopsearx/saved_runner.py",
+        "tests/test_saved_models.py",
+        "tests/test_saved_searches.py",
+        "tests/test_saved_valkey.py"
+      ],
+      "handoff": "Native saved-search store/scheduler with atomic publication boundary."
+    },
+    {
+      "id": "W05",
+      "title": "Port saved event outbox, acknowledgements and retention",
+      "lane": "workflows",
+      "depends_on": [
+        "W04"
+      ],
+      "problem": "Event delivery must remain consistent with published reports and bounded retention.",
+      "scope": [
+        "Port atomic report/baseline/outbox transaction, event IDs/cursors, acknowledgements and replay",
+        "Preserve capacity rejection, retention horizons and tenant isolation",
+        "Expose event metrics through the shared observability API"
+      ],
+      "acceptance": [
+        "Restart/duplicate acknowledgement/capacity-full tests never publish inconsistent partial state",
+        "Consumers resume using preserved cursors; expiry/revocation distinctions match contract",
+        "Real Valkey and transport fixtures prove report and event publication are atomic"
+      ],
+      "sources": [
+        "slopsearx/saved_events.py",
+        "slopsearx/saved_store.py",
+        "tests/test_saved_events.py",
+        "tests/test_saved_events_valkey.py",
+        "tests/test_saved_events_transport.py"
+      ],
+      "handoff": "Native event outbox API, cursor compatibility and recovery fixtures."
+    },
+    {
+      "id": "W11",
+      "title": "Port staged admission, records and retry transitions",
+      "lane": "workflows",
+      "depends_on": [
+        "F07",
+        "F09"
+      ],
+      "problem": "Staged admission and recovery state must be correct before running multi-stage searches.",
+      "scope": [
+        "Port immutable plan digest, idempotent admission, budgets, record schema and ready/running indexes.",
+        "Implement claim/renew/fenced-save, retry keys, orphan recovery and reconciliation without executing providers.",
+        "Preserve Valkey cjson empty-array normalization and legacy record/ID compatibility."
+      ],
+      "acceptance": [
+        "Duplicate admission with changed plans rejects; retry keys and index reconciliation are deterministic.",
+        "Real Valkey tests with competing owners, stale tokens, interruptions and storage loss preserve records and budget reservations.",
+        "No provider dispatch occurs; store hands off a validated owned stage record to W06."
+      ],
+      "sources": [
+        "slopsearx/staged.py",
+        "tests/test_staged_valkey_integration.py",
+        "tests/test_staged_search.py"
+      ],
+      "handoff": "Native staged store/transition APIs and durable compatibility corpus for W06."
+    },
+    {
+      "id": "W06",
+      "title": "Run staged searches with bounded fallback and recovery",
+      "lane": "workflows",
+      "depends_on": [
+        "W11",
+        "W02",
+        "W04",
+        "F15"
+      ],
+      "problem": "Staged searches add immutable plans, idempotency and recoverable stage execution.",
+      "scope": [
+        "Integrate W11 admission/ownership APIs with the staged runner and saved-report-derived source resolution.",
+        "Preserve stage limits, deadlines, fallback policy and saved-report-derived inputs",
+        "Reconcile indexes and recover orphans without bypassing shared policy or budgets"
+      ],
+      "acceptance": [
+        "Duplicate submissions/retries, changed-plan keys, process loss and stale renewals behave deterministically",
+        "Valkey cjson empty-array normalization and historical record readers remain compatible",
+        "No simultaneous valid owners or duplicate committed stage result; recovery preserves unknown upstream outcomes and charges reserved retry budgets without claiming exactly-once remote execution."
+      ],
+      "sources": [
+        "slopsearx/staged.py",
+        "slopsearx/mcp/staged_tools.py",
+        "tests/test_staged_search.py",
+        "tests/test_staged_valkey_integration.py"
+      ],
+      "handoff": "Native staged-operation service and recovery/identity test matrix."
+    },
+    {
+      "id": "W07",
+      "title": "Port retrieval receipts, manifests and artifact lineage",
+      "lane": "evidence",
+      "depends_on": [
+        "F13",
+        "F07"
+      ],
+      "problem": "Evidence relationships must remain stable and must not imply that search itself fetched or verified a page.",
+      "scope": [
+        "Port receipt submission/read/replay, idempotency and retention horizons",
+        "Port artifact references/composite IDs, lineage edges and retrieval manifests with tenant policy",
+        "Preserve immutable evidence relationships across snapshots and workflow outputs"
+      ],
+      "acceptance": [
+        "Cross-tenant, malformed-reference, expired-horizon and duplicate-receipt cases match fixtures",
+        "Real Valkey writes preserve atomicity and bounded indexes",
+        "Receipt claims remain caller-supplied evidence; search results are not relabeled as verified retrieval"
+      ],
+      "sources": [
+        "slopsearx/retrieval_receipts.py",
+        "slopsearx/artifacts.py",
+        "slopsearx/mcp/receipt_tools.py",
+        "slopsearx/mcp/lineage_tools.py",
+        "tests/test_retrieval_receipts_valkey.py",
+        "tests/test_artifact_lineage_valkey.py"
+      ],
+      "handoff": "Native evidence/lineage APIs and stable ID/storage contracts."
+    },
+    {
+      "id": "W08",
+      "title": "Port dependency dossiers and workflow composition",
+      "lane": "evidence",
+      "depends_on": [
+        "W07",
+        "F15",
+        "W02",
+        "W04",
+        "W06"
+      ],
+      "problem": "Dossiers and handoffs combine evidence without granting new retrieval authority.",
+      "scope": [
+        "Port bounded dependency dossier plans/results and workflow source resolution",
+        "Preserve immutable artifact references, policy revalidation and provenance across compositions",
+        "Keep request budgets and unavailable-source states explicit"
+      ],
+      "acceptance": [
+        "Dossier and composition fixtures preserve links, bounded inputs and errors",
+        "Cross-tenant/expired/revoked references cannot authorize a new dispatch",
+        "No hidden provider calls occur during pure preview/reference resolution"
+      ],
+      "sources": [
+        "slopsearx/dependency_dossier.py",
+        "slopsearx/mcp/dependency_tools.py",
+        "slopsearx/mcp/composition.py",
+        "tests/test_dependency_dossier.py",
+        "tests/test_workflow_composition.py"
+      ],
+      "handoff": "Native dossier/composition services for final workflow transports."
+    },
+    {
+      "id": "W09",
+      "title": "Complete workflow MCP tools, prompts and registry parity",
+      "lane": "protocol",
+      "depends_on": [
+        "W03",
+        "W05",
+        "W06",
+        "W08",
+        "T06",
+        "T07"
+      ],
+      "problem": "Incremental ports must converge on the complete public tool catalog, not a working subset.",
+      "scope": [
+        "Expose research/saved/events/staged/receipt/lineage/dossier tools through one declarative registry",
+        "Port all resources/templates and five baseline prompts, including evidence-directed planning",
+        "Preserve grants, mutations, state requirements, schemas, compact results and error envelopes"
+      ],
+      "acceptance": [
+        "Every capability from F01 is mapped to native implementation and a transport test; complete descriptor comparison passes",
+        "All workflow tools enforce tenant and sensitive-engine policy through shared services",
+        "Gateway/direct and stdio/HTTP tests exercise success, denial and malformed requests with injected state"
+      ],
+      "sources": [
+        "slopsearx/mcp/tool_registry.py",
+        "slopsearx/mcp/prompts.py",
+        "slopsearx/mcp/resources.py",
+        "tests/test_mcp_tool_registry.py",
+        "tests/test_saved_transport.py",
+        "tests/test_workflow_composition_transport.py"
+      ],
+      "handoff": "Complete native MCP catalog and checked capability-to-test manifest."
+    },
+    {
+      "id": "W10",
+      "title": "Port authenticated workflow console and browser mutations",
+      "lane": "portal",
+      "depends_on": [
+        "T09",
+        "T03",
+        "W09"
+      ],
+      "problem": "Workflow UI must use real identity and application transitions rather than bypassing them for convenience.",
+      "scope": [
+        "Port login/tenant/logout, workflow index/detail, research/saved/staged actions and evidence views",
+        "Preserve CSRF, idempotency, stale-revision handling, content negotiation and uniform object denial",
+        "Use shared native services and escaped templates; maintain privacy/audit contract"
+      ],
+      "acceptance": [
+        "Browser journeys cover login, tenant switch, expiry mid-form, duplicate submission, forbidden actions and malicious content",
+        "Machine negotiation receives problem responses rather than unexpected HTML redirects",
+        "Public search remains unaffected; accessibility and bounded denial-timing classes are recorded"
+      ],
+      "sources": [
+        "slopsearx/workflow_portal.py",
+        "slopsearx/workflow_console.py",
+        "tests/test_workflow_portal.py",
+        "tests/test_workflow_console_policy.py",
+        "docs/PORTAL_ACCEPTANCE.md"
+      ],
+      "handoff": "Complete native workflow portal and protected browser acceptance evidence."
+    },
+    {
+      "id": "A01",
+      "title": "Port registry-search pilot adapters",
+      "lane": "adapters",
+      "depends_on": [
+        "F06",
+        "F08",
+        "F04"
+      ],
+      "problem": "Feature completeness requires native implementations of npm, crates, not generic wrappers or stubs.",
+      "scope": [
+        "Implement only these engines using the shared native transport/registry/outcome types: npm, crates",
+        "Real captured package fixtures prove request shape, canonical URLs, legitimate empty versus malformed responses and the comparator itself.",
+        "Export missing inline fixtures with provenance; keep source metadata/Jev cards and documentation aligned without changing the orchestrator",
+        "Own only named-engine source/fixture/metadata fragments. Request shared interface changes through the F06/F08 owner; aggregate catalog/docs integration is verified by G01."
+      ],
+      "acceptance": [
+        "For each engine replay success, valid empty, malformed/wrong-shape, HTTP failure, timeout/cancellation, auth/config and applicable paging/filter/media/payload cases",
+        "Assert outbound method/URL/parameters/auth placement and request count/order; use actual Rust parsers and compare normalized outputs",
+        "Map every existing named-engine regression test to a native case or reviewed supersession; no Python helper or live provider call",
+        "Run native conformance and registry completeness checks; all mismatches require explicit review, never blanket normalization"
+      ],
+      "sources": [
+        "engines/npm.py",
+        "engines/crates.py",
+        "tests/fixtures/upstream_contracts",
+        "tests/test_upstream_contracts.py",
+        "tests/test_new_engines.py"
+      ],
+      "handoff": "Native named-engine implementations, engine-local fixture packs and old-to-new regression mapping; consumes frozen interfaces and can run independently of other adapter batches.",
+      "engines": [
+        "npm",
+        "crates"
+      ]
+    },
+    {
+      "id": "A06",
+      "title": "Port scholarly publication sources adapters",
+      "lane": "adapters",
+      "depends_on": [
+        "A01"
+      ],
+      "problem": "Feature completeness requires native implementations of openalex, semanticscholar, arxiv, not generic wrappers or stubs.",
+      "scope": [
+        "Implement only these engines using the shared native transport/registry/outcome types: openalex, semanticscholar, arxiv",
+        "Preserve OpenAlex upstream/local audited date enforcement, abstract reconstruction, scientific IDs/authors, arXiv Atom mixed content, phrase-versus-explicit query syntax and revisions.",
+        "Export missing inline fixtures with provenance; keep source metadata/Jev cards and documentation aligned without changing the orchestrator",
+        "Own only named-engine source/fixture/metadata fragments. Request shared interface changes through the F06/F08 owner; aggregate catalog/docs integration is verified by G01."
+      ],
+      "acceptance": [
+        "For each engine replay success, valid empty, malformed/wrong-shape, HTTP failure, timeout/cancellation, auth/config and applicable paging/filter/media/payload cases",
+        "Assert outbound method/URL/parameters/auth placement and request count/order; use actual Rust parsers and compare normalized outputs",
+        "Map every existing named-engine regression test to a native case or reviewed supersession; no Python helper or live provider call",
+        "Run native conformance and registry completeness checks; all mismatches require explicit review, never blanket normalization"
+      ],
+      "sources": [
+        "engines/openalex.py",
+        "engines/semanticscholar.py",
+        "engines/arxiv.py",
+        "tests/test_openalex_adapter.py",
+        "tests/test_arxiv_relevance.py",
+        "tests/test_scholarly.py",
+        "tests/fixtures/upstream_contracts"
+      ],
+      "handoff": "Native named-engine implementations, engine-local fixture packs and old-to-new regression mapping; consumes frozen interfaces and can run independently of other adapter batches.",
+      "engines": [
+        "openalex",
+        "semanticscholar",
+        "arxiv"
+      ]
+    },
+    {
+      "id": "O02",
+      "title": "Replace Python health, deployment and upstream-contract tools",
+      "lane": "operations",
+      "depends_on": [
+        "T02",
+        "F08",
+        "A01",
+        "A06"
+      ],
+      "problem": "Python can remain hidden in healthchecks, image verification and deployment automation after the server port.",
+      "scope": [
+        "Replace docker/healthcheck.py and backend-dependent smoke/upstream replay commands with Rust or portable shell clients",
+        "Replace Python image-promotion/base-image verification helpers and inline interpreter snippets used by release jobs",
+        "Preserve digest promotion, rollback safety and secret redaction; update relevant CI/container commands"
+      ],
+      "acceptance": [
+        "Server build/start/health/deploy/rollback commands run in a Python-free environment",
+        "Upstream checks invoke native adapters or wire endpoints; no import of engines/slopsearx remains",
+        "Artifact/digest mismatches and failed health checks exit nonzero; no production rollout is performed by this implementation issue",
+        "Native upstream probes retain allowlisted hosts/paths, request counts, timeout/body/decompression limits and sanitized capture behavior; default verification remains offline."
+      ],
+      "sources": [
+        "docker/healthcheck.py",
+        "scripts/promote_image_digest.py",
+        "scripts/portal_release_smoke.py",
+        ".github/workflows/docker.yml",
+        ".github/workflows/image-promotion.yml",
+        ".github/workflows/upstream-contracts.yml",
+        "tests/test_deployment_artifacts.py",
+        "scripts/upstream_contracts.py"
+      ],
+      "handoff": "Native backend operational tools and updated executable workflow commands."
+    },
+    {
+      "id": "O03",
+      "title": "Classify active experiment tooling and define native evidence contracts",
+      "lane": "tooling",
+      "depends_on": [
+        "F04"
+      ],
+      "problem": "Experiment runners import Python SearchService and bind evidence to Python runtime hashes; they are not client-only code.",
+      "scope": [
+        "Complete the F01 tooling map for active acquisition, replay, selector, authority, accounting and verification paths.",
+        "Specify native command/wire interfaces and versioned Rust build/runtime/source receipt formats; preserve historical evidence bytes.",
+        "Assign every backend-coupled executable to O07 or O08; identify genuinely independent client-only grading/orchestration and approved retirements.",
+        "Required acquisition/evidence/qualification commands become native. Optional Python analysis may remain only as a separately packaged wire-only client and never as a prerequisite for mandatory backend release verification."
+      ],
+      "acceptance": [
+        "Every active script and evidence producer/consumer has a disposition, interface and owner; no backend import is mislabeled client-only.",
+        "Prospective schema specifies binary/source/toolchain/config binding, authority and clock/accounting invariants.",
+        "Historical artifacts remain byte-identical; replacement work is sequenced without disabling existing experiment verification."
+      ],
+      "sources": [
+        "scripts",
+        "tests/test_coverage_saved_method_materials.py",
+        "tests/test_intent_ranking_replay.py",
+        "docs/experiments/README.md",
+        "docs/experiments/DESIGN.md"
+      ],
+      "handoff": "Complete active-tool inventory and accepted command/evidence schemas for O07/O08."
+    },
+    {
+      "id": "O04",
+      "title": "Build native release artifacts, containers and install paths",
+      "lane": "operations",
+      "depends_on": [
+        "T07",
+        "T08",
+        "O01",
+        "O02",
+        "W09",
+        "T02"
+      ],
+      "problem": "A usable rewrite must deliver signed/versioned artifacts on supported targets without Python runtime baggage.",
+      "scope": [
+        "Build server/worker/gateway/ssx binaries and multi-architecture non-root containers with required CA/TLS assets",
+        "Migrate package/version/release automation, SBOM/provenance, checksums, installation and command compatibility",
+        "Port Compose/Kubernetes settings, signals/readiness and resource defaults"
+      ],
+      "acceptance": [
+        "Fresh install/smoke on supported OS/architectures succeeds without Python; image filesystem/process audit confirms no interpreter or libpython",
+        "Release tags/version metadata and immutable digest promotion are consistent across binaries/images",
+        "Container signal handling, health/readiness and disabled optional services pass; no production deployment yet"
+      ],
+      "sources": [
+        "Dockerfile",
+        "docker-compose.yml",
+        "k8s",
+        "pyproject.toml",
+        ".github/workflows/docker.yml",
+        ".github/workflows/release-please.yml",
+        "tests/test_packaging.py"
+      ],
+      "handoff": "Reproducible native artifact pipeline and deployment manifests for staging."
+    },
+    {
+      "id": "A02",
+      "title": "Port package registries adapters",
+      "lane": "adapters",
+      "depends_on": [
+        "A01"
+      ],
+      "problem": "Feature completeness requires native implementations of pypi, rubygems, dockerhub, not generic wrappers or stubs.",
+      "scope": [
+        "Implement only these engines using the shared native transport/registry/outcome types: pypi, rubygems, dockerhub",
+        "PyPI parses HTML despite API classification; preserve exact-name/search behavior, package/container identity and pagination.",
+        "Export missing inline fixtures with provenance; keep source metadata/Jev cards and documentation aligned without changing the orchestrator",
+        "Own only named-engine source/fixture/metadata fragments. Request shared interface changes through the F06/F08 owner; aggregate catalog/docs integration is verified by G01."
+      ],
+      "acceptance": [
+        "For each engine replay success, valid empty, malformed/wrong-shape, HTTP failure, timeout/cancellation, auth/config and applicable paging/filter/media/payload cases",
+        "Assert outbound method/URL/parameters/auth placement and request count/order; use actual Rust parsers and compare normalized outputs",
+        "Map every existing named-engine regression test to a native case or reviewed supersession; no Python helper or live provider call",
+        "Run native conformance and registry completeness checks; all mismatches require explicit review, never blanket normalization"
+      ],
+      "sources": [
+        "engines/pypi.py",
+        "engines/rubygems.py",
+        "engines/dockerhub.py",
+        "tests/test_new_engines.py"
+      ],
+      "handoff": "Native named-engine implementations, engine-local fixture packs and old-to-new regression mapping; consumes frozen interfaces and can run independently of other adapter batches.",
+      "engines": [
+        "pypi",
+        "rubygems",
+        "dockerhub"
+      ]
+    },
+    {
+      "id": "A03",
+      "title": "Port developer and community sources adapters",
+      "lane": "adapters",
+      "depends_on": [
+        "A01"
+      ],
+      "problem": "Feature completeness requires native implementations of github, huggingface, stackexchange, hackernews, not generic wrappers or stubs.",
+      "scope": [
+        "Implement only these engines using the shared native transport/registry/outcome types: github, huggingface, stackexchange, hackernews",
+        "Preserve subcategory routing, endpoint-specific results, auth conventions, paging and structured metadata.",
+        "Export missing inline fixtures with provenance; keep source metadata/Jev cards and documentation aligned without changing the orchestrator",
+        "Own only named-engine source/fixture/metadata fragments. Request shared interface changes through the F06/F08 owner; aggregate catalog/docs integration is verified by G01."
+      ],
+      "acceptance": [
+        "For each engine replay success, valid empty, malformed/wrong-shape, HTTP failure, timeout/cancellation, auth/config and applicable paging/filter/media/payload cases",
+        "Assert outbound method/URL/parameters/auth placement and request count/order; use actual Rust parsers and compare normalized outputs",
+        "Map every existing named-engine regression test to a native case or reviewed supersession; no Python helper or live provider call",
+        "Run native conformance and registry completeness checks; all mismatches require explicit review, never blanket normalization"
+      ],
+      "sources": [
+        "engines/github.py",
+        "engines/huggingface.py",
+        "engines/stackexchange.py",
+        "engines/hackernews.py",
+        "tests/test_adapters.py",
+        "tests/test_stackexchange_adapter.py"
+      ],
+      "handoff": "Native named-engine implementations, engine-local fixture packs and old-to-new regression mapping; consumes frozen interfaces and can run independently of other adapter batches.",
+      "engines": [
+        "github",
+        "huggingface",
+        "stackexchange",
+        "hackernews"
+      ]
+    },
+    {
+      "id": "A04",
+      "title": "Port broad api search adapters",
+      "lane": "adapters",
+      "depends_on": [
+        "A01"
+      ],
+      "problem": "Feature completeness requires native implementations of brave, wikipedia, reddit, not generic wrappers or stubs.",
+      "scope": [
+        "Implement only these engines using the shared native transport/registry/outcome types: brave, wikipedia, reddit",
+        "Preserve answers/media, Wikipedia enrichment/corrections/infoboxes/contact User-Agent, Reddit token precedence and authenticated endpoints.",
+        "Export missing inline fixtures with provenance; keep source metadata/Jev cards and documentation aligned without changing the orchestrator",
+        "Own only named-engine source/fixture/metadata fragments. Request shared interface changes through the F06/F08 owner; aggregate catalog/docs integration is verified by G01."
+      ],
+      "acceptance": [
+        "For each engine replay success, valid empty, malformed/wrong-shape, HTTP failure, timeout/cancellation, auth/config and applicable paging/filter/media/payload cases",
+        "Assert outbound method/URL/parameters/auth placement and request count/order; use actual Rust parsers and compare normalized outputs",
+        "Map every existing named-engine regression test to a native case or reviewed supersession; no Python helper or live provider call",
+        "Run native conformance and registry completeness checks; all mismatches require explicit review, never blanket normalization"
+      ],
+      "sources": [
+        "engines/brave.py",
+        "engines/wikipedia.py",
+        "engines/reddit.py",
+        "tests/test_tier1_adapters.py",
+        "tests/test_adapters.py",
+        "tests/test_media_contract.py"
+      ],
+      "handoff": "Native named-engine implementations, engine-local fixture packs and old-to-new regression mapping; consumes frozen interfaces and can run independently of other adapter batches.",
+      "engines": [
+        "brave",
+        "wikipedia",
+        "reddit"
+      ]
+    },
+    {
+      "id": "A05",
+      "title": "Port html general search adapters",
+      "lane": "adapters",
+      "depends_on": [
+        "A01"
+      ],
+      "problem": "Feature completeness requires native implementations of duckduckgo, google, not generic wrappers or stubs.",
+      "scope": [
+        "Implement only these engines using the shared native transport/registry/outcome types: duckduckgo, google",
+        "Preserve search-local cookies, bootstrap/lite fallback, challenge versus genuine empty, terminal rate/timeout behavior, redirect unwrapping and proxy feedback. Include malformed HTML tree differences.",
+        "Export missing inline fixtures with provenance; keep source metadata/Jev cards and documentation aligned without changing the orchestrator",
+        "Own only named-engine source/fixture/metadata fragments. Request shared interface changes through the F06/F08 owner; aggregate catalog/docs integration is verified by G01."
+      ],
+      "acceptance": [
+        "For each engine replay success, valid empty, malformed/wrong-shape, HTTP failure, timeout/cancellation, auth/config and applicable paging/filter/media/payload cases",
+        "Assert outbound method/URL/parameters/auth placement and request count/order; use actual Rust parsers and compare normalized outputs",
+        "Map every existing named-engine regression test to a native case or reviewed supersession; no Python helper or live provider call",
+        "Run native conformance and registry completeness checks; all mismatches require explicit review, never blanket normalization"
+      ],
+      "sources": [
+        "engines/duckduckgo.py",
+        "engines/google.py",
+        "tests/test_duckduckgo_resilience.py",
+        "tests/test_google_adapter.py",
+        "tests/test_http_pooling.py"
+      ],
+      "handoff": "Native named-engine implementations, engine-local fixture packs and old-to-new regression mapping; consumes frozen interfaces and can run independently of other adapter batches.",
+      "engines": [
+        "duckduckgo",
+        "google"
+      ]
+    },
+    {
+      "id": "A07",
+      "title": "Port biomedical metadata sources adapters",
+      "lane": "adapters",
+      "depends_on": [
+        "A01"
+      ],
+      "problem": "Feature completeness requires native implementations of pubmed, europepmc, clinicaltrials, pubchem, uniprot, not generic wrappers or stubs.",
+      "scope": [
+        "Implement only these engines using the shared native transport/registry/outcome types: pubmed, europepmc, clinicaltrials, pubchem, uniprot",
+        "PubMed deadline includes both requests plus parsing/normalization. Europe PMC is opt-in/lite-only with honest date/paging claims, source attribution and preprint notice. Preserve biomedical payloads.",
+        "Export missing inline fixtures with provenance; keep source metadata/Jev cards and documentation aligned without changing the orchestrator",
+        "Own only named-engine source/fixture/metadata fragments. Request shared interface changes through the F06/F08 owner; aggregate catalog/docs integration is verified by G01."
+      ],
+      "acceptance": [
+        "For each engine replay success, valid empty, malformed/wrong-shape, HTTP failure, timeout/cancellation, auth/config and applicable paging/filter/media/payload cases",
+        "Assert outbound method/URL/parameters/auth placement and request count/order; use actual Rust parsers and compare normalized outputs",
+        "Map every existing named-engine regression test to a native case or reviewed supersession; no Python helper or live provider call",
+        "Run native conformance and registry completeness checks; all mismatches require explicit review, never blanket normalization"
+      ],
+      "sources": [
+        "engines/pubmed.py",
+        "engines/europepmc.py",
+        "engines/clinicaltrials.py",
+        "engines/pubchem.py",
+        "engines/uniprot.py",
+        "tests/test_pubmed.py",
+        "tests/test_europepmc.py",
+        "tests/test_uniprot.py",
+        "tests/fixtures/europepmc"
+      ],
+      "handoff": "Native named-engine implementations, engine-local fixture packs and old-to-new regression mapping; consumes frozen interfaces and can run independently of other adapter batches.",
+      "engines": [
+        "pubmed",
+        "europepmc",
+        "clinicaltrials",
+        "pubchem",
+        "uniprot"
+      ]
+    },
+    {
+      "id": "A08",
+      "title": "Port regulatory financial and legal sources adapters",
+      "lane": "adapters",
+      "depends_on": [
+        "A01"
+      ],
+      "problem": "Feature completeness requires native implementations of openfda, edgar, fred, oyez, not generic wrappers or stubs.",
+      "scope": [
+        "Implement only these engines using the shared native transport/registry/outcome types: openfda, edgar, fred, oyez",
+        "Preserve safe queries, structured payloads, stable identifiers/canonical links, omission diagnostics, contact headers and provider-specific dates.",
+        "Export missing inline fixtures with provenance; keep source metadata/Jev cards and documentation aligned without changing the orchestrator",
+        "Own only named-engine source/fixture/metadata fragments. Request shared interface changes through the F06/F08 owner; aggregate catalog/docs integration is verified by G01."
+      ],
+      "acceptance": [
+        "For each engine replay success, valid empty, malformed/wrong-shape, HTTP failure, timeout/cancellation, auth/config and applicable paging/filter/media/payload cases",
+        "Assert outbound method/URL/parameters/auth placement and request count/order; use actual Rust parsers and compare normalized outputs",
+        "Map every existing named-engine regression test to a native case or reviewed supersession; no Python helper or live provider call",
+        "Run native conformance and registry completeness checks; all mismatches require explicit review, never blanket normalization"
+      ],
+      "sources": [
+        "engines/openfda.py",
+        "engines/edgar.py",
+        "engines/fred.py",
+        "engines/oyez.py",
+        "tests/test_new_engines.py",
+        "tests/test_payload.py"
+      ],
+      "handoff": "Native named-engine implementations, engine-local fixture packs and old-to-new regression mapping; consumes frozen interfaces and can run independently of other adapter batches.",
+      "engines": [
+        "openfda",
+        "edgar",
+        "fred",
+        "oyez"
+      ]
+    },
+    {
+      "id": "A09",
+      "title": "Port catalog geocoding and archive sources adapters",
+      "lane": "adapters",
+      "depends_on": [
+        "A01"
+      ],
+      "problem": "Feature completeness requires native implementations of openlibrary, musicbrainz, tmdb, nominatim, internetarchive, not generic wrappers or stubs.",
+      "scope": [
+        "Implement only these engines using the shared native transport/registry/outcome types: openlibrary, musicbrainz, tmdb, nominatim, internetarchive",
+        "Preserve ISBN/work/edition identity and media fields. Archive fallback makes exactly one bounded Availability request and must not claim historical completeness; validate trusted snapshot URLs.",
+        "Export missing inline fixtures with provenance; keep source metadata/Jev cards and documentation aligned without changing the orchestrator",
+        "Own only named-engine source/fixture/metadata fragments. Request shared interface changes through the F06/F08 owner; aggregate catalog/docs integration is verified by G01."
+      ],
+      "acceptance": [
+        "For each engine replay success, valid empty, malformed/wrong-shape, HTTP failure, timeout/cancellation, auth/config and applicable paging/filter/media/payload cases",
+        "Assert outbound method/URL/parameters/auth placement and request count/order; use actual Rust parsers and compare normalized outputs",
+        "Map every existing named-engine regression test to a native case or reviewed supersession; no Python helper or live provider call",
+        "Run native conformance and registry completeness checks; all mismatches require explicit review, never blanket normalization"
+      ],
+      "sources": [
+        "engines/openlibrary.py",
+        "engines/musicbrainz.py",
+        "engines/tmdb.py",
+        "engines/nominatim.py",
+        "engines/internetarchive.py",
+        "tests/test_internetarchive_adapter.py",
+        "tests/test_openlibrary_url_contract.py",
+        "tests/test_media_contract.py"
+      ],
+      "handoff": "Native named-engine implementations, engine-local fixture packs and old-to-new regression mapping; consumes frozen interfaces and can run independently of other adapter batches.",
+      "engines": [
+        "openlibrary",
+        "musicbrainz",
+        "tmdb",
+        "nominatim",
+        "internetarchive"
+      ]
+    },
+    {
+      "id": "A10",
+      "title": "Port vulnerability and exploit knowledge adapters",
+      "lane": "adapters",
+      "depends_on": [
+        "A01"
+      ],
+      "problem": "Feature completeness requires native implementations of cve, nvd, epss, exploitdb, mitreattack, not generic wrappers or stubs.",
+      "scope": [
+        "Implement only these engines using the shared native transport/registry/outcome types: cve, nvd, epss, exploitdb, mitreattack",
+        "Preserve CVE endpoints, CVSS/EPSS numeric data, ExploitDB DataTables/CVE query and HTML fallback/count diagnostics, and MITRE HTML parsing.",
+        "Export missing inline fixtures with provenance; keep source metadata/Jev cards and documentation aligned without changing the orchestrator",
+        "Own only named-engine source/fixture/metadata fragments. Request shared interface changes through the F06/F08 owner; aggregate catalog/docs integration is verified by G01."
+      ],
+      "acceptance": [
+        "For each engine replay success, valid empty, malformed/wrong-shape, HTTP failure, timeout/cancellation, auth/config and applicable paging/filter/media/payload cases",
+        "Assert outbound method/URL/parameters/auth placement and request count/order; use actual Rust parsers and compare normalized outputs",
+        "Map every existing named-engine regression test to a native case or reviewed supersession; no Python helper or live provider call",
+        "Run native conformance and registry completeness checks; all mismatches require explicit review, never blanket normalization"
+      ],
+      "sources": [
+        "engines/cve.py",
+        "engines/nvd.py",
+        "engines/epss.py",
+        "engines/exploitdb.py",
+        "engines/mitreattack.py",
+        "tests/test_cve.py",
+        "tests/test_nvd.py",
+        "tests/test_epss.py",
+        "tests/test_exploitdb.py",
+        "tests/test_mitreattack.py"
+      ],
+      "handoff": "Native named-engine implementations, engine-local fixture packs and old-to-new regression mapping; consumes frozen interfaces and can run independently of other adapter batches.",
+      "engines": [
+        "cve",
+        "nvd",
+        "epss",
+        "exploitdb",
+        "mitreattack"
+      ]
+    },
+    {
+      "id": "A11",
+      "title": "Port ip and url intelligence adapters",
+      "lane": "adapters",
+      "depends_on": [
+        "A01"
+      ],
+      "problem": "Feature completeness requires native implementations of abuseipdb, greynoise, otx, urlhaus, not generic wrappers or stubs.",
+      "scope": [
+        "Implement only these engines using the shared native transport/registry/outcome types: abuseipdb, greynoise, otx, urlhaus",
+        "Preserve IOC detection, lookup-versus-search routing, request counts, auth/redaction and structured evidence.",
+        "Export missing inline fixtures with provenance; keep source metadata/Jev cards and documentation aligned without changing the orchestrator",
+        "Own only named-engine source/fixture/metadata fragments. Request shared interface changes through the F06/F08 owner; aggregate catalog/docs integration is verified by G01."
+      ],
+      "acceptance": [
+        "For each engine replay success, valid empty, malformed/wrong-shape, HTTP failure, timeout/cancellation, auth/config and applicable paging/filter/media/payload cases",
+        "Assert outbound method/URL/parameters/auth placement and request count/order; use actual Rust parsers and compare normalized outputs",
+        "Map every existing named-engine regression test to a native case or reviewed supersession; no Python helper or live provider call",
+        "Run native conformance and registry completeness checks; all mismatches require explicit review, never blanket normalization"
+      ],
+      "sources": [
+        "engines/abuseipdb.py",
+        "engines/greynoise.py",
+        "engines/otx.py",
+        "engines/urlhaus.py",
+        "tests/test_abuseipdb.py",
+        "tests/test_greynoise.py",
+        "tests/test_otx.py",
+        "tests/test_urlhaus.py"
+      ],
+      "handoff": "Native named-engine implementations, engine-local fixture packs and old-to-new regression mapping; consumes frozen interfaces and can run independently of other adapter batches.",
+      "engines": [
+        "abuseipdb",
+        "greynoise",
+        "otx",
+        "urlhaus"
+      ]
+    },
+    {
+      "id": "A12",
+      "title": "Port infrastructure security enrichment adapters",
+      "lane": "adapters",
+      "depends_on": [
+        "A01"
+      ],
+      "problem": "Feature completeness requires native implementations of censys, shodan, virustotal, vulncheck, crtsh, not generic wrappers or stubs.",
+      "scope": [
+        "Implement only these engines using the shared native transport/registry/outcome types: censys, shodan, virustotal, vulncheck, crtsh",
+        "Preserve provider auth/target routing. CRT.sh must distinguish challenge HTML, other HTML, malformed JSON and malformed certificate rows without leaking response bodies or credentials.",
+        "Export missing inline fixtures with provenance; keep source metadata/Jev cards and documentation aligned without changing the orchestrator",
+        "Own only named-engine source/fixture/metadata fragments. Request shared interface changes through the F06/F08 owner; aggregate catalog/docs integration is verified by G01."
+      ],
+      "acceptance": [
+        "For each engine replay success, valid empty, malformed/wrong-shape, HTTP failure, timeout/cancellation, auth/config and applicable paging/filter/media/payload cases",
+        "Assert outbound method/URL/parameters/auth placement and request count/order; use actual Rust parsers and compare normalized outputs",
+        "Map every existing named-engine regression test to a native case or reviewed supersession; no Python helper or live provider call",
+        "Run native conformance and registry completeness checks; all mismatches require explicit review, never blanket normalization"
+      ],
+      "sources": [
+        "engines/censys.py",
+        "engines/shodan.py",
+        "engines/virustotal.py",
+        "engines/vulncheck.py",
+        "engines/crtsh.py",
+        "tests/test_censys.py",
+        "tests/test_shodan.py",
+        "tests/test_virustotal.py",
+        "tests/test_vulncheck.py",
+        "tests/test_crtsh.py"
+      ],
+      "handoff": "Native named-engine implementations, engine-local fixture packs and old-to-new regression mapping; consumes frozen interfaces and can run independently of other adapter batches.",
+      "engines": [
+        "censys",
+        "shodan",
+        "virustotal",
+        "vulncheck",
+        "crtsh"
+      ]
+    },
+    {
+      "id": "A13",
+      "title": "Port sensitive and asynchronous intelligence adapters",
+      "lane": "adapters",
+      "depends_on": [
+        "A01",
+        "F09"
+      ],
+      "problem": "Feature completeness requires native implementations of hibp, dehashed, intelx, not generic wrappers or stubs.",
+      "scope": [
+        "Implement only these engines using the shared native transport/registry/outcome types: hibp, dehashed, intelx",
+        "Preserve actual catalog sensitivity rather than broadening it; fabricated identities only. DeHashed basic auth and IntelX start/delay/results sequence need exact tests and predispatch policy denial.",
+        "Export missing inline fixtures with provenance; keep source metadata/Jev cards and documentation aligned without changing the orchestrator",
+        "Own only named-engine source/fixture/metadata fragments. Request shared interface changes through the F06/F08 owner; aggregate catalog/docs integration is verified by G01."
+      ],
+      "acceptance": [
+        "For each engine replay success, valid empty, malformed/wrong-shape, HTTP failure, timeout/cancellation, auth/config and applicable paging/filter/media/payload cases",
+        "Assert outbound method/URL/parameters/auth placement and request count/order; use actual Rust parsers and compare normalized outputs",
+        "Map every existing named-engine regression test to a native case or reviewed supersession; no Python helper or live provider call",
+        "Run native conformance and registry completeness checks; all mismatches require explicit review, never blanket normalization"
+      ],
+      "sources": [
+        "engines/hibp.py",
+        "engines/dehashed.py",
+        "engines/intelx.py",
+        "tests/test_hibp.py",
+        "tests/test_dehashed.py",
+        "tests/test_intelx.py",
+        "tests/test_mcp_security.py"
+      ],
+      "handoff": "Native named-engine implementations, engine-local fixture packs and old-to-new regression mapping; consumes frozen interfaces and can run independently of other adapter batches.",
+      "engines": [
+        "hibp",
+        "dehashed",
+        "intelx"
+      ]
+    },
+    {
+      "id": "A14",
+      "title": "Port ats jobs and company targeting adapters",
+      "lane": "adapters",
+      "depends_on": [
+        "A01"
+      ],
+      "problem": "Feature completeness requires native implementations of ashby, greenhouse, lever, not generic wrappers or stubs.",
+      "scope": [
+        "Implement only these engines using the shared native transport/registry/outcome types: ashby, greenhouse, lever",
+        "Own the shared jobs utility port. Preserve board/company extraction, endpoints, matching, location/employment metadata and filter-enforcement honesty.",
+        "Export missing inline fixtures with provenance; keep source metadata/Jev cards and documentation aligned without changing the orchestrator",
+        "Own only named-engine source/fixture/metadata fragments. Request shared interface changes through the F06/F08 owner; aggregate catalog/docs integration is verified by G01."
+      ],
+      "acceptance": [
+        "For each engine replay success, valid empty, malformed/wrong-shape, HTTP failure, timeout/cancellation, auth/config and applicable paging/filter/media/payload cases",
+        "Assert outbound method/URL/parameters/auth placement and request count/order; use actual Rust parsers and compare normalized outputs",
+        "Map every existing named-engine regression test to a native case or reviewed supersession; no Python helper or live provider call",
+        "Run native conformance and registry completeness checks; all mismatches require explicit review, never blanket normalization"
+      ],
+      "sources": [
+        "engines/ashby.py",
+        "engines/greenhouse.py",
+        "engines/lever.py",
+        "tests/test_jobs_adapters.py",
+        "slopsearx/jobs_utils.py"
+      ],
+      "handoff": "Native named-engine implementations, engine-local fixture packs and old-to-new regression mapping; consumes frozen interfaces and can run independently of other adapter batches.",
+      "engines": [
+        "ashby",
+        "greenhouse",
+        "lever"
+      ]
+    },
+    {
+      "id": "O05",
+      "title": "Replace backend-importing tests and isolate optional Python clients",
+      "lane": "quality",
+      "depends_on": [
+        "W09",
+        "T03",
+        "T07",
+        "T08",
+        "W10",
+        "A01",
+        "A02",
+        "A03",
+        "A04",
+        "A05",
+        "A06",
+        "A07",
+        "A08",
+        "A09",
+        "A10",
+        "A11",
+        "A12",
+        "A13",
+        "A14"
+      ],
+      "problem": "Temporary Python parity oracles must not become a permanent backend dependency.",
+      "scope": [
+        "Convert implementation/unit/integration tests that import backend modules into Rust tests",
+        "Retain or rewrite independent HTTP/MCP client tests; separate any allowed Python client package and dependencies",
+        "Remove Python launchers/fixtures that start the old backend; preserve fixture provenance and external comparison evidence"
+      ],
+      "acceptance": [
+        "Rust backend build and the native replacement gate set pass with Python absent from PATH; temporary baseline-oracle jobs remain separate until O09/G08.",
+        "Python retained within the migrated test/client scope is optional client-only and imports no backend/adapter/FFI implementation; repository-wide deletion is reserved for G08.",
+        "All original capability tests have a successor or reviewed redundancy rationale; coverage is behavioral, not merely a line percentage"
+      ],
+      "sources": [
+        "tests",
+        "slopsearx/mcp/harness.py",
+        ".github/workflows/ci.yml",
+        "pyproject.toml"
+      ],
+      "handoff": "Native backend test suite, isolated optional client tests and coverage traceability ledger."
+    },
+    {
+      "id": "O06",
+      "title": "Prepare native CI and protected review successors",
+      "lane": "tooling",
+      "depends_on": [
+        "F03",
+        "F01"
+      ],
+      "problem": "Backend Python can linger in pre-commit, dependency analysis, release jobs and security-sensitive review publication.",
+      "scope": [
+        "Inventory local/inline Python execution in CI/pre-commit/PR templates and implement additive native successors while retaining current required Python gates.",
+        "Preserve protected review publication trust boundaries; replace project-owned Python invocation with a native or wire-client integration rather than deleting the security gate",
+        "Keep optional Python-client checks in a separately scoped job; external provider implementation languages are not part of SlopSearX runtime"
+      ],
+      "acceptance": [
+        "A successor mapping exists for every backend build/test/release/review gate; native review/helper checks are tested independently without disabling existing gates.",
+        "Pinned review provenance, untrusted PR isolation and publication permissions remain verified",
+        "No required check disappears without a successor mapping; any external integration decision is resolved before final removal"
+      ],
+      "sources": [
+        ".pre-commit-config.yaml",
+        ".github/workflows/ci.yml",
+        ".github/workflows/codeql.yml",
+        ".github/workflows/pr-publish.yml",
+        ".github/PULL_REQUEST_TEMPLATE.md"
+      ],
+      "handoff": "Additive native CI/review integrations and a gate-transition plan for O09; no premature Python gate removal."
+    },
+    {
+      "id": "S01",
+      "title": "Restore upstream advisory coverage for private crate forks",
+      "lane": "security",
+      "depends_on": [
+        "F03",
+        "O06"
+      ],
+      "problem": "Local path forks have no Cargo metadata source, so cargo-deny 0.20.2 can skip their upstream advisory identity. Source provenance alone does not prove current advisory coverage.",
+      "scope": [
+        "Inventory active third-party local/path forks from current Cargo metadata and distinguish them from project-owned workspace crates",
+        "Bind each reviewed mapping to the physical manifest and package identity, upstream name/version, pristine archive checksum, license and patch provenance; reject unknown or stale mappings",
+        "Keep the real physical dependency graph and existing cargo-deny checks unchanged; derive a clearly labeled, source-bound metadata view only for upstream advisory identity matching",
+        "Exercise pinned cargo-deny with deterministic advisory fixtures and a sufficiently fresh database in required CI; retain exact source, tool, database and output provenance",
+        "Document the limits of upstream identity scanning and carry accepted evidence into T07, G02 and final G09 acceptance"
+      ],
+      "acceptance": [
+        "All active non-workspace forks are enumerated; canonical and renamed forks map to reviewed identities and unknown, missing or tampered provenance fails closed",
+        "The original physical metadata/lock and existing advisory, bans, license and source checks remain intact; the derived view cannot be used as resolver, feature, TLS or shipping evidence",
+        "Real-tool fixtures demonstrate the raw local-source omission and the mapped advisory match, asserting the expected advisory ID, package and version; parse/configuration failures are not counted as findings",
+        "Required CI scans the source-bound advisory view with a sufficiently fresh database and records source revision, metadata hashes, mappings, tool/database identity, command, exit and diagnostics",
+        "Exact-head native tests and hosted CI pass; maintenance guidance and source bindings are updated without changing permissions, triggers or historical evidence"
+      ],
+      "sources": [
+        "Cargo.lock",
+        "crates/xtask/src/t08a.rs",
+        "crates/xtask/src/t08a_custody.rs",
+        "crates/xtask/src/t08a_main_join.rs",
+        "docs/rust-rewrite/t08a/hyper-provenance.json",
+        "docs/rust-rewrite/t08a/PRIVATE_HTTP_MAINTENANCE.md",
+        ".github/workflows/rust.yml",
+        "cargo-deny 0.20.2 --metadata-path"
+      ],
+      "handoff": "A source-bound advisory identity adapter and real cargo-deny fixture results alongside the unchanged physical graph scan; no Python helper, fabricated resolver result or production activation."
+    },
+    {
+      "id": "P01",
+      "title": "Port bounded publication-date enforcement and proof from #874",
+      "lane": "search",
+      "depends_on": [
+        "A06",
+        "F14",
+        "T02",
+        "T03",
+        "T06"
+      ],
+      "problem": "The Python HTTP path once dropped date_from/date_to, so bounded searches could return unbounded results as if they were valid. The native rewrite must preserve the corrected date-proof contract across the integrated stack.",
+      "scope": [
+        "Carry inclusive calendar bounds through the actual registered OpenAlex adapter, shared SearchService and disposable Valkey cache",
+        "Enforce explicit audited OpenAlex-only scope and reject malformed, reversed, repeated, unknown, contradictory or unsupported bounded requests before dispatch",
+        "Preserve date proof, engine outcomes, upstream provenance and absolute bounds through native HTTP/form, science MCP, JSON/YAML and portal pagination/format links",
+        "Separate date-bound cache identities and reacquire legacy or mismatching-proof entries; reject bounded CSV/RSS before acquisition while retaining unbounded compatibility",
+        "Map #874 regressions to real Rust HTTP/MCP/adapter/parser coverage or reviewed supersession using deterministic upstream fixtures"
+      ],
+      "acceptance": [
+        "HTTP GET and form POST on / and /search forward exact inclusive bounds to OpenAlex; one-sided, equal-date and leap-day cases pass with actual mocked upstream requests",
+        "Invalid, repeated, unknown, contradictory, implicit, mixed, unsupported or unaudited scopes reject before engine dispatch without changing specialist permissions",
+        "JSON, YAML, science MCP and portal expose truthful matching date proof, audited upstream:openalex provenance, selected engine identity, absolute bounds and preserved acquisition failures",
+        "Cache keys separate bounds; proof and publication dates round-trip; legacy and mismatching proof entries reacquire; bounded CSV/RSS reject before acquisition",
+        "All #874 regressions have exact native evidence or reviewed supersession, and integrated exact-head CI plus portal coverage pass without live provider calls"
+      ],
+      "sources": [
+        "docs/DATE_FILTERS.md",
+        "engines/openalex.py",
+        "slopsearx/service.py",
+        "slopsearx/filters.py",
+        "slopsearx/formatter.py",
+        "slopsearx/mcp/tools.py",
+        "tests/test_server.py",
+        "tests/test_filter_semantics.py",
+        "tests/test_mcp_enforcement.py",
+        "tests/test_mcp_tools.py"
+      ],
+      "handoff": "Integrated native publication-date proof and regression trace bound to the actual OpenAlex adapter, HTTP/forms, science MCP, cache, JSON/YAML and portal artifacts; required by G01 before parity acceptance."
+    },
+    {
+      "id": "G01",
+      "title": "Prove integrated full-feature and all-adapter parity",
+      "lane": "qualification",
+      "depends_on": [
+        "A01",
+        "A02",
+        "A03",
+        "A04",
+        "A05",
+        "A06",
+        "A07",
+        "A08",
+        "A09",
+        "A10",
+        "A11",
+        "A12",
+        "A13",
+        "A14",
+        "W10",
+        "F15",
+        "T07",
+        "T08",
+        "O01",
+        "O04",
+        "O05",
+        "P01"
+      ],
+      "problem": "Individually passing slices are insufficient until every public path uses the native services together.",
+      "scope": [
+        "Execute F01 capability matrix across all 51 adapters, HTTP formats, portal journeys, 38 baseline tools and all discovery modes",
+        "Test integrated cross-source dedup/provenance/filter claims, sensitive policy, Europe PMC attribution and scholarly evidence",
+        "Run compiled release artifacts with deterministic upstream/IdP fixtures; compare direct/gateway and public/protected surfaces"
+      ],
+      "acceptance": [
+        "Zero unclassified contract differences and zero missing capabilities; new upstream additions are explicitly reconciled",
+        "All suites execute without Python backend code or stubs; compiled artifact SHA/digest is recorded",
+        "A complete traceability report maps each baseline capability/regression to passing evidence; remaining optional client Python is isolated",
+        "Europe PMC remains opt-in and lite-only; both attribution and preprint notices survive deduplication, compact MCP projection and portal rendering.",
+        "P01 publication-date proof and regression evidence are included in the integrated artifact traceability report."
+      ],
+      "sources": [
+        "tests",
+        "docs/MCP_CONTRACT.md",
+        "docs/SEARXNG_API_CONTRACT.md",
+        "docs/PORTAL_ACCEPTANCE.md",
+        "tests/test_europepmc.py"
+      ],
+      "handoff": "Full parity report bound to exact native release artifacts; prerequisite for qualification/cutover."
+    },
+    {
+      "id": "G02",
+      "title": "Qualify security, multi-process recovery and overload behavior",
+      "lane": "qualification",
+      "depends_on": [
+        "W10",
+        "O01",
+        "T05",
+        "S01"
+      ],
+      "problem": "Type safety and happy-path tests cannot prove tenant isolation, token use or durable recovery.",
+      "scope": [
+        "Run adversarial cross-surface policy/tenant/CSRF/OIDC/OAuth denial matrices and secret-leak fixtures",
+        "Inject process kills, lost Valkey replies, lease expiry, stale owners, cancellation and simultaneous retries",
+        "Exercise bounded admission/body/parser/telemetry budgets, fair service and cleanup under overload"
+      ],
+      "acceptance": [
+        "No unauthorized provider dispatch, token replay, evidence overwrite or duplicate scheduled publication occurs in registered scenarios",
+        "Every crash point conserves evidence/budgets and recovers or reports explicit unavailable state",
+        "Security review and reproducible fault scripts bind to exact head; remaining risks have explicit disposition, not silent waivers"
+      ],
+      "sources": [
+        "tests/test_mcp_security.py",
+        "tests/test_research_durability.py",
+        "tests/test_saved_events_valkey.py",
+        "tests/test_staged_valkey_integration.py",
+        "docs/PORTAL_ACCEPTANCE.md"
+      ],
+      "handoff": "Security and distributed-failure qualification report with deterministic reproductions."
+    },
+    {
+      "id": "G03",
+      "title": "Measure native resource and performance outcomes",
+      "lane": "qualification",
+      "depends_on": [
+        "G01",
+        "G02"
+      ],
+      "problem": "The rewrite has plausible efficiency benefits but no measured gain yet.",
+      "scope": [
+        "Preregister paired workloads, primary metric/useful-effect threshold, budgets and stopping rules before measuring",
+        "Measure cache hit/orchestration/parser/grouping CPU, RSS at concurrency, throughput/tail latency, startup and image/binary size",
+        "Compare identical outputs/configs and separate upstream wait from local overhead; evaluate immutable sharing/pooling changes explicitly"
+      ],
+      "acceptance": [
+        "Retain raw runs and negative/inconclusive outcomes with environment/source/artifact identifiers",
+        "Policy/result/relevance/provider-request-count guardrails pass; performance cannot excuse parity failures",
+        "Report observed gains or regressions honestly; frozen acceptance targets are not retroactively relaxed"
+      ],
+      "sources": [
+        "docs/experiments/README.md",
+        "docs/experiments/DESIGN.md",
+        "docs/PORTAL_ACCEPTANCE.md"
+      ],
+      "handoff": "Performance readout and capacity defaults supported by evidence, not a Rust speedup assumption."
+    },
+    {
+      "id": "G04",
+      "title": "Implement and rehearse durable-state migration and rollback",
+      "lane": "state",
+      "depends_on": [
+        "W09",
+        "T05",
+        "T09"
+      ],
+      "problem": "Existing state includes far more than disposable cache entries and must survive coexistence or a controlled drain.",
+      "scope": [
+        "Inventory records/indexes/leases/due queues/events/cursors/tombstones/idempotency/session/OAuth namespaces and TTL margins",
+        "Build native inspect/export/validate/migrate/reconcile commands under the F02 compatibility decision",
+        "Rehearse drain or compatible mixed-version workers; verify forward and reverse readability for records written after cutover"
+      ],
+      "acceptance": [
+        "Counts, stable IDs, evidence digests, index membership, horizons and authority reconcile on a representative sanitized dataset",
+        "Restart/interrupted migration/retry/rollback cannot create simultaneous valid owners, duplicate committed publication or lost evidence. Unknown remote request outcomes remain charged and explicit; do not claim exactly-once upstream execution.",
+        "Rollback is tested before traffic migration; no global flush, uncontrolled production write or incompatible dual ownership",
+        "Migrate durable expiry/TTL semantics, not process-local monotonic timestamp values; clock-jump and restart fixtures pass."
+      ],
+      "sources": [
+        "slopsearx/research_store.py",
+        "slopsearx/saved_store.py",
+        "slopsearx/staged.py",
+        "slopsearx/snapshot.py",
+        "slopsearx/retrieval_receipts.py",
+        "slopsearx/portal_auth.py",
+        "slopsearx/mcp/oauth.py"
+      ],
+      "handoff": "Native migration tooling, namespace manifest and timed rollback rehearsal evidence."
+    },
+    {
+      "id": "O07",
+      "title": "Port backend-coupled acquisition and replay drivers",
+      "lane": "tooling",
+      "depends_on": [
+        "O03",
+        "W09"
+      ],
+      "problem": "Active experiment acquisition directly imports SearchService, ranking and adapters and must use the native implementation.",
+      "scope": [
+        "Port active acquisition, source selection, frozen-pool and replay execution commands to Rust or an explicit native wire interface.",
+        "Preserve admission, request/cost bounds, source/authority checks, deadline and cancellation behavior.",
+        "Generate prospective receipts under O03 schemas without rewriting historical evidence."
+      ],
+      "acceptance": [
+        "Acquisition/replay fixtures preserve source order, dispatch counts, budgets and failure classification without Python backend imports.",
+        "Default tests are offline; live/provider use requires separately registered bounded authorization.",
+        "Every assigned active driver has a tested replacement and old-to-new command mapping."
+      ],
+      "sources": [
+        "scripts/coverage_pipeline_inputs.py",
+        "scripts/coverage_frozen_pool_collect.py",
+        "scripts/coverage_study_acquire.py",
+        "scripts/coverage_selector_input_map.py",
+        "scripts/coverage_live_acquire.py",
+        "scripts/coverage_operator_runner.py"
+      ],
+      "handoff": "Native acquisition/replay executables and bounded execution fixture evidence."
+    },
+    {
+      "id": "O08",
+      "title": "Port evidence receipts, qualification and verification tools",
+      "lane": "tooling",
+      "depends_on": [
+        "O03",
+        "O07"
+      ],
+      "problem": "Python-environment bindings and Python-only qualification tools would prevent a complete operational rewrite.",
+      "scope": [
+        "Implement native Rust runtime/source/binary receipt issuance and verification under versioned O03 contracts.",
+        "Port active qualification, material-lock, authority, accounting and stage-finalization verifiers and connect O07 outputs.",
+        "Retain immutable historical evidence with explicit schema-aware readers; retire old executable backend code after cutover."
+      ],
+      "acceptance": [
+        "Corrupted hashes, runtime identity, authority, clocks, budgets and incomplete evidence cause nonzero verifier exits.",
+        "Known accepted/rejected/inconclusive fixture cases preserve outcomes; validators do not merely count files.",
+        "Active evaluation commands execute without Python; prospective evidence names the exact native artifact and all tooling dispositions close."
+      ],
+      "sources": [
+        "scripts/coverage_runtime_environment.py",
+        "scripts/coverage_external_invocation.py",
+        "scripts/coverage_external_issuer.py",
+        "scripts/coverage_gate_calculation.py",
+        "scripts/coverage_stage_finalization.py",
+        "tests/test_coverage_saved_method_materials.py"
+      ],
+      "handoff": "Native evidence/verifier tools, versioned receipt compatibility and complete active-tool replacement evidence."
+    },
+    {
+      "id": "O09",
+      "title": "Switch required CI and release gates to native implementations",
+      "lane": "tooling",
+      "depends_on": [
+        "O05",
+        "O02",
+        "O08",
+        "O06"
+      ],
+      "problem": "Python gates must be removed only after all native successor suites and tools exist.",
+      "scope": [
+        "Activate the accepted native fmt/lint/test/security/architecture/Valkey/protocol/browser/release/evidence gates.",
+        "Update required-check mappings, pre-commit, CodeQL/dependency automation and PR templates without weakening protected review trust.",
+        "Isolate optional Python-client checks; retain the temporary baseline reference only outside mandatory native paths until G08 deletion."
+      ],
+      "acceptance": [
+        "All default mandatory backend CI/release commands run without Python and cover the original capability/gate matrix.",
+        "No required check is silently dropped; protected review publication provenance and permissions remain verified.",
+        "A clean checkout exercises the native pipeline and documented contributor commands; G08 owns final backend source deletion."
+      ],
+      "sources": [
+        ".github/workflows",
+        ".pre-commit-config.yaml",
+        ".github/PULL_REQUEST_TEMPLATE.md",
+        "CONTRIBUTING.md",
+        "pyproject.toml"
+      ],
+      "handoff": "Verified native-only mandatory gate set and explicit predecessor-to-successor CI mapping."
+    },
+    {
+      "id": "G05",
+      "title": "Publish native operator and contributor migration runbooks",
+      "lane": "operations",
+      "depends_on": [
+        "O04",
+        "O06",
+        "G04",
+        "O08",
+        "O09"
+      ],
+      "problem": "Operators and future contributors need commands that actually work after Python backend removal.",
+      "scope": [
+        "Update README/AGENTS/spec/adapter guide/MCP/portal/Compose/Kubernetes/install/release instructions for Rust",
+        "Document config/CLI compatibility, data migration, rollback triggers and supported platforms",
+        "Assign rollout owner, freeze thresholds/minimum windows, reconcile changes arriving on main and map former CI gates to successors"
+      ],
+      "acceptance": [
+        "Every production example uses native binaries or containers; optional Python clients are clearly separate",
+        "Run all documented build/start/health/migrate/smoke commands in clean environments",
+        "Runbook includes exact artifacts, rollback command/state policy and ownership; no guessed production authority or deployment occurs in this issue"
+      ],
+      "sources": [
+        "README.md",
+        "AGENTS.md",
+        "CONTRIBUTING.md",
+        "spec.md",
+        "docs/ENGINE_ADAPTERS.md",
+        "docs/MCP_SERVER.md",
+        "docs/PORTAL_DEPLOYMENT.md",
+        "docker-compose.yml",
+        "k8s"
+      ],
+      "handoff": "Executable native operations/development runbooks and approved rollout gate definitions."
+    },
+    {
+      "id": "G06",
+      "title": "Rehearse the exact release in isolated staging",
+      "lane": "release",
+      "depends_on": [
+        "G01",
+        "G02",
+        "G03",
+        "G05"
+      ],
+      "problem": "Local test success is not evidence that published artifacts and migration procedures work together.",
+      "scope": [
+        "Deploy exact candidate binary/image digests into isolated staging with representative sanitized Valkey state",
+        "Run full public/protected HTTP/MCP/browser/client journeys, restart/scale checks and a timed rollback",
+        "Audit filesystem/process/build/deploy paths for Python backend dependency before release authorization"
+      ],
+      "acceptance": [
+        "Published artifact provenance/checksums match tested source; no debug-only success claim",
+        "Forward migration and rollback preserve data/authority and avoid duplicate provider work",
+        "Frozen parity/security/performance gates pass for the predefined staging window; owner records go/no-go evidence"
+      ],
+      "sources": [
+        "docs/PORTAL_DEPLOYMENT.md",
+        "docs/PORTAL_ACCEPTANCE.md",
+        "docker-compose.yml",
+        "k8s",
+        ".github/workflows/image-promotion.yml"
+      ],
+      "handoff": "Exact-artifact staging and rollback evidence; explicit production go/no-go packet."
+    },
+    {
+      "id": "G07",
+      "title": "Canary and cut over production to native services",
+      "lane": "release",
+      "depends_on": [
+        "G06"
+      ],
+      "problem": "A gradual transition must not duplicate scheduled work or provider spend and must remain reversible.",
+      "scope": [
+        "Obtain explicit production rollout authorization for the concrete G06 artifacts and runbook",
+        "Execute declared canary stages and minimum observation windows with one authoritative scheduler/worker ownership scheme",
+        "Monitor predefined error/latency/dispatch/resource/tenant/evidence signals and perform rollback on any gate breach"
+      ],
+      "acceptance": [
+        "Each traffic stage has recorded artifact, observations, gate decision and remaining risk",
+        "No duplicate paid/live requests are created for shadow comparison; replay or specifically authorized budgets are used",
+        "Full traffic and every background schedule/process use Rust; rollback window and operational retirement date are recorded"
+      ],
+      "sources": [
+        "docs/PORTAL_DEPLOYMENT.md",
+        "docker-compose.yml",
+        "k8s"
+      ],
+      "handoff": "Authorized production cutover evidence with final artifact identity and rollback-window decision."
+    },
+    {
+      "id": "G08",
+      "title": "Remove all backend Python source and runtime dependencies",
+      "lane": "retirement",
+      "depends_on": [
+        "G07",
+        "O05",
+        "O06",
+        "O08",
+        "O09"
+      ],
+      "problem": "The user explicitly requires a fully finished rewrite, not a Rust front end over retained Python services.",
+      "scope": [
+        "After the declared rollback window, remove engines/slopsearx Python implementation, backend entrypoints/dependencies and obsolete launch/build/test scripts",
+        "Keep historical evidence data/captures immutable and non-executable. Runnable old backend source remains only in Git history, not an active archive directory; file-extension exceptions require explicit evidence classification and cannot ship as executable backend code.",
+        "Classify every remaining Python file as separately packaged optional client-only code; remove hidden subprocess/FFI/sidecar/backend-import paths"
+      ],
+      "acceptance": [
+        "Static inventory plus clean build/image/process/cron/service audits show zero active backend Python, libpython, PyO3 or interpreter fallback",
+        "Mandatory backend CI, deployment, migrations, health and active evaluation commands run without Python",
+        "All former sources/tests/tools have replacement or reviewed retirement; no feature disappears just to satisfy deletion",
+        "Run server, worker, ssx, gateway, migration, health and required tooling in a clean minimal environment with no Python/libpython, no old backend reachable, and egress restricted to deterministic fixtures and Valkey; detect remote fallback as well as embedded interpreters."
+      ],
+      "sources": [
+        "pyproject.toml",
+        "slopsearx",
+        "engines",
+        "scripts",
+        "tests",
+        "Dockerfile",
+        ".github/workflows",
+        ".pre-commit-config.yaml"
+      ],
+      "handoff": "Backend Python deletion PR, final disposition manifest and Python-free execution evidence."
+    },
+    {
+      "id": "G09",
+      "title": "Verify final Rust-only release and close rewrite acceptance",
+      "lane": "release",
+      "depends_on": [
+        "G08",
+        "S01"
+      ],
+      "problem": "Closing the milestone requires observed end-state evidence after cleanup, not just merged implementation tickets.",
+      "scope": [
+        "Rerun exact-artifact parity/security/browser/Valkey/client tests after deletion and publish the final release",
+        "Verify deployed server, worker, scheduled tools and gateway/CLI installations use the accepted native artifacts",
+        "Reconcile all milestone issues, intentional differences, current main drift and remaining optional Python client boundary"
+      ],
+      "acceptance": [
+        "No backend Python source/runtime/install dependency remains in the delivered tree or active deployment",
+        "All F01 capabilities and 51 engines remain covered, current-source drift is reconciled and no unresolved blocking findings remain",
+        "Publish final source/digest, migration/rollback outcome, measured benefits/limitations and optional client inventory; only then close the epic/milestone"
+      ],
+      "sources": [
+        "docs/rust-rewrite/CASE_STUDY.md",
+        "docs/rust-rewrite/plan.json",
+        "docs/PORTAL_ACCEPTANCE.md"
+      ],
+      "handoff": "Final acceptance report and verified completed Rust Rewrite milestone."
+    }
+  ]
+}

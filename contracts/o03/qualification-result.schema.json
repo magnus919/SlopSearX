@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://slopsearx.invalid/contracts/o03/qualification-result-1.0.0.schema.json",
+  "title": "Prospective native qualification result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "plan_id",
+    "runtime_receipt_sha256",
+    "checks",
+    "outcome",
+    "reason_codes",
+    "source_sha256",
+    "decision_timestamp_unix_ms"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "plan_id": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9-]*$"
+    },
+    "runtime_receipt_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "check_id",
+          "status",
+          "evidence_sha256"
+        ],
+        "properties": {
+          "check_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "enum": [
+              "passed",
+              "failed",
+              "not_run",
+              "unknown"
+            ]
+          },
+          "evidence_sha256": {
+            "$ref": "#/$defs/sha256"
+          }
+        }
+      }
+    },
+    "outcome": {
+      "enum": [
+        "accepted",
+        "rejected",
+        "inconclusive",
+        "blocked",
+        "failure",
+        "outcome_unknown"
+      ]
+    },
+    "reason_codes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "source_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "decision_timestamp_unix_ms": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}

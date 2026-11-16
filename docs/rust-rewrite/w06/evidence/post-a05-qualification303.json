@@ -1,0 +1,197 @@
+{
+  "schema_version": 1,
+  "plan_id": "W06",
+  "scope": "local post-A05 integrated qualification for PR992; fresh final-head CI/review/delivery pending",
+  "qualified_head": "54cabc795edbfc43cb8829f8bf0c466bf26dfba3",
+  "parents": [
+    "9de1abd3d44c774d77e7d8e2f9811a8d94115adf",
+    "93db215de1c5b59ffdcac035a79ffcbd8e806762"
+  ],
+  "toolchain": "Rust1.99.0, explicit child RUSTUP_TOOLCHAIN=1.99.0, CARGO_INCREMENTAL=0",
+  "host": "aarch64-apple-darwin",
+  "valkey": "private Valkey8.1.10",
+  "provider_calls": 0,
+  "production_state_used": false,
+  "qualification_sha256": "18c907fcbe81cea06eef1cb94366059abae63d0baca791936c41449cb010c607",
+  "gate_source_sha256": "c29d0d29b20dbca1bd7b97bdc8ac59d4a9525b7c22420fad0d9dc33be4dfa982",
+  "source_reconciliation": {
+    "parent_review_path": "/private/tmp/w06-parent-a05-union-review.json",
+    "parent_review_sha256": "371b225415b31a195d55947042bfd3b7bd8b6ea7194ade62cc1d064608bc06bc",
+    "approved_proposal_sha256": "706de300f57ecb95e38b673a3ab98ca13a94e9a409074930aa0ea7704cd87d49",
+    "owned_source_changes": {
+      "Cargo.lock": {
+        "before_sha256": "da352846b0c840c02493a135de5f9bb733907f702b1133cd56e0ee49fae8052e",
+        "after_sha256": "b7fd45a8e8a0bd28ffe0cc23f83acb3cc34363c8cb91f004395f9da2463ba579"
+      },
+      "crates/ssx-infra/Cargo.toml": {
+        "before_sha256": "6523a44e34259bb656a4cd61983ac05f3b9269847b7f5014e7ec66bb823c5c23",
+        "after_sha256": "98ba70c193036e309e2f8f01a9bd96a75476bbb96bf53f2e2d47ebf8baeb6ac2"
+      },
+      "crates/ssx-infra/src/lib.rs": {
+        "before_sha256": "fb39989daa0d42f1922bb1facde3ec31f6bf5bd6a595d2db83d5ae72d8613b5e",
+        "after_sha256": "8bc126d2f8f691ed5ed7f468a5eab80967f7bab5b87c3641ae7953edb5b4bec1"
+      }
+    },
+    "other11_owned_files_unchanged": true,
+    "nonworkspace_lock_record_union": {
+      "comparison": "full canonical JSON object Counter equality; W06+main-commonbase, preserving multiplicity",
+      "base": 330,
+      "w06": 330,
+      "main": 341,
+      "proposed": 341,
+      "exact_match": true
+    }
+  },
+  "source_cases": 248,
+  "native_cases": 55,
+  "actual_unique_case_receipts": 303,
+  "semantic_tests": 37,
+  "explicit_process_probe": 1,
+  "case_validation": "All303 actual completion receipts match exact qualified case IDs and expected test names; every37 semantic test executed passed0ignored; process probe proved by parent test.",
+  "reference_controls_source_only": [
+    "review.runner.deadline_after_acknowledged_renewal",
+    "review.runner.actual_shared_rate_denial",
+    "review.runner.presave_revocation.sensitive",
+    "review.runner.presave_revocation.staged_grant"
+  ],
+  "gates": [
+    {
+      "plan_id": "W06",
+      "status": "passed",
+      "artifact": "/Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/W06-post-A05-54cabc79-r1.json",
+      "sha256": "2a170404fd3d1cc6667e64f7eada528a998ff23d93c306fcc0764b714f450225",
+      "executed_commands": 71,
+      "summary_records": 1
+    },
+    {
+      "plan_id": "F01",
+      "status": "passed",
+      "artifact": "/Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/F01-post-A05-54cabc79-r1.json",
+      "sha256": "00f2c970b6f3ce8644c24a43158daf501475fe5ae5e0661dff9422f224f52f4c",
+      "executed_commands": 475,
+      "summary_records": 0
+    },
+    {
+      "plan_id": "O06",
+      "status": "passed",
+      "artifact": "/Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/O06-post-A05-54cabc79-r1.json",
+      "sha256": "53258af56068a28d4bd7d24b42519c887020e6281279f2ba179f8e286ad7a92f",
+      "executed_commands": 1,
+      "summary_records": 0
+    },
+    {
+      "plan_id": "W04",
+      "status": "passed",
+      "artifact": "/Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/W04-post-A05-54cabc79-r1.json",
+      "sha256": "b115cef1d0933f68eed77e88bda4161f265c947325b32d4df7f23a5ad30fd762",
+      "executed_commands": 17,
+      "summary_records": 1
+    },
+    {
+      "plan_id": "W11",
+      "status": "passed",
+      "artifact": "/Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/W11-post-A05-54cabc79-r1.json",
+      "sha256": "9b1752185f29530d87e70210fa918539ac6c1d7489850195ee850eb1c43d0f1f",
+      "executed_commands": 34,
+      "summary_records": 5
+    },
+    {
+      "plan_id": "W02",
+      "status": "passed",
+      "artifact": "/Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/W02-post-A05-54cabc79-r1.json",
+      "sha256": "1a237624ceb927b24bc67bf388138be93a79edbfe8c28d887492865f6269e320",
+      "executed_commands": 19,
+      "summary_records": 1
+    },
+    {
+      "plan_id": "A05",
+      "status": "passed",
+      "artifact": "/Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/A05-post-A05-54cabc79-r1.json",
+      "sha256": "de220221189492c88fbd26025f0d82c7b4ccc2f3f2d105084df9534a20ccc95f",
+      "executed_commands": 22,
+      "summary_records": 1
+    },
+    {
+      "plan_id": "A08",
+      "status": "passed",
+      "artifact": "/Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/A08-post-A05-54cabc79-r1.json",
+      "sha256": "547dd5256b2a6d46acce8471ef2fca9e516430bd0e68249d199c9fbd2b85f9d3",
+      "executed_commands": 11,
+      "summary_records": 40
+    }
+  ],
+  "checks": {
+    "fmt": {
+      "command": "cargo +1.99.0 fmt --all --check",
+      "exit_code": 0,
+      "path": "/private/tmp/W06-post-A05-54cabc79-r1.fmt.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "workspace-clippy": {
+      "command": "cargo +1.99.0 clippy --locked --workspace --all-targets -- -D warnings",
+      "exit_code": 0,
+      "path": "/private/tmp/W06-post-A05-54cabc79-r1.workspace-clippy.log",
+      "sha256": "7beb81fc40d7efe81a78e5caef45ce25ea5c96efbc920588c72d74af8acfb73b"
+    },
+    "gate-unit": {
+      "command": "cargo +1.99.0 test --locked -p xtask w06::tests:: -- --show-output",
+      "exit_code": 0,
+      "path": "/private/tmp/W06-post-A05-54cabc79-r1.gate-unit.log",
+      "sha256": "69565f2728137b10fd4ba52814f11705f8dcd5bfed9d087d594aa3c0dd5b41e8"
+    },
+    "direct-ruff": {
+      "command": "ruff check .",
+      "exit_code": 0,
+      "path": "/private/tmp/W06-post-A05-54cabc79-r1.direct-ruff.log",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "scoped-hooks": {
+      "command": "pre-commit run --show-diff-on-failure --files <W06 paths changed from origin/main>",
+      "exit_code": 0,
+      "path": "/private/tmp/W06-post-A05-54cabc79-r1.scoped-hooks.log",
+      "sha256": "5ceee8435fbc6560313956a0d679f5818f3e031bd8be9581807a9d9a9374cd24"
+    },
+    "graphify": {
+      "command": "graphify update .",
+      "exit_code": 0,
+      "path": "/private/tmp/W06-post-A05-54cabc79-r1.graphify.log",
+      "sha256": "55da818ec009c4a1a46e68d5594c4c050a0fdee48d388492ec44dd285a00cd51"
+    },
+    "pr-diff-check": {
+      "command": "git diff --check origin/main...HEAD",
+      "exit_code": 0,
+      "path": "/private/tmp/W06-post-A05-54cabc79-r1.pr-diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "graphify_nodes": 31429,
+  "graphify_edges": 66005,
+  "inventory": {
+    "tracked_python_paths": 462,
+    "developer_oracle_rows": 52,
+    "active_interpreter_rows": 63,
+    "F01_source_bindings": 473
+  },
+  "hooks": {
+    "scoped": "passed; import-linter/mypy skipped because no matching changed runtime Python",
+    "direct_ruff": "passed with accepted exact producer E501-only exception plus incoming A05 exact provenance extend-exclude",
+    "all_files": "not rerun on this merge; prior4cc failure/restoration retained in historical receipt, never relabeled green"
+  },
+  "historical_evidence": [
+    {
+      "path": "evidence/integrated-qualification303.json",
+      "qualified_head": "4cc5858cc06348c36fad1a22572e00528ef9dcb6",
+      "sha256": "1784b473ac427e344864b317758e64049c54973c95da9d5a8f58fe11ac047931",
+      "scope": "pre-A05 integrated303 proof"
+    },
+    {
+      "path": "evidence/native-gate-qualification.json",
+      "sha256": "6dd14e840e7b172143131b05c6a42808f9070bdc2fa2b656f7b7ac8c86d720e2",
+      "scope": "immutable151 component positives and five actual mutation negatives; no303 mutation rerun claimed"
+    }
+  ],
+  "limits": [
+    "Fresh local gates do not establish new Linux ARM/AMD CI results; earlier pre-A05 ARM A07 one-millisecond configuration timeout is separate and not retried/resolved here",
+    "No providers/production, continuous policy notifications, atomic policy fence after SAVE was sent, exactly-once remote dispatch, live MCP/portal composition, performance/relevance or Python-retirement acceptance claim"
+  ]
+}

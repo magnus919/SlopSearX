@@ -1,0 +1,88 @@
+import asyncio, copy, dataclasses, hashlib, json, pathlib, sys
+from types import SimpleNamespace
+
+root = pathlib.Path('/private/tmp/slopsearx-w06')
+packet = json.loads((root / 'docs/rust-rewrite/w06/source.json').read_text())
+controls = json.loads((root / 'docs/rust-rewrite/w06/evidence/retained-policy-source-outcomes.json').read_text())['source_controls']
+if '--wrong-source-hash' in sys.argv:
+    controls['slopsearx/mcp/composition.py'] = '0' * 64
+if sys.version_info[:3] != (3, 14, 7):
+    raise RuntimeError('unpinned interpreter')
+for path, expected in controls.items():
+    if hashlib.sha256((root / path).read_bytes()).hexdigest() != expected:
+        raise RuntimeError('source drift: ' + path)
+sys.path.insert(0, str(root))
+import pytest
+from slopsearx.artifacts import artifact_ref, composite_artifact_id
+from slopsearx.capabilities import MCPPolicy
+from slopsearx.mcp import composition
+from slopsearx.mcp.state import set_state
+from tests.test_mcp_tools import _build_state
+
+class Store:
+    available = True
+    def for_tenant(self, tenant):
+        if tenant != 'default':
+            raise RuntimeError('unexpected tenant')
+        return self
+    async def load(self, search):
+        if search != 'saved':
+            raise RuntimeError('unexpected definition')
+        return SimpleNamespace(engines=['wikipedia'])
+    async def reports(self, search, **kwargs):
+        self.listing_arguments = kwargs
+        return [copy.deepcopy(self.report)]
+
+async def main():
+    rows = []
+    mutations = [
+        ('auth_changed', {'catalog_changes': {'wikipedia': {'auth_class': 'required', 'auth_configured': True}, 'brave': {'auth_class': 'required', 'auth_configured': False}}}),
+        ('categories_changed', {'catalog_changes': {'wikipedia': {'categories': ['new-category']}, 'brave': {'categories': ['other-category']}}}),
+        ('unrelated_sensitive_configuration_changed', {'sensitive_engines': ['hibp']}),
+        ('selected_sensitive_allowed', {'sensitive_engines': ['wikipedia', 'brave'], 'targeted_sensitive_allowed': True}),
+        ('active_removed', {'active_remove': ['wikipedia', 'brave']}),
+        ('health_and_circuit_changed', {'catalog_changes': {'wikipedia': {'last_known_status': 'unavailable', 'circuit_open': True}, 'brave': {'last_known_status': 'timeout', 'circuit_open': True}}}),
+        ('definition_disabled', {'catalog_changes': {'wikipedia': {'enabled': False}}}),
+        ('historical_disabled', {'catalog_changes': {'brave': {'enabled': False}}}),
+        ('definition_unknown', {'catalog_remove': ['wikipedia']}),
+        ('historical_unknown', {'catalog_remove': ['brave']}),
+        ('definition_sensitive_denied', {'sensitive_engines': ['wikipedia']}),
+        ('historical_sensitive_denied', {'sensitive_engines': ['brave']}),
+        ('saved_grant_denied', {'saved_granted': False}),
+    ]
+    for name, mutation in mutations:
+        p = MCPPolicy()
+        p.enabled_tools['saved_searches'] = mutation.get('saved_granted', True)
+        state = _build_state(['wikipedia', 'brave'], policy=p)
+        engines = list(state.ctx.active_engines.values())
+        for engine in mutation.get('active_remove', []):
+            state.ctx.active_engines.pop(engine)
+        for engine in mutation.get('catalog_remove', []):
+            state.catalog._by_name.pop(engine)
+        for engine, changes in mutation.get('catalog_changes', {}).items():
+            state.catalog._by_name[engine] = dataclasses.replace(state.catalog._by_name[engine], **changes)
+        if 'sensitive_engines' in mutation:
+            state.policy.sensitive_engines = set(mutation['sensitive_engines'])
+        state.policy.targeted_sensitive_allowed = mutation.get('targeted_sensitive_allowed', False)
+        store = Store()
+        store.report = {'run_id': 'run', 'status': 'changed', 'revision': 3, 'incomparable_reasons': [], 'observation': {'window': {'query': 'historical query', 'engines': ['brave']}}}
+        state.saved_store = store
+        set_state(state)
+        artifact = artifact_ref('saved_report', composite_artifact_id('saved', 'run'))
+        with pytest.MonkeyPatch.context() as patch:
+            patch.setattr(composition.time, 'time', lambda: 1000.0)
+            result = await composition.resolve_source(artifact, 'staged_search')
+        output = result.stored() if isinstance(result, composition.ResolvedSource) else result
+        allowed = name in {'auth_changed', 'categories_changed', 'unrelated_sensitive_configuration_changed', 'selected_sensitive_allowed', 'active_removed', 'health_and_circuit_changed'}
+        if ('error' not in output) != allowed:
+            raise RuntimeError(f'wrong branch {name}: {output}')
+        if sum(engine.calls for engine in engines):
+            raise RuntimeError('capture dispatched engine')
+        rows.append({'id': 'saved_authority.' + name, 'artifact': artifact, 'definition': {'query': 'current definition query', 'engines': ['wikipedia']}, 'report': store.report, 'mutations': mutation, 'output': output, 'listing_arguments': getattr(store, 'listing_arguments', None), 'engine_calls': 0})
+    set_state(None)
+    output = {'schema_version': 1, 'plan_id': 'W06', 'baseline': packet['baseline'], 'source_controls': controls, 'context': packet['context'], 'provider_calls': 0, 'execution': 'actual original composition.resolve_source/_saved_report over explicit retained definition/report fixtures and current-policy mutations; no providers or acquisition', 'cases': rows}
+    destination = root / 'docs/rust-rewrite/w06/evidence/saved-source-authority-outcomes.json'
+    destination.write_text(json.dumps(output, indent=2) + '\n')
+    print(json.dumps({'cases': len(rows), 'sha256': hashlib.sha256(destination.read_bytes()).hexdigest()}))
+
+asyncio.run(main())
