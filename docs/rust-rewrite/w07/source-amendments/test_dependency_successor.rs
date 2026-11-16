@@ -1,6 +1,6 @@
 //! One direct test-only AWS-LC edge over the accepted D Cargo source pair.
 use sha2::{Digest, Sha256};
-use std::{fs, path::Path};
+use std::{fs, path::Path, process::Command};
 type Result<T> = std::result::Result<T, String>;
 pub const LOCK_PRIOR_SHA: &str = "92ee06e2da26d90c014ffabe812d52af88b084b0edfc4b362c9c33716e0ecd7d";
 pub const LOCK_CURRENT_SHA: &str =
@@ -62,23 +62,32 @@ fn reconstruct_manifest(bytes: &[u8]) -> Result<Vec<u8>> {
         DEV_LINE,
     )
 }
-#[cfg(unix)]
-fn mode(stat: &fs::Metadata) -> Result<u32> {
-    use std::os::unix::fs::PermissionsExt;
-    Ok(stat.permissions().mode() & 0o777)
-}
-#[cfg(not(unix))]
-fn mode(_: &fs::Metadata) -> Result<u32> {
-    Err("W07 dependency source mode proof requires Unix".into())
+fn read_material(root: &Path, path: &str) -> Result<(Vec<u8>, u32)> {
+    let (bytes, opened_mode) =
+        super::w07_t02_joint::cli_source_custody::bounded_read(root, path, 1_048_576)?;
+    #[cfg(unix)]
+    need(
+        opened_mode == 0o644,
+        "W07 dependency source must be a bounded regular0644 file",
+    )?;
+    #[cfg(not(unix))]
+    {
+        let _ = (bytes, opened_mode);
+        return Err("W07 dependency source mode proof requires Unix".into());
+    }
+    #[cfg(unix)]
+    Ok((bytes, opened_mode))
 }
 fn read(root: &Path, path: &str) -> Result<Vec<u8>> {
-    let path = root.join(path);
-    let stat = fs::symlink_metadata(&path).map_err(|e| e.to_string())?;
-    need(
-        stat.is_file() && !stat.file_type().is_symlink() && mode(&stat)? == 0o644,
-        "W07 dependency source must be a regular non-symlink0644 file",
-    )?;
-    fs::read(path).map_err(|e| e.to_string())
+    read_material(root, path).map(|(bytes, _)| bytes)
+}
+fn project_current_manifest(root: &Path, bytes: &[u8], opened_mode: u32) -> Result<Vec<u8>> {
+    super::w07_t02_joint::cli_source_custody::project_issue903_config(
+        root,
+        "crates/ssx-mcp/Cargo.toml",
+        bytes,
+        opened_mode,
+    )
 }
 fn pair(lock: &[u8], manifest: &[u8]) -> Result<Vec<u8>> {
     let old_lock = reconstruct_lock(lock)?;
@@ -94,12 +103,13 @@ fn pair(lock: &[u8], manifest: &[u8]) -> Result<Vec<u8>> {
 /// Both actual source leaves and their paired profile are checked first.
 pub fn historical_lock(root: &Path, supplied: &[u8]) -> Result<Vec<u8>> {
     let lock = read(root, "Cargo.lock")?;
-    let manifest = read(root, "crates/ssx-mcp/Cargo.toml")?;
+    let (physical_manifest, manifest_mode) = read_material(root, "crates/ssx-mcp/Cargo.toml")?;
     if sha(&lock) == LOCK_PRIOR_SHA {
-        let old = pair(&lock, &manifest)?;
+        let old = pair(&lock, &physical_manifest)?;
         need(supplied == lock, "W07 supplied historical lock differs")?;
         return Ok(old);
     }
+    let manifest = project_current_manifest(root, &physical_manifest, manifest_mode)?;
     let parent = super::w07_t02_joint::parent(
         root,
         "Cargo.lock",
@@ -111,9 +121,11 @@ pub fn historical_lock(root: &Path, supplied: &[u8]) -> Result<Vec<u8>> {
 /// W07 current admission requires the actual new direct dev edge, never old pins alone.
 pub fn verify_current(root: &Path) -> Result<()> {
     let lock = read(root, "Cargo.lock")?;
-    let manifest = read(root, "crates/ssx-mcp/Cargo.toml")?;
-    // Physical current is authenticated before comparing its accepted joint frame.
-    // Keep the raw physical lock for parent(), which independently checks supplied==actual.
+    let (physical_manifest, manifest_mode) = read_material(root, "crates/ssx-mcp/Cargo.toml")?;
+    // The newest issue #903 config edge is authenticated and projected before the
+    // unchanged W07 direct-dev-edge profile is compared. Keep the raw lock for
+    // prior(), which independently checks supplied==physical current.
+    let manifest = project_current_manifest(root, &physical_manifest, manifest_mode)?;
     let joint = super::w07_t02_joint::cli_source_custody::prior(root, "Cargo.lock", &lock)?;
     need(
         sha(&joint) == super::w07_t02_joint::LOCK_SHA && sha(&manifest) == MANIFEST_CURRENT_SHA,
@@ -134,7 +146,8 @@ pub fn controls(root: &Path) -> Result<()> {
         &physical_lock,
         super::w07_t02_joint::Parent::W07,
     )?;
-    let manifest = read(root, "crates/ssx-mcp/Cargo.toml")?;
+    let (physical_manifest, manifest_mode) = read_material(root, "crates/ssx-mcp/Cargo.toml")?;
+    let manifest = project_current_manifest(root, &physical_manifest, manifest_mode)?;
     let old_lock = reconstruct_lock(&lock)?;
     let old_manifest = reconstruct_manifest(&manifest)?;
     need(
@@ -189,7 +202,13 @@ pub fn controls(root: &Path) -> Result<()> {
             "W07 SDK/other-package lock delta accepted",
         )?;
     }
-    filesystem_controls(root, &physical_lock, &manifest, &old_lock, &old_manifest)
+    filesystem_controls(
+        root,
+        &physical_lock,
+        &physical_manifest,
+        &old_lock,
+        &old_manifest,
+    )
 }
 #[cfg(not(unix))]
 fn filesystem_controls(_: &Path, _: &[u8], _: &[u8], _: &[u8], _: &[u8]) -> Result<()> {
@@ -239,6 +258,20 @@ fn filesystem_controls(
     fs::write(&capsule_path, &capsule).map_err(|e| e.to_string())?;
     fs::set_permissions(&capsule_path, fs::Permissions::from_mode(0o644))
         .map_err(|e| e.to_string())?;
+    let git_dir = Command::new("git")
+        .args(["rev-parse", "--absolute-git-dir"])
+        .current_dir(source_root)
+        .output()
+        .map_err(|error| error.to_string())?;
+    need(
+        git_dir.status.success(),
+        "W07 control fixture Git directory lookup",
+    )?;
+    let git_dir = String::from_utf8(git_dir.stdout)
+        .map_err(|error| error.to_string())?
+        .trim()
+        .to_owned();
+    fs::write(owned.0.join(".git"), format!("gitdir: {git_dir}\n")).map_err(|e| e.to_string())?;
     verify_current(&owned.0)?;
     let mut changed_capsule = capsule.clone();
     changed_capsule.push(b' ');

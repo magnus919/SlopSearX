@@ -1,6 +1,8 @@
 //! Two-path CLI successor. Physical current bytes precede historical interpretation.
 #[path = "t08a_main_join.rs"]
 pub(crate) mod accepted_main_join;
+#[path = "../../../docs/rust-rewrite/t08a/issue903-config-edge-successor.rs"]
+mod issue903_config_successor;
 #[allow(
     dead_code,
     clippy::duplicate_mod,
@@ -8,9 +10,11 @@ pub(crate) mod accepted_main_join;
 )]
 #[path = "../../../docs/rust-rewrite/o02/upstream-contracts-source-successor-v1.rs"]
 pub(crate) mod upstream_contracts_successor;
+#[path = "../../../docs/rust-rewrite/t08a/w07-test-dependency-source-successor-v1.rs"]
+mod w07_test_dependency_source_successor;
 use serde_json::Value;
 use sha2::{Digest, Sha256};
-use std::{fs, path::Path, process::Command};
+use std::{path::Path, process::Command};
 type Result<T> = std::result::Result<T, String>;
 const CAPSULE: &str = "docs/rust-rewrite/t08a/shared-source-successor.json";
 const CAPSULE_SHA: &str = "bb6ae04922975769b8baa8fc0b1f1751326a9c2c15fb9b2052239493e5c98c38";
@@ -28,49 +32,60 @@ fn digest(bytes: &[u8]) -> String {
         .map(|b| format!("{b:02x}"))
         .collect()
 }
-fn regular(root: &Path, path: &str) -> Result<Vec<u8>> {
-    let full = root.join(path);
-    let m = fs::symlink_metadata(&full).map_err(|e| e.to_string())?;
-    need(
-        m.is_file() && !m.file_type().is_symlink() && m.len() <= 1048576,
-        "regular bounded source leaf",
-    )?;
-    need(
-        full.canonicalize()
-            .map_err(|e| e.to_string())?
-            .starts_with(root.canonicalize().map_err(|e| e.to_string())?),
-        "source stays within root",
-    )?;
-    fs::read(full).map_err(|e| e.to_string())
+#[allow(
+    clippy::duplicate_mod,
+    reason = "Shared standalone reader is independently included by sealed Rust source gates"
+)]
+#[path = "../../../docs/rust-rewrite/t08a/bounded_source_reader.rs"]
+mod bounded_source_reader;
+pub(crate) use bounded_source_reader::bounded_read;
+
+fn regular_material(root: &Path, path: &str) -> Result<(Vec<u8>, u32)> {
+    bounded_read(root, path, 1048576)
 }
-fn source_mode(root: &Path, path: &str) -> Result<&'static str> {
+fn regular(root: &Path, path: &str) -> Result<Vec<u8>> {
+    regular_material(root, path).map(|(bytes, _)| bytes)
+}
+fn opened_source_mode(root: &Path, path: &str, mode: u32) -> Result<&'static str> {
     #[cfg(unix)]
     {
-        use std::os::unix::fs::PermissionsExt;
-        need(
-            fs::symlink_metadata(root.join(path))
-                .map_err(|e| e.to_string())?
-                .permissions()
-                .mode()
-                & 0o7777
-                == 0o644,
-            "physical source requires regular0644",
-        )?;
+        let _ = (root, path);
+        need(mode == 0o644, "opened physical source requires regular0644")?;
+        Ok("0644")
     }
     #[cfg(not(unix))]
     {
-        // Windows does not expose Unix permission bits. Preserve the committed
-        // source mode through the current index and independently reject links.
-        let out = Command::new("git")
-            .args(["ls-files", "--stage", "--", path])
-            .current_dir(root)
-            .output()
-            .map_err(|e| e.to_string())?;
-        need(
-            out.status.success() && String::from_utf8_lossy(&out.stdout).starts_with("100644 "),
-            "Windows current source index requires100644",
-        )?;
+        let _ = mode;
+        source_mode(root, path)
     }
+}
+
+pub(crate) fn project_issue903_config(
+    root: &Path,
+    path: &str,
+    current: &[u8],
+    opened_mode: u32,
+) -> Result<Vec<u8>> {
+    opened_source_mode(root, path, opened_mode)?;
+    issue903_config_successor::prior(root, path, current, opened_mode)
+}
+pub(crate) fn issue903_config_controls(root: &Path) -> Result<()> {
+    issue903_config_successor::controls(root)
+}
+
+#[cfg(not(unix))]
+fn source_mode(root: &Path, path: &str) -> Result<&'static str> {
+    // Windows does not expose Unix permission bits. Preserve the committed
+    // source mode through the current index and independently reject links.
+    let out = Command::new("git")
+        .args(["ls-files", "--stage", "--", path])
+        .current_dir(root)
+        .output()
+        .map_err(|e| e.to_string())?;
+    need(
+        out.status.success() && String::from_utf8_lossy(&out.stdout).starts_with("100644 "),
+        "Windows current source index requires100644",
+    )?;
     Ok("0644")
 }
 fn capsule(root: &Path) -> Result<Value> {
@@ -160,8 +175,9 @@ const RMCP_SECURITY_CAPSULE: &str =
     include_str!("../../../docs/rust-rewrite/t08a/rmcp-security-successor.json");
 const RMCP_SECURITY_CAPSULE_SHA: &str =
     "b348258e03bc90feafc68b721d583e5f977d660a90062bff20b8c0f8521aec09";
-pub(crate) const CURRENT_LOCK_SHA: &str = upstream_contracts_successor::LOCK_SHA;
-pub(crate) const CURRENT_LOCK_BYTES: usize = upstream_contracts_successor::LOCK_BYTES;
+pub(crate) const CURRENT_LOCK_SHA: &str =
+    "be8d91b79e48175ea1d3d523c05e5e21a9e8cac815bfb4d49db6fd188b8ca4d0";
+pub(crate) const CURRENT_LOCK_BYTES: usize = 94358;
 const RMCP_ROWS: [(&str, usize); 2] = [("Cargo.toml", 1), ("Cargo.lock", 6)];
 fn rmcp_security_capsule(raw: &str) -> Result<Value> {
     need(
@@ -210,10 +226,22 @@ const PORTAL_LOCK_EDITS: [(usize, &[u8]); 3] = [
     (66903, b" \"scraper\",\n"),
     (91635, b" \"url\",\n"),
 ];
-pub(crate) fn portal_health_lock_frame(current: &[u8]) -> Result<Vec<u8>> {
+pub(crate) fn portal_health_lock_frame(root: &Path, current: &[u8]) -> Result<Vec<u8>> {
+    let (physical, opened_mode) = regular_material(root, "Cargo.lock")?;
     need(
-        current.len() == CURRENT_LOCK_BYTES && digest(current) == CURRENT_LOCK_SHA,
-        "security exact current lock",
+        current == physical
+            && physical.len() == CURRENT_LOCK_BYTES
+            && digest(&physical) == CURRENT_LOCK_SHA,
+        "issue903 exact physical current lock",
+    )?;
+    let prior = project_issue903_config(root, "Cargo.lock", &physical, opened_mode)?;
+    portal_health_lock_frame_prior(&prior)
+}
+fn portal_health_lock_frame_prior(current: &[u8]) -> Result<Vec<u8>> {
+    need(
+        current.len() == upstream_contracts_successor::LOCK_BYTES
+            && digest(current) == upstream_contracts_successor::LOCK_SHA,
+        "security exact projected prior lock",
     )?;
     let security = upstream_contracts_successor::frame("Cargo.lock", current, 0o644)?;
     let portal = rmcp_security_prior("Cargo.lock", &security)?;
@@ -278,12 +306,20 @@ fn native_health_lock_prior(physical: &[u8]) -> Result<Vec<u8>> {
     )?;
     Ok(prior)
 }
-fn cli_logical_input(root: &Path, path: &str, physical: &[u8]) -> Result<Vec<u8>> {
+fn cli_logical_input(
+    root: &Path,
+    path: &str,
+    physical: &[u8],
+    opened_mode: u32,
+) -> Result<Vec<u8>> {
     if path == "Cargo.lock" {
-        return native_health_lock_prior(&portal_health_lock_frame(physical)?);
+        return native_health_lock_prior(&portal_health_lock_frame(root, physical)?);
     }
     if path == "Cargo.toml" {
         return rmcp_security_prior(path, physical);
+    }
+    if w07_test_dependency_source_successor::owns(path) {
+        return w07_test_dependency_source_successor::prior(root, path, physical, opened_mode);
     }
     if accepted_main_join::owns(path) {
         accepted_main_join::project(root, path, physical, accepted_main_join::Parent::Cli)
@@ -298,17 +334,17 @@ pub(crate) fn prior(root: &Path, path: &str, supplied: &[u8]) -> Result<Vec<u8>>
         .iter()
         .position(|r| r.0 == path)
         .ok_or("unowned CLI successor path")?;
-    let current = regular(root, path)?;
+    let (current, mode) = regular_material(root, path)?;
     need(
         current == supplied,
         "supplied bytes are not physical current",
     )?;
-    let logical = cli_logical_input(root, path, &current)?;
+    let logical = cli_logical_input(root, path, &current, mode)?;
     let doc = capsule(root)?;
     inverse(
         &doc["rows"][index],
         &logical,
-        source_mode(root, path)?,
+        opened_source_mode(root, path, mode)?,
         ROWS[index].1,
     )
 }
@@ -344,7 +380,7 @@ pub(crate) fn w07_lock_prior_from_physical(
         .iter()
         .position(|row| row.0 == path)
         .ok_or("unowned W07 Cargo.lock successor path")?;
-    let logical = cli_logical_input(root, path, supplied)?;
+    let logical = cli_logical_input(root, path, supplied, 0o644)?;
     let doc = capsule(root)?;
     let prior = inverse(&doc["rows"][index], &logical, mode, ROWS[index].1)?;
     need(
@@ -382,11 +418,12 @@ fn controls_for(
 ) -> Result<()> {
     for (index, (path, count)) in rows.iter().enumerate() {
         let row = &doc["rows"][index];
-        let actual = regular(root, path)?;
+        let (actual, opened_mode) = regular_material(root, path)?;
+        let accepted_mode = opened_source_mode(root, path, opened_mode)?;
         let old = normalize(root, path, &actual)?;
-        let logical = cli_logical_input(root, path, &actual)?;
+        let logical = cli_logical_input(root, path, &actual, opened_mode)?;
         need(
-            inverse(row, &logical, "0644", *count)? == old,
+            inverse(row, &logical, accepted_mode, *count)? == old,
             "original pure positive after physical outer admission",
         )?;
         let commit = text(&row["prior"], "commit")?;
@@ -501,17 +538,17 @@ pub(crate) fn legacy_prior(root: &Path, path: &str, supplied: &[u8]) -> Result<V
         .iter()
         .position(|row| row.0 == path)
         .ok_or("unowned legacy successor path")?;
-    let physical = regular(root, path)?;
+    let (physical, mode) = regular_material(root, path)?;
     need(
         physical == supplied,
         "legacy supplied is not physical current",
     )?;
-    let logical = cli_logical_input(root, path, &physical)?;
+    let logical = cli_logical_input(root, path, &physical, mode)?;
     let doc = legacy_capsule(root)?;
     inverse(
         &doc["rows"][index],
         &logical,
-        source_mode(root, path)?,
+        opened_source_mode(root, path, mode)?,
         LEGACY_ROWS[index].1,
     )
 }
@@ -533,21 +570,117 @@ pub(crate) fn test_dependency_prior(
         "closed W07 dependency caller path/hash",
     )?;
     let prior = legacy_prior(root, path, supplied)?;
-    let archive = regular(root, TEST_DEPENDENCY_ARCHIVE)?;
-    source_mode(root, TEST_DEPENDENCY_ARCHIVE)?;
+    let (archive, archive_mode) = regular_material(root, TEST_DEPENDENCY_ARCHIVE)?;
+    opened_source_mode(root, TEST_DEPENDENCY_ARCHIVE, archive_mode)?;
     need(
         digest(&archive) == TEST_DEPENDENCY_PRIOR_SHA && archive == prior,
         "exact immutable W07 dependency archive",
     )?;
     Ok(prior)
 }
-pub(crate) fn controls(root: &Path) -> Result<()> {
-    upstream_contracts_successor::controls(root)?;
-    rmcp_security_controls(root)?;
-    let actual = regular(root, "Cargo.lock")?;
-    let health = portal_health_lock_frame(&actual)?;
+fn configured_control_scratch_root() -> Result<std::path::PathBuf> {
+    let tmp_dir =
+        std::env::var_os("TMPDIR").ok_or("TMPDIR must be configured for T08A controls")?;
+    let fixture_root = std::env::var_os("SLOPSEARX_TEST_TEMP_ROOT")
+        .ok_or("SLOPSEARX_TEST_TEMP_ROOT must be configured for T08A controls")?;
+    let tmp_dir = std::path::PathBuf::from(tmp_dir);
+    let fixture_root = std::path::PathBuf::from(fixture_root);
     need(
-        portal_health_lock_frame(&health).is_err(),
+        tmp_dir.is_absolute() && fixture_root.is_absolute(),
+        "T08A control scratch roots must be absolute",
+    )?;
+    let tmp_meta = std::fs::symlink_metadata(&tmp_dir).map_err(|error| error.to_string())?;
+    let fixture_meta =
+        std::fs::symlink_metadata(&fixture_root).map_err(|error| error.to_string())?;
+    need(
+        tmp_meta.is_dir()
+            && !tmp_meta.file_type().is_symlink()
+            && fixture_meta.is_dir()
+            && !fixture_meta.file_type().is_symlink(),
+        "T08A control scratch roots must be existing non-symlink directories",
+    )?;
+    let tmp_dir = tmp_dir.canonicalize().map_err(|error| error.to_string())?;
+    let fixture_root = fixture_root
+        .canonicalize()
+        .map_err(|error| error.to_string())?;
+    need(
+        tmp_dir == fixture_root,
+        "TMPDIR and SLOPSEARX_TEST_TEMP_ROOT must resolve to one registered scratch root",
+    )?;
+    Ok(tmp_dir)
+}
+fn upstream_controls_with_projected_lock(root: &Path) -> Result<()> {
+    #[cfg(unix)]
+    use std::os::unix::fs::PermissionsExt;
+    use std::{
+        fs,
+        time::{SystemTime, UNIX_EPOCH},
+    };
+    let scratch_root = configured_control_scratch_root()?;
+    let nonce = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|error| error.to_string())?
+        .as_nanos();
+    let overlay = scratch_root.join(format!("ssx-issue903-o02-{nonce}"));
+    fs::create_dir(&overlay).map_err(|error| error.to_string())?;
+    let populate = || -> Result<()> {
+        let git_dir = Command::new("git")
+            .args(["rev-parse", "--absolute-git-dir"])
+            .current_dir(root)
+            .output()
+            .map_err(|error| error.to_string())?;
+        need(git_dir.status.success(), "overlay Git directory lookup")?;
+        let git_dir = String::from_utf8(git_dir.stdout)
+            .map_err(|error| error.to_string())?
+            .trim()
+            .to_owned();
+        fs::write(overlay.join(".git"), format!("gitdir: {git_dir}\n"))
+            .map_err(|error| error.to_string())?;
+        for (path, bytes) in [
+            (
+                "docs/rust-rewrite/o02/UPSTREAM_CONTRACTS_SOURCE_SUCCESSOR.json",
+                regular(
+                    root,
+                    "docs/rust-rewrite/o02/UPSTREAM_CONTRACTS_SOURCE_SUCCESSOR.json",
+                )?,
+            ),
+            (
+                "crates/xtask/src/main.rs",
+                regular(root, "crates/xtask/src/main.rs")?,
+            ),
+        ] {
+            let destination = overlay.join(path);
+            fs::create_dir_all(destination.parent().ok_or("overlay source parent")?)
+                .map_err(|error| error.to_string())?;
+            fs::write(&destination, bytes).map_err(|error| error.to_string())?;
+            #[cfg(unix)]
+            fs::set_permissions(&destination, fs::Permissions::from_mode(0o644))
+                .map_err(|error| error.to_string())?;
+        }
+        let (physical_lock, mode) = regular_material(root, "Cargo.lock")?;
+        let projected_lock = project_issue903_config(root, "Cargo.lock", &physical_lock, mode)?;
+        let destination = overlay.join("Cargo.lock");
+        fs::write(&destination, projected_lock).map_err(|error| error.to_string())?;
+        #[cfg(unix)]
+        fs::set_permissions(&destination, fs::Permissions::from_mode(0o644))
+            .map_err(|error| error.to_string())?;
+        Ok(())
+    };
+    let result = populate().and_then(|()| upstream_contracts_successor::controls(&overlay));
+    fs::remove_dir_all(&overlay).map_err(|error| error.to_string())?;
+    result
+}
+
+pub(crate) fn controls(root: &Path) -> Result<()> {
+    issue903_config_controls(root)?;
+    w07_test_dependency_source_successor::controls(root)?;
+    upstream_controls_with_projected_lock(root)?;
+    rmcp_security_controls(root)?;
+    let (actual, mode) = regular_material(root, "Cargo.lock")?;
+    let projected_prior_lock = project_issue903_config(root, "Cargo.lock", &actual, mode)?;
+    let health = portal_health_lock_frame(root, &actual)?;
+    need(
+        portal_health_lock_frame_prior(&health).is_err(),
         "portal historical health lock is not current",
     )?;
     for (at, inserted) in PORTAL_LOCK_EDITS {
@@ -557,29 +690,29 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
                 .filter(|edit| edit.0 < at)
                 .map(|edit| edit.1.len())
                 .sum::<usize>();
-        let mut missing = actual.clone();
+        let mut missing = projected_prior_lock.clone();
         missing.drain(shifted..shifted + inserted.len());
         need(
-            portal_health_lock_frame(&missing).is_err(),
+            portal_health_lock_frame_prior(&missing).is_err(),
             "portal missing dependency edge rejected",
         )?;
-        let mut duplicate = actual.clone();
+        let mut duplicate = projected_prior_lock.clone();
         duplicate.splice(shifted..shifted, inserted.iter().copied());
         need(
-            portal_health_lock_frame(&duplicate).is_err(),
+            portal_health_lock_frame_prior(&duplicate).is_err(),
             "portal duplicate dependency edge rejected",
         )?;
     }
-    let mut unrelated = actual.clone();
+    let mut unrelated = projected_prior_lock.clone();
     unrelated[0] ^= 1;
     need(
-        portal_health_lock_frame(&unrelated).is_err(),
+        portal_health_lock_frame_prior(&unrelated).is_err(),
         "portal unrelated lock mutation rejected",
     )?;
-    let mut appended = actual.clone();
+    let mut appended = projected_prior_lock.clone();
     appended.push(b'\n');
     need(
-        portal_health_lock_frame(&appended).is_err(),
+        portal_health_lock_frame_prior(&appended).is_err(),
         "portal appended lock bytes rejected",
     )?;
     let prior_lock = native_health_lock_prior(&health)?;
@@ -624,10 +757,11 @@ fn rmcp_security_controls(root: &Path) -> Result<()> {
         "altered security capsule rejected",
     )?;
     for (index, (path, count)) in RMCP_ROWS.iter().enumerate() {
-        let physical = regular(root, path)?;
-        source_mode(root, path)?;
+        let (physical, opened_mode) = regular_material(root, path)?;
+        opened_source_mode(root, path, opened_mode)?;
         let actual = if *path == "Cargo.lock" {
-            upstream_contracts_successor::frame(path, &physical, 0o644)?
+            let projected = project_issue903_config(root, path, &physical, opened_mode)?;
+            upstream_contracts_successor::frame(path, &projected, 0o644)?
         } else {
             physical
         };

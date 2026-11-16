@@ -34,4 +34,4 @@ workspace = true
 
 [target.'cfg(unix)'.dependencies.nix]
 version = "=0.31.3"
-features = ["signal"]
+features = ["signal", "fs"]

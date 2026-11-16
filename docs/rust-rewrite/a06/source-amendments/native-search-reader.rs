@@ -1,7 +1,13 @@
 //! The existing sealed fcac -> a1b search transition, shared by A06 and T06.
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
-use std::{fs, path::Path, process::Command};
+use std::{path::Path, process::Command};
+#[allow(
+    clippy::duplicate_mod,
+    reason = "Independent source gates include the same std-only bounded reader"
+)]
+#[path = "../../t08a/bounded_source_reader.rs"]
+mod bounded_source_reader;
 type Result<T> = std::result::Result<T, String>;
 pub(crate) const SOURCE: &str = "crates/ssx-infra/src/search.rs";
 const OLD: &str = "fcac2929eb6637960d5e1086c321f0eac62fc0f8446cf73f22d6b43406137b12";
@@ -37,24 +43,13 @@ struct Inputs {
     git_tree: Vec<u8>,
 }
 fn read(root: &Path, path: &str) -> Result<Material> {
-    let full = root.join(path);
-    let meta = fs::symlink_metadata(&full).map_err(|e| format!("{path}: {e}"))?;
-    need(
-        meta.is_file() && !meta.file_type().is_symlink(),
-        "regular non-symlink material",
-    )?;
     #[cfg(unix)]
-    let mode = {
-        use std::os::unix::fs::PermissionsExt;
-        meta.permissions().mode() & 0o7777
-    };
+    let (bytes, mode) = bounded_source_reader::bounded_read(root, path, 1048576)
+        .map_err(|e| format!("{path}: {e}"))?;
     #[cfg(not(unix))]
     return Err("T06 source mode proof requires Unix".into());
     #[cfg(unix)]
-    Ok(Material {
-        bytes: fs::read(full).map_err(|e| e.to_string())?,
-        mode,
-    })
+    Ok(Material { bytes, mode })
 }
 fn row(raw: &[u8]) -> Result<Value> {
     need(

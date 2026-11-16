@@ -40,3 +40,7 @@ rustls.workspace = true
 aws-lc-rs.workspace = true
 redis.workspace = true
 tokio = { workspace = true, features = ["test-util"] }
+
+[target.'cfg(unix)'.dev-dependencies.nix]
+version = "=0.31.3"
+features = ["fs"]

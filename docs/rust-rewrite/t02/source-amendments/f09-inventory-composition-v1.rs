@@ -4,7 +4,14 @@
 //! Finite source-only T02 f7 -> accepted-main integration proof; no original execution.
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
-use std::{fs, path::Path, process::Command};
+use std::{path::Path, process::Command};
+#[allow(
+    clippy::duplicate_mod,
+    reason = "Independent source gates include the same std-only bounded reader"
+)]
+#[path = "../../t08a/bounded_source_reader.rs"]
+mod bounded_source_reader;
+const MAX_PHYSICAL_SOURCE_BYTES: u64 = 1_048_576;
 #[path = "yaml-break-successor-v1.rs"]
 mod yaml_break;
 type Result<T> = std::result::Result<T, String>;
@@ -103,30 +110,26 @@ fn sha(raw: &[u8]) -> String {
 fn permission_bits(raw: u32) -> u32 {
     raw & 0o7777
 }
-fn read(root: &Path, path: &str) -> Result<Material> {
-    let full = root.join(path);
-    let metadata = fs::symlink_metadata(&full).map_err(|e| format!("{path}:{e}"))?;
-    need(
-        metadata.is_file() && !metadata.file_type().is_symlink(),
-        "T02 material is not regular",
-    )?;
+fn read_physical(root: &Path, path: &str) -> Result<Material> {
     #[cfg(unix)]
-    let mode = {
-        use std::os::unix::fs::PermissionsExt;
-        permission_bits(metadata.permissions().mode())
-    };
+    let (actual, mode) = bounded_source_reader::bounded_read(root, path, MAX_PHYSICAL_SOURCE_BYTES)
+        .map_err(|e| format!("{path}:{e}"))?;
     #[cfg(not(unix))]
     return Err("T02 source mode proof requires Unix".into());
     #[cfg(unix)]
     {
-        let actual = fs::read(full).map_err(|e| format!("{path}:{e}"))?;
-        let bytes = if PAGE_CHAINED.contains(&path) {
-            page_original(root, path)?.ok_or("missing chained page material")?
-        } else {
-            actual
-        };
-        Ok(Material { bytes, mode })
+        Ok(Material {
+            bytes: actual,
+            mode,
+        })
     }
+}
+fn read(root: &Path, path: &str) -> Result<Material> {
+    let mut material = read_physical(root, path)?;
+    if PAGE_CHAINED.contains(&path) {
+        material.bytes = page_original(root, path)?.ok_or("missing chained page material")?;
+    }
+    Ok(material)
 }
 fn decode(raw: &[u8], pin: &str) -> Result<Capsule> {
     need(sha(raw) == pin, "T02 successor capsule digest")?;
@@ -208,7 +211,7 @@ fn load_inputs(root: &Path, c: &Capsule) -> Result<Vec<Inputs>> {
                 material.bytes = crate::a13::a06_source_successor::w07_t02_joint::parent(
                     root,
                     p,
-                    &fs::read(root.join(p)).map_err(|e| e.to_string())?,
+                    &read_physical(root, p)?.bytes,
                     crate::a13::a06_source_successor::w07_t02_joint::Parent::T02,
                 )?;
             }
@@ -221,7 +224,7 @@ fn load_inputs(root: &Path, c: &Capsule) -> Result<Vec<Inputs>> {
             let parent_blob = crate::a13::a06_source_successor::w07_t02_joint::parent_git_blob(
                 root,
                 &t.path,
-                &fs::read(root.join(&t.path)).map_err(|e| e.to_string())?,
+                &read_physical(root, &t.path)?.bytes,
                 crate::a13::a06_source_successor::w07_t02_joint::Parent::T02,
             )?;
             let proved_parent_blob_line = format!("{parent_blob}\n");
@@ -318,10 +321,7 @@ pub(super) fn controls(root: &Path) -> Result<()> {
     let good = load_inputs(root, &c)?;
     verify_materials(&c, &good)?;
     for (index, transition) in c.transitions.iter().enumerate() {
-        let physical = Material {
-            bytes: fs::read(root.join(&transition.path)).map_err(|e| e.to_string())?,
-            mode: read(root, &transition.path)?.mode,
-        };
+        let physical = read_physical(root, &transition.path)?;
         need(
             physical.bytes != good[index].current.bytes,
             "T02 physical joint and parent operands were conflated",
@@ -617,13 +617,8 @@ struct PageCapsule {
 }
 fn page_capsule(root: &Path) -> Result<PageCapsule> {
     let _ = f09_parents(root)?;
-    let full = root.join(PAGE_CAPSULE);
-    let meta = fs::symlink_metadata(&full).map_err(|e| e.to_string())?;
-    need(
-        meta.is_file() && !meta.file_type().is_symlink(),
-        "page capsule regular material",
-    )?;
-    let raw = fs::read(full).map_err(|e| e.to_string())?;
+    let (raw, _) =
+        bounded_source_reader::bounded_read(root, PAGE_CAPSULE, MAX_PHYSICAL_SOURCE_BYTES)?;
     need(sha(&raw) == PAGE_CAPSULE_SHA, "page capsule exact digest")?;
     let c: PageCapsule = serde_json::from_slice(&raw).map_err(|e| e.to_string())?;
     need(
@@ -691,21 +686,10 @@ fn page_f14_current(path: &str, current: &[u8]) -> Result<Vec<u8>> {
     Ok(projected)
 }
 fn page_row(root: &Path, row: &PageRow) -> Result<Vec<u8>> {
-    let full = root.join(&row.path);
-    let meta = fs::symlink_metadata(&full).map_err(|e| e.to_string())?;
-    need(
-        meta.is_file() && !meta.file_type().is_symlink(),
-        "page source regular file",
-    )?;
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        need(
-            permission_bits(meta.permissions().mode()) == row.mode,
-            "page exact source mode",
-        )?;
-    }
-    let current = fs::read(full).map_err(|e| e.to_string())?;
+    let physical = read_physical(root, &row.path)?;
+    let current = physical.bytes;
+    let mode = physical.mode;
+    need(mode == row.mode, "page exact source mode")?;
     let current = if row.path == F09_PATHS[0] {
         f09_parent(root, &current)?
     } else if row.path == "crates/ssx-infra/src/search.rs" {
@@ -764,7 +748,7 @@ fn page_controls(root: &Path) -> Result<()> {
     let c = page_capsule(root)?;
     for row in &c.rows {
         page_row(root, row)?;
-        let current = fs::read(root.join(&row.path)).map_err(|e| e.to_string())?;
+        let current = read_physical(root, &row.path)?.bytes;
         let current = if row.path == F09_PATHS[0] {
             f09_parent(root, &current)?
         } else if row.path == "crates/ssx-infra/src/search.rs" {
@@ -920,21 +904,13 @@ fn f09_regular(root: &Path, path: &str) -> Result<Material> {
             || F09_FROZEN.iter().any(|(p, _)| *p == path),
         "F09 composition unlisted physical path",
     )?;
-    let full = root.join(path);
-    let metadata = fs::symlink_metadata(&full).map_err(|e| e.to_string())?;
-    need(
-        metadata.is_file() && !metadata.file_type().is_symlink(),
-        "F09 composition regular material",
-    )?;
     #[cfg(unix)]
     {
-        use std::os::unix::fs::PermissionsExt;
-        let mode = permission_bits(metadata.permissions().mode());
+        let (bytes, raw_mode) =
+            bounded_source_reader::bounded_read(root, path, MAX_PHYSICAL_SOURCE_BYTES)?;
+        let mode = permission_bits(raw_mode);
         need(mode == 0o644, "F09 composition exact mode")?;
-        Ok(Material {
-            bytes: fs::read(full).map_err(|e| e.to_string())?,
-            mode,
-        })
+        Ok(Material { bytes, mode })
     }
     #[cfg(not(unix))]
     {
@@ -1089,4 +1065,44 @@ pub(super) fn f09_controls(root: &Path) -> Result<()> {
         "PAGE_F09_INVENTORY_COMPOSITION_CONTROLS exact:two:git:inverse:missing:extra:tamper:modes"
     );
     Ok(())
+}
+
+#[cfg(test)]
+mod bounded_page_read_tests {
+    use super::*;
+
+    #[test]
+    fn physical_page_reads_are_bounded_independently_of_projected_size() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let capsule = page_capsule(&root).unwrap();
+        let mut larger_physical_rows = 0;
+        for row in &capsule.rows {
+            let physical = read_physical(&root, &row.path).unwrap();
+            if physical.bytes.len() > row.after_bytes {
+                larger_physical_rows += 1;
+                assert!(
+                    page_row(&root, row).is_ok(),
+                    "physical page source: {}",
+                    row.path
+                );
+            }
+        }
+        assert!(
+            larger_physical_rows > 0,
+            "fixture has rows whose physical source exceeds projected size"
+        );
+
+        for path in PAGE_CHAINED {
+            let physical = read_physical(&root, path).unwrap();
+            let projected = read(&root, path).unwrap();
+            assert_ne!(
+                physical.bytes, projected.bytes,
+                "projection remains distinct for {path}"
+            );
+            assert_eq!(
+                projected.bytes,
+                page_original(&root, path).unwrap().unwrap()
+            );
+        }
+    }
 }

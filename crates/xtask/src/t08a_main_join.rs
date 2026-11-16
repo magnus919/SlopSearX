@@ -1,7 +1,7 @@
 //! Closed accepted-CLI/W08-main join. No calls into either historical reader.
 use serde_json::Value;
 use sha2::{Digest, Sha256};
-use std::{fs, path::Path, process::Command};
+use std::{path::Path, process::Command};
 #[allow(
     dead_code,
     clippy::duplicate_mod,
@@ -50,48 +50,26 @@ fn digest(bytes: &[u8]) -> String {
         .collect()
 }
 fn regular(root: &Path, path: &str) -> Result<Vec<u8>> {
-    let full = root.join(path);
-    let m = fs::symlink_metadata(&full).map_err(|e| e.to_string())?;
-    need(
-        m.is_file() && !m.file_type().is_symlink() && m.len() <= 1048576,
-        "regular bounded source leaf",
-    )?;
-    need(
-        full.canonicalize()
-            .map_err(|e| e.to_string())?
-            .starts_with(root.canonicalize().map_err(|e| e.to_string())?),
-        "source stays within root",
-    )?;
-    fs::read(full).map_err(|e| e.to_string())
-}
-fn source_mode(root: &Path, path: &str) -> Result<&'static str> {
+    let (bytes, mode) = super::bounded_read(root, path, 1048576)?;
     #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        need(
-            fs::symlink_metadata(root.join(path))
-                .map_err(|e| e.to_string())?
-                .permissions()
-                .mode()
-                & 0o7777
-                == 0o644,
-            "physical source requires regular0644",
-        )?;
-    }
+    need(mode == 0o644, "opened source mode must be regular0644")?;
     #[cfg(not(unix))]
-    {
-        // Windows does not expose Unix permission bits. Preserve the committed
-        // source mode through the current index and independently reject links.
-        let out = Command::new("git")
-            .args(["ls-files", "--stage", "--", path])
-            .current_dir(root)
-            .output()
-            .map_err(|e| e.to_string())?;
-        need(
-            out.status.success() && String::from_utf8_lossy(&out.stdout).starts_with("100644 "),
-            "Windows current source index requires100644",
-        )?;
-    }
+    let _ = mode;
+    Ok(bytes)
+}
+#[cfg(not(unix))]
+fn source_mode(root: &Path, path: &str) -> Result<&'static str> {
+    // Windows does not expose Unix permission bits. Preserve the committed
+    // source mode through the current index and independently reject links.
+    let out = Command::new("git")
+        .args(["ls-files", "--stage", "--", path])
+        .current_dir(root)
+        .output()
+        .map_err(|e| e.to_string())?;
+    need(
+        out.status.success() && String::from_utf8_lossy(&out.stdout).starts_with("100644 "),
+        "Windows current source index requires100644",
+    )?;
     Ok("0644")
 }
 fn scope(doc: &Value) -> Result<()> {
@@ -133,8 +111,14 @@ fn scope(doc: &Value) -> Result<()> {
     Ok(())
 }
 fn capsule(root: &Path) -> Result<Value> {
-    source_mode(root, CAPSULE_PATH)?;
-    let raw = regular(root, CAPSULE_PATH)?;
+    let (raw, mode) = super::bounded_read(root, CAPSULE_PATH, 1048576)?;
+    #[cfg(unix)]
+    need(mode == 0o644, "opened capsule mode must be regular0644")?;
+    #[cfg(not(unix))]
+    {
+        let _ = mode;
+        source_mode(root, CAPSULE_PATH)?;
+    }
     need(
         digest(&raw) == CAPSULE_SHA,
         "compiled outer capsule identity",
@@ -572,8 +556,20 @@ pub(crate) fn project_at(
     parent: Parent,
 ) -> Result<Vec<u8>> {
     need(owns(path), "unlisted physical join path")?;
-    let mode = source_mode(physical_root, path)?;
-    let physical = regular(physical_root, path)?;
+    let (physical, opened_mode) = super::bounded_read(physical_root, path, 1048576)?;
+    #[cfg(unix)]
+    let mode = {
+        need(
+            opened_mode == 0o644,
+            "opened source mode must be regular0644",
+        )?;
+        "0644"
+    };
+    #[cfg(not(unix))]
+    let mode = {
+        let _ = opened_mode;
+        source_mode(physical_root, path)?
+    };
     need(
         physical == supplied,
         "join supplied buffer is not physical current",

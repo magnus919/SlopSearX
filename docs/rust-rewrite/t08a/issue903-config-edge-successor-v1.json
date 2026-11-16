@@ -1,0 +1,492 @@
+{
+  "schema": "ISSUE903_CONFIG_EDGE_SUCCESSOR_V1",
+  "baseline_commit": "cab037909ca261d3d7157a5cab5628f1b6a8cf83",
+  "rows": [
+    {
+      "path": "Cargo.lock",
+      "prior": {
+        "bytes": 94340,
+        "sha256": "fcc6f4375b5f967d6a1d96172a0707438957e95fbddd83a502105bf5fede4847",
+        "mode": "0644",
+        "git_blob": "c7fddce0c1d2f5d4bfed297056f2f81da936caf8"
+      },
+      "current": {
+        "bytes": 94358,
+        "sha256": "be8d91b79e48175ea1d3d523c05e5e21a9e8cac815bfb4d49db6fd188b8ca4d0",
+        "mode": "0644"
+      },
+      "edits": [
+        {
+          "offset": 65746,
+          "remove_utf8": "",
+          "insert_utf8": "\",\n \"serde"
+        },
+        {
+          "offset": 67878,
+          "remove_utf8": "",
+          "insert_utf8": "nix\",\n \""
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-cli-check/Cargo.toml",
+      "prior": {
+        "bytes": 638,
+        "sha256": "3f69532d7239aa90169e03abf5e7e32dd31fcd2ec2c47b07c56f5dbc5e77e42a",
+        "mode": "0644",
+        "git_blob": "1f1254f20f661e522a8b2351ec628db78b25460f"
+      },
+      "current": {
+        "bytes": 667,
+        "sha256": "f346deb58f7a660afc288a1609507a140259fd743e3a8eef61990f85ea5795b5",
+        "mode": "0644"
+      },
+      "edits": [
+        {
+          "offset": 204,
+          "remove_utf8": "",
+          "insert_utf8": "\nserde.workspace = true"
+        },
+        {
+          "offset": 636,
+          "remove_utf8": "]\n",
+          "insert_utf8": ", \"fs\"]\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-mcp/Cargo.toml",
+      "prior": {
+        "bytes": 1234,
+        "sha256": "9a077866f6c72e8513d727c4f81928777ee985ae5742ace152bc61875775727b",
+        "mode": "0644",
+        "git_blob": "3a25afe2908a25a81d0f413d9c098e20bdbf7e86"
+      },
+      "current": {
+        "bytes": 1315,
+        "sha256": "a7ce09fdebd94fb153b729d448caeba998955f47814e262d78605786a7272acf",
+        "mode": "0644"
+      },
+      "edits": [
+        {
+          "offset": 1234,
+          "remove_utf8": "",
+          "insert_utf8": "\n[target.'cfg(unix)'.dev-dependencies.nix]\nversion = \"=0.31.3\"\nfeatures = [\"fs\"]\n"
+        }
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/a06/source-amendments/native-search-reader.rs",
+      "prior": {
+        "bytes": 39955,
+        "sha256": "61fa2a5aa3037c383691a1a023a17f48c20c05dcda486a02cfd0090c8a25035a",
+        "mode": "0644",
+        "git_blob": "b6fcb6d4b0470517a064ca66690241ff7e8a441a"
+      },
+      "current": {
+        "bytes": 39866,
+        "sha256": "489873046d41019cf1e01567e9bbe0b78fae5e2712e07585a46aa7a33e3387b3",
+        "mode": "0644"
+      },
+      "edits": [
+        {
+          "offset": 147,
+          "remove_utf8": "fs, ",
+          "insert_utf8": ""
+        },
+        {
+          "offset": 180,
+          "remove_utf8": "",
+          "insert_utf8": ";\n#[allow(\n    clippy::duplicate_mod,\n    reason = \"Independent source gates include the same std-only bounded reader\"\n)]\n#[path = \"../../t08a/bounded_source_reader.rs\"]\nmod bounded_source_reader"
+        },
+        {
+          "offset": 1431,
+          "remove_utf8": "let full = root.join(path);\n    let",
+          "insert_utf8": "#[cfg(unix)]\n    let (bytes,"
+        },
+        {
+          "offset": 1468,
+          "remove_utf8": "eta = fs",
+          "insert_utf8": "ode) = bounded_source_reader"
+        },
+        {
+          "offset": 1478,
+          "remove_utf8": "symlink_metadata(&full)",
+          "insert_utf8": "bounded_read(root, path, 1048576)\n        "
+        },
+        {
+          "offset": 1544,
+          "remove_utf8": "need(\n        meta.is_file() && !meta.file_type().is_symlink(),\n        \"regular non-symlink material\",\n    )?;\n    #[cfg(unix)]\n    let mode = {\n        use std::os::unix::fs::PermissionsExt;\n        meta.permissions().mode() & 0o7777\n    };\n    ",
+          "insert_utf8": ""
+        },
+        {
+          "offset": 1905,
+          "remove_utf8": "\n       ",
+          "insert_utf8": ""
+        },
+        {
+          "offset": 1919,
+          "remove_utf8": ": fs::read(full).",
+          "insert_utf8": ", "
+        },
+        {
+          "offset": 1937,
+          "remove_utf8": "ap_err(|e| e.to_string())?,\n        mode,\n   ",
+          "insert_utf8": "ode"
+        }
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+      "prior": {
+        "bytes": 46295,
+        "sha256": "3c1dfa0d8e244affb4329a857736ecc18e9378732a5f86899e491096dd771264",
+        "mode": "0644",
+        "git_blob": "d1aab72606466f05d8198c5125660bbd46562fc0"
+      },
+      "current": {
+        "bytes": 46427,
+        "sha256": "9497f9b559d4ce0af70cc19e31aed1a9b46260f23257013e59d07340beb2d25d",
+        "mode": "0644"
+      },
+      "edits": [
+        {
+          "offset": 29603,
+          "remove_utf8": "full",
+          "insert_utf8": "(bytes, mode)"
+        },
+        {
+          "offset": 29610,
+          "remove_utf8": "root.join(",
+          "insert_utf8": "cli_source_custody::bounded_read(root, "
+        },
+        {
+          "offset": 29628,
+          "remove_utf8": ");\n    let meta = fs::symlink_metadata(&full).map_err(|e| e.to_string()",
+          "insert_utf8": ", 1_048_576"
+        },
+        {
+          "offset": 29707,
+          "remove_utf8": "need(\n        meta.is_file() && !meta.file_type().is_symlink(),\n        \"re",
+          "insert_utf8": "#[cf"
+        },
+        {
+          "offset": 29783,
+          "remove_utf8": "ular non-symlink source\",\n    ",
+          "insert_utf8": "(unix)]\n    need(mode == 0o644, \"opened regular source mode0644\""
+        },
+        {
+          "offset": 29827,
+          "remove_utf8": "",
+          "insert_utf8": "not("
+        },
+        {
+          "offset": 29832,
+          "remove_utf8": "",
+          "insert_utf8": ")"
+        },
+        {
+          "offset": 29838,
+          "remove_utf8": "{\n        use std::os::unix::fs::PermissionsExt;\n        Ok((\n            fs::read(full).map_err(|e| e.to_string())?,\n            meta.permissions().mode() & 0o7777,\n        ))\n    }\n    #[cfg(not(unix))]\n    {\n       ",
+          "insert_utf8": "return"
+        },
+        {
+          "offset": 30110,
+          "remove_utf8": "\n    ",
+          "insert_utf8": ";\n    #[cfg(unix)]\n    Ok((bytes, mode))\n"
+        },
+        {
+          "offset": 30117,
+          "remove_utf8": "}",
+          "insert_utf8": ""
+        },
+        {
+          "offset": 30226,
+          "remove_utf8": "",
+          "insert_utf8": "physical_"
+        },
+        {
+          "offset": 30237,
+          "remove_utf8": "",
+          "insert_utf8": ", trusted_source_root: &Path"
+        },
+        {
+          "offset": 30263,
+          "remove_utf8": "pat",
+          "insert_utf8": "(current, mode) =\n        cli_source_custody::bounded_read(p"
+        },
+        {
+          "offset": 30267,
+          "remove_utf8": " = root.join(",
+          "insert_utf8": "ysical_root, "
+        },
+        {
+          "offset": 30307,
+          "remove_utf8": ");\n    let meta = fs::symlink_metadata(&path).map_err(|e| e.to_string()",
+          "insert_utf8": ", 1_048_576"
+        },
+        {
+          "offset": 30386,
+          "remove_utf8": "need(\n        meta.is_file() && !meta.file_type().is_symlink(),\n        \"regular non-symlink paired MCP manifest\",\n    )?;\n    ",
+          "insert_utf8": ""
+        },
+        {
+          "offset": 30540,
+          "remove_utf8": "use std::os::unix::fs::PermissionsExt;\n        let bytes = fs::read(path).map_err(|e| e.to_string())?;\n        need(\n            meta.permissions().mode() & 0o7777",
+          "insert_utf8": "need(mode"
+        },
+        {
+          "offset": 30712,
+          "remove_utf8": "\n    ",
+          "insert_utf8": ", \"opened paired manifest mode0644\")?;\n        let prior = cli_source_custody::project_issue903_config(\n            trusted_source_root,\n            \"crates/ssx-mcp/Cargo.toml\",\n"
+        },
+        {
+          "offset": 30730,
+          "remove_utf8": "& bytes",
+          "insert_utf8": "current,\n            mode,\n        )?;\n        need(\n            prior"
+        },
+        {
+          "offset": 30776,
+          "remove_utf8": "bytes",
+          "insert_utf8": "prior"
+        },
+        {
+          "offset": 30913,
+          "remove_utf8": "",
+          "insert_utf8": "predecessor "
+        },
+        {
+          "offset": 30923,
+          "remove_utf8": "",
+          "insert_utf8": "/Git identity"
+        },
+        {
+          "offset": 30969,
+          "remove_utf8": "",
+          "insert_utf8": "\n        let _ = (current, mode, trusted_source_root);"
+        },
+        {
+          "offset": 31056,
+          "remove_utf8": "",
+          "insert_utf8": "\n"
+        },
+        {
+          "offset": 33718,
+          "remove_utf8": "",
+          "insert_utf8": ", trusted_source_root"
+        },
+        {
+          "offset": 35424,
+          "remove_utf8": "",
+          "insert_utf8": "controls(root)?;\n    cli_source_custody::issue903_config_"
+        },
+        {
+          "offset": 41176,
+          "remove_utf8": "manifest",
+          "insert_utf8": "(manifest, manifest_mode)"
+        },
+        {
+          "offset": 41186,
+          "remove_utf8": " fs::read(root.join(",
+          "insert_utf8": "\n        cli_source_custody::bounded_read(root, "
+        },
+        {
+          "offset": 41233,
+          "remove_utf8": ")).map_err(|e| e.to_string()",
+          "insert_utf8": ", 1_048_576)?;\n    need(\n        manifest_mode == 0o644,\n        \"opened paired manifest source mode0644\",\n    "
+        },
+        {
+          "offset": 44384,
+          "remove_utf8": "",
+          "insert_utf8": "("
+        },
+        {
+          "offset": 44388,
+          "remove_utf8": "",
+          "insert_utf8": ", lock_mode)"
+        },
+        {
+          "offset": 44390,
+          "remove_utf8": " fs::read(",
+          "insert_utf8": "\n        cli_source_custody::bounded_read(&"
+        },
+        {
+          "offset": 44419,
+          "remove_utf8": ".join(",
+          "insert_utf8": ", "
+        },
+        {
+          "offset": 44437,
+          "remove_utf8": ")).map_err(|e| e.to_string()",
+          "insert_utf8": ", 1_048_576)?;\n    need(lock_mode == 0o644, \"opened fixture lock mode0644\""
+        }
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/t03/source-successor-v1.rs",
+      "prior": {
+        "bytes": 40547,
+        "sha256": "9090524bb86a7679a0c7d3c95698cdd34f2b8e350bc50545bca19b950df70f03",
+        "mode": "0644",
+        "git_blob": "c6f955083f7dae389136e5799c8446e14932ef0c"
+      },
+      "current": {
+        "bytes": 42194,
+        "sha256": "065bb991fb93ab73b43125156d698e493d24ac4a08983827d8a53364725dbd43",
+        "mode": "0644"
+      },
+      "edits": [
+        {
+          "offset": 174,
+          "remove_utf8": "",
+          "insert_utf8": "allow(\n    dead_code,\n    clippy::duplicate_mod,\n    reason = \"T08 bounded physical admission shared with the custody roots\"\n)]\n#[path = \"../t08a/bounded_source_reader.rs\"]\nmod bounded_source_reader;\n#["
+        },
+        {
+          "offset": 428,
+          "remove_utf8": "",
+          "insert_utf8": ";\n#[allow(\n    dead_code,\n    clippy::duplicate_mod,\n    reason = \"Exact issue903 source layer is shared by T08A custody and T03 admission\"\n)]\n#[path = \"../t08a/issue903-config-edge-successor.rs\"]\nmod issue903_config_successor;\nconst ISSUE903_JOINT_SOURCE: &str = \"docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs\";\nconst ISSUE903_NATIVE_SOURCE: &str =\n    \"docs/rust-rewrite/a06/source-amendments/native-search-reader.rs\""
+        },
+        {
+          "offset": 31124,
+          "remove_utf8": "",
+          "insert_utf8": ", Vec<u8>"
+        },
+        {
+          "offset": 31334,
+          "remove_utf8": "",
+          "insert_utf8": "("
+        },
+        {
+          "offset": 31342,
+          "remove_utf8": "",
+          "insert_utf8": ", logical) = if path == ISSUE903_NATIVE_SOURCE {\n        let (physical, mode) = bounded_source_reader::bounded_read(root, path, LIMIT)?;\n        let logical = issue903_config_successor::prior(root, path, &physical, mode)?;\n        (physical, logical)\n    } else {\n        let physical"
+        },
+        {
+          "offset": 31393,
+          "remove_utf8": "let prior = inverse(&source, source_row, &",
+          "insert_utf8": "    ("
+        },
+        {
+          "offset": 31439,
+          "remove_utf8": "",
+          "insert_utf8": "ical.clone(), physical)\n    };\n    let prior = inverse(&source, source_row, &log"
+        },
+        {
+          "offset": 31616,
+          "remove_utf8": "phys",
+          "insert_utf8": "log"
+        },
+        {
+          "offset": 32355,
+          "remove_utf8": "",
+          "insert_utf8": "ical, log"
+        },
+        {
+          "offset": 32965,
+          "remove_utf8": "",
+          "insert_utf8": "logical, "
+        },
+        {
+          "offset": 33080,
+          "remove_utf8": "phys",
+          "insert_utf8": "log"
+        },
+        {
+          "offset": 33518,
+          "remove_utf8": "phys",
+          "insert_utf8": "log"
+        },
+        {
+          "offset": 34621,
+          "remove_utf8": "phys",
+          "insert_utf8": "log"
+        },
+        {
+          "offset": 35057,
+          "remove_utf8": "phys",
+          "insert_utf8": "log"
+        },
+        {
+          "offset": 35346,
+          "remove_utf8": "phys",
+          "insert_utf8": "log"
+        },
+        {
+          "offset": 36261,
+          "remove_utf8": "",
+          "insert_utf8": "_logical, "
+        },
+        {
+          "offset": 36563,
+          "remove_utf8": "",
+          "insert_utf8": "logical = if path == ISSUE903_JOINT_SOURCE {\n        let ("
+        },
+        {
+          "offset": 36571,
+          "remove_utf8": " = regular",
+          "insert_utf8": ", mode) = bounded_source_reader::bounded_read"
+        },
+        {
+          "offset": 36594,
+          "remove_utf8": "pin.current_",
+          "insert_utf8": "LIMIT)?;\n        need(physical == supplied, \"supplied "
+        },
+        {
+          "offset": 36611,
+          "remove_utf8": "",
+          "insert_utf8": " are physical current\""
+        },
+        {
+          "offset": 36619,
+          "remove_utf8": "need(",
+          "insert_utf8": "    issue903_config_successor::prior(root, path, &"
+        },
+        {
+          "offset": 36632,
+          "remove_utf8": " == supplied, \"supplied ",
+          "insert_utf8": ", mode)?\n    } else {\n        let physical = regular(root, path, pin.current_"
+        },
+        {
+          "offset": 36661,
+          "remove_utf8": " are ",
+          "insert_utf8": ")?;\n        need("
+        },
+        {
+          "offset": 36675,
+          "remove_utf8": "",
+          "insert_utf8": "== supplied, \"supplied bytes are physical "
+        },
+        {
+          "offset": 36691,
+          "remove_utf8": "let prior = inverse(&pin, row(&doc, path)?, &",
+          "insert_utf8": "    "
+        },
+        {
+          "offset": 36740,
+          "remove_utf8": "",
+          "insert_utf8": "ical\n    };\n    let prior = inverse(&pin, row(&doc, path)?, &log"
+        },
+        {
+          "offset": 36987,
+          "remove_utf8": "",
+          "insert_utf8": "issue903_config_successor::controls(root)?;\n    "
+        },
+        {
+          "offset": 37512,
+          "remove_utf8": "{\n            let p",
+          "insert_utf8": "if pin.pat"
+        },
+        {
+          "offset": 37532,
+          "remove_utf8": "ysical = regular(root, pin.path, pin.current_bytes)?;\n            (physical.clone(), physical)\n        };\n        let prior_bytes = prior(root, pin.path, &physical)?;\n        let source_row = row(&doc, pin.path)?;\n        need(\n            inverse(pin, source_row, &logical, 0o644)? == prior_bytes,\n            \"pure positive precedes controls\",\n        )?;\n        need(\n            frame(pin.path, &logical, 0o644)? == prior_bytes,\n            \"same pure frame as full custody\",\n        )?;\n        need(\n            prior(root, pin.path, &prior_bytes).is_err()\n                && frame(pin.path, &prior_bytes, 0o644).is_err(),\n            \"stale parent is not current\",\n        )?;\n        if pin.path == W07",
+          "insert_utf8": " == ISSUE903_JOINT"
+        },
+        {
+          "offset": 38265,
+          "remove_utf8": "",
+          "insert_utf8": "let (physical, mode) = bounded_source_reader::bounded_read(root, pin.path, LIMIT)?;\n            let logical = issue903_config_successor::prior(root, pin.path, &physical, mode)?;\n            (physical, logical)\n        } else {\n            let physical = regular(root, pin.path, pin.current_bytes)?;\n            (physical.clone(), physical)\n        };\n        let prior_bytes = prior(root, pin.path, &physical)?;\n        let source_row = row(&doc, pin.path)?;\n        need(\n            inverse(pin, source_row, &logical, 0o644)? == prior_bytes,\n            \"pure positive precedes controls\",\n        )?;\n        need(\n            frame(pin.path, &logical, 0o644)? == prior_bytes,\n            \"same pure frame as full custody\",\n        )?;\n        need(\n            prior(root, pin.path, &prior_bytes).is_err()\n                && frame(pin.path, &prior_bytes, 0o644).is_err(),\n            \"stale parent is not current\",\n        )?;\n        if pin.path == W07_SOURCE {\n            "
+        }
+      ]
+    }
+  ]
+}
