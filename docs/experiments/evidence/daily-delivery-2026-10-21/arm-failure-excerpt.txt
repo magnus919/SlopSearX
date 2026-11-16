@@ -1,0 +1,25 @@
+Derived excerpt: JSON-escaped newlines expanded from hashed hosted log. Full raw stream identity in arm-log-provenance-v2.json.
+thread 'cold_bootstrap_expires_without_spending_search_deadline_or_leaking_cookies' (32649) panicked at crates/ssx-infra/tests/a05_html.rs:492:54:
+called `Option::unwrap()` on a `None` value
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+             at /rustc/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4/library/std/src/panicking.rs:679:5
+   1: core::panicking::panic_fmt
+             at /rustc/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4/library/core/src/panicking.rs:80:14
+   2: core::panicking::panic
+             at /rustc/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4/library/core/src/panicking.rs:150:5
+   3: core::option::unwrap_failed
+             at /rustc/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4/library/core/src/option.rs:2248:5
+   4: <core::option::Option<tokio::time::instant::Instant>>::unwrap
+             at /rustc/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4/library/core/src/option.rs:1014:21
+   5: <a05_html::ColdBootstrap as ssx_infra::http::Transport>::exchange::{closure#0}
+             at ./tests/a05_html.rs:492:54
+   6: <core::pin::Pin<alloc::boxed::Box<dyn core::future::future::Future<Output = core::result::Result<ssx_infra::http::Response, ssx_infra::http::Error>> + core::marker::Send>> as core::future::future::Future>::poll
+             at /rustc/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4/library/core/src/future/future.rs:133:9
+   7: <ssx_infra::http::Session>::execute_inner::{closure#0}
+             at ./src/http.rs:738:38
+   8: <ssx_infra::http::Session>::execute::{closure#0}::{closure#0}
+             at /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.53.3/src/macros/select.rs:710:49
+   9: <core::future::poll_fn::PollFn<<ssx_infra::http::Session>::execute::{closure#0}::{closure#0}> as core::future::future::Future>::poll
+             at /rustc
+Workspace summary: 12 passed; 1 failed in a05_html. See job118313385925.

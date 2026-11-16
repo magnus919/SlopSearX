@@ -1,0 +1,7 @@
+# Research completion ownership retirement
+
+A successful research attempt could persist its final job and then return `AuthorityLost`: its completion write cleared the job token while its own renewal monitor still validated that token during derived-index refresh. The fix keeps the token until execution and every search/snapshot/job write finish, signals and joins the authority monitor, then clears ownership using the existing lease/history-fenced CAS and releases only the old token. Real reclaimer loss remains an error; missing tokens never become authority.
+
+The regression controls use private pinned Valkey, a fixture-local test-only post-CAS barrier and the actual monitor. They cover normal completion, the already-completed early path and a replacement owner between monitor join and retirement. Existing research reservations, policy grants, tenant ownership, snapshots and wire shapes are unchanged.
+
+Portal impact: no request/filter/result/capability/cache/formatter/HTML contract changes. The corrected research completion result follows durable job state rather than a self-induced authority error. No portal code or browser visual change is required. The full configured CI portal contract gate remains required publication evidence; local original-Python/provider execution is not authorized or claimed. Native existing W02 contracts and new ordering controls are qualified separately with exact source identities.

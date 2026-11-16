@@ -1,0 +1,459 @@
+{
+  "schema": "slopsearx.a07.pure-a06-composition.v1",
+  "status": "SOURCE_PROPOSAL_UNCOMPILED_NATIVE_PENDING",
+  "historical_main": "d5615ace90b827f31789ccf04c72aaad4516e8f7",
+  "published_A06": "6e4ed9e90c59f304f28206ec0bb61b3a2b365938",
+  "transitions": [
+    {
+      "before": {
+        "path": "crates/ssx-infra/src/http.rs",
+        "bytes": 54774,
+        "sha256": "c5116d9a0081a0497a12643440053f001b6d68b48e9b4bf8c5feabf81eed5d10",
+        "mode": 420
+      },
+      "archive": {
+        "path": "docs/rust-rewrite/a07/source-amendments/pure-a06-v1/d561/crates/ssx-infra/src/http.rs.frozen",
+        "bytes": 54774,
+        "sha256": "c5116d9a0081a0497a12643440053f001b6d68b48e9b4bf8c5feabf81eed5d10",
+        "mode": 420
+      },
+      "after": {
+        "path": "crates/ssx-infra/src/http.rs",
+        "bytes": 92689,
+        "sha256": "7b97e19cca0dca7913ec5562428663d4af6c1b670c299497f5703fd6bb44ce75",
+        "mode": 420
+      },
+      "edits": [
+        {
+          "at": 100,
+          "remove_utf8": "use monotonic::Clock as DeadlineClock;\n",
+          "insert_utf8": "pub(crate) use monotonic::Clock as DeadlineClock;\n"
+        },
+        {
+          "at": 454,
+          "remove_utf8": "use tokio::sync::{Notify, OwnedSemaphorePermit, Semaphore, watch};\n",
+          "insert_utf8": "use tokio::sync::{Notify, OwnedSemaphorePermit, Semaphore, oneshot, watch};\n"
+        },
+        {
+          "at": 852,
+          "remove_utf8": "",
+          "insert_utf8": "/// Reviewed native outbound adapter identity. Explicit request/session values\n/// override this static versioned default; no tenant/auth headers are copied.\npub const DEFAULT_USER_AGENT: &str = concat!(\n    \"SlopSearX/\",\n    env!(\"CARGO_PKG_VERSION\"),\n    \" (meta search engine; agent-native)\"\n);\nfn default_headers() -> HeaderMap {\n    let mut headers = HeaderMap::new();\n    headers.insert(\n        header::USER_AGENT,\n        HeaderValue::from_static(DEFAULT_USER_AGENT),\n    );\n    headers\n}\n\n"
+        },
+        {
+          "at": 5662,
+          "remove_utf8": "    fn checkout(self: &Arc<Self>, url: &Url, state: Arc<Mutex<State>>) -> Result<Checkout> {\n        let origin = url.origin().ascii_serialization();\n",
+          "insert_utf8": "    fn reserve(\n        self: &Arc<Self>,\n        origin: String,\n        state: Arc<Mutex<State>>,\n        adapter_permit: OwnedSemaphorePermit,\n        pool_permit: OwnedSemaphorePermit,\n    ) -> Result<Checkout> {\n"
+        },
+        {
+          "at": 6316,
+          "remove_utf8": "                        i.origin == origin && i.used.elapsed() < Duration::from_secs(5)\n",
+          "insert_utf8": "                        (i.origin == origin || i.origin.is_empty())\n                            && i.used.elapsed() < Duration::from_secs(5)\n"
+        },
+        {
+          "at": 6958,
+          "remove_utf8": "                Some(i) if i.origin == origin && i.used.elapsed() < Duration::from_secs(5) => {\n                    i.client\n",
+          "insert_utf8": "                Some(i)\n                    if (i.origin == origin || i.origin.is_empty())\n                        && i.used.elapsed() < Duration::from_secs(5) =>\n                {\n                    Some(i.client)\n"
+        },
+        {
+          "at": 7101,
+          "remove_utf8": "                _ => build_client(&self.options)?,\n",
+          "insert_utf8": "                _ => None,\n"
+        },
+        {
+          "at": 7234,
+          "remove_utf8": "            build_client(&self.options)?\n",
+          "insert_utf8": "            None\n"
+        },
+        {
+          "at": 7397,
+          "remove_utf8": "            client: Some(client),\n",
+          "insert_utf8": "            client,\n            retain: true,\n            _adapter_permit: adapter_permit,\n            _pool_permit: pool_permit,\n"
+        },
+        {
+          "at": 8072,
+          "remove_utf8": "",
+          "insert_utf8": "    // A non-abortable builder owns this whole checkout, including these leases\n    // and its reserved slot, until completion even if its waiting future drops.\n    retain: bool,\n    _adapter_permit: OwnedSemaphorePermit,\n    _pool_permit: OwnedSemaphorePermit,\n"
+        },
+        {
+          "at": 8431,
+          "remove_utf8": "            if self.pool.permits.is_closed() {\n",
+          "insert_utf8": "            slots[n].0 = false;\n            if self.pool.permits.is_closed() || self.client.is_none() || !self.retain {\n"
+        },
+        {
+          "at": 8516,
+          "remove_utf8": "            slots[n].0 = false;\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 8961,
+          "remove_utf8": "",
+          "insert_utf8": "    }\n}\n/// Startup preparation is deliberately limited to the preexisting ordinary\n/// default pool. Ephemeral TLS/proxy profiles retain their cold-session lifetime.\n#[derive(Clone, Copy, Debug, PartialEq, Eq)]\npub enum Preparation {\n    Prepared,\n    Ephemeral,\n    Injected,\n    CapacityUnavailable,\n}\n#[derive(Default)]\nstruct BuilderState {\n    closed: bool,\n    jobs: Vec<tokio::task::JoinHandle<()>>,\n}\n#[cfg(test)]\ntype TestClientBuilder = Arc<dyn Fn(&Options) -> Result<Client> + Send + Sync>;\n#[derive(Default)]\nstruct ClientBuilders {\n    state: Mutex<BuilderState>,\n    draining: tokio::sync::Mutex<()>,\n    #[cfg(test)]\n    build: Mutex<Option<TestClientBuilder>>,\n    #[cfg(test)]\n    events: Mutex<Option<tokio::sync::mpsc::Sender<&'static str>>>,\n}\nimpl ClientBuilders {\n    fn event(&self, event: &'static str) {\n        #[cfg(test)]\n        if let Some(events) = self.events.lock().unwrap().as_ref() {\n            let _ = events.try_send(event);\n        }\n        #[cfg(not(test))]\n        let _ = event;\n    }\n    fn construct(&self, options: &Options) -> Result<Client> {\n        #[cfg(test)]\n        if let Some(build) = self.build.lock().unwrap().clone() {\n            return build(options);\n        }\n        build_client(options)\n    }\n    async fn run<T: Send + 'static>(\n        &self,\n        work: impl FnOnce() -> Result<T> + Send + 'static,\n    ) -> Result<T> {\n        let (tx, rx) = oneshot::channel();\n        {\n            let mut state = self.state.lock().unwrap();\n            if state.closed {\n                return Err(Error::Closed);\n            }\n            // Admission belongs to the caller's existing connection and pool\n            // leases, already moved into work, not a second worker allowance.\n            state.jobs.retain(|job| !job.is_finished());\n            state.jobs.push(tokio::task::spawn_blocking(move || {\n                // Receiver cancellation drops the completed checkout here,\n                // releasing its client, reserved slot and both owned leases.\n                let _ = tx.send(work());\n            }));\n        }\n        rx.await.map_err(|_| Error::InvalidResponse)?\n    }\n    fn close(&self) {\n        self.state.lock().unwrap().closed = true;\n    }\n    async fn drain(&self) {\n        let _draining = self.draining.lock().await;\n        // Keep join handles in the owner across cancellation of this drain.\n        // The async lock serializes concurrent drain waiters without detaching\n        // any job when one caller drops its shutdown future.\n        std::future::poll_fn(|cx| {\n            let mut state = self.state.lock().unwrap();\n            state\n                .jobs\n                .retain_mut(|job| Pin::new(job).poll(cx).is_pending());\n            if state.jobs.is_empty() {\n                std::task::Poll::Ready(())\n            } else {\n                std::task::Poll::Pending\n            }\n        })\n        .await;\n        self.event(\"builders_joined\");\n    }\n}\nasync fn checkout(\n    pool: Arc<Pool>,\n    builders: Arc<ClientBuilders>,\n    state: Arc<Mutex<State>>,\n    connections: Arc<Semaphore>,\n    origin: String,\n) -> Result<Checkout> {\n    let adapter_permit = connections\n        .acquire_owned()\n        .await\n        .map_err(|_| Error::Closed)?;\n    let pool_permit = pool\n        .permits\n        .clone()\n        .acquire_owned()\n        .await\n        .map_err(|_| Error::Closed)?;\n    state.lock().unwrap().expire_idle();\n    let mut checkout = pool.reserve(origin, state, adapter_permit, pool_permit)?;\n    if checkout.client.is_none() {\n        // Only the receiving operation can authorize idle retention. If its\n        // future drops, the worker/result guard drops the new client outright.\n        checkout.retain = false;\n        let builder_owner = builders.clone();\n        let mut checkout = builders\n            .run(move || {\n                checkout.client = Some(builder_owner.construct(&checkout.pool.options)?);\n                Ok(checkout)\n            })\n            .await?;\n        checkout.retain = true;\n        Ok(checkout)\n    } else {\n        Ok(checkout)\n"
+        },
+        {
+          "at": 10667,
+          "remove_utf8": "",
+          "insert_utf8": "    builders: Arc<ClientBuilders>,\n"
+        },
+        {
+          "at": 11115,
+          "remove_utf8": "",
+          "insert_utf8": "            builders: Arc::new(ClientBuilders::default()),\n"
+        },
+        {
+          "at": 14095,
+          "remove_utf8": "",
+          "insert_utf8": "    pub(crate) fn deadline_clock(&self) -> DeadlineClock {\n        self.clock.clone()\n    }\n    #[cfg(test)]\n    pub(crate) fn pending_replay_owner(\n        manual: bool,\n    ) -> (Self, PendingObserver, Option<monotonic::Driver>) {\n        pending_replay::owner(manual)\n    }\n    pub(crate) async fn admission_timeout<F: std::future::Future>(\n        &self,\n        deadline: Instant,\n        future: F,\n    ) -> std::result::Result<F::Output, ()> {\n        #[cfg(test)]\n        if self.clock.is_manual() {\n            assert!(\n                self.clock.is_pending_only(),\n                \"scholarly Manual owner must be sealed pending-only\"\n            );\n            return tokio::select! { biased; value=future=>Ok(value), _=self.clock.sleep_until(deadline)=>Err(()) };\n        }\n        tokio::time::timeout_at(deadline.into(), future)\n            .await\n            .map_err(|_| ())\n    }\n    #[cfg(test)]\n    pub(crate) fn record_scholarly_deadlines(&self, network: Instant, operation: Instant) {\n        self.clock.record_deadlines(network, operation);\n    }\n"
+        },
+        {
+          "at": 14869,
+          "remove_utf8": "",
+          "insert_utf8": "    #[cfg(test)]\n    pub(crate) fn replay_workers(&self) -> (usize, usize) {\n        (\n            self.decoder.state.lock().unwrap().active,\n            self.builders.state.lock().unwrap().jobs.len(),\n        )\n    }\n    /// Production startup constructor. A single runtime-owned startup guardian\n    /// retains the unpublished owner until receiver acknowledgment, or closes\n    /// and drains it if the constructor future disappears. No global reaper or\n    /// provider request is involved. Only the owner Arc is shared, never Client.\n    ///\n    /// Cleanup can outlast the startup deadline: OS proxy discovery cannot be\n    /// forcibly canceled. The guardian is not externally joined by a canceled\n    /// caller, and its async cleanup requires its Tokio runtime to remain alive.\n    /// Publication means this constructor returns Ready. A completed enclosing\n    /// task result left unread is normal post-return owner Drop; exact joins\n    /// then require an external shutdown supervisor, not this startup guardian.\n    pub async fn new_ready(\n        deadline: tokio::time::Instant,\n        cancel: Cancellation,\n    ) -> Result<(Arc<Self>, Preparation)> {\n        Self::ready_owner(Arc::new(Self::default()), deadline, cancel).await\n    }\n    async fn ready_owner(\n        owner: Arc<Self>,\n        deadline: tokio::time::Instant,\n        cancel: Cancellation,\n    ) -> Result<(Arc<Self>, Preparation)> {\n        let (mut publication, receiver) = oneshot::channel();\n        let receiver_cancel = cancel.clone();\n        // Exactly one startup guardian per new owner. Its sole cleanup scope is\n        // this owner and its existing admitted builders, not a background queue.\n        let _guardian = tokio::spawn(async move {\n            let result = tokio::select! { biased;\n                _=publication.closed()=>Err(Error::Cancelled),\n                result=owner.prepare_default(deadline, cancel.clone())=>result,\n            };\n            match result {\n                Ok(preparation) => {\n                    // Complete initialization joins before publication; no search\n                    // consumer can yet create another builder on this owner.\n                    owner.builders.drain().await;\n                    let late_error = if *owner.stop.0.borrow() {\n                        Some(Error::Closed)\n                    } else if *cancel.0.borrow() {\n                        Some(Error::Cancelled)\n                    } else if tokio::time::Instant::now() >= deadline {\n                        Some(Error::Deadline)\n                    } else {\n                        None\n                    };\n                    if let Some(error) = late_error {\n                        owner.builders.event(\"startup_cleanup_started\");\n                        owner.shutdown_and_wait().await;\n                        let _ = publication.send(Err(error));\n                        return;\n                    }\n                    let (acknowledge, acknowledgment) = oneshot::channel();\n                    let value = Ok((owner.clone(), preparation, acknowledge));\n                    match publication.send(value) {\n                        Ok(()) => {\n                            owner.builders.event(\"startup_sent\");\n                            if acknowledgment.await.is_ok() {\n                                owner.builders.event(\"startup_acknowledged\");\n                                return;\n                            }\n                        }\n                        Err(value) => drop(value),\n                    }\n                    // A successful send can still be unread and then dropped.\n                    // Only receiver acknowledgment authorizes publication.\n                    owner.builders.event(\"startup_cleanup_started\");\n                    owner.shutdown_and_wait().await;\n                }\n                Err(error) => {\n                    owner.builders.event(\"startup_cleanup_started\");\n                    owner.shutdown_and_wait().await;\n                    let _ = publication.send(Err(error));\n                }\n            }\n        });\n        let (owner, preparation, acknowledge) = receiver.await.map_err(|_| Error::Closed)??;\n        // A successfully sent payload may have remained unread while startup\n        // cancellation/closure/deadline changed. Recheck before publication in\n        // the same priority as execute; rejecting drops the ack and owner Arc,\n        // so the guardian still owns and drains the unpublished owner.\n        if *owner.stop.0.borrow() {\n            return Err(Error::Closed);\n        }\n        if *receiver_cancel.0.borrow() {\n            return Err(Error::Cancelled);\n        }\n        if tokio::time::Instant::now() >= deadline {\n            return Err(Error::Deadline);\n        }\n        // No await/yield between acknowledgment and returning the strong owner.\n        acknowledge.send(()).map_err(|_| Error::Closed)?;\n        Ok((owner, preparation))\n    }\n"
+        },
+        {
+          "at": 14940,
+          "remove_utf8": "",
+          "insert_utf8": "        #[cfg(test)]\n        if self.clock.is_pending_only() {\n            return Err(Error::InvalidRequest);\n        }\n"
+        },
+        {
+          "at": 18654,
+          "remove_utf8": "",
+          "insert_utf8": "            builders: self.builders.clone(),\n"
+        },
+        {
+          "at": 18747,
+          "remove_utf8": "            headers: HeaderMap::new(),\n",
+          "insert_utf8": "            headers: default_headers(),\n"
+        },
+        {
+          "at": 18922,
+          "remove_utf8": "",
+          "insert_utf8": "    }\n    /// Prepare one independent default-profile client before publishing native\n    /// consumers. This never connects to a URL. Only the already retained\n    /// ordinary pool is eligible; custom/environment-derived ephemeral profiles\n    /// are reported explicitly and remain cooperatively cold.\n    ///\n    /// The startup deadline covers admission and construction. A prepared client\n    /// shares the existing adapter-wide idle-ten allowance and expires after\n    /// five seconds, without extending the later request's absolute deadline.\n    pub async fn prepare_default(\n        &self,\n        deadline: tokio::time::Instant,\n        cancel: Cancellation,\n    ) -> Result<Preparation> {\n        if *self.stop.0.borrow() {\n            return Err(Error::Closed);\n        }\n        if *cancel.0.borrow() {\n            return Err(Error::Cancelled);\n        }\n        if tokio::time::Instant::now() >= deadline {\n            return Err(Error::Deadline);\n        }\n        {\n            let state = self.state.lock().unwrap();\n            if state.closed {\n                return Err(Error::Closed);\n            }\n            if state.injected.is_some() {\n                return Ok(Preparation::Injected);\n            }\n        }\n        // Default env-root profiles are already ephemeral after resolution.\n        // Report that exclusion before synchronous filesystem/certificate work;\n        // their ordinary session behavior remains unchanged.\n        if std::env::var_os(\"SSL_CERT_FILE\").is_some() || std::env::var_os(\"SSL_CERT_DIR\").is_some()\n        {\n            return Ok(Preparation::Ephemeral);\n        }\n        let session = self.session(Options::default(), deadline, cancel.clone())?;\n        self.prepare_resolved(session, deadline, cancel).await\n    }\n    async fn prepare_resolved(\n        &self,\n        session: Session,\n        deadline: tokio::time::Instant,\n        cancel: Cancellation,\n    ) -> Result<Preparation> {\n        if session.injected.is_some() {\n            return Ok(Preparation::Injected);\n        }\n        if !self\n            .state\n            .lock()\n            .unwrap()\n            .pools\n            .values()\n            .any(|p| Arc::ptr_eq(p, &session.pool))\n        {\n            return Ok(Preparation::Ephemeral);\n        }\n        let work = async {\n            self.state.lock().unwrap().expire_idle();\n            if session\n                .pool\n                .slots\n                .lock()\n                .unwrap()\n                .iter()\n                .any(|(_, entry)| entry.as_ref().is_some_and(|e| e.origin.is_empty()))\n            {\n                return Ok(Preparation::Prepared);\n            }\n            let prepared = checkout(\n                session.pool.clone(),\n                self.builders.clone(),\n                self.state.clone(),\n                self.connections.clone(),\n                String::new(),\n            )\n            .await?;\n            // Return through the ordinary slot/retention guard, with an empty\n            // origin meaning an unused client which has never opened a socket.\n            drop(prepared);\n            let retained = session\n                .pool\n                .slots\n                .lock()\n                .unwrap()\n                .iter()\n                .any(|(_, entry)| entry.as_ref().is_some_and(|e| e.origin.is_empty()));\n            Ok(if retained {\n                Preparation::Prepared\n            } else {\n                Preparation::CapacityUnavailable\n            })\n        };\n        tokio::select! { biased;\n            _=self.stop.cancelled()=>Err(Error::Closed),\n            _=cancel.cancelled()=>Err(Error::Cancelled),\n            _=tokio::time::sleep_until(deadline)=>Err(Error::Deadline),\n            result=work=>result,\n        }\n"
+        },
+        {
+          "at": 19322,
+          "remove_utf8": "",
+          "insert_utf8": "        self.builders.close();\n"
+        },
+        {
+          "at": 19717,
+          "remove_utf8": "",
+          "insert_utf8": "        self.builders.drain().await;\n        self.builders.event(\"shutdown_drained\");\n"
+        },
+        {
+          "at": 19875,
+          "remove_utf8": "",
+          "insert_utf8": "        self.builders.event(\"owner_dropped\");\n"
+        },
+        {
+          "at": 21754,
+          "remove_utf8": "",
+          "insert_utf8": "    builders: Arc<ClientBuilders>,\n"
+        },
+        {
+          "at": 22005,
+          "remove_utf8": "",
+          "insert_utf8": "    pub(crate) fn deadline_elapsed(&self, deadline: Instant) -> bool {\n        self.clock.now() >= deadline\n    }\n"
+        },
+        {
+          "at": 27959,
+          "remove_utf8": "        let _adapter_permit = self\n            .connections\n            .acquire()\n            .await\n            .map_err(|_| Error::Closed)?;\n        let _permit = self\n            .pool\n            .permits\n            .acquire()\n            .await\n            .map_err(|_| Error::Closed)?;\n        self.state.lock().unwrap().expire_idle();\n        let checkout = self.pool.checkout(&r.url, self.state.clone())?;\n",
+          "insert_utf8": "        let checkout = checkout(\n            self.pool.clone(),\n            self.builders.clone(),\n            self.state.clone(),\n            self.connections.clone(),\n            r.url.origin().ascii_serialization(),\n        )\n        .await?;\n"
+        },
+        {
+          "at": 54774,
+          "remove_utf8": "",
+          "insert_utf8": "\n#[cfg(test)]\n#[path = \"../tests/support/default_ca_environment.rs\"]\nmod default_ca_environment;\n#[cfg(test)]\npub(crate) use default_ca_environment::default_ca_test_environment;\n\n#[cfg(test)]\nmod client_initialization_tests {\n    use super::*;\n    use tokio::io::{AsyncReadExt, AsyncWriteExt};\n\n    fn block_builder(http: &AdapterHttp) -> (oneshot::Receiver<()>, std::sync::mpsc::Sender<()>) {\n        let (started_tx, started_rx) = oneshot::channel();\n        let started = Mutex::new(Some(started_tx));\n        let (release_tx, release_rx) = std::sync::mpsc::channel();\n        let release = Mutex::new(release_rx);\n        *http.builders.build.lock().unwrap() = Some(Arc::new(move |_| {\n            started.lock().unwrap().take().unwrap().send(()).unwrap();\n            release.lock().unwrap().recv().unwrap();\n            // Only the scheduling control changes: the normal builder still\n            // produces an independent client; no HTTP or real proxy is used.\n            build_client(&Options {\n                trust_env: false,\n                ..Options::default()\n            })\n        }));\n        (started_rx, release_tx)\n    }\n    fn busy(http: &AdapterHttp) -> usize {\n        http.state\n            .lock()\n            .unwrap()\n            .all_pools\n            .iter()\n            .filter_map(Weak::upgrade)\n            .map(|p| {\n                p.slots\n                    .lock()\n                    .unwrap()\n                    .iter()\n                    .filter(|(busy, _)| *busy)\n                    .count()\n            })\n            .sum()\n    }\n    #[tokio::test]\n    async fn deadline_keeps_builder_permits_and_slot_until_actual_completion_without_dispatch() {\n        let listener = tokio::net::TcpListener::bind(\"127.0.0.1:0\").await.unwrap();\n        let http = Arc::new(AdapterHttp::default());\n        let (started, release) = block_builder(&http);\n        let deadline = tokio::time::Instant::now() + Duration::from_secs(60);\n        let mut session = http\n            .session(Options::default(), deadline, Cancellation::default())\n            .unwrap();\n        let pool = session.pool.clone();\n        let request = Request::get(&format!(\"http://{}/\", listener.local_addr().unwrap())).unwrap();\n        let operation = tokio::spawn(async move { session.execute(request).await });\n        tokio::time::timeout(Duration::from_secs(5), started)\n            .await\n            .unwrap()\n            .unwrap();\n        // A deterministic parent Tokio deadline after observed worker startup;\n        // actual A08 fifty-millisecond wall-clock control stays separate.\n        tokio::time::pause();\n        tokio::time::advance(Duration::from_secs(61)).await;\n        assert!(tokio::time::Instant::now() > deadline);\n        // Resume before the qualification timeout: blocked workers inhibit\n        // paused-clock auto-advance, but cannot stop this real running clock.\n        tokio::time::resume();\n        assert_eq!(http.connections.available_permits(), 19);\n        assert_eq!(pool.permits.available_permits(), 19);\n        assert_eq!(busy(&http), 1);\n        assert_eq!(\n            tokio::time::timeout(Duration::from_secs(5), operation)\n                .await\n                .unwrap()\n                .unwrap()\n                .unwrap_err(),\n            Error::Deadline,\n        );\n        assert_eq!(http.connections.available_permits(), 19);\n        assert_eq!(pool.permits.available_permits(), 19);\n        assert_eq!(busy(&http), 1);\n        assert!(\n            tokio::time::timeout(Duration::from_millis(1), listener.accept())\n                .await\n                .is_err()\n        );\n        let owner = http.clone();\n        let drain = tokio::spawn(async move { owner.shutdown_and_wait().await });\n        tokio::task::yield_now().await;\n        assert!(!drain.is_finished());\n        release.send(()).unwrap();\n        drain.await.unwrap();\n        assert_eq!(busy(&http), 0);\n        // Closed semaphore still reports released ownership after exact join.\n        assert_eq!(http.connections.available_permits(), 20);\n        assert_eq!(pool.permits.available_permits(), 20);\n        assert!(pool.slots.lock().unwrap().iter().all(|(busy, _)| !busy));\n        assert!(http.state.lock().unwrap().pools.is_empty());\n    }\n    #[tokio::test]\n    async fn waiter_abort_does_not_release_blocking_builder_ownership_or_retain_late_client() {\n        let http = Arc::new(AdapterHttp::default());\n        let (started, release) = block_builder(&http);\n        let mut session = http\n            .session(\n                Options::default(),\n                tokio::time::Instant::now() + Duration::from_secs(10),\n                Cancellation::default(),\n            )\n            .unwrap();\n        let operation = tokio::spawn(async move {\n            session\n                .execute(Request::get(\"http://127.0.0.1:1/\").unwrap())\n                .await\n        });\n        tokio::time::timeout(Duration::from_secs(5), started)\n            .await\n            .unwrap()\n            .unwrap();\n        operation.abort();\n        assert!(operation.await.unwrap_err().is_cancelled());\n        assert_eq!(http.connections.available_permits(), 19);\n        assert_eq!(busy(&http), 1);\n        let owner = http.clone();\n        let first_drain = tokio::spawn(async move { owner.builders.drain().await });\n        tokio::task::yield_now().await;\n        assert!(!first_drain.is_finished());\n        first_drain.abort();\n        assert!(first_drain.await.unwrap_err().is_cancelled());\n        assert_eq!(http.builders.state.lock().unwrap().jobs.len(), 1);\n        release.send(()).unwrap();\n        http.builders.drain().await;\n        assert_eq!(http.connections.available_permits(), 20);\n        assert_eq!(busy(&http), 0);\n        assert_eq!(http.idle.available_permits(), 10);\n        http.shutdown_and_wait().await;\n    }\n    #[tokio::test]\n    async fn prepared_default_client_is_moved_once_and_reuses_existing_retention_and_expiry() {\n        if default_ca_test_environment(\n            \"http::client_initialization_tests::prepared_default_client_is_moved_once_and_reuses_existing_retention_and_expiry\",\n        ) {\n            return;\n        }\n        let http = AdapterHttp::default();\n        *http.builders.build.lock().unwrap() = Some(Arc::new(|_| {\n            build_client(&Options {\n                trust_env: false,\n                ..Options::default()\n            })\n        }));\n        let result = http\n            .prepare_default(\n                tokio::time::Instant::now() + Duration::from_secs(2),\n                Cancellation::default(),\n            )\n            .await\n            .unwrap();\n        // Launcher must provide an ordinary default-profile environment;\n        // a nonordinary host profile fails visibly rather than skipping controls.\n        assert_eq!(result, Preparation::Prepared);\n        assert_eq!(http.idle.available_permits(), 9);\n        let pool = http.state.lock().unwrap().pools.get(&None).unwrap().clone();\n        assert_eq!(\n            pool.slots\n                .lock()\n                .unwrap()\n                .iter()\n                .filter(|(_, i)| i.as_ref().is_some_and(|i| i.origin.is_empty()))\n                .count(),\n            1\n        );\n        // Unused prepared clients use the same five-second idle expiry.\n        for (_, entry) in pool.slots.lock().unwrap().iter_mut() {\n            if let Some(entry) = entry {\n                entry.used = Instant::now() - Duration::from_secs(5);\n            }\n        }\n        pool.expire_idle();\n        assert_eq!(http.idle.available_permits(), 10);\n        assert_eq!(\n            http.prepare_default(\n                tokio::time::Instant::now() + Duration::from_secs(2),\n                Cancellation::default()\n            )\n            .await\n            .unwrap(),\n            Preparation::Prepared\n        );\n        assert_eq!(http.idle.available_permits(), 9);\n        let listener = tokio::net::TcpListener::bind(\"127.0.0.1:0\").await.unwrap();\n        let address = listener.local_addr().unwrap();\n        let server = tokio::spawn(async move {\n            let (mut stream, _) = listener.accept().await.unwrap();\n            let mut bytes = [0; 8192];\n            assert!(stream.read(&mut bytes).await.unwrap() > 0);\n            stream\n                .write_all(b\"HTTP/1.1 200 OK\\r\\nContent-Length: 2\\r\\nConnection: close\\r\\n\\r\\nok\")\n                .await\n                .unwrap();\n        });\n        // Any second construction is an actual regression, not a timing check.\n        *http.builders.build.lock().unwrap() =\n            Some(Arc::new(|_| panic!(\"prepared client was not moved\")));\n        let mut session = http\n            .session(\n                Options::default(),\n                tokio::time::Instant::now() + Duration::from_secs(2),\n                Cancellation::default(),\n            )\n            .unwrap();\n        assert_eq!(\n            session\n                .execute(Request::get(&format!(\"http://{address}/\")).unwrap())\n                .await\n                .unwrap()\n                .body,\n            b\"ok\"\n        );\n        server.await.unwrap();\n        assert_eq!(http.idle.available_permits(), 9);\n        assert!(\n            pool.slots\n                .lock()\n                .unwrap()\n                .iter()\n                .all(|(_, i)| i.as_ref().is_none_or(|i| !i.origin.is_empty()))\n        );\n        for (_, idle) in pool.slots.lock().unwrap().iter_mut() {\n            if let Some(idle) = idle {\n                idle.used = Instant::now() - Duration::from_secs(5);\n            }\n        }\n        pool.expire_idle();\n        assert_eq!(http.idle.available_permits(), 10);\n        http.shutdown_and_wait().await;\n    }\n    #[tokio::test]\n    async fn builder_error_releases_both_leases_and_reserved_slot_without_idle_client() {\n        if default_ca_test_environment(\n            \"http::client_initialization_tests::builder_error_releases_both_leases_and_reserved_slot_without_idle_client\",\n        ) {\n            return;\n        }\n        let http = AdapterHttp::default();\n        *http.builders.build.lock().unwrap() = Some(Arc::new(|_| Err(Error::InvalidRequest)));\n        assert_eq!(\n            http.prepare_default(\n                tokio::time::Instant::now() + Duration::from_secs(5),\n                Cancellation::default()\n            )\n            .await\n            .unwrap_err(),\n            Error::InvalidRequest\n        );\n        let mut session = http\n            .session(\n                Options::default(),\n                tokio::time::Instant::now() + Duration::from_secs(5),\n                Cancellation::default(),\n            )\n            .unwrap();\n        let pool = session.pool.clone();\n        assert_eq!(\n            session\n                .execute(Request::get(\"http://127.0.0.1:1/\").unwrap())\n                .await\n                .unwrap_err(),\n            Error::InvalidRequest\n        );\n        http.builders.drain().await;\n        assert_eq!(http.connections.available_permits(), 20);\n        assert_eq!(pool.permits.available_permits(), 20);\n        assert_eq!(busy(&http), 0);\n        assert_eq!(http.idle.available_permits(), 10);\n        http.shutdown_and_wait().await;\n    }\n    #[tokio::test]\n    async fn owner_close_cancels_waiter_but_retains_build_ownership_until_drain() {\n        let http = Arc::new(AdapterHttp::default());\n        let (started, release) = block_builder(&http);\n        let mut session = http\n            .session(\n                Options::default(),\n                tokio::time::Instant::now() + Duration::from_secs(60),\n                Cancellation::default(),\n            )\n            .unwrap();\n        let pool = session.pool.clone();\n        let operation = tokio::spawn(async move {\n            session\n                .execute(Request::get(\"http://127.0.0.1:1/\").unwrap())\n                .await\n        });\n        tokio::time::timeout(Duration::from_secs(5), started)\n            .await\n            .unwrap()\n            .unwrap();\n        http.shutdown();\n        assert_eq!(operation.await.unwrap().unwrap_err(), Error::Closed);\n        assert_eq!(http.connections.available_permits(), 19);\n        assert_eq!(pool.permits.available_permits(), 19);\n        assert!(pool.slots.lock().unwrap().iter().any(|(busy, _)| *busy));\n        release.send(()).unwrap();\n        http.shutdown_and_wait().await;\n        assert_eq!(http.connections.available_permits(), 20);\n        assert_eq!(pool.permits.available_permits(), 20);\n        assert!(pool.slots.lock().unwrap().iter().all(|(busy, _)| !*busy));\n        assert_eq!(http.idle.available_permits(), 10);\n    }\n    struct NeverExchange;\n    impl Transport for NeverExchange {\n        fn exchange(&self, _: Request) -> ExchangeFuture<'_> {\n            Box::pin(async { panic!(\"preparation dispatched HTTP\") })\n        }\n    }\n    #[tokio::test]\n    async fn injected_and_ephemeral_profiles_never_start_preparation_workers() {\n        let http = AdapterHttp::default();\n        *http.builders.build.lock().unwrap() = Some(Arc::new(|_| panic!(\"excluded profile built\")));\n        let deadline = tokio::time::Instant::now() + Duration::from_secs(5);\n        // These are actual existing ephemeral Session profiles. The same private\n        // classification is called by the public default-only preparation API.\n        for options in [\n            Options {\n                trust_env: false,\n                ..Options::default()\n            },\n            Options {\n                http2: true,\n                ..Options::default()\n            },\n            Options {\n                verify_tls: false,\n                ..Options::default()\n            },\n        ] {\n            let session = http\n                .session(options, deadline, Cancellation::default())\n                .unwrap();\n            assert_eq!(\n                http.prepare_resolved(session, deadline, Cancellation::default())\n                    .await\n                    .unwrap(),\n                Preparation::Ephemeral\n            );\n        }\n        assert!(http.builders.state.lock().unwrap().jobs.is_empty());\n        assert_eq!(http.connections.available_permits(), 20);\n        assert_eq!(http.idle.available_permits(), 10);\n        http.shutdown_and_wait().await;\n        let injected = AdapterHttp::default();\n        injected.set_transport(Arc::new(NeverExchange)).unwrap();\n        *injected.builders.build.lock().unwrap() =\n            Some(Arc::new(|_| panic!(\"injected profile built\")));\n        assert_eq!(\n            injected\n                .prepare_default(deadline, Cancellation::default())\n                .await\n                .unwrap(),\n            Preparation::Injected\n        );\n        assert!(injected.builders.state.lock().unwrap().jobs.is_empty());\n        assert_eq!(injected.connections.available_permits(), 20);\n        assert_eq!(injected.idle.available_permits(), 10);\n        injected.shutdown_and_wait().await;\n    }\n    async fn event(events: &mut tokio::sync::mpsc::Receiver<&'static str>, expected: &'static str) {\n        let actual = tokio::time::timeout(Duration::from_secs(5), events.recv())\n            .await\n            .unwrap()\n            .unwrap();\n        assert_eq!(actual, expected);\n    }\n    #[tokio::test]\n    async fn aborted_unpublished_constructor_guardian_joins_blocked_builder_without_external_owner()\n    {\n        if default_ca_test_environment(\n            \"http::client_initialization_tests::aborted_unpublished_constructor_guardian_joins_blocked_builder_without_external_owner\",\n        ) {\n            return;\n        }\n        let owner = Arc::new(AdapterHttp::default());\n        let weak = Arc::downgrade(&owner);\n        let connections = owner.connections.clone();\n        let idle = owner.idle.clone();\n        let (events_tx, mut events) = tokio::sync::mpsc::channel(16);\n        *owner.builders.events.lock().unwrap() = Some(events_tx);\n        let (started, release) = block_builder(&owner);\n        let mut constructor = Box::pin(AdapterHttp::ready_owner(\n            owner,\n            tokio::time::Instant::now() + Duration::from_secs(60),\n            Cancellation::default(),\n        ));\n        std::future::poll_fn(|cx| {\n            assert!(constructor.as_mut().poll(cx).is_pending());\n            std::task::Poll::Ready(())\n        })\n        .await;\n        tokio::time::timeout(Duration::from_secs(5), started)\n            .await\n            .unwrap()\n            .unwrap();\n        let pool = {\n            let owner = weak.upgrade().unwrap();\n            owner\n                .state\n                .lock()\n                .unwrap()\n                .pools\n                .get(&None)\n                .unwrap()\n                .clone()\n        };\n        // Only the unpublished guardian now owns AdapterHttp, not this test.\n        assert_eq!(weak.strong_count(), 1);\n        drop(constructor);\n        event(&mut events, \"startup_cleanup_started\").await;\n        assert_eq!(connections.available_permits(), 19);\n        assert_eq!(pool.permits.available_permits(), 19);\n        assert!(pool.slots.lock().unwrap().iter().any(|(busy, _)| *busy));\n        assert!(events.try_recv().is_err());\n        release.send(()).unwrap();\n        event(&mut events, \"builders_joined\").await;\n        event(&mut events, \"shutdown_drained\").await;\n        event(&mut events, \"owner_dropped\").await;\n        assert!(weak.upgrade().is_none());\n        assert_eq!(connections.available_permits(), 20);\n        assert_eq!(pool.permits.available_permits(), 20);\n        assert!(\n            pool.slots\n                .lock()\n                .unwrap()\n                .iter()\n                .all(|(busy, entry)| !busy && entry.is_none())\n        );\n        assert_eq!(idle.available_permits(), 10);\n    }\n    #[tokio::test]\n    async fn unread_successful_publication_still_requires_ack_and_drains_on_receiver_drop() {\n        if default_ca_test_environment(\n            \"http::client_initialization_tests::unread_successful_publication_still_requires_ack_and_drains_on_receiver_drop\",\n        ) {\n            return;\n        }\n        let owner = Arc::new(AdapterHttp::default());\n        let weak = Arc::downgrade(&owner);\n        let connections = owner.connections.clone();\n        let idle = owner.idle.clone();\n        let (events_tx, mut events) = tokio::sync::mpsc::channel(16);\n        *owner.builders.events.lock().unwrap() = Some(events_tx);\n        *owner.builders.build.lock().unwrap() = Some(Arc::new(|_| {\n            build_client(&Options {\n                trust_env: false,\n                ..Options::default()\n            })\n        }));\n        let mut constructor = Box::pin(AdapterHttp::ready_owner(\n            owner,\n            tokio::time::Instant::now() + Duration::from_secs(60),\n            Cancellation::default(),\n        ));\n        std::future::poll_fn(|cx| {\n            assert!(constructor.as_mut().poll(cx).is_pending());\n            std::task::Poll::Ready(())\n        })\n        .await;\n        event(&mut events, \"builders_joined\").await;\n        event(&mut events, \"startup_sent\").await;\n        // Do not poll constructor again: send succeeded, but result is unread.\n        assert_eq!(weak.strong_count(), 2); // guardian plus channel payload\n        assert_eq!(idle.available_permits(), 9);\n        drop(constructor);\n        event(&mut events, \"startup_cleanup_started\").await;\n        event(&mut events, \"builders_joined\").await;\n        event(&mut events, \"shutdown_drained\").await;\n        event(&mut events, \"owner_dropped\").await;\n        assert!(weak.upgrade().is_none());\n        assert_eq!(connections.available_permits(), 20);\n        assert_eq!(idle.available_permits(), 10);\n    }\n    async fn reject_late_unread_publication(cancelled: bool) {\n        let owner = Arc::new(AdapterHttp::default());\n        let weak = Arc::downgrade(&owner);\n        let connections = owner.connections.clone();\n        let idle = owner.idle.clone();\n        let (events_tx, mut events) = tokio::sync::mpsc::channel(16);\n        *owner.builders.events.lock().unwrap() = Some(events_tx);\n        *owner.builders.build.lock().unwrap() = Some(Arc::new(|_| {\n            build_client(&Options {\n                trust_env: false,\n                ..Options::default()\n            })\n        }));\n        let cancel = Cancellation::default();\n        let deadline = tokio::time::Instant::now() + Duration::from_secs(60);\n        let mut constructor = Box::pin(AdapterHttp::ready_owner(owner, deadline, cancel.clone()));\n        std::future::poll_fn(|cx| {\n            assert!(constructor.as_mut().poll(cx).is_pending());\n            std::task::Poll::Ready(())\n        })\n        .await;\n        event(&mut events, \"builders_joined\").await;\n        event(&mut events, \"startup_sent\").await;\n        assert_eq!(weak.strong_count(), 2);\n        if cancelled {\n            cancel.cancel();\n        } else {\n            tokio::time::pause();\n            tokio::time::advance(Duration::from_secs(61)).await;\n            assert!(tokio::time::Instant::now() > deadline);\n            tokio::time::resume();\n        }\n        let result = tokio::time::timeout(Duration::from_secs(5), constructor)\n            .await\n            .unwrap();\n        if cancelled {\n            assert!(matches!(result, Err(Error::Cancelled)));\n        } else {\n            assert!(matches!(result, Err(Error::Deadline)));\n        }\n        event(&mut events, \"startup_cleanup_started\").await;\n        event(&mut events, \"builders_joined\").await;\n        event(&mut events, \"shutdown_drained\").await;\n        event(&mut events, \"owner_dropped\").await;\n        assert!(weak.upgrade().is_none());\n        assert_eq!(connections.available_permits(), 20);\n        assert_eq!(idle.available_permits(), 10);\n    }\n    #[tokio::test]\n    async fn unread_publication_cancelled_before_final_poll_is_rejected_and_drained() {\n        reject_late_unread_publication(true).await;\n    }\n    #[tokio::test]\n    async fn unread_publication_expired_before_final_poll_is_rejected_and_drained() {\n        reject_late_unread_publication(false).await;\n    }\n}\n\n#[cfg(test)]\n#[path = \"../tests/support/a07_http_clock.rs\"]\nmod owner_clock_tests;\n\n#[cfg(test)]\n#[path = \"http/pending_replay.rs\"]\nmod pending_replay;\n#[cfg(test)]\npub(crate) use pending_replay::PendingObserver;\n#[cfg(test)]\n#[path = \"../tests/support/a06_timeout_clock.rs\"]\nmod scholarly_timeout_clock;\n\n#[cfg(test)]\n#[path = \"../tests/support/a07_cold_context.rs\"]\nmod cold_context_tests;\n"
+        }
+      ]
+    },
+    {
+      "before": {
+        "path": "crates/ssx-infra/src/http/monotonic.rs",
+        "bytes": 2433,
+        "sha256": "1a58034e2ca03360d8bb4cdf419353e3677be0528704962a66ecb4add388a24f",
+        "mode": 420
+      },
+      "archive": {
+        "path": "docs/rust-rewrite/a07/source-amendments/pure-a06-v1/d561/crates/ssx-infra/src/http/monotonic.rs.frozen",
+        "bytes": 2433,
+        "sha256": "1a58034e2ca03360d8bb4cdf419353e3677be0528704962a66ecb4add388a24f",
+        "mode": 420
+      },
+      "after": {
+        "path": "crates/ssx-infra/src/http/monotonic.rs",
+        "bytes": 4833,
+        "sha256": "6ea309356076a9dda8f7a313f2dd5f476c624ff28663c91b104bbf86bde63ec6",
+        "mode": 420
+      },
+      "edits": [
+        {
+          "at": 223,
+          "remove_utf8": "",
+          "insert_utf8": "    #[cfg(test)]\n    trace: Option<std::sync::Arc<Trace>>,\n    #[cfg(test)]\n    pending_only: bool,\n"
+        },
+        {
+          "at": 683,
+          "remove_utf8": "",
+          "insert_utf8": "                    self.note_hit(deadline);\n"
+        },
+        {
+          "at": 1040,
+          "remove_utf8": "",
+          "insert_utf8": "        self.note_hit(deadline);\n"
+        },
+        {
+          "at": 1458,
+          "remove_utf8": "",
+          "insert_utf8": "                trace: None,\n                pending_only: false,\n"
+        },
+        {
+          "at": 2433,
+          "remove_utf8": "",
+          "insert_utf8": "\n#[cfg(test)]\n#[derive(Default)]\nstruct Trace {\n    hit: std::sync::Mutex<Option<(Instant, Instant)>>,\n    registered: std::sync::Mutex<Option<(Instant, Instant)>>,\n}\nimpl Clock {\n    pub(crate) fn expired(&self, deadline: Instant) -> bool {\n        let expired = self.now() >= deadline;\n        if expired {\n            self.note_hit(deadline);\n        }\n        expired\n    }\n    fn note_hit(&self, deadline: Instant) {\n        #[cfg(test)]\n        if let Some(trace) = &self.trace {\n            let now = self.now();\n            if now >= deadline {\n                *trace.hit.lock().unwrap() = Some((deadline, now));\n            }\n        }\n        #[cfg(not(test))]\n        let _ = deadline;\n    }\n    #[cfg(test)]\n    pub(crate) fn pending_owner(manual: bool) -> (Self, Option<Driver>) {\n        let (mut clock, driver) = if manual {\n            let (clock, driver) = Self::replay();\n            (clock, Some(driver))\n        } else {\n            (Self::default(), None)\n        };\n        clock.trace = Some(std::sync::Arc::new(Trace::default()));\n        clock.pending_only = true;\n        (clock, driver)\n    }\n    #[cfg(test)]\n    pub(crate) fn is_pending_only(&self) -> bool {\n        self.pending_only\n    }\n    #[cfg(test)]\n    pub(crate) fn observed(&self) -> bool {\n        self.trace.is_some() || self.is_manual()\n    }\n    #[cfg(test)]\n    pub(crate) fn record_deadlines(&self, network: Instant, operation: Instant) {\n        if let Some(trace) = &self.trace {\n            *trace.registered.lock().unwrap() = Some((network, operation));\n        }\n    }\n    #[cfg(test)]\n    pub(crate) fn deadlines(&self) -> (Instant, Instant) {\n        self.trace\n            .as_ref()\n            .unwrap()\n            .registered\n            .lock()\n            .unwrap()\n            .unwrap()\n    }\n    #[cfg(test)]\n    pub(crate) fn hit(&self) -> Option<(Instant, Instant)> {\n        *self.trace.as_ref().unwrap().hit.lock().unwrap()\n    }\n    #[cfg(test)]\n    pub(crate) fn matches_driver(&self, driver: &Driver) -> bool {\n        self.manual\n            .as_ref()\n            .is_some_and(|manual| std::sync::Arc::ptr_eq(manual, &driver.0))\n    }\n}\n"
+        }
+      ]
+    },
+    {
+      "before": {
+        "path": "crates/ssx-infra/src/adapters/clinicaltrials.rs",
+        "bytes": 42996,
+        "sha256": "2baaac73ee64f63192ec9c35ad44577d42cf4c314d1b6d3c57c7447086319485",
+        "mode": 420
+      },
+      "archive": {
+        "path": "docs/rust-rewrite/a07/source-amendments/pure-a06-v1/d561/crates/ssx-infra/src/adapters/clinicaltrials.rs.frozen",
+        "bytes": 42996,
+        "sha256": "2baaac73ee64f63192ec9c35ad44577d42cf4c314d1b6d3c57c7447086319485",
+        "mode": 420
+      },
+      "after": {
+        "path": "crates/ssx-infra/src/adapters/clinicaltrials.rs",
+        "bytes": 42588,
+        "sha256": "c3f8d666fa93b8ddd792ab50e2557a20b73d49c86ab3960c67b751bc08629120",
+        "mode": 420
+      },
+      "edits": [
+        {
+          "at": 12260,
+          "remove_utf8": "    get_observed_using_clock(\n        session,\n        req,\n        deadline,\n        empty404,\n        details,\n        parse_deadline,\n        observer,\n        Instant::now,\n    )\n    .await\n}\n#[allow(clippy::too_many_arguments)]\nasync fn get_observed_using_clock(\n    session: &mut crate::http::Session,\n    req: Request,\n    deadline: Instant,\n    empty404: bool,\n    details: bool,\n    parse_deadline: Option<Instant>,\n    observer: Observer<'_>,\n    now: impl FnOnce() -> Instant,\n) -> Result<Option<Value>> {\n    check_using(deadline, now)?;\n",
+          "insert_utf8": "    if session.deadline_elapsed(deadline) {\n        return Err(timeout());\n    }\n"
+        },
+        {
+          "at": 13695,
+          "remove_utf8": "#[allow(clippy::too_many_arguments)] // Same private HTTP request policy with its owner clock.\n",
+          "insert_utf8": "#[allow(clippy::too_many_arguments)] // Compatibility interface; Session owns the authoritative request clock.\n"
+        },
+        {
+          "at": 13833,
+          "remove_utf8": "    http: &AdapterHttp,\n",
+          "insert_utf8": "    _http: &AdapterHttp,\n"
+        },
+        {
+          "at": 14071,
+          "remove_utf8": "    get_observed_using_clock(\n",
+          "insert_utf8": "    get_observed(\n"
+        },
+        {
+          "at": 14226,
+          "remove_utf8": "        || http.deadline_now(),\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 42996,
+          "remove_utf8": "",
+          "insert_utf8": "\n#[cfg(test)]\n#[path = \"../../tests/support/a07_owner_clock.rs\"]\nmod owner_clock_tests;\n"
+        }
+      ]
+    },
+    {
+      "before": {
+        "path": "crates/ssx-infra/tests/a07_biomedical.rs",
+        "bytes": 30369,
+        "sha256": "6197dc61021719257105ce255b981ccbb95a2ed5fe60cbff67e891f3b2d0cf9a",
+        "mode": 420
+      },
+      "archive": {
+        "path": "docs/rust-rewrite/a07/source-amendments/pure-a06-v1/d561/crates/ssx-infra/tests/a07_biomedical.rs.frozen",
+        "bytes": 30369,
+        "sha256": "6197dc61021719257105ce255b981ccbb95a2ed5fe60cbff67e891f3b2d0cf9a",
+        "mode": 420
+      },
+      "after": {
+        "path": "crates/ssx-infra/tests/a07_biomedical.rs",
+        "bytes": 34801,
+        "sha256": "f50dad891fe6f16e2b2363536a4c0c4cfd48c932ee7229730af50de8649e514b",
+        "mode": 420
+      },
+      "edits": [
+        {
+          "at": 22179,
+          "remove_utf8": "struct CapturedTransport {\n    replies: Mutex<std::collections::VecDeque<ssx_json::Value>>,\n    seen: Mutex<Vec<ssx_infra::http::Request>>,\n",
+          "insert_utf8": "use ssx_infra::http as replay_http;\n#[path = \"support/a07_source_replay.rs\"]\nmod source_replay;\nuse source_replay::CapturedTransport;\n#[tokio::test]\nasync fn actual_source_matrix_preserves_requests_and_full_normalized_results() {\n    let matrix: ssx_json::Value = ssx_json::from_str(include_str!(\n        \"../../../docs/rust-rewrite/a07/source_matrix.json\"\n    ))\n    .unwrap();\n    let mut moved = std::collections::BTreeSet::new();\n    let mut replayed = 0usize;\n    let mut diagnostics = Vec::new();\n    let mut executed = std::collections::BTreeSet::new();\n    let supplement: ssx_json::Value = ssx_json::from_str(include_str!(\n        \"../../../docs/rust-rewrite/a07/source_supplement.json\"\n    ))\n    .unwrap();\n    let numeric: ssx_json::Value = ssx_json::from_str(include_str!(\n        \"../../../docs/rust-rewrite/a07/source_numeric.json\"\n    ))\n    .unwrap();\n    let digits: ssx_json::Value = ssx_json::from_str(include_str!(\n        \"../../../docs/rust-rewrite/a07/source_digits.json\"\n    ))\n    .unwrap();\n    let complete: ssx_json::Value = ssx_json::from_str(include_str!(\n        \"../../../docs/rust-rewrite/a07/source_complete.json\"\n    ))\n    .unwrap();\n    let complete_rows = complete[\"records\"].as_array().unwrap();\n    assert_eq!(complete_rows.len(), 127);\n    for old in matrix[\"records\"]\n        .as_array()\n        .unwrap()\n        .iter()\n        .chain(supplement[\"records\"].as_array().unwrap())\n        .chain(numeric[\"records\"].as_array().unwrap())\n        .chain(digits[\"records\"].as_array().unwrap())\n    {\n        let current = complete_rows\n            .iter()\n            .find(|row| row[\"id\"] == old[\"id\"])\n            .expect(\"original control must survive full-field recapture\");\n        for key in [\"engine\", \"query\", \"config\", \"responses\", \"requests\"] {\n            assert_eq!(\n                current[key], old[key],\n                \"source recapture input/request drift at {} {key}\",\n                old[\"id\"]\n            );\n        }\n        for key in [\"status\", \"error_message\", \"raised\"] {\n            assert_eq!(\n                current[\"output\"].get(key),\n                old[\"output\"].get(key),\n                \"source recapture status drift\"\n            );\n        }\n        if let Some(prior) = old[\"output\"][\"results\"].as_array() {\n            let current = current[\"output\"][\"results\"].as_array().unwrap();\n            assert_eq!(current.len(), prior.len());\n            for (row, old) in current.iter().zip(prior) {\n                for (key, value) in old.as_object().unwrap() {\n                    assert_eq!(\n                        &row[key.as_str()],\n                        value,\n                        \"existing captured normalized field changed\"\n                    );\n                }\n            }\n        }\n    }\n    let genes: ssx_json::Value = ssx_json::from_str(include_str!(\n        \"../../../docs/rust-rewrite/a07/source_gene_shapes.json\"\n    ))\n    .unwrap();\n    let dates: ssx_json::Value = ssx_json::from_str(include_str!(\n        \"../../../docs/rust-rewrite/a07/source_date_grammar.json\"\n    ))\n    .unwrap();\n    let sequences: ssx_json::Value = ssx_json::from_str(include_str!(\n        \"../../../docs/rust-rewrite/a07/source_sequences.json\"\n    ))\n    .unwrap();\n    let empty_iterables: ssx_json::Value = ssx_json::from_str(include_str!(\n        \"../../../docs/rust-rewrite/a07/source_empty_iterables.json\"\n    ))\n    .unwrap();\n    for record in complete_rows\n        .iter()\n        .chain(genes[\"records\"].as_array().unwrap())\n        .chain(dates[\"records\"].as_array().unwrap())\n        .chain(sequences[\"records\"].as_array().unwrap())\n        .chain(empty_iterables[\"records\"].as_array().unwrap())\n    {\n        let id = record[\"id\"].as_str().unwrap();\n        assert!(executed.insert(id), \"duplicate source control {id}\");\n        if source_replay::MOVED.contains(&id) {\n            assert_eq!(&source_replay::source_record(id), record);\n            moved.insert(id);\n            continue;\n        }\n        let transport = source_replay::transport(record);\n        let http = Arc::new(AdapterHttp::default());\n        http.set_transport(transport.clone()).unwrap();\n        diagnostics.extend(source_replay::replay_record(record, http, transport).await);\n        replayed += 1;\n    }\n    assert_eq!(\n        executed.len(),\n        172,\n        \"source capture must not be silently shortened\"\n    );\n    // Diagnostics are explicit proposed differences, not silently normalized parity.\n    if let Ok(path) = std::env::var(\"A07_DIAGNOSTIC_CAPTURE\") {\n        std::fs::write(path, ssx_json::to_string(&diagnostics).unwrap()).unwrap();\n    }\n    let ledger: ssx_json::Value = ssx_json::from_str(include_str!(\n        \"../../../docs/rust-rewrite/a07/proposed-differences.json\"\n    ))\n    .unwrap();\n    let approved_shape=ledger[\"records\"].as_array().unwrap().iter().map(|r|ssx_json::json!({\"id\":r[\"id\"],\"source_error\":r[\"source_error\"],\"source_raised\":r[\"source_raised\"],\"native_status\":r[\"native_status\"],\"native_error\":r[\"native_error\"]})).collect::<Vec<_>>();\n    assert_eq!(\n        diagnostics, approved_shape,\n        \"diagnostic drift requires an explicit per-case ledger update and review; pending entries are not acceptance\"\n    );\n    assert_eq!(replayed, 168);\n    assert_eq!(moved, source_replay::MOVED.into_iter().collect());\n"
+        },
+        {
+          "at": 22321,
+          "remove_utf8": "impl ssx_infra::http::Transport for CapturedTransport {\n    fn exchange(&self, request: ssx_infra::http::Request) -> ssx_infra::http::ExchangeFuture<'_> {\n        Box::pin(async move {\n            let url = request.url.clone();\n            self.seen.lock().unwrap().push(request);\n            let reply = self\n                .replies\n                .lock()\n                .unwrap()\n                .pop_front()\n                .ok_or(ssx_infra::http::Error::RequestLimit)?;\n            Ok(ssx_infra::http::Response {\n                status: reply[\"status\"].as_u64().unwrap() as u16,\n                url,\n                headers: Default::default(),\n                body: ssx_json::to_vec(&reply[\"body\"]).unwrap(),\n            })\n        })\n    }\n}\n",
+          "insert_utf8": "\n"
+        }
+      ]
+    }
+  ],
+  "fixed_sources": [
+    {
+      "path": "docs/rust-rewrite/a07/coverage.json",
+      "bytes": 68875,
+      "sha256": "3356fa8d6933418a666af2642d1c95705f76d60cf1d8306024a7e7f82d0718d2",
+      "mode": 420
+    },
+    {
+      "path": "docs/rust-rewrite/a07/source-amendments/pubchem-independent-budget-owner-clock-v1.json",
+      "bytes": 5334,
+      "sha256": "c2961952a5b8e0bdc0fbad51dabdb4227cac9c119378af009a3bda5f14fc9fa3",
+      "mode": 420
+    },
+    {
+      "path": "docs/rust-rewrite/a07/source-amendments/pubchem-independent-budget-original-v1.json",
+      "bytes": 32339,
+      "sha256": "25418d4e67381955d14275e37f9c52b2eafde81c3ee372ca2473017d73f52f96",
+      "mode": 420
+    },
+    {
+      "path": "crates/ssx-infra/tests/a07_context.rs",
+      "bytes": 30230,
+      "sha256": "1beb6032656e67e89c5055a2c6ff7790f7c1e6093700abdbaf7566fe1cba1b1f",
+      "mode": 420
+    },
+    {
+      "path": "crates/ssx-infra/tests/support/a07_resources.rs",
+      "bytes": 37892,
+      "sha256": "4c4fb9750de167dc458837cbddf3212aa9d60580c4265180f65d10e497b5faa7",
+      "mode": 420
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/pubchem.rs",
+      "bytes": 11808,
+      "sha256": "69693fef8959d1ef0db05fc3ae18f693552c500863ce7f8cb307076dcd224084",
+      "mode": 420
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/europepmc.rs",
+      "bytes": 12061,
+      "sha256": "fbdcc3903ecb18faaa56c22229e94ff2bb0f750c08e4e094dcf9ba1674946585",
+      "mode": 420
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/uniprot.rs",
+      "bytes": 15047,
+      "sha256": "c9e414a66cb1c83b796d1c44ef060fb92565bf2186c6b73aba63a528c5dc4137",
+      "mode": 420
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/pubmed.rs",
+      "bytes": 12909,
+      "sha256": "ac40d5d25c235dd4340759111da760e9a16567455910565a01fa481d4c27ef6e",
+      "mode": 420
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/a07_matrix_replay.rs",
+      "bytes": 12214,
+      "sha256": "1b84793a369ccbfe1eb3251fd653f65efd8570f7186e625436071faf3cdac14c",
+      "mode": 420
+    },
+    {
+      "path": "crates/ssx-infra/tests/support/a07_source_replay.rs",
+      "bytes": 9170,
+      "sha256": "f44fa9e3ac288e63bedfad3f41e6f3bc40a0182e35024a45ce3fa3c4311da04a",
+      "mode": 420,
+      "source_revision": "6e4ed9e90c59f304f28206ec0bb61b3a2b365938",
+      "git_blob": "2f6ae4a8859d1f3c15287aba54cdb727c3bbd275"
+    },
+    {
+      "path": "crates/ssx-infra/tests/support/a07_owner_clock.rs",
+      "bytes": 6222,
+      "sha256": "a3b1f31b273d82e527f587a86e27f7e1d7d972f1bbc9255767a24c632c1f9f4a",
+      "mode": 420,
+      "source_revision": "6e4ed9e90c59f304f28206ec0bb61b3a2b365938",
+      "git_blob": "6546dd466ca796681245593965a4e20392a0e982"
+    },
+    {
+      "path": "crates/ssx-infra/tests/support/a07_http_clock.rs",
+      "bytes": 9834,
+      "sha256": "df1b65b18a25f65586e3cc453061b9a78a9a5ce0c1bad9d20885b4df5c99866a",
+      "mode": 420,
+      "source_revision": "6e4ed9e90c59f304f28206ec0bb61b3a2b365938",
+      "git_blob": "4c4b4eb16c03786bcd200215039f14b07366c1bf"
+    },
+    {
+      "path": "crates/ssx-infra/src/http/pending_replay.rs",
+      "bytes": 2519,
+      "sha256": "b544244e15e646ed392e158f63bee825233e4e8b291b7d7d29654e64226807e9",
+      "mode": 420,
+      "source_revision": "6e4ed9e90c59f304f28206ec0bb61b3a2b365938",
+      "git_blob": "dbb13a691d53c23efe8f6416da5be418e3d1ae16"
+    },
+    {
+      "path": "crates/ssx-infra/tests/support/a07_cold_context.rs",
+      "bytes": 7079,
+      "sha256": "35b0c77f25a4175fd8b25e63f10e2d95d13addde018264f3d5cb4dcf4248c55f",
+      "mode": 420,
+      "source_revision": "6e4ed9e90c59f304f28206ec0bb61b3a2b365938",
+      "git_blob": "f94d63f895aa3da1ee43592a4e2f46fe67197f89"
+    },
+    {
+      "path": "crates/ssx-infra/tests/support/default_ca_environment.rs",
+      "bytes": 959,
+      "sha256": "00aee0178f3f111449e5a6e99f495538a1eafa29ec95ced7d8343a3a8ee1108c",
+      "mode": 420,
+      "source_revision": "6e4ed9e90c59f304f28206ec0bb61b3a2b365938",
+      "git_blob": "524bc0cf3c233c5ff9cf88c161aa20d3282cfc4d"
+    }
+  ],
+  "predecessor_candidate_sources": [
+    {
+      "path": "crates/ssx-infra/tests/a07_biomedical.rs",
+      "sha256": "6197dc61021719257105ce255b981ccbb95a2ed5fe60cbff67e891f3b2d0cf9a",
+      "bytes": 30369
+    },
+    {
+      "path": "crates/ssx-infra/tests/support/a07_resources.rs",
+      "sha256": "4c4fb9750de167dc458837cbddf3212aa9d60580c4265180f65d10e497b5faa7",
+      "bytes": 37892
+    }
+  ],
+  "execution_partition": {
+    "total": 172,
+    "integration_count": 168,
+    "integration": {
+      "package": "ssx-infra",
+      "target": "test:a07_biomedical",
+      "qualified_name": "actual_source_matrix_preserves_requests_and_full_normalized_results"
+    },
+    "moved": [
+      {
+        "id": "clinicaltrials-config-timeout_ms-bool-True",
+        "package": "ssx-infra",
+        "target": "lib",
+        "qualified_name": "adapters::clinicaltrials::owner_clock_tests::clinicaltrials_bool_true_full_source_replay"
+      },
+      {
+        "id": "europepmc-config-timeout_ms-bool-True",
+        "package": "ssx-infra",
+        "target": "lib",
+        "qualified_name": "adapters::clinicaltrials::owner_clock_tests::europepmc_bool_true_full_source_replay"
+      },
+      {
+        "id": "pubchem-config-timeout_ms-bool-True",
+        "package": "ssx-infra",
+        "target": "lib",
+        "qualified_name": "adapters::clinicaltrials::owner_clock_tests::pubchem_bool_true_full_source_replay"
+      },
+      {
+        "id": "uniprot-config-timeout_ms-bool-True",
+        "package": "ssx-infra",
+        "target": "lib",
+        "qualified_name": "adapters::clinicaltrials::owner_clock_tests::uniprot_bool_true_full_source_replay"
+      }
+    ]
+  },
+  "scope": "Four exact archived main-to-pure-A06 source transitions; historical coverage, captures and original PubChem amendments unchanged. Existing lib 172 replay retained; additive full-public SearchEngine 168+4 receipts required. No self-hash or gate/helper afterimage hash in this document."
+}

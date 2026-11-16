@@ -1,0 +1,1012 @@
+{
+  "source_archive_sha256": "3b48dac8fb59f62eaa67ac83c1eb12bda1b7a08406dd286e252c11a66be27f81",
+  "root_license": "LICENSE-PYTHON",
+  "alias_source": {
+    "path": "Lib/encodings/aliases.py",
+    "sha256": "1ee993f8eb4986999b6501381e53947be9a04443626cb48b4190bcff2e87d3b4",
+    "license": "PSF-2.0; complete LICENSE-PYTHON retained"
+  },
+  "single_byte_sources": [
+    {
+      "canonical": "cp037",
+      "source_path": "Lib/encodings/cp037.py",
+      "source_sha256": "fda6ca994d710e4e0c760e0204c29a4273fc0f14ebe3169306d2eb54c9953f58",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec cp037 generated from 'MAPPINGS/VENDORS/MICSFT/EBCDIC/CP037.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp1026",
+      "source_path": "Lib/encodings/cp1026.py",
+      "source_sha256": "f5227237dd7ce5005b16a8e4d8342f0d193193c878e3cf35b9305d22b3b1aaf9",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec cp1026 generated from 'MAPPINGS/VENDORS/MICSFT/EBCDIC/CP1026.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp1125",
+      "source_path": "Lib/encodings/cp1125.py",
+      "source_sha256": "f84c7d30ce222e6a50cff1a4c9737173411da108cbd2c9bb57c854480103c470",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec for CP1125\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp1140",
+      "source_path": "Lib/encodings/cp1140.py",
+      "source_sha256": "3379d78b244aa905ffe1171a968caaf41b9a0154d1ddc76c05a2abaca2b289fd",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec cp1140 generated from 'python-mappings/CP1140.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp1250",
+      "source_path": "Lib/encodings/cp1250.py",
+      "source_sha256": "ebcec1adf9167863fb0bab29708c546300c80a77ef07838c9e0437a59e265970",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec cp1250 generated from 'MAPPINGS/VENDORS/MICSFT/WINDOWS/CP1250.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp1251",
+      "source_path": "Lib/encodings/cp1251.py",
+      "source_sha256": "d57f8cfa34494c5acb6692ddb31f616ae2dd89a075d2af6d36b0b7ec2ffe7af1",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec cp1251 generated from 'MAPPINGS/VENDORS/MICSFT/WINDOWS/CP1251.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp1252",
+      "source_path": "Lib/encodings/cp1252.py",
+      "source_sha256": "19aa5bee667f5fb387924a813aec9fa1dda47769d09e8483a748bdb202be6a84",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec cp1252 generated from 'MAPPINGS/VENDORS/MICSFT/WINDOWS/CP1252.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp1253",
+      "source_path": "Lib/encodings/cp1253.py",
+      "source_sha256": "8c27696dcfb6894b378869bc89f113703fbd1e9b13a83934463d5999b055d1e8",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec cp1253 generated from 'MAPPINGS/VENDORS/MICSFT/WINDOWS/CP1253.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp1254",
+      "source_path": "Lib/encodings/cp1254.py",
+      "source_sha256": "06517ec2f74f1c6562d0a1a500c48ba43f2e6e9d0c3d28356d747f274f1a4c8d",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec cp1254 generated from 'MAPPINGS/VENDORS/MICSFT/WINDOWS/CP1254.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp1255",
+      "source_path": "Lib/encodings/cp1255.py",
+      "source_sha256": "54a1b5087578fa78e5bdd0afa6a9e80e8c5467c1e4226cf6e586cfe7a674a653",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec cp1255 generated from 'MAPPINGS/VENDORS/MICSFT/WINDOWS/CP1255.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp1256",
+      "source_path": "Lib/encodings/cp1256.py",
+      "source_sha256": "ad3768ac2fef2a646b3301c20af705f4d4a1544f22fa8a84241bada27ab84133",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec cp1256 generated from 'MAPPINGS/VENDORS/MICSFT/WINDOWS/CP1256.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp1257",
+      "source_path": "Lib/encodings/cp1257.py",
+      "source_sha256": "d9149d2925b3f719809ef2297e541461079f15c658af207a3e498be314ab2c6b",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec cp1257 generated from 'MAPPINGS/VENDORS/MICSFT/WINDOWS/CP1257.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp1258",
+      "source_path": "Lib/encodings/cp1258.py",
+      "source_sha256": "672e05b51952a82c8dbd5603769195fcedf565e457bb86c0d5bae04955d04630",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec cp1258 generated from 'MAPPINGS/VENDORS/MICSFT/WINDOWS/CP1258.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp273",
+      "source_path": "Lib/encodings/cp273.py",
+      "source_sha256": "6c6aec3b213ea3aebc2c526dd4d121c95d4a25a2fc928a87cd80f8448988185f",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec cp273 generated from 'python-mappings/CP273.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp424",
+      "source_path": "Lib/encodings/cp424.py",
+      "source_sha256": "30414c2186ea0802bbf3db034122ddec1f8a10061b97c50871e14b74ee36d0ca",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec cp424 generated from 'MAPPINGS/VENDORS/MISC/CP424.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp437",
+      "source_path": "Lib/encodings/cp437.py",
+      "source_sha256": "5c2a5015cd36cf7f561269f33dec4c323093d3d88b0673969accdabdcb9ce2cb",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec cp437 generated from 'VENDORS/MICSFT/PC/CP437.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp500",
+      "source_path": "Lib/encodings/cp500.py",
+      "source_sha256": "630f503f9110d98ea3e1529f2f965ebc275a2f78d3de47f8e9b69d35589d764b",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec cp500 generated from 'MAPPINGS/VENDORS/MICSFT/EBCDIC/CP500.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp775",
+      "source_path": "Lib/encodings/cp775.py",
+      "source_sha256": "e0dba85b99329d7f16907e620adada06be5216abcb964406c827b569b2cf1aeb",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec cp775 generated from 'VENDORS/MICSFT/PC/CP775.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp850",
+      "source_path": "Lib/encodings/cp850.py",
+      "source_sha256": "257e29f235e2a8790dd68cee45668776648bab809ce8584f893cdd8fd007993c",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec generated from 'VENDORS/MICSFT/PC/CP850.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp852",
+      "source_path": "Lib/encodings/cp852.py",
+      "source_sha256": "cc6faaa9dc4a933127da0aaacd1dc7a44c09266051af56bfe3215ff228636b6b",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec generated from 'VENDORS/MICSFT/PC/CP852.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp855",
+      "source_path": "Lib/encodings/cp855.py",
+      "source_sha256": "7b25c61c9e8c47b218d3fbb801541a2861926ac712843d2113fff90e2074f5ba",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec generated from 'VENDORS/MICSFT/PC/CP855.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp857",
+      "source_path": "Lib/encodings/cp857.py",
+      "source_sha256": "8d1b769058bfccdb3c6c70c49a104f5081a2fcc9fad68f7b5eb3e4f67f0b33da",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec generated from 'VENDORS/MICSFT/PC/CP857.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp858",
+      "source_path": "Lib/encodings/cp858.py",
+      "source_sha256": "a24930c4a6ad0ff66dde9a69f2027e4b92c2c9c61dcda2992e940654c606577b",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec for CP858, modified from cp850.\n\n\"\"\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp860",
+      "source_path": "Lib/encodings/cp860.py",
+      "source_sha256": "2dfae7e31d3d9aa3013cff44a4d7ad842f257ac63765a9998436701b629cd86a",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec generated from 'VENDORS/MICSFT/PC/CP860.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp861",
+      "source_path": "Lib/encodings/cp861.py",
+      "source_sha256": "701930d77a2177497586e99bc3fe60f2d4beffb645608f167c76874a72ff405e",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec generated from 'VENDORS/MICSFT/PC/CP861.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp862",
+      "source_path": "Lib/encodings/cp862.py",
+      "source_sha256": "15a2844b6ed9544c6400cf7299b42d0c2bef93c9bee70a9e89f66b8610ad6d6d",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec generated from 'VENDORS/MICSFT/PC/CP862.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp863",
+      "source_path": "Lib/encodings/cp863.py",
+      "source_sha256": "a3d57f61fce1b98fc81ea8e4ebebaf402fae40bbcdd35d4b8297b9bb49a79aa2",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec generated from 'VENDORS/MICSFT/PC/CP863.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp864",
+      "source_path": "Lib/encodings/cp864.py",
+      "source_sha256": "15ad8f1fdfdd842c7522241372e7eddda7df687e815692a89157c5f256f21a08",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec generated from 'VENDORS/MICSFT/PC/CP864.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp865",
+      "source_path": "Lib/encodings/cp865.py",
+      "source_sha256": "bdbaded987242ed2a8de7133ec2f61ddcc1c2e9de27816ab7cd0a4c678a3a907",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec generated from 'VENDORS/MICSFT/PC/CP865.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp866",
+      "source_path": "Lib/encodings/cp866.py",
+      "source_sha256": "9efcc8e85bbd1687272a0991f6d0429a4c06679db2d114b2ac95db27a70f9d13",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec generated from 'VENDORS/MICSFT/PC/CP866.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp869",
+      "source_path": "Lib/encodings/cp869.py",
+      "source_sha256": "52582d9fb769b24eac7154f18d7dae856588297d6da98f37fb5efd8da883826d",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec generated from 'VENDORS/MICSFT/PC/CP869.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp874",
+      "source_path": "Lib/encodings/cp874.py",
+      "source_sha256": "fe4752fa2e65741e08a563a31ff914fe71068942ce9c6f4070b1dfd7b25e5e7f",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec cp874 generated from 'MAPPINGS/VENDORS/MICSFT/WINDOWS/CP874.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "iso8859-6",
+      "source_path": "Lib/encodings/iso8859_6.py",
+      "source_sha256": "4840e68014346517680f593ca22f67133c39ba7e46f34b9be62c980a728448c6",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec iso8859_6 generated from 'MAPPINGS/ISO8859/8859-6.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp1006",
+      "source_path": "Lib/encodings/cp1006.py",
+      "source_sha256": "eaded38b427841bdf280e878f1e26da506e743eaa9429075332af60cce429473",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec cp1006 generated from 'MAPPINGS/VENDORS/MISC/CP1006.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "hp-roman8",
+      "source_path": "Lib/encodings/hp_roman8.py",
+      "source_sha256": "c43cce763d12e8f71a63dbc16641bd87147eaf5f9d9054ea856864b216b2735b",
+      "output": "src/singlebyte.rs",
+      "license": "Native table derived independently from ICU under retained LICENSE-ICU-DATA; original source observations remain unchanged",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec generated from 'hp_roman8.txt' with gencodec.py.\n\n    Based on data from ftp://dkuug.dk/i18n/charmaps/HP-ROMAN8 (Keld Simonsen)\n\n    Original source: LaserJet IIP Printer User's Manual HP part no\n    33471-90901, Hewlet-Packard, June 1989.\n\n    (Used with permission)\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "Native mapping uses pinned ICU |0/|3 decode mappings; no CPython value-array input to native derivation",
+      "historical_source_observation_only": true,
+      "native_mapping_source": "provenance/singlebyte-icu/manifest.json",
+      "native_generation": "provenance/singlebyte-icu/manifest.json; original opaque table is excluded from native generator input"
+    },
+    {
+      "canonical": "ptcp154",
+      "source_path": "Lib/encodings/ptcp154.py",
+      "source_sha256": "0eabcb2c287d335e86b71b0abe5718bd6ddc9aaee234f0f0f2363845d2926d8d",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec generated from 'PTCP154.txt' with gencodec.py.\n\nWritten by Marc-Andre Lemburg (mal@lemburg.com).\n\n(c) Copyright CNRI, All Rights Reserved. NO WARRANTY.\n(c) Copyright 2000 Guido van Rossum.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp720",
+      "source_path": "Lib/encodings/cp720.py",
+      "source_sha256": "395496001271b92efe5df07fc0ae7c3410d1dd2bdfebbd3e4d8e806c8166beb0",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\"Python Character Mapping Codec cp720 generated on Windows:\nVista 6.0.6002 SP2 Multiprocessor Free with the command:\n  python Tools/unicode/genwincodec.py 720\n\"\"\"#\"\n\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp737",
+      "source_path": "Lib/encodings/cp737.py",
+      "source_sha256": "be3ca1785a3970ec62310710eaf7de82932181b04d06fe4528f8adaba9fb8c4b",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec cp737 generated from 'VENDORS/MICSFT/PC/CP737.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp856",
+      "source_path": "Lib/encodings/cp856.py",
+      "source_sha256": "2e52ec5cb1eafa6739b5569b0b98ee89df5f7358b84ccdc8da64e86f017d359f",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec cp856 generated from 'MAPPINGS/VENDORS/MISC/CP856.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "cp875",
+      "source_path": "Lib/encodings/cp875.py",
+      "source_sha256": "2fe72632015db2cba2bb4367055551da6fe22051b96d170c7b96fa271c46b257",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec cp875 generated from 'MAPPINGS/VENDORS/MICSFT/EBCDIC/CP875.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "iso8859-2",
+      "source_path": "Lib/encodings/iso8859_2.py",
+      "source_sha256": "2b57cab6111cae9021505e3ae1b2adbbfc344ec48165fda322f6b069fbb18adc",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec iso8859_2 generated from 'MAPPINGS/ISO8859/8859-2.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "iso8859-3",
+      "source_path": "Lib/encodings/iso8859_3.py",
+      "source_sha256": "4ffdf89004bf0c5230caa7079f7ca3142fc112f8b923ddb2c7358369d2d3c242",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec iso8859_3 generated from 'MAPPINGS/ISO8859/8859-3.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "iso8859-4",
+      "source_path": "Lib/encodings/iso8859_4.py",
+      "source_sha256": "87bd130daa0eaef3e4cb465e10cffb2bcd194ff74097e0c186b4b8eb7be41ac5",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec iso8859_4 generated from 'MAPPINGS/ISO8859/8859-4.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "iso8859-9",
+      "source_path": "Lib/encodings/iso8859_9.py",
+      "source_sha256": "84d9b15263e81685f7513c5ab45caf80b2f73c301c68e659f7162c1b1882d359",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec iso8859_9 generated from 'MAPPINGS/ISO8859/8859-9.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "iso8859-10",
+      "source_path": "Lib/encodings/iso8859_10.py",
+      "source_sha256": "54c886b41819ebb7f4fb34b8dbae1c45f4fc0864f019ecd772676ccfac5fae7b",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec iso8859_10 generated from 'MAPPINGS/ISO8859/8859-10.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "iso8859-5",
+      "source_path": "Lib/encodings/iso8859_5.py",
+      "source_sha256": "9961d96cc7b9fdf011ebcaaeaeca7b50b8670fadbd7b75fde66192f8c1f68f30",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec iso8859_5 generated from 'MAPPINGS/ISO8859/8859-5.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "iso8859-7",
+      "source_path": "Lib/encodings/iso8859_7.py",
+      "source_sha256": "b352eca3b819488f64fb3338fd93f39c1e30f32bb13f2f9c577925e58f2960e4",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec iso8859_7 generated from 'MAPPINGS/ISO8859/8859-7.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "iso8859-8",
+      "source_path": "Lib/encodings/iso8859_8.py",
+      "source_sha256": "4cf9e8a8bbe04accb1c1a80853efb19ae0772d18f81e270adefc1b2386cb368e",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec iso8859_8 generated from 'MAPPINGS/ISO8859/8859-8.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "koi8-r",
+      "source_path": "Lib/encodings/koi8_r.py",
+      "source_sha256": "4d4e353aee8039bb71e2145a6e68fe1e6833a1b4250b70ee0ac5ec70bbb8c51d",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec koi8_r generated from 'MAPPINGS/VENDORS/MISC/KOI8-R.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "iso8859-11",
+      "source_path": "Lib/encodings/iso8859_11.py",
+      "source_sha256": "ed5a964470a241b4da7a6cfb718e4149d09644933af38f0497602baab6e563ef",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec iso8859_11 generated from 'MAPPINGS/ISO8859/8859-11.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "iso8859-13",
+      "source_path": "Lib/encodings/iso8859_13.py",
+      "source_sha256": "7312237e8e5d201d920b4130f057cfdf1b0be9baafaa246826e6d93204fcc206",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec iso8859_13 generated from 'MAPPINGS/ISO8859/8859-13.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "iso8859-14",
+      "source_path": "Lib/encodings/iso8859_14.py",
+      "source_sha256": "82778b995a0ee87c5f1180fcc52900359eee15bd9a6e3a0e25f0d963e0b2a343",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec iso8859_14 generated from 'MAPPINGS/ISO8859/8859-14.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "iso8859-15",
+      "source_path": "Lib/encodings/iso8859_15.py",
+      "source_sha256": "01976a81811873dc9a0c79db9fc00d1c30103487f3c6bc3a6d81b4043cd48e02",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec iso8859_15 generated from 'MAPPINGS/ISO8859/8859-15.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "iso8859-16",
+      "source_path": "Lib/encodings/iso8859_16.py",
+      "source_sha256": "b5ac8f5a5d8f84c0f903b2b7c342184758d590d8bcf810d561f942fe5b372d66",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec iso8859_16 generated from 'MAPPINGS/ISO8859/8859-16.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "tis-620",
+      "source_path": "Lib/encodings/tis_620.py",
+      "source_sha256": "647c4719e2c1a7375105e15a89b377c66f6b699977dcabbb71d923a4607b7902",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec tis_620 generated from 'python-mappings/TIS-620.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "koi8-t",
+      "source_path": "Lib/encodings/koi8_t.py",
+      "source_sha256": "9c9043814abdbe7dc39ff98f3857d5d110a84c978ad2304158d810a4e9eacef1",
+      "output": "src/singlebyte.rs",
+      "license": "Native table derived independently from ICU under retained LICENSE-ICU-DATA; original source observations remain unchanged",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec koi8_t\n\"\"\"\n# http://ru.wikipedia.org/wiki/КОИ-8\n# http://www.opensource.apple.com/source/libiconv/libiconv-4/libiconv/tests/KOI8-T.TXT\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "Native mapping uses pinned ICU |0/|3 decode mappings; no CPython value-array input to native derivation",
+      "historical_source_observation_only": true,
+      "native_mapping_source": "provenance/singlebyte-icu/manifest.json",
+      "native_generation": "provenance/singlebyte-icu/manifest.json; original opaque table is excluded from native generator input"
+    },
+    {
+      "canonical": "koi8-u",
+      "source_path": "Lib/encodings/koi8_u.py",
+      "source_sha256": "d449f9858e357fa8c2edbd4b9fe739337e9f201cac3ded20f99bfcecd4970ff7",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec koi8_u generated from 'python-mappings/KOI8-U.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "kz1048",
+      "source_path": "Lib/encodings/kz1048.py",
+      "source_sha256": "76beb30e98a911f72f97609a2373782573c17c88a5fb3537db338aa382979ffc",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec kz1048 generated from 'MAPPINGS/VENDORS/MISC/KZ1048.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "mac-arabic",
+      "source_path": "Lib/encodings/mac_arabic.py",
+      "source_sha256": "5eafd9a3136abfbd8ed52df9c90203c7a283e7429ed60502a87a02511e0fb777",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec generated from 'VENDORS/APPLE/ARABIC.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "mac-latin2",
+      "source_path": "Lib/encodings/mac_latin2.py",
+      "source_sha256": "31670da18ce8b5394cd53fe6bf216268e7e8eae4c0247532e420e2e103727d50",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec mac_latin2 generated from 'MAPPINGS/VENDORS/MICSFT/MAC/LATIN2.TXT' with gencodec.py.\n\nWritten by Marc-Andre Lemburg (mal@lemburg.com).\n\n(c) Copyright CNRI, All Rights Reserved. NO WARRANTY.\n(c) Copyright 2000 Guido van Rossum.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "mac-croatian",
+      "source_path": "Lib/encodings/mac_croatian.py",
+      "source_sha256": "a880cd05c82a8d11a29c65ee86a396def3344465dd71441b0bb4a73826024953",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec mac_croatian generated from 'MAPPINGS/VENDORS/APPLE/CROATIAN.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "mac-cyrillic",
+      "source_path": "Lib/encodings/mac_cyrillic.py",
+      "source_sha256": "83616786a1c6308b03a0dc82536908d24d0974b2248d67393d613fe558cea4bd",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec mac_cyrillic generated from 'MAPPINGS/VENDORS/APPLE/CYRILLIC.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "mac-farsi",
+      "source_path": "Lib/encodings/mac_farsi.py",
+      "source_sha256": "f5763c38fb4ab0423fafe2fdca34d6f9932ac7f1a74c0cd8109d60234c7dc624",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec mac_farsi generated from 'MAPPINGS/VENDORS/APPLE/FARSI.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "mac-greek",
+      "source_path": "Lib/encodings/mac_greek.py",
+      "source_sha256": "63016a323ddf98cb3aa9cfa78f3bab4768bedbfe9a5262a36a5aecb13d291f6e",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec mac_greek generated from 'MAPPINGS/VENDORS/APPLE/GREEK.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "mac-iceland",
+      "source_path": "Lib/encodings/mac_iceland.py",
+      "source_sha256": "753cc1ac635caa7e1b4630fbcebef8db8db332c098154a5b11f652912bf64f37",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec mac_iceland generated from 'MAPPINGS/VENDORS/APPLE/ICELAND.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "mac-roman",
+      "source_path": "Lib/encodings/mac_roman.py",
+      "source_sha256": "230367d96aef8e8d7f185b4acfb84923714f39ddbcbf9cf38a06bf6f5d621c22",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec mac_roman generated from 'MAPPINGS/VENDORS/APPLE/ROMAN.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "mac-romanian",
+      "source_path": "Lib/encodings/mac_romanian.py",
+      "source_sha256": "49630cf035c19e896a123ed6e5fee18b5e485123daf2f15da38bf727ff387bee",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec mac_romanian generated from 'MAPPINGS/VENDORS/APPLE/ROMANIAN.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "mac-turkish",
+      "source_path": "Lib/encodings/mac_turkish.py",
+      "source_sha256": "99758a5cad2825cb3be3fa5d031e0821e4eba910a46f417fd890207b9b6be77b",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec mac_turkish generated from 'MAPPINGS/VENDORS/APPLE/TURKISH.TXT' with gencodec.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    },
+    {
+      "canonical": "palmos",
+      "source_path": "Lib/encodings/palmos.py",
+      "source_sha256": "79b4edcfaede8f7deb25b278d60e472217c0ff55e830ef1ccd2c408413742fa0",
+      "output": "src/singlebyte.rs",
+      "license": "PSF-2.0 with complete Python LICENSE historical terms retained",
+      "original_file_prelude": "\"\"\" Python Character Mapping Codec for PalmOS 3.5.\n\nWritten by Sjoerd Mullender (sjoerd@acm.org); based on iso8859_15.py.\n\n\"\"\"#\"\n\nimport codecs\n\n### Codec APIs\n\nclass Codec(codecs.Codec):",
+      "change": "native u32 table from actual errors=replace decode of bytes0..255; undefined mappings retain replacement UFFFD"
+    }
+  ],
+  "native_algorithm_sources": [
+    {
+      "source_path": "Objects/unicodeobject.c",
+      "source_sha256": "dc0da0c0379a64bf3e6277d53678c5eb8181a409ceec44868150ba47f89d11a3",
+      "outputs": [
+        "src/utf7.rs",
+        "src/raw_unicode_escape.rs",
+        "src/unicode_escape.rs"
+      ],
+      "license": "PSF-2.0; complete root LICENSE-PYTHON and historical terms retained",
+      "change": "Native final-input errors=replace ports use owned validated codepoints instead of Python Unicode writer/callback; Unicode16 names and algorithmic ranges use separately attributed native data."
+    },
+    {
+      "source_path": "Lib/encodings/punycode.py",
+      "source_sha256": "1e8d57e06e9b527009c35f2a1486ab56b51540e817f5bd8f239dc71e3fc0b014",
+      "outputs": [
+        "src/punycode.rs"
+      ],
+      "license": "PSF-2.0; complete root LICENSE-PYTHON and historical terms retained",
+      "change": "Native decoder uses private arbitrary-precision unsigned limbs and owned codepoints in place of Python integers and strings; errors=replace preserves surrogates."
+    }
+  ],
+  "output_hashes": {
+    "src/alias_only.rs": "f1d3656b96657339a3187a23da15e5ec59c73e30d35504999b823bf779a1091c",
+    "src/aliases.rs": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48",
+    "src/cjk/big5.pairs.bin": "603594bb1e79752f25b50d72ff5ce0f3ae88a942e8c81a36f82e3daa2b4ca3dc",
+    "src/cjk/big5.single.bin": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+    "src/cjk/big5hkscs.pairs.bin": "fc9461564284bac32fca61da4fb07b5b8a144b6943092425f0ac51876d1b344a",
+    "src/cjk/big5hkscs.single.bin": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+    "src/cjk/cp932.pairs.bin": "b51e5e105b1e9b777b5fc0ddc080860a8444881ac40533e2b1669d1b414007ac",
+    "src/cjk/cp932.single.bin": "f5f3981063d66814ca8db6f94f7fa973fa4826dbb5ac3fa7ce8e02ea3600f99f",
+    "src/cjk/cp949.pairs.bin": "53d7b966f810d955efb6cb92f3280126ae412e0688a4e46b444ee662626a95d4",
+    "src/cjk/cp949.single.bin": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+    "src/cjk/cp950.pairs.bin": "89af3c2176761d1bb76b8c61fed4877ab467f3b552bcd9c3bc99a28f6139da89",
+    "src/cjk/cp950.single.bin": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+    "src/cjk/euc_jis_2004.pairs.bin": "68d20bf66d1aa2f509e9e2b1dc1401a3dd9e1ef7219674a4076cf8ec45f004fc",
+    "src/cjk/euc_jis_2004.single.bin": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+    "src/cjk/euc_jis_2004.triples.bin": "57e77b5703e6a040ccd08be4322fbf05f9b35bdfcebfa65819aa95849a9d0d2b",
+    "src/cjk/euc_jisx0213.pairs.bin": "1cc39aebc4c4bf90d9b7e431bdf0a306104437d98a7e3b159c6b28765535c7a8",
+    "src/cjk/euc_jisx0213.single.bin": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+    "src/cjk/euc_jisx0213.triples.bin": "8ff036f49e9de9ebdcd8c055528d7df007dec8b116dec50469cb40523664cd87",
+    "src/cjk/euc_jp.pairs.bin": "ff25787a4fd0f23e987023188444cbdeb494ec6985eacaace939afbdc71c12f5",
+    "src/cjk/euc_jp.single.bin": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+    "src/cjk/euc_jp.triples.bin": "4bc2f48ecae2307bff49571d531cf45e28da43d3a4886a09bdc0c5902dcb8d2c",
+    "src/cjk/euc_kr.pairs.bin": "4c113fb80dd7ff04e62417887f0d61241083ad47becae4bfab78dc22736157df",
+    "src/cjk/euc_kr.single.bin": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+    "src/cjk/gb18030.pairs.bin": "ccc6e1e022d66c88cc16ac18de3d94595095b496d866d30136c2097b100cb566",
+    "src/cjk/gb18030.single.bin": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+    "src/cjk/gb2312.pairs.bin": "0c62f0718d021cc5f7d0f9aebe12c62813db620673b17477d00b295ee5c55339",
+    "src/cjk/gb2312.single.bin": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+    "src/cjk/gbk.pairs.bin": "5ef8bf4c9643a792ddfc6dc0e6f70fc99453afd8d846a31009dd5f89988572fb",
+    "src/cjk/gbk.single.bin": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+    "src/cjk/johab.pairs.bin": "864edf098cefd7e2f6c3eb6ee4e936f315e7c1314c9049cd809dec5d2b73ecc9",
+    "src/cjk/johab.single.bin": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+    "src/cjk/shift_jis.pairs.bin": "76cc259c1fd8eb8e39d668d72422a9180e6c533a81ed2967c6202d5c0205c4c0",
+    "src/cjk/shift_jis.single.bin": "29fdf4b03f25fb9cfae0d5ceba9b658497268a7f043d3e13d7a152e9124fca6e",
+    "src/cjk/shift_jis_2004.pairs.bin": "559304f05cf5d6ff468c6169f2222c67d2653f669a6282494d2c3ca2c4f1b927",
+    "src/cjk/shift_jis_2004.single.bin": "dde9ffb93d76fb44b4e6e3c209b021baabb51644934def3c14e7d167790dce5d",
+    "src/cjk/shift_jisx0213.pairs.bin": "59d22cc9f01036288d8640d3ed643df25aea1611ac86b29367500cc428cbfb2b",
+    "src/cjk/shift_jisx0213.single.bin": "dde9ffb93d76fb44b4e6e3c209b021baabb51644934def3c14e7d167790dce5d",
+    "src/doublebyte.rs": "a973aa625c768baa54c5b95daa50c0b5f820e53d2caf50d4f07e5bc300b9e561",
+    "src/gb18030_ranges.rs": "922c35417c984a328eba4034368bcde531ebd674d34f63060e72a4ad2442d477",
+    "src/hz.rs": "e2526d6925a1f0ef20ec36e9edd54f8cf141985cdcc7bc03207a38efc40509d6",
+    "src/idna.rs": "3c59b8b7679633778b906a084c91a076eb1dcce0e87ca614d6857af7f12775ed",
+    "src/idna_data.rs": "719e747cd2cd61ce54ce6d8accf56e4c6b145519a672b6dfedfe9d86356d2a52",
+    "src/iso2022/gb2312.bin": "7574d029b9ddf8626671117e378ad05ac47094d7aad27391148485cf0160f5ba",
+    "src/iso2022/jis0208.bin": "0416112dcb0970a36b4a15c4a81d12b26415e38149543e08b9e34d5723e12b6d",
+    "src/iso2022/jis0212.bin": "c7cd2049ea68c0e1818a57414a560d7cf06f468414485d2356781f1dd3ee60a0",
+    "src/iso2022/jis0213_2000_1.bin": "7029af04afa447689f93827b81e77ba805f32716a9d153316802f4371ef6c040",
+    "src/iso2022/jis0213_2000_2.bin": "b2a26bcc095be14d44ae9fb54301acff1345e593909fcc5cb10ab510a4777360",
+    "src/iso2022/jis0213_2004_1.bin": "1d37c3ffe71db2269db566bdcb1140c18a2e3bebc56c4bb2dce65a555df12fa5",
+    "src/iso2022/jis0213_2004_2.bin": "b2a26bcc095be14d44ae9fb54301acff1345e593909fcc5cb10ab510a4777360",
+    "src/iso2022/ksx1001.bin": "bc07ce8231127b1b9127feb75e8340e5b07db070423163307fea47c28e4aec05",
+    "src/iso2022.rs": "11cfa19cf37d4c6b2b440d28b27899b316b8290ee4efb80dfc6fbffb79b044b7",
+    "src/label_alnum.rs": "a66e29ad2f634854812170e7fc4c18c1a7cda06c39fc7915fca54d7f26492664",
+    "src/lib.rs": "cbc2fb9bbc0c9c22166ef25cb454ea4258b53ad58f9c92c13daf76552ff4938f",
+    "src/punycode.rs": "be174e32d4abfe89e097d48ba919e7317b6f17d1fd1b5e786b2ae073c5fd7b27",
+    "src/raw_unicode_escape.rs": "fac0c84818263558a45101f5d6f29ca4e7c5dd47285a773a17ba9c2958463595",
+    "src/singlebyte.rs": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd",
+    "src/strict_cjk_errors.rs": "c6f9c5b104ba20c1a5e6d746d5e77f3c9aa98acb7583cbb39478837af4196a8f",
+    "src/strict_parameter.rs": "fede3ba3e5193d616a13d169cf48f55c7b2c8d0afffe5a2798e0f2f67e5e8c3b",
+    "src/strict_validity.rs": "ec115e43cd5e4b31c64297a2c9e6ea4422c296bb51c140c3fc144767c357009e",
+    "src/text.rs": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a",
+    "src/unicode.rs": "f5f38ccc20be13449f56f0755bf2d5b0aff0dae29b2b633b929711213c5bbca6",
+    "src/unicode_escape.rs": "26d4f75ba7958b8115899a5254a97401c96cca48d8e5a377d9f5ae06ee0e02ce",
+    "src/unicode_name_ranges.rs": "599e706e2cb261bec418c48a588384b74be9c50b72155f9e43c853ac80b4bc83",
+    "src/unicode_names.rs": "c9ff0bf97ae36ad98006939785e23f391eff9b7b64778f60068bc42db20a2f29",
+    "src/utf7.rs": "c2ad0929c61ae53d49597c1e429c6a8266c8cee0d2bbb3f46111c2669048ae42"
+  },
+  "native_cjk_algorithm_sources": [
+    {
+      "source_path": "Modules/cjkcodecs/_codecs_cn.c",
+      "source_sha256": "8b28def11821d71acb90ef3e74d7d6d597246daf4c196415107d19ebeeb73e55",
+      "license_basis": "CPython3.14.7 root LICENSE; original author/header retained in PYTHON-SOURCE-NOTICES.txt; this assignment covers algorithm code, not independent mapping source notices"
+    },
+    {
+      "source_path": "Modules/cjkcodecs/_codecs_jp.c",
+      "source_sha256": "b2f18a31b427c3b2c454c2e903101ec08644541fb2bb33daaea130b26a72a20e",
+      "license_basis": "CPython3.14.7 root LICENSE; original author/header retained in PYTHON-SOURCE-NOTICES.txt; this assignment covers algorithm code, not independent mapping source notices"
+    },
+    {
+      "source_path": "Modules/cjkcodecs/_codecs_kr.c",
+      "source_sha256": "c6b24c685f64f6b7d67a0c50068cc7ba7a3ebf2ddfa2ebbb3f0a7faed90c217a",
+      "license_basis": "CPython3.14.7 root LICENSE; original author/header retained in PYTHON-SOURCE-NOTICES.txt; this assignment covers algorithm code, not independent mapping source notices"
+    },
+    {
+      "source_path": "Modules/cjkcodecs/_codecs_tw.c",
+      "source_sha256": "bd156987b58714a877453fcc67f81cc569e46a2c29a33caebbd6aaa71ad10ede",
+      "license_basis": "CPython3.14.7 root LICENSE; original author/header retained in PYTHON-SOURCE-NOTICES.txt; this assignment covers algorithm code, not independent mapping source notices"
+    },
+    {
+      "source_path": "Modules/cjkcodecs/_codecs_hk.c",
+      "source_sha256": "2b1c4a0516cc930c58bf885baae06e7b7b676b5dc1713c0653bba1fc39c4e12d",
+      "license_basis": "CPython3.14.7 root LICENSE; original author/header retained in PYTHON-SOURCE-NOTICES.txt; this assignment covers algorithm code, not independent mapping source notices"
+    },
+    {
+      "source_path": "Modules/cjkcodecs/_codecs_iso2022.c",
+      "source_sha256": "1dec516ad16a9aa179770b5accdd20efa77e7265c0a2a06d8d8913e4524c4010",
+      "license_basis": "CPython3.14.7 root LICENSE; original author/header retained in PYTHON-SOURCE-NOTICES.txt; this assignment covers algorithm code, not independent mapping source notices"
+    },
+    {
+      "source_path": "Modules/cjkcodecs/multibytecodec.c",
+      "source_sha256": "8891773ee72fa47ffbdde9eeef5abf476b14b8027c2a812d180f0fefedd906e6",
+      "license_basis": "CPython3.14.7 root LICENSE; original author/header retained in PYTHON-SOURCE-NOTICES.txt; this assignment covers algorithm code, not independent mapping source notices"
+    },
+    {
+      "source_path": "Modules/cjkcodecs/cjkcodecs.h",
+      "source_sha256": "cd7e1e3736cfe360cf2b8c34e7d8a1c3c67664418423038a5cabe5bf0c331fe9",
+      "license_basis": "CPython3.14.7 root LICENSE; original author/header retained in PYTHON-SOURCE-NOTICES.txt; this assignment covers algorithm code, not independent mapping source notices"
+    },
+    {
+      "source_path": "Modules/cjkcodecs/multibytecodec.h",
+      "source_sha256": "b77227eba7c9b09ad3d2b9623e371c90676803781555166132a63138ddb98673",
+      "license_basis": "CPython3.14.7 root LICENSE; original author/header retained in PYTHON-SOURCE-NOTICES.txt; this assignment covers algorithm code, not independent mapping source notices"
+    },
+    {
+      "source_path": "Modules/cjkcodecs/alg_jisx0201.h",
+      "source_sha256": "e3d6b89fa67e6e05fe2b59dc9c8690dab7d0357ddef7fbb6e92cc34bebf41c7b",
+      "license_basis": "CPython3.14.7 root LICENSE; original author/header retained in PYTHON-SOURCE-NOTICES.txt; this assignment covers algorithm code, not independent mapping source notices"
+    },
+    {
+      "source_path": "Modules/cjkcodecs/emu_jisx0213_2000.h",
+      "source_sha256": "b8db3dce0aac8d433ea5f3ba057547c52727b9e3391971b278c9eb4cb61a7aca",
+      "license_basis": "CPython3.14.7 root LICENSE; original author/header retained in PYTHON-SOURCE-NOTICES.txt; this assignment covers algorithm code, not independent mapping source notices"
+    }
+  ],
+  "retained_independent_mapping_sources": [
+    {
+      "source_path": "Tools/unicode/python-mappings/CP1140.TXT",
+      "source_sha256": "e96b92f57980209b6aef47fcf7ab5182bade6f57930a11bc26ebfce30d5c579a",
+      "notice_file": "MAPPING-SOURCE-NOTICES.txt",
+      "license_basis": "PSF contributor agreement plus explicit legacy Unicode grant; retain complete original notice"
+    },
+    {
+      "source_path": "Tools/unicode/python-mappings/CP273.TXT",
+      "source_sha256": "ed1528454e20342829cce283585b9f2cf66dc265296b28ae3b0cdd675e4266cc",
+      "notice_file": "MAPPING-SOURCE-NOTICES.txt",
+      "license_basis": "no per-file notice; CPython source/root permission basis, no contrary file notice identified"
+    },
+    {
+      "source_path": "Tools/unicode/python-mappings/GB2312.TXT",
+      "source_sha256": "52335c54396c41d3e04856cb6018bd600469f210556233aa9895b1f396b257ed",
+      "notice_file": "MAPPING-SOURCE-NOTICES.txt",
+      "license_basis": "explicit legacy Unicode grant; retain complete original notice"
+    },
+    {
+      "source_path": "Tools/unicode/python-mappings/KOI8-U.TXT",
+      "source_sha256": "d36ca29a43ff9d397377f7a39f90991ef1d076ff831dfd4a03e3a55e068a9217",
+      "notice_file": "MAPPING-SOURCE-NOTICES.txt",
+      "license_basis": "PSF contributor agreement plus explicit legacy Unicode grant; retain complete original notice"
+    },
+    {
+      "source_path": "Tools/unicode/python-mappings/TIS-620.TXT",
+      "source_sha256": "07647d2cd06373e449a6c6b7ba64dd17a892fe1246e968449cfe6be55be148bb",
+      "notice_file": "MAPPING-SOURCE-NOTICES.txt",
+      "license_basis": "PSF contributor agreement plus explicit legacy Unicode grant; retain complete original notice"
+    },
+    {
+      "source_path": "Tools/unicode/python-mappings/jisx0213-2004-std.txt",
+      "source_sha256": "41c9b4c9221162a94cfa5a87016256c42321a8a4f81c852034564e67eab46446",
+      "notice_file": "MAPPING-SOURCE-NOTICES.txt",
+      "license_basis": "explicit earthian/I'O permission to use, modify and distribute freely"
+    },
+    {
+      "source_path": "Tools/unicode/python-mappings/gb-18030-2000.xml",
+      "source_sha256": "47350d44c6db23e0f0c9e9f4a1bf2e966369f52357fd01425bc06b9aaf83f943",
+      "notice_file": "MAPPING-SOURCE-NOTICES.txt",
+      "license_basis": "no per-file notice; CPython generator points to original ICU mapping; independent upstream source-chain assignment remains under review"
+    }
+  ],
+  "hkscs_native_generation": {
+    "manifest": "provenance/hkscs/manifest.json",
+    "basis": "parent independently replayed WHATWG/ICU/validity-only generator and approved native-generation boundary; no CPython HKSCS mapping table is native-generator input"
+  },
+  "status": "Proposed provenance reconciliation; source notices/individual approved generator boundaries retained. Complete package license classification and per-file review remain pending; no broad permission inference.",
+  "historical_output_hashes": {
+    "src/aliases.rs": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48",
+    "src/cjk/big5.pairs.bin": "603594bb1e79752f25b50d72ff5ce0f3ae88a942e8c81a36f82e3daa2b4ca3dc",
+    "src/cjk/big5.single.bin": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+    "src/cjk/big5hkscs.pairs.bin": "fc9461564284bac32fca61da4fb07b5b8a144b6943092425f0ac51876d1b344a",
+    "src/cjk/big5hkscs.single.bin": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+    "src/cjk/cp932.pairs.bin": "b51e5e105b1e9b777b5fc0ddc080860a8444881ac40533e2b1669d1b414007ac",
+    "src/cjk/cp932.single.bin": "f5f3981063d66814ca8db6f94f7fa973fa4826dbb5ac3fa7ce8e02ea3600f99f",
+    "src/cjk/cp949.pairs.bin": "53d7b966f810d955efb6cb92f3280126ae412e0688a4e46b444ee662626a95d4",
+    "src/cjk/cp949.single.bin": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+    "src/cjk/cp950.pairs.bin": "89af3c2176761d1bb76b8c61fed4877ab467f3b552bcd9c3bc99a28f6139da89",
+    "src/cjk/cp950.single.bin": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+    "src/cjk/euc_jis_2004.pairs.bin": "68d20bf66d1aa2f509e9e2b1dc1401a3dd9e1ef7219674a4076cf8ec45f004fc",
+    "src/cjk/euc_jis_2004.single.bin": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+    "src/cjk/euc_jis_2004.triples.bin": "57e77b5703e6a040ccd08be4322fbf05f9b35bdfcebfa65819aa95849a9d0d2b",
+    "src/cjk/euc_jisx0213.pairs.bin": "1cc39aebc4c4bf90d9b7e431bdf0a306104437d98a7e3b159c6b28765535c7a8",
+    "src/cjk/euc_jisx0213.single.bin": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+    "src/cjk/euc_jisx0213.triples.bin": "8ff036f49e9de9ebdcd8c055528d7df007dec8b116dec50469cb40523664cd87",
+    "src/cjk/euc_jp.pairs.bin": "ff25787a4fd0f23e987023188444cbdeb494ec6985eacaace939afbdc71c12f5",
+    "src/cjk/euc_jp.single.bin": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+    "src/cjk/euc_jp.triples.bin": "4bc2f48ecae2307bff49571d531cf45e28da43d3a4886a09bdc0c5902dcb8d2c",
+    "src/cjk/euc_kr.pairs.bin": "4c113fb80dd7ff04e62417887f0d61241083ad47becae4bfab78dc22736157df",
+    "src/cjk/euc_kr.single.bin": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+    "src/cjk/gb18030.pairs.bin": "ccc6e1e022d66c88cc16ac18de3d94595095b496d866d30136c2097b100cb566",
+    "src/cjk/gb18030.single.bin": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+    "src/cjk/gb2312.pairs.bin": "0c62f0718d021cc5f7d0f9aebe12c62813db620673b17477d00b295ee5c55339",
+    "src/cjk/gb2312.single.bin": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+    "src/cjk/gbk.pairs.bin": "5ef8bf4c9643a792ddfc6dc0e6f70fc99453afd8d846a31009dd5f89988572fb",
+    "src/cjk/gbk.single.bin": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+    "src/cjk/johab.pairs.bin": "864edf098cefd7e2f6c3eb6ee4e936f315e7c1314c9049cd809dec5d2b73ecc9",
+    "src/cjk/johab.single.bin": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+    "src/cjk/shift_jis.pairs.bin": "76cc259c1fd8eb8e39d668d72422a9180e6c533a81ed2967c6202d5c0205c4c0",
+    "src/cjk/shift_jis.single.bin": "29fdf4b03f25fb9cfae0d5ceba9b658497268a7f043d3e13d7a152e9124fca6e",
+    "src/cjk/shift_jis_2004.pairs.bin": "559304f05cf5d6ff468c6169f2222c67d2653f669a6282494d2c3ca2c4f1b927",
+    "src/cjk/shift_jis_2004.single.bin": "dde9ffb93d76fb44b4e6e3c209b021baabb51644934def3c14e7d167790dce5d",
+    "src/cjk/shift_jisx0213.pairs.bin": "59d22cc9f01036288d8640d3ed643df25aea1611ac86b29367500cc428cbfb2b",
+    "src/cjk/shift_jisx0213.single.bin": "dde9ffb93d76fb44b4e6e3c209b021baabb51644934def3c14e7d167790dce5d",
+    "src/doublebyte.rs": "4fc1d1bfaeb75389c02b7e3f8cc39e1bdcbe565575832da683fef378354c0d0d",
+    "src/gb18030_ranges.rs": "922c35417c984a328eba4034368bcde531ebd674d34f63060e72a4ad2442d477",
+    "src/hz.rs": "24c3c0e6c160b3a05f8bcdaade421e642f31b80b4178e7d909723b7ce5472d17",
+    "src/iso2022/gb2312.bin": "7574d029b9ddf8626671117e378ad05ac47094d7aad27391148485cf0160f5ba",
+    "src/iso2022/jis0208.bin": "0416112dcb0970a36b4a15c4a81d12b26415e38149543e08b9e34d5723e12b6d",
+    "src/iso2022/jis0212.bin": "c7cd2049ea68c0e1818a57414a560d7cf06f468414485d2356781f1dd3ee60a0",
+    "src/iso2022/jis0213_2000_1.bin": "7029af04afa447689f93827b81e77ba805f32716a9d153316802f4371ef6c040",
+    "src/iso2022/jis0213_2000_2.bin": "b2a26bcc095be14d44ae9fb54301acff1345e593909fcc5cb10ab510a4777360",
+    "src/iso2022/jis0213_2004_1.bin": "1d37c3ffe71db2269db566bdcb1140c18a2e3bebc56c4bb2dce65a555df12fa5",
+    "src/iso2022/jis0213_2004_2.bin": "b2a26bcc095be14d44ae9fb54301acff1345e593909fcc5cb10ab510a4777360",
+    "src/iso2022/ksx1001.bin": "bc07ce8231127b1b9127feb75e8340e5b07db070423163307fea47c28e4aec05",
+    "src/iso2022.rs": "2b8d8a2c1f169fe39c678bdff5c0ad7ea0d9ef8af891afad7b2b3f6fad850f2a",
+    "src/lib.rs": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087",
+    "src/punycode.rs": "e3eb6a8e8c6cd815eb6735e3b48378b7b8ec146361a98694b8afacf3ee36b544",
+    "src/raw_unicode_escape.rs": "b8873b853709339f901087b53208c62d4988cfe7289e590d88de406692ef29f1",
+    "src/singlebyte.rs": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd",
+    "src/text.rs": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a",
+    "src/unicode.rs": "f5f38ccc20be13449f56f0755bf2d5b0aff0dae29b2b633b929711213c5bbca6",
+    "src/unicode_escape.rs": "9d5cea94649335a0a15e35d5a80393fc6944a04973528d3f59d8eb61dfbc8b28",
+    "src/unicode_name_ranges.rs": "599e706e2cb261bec418c48a588384b74be9c50b72155f9e43c853ac80b4bc83",
+    "src/unicode_names.rs": "c9ff0bf97ae36ad98006939785e23f391eff9b7b64778f60068bc42db20a2f29",
+    "src/utf7.rs": "a5ca507e22f8cb1d48a743d560f0bd0bbb8699dd5661f183c2cc14ce4b0cb30e"
+  },
+  "historical_initial_outputs": [
+    {
+      "path": "CHANGES",
+      "sha256": "7e1ad4d4a0b3205a600a83fd0cdbca5013562689d4904c6dc39a15ae33dd7aa9"
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "d7a0b1b3b24b9570c00c7c6f56bcc72b144773aed674d6ed2c3100e21c85651c"
+    },
+    {
+      "path": "LICENSE-PYTHON",
+      "sha256": "b0e25a78cffb43f4d92de8b61ccfa1f1f98ecbc22330b54b5251e7b6ba010231"
+    },
+    {
+      "path": "src/aliases.rs",
+      "sha256": "ca30aa78ad6df055b0f5c3dc70419bfd41b79aba2c9a322635640cc1ff3a2204"
+    },
+    {
+      "path": "src/lib.rs",
+      "sha256": "c5036fee4e6eb7b84f041965526d72d0fb56395a1bccb80b9b108618b38c50fb"
+    },
+    {
+      "path": "src/singlebyte.rs",
+      "sha256": "3f1d63f0f719efe50a26eb8bc5eaefd9c59b8717dde20ffd30e5f54b71dd61f0"
+    },
+    {
+      "path": "tests/singlebyte-source.json",
+      "sha256": "8328ee11495ff728c0bcc0a3355faeb0ef2c94d378ce3d9e884bae50219457fb"
+    },
+    {
+      "path": "tests/singlebyte.rs",
+      "sha256": "21006ad74c6e3833995e1abf356463d14294dc6748aa0e3fb3048a50441bce90"
+    }
+  ],
+  "generation_amendments": [
+    {
+      "scope": "67 source-covered singlebyte arrays plus two independently derived ICU arrays; alias/order metadata excludes opaque arrays",
+      "manifest": "provenance/singlebyte-icu/manifest.json",
+      "generators": [
+        "singlebyte_native_input.py",
+        "singlebyte_icu_independent.py",
+        "singlebyte_tables.py"
+      ],
+      "notices": [
+        "LICENSE-PYTHON",
+        "LICENSE-ICU-DATA",
+        "MAPPING-SOURCE-NOTICES.txt"
+      ]
+    },
+    {
+      "scope": "HKSCS mapping from WHATWG+ICU with validity-only oracle mask; no contested mapping values",
+      "manifest": "provenance/hkscs/manifest.json",
+      "generators": [
+        "hkscs_independent.py"
+      ],
+      "notices": [
+        "LICENSE-WHATWG",
+        "LICENSE-ICU-DATA",
+        "CJK-MAPPING-NOTICES.txt"
+      ]
+    },
+    {
+      "scope": "private Unicode3.2 IDNA2003 profile with Unicode16 lowercase and CPython/RFC algorithm",
+      "manifest": "provenance/idna/manifest.json",
+      "generators": [
+        "idna_profile_generate.py",
+        "idna_profile_rust.py"
+      ],
+      "notices": [
+        "LICENSE-PYTHON",
+        "LICENSE-UNICODE",
+        "provenance/idna/UNICODE-3.2-ORIGINAL-NOTICE.html",
+        "provenance/idna/RFC3454-ORIGINAL-NOTICE.txt"
+      ]
+    },
+    {
+      "scope": "Unicode16 alphanumeric classification only for codec labels",
+      "manifest": "provenance/idna/label-alnum-manifest.json",
+      "generators": [
+        "label_alnum_generate.py",
+        "label_alnum_rust.py"
+      ],
+      "notices": [
+        "LICENSE-UNICODE"
+      ]
+    },
+    {
+      "scope": "actual source alias dictionary, separately resolved from module-name registry",
+      "manifest": "provenance/idna/alias-dictionary-manifest.json",
+      "generators": [
+        "alias_only_generate.py"
+      ],
+      "notices": [
+        "LICENSE-PYTHON"
+      ]
+    },
+    {
+      "scope": "strict singlebyte validity bits and CJK invalid-key metadata; no new Unicode mapping values",
+      "generators": [
+        "strict_validity_generate.py",
+        "cjk_strict_error_records.py"
+      ],
+      "notices": [
+        "LICENSE-PYTHON",
+        "LICENSE-ICU-DATA",
+        "CJK-MAPPING-NOTICES.txt"
+      ]
+    }
+  ],
+  "generation_amendments_note": "Generator basenames resolve under docs/rust-rewrite/a05/oracle; candidate preserves historical attribution records. This index does not replace file-specific upstream notices or independently reviewed generator boundaries.",
+  "strict_algorithm_amendment": {
+    "outputs": [
+      "src/strict_parameter.rs",
+      "src/strict_validity.rs",
+      "src/strict_cjk_errors.rs",
+      "src/idna.rs"
+    ],
+    "change": "Strict mode added alongside existing replacement body decoding; Unicode failure tracked explicitly; source ValueError/RuntimeError/OverflowError and first-error precedence retained. Native source observations are test evidence, not replacement table provenance."
+  }
+}

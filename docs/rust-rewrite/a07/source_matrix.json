@@ -1,0 +1,5358 @@
+{
+  "baseline": "1e9dd82d62456fe6f511cc5ade88bae619fac027",
+  "provenance": "actual offline Python adapters with HTTPX MockTransport; synthetic regression/control cases; no network/provider calls",
+  "toolchain": {
+    "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+    "httpx": "0.28.1",
+    "platform": "macOS-27.0-arm64-arm-64bit-Mach-O"
+  },
+  "source_inventory": [
+    {
+      "path": "engines/clinicaltrials.py",
+      "sha256": "28d1981607b05988a264c0950bd3b151608c7992d7fa0d543421a8577a2295c7",
+      "git_blob": "23c8ab6ba1e1510cc7b9a5ec5e3a7365bf13fb03"
+    },
+    {
+      "path": "engines/europepmc.py",
+      "sha256": "c8811e83b2117eb53011e96a8e9462a30462da43bebb6a8cea6cb7a8dc702dbf",
+      "git_blob": "f1c026cca5fab094e77e7658ef69edebbe3ea7e3"
+    },
+    {
+      "path": "engines/pubchem.py",
+      "sha256": "aa57ea70db504d260ef3d295fafc344e8d911341bbb1bbe3bee5f1880aa2b0c1",
+      "git_blob": "e027508d33240f1fb6eb63d41c7ccceb252eafd7"
+    },
+    {
+      "path": "engines/pubmed.py",
+      "sha256": "ac7b78c12f890ac5bcb9360cfc0c7059377b680b77902e016181ba70ae0f688c",
+      "git_blob": "8425948f5a115d0d46afce3a625bce49ee0b0fcd"
+    },
+    {
+      "path": "engines/uniprot.py",
+      "sha256": "03887fe7af9da041cb2185e7c21d85d57adc8acd343629af613191b36e55944c",
+      "git_blob": "2a1564c948e4f2220dd970e564da0ba865348bea"
+    },
+    {
+      "path": "slopsearx/adapter.py",
+      "sha256": "5883a35c48d0dad1077306fbda21997ee1d32116a8c03633a6b762de0c26d6f3",
+      "git_blob": "664e853d9ab1330596d01899ebe015701de09e88"
+    },
+    {
+      "path": "slopsearx/payload.py",
+      "sha256": "a44a95655566f9fadaf62da1bab8c975f71f3ead6c3cc57f48c411a9c093c40d",
+      "git_blob": "efa149d48bae401f7a0a9df6e50c8c614adecbb5"
+    },
+    {
+      "path": "slopsearx/config.py",
+      "sha256": "1cf76b8732439782342a9d217fb2f7c423f688533f287dbf78729a1defc5236e",
+      "git_blob": "761db0521d74ec6d955aa8a84fd92a4a62533c43"
+    }
+  ],
+  "records": [
+    {
+      "id": "ct-success",
+      "engine": "clinicaltrials",
+      "query": "heart disease",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "studies": [
+              {
+                "protocolSection": {
+                  "identificationModule": {
+                    "nctId": "NCT00000001",
+                    "briefTitle": "Study of heart disease prevention"
+                  },
+                  "statusModule": {
+                    "overallStatus": "RECRUITING"
+                  },
+                  "designModule": {
+                    "phases": [
+                      "PHASE3"
+                    ]
+                  },
+                  "conditionsModule": {
+                    "conditions": [
+                      "Heart Disease",
+                      "Cardiovascular"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://clinicaltrials.gov/api/v2/studies?query.term=heart+disease&pageSize=10&format=json&sort=%40relevance",
+          "headers": {
+            "host": "clinicaltrials.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://clinicaltrials.gov/study/NCT00000001",
+            "title": "Study of heart disease prevention",
+            "content": "RECRUITING \u2014 PHASE3 \u2014 Heart Disease; Cardiovascular",
+            "engine": "clinicaltrials",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "pc-success",
+      "engine": "pubchem",
+      "query": "aspirin/a b",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "IdentifierList": {
+              "CID": [
+                2244,
+                962
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "PC_Compounds": [
+              {
+                "id": {
+                  "id": {
+                    "cid": 2244
+                  }
+                },
+                "props": [
+                  {
+                    "urn": {
+                      "label": "IUPAC Name",
+                      "name": "Preferred"
+                    },
+                    "value": {
+                      "sval": "aspirin"
+                    }
+                  },
+                  {
+                    "urn": {
+                      "label": "Molecular Formula"
+                    },
+                    "value": {
+                      "sval": "C9H8O4"
+                    }
+                  },
+                  {
+                    "urn": {
+                      "label": "Molecular Weight"
+                    },
+                    "value": {
+                      "fval": 180.16
+                    }
+                  }
+                ]
+              },
+              {
+                "id": {
+                  "id": {
+                    "cid": 962
+                  }
+                },
+                "props": [
+                  {
+                    "urn": {
+                      "label": "Molecular Formula"
+                    },
+                    "value": {
+                      "sval": "C17H21NO4"
+                    }
+                  },
+                  {
+                    "urn": {
+                      "label": "Molecular Weight"
+                    },
+                    "value": {
+                      "fval": 303.35
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/aspirin/a%20b/cids/JSON",
+          "headers": {
+            "host": "pubchem.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/2244,962/JSON",
+          "headers": {
+            "host": "pubchem.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://pubchem.ncbi.nlm.nih.gov/compound/2244",
+            "title": "aspirin",
+            "content": "Formula: C9H8O4 | MW: 180.16",
+            "engine": "pubchem",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://pubchem.ncbi.nlm.nih.gov/compound/962",
+            "title": "Compound CID 962",
+            "content": "Formula: C17H21NO4 | MW: 303.35",
+            "engine": "pubchem",
+            "position": 2,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "pm-success",
+      "engine": "pubmed",
+      "query": "covid vaccine",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "esearchresult": {
+              "idlist": [
+                "12345",
+                "67890"
+              ],
+              "count": "2"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "result": {
+              "12345": {
+                "title": "COVID-19 vaccine efficacy",
+                "source": "New England Journal of Medicine",
+                "pubdate": "2024 Jan",
+                "authors": [
+                  {
+                    "name": "Smith J"
+                  },
+                  {
+                    "name": "Doe A"
+                  }
+                ],
+                "elocationid": "doi: 10.1056/test"
+              },
+              "67890": {
+                "title": "mRNA vaccine mechanisms",
+                "source": "Nature Medicine",
+                "pubdate": "2023 Dec",
+                "authors": [
+                  {
+                    "name": "Jones B"
+                  }
+                ],
+                "elocationid": ""
+              }
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=covid+vaccine&retmax=10&retmode=json&sort=relevance",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=12345%2C67890&retmode=json",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://pubmed.ncbi.nlm.nih.gov/12345/",
+            "title": "COVID-19 vaccine efficacy",
+            "content": "New England Journal of Medicine \u2014 Smith J, Doe A",
+            "engine": "pubmed",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": "2024 Jan",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "12345",
+                "pmid": "12345",
+                "publication_types": [],
+                "journal": "New England Journal of Medicine",
+                "authors": [
+                  "Smith J",
+                  "Doe A"
+                ]
+              },
+              "provenance": {
+                "engine": "pubmed",
+                "adapter_fields": [
+                  "publication_id",
+                  "pmid",
+                  "publication_types",
+                  "journal",
+                  "authors"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          },
+          {
+            "url": "https://pubmed.ncbi.nlm.nih.gov/67890/",
+            "title": "mRNA vaccine mechanisms",
+            "content": "Nature Medicine \u2014 Jones B",
+            "engine": "pubmed",
+            "position": 2,
+            "score": 1.0,
+            "category": "general",
+            "published_date": "2023 Dec",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "67890",
+                "pmid": "67890",
+                "publication_types": [],
+                "journal": "Nature Medicine",
+                "authors": [
+                  "Jones B"
+                ]
+              },
+              "provenance": {
+                "engine": "pubmed",
+                "adapter_fields": [
+                  "publication_id",
+                  "pmid",
+                  "publication_types",
+                  "journal",
+                  "authors"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "epmc-med",
+      "engine": "europepmc",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "version": "6.9",
+            "hitCount": 4423,
+            "nextCursorMark": "AoIIQKcU6Cg1NjQ3MjIxNg==",
+            "nextPageUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=CRISPR+sickle+cell&cursorMark=AoIIQKcU6Cg1NjQ3MjIxNg%3D%3D&resultType=lite&pageSize=5&format=json",
+            "request": {
+              "queryString": "CRISPR sickle cell",
+              "resultType": "lite",
+              "cursorMark": "*",
+              "pageSize": 5,
+              "sort": "",
+              "synonym": false
+            },
+            "resultList": {
+              "result": [
+                {
+                  "id": "42755327",
+                  "source": "MED",
+                  "pmid": "42755327",
+                  "doi": "10.1080/03630269.2026.2729189",
+                  "title": "CRISPR-Based Mediated Reactivation of Fetal Hemoglobin as a Therapeutic Strategy for Hemoglobinopathies: Evidence from Preclinical to Clinical Trials in Sickle Cell Disease and \u03b2-Thalassemia.",
+                  "authorString": "Wong Castro DA, Morocho Perugachi AC, Fuel Herrera MO.",
+                  "journalTitle": "Hemoglobin",
+                  "pubYear": "2026",
+                  "journalIssn": "0363-0269; 1532-432x; ",
+                  "pageInfo": "1-10",
+                  "pubType": "review; journal article",
+                  "isOpenAccess": "N",
+                  "inEPMC": "N",
+                  "inPMC": "N",
+                  "citedByCount": 0,
+                  "hasReferences": "N",
+                  "hasTextMinedTerms": "N",
+                  "hasDbCrossReferences": "N",
+                  "hasPDF": "N",
+                  "hasBook": "N",
+                  "hasSuppl": "N",
+                  "hasLabsLinks": "N",
+                  "hasTMAccessionNumbers": "N",
+                  "firstPublicationDate": "2026-09-18",
+                  "firstIndexDate": "2026-09-18"
+                },
+                {
+                  "id": "42760781",
+                  "source": "MED",
+                  "pmid": "42760781",
+                  "doi": "10.1016/j.ymthe.2026.09.020",
+                  "title": "Development of CRISPR_SCD001, an Autologous Hematopoietic Stem Cell Gene Therapy for Sickle Cell Disease after CRISPR-Cas9 Mediated Correction.",
+                  "authorString": "DeWitt M, Campo-Fernandez B, Roy S, Kleinhenz ALW, Davila A, Lennon M, Vu JT, Krishnappa N, Said S, Tseng CH, Park SH, Bao G, Magis W, Martin DIK, Boffelli D, Wyman SK, Kohn DB, Walters MC, Romero Z.",
+                  "journalTitle": "Mol Ther",
+                  "pubYear": "2026",
+                  "journalIssn": "1525-0016; 1525-0024; ",
+                  "pageInfo": "S1525-0016(26)00790-2",
+                  "pubType": "journal article",
+                  "isOpenAccess": "N",
+                  "inEPMC": "N",
+                  "inPMC": "N",
+                  "citedByCount": 0,
+                  "hasReferences": "N",
+                  "hasTextMinedTerms": "Y",
+                  "hasDbCrossReferences": "N",
+                  "hasPDF": "N",
+                  "hasBook": "N",
+                  "hasSuppl": "N",
+                  "hasLabsLinks": "N",
+                  "hasTMAccessionNumbers": "N",
+                  "firstPublicationDate": "2026-09-19",
+                  "firstIndexDate": "2026-09-19"
+                },
+                {
+                  "id": "42758354",
+                  "source": "MED",
+                  "pmid": "42758354",
+                  "doi": "10.1007/s11033-026-12771-1",
+                  "title": "CRISPR-Cas9 genome editing: technological advances, delivery strategies and precision engineering of primary cells for therapeutic application in genetic disorders and diabetes mellitus.",
+                  "authorString": "Islam MN, Islam MM, Feng H, Bellah SF, Zaman Miah MM, Hossain MS.",
+                  "journalTitle": "Mol Biol Rep",
+                  "issue": "1",
+                  "journalVolume": "53",
+                  "pubYear": "2026",
+                  "journalIssn": "0301-4851; 1573-4978; ",
+                  "pageInfo": "1589",
+                  "pubType": "review; journal article",
+                  "isOpenAccess": "N",
+                  "inEPMC": "N",
+                  "inPMC": "N",
+                  "citedByCount": 0,
+                  "hasReferences": "Y",
+                  "hasTextMinedTerms": "Y",
+                  "hasDbCrossReferences": "N",
+                  "hasPDF": "N",
+                  "hasBook": "N",
+                  "hasSuppl": "N",
+                  "hasLabsLinks": "N",
+                  "hasTMAccessionNumbers": "N",
+                  "firstPublicationDate": "2026-09-18",
+                  "firstIndexDate": "2026-09-19"
+                },
+                {
+                  "id": "42617141",
+                  "source": "MED",
+                  "pmid": "42617141",
+                  "doi": "10.1200/op-26-00479",
+                  "title": "Translating CRISPR to Practice in the Clinic: Transformative Therapy in Hemoglobinopathies and Emerging Applications in Malignancies.",
+                  "authorString": "Salim Hammoud M, Hanna R.",
+                  "journalTitle": "JCO Oncol Pract",
+                  "pubYear": "2026",
+                  "journalIssn": "2688-1527; 2688-1535; ",
+                  "pageInfo": "OP2600479",
+                  "pubType": "review; journal article",
+                  "isOpenAccess": "N",
+                  "inEPMC": "N",
+                  "inPMC": "N",
+                  "citedByCount": 0,
+                  "hasReferences": "N",
+                  "hasTextMinedTerms": "Y",
+                  "hasDbCrossReferences": "N",
+                  "hasPDF": "N",
+                  "hasBook": "N",
+                  "hasSuppl": "N",
+                  "hasLabsLinks": "N",
+                  "hasTMAccessionNumbers": "N",
+                  "firstPublicationDate": "2026-08-19",
+                  "firstIndexDate": "2026-08-22"
+                },
+                {
+                  "id": "42772556",
+                  "source": "MED",
+                  "pmid": "42772556",
+                  "doi": "10.1016/j.jbc.2026.113595",
+                  "title": "Structural insights into target detection by the Serratia type III CRISPR complex and its deployment in SNP identification.",
+                  "authorString": "Perdigao CC, Ajisafe LO, Sunny AT, Wu S, Dokland T, Dunkle JA.",
+                  "journalTitle": "J Biol Chem",
+                  "pubYear": "2026",
+                  "journalIssn": "0021-9258; 1083-351x; ",
+                  "pageInfo": "113595",
+                  "pubType": "journal article",
+                  "isOpenAccess": "N",
+                  "inEPMC": "N",
+                  "inPMC": "N",
+                  "citedByCount": 0,
+                  "hasReferences": "N",
+                  "hasTextMinedTerms": "Y",
+                  "hasDbCrossReferences": "N",
+                  "hasPDF": "N",
+                  "hasBook": "N",
+                  "hasSuppl": "N",
+                  "hasLabsLinks": "N",
+                  "hasTMAccessionNumbers": "N",
+                  "firstPublicationDate": "2026-09-22",
+                  "firstIndexDate": "2026-09-23"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=test&format=json&resultType=lite&pageSize=10",
+          "headers": {
+            "host": "www.ebi.ac.uk",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://europepmc.org/article/MED/42755327",
+            "title": "CRISPR-Based Mediated Reactivation of Fetal Hemoglobin as a Therapeutic Strategy for Hemoglobinopathies: Evidence from Preclinical to Clinical Trials in Sickle Cell Disease and \u03b2-Thalassemia.",
+            "content": "Source: Europe PMC / EMBL-EBI (https://europepmc.org) \u2014 Hemoglobin \u2014 Wong Castro DA, Morocho Perugachi AC, Fuel Herrera MO.",
+            "engine": "europepmc",
+            "position": 0,
+            "score": 1.0,
+            "category": "general",
+            "published_date": "2026-09-18",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "42755327",
+                "source": "MED",
+                "pmid": "42755327",
+                "doi": "10.1080/03630269.2026.2729189",
+                "journal": "Hemoglobin",
+                "is_open_access": "N",
+                "in_epmc": "N"
+              },
+              "provenance": {
+                "engine": "europepmc",
+                "adapter_fields": [
+                  "publication_id",
+                  "source",
+                  "pmid",
+                  "doi",
+                  "journal",
+                  "is_open_access",
+                  "in_epmc"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          },
+          {
+            "url": "https://europepmc.org/article/MED/42760781",
+            "title": "Development of CRISPR_SCD001, an Autologous Hematopoietic Stem Cell Gene Therapy for Sickle Cell Disease after CRISPR-Cas9 Mediated Correction.",
+            "content": "Source: Europe PMC / EMBL-EBI (https://europepmc.org) \u2014 Mol Ther \u2014 DeWitt M, Campo-Fernandez B, Roy S, Kleinhenz ALW, Davila A, Lennon M, Vu JT, Krishnappa N, Said S, Tseng CH, Park SH, Bao G, Magis W, Martin DIK, Boffelli D, Wyman SK, Kohn DB, Walters MC, Romero Z.",
+            "engine": "europepmc",
+            "position": 0,
+            "score": 0.5,
+            "category": "general",
+            "published_date": "2026-09-19",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "42760781",
+                "source": "MED",
+                "pmid": "42760781",
+                "doi": "10.1016/j.ymthe.2026.09.020",
+                "journal": "Mol Ther",
+                "is_open_access": "N",
+                "in_epmc": "N"
+              },
+              "provenance": {
+                "engine": "europepmc",
+                "adapter_fields": [
+                  "publication_id",
+                  "source",
+                  "pmid",
+                  "doi",
+                  "journal",
+                  "is_open_access",
+                  "in_epmc"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          },
+          {
+            "url": "https://europepmc.org/article/MED/42758354",
+            "title": "CRISPR-Cas9 genome editing: technological advances, delivery strategies and precision engineering of primary cells for therapeutic application in genetic disorders and diabetes mellitus.",
+            "content": "Source: Europe PMC / EMBL-EBI (https://europepmc.org) \u2014 Mol Biol Rep \u2014 Islam MN, Islam MM, Feng H, Bellah SF, Zaman Miah MM, Hossain MS.",
+            "engine": "europepmc",
+            "position": 0,
+            "score": 0.3333333333333333,
+            "category": "general",
+            "published_date": "2026-09-18",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "42758354",
+                "source": "MED",
+                "pmid": "42758354",
+                "doi": "10.1007/s11033-026-12771-1",
+                "journal": "Mol Biol Rep",
+                "is_open_access": "N",
+                "in_epmc": "N"
+              },
+              "provenance": {
+                "engine": "europepmc",
+                "adapter_fields": [
+                  "publication_id",
+                  "source",
+                  "pmid",
+                  "doi",
+                  "journal",
+                  "is_open_access",
+                  "in_epmc"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          },
+          {
+            "url": "https://europepmc.org/article/MED/42617141",
+            "title": "Translating CRISPR to Practice in the Clinic: Transformative Therapy in Hemoglobinopathies and Emerging Applications in Malignancies.",
+            "content": "Source: Europe PMC / EMBL-EBI (https://europepmc.org) \u2014 JCO Oncol Pract \u2014 Salim Hammoud M, Hanna R.",
+            "engine": "europepmc",
+            "position": 0,
+            "score": 0.25,
+            "category": "general",
+            "published_date": "2026-08-19",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "42617141",
+                "source": "MED",
+                "pmid": "42617141",
+                "doi": "10.1200/op-26-00479",
+                "journal": "JCO Oncol Pract",
+                "is_open_access": "N",
+                "in_epmc": "N"
+              },
+              "provenance": {
+                "engine": "europepmc",
+                "adapter_fields": [
+                  "publication_id",
+                  "source",
+                  "pmid",
+                  "doi",
+                  "journal",
+                  "is_open_access",
+                  "in_epmc"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          },
+          {
+            "url": "https://europepmc.org/article/MED/42772556",
+            "title": "Structural insights into target detection by the Serratia type III CRISPR complex and its deployment in SNP identification.",
+            "content": "Source: Europe PMC / EMBL-EBI (https://europepmc.org) \u2014 J Biol Chem \u2014 Perdigao CC, Ajisafe LO, Sunny AT, Wu S, Dokland T, Dunkle JA.",
+            "engine": "europepmc",
+            "position": 0,
+            "score": 0.2,
+            "category": "general",
+            "published_date": "2026-09-22",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "42772556",
+                "source": "MED",
+                "pmid": "42772556",
+                "doi": "10.1016/j.jbc.2026.113595",
+                "journal": "J Biol Chem",
+                "is_open_access": "N",
+                "in_epmc": "N"
+              },
+              "provenance": {
+                "engine": "europepmc",
+                "adapter_fields": [
+                  "publication_id",
+                  "source",
+                  "pmid",
+                  "doi",
+                  "journal",
+                  "is_open_access",
+                  "in_epmc"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "epmc-ppr",
+      "engine": "europepmc",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "version": "6.9",
+            "hitCount": 93775,
+            "nextCursorMark": "AoIIQXkHeSg1NjQ2MDIwNw==",
+            "nextPageUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=SRC%3APPR+AND+COVID-19&cursorMark=AoIIQXkHeSg1NjQ2MDIwNw%3D%3D&resultType=lite&pageSize=5&format=json",
+            "request": {
+              "queryString": "SRC:PPR AND COVID-19",
+              "resultType": "lite",
+              "cursorMark": "*",
+              "pageSize": 5,
+              "sort": "",
+              "synonym": false
+            },
+            "resultList": {
+              "result": [
+                {
+                  "id": "PPR1326169",
+                  "source": "PPR",
+                  "doi": "10.64898/2026.09.18.26363380",
+                  "title": "Shared Clinical and Immunological Features of Post-Acute COVID-19 and Post-Acute COVID-19 Vaccination Syndromes",
+                  "authorString": "Dinser J, Anft M, Wiemers L, Skrzypczyk S, Kohut E, Kurek J, Stervbo U, Seibert F, Westhoff TH, Rosiewicz K, Babel N.",
+                  "pubYear": "2026",
+                  "pubType": "preprint",
+                  "bookOrReportDetails": {
+                    "publisher": "medRxiv",
+                    "yearOfPublication": 2026
+                  },
+                  "isOpenAccess": "N",
+                  "inEPMC": "N",
+                  "inPMC": "N",
+                  "citedByCount": 0,
+                  "hasReferences": "N",
+                  "hasTextMinedTerms": "Y",
+                  "hasDbCrossReferences": "N",
+                  "hasPDF": "N",
+                  "hasBook": "N",
+                  "hasSuppl": "N",
+                  "hasLabsLinks": "N",
+                  "hasTMAccessionNumbers": "N",
+                  "firstPublicationDate": "2026-09-23",
+                  "firstIndexDate": "2026-09-24"
+                },
+                {
+                  "id": "PPR1259614",
+                  "source": "PPR",
+                  "doi": "10.21203/rs.3.rs-10083725/v1",
+                  "title": "Scoping Review of Post-Acute COVID-19 Syndrome: Is it COVID-19 Virus or the Vaccines?",
+                  "authorString": "Agbenyezi IK, Quarm MD, Fianu PLK, Dudjin E, Ansah EW.",
+                  "pubYear": "2026",
+                  "pubType": "preprint",
+                  "bookOrReportDetails": {
+                    "publisher": "Research Square",
+                    "yearOfPublication": 2026
+                  },
+                  "isOpenAccess": "N",
+                  "inEPMC": "N",
+                  "inPMC": "N",
+                  "citedByCount": 0,
+                  "hasReferences": "Y",
+                  "hasTextMinedTerms": "Y",
+                  "hasDbCrossReferences": "N",
+                  "hasPDF": "N",
+                  "hasBook": "N",
+                  "hasSuppl": "N",
+                  "hasLabsLinks": "N",
+                  "hasTMAccessionNumbers": "N",
+                  "firstPublicationDate": "2026-06-25",
+                  "firstIndexDate": "2026-06-26",
+                  "versionNumber": 1
+                },
+                {
+                  "id": "PPR1322657",
+                  "source": "PPR",
+                  "doi": "10.64898/2026.09.16.26363217",
+                  "title": "UNIVERSAL EPIDEMIC SCALING: INFLUENZA AND COVID-19",
+                  "authorString": "Below D, Mairanowski F.",
+                  "pubYear": "2026",
+                  "pubType": "preprint",
+                  "bookOrReportDetails": {
+                    "publisher": "medRxiv",
+                    "yearOfPublication": 2026
+                  },
+                  "isOpenAccess": "N",
+                  "inEPMC": "N",
+                  "inPMC": "N",
+                  "citedByCount": 0,
+                  "hasReferences": "N",
+                  "hasTextMinedTerms": "Y",
+                  "hasDbCrossReferences": "N",
+                  "hasPDF": "N",
+                  "hasBook": "N",
+                  "hasSuppl": "N",
+                  "hasLabsLinks": "N",
+                  "hasTMAccessionNumbers": "N",
+                  "firstPublicationDate": "2026-09-17",
+                  "firstIndexDate": "2026-09-19"
+                },
+                {
+                  "id": "PPR1333936",
+                  "source": "PPR",
+                  "doi": "10.21203/rs.3.rs-10953537/v1",
+                  "title": "Lockstalgia: Reflective Nostalgia in Autobiographical Memories of COVID-19 Lockdown",
+                  "authorString": "Mattappallil TA, Research JM, Varghese S.",
+                  "pubYear": "2026",
+                  "pubType": "preprint",
+                  "bookOrReportDetails": {
+                    "publisher": "Research Square",
+                    "yearOfPublication": 2026
+                  },
+                  "isOpenAccess": "N",
+                  "inEPMC": "N",
+                  "inPMC": "N",
+                  "citedByCount": 0,
+                  "hasReferences": "N",
+                  "hasTextMinedTerms": "N",
+                  "hasDbCrossReferences": "N",
+                  "hasPDF": "N",
+                  "hasBook": "N",
+                  "hasSuppl": "N",
+                  "hasLabsLinks": "N",
+                  "hasTMAccessionNumbers": "N",
+                  "firstPublicationDate": "2026-10-05",
+                  "firstIndexDate": "2026-10-06",
+                  "versionNumber": 1
+                },
+                {
+                  "id": "PPR1323337",
+                  "source": "PPR",
+                  "doi": "10.64898/2026.09.16.26363250",
+                  "title": "Microbiome signature in wastewater is predictive of COVID-19 case rates",
+                  "authorString": "Schroeder TA, Basting CM, Swanson E, Bailey M, Champeau SR, Velez A, Li J, Broedlow C, Schacker TW, Osborn MJ, Klatt NR.",
+                  "pubYear": "2026",
+                  "pubType": "preprint",
+                  "bookOrReportDetails": {
+                    "publisher": "medRxiv",
+                    "yearOfPublication": 2026
+                  },
+                  "isOpenAccess": "N",
+                  "inEPMC": "N",
+                  "inPMC": "N",
+                  "citedByCount": 0,
+                  "hasReferences": "N",
+                  "hasTextMinedTerms": "Y",
+                  "hasDbCrossReferences": "N",
+                  "hasPDF": "N",
+                  "hasBook": "N",
+                  "hasSuppl": "N",
+                  "hasLabsLinks": "N",
+                  "hasTMAccessionNumbers": "N",
+                  "firstPublicationDate": "2026-09-20",
+                  "firstIndexDate": "2026-09-21"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=test&format=json&resultType=lite&pageSize=10",
+          "headers": {
+            "host": "www.ebi.ac.uk",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://europepmc.org/article/PPR/PPR1326169",
+            "title": "Shared Clinical and Immunological Features of Post-Acute COVID-19 and Post-Acute COVID-19 Vaccination Syndromes",
+            "content": "Source: Europe PMC / EMBL-EBI (https://europepmc.org) \u2014 Preprint (not peer reviewed) \u2014 Dinser J, Anft M, Wiemers L, Skrzypczyk S, Kohut E, Kurek J, Stervbo U, Seibert F, Westhoff TH, Rosiewicz K, Babel N.",
+            "engine": "europepmc",
+            "position": 0,
+            "score": 1.0,
+            "category": "general",
+            "published_date": "2026-09-23",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "PPR1326169",
+                "source": "PPR",
+                "doi": "10.64898/2026.09.18.26363380",
+                "is_open_access": "N",
+                "in_epmc": "N"
+              },
+              "provenance": {
+                "engine": "europepmc",
+                "adapter_fields": [
+                  "publication_id",
+                  "source",
+                  "doi",
+                  "is_open_access",
+                  "in_epmc"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          },
+          {
+            "url": "https://europepmc.org/article/PPR/PPR1259614",
+            "title": "Scoping Review of Post-Acute COVID-19 Syndrome: Is it COVID-19 Virus or the Vaccines?",
+            "content": "Source: Europe PMC / EMBL-EBI (https://europepmc.org) \u2014 Preprint (not peer reviewed) \u2014 Agbenyezi IK, Quarm MD, Fianu PLK, Dudjin E, Ansah EW.",
+            "engine": "europepmc",
+            "position": 0,
+            "score": 0.5,
+            "category": "general",
+            "published_date": "2026-06-25",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "PPR1259614",
+                "source": "PPR",
+                "doi": "10.21203/rs.3.rs-10083725/v1",
+                "is_open_access": "N",
+                "in_epmc": "N"
+              },
+              "provenance": {
+                "engine": "europepmc",
+                "adapter_fields": [
+                  "publication_id",
+                  "source",
+                  "doi",
+                  "is_open_access",
+                  "in_epmc"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          },
+          {
+            "url": "https://europepmc.org/article/PPR/PPR1322657",
+            "title": "UNIVERSAL EPIDEMIC SCALING: INFLUENZA AND COVID-19",
+            "content": "Source: Europe PMC / EMBL-EBI (https://europepmc.org) \u2014 Preprint (not peer reviewed) \u2014 Below D, Mairanowski F.",
+            "engine": "europepmc",
+            "position": 0,
+            "score": 0.3333333333333333,
+            "category": "general",
+            "published_date": "2026-09-17",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "PPR1322657",
+                "source": "PPR",
+                "doi": "10.64898/2026.09.16.26363217",
+                "is_open_access": "N",
+                "in_epmc": "N"
+              },
+              "provenance": {
+                "engine": "europepmc",
+                "adapter_fields": [
+                  "publication_id",
+                  "source",
+                  "doi",
+                  "is_open_access",
+                  "in_epmc"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          },
+          {
+            "url": "https://europepmc.org/article/PPR/PPR1333936",
+            "title": "Lockstalgia: Reflective Nostalgia in Autobiographical Memories of COVID-19 Lockdown",
+            "content": "Source: Europe PMC / EMBL-EBI (https://europepmc.org) \u2014 Preprint (not peer reviewed) \u2014 Mattappallil TA, Research JM, Varghese S.",
+            "engine": "europepmc",
+            "position": 0,
+            "score": 0.25,
+            "category": "general",
+            "published_date": "2026-10-05",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "PPR1333936",
+                "source": "PPR",
+                "doi": "10.21203/rs.3.rs-10953537/v1",
+                "is_open_access": "N",
+                "in_epmc": "N"
+              },
+              "provenance": {
+                "engine": "europepmc",
+                "adapter_fields": [
+                  "publication_id",
+                  "source",
+                  "doi",
+                  "is_open_access",
+                  "in_epmc"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          },
+          {
+            "url": "https://europepmc.org/article/PPR/PPR1323337",
+            "title": "Microbiome signature in wastewater is predictive of COVID-19 case rates",
+            "content": "Source: Europe PMC / EMBL-EBI (https://europepmc.org) \u2014 Preprint (not peer reviewed) \u2014 Schroeder TA, Basting CM, Swanson E, Bailey M, Champeau SR, Velez A, Li J, Broedlow C, Schacker TW, Osborn MJ, Klatt NR.",
+            "engine": "europepmc",
+            "position": 0,
+            "score": 0.2,
+            "category": "general",
+            "published_date": "2026-09-20",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "PPR1323337",
+                "source": "PPR",
+                "doi": "10.64898/2026.09.16.26363250",
+                "is_open_access": "N",
+                "in_epmc": "N"
+              },
+              "provenance": {
+                "engine": "europepmc",
+                "adapter_fields": [
+                  "publication_id",
+                  "source",
+                  "doi",
+                  "is_open_access",
+                  "in_epmc"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "up-success",
+      "engine": "uniprot",
+      "query": "p53",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": [
+              {
+                "primaryAccession": "P04637",
+                "uniProtkbId": "P53_HUMAN",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Cellular tumor antigen p53"
+                    }
+                  }
+                },
+                "organism": {
+                  "scientificName": "Homo sapiens"
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "TP53"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=%28p53%29+OR+%28gene%3Ap53%29&size=30&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.uniprot.org/uniprotkb/P04637/entry",
+            "title": "P04637 \u2014 Cellular tumor antigen p53",
+            "content": "Homo sapiens \u2014 Gene: TP53",
+            "engine": "uniprot",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "clinicaltrials-empty",
+      "engine": "clinicaltrials",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "studies": []
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://clinicaltrials.gov/api/v2/studies?query.term=test&pageSize=10&format=json&sort=%40relevance",
+          "headers": {
+            "host": "clinicaltrials.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "clinicaltrials-wrong-outer",
+      "engine": "clinicaltrials",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": []
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://clinicaltrials.gov/api/v2/studies?query.term=test&pageSize=10&format=json&sort=%40relevance",
+          "headers": {
+            "host": "clinicaltrials.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "'list' object has no attribute 'get'",
+        "results": []
+      }
+    },
+    {
+      "id": "clinicaltrials-missing",
+      "engine": "clinicaltrials",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://clinicaltrials.gov/api/v2/studies?query.term=test&pageSize=10&format=json&sort=%40relevance",
+          "headers": {
+            "host": "clinicaltrials.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "clinicaltrials-http-404",
+      "engine": "clinicaltrials",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 404,
+          "body": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://clinicaltrials.gov/api/v2/studies?query.term=test&pageSize=10&format=json&sort=%40relevance",
+          "headers": {
+            "host": "clinicaltrials.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "Client error '404 Not Found' for url 'https://clinicaltrials.gov/api/v2/studies?query.term=test&pageSize=10&format=json&sort=%40relevance'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+        "results": []
+      }
+    },
+    {
+      "id": "clinicaltrials-http-429",
+      "engine": "clinicaltrials",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 429,
+          "body": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://clinicaltrials.gov/api/v2/studies?query.term=test&pageSize=10&format=json&sort=%40relevance",
+          "headers": {
+            "host": "clinicaltrials.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "rate_limited",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "clinicaltrials-http-503",
+      "engine": "clinicaltrials",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 503,
+          "body": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://clinicaltrials.gov/api/v2/studies?query.term=test&pageSize=10&format=json&sort=%40relevance",
+          "headers": {
+            "host": "clinicaltrials.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "Server error '503 Service Unavailable' for url 'https://clinicaltrials.gov/api/v2/studies?query.term=test&pageSize=10&format=json&sort=%40relevance'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503",
+        "results": []
+      }
+    },
+    {
+      "id": "clinicaltrials-config-max_results-int-0",
+      "engine": "clinicaltrials",
+      "query": "test",
+      "config": {
+        "max_results": 0
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "studies": []
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://clinicaltrials.gov/api/v2/studies?query.term=test&pageSize=0&format=json&sort=%40relevance",
+          "headers": {
+            "host": "clinicaltrials.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "clinicaltrials-config-max_results-int--1",
+      "engine": "clinicaltrials",
+      "query": "test",
+      "config": {
+        "max_results": -1
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "studies": []
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://clinicaltrials.gov/api/v2/studies?query.term=test&pageSize=-1&format=json&sort=%40relevance",
+          "headers": {
+            "host": "clinicaltrials.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "clinicaltrials-config-max_results-bool-True",
+      "engine": "clinicaltrials",
+      "query": "test",
+      "config": {
+        "max_results": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "studies": []
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://clinicaltrials.gov/api/v2/studies?query.term=test&pageSize=true&format=json&sort=%40relevance",
+          "headers": {
+            "host": "clinicaltrials.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "clinicaltrials-config-max_results-float-2.0",
+      "engine": "clinicaltrials",
+      "query": "test",
+      "config": {
+        "max_results": 2.0
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "studies": []
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://clinicaltrials.gov/api/v2/studies?query.term=test&pageSize=2.0&format=json&sort=%40relevance",
+          "headers": {
+            "host": "clinicaltrials.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "slice indices must be integers or None or have an __index__ method",
+        "results": []
+      }
+    },
+    {
+      "id": "clinicaltrials-config-max_results-str-2",
+      "engine": "clinicaltrials",
+      "query": "test",
+      "config": {
+        "max_results": "2"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "studies": []
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://clinicaltrials.gov/api/v2/studies?query.term=test&pageSize=2&format=json&sort=%40relevance",
+          "headers": {
+            "host": "clinicaltrials.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "slice indices must be integers or None or have an __index__ method",
+        "results": []
+      }
+    },
+    {
+      "id": "clinicaltrials-config-timeout_ms-bool-True",
+      "engine": "clinicaltrials",
+      "query": "test",
+      "config": {
+        "timeout_ms": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "studies": []
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://clinicaltrials.gov/api/v2/studies?query.term=test&pageSize=10&format=json&sort=%40relevance",
+          "headers": {
+            "host": "clinicaltrials.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "clinicaltrials-config-timeout_ms-str-5000",
+      "engine": "clinicaltrials",
+      "query": "test",
+      "config": {
+        "timeout_ms": "5000"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "studies": []
+          }
+        }
+      ],
+      "requests": [],
+      "output": {
+        "status": "error",
+        "error_message": "unsupported operand type(s) for /: 'str' and 'float'",
+        "results": []
+      }
+    },
+    {
+      "id": "europepmc-empty",
+      "engine": "europepmc",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "resultList": {
+              "result": []
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=test&format=json&resultType=lite&pageSize=10",
+          "headers": {
+            "host": "www.ebi.ac.uk",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "europepmc-wrong-outer",
+      "engine": "europepmc",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": []
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=test&format=json&resultType=lite&pageSize=10",
+          "headers": {
+            "host": "www.ebi.ac.uk",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "Europe PMC response missing resultList",
+        "results": []
+      }
+    },
+    {
+      "id": "europepmc-missing",
+      "engine": "europepmc",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=test&format=json&resultType=lite&pageSize=10",
+          "headers": {
+            "host": "www.ebi.ac.uk",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "Europe PMC response missing resultList",
+        "results": []
+      }
+    },
+    {
+      "id": "europepmc-http-404",
+      "engine": "europepmc",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 404,
+          "body": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=test&format=json&resultType=lite&pageSize=10",
+          "headers": {
+            "host": "www.ebi.ac.uk",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "Client error '404 Not Found' for url 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=test&format=json&resultType=lite&pageSize=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+        "results": []
+      }
+    },
+    {
+      "id": "europepmc-http-429",
+      "engine": "europepmc",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 429,
+          "body": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=test&format=json&resultType=lite&pageSize=10",
+          "headers": {
+            "host": "www.ebi.ac.uk",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "rate_limited",
+        "error_message": "Client error '429 Too Many Requests' for url 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=test&format=json&resultType=lite&pageSize=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+        "results": []
+      }
+    },
+    {
+      "id": "europepmc-http-503",
+      "engine": "europepmc",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 503,
+          "body": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=test&format=json&resultType=lite&pageSize=10",
+          "headers": {
+            "host": "www.ebi.ac.uk",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "Server error '503 Service Unavailable' for url 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=test&format=json&resultType=lite&pageSize=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503",
+        "results": []
+      }
+    },
+    {
+      "id": "europepmc-config-max_results-int-0",
+      "engine": "europepmc",
+      "query": "test",
+      "config": {
+        "max_results": 0
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "resultList": {
+              "result": []
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=test&format=json&resultType=lite&pageSize=1",
+          "headers": {
+            "host": "www.ebi.ac.uk",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "europepmc-config-max_results-int--1",
+      "engine": "europepmc",
+      "query": "test",
+      "config": {
+        "max_results": -1
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "resultList": {
+              "result": []
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=test&format=json&resultType=lite&pageSize=1",
+          "headers": {
+            "host": "www.ebi.ac.uk",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "europepmc-config-max_results-bool-True",
+      "engine": "europepmc",
+      "query": "test",
+      "config": {
+        "max_results": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "resultList": {
+              "result": []
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=test&format=json&resultType=lite&pageSize=1",
+          "headers": {
+            "host": "www.ebi.ac.uk",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "europepmc-config-max_results-float-2.0",
+      "engine": "europepmc",
+      "query": "test",
+      "config": {
+        "max_results": 2.0
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "resultList": {
+              "result": []
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=test&format=json&resultType=lite&pageSize=2",
+          "headers": {
+            "host": "www.ebi.ac.uk",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "europepmc-config-max_results-str-2",
+      "engine": "europepmc",
+      "query": "test",
+      "config": {
+        "max_results": "2"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "resultList": {
+              "result": []
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=test&format=json&resultType=lite&pageSize=2",
+          "headers": {
+            "host": "www.ebi.ac.uk",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "europepmc-config-timeout_ms-bool-True",
+      "engine": "europepmc",
+      "query": "test",
+      "config": {
+        "timeout_ms": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "resultList": {
+              "result": []
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=test&format=json&resultType=lite&pageSize=10",
+          "headers": {
+            "host": "www.ebi.ac.uk",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "europepmc-config-timeout_ms-str-5000",
+      "engine": "europepmc",
+      "query": "test",
+      "config": {
+        "timeout_ms": "5000"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "resultList": {
+              "result": []
+            }
+          }
+        }
+      ],
+      "requests": [],
+      "output": {
+        "status": "error",
+        "error_message": "unsupported operand type(s) for /: 'str' and 'int'",
+        "results": []
+      }
+    },
+    {
+      "id": "pubchem-empty",
+      "engine": "pubchem",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "IdentifierList": {
+              "CID": []
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/test/cids/JSON",
+          "headers": {
+            "host": "pubchem.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "pubchem-wrong-outer",
+      "engine": "pubchem",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": []
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/test/cids/JSON",
+          "headers": {
+            "host": "pubchem.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "'list' object has no attribute 'get'",
+        "results": []
+      }
+    },
+    {
+      "id": "pubchem-missing",
+      "engine": "pubchem",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/test/cids/JSON",
+          "headers": {
+            "host": "pubchem.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "pubchem-http-404",
+      "engine": "pubchem",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 404,
+          "body": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/test/cids/JSON",
+          "headers": {
+            "host": "pubchem.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "pubchem-http-429",
+      "engine": "pubchem",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 429,
+          "body": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/test/cids/JSON",
+          "headers": {
+            "host": "pubchem.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "rate_limited",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "pubchem-http-503",
+      "engine": "pubchem",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 503,
+          "body": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/test/cids/JSON",
+          "headers": {
+            "host": "pubchem.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "Server error '503 Service Unavailable' for url 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/test/cids/JSON'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503",
+        "results": []
+      }
+    },
+    {
+      "id": "pubchem-config-max_results-int-0",
+      "engine": "pubchem",
+      "query": "test",
+      "config": {
+        "max_results": 0
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "IdentifierList": {
+              "CID": []
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/test/cids/JSON",
+          "headers": {
+            "host": "pubchem.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "pubchem-config-max_results-int--1",
+      "engine": "pubchem",
+      "query": "test",
+      "config": {
+        "max_results": -1
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "IdentifierList": {
+              "CID": []
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/test/cids/JSON",
+          "headers": {
+            "host": "pubchem.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "pubchem-config-max_results-bool-True",
+      "engine": "pubchem",
+      "query": "test",
+      "config": {
+        "max_results": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "IdentifierList": {
+              "CID": []
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/test/cids/JSON",
+          "headers": {
+            "host": "pubchem.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "pubchem-config-max_results-float-2.0",
+      "engine": "pubchem",
+      "query": "test",
+      "config": {
+        "max_results": 2.0
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "IdentifierList": {
+              "CID": []
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/test/cids/JSON",
+          "headers": {
+            "host": "pubchem.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "pubchem-config-max_results-str-2",
+      "engine": "pubchem",
+      "query": "test",
+      "config": {
+        "max_results": "2"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "IdentifierList": {
+              "CID": []
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/test/cids/JSON",
+          "headers": {
+            "host": "pubchem.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "pubchem-config-timeout_ms-bool-True",
+      "engine": "pubchem",
+      "query": "test",
+      "config": {
+        "timeout_ms": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "IdentifierList": {
+              "CID": []
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/test/cids/JSON",
+          "headers": {
+            "host": "pubchem.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "pubchem-config-timeout_ms-str-5000",
+      "engine": "pubchem",
+      "query": "test",
+      "config": {
+        "timeout_ms": "5000"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "IdentifierList": {
+              "CID": []
+            }
+          }
+        }
+      ],
+      "requests": [],
+      "output": {
+        "status": "error",
+        "error_message": "unsupported operand type(s) for /: 'str' and 'float'",
+        "results": []
+      }
+    },
+    {
+      "id": "pubmed-empty",
+      "engine": "pubmed",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "esearchresult": {
+              "idlist": []
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=test&retmax=10&retmode=json&sort=relevance",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "pubmed-wrong-outer",
+      "engine": "pubmed",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": []
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=test&retmax=10&retmode=json&sort=relevance",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "ESearch payload must be an object",
+        "results": []
+      }
+    },
+    {
+      "id": "pubmed-missing",
+      "engine": "pubmed",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=test&retmax=10&retmode=json&sort=relevance",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "ESearch payload is missing esearchresult",
+        "results": []
+      }
+    },
+    {
+      "id": "pubmed-http-404",
+      "engine": "pubmed",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 404,
+          "body": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=test&retmax=10&retmode=json&sort=relevance",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "Client error '404 Not Found' for url 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=test&retmax=10&retmode=json&sort=relevance'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+        "results": []
+      }
+    },
+    {
+      "id": "pubmed-http-429",
+      "engine": "pubmed",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 429,
+          "body": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=test&retmax=10&retmode=json&sort=relevance",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "rate_limited",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "pubmed-http-503",
+      "engine": "pubmed",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 503,
+          "body": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=test&retmax=10&retmode=json&sort=relevance",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "Server error '503 Service Unavailable' for url 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=test&retmax=10&retmode=json&sort=relevance'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503",
+        "results": []
+      }
+    },
+    {
+      "id": "pubmed-config-max_results-int-0",
+      "engine": "pubmed",
+      "query": "test",
+      "config": {
+        "max_results": 0
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "esearchresult": {
+              "idlist": []
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=test&retmax=0&retmode=json&sort=relevance",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "pubmed-config-max_results-int--1",
+      "engine": "pubmed",
+      "query": "test",
+      "config": {
+        "max_results": -1
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "esearchresult": {
+              "idlist": []
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=test&retmax=-1&retmode=json&sort=relevance",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "pubmed-config-max_results-bool-True",
+      "engine": "pubmed",
+      "query": "test",
+      "config": {
+        "max_results": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "esearchresult": {
+              "idlist": []
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=test&retmax=true&retmode=json&sort=relevance",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "pubmed-config-max_results-float-2.0",
+      "engine": "pubmed",
+      "query": "test",
+      "config": {
+        "max_results": 2.0
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "esearchresult": {
+              "idlist": []
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=test&retmax=2.0&retmode=json&sort=relevance",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "pubmed-config-max_results-str-2",
+      "engine": "pubmed",
+      "query": "test",
+      "config": {
+        "max_results": "2"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "esearchresult": {
+              "idlist": []
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=test&retmax=2&retmode=json&sort=relevance",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "pubmed-config-timeout_ms-bool-True",
+      "engine": "pubmed",
+      "query": "test",
+      "config": {
+        "timeout_ms": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "esearchresult": {
+              "idlist": []
+            }
+          }
+        }
+      ],
+      "requests": [],
+      "output": {
+        "status": "error",
+        "error_message": "timeout_ms must be a positive finite number",
+        "results": []
+      }
+    },
+    {
+      "id": "pubmed-config-timeout_ms-str-5000",
+      "engine": "pubmed",
+      "query": "test",
+      "config": {
+        "timeout_ms": "5000"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "esearchresult": {
+              "idlist": []
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=test&retmax=10&retmode=json&sort=relevance",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "uniprot-empty",
+      "engine": "uniprot",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": []
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=%28test%29+OR+%28gene%3Atest%29&size=30&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "uniprot-wrong-outer",
+      "engine": "uniprot",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": []
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=%28test%29+OR+%28gene%3Atest%29&size=30&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "'list' object has no attribute 'get'",
+        "results": []
+      }
+    },
+    {
+      "id": "uniprot-missing",
+      "engine": "uniprot",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=%28test%29+OR+%28gene%3Atest%29&size=30&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "uniprot-http-404",
+      "engine": "uniprot",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 404,
+          "body": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=%28test%29+OR+%28gene%3Atest%29&size=30&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "Client error '404 Not Found' for url 'https://rest.uniprot.org/uniprotkb/search?query=%28test%29+OR+%28gene%3Atest%29&size=30&format=json'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+        "results": []
+      }
+    },
+    {
+      "id": "uniprot-http-429",
+      "engine": "uniprot",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 429,
+          "body": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=%28test%29+OR+%28gene%3Atest%29&size=30&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "rate_limited",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "uniprot-http-503",
+      "engine": "uniprot",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 503,
+          "body": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=%28test%29+OR+%28gene%3Atest%29&size=30&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "Server error '503 Service Unavailable' for url 'https://rest.uniprot.org/uniprotkb/search?query=%28test%29+OR+%28gene%3Atest%29&size=30&format=json'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503",
+        "results": []
+      }
+    },
+    {
+      "id": "uniprot-config-max_results-int-0",
+      "engine": "uniprot",
+      "query": "test",
+      "config": {
+        "max_results": 0
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": []
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=%28test%29+OR+%28gene%3Atest%29&size=0&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "uniprot-config-max_results-int--1",
+      "engine": "uniprot",
+      "query": "test",
+      "config": {
+        "max_results": -1
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": []
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=%28test%29+OR+%28gene%3Atest%29&size=-3&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "uniprot-config-max_results-bool-True",
+      "engine": "uniprot",
+      "query": "test",
+      "config": {
+        "max_results": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": []
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=%28test%29+OR+%28gene%3Atest%29&size=3&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "uniprot-config-max_results-float-2.0",
+      "engine": "uniprot",
+      "query": "test",
+      "config": {
+        "max_results": 2.0
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": []
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=%28test%29+OR+%28gene%3Atest%29&size=6.0&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "slice indices must be integers or None or have an __index__ method",
+        "results": []
+      }
+    },
+    {
+      "id": "uniprot-config-max_results-str-2",
+      "engine": "uniprot",
+      "query": "test",
+      "config": {
+        "max_results": "2"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": []
+          }
+        }
+      ],
+      "requests": [],
+      "output": {
+        "raised": "TypeError",
+        "error_message": "'<' not supported between instances of 'int' and 'str'"
+      }
+    },
+    {
+      "id": "uniprot-config-timeout_ms-bool-True",
+      "engine": "uniprot",
+      "query": "test",
+      "config": {
+        "timeout_ms": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": []
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=%28test%29+OR+%28gene%3Atest%29&size=30&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "uniprot-config-timeout_ms-str-5000",
+      "engine": "uniprot",
+      "query": "test",
+      "config": {
+        "timeout_ms": "5000"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": []
+          }
+        }
+      ],
+      "requests": [],
+      "output": {
+        "status": "error",
+        "error_message": "unsupported operand type(s) for /: 'str' and 'float'",
+        "results": []
+      }
+    },
+    {
+      "id": "up-query-VIM",
+      "engine": "uniprot",
+      "query": "VIM",
+      "config": {
+        "max_results": 2
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": [
+              {
+                "primaryAccession": "Q99999",
+                "uniProtkbId": "Q99999_TEST",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Vimentin-binding protein"
+                    }
+                  }
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "VIMBP"
+                    }
+                  }
+                ],
+                "organism": {
+                  "scientificName": "Homo sapiens"
+                }
+              },
+              {
+                "primaryAccession": "P20152",
+                "uniProtkbId": "P20152_TEST",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Vimentin"
+                    }
+                  }
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "Vim"
+                    }
+                  }
+                ],
+                "organism": {
+                  "scientificName": "Mus musculus"
+                }
+              },
+              {
+                "primaryAccession": "P08670",
+                "uniProtkbId": "P08670_TEST",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Vimentin"
+                    }
+                  }
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "VIM"
+                    }
+                  }
+                ],
+                "organism": {
+                  "scientificName": "Homo sapiens"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=%28VIM%29+OR+%28gene%3AVIM%29&size=6&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.uniprot.org/uniprotkb/P20152/entry",
+            "title": "P20152 \u2014 Vimentin",
+            "content": "Mus musculus \u2014 Gene: Vim",
+            "engine": "uniprot",
+            "position": 1,
+            "score": 2.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://www.uniprot.org/uniprotkb/P08670/entry",
+            "title": "P08670 \u2014 Vimentin",
+            "content": "Homo sapiens \u2014 Gene: VIM",
+            "engine": "uniprot",
+            "position": 2,
+            "score": 2.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "up-query-P08670",
+      "engine": "uniprot",
+      "query": "P08670",
+      "config": {
+        "max_results": 2
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": [
+              {
+                "primaryAccession": "Q99999",
+                "uniProtkbId": "Q99999_TEST",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Vimentin-binding protein"
+                    }
+                  }
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "VIMBP"
+                    }
+                  }
+                ],
+                "organism": {
+                  "scientificName": "Homo sapiens"
+                }
+              },
+              {
+                "primaryAccession": "P20152",
+                "uniProtkbId": "P20152_TEST",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Vimentin"
+                    }
+                  }
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "Vim"
+                    }
+                  }
+                ],
+                "organism": {
+                  "scientificName": "Mus musculus"
+                }
+              },
+              {
+                "primaryAccession": "P08670",
+                "uniProtkbId": "P08670_TEST",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Vimentin"
+                    }
+                  }
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "VIM"
+                    }
+                  }
+                ],
+                "organism": {
+                  "scientificName": "Homo sapiens"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=%28P08670%29+OR+%28accession%3AP08670%29&size=6&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.uniprot.org/uniprotkb/P08670/entry",
+            "title": "P08670 \u2014 Vimentin",
+            "content": "Homo sapiens \u2014 Gene: VIM",
+            "engine": "uniprot",
+            "position": 1,
+            "score": 3.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://www.uniprot.org/uniprotkb/Q99999/entry",
+            "title": "Q99999 \u2014 Vimentin-binding protein",
+            "content": "Homo sapiens \u2014 Gene: VIMBP",
+            "engine": "uniprot",
+            "position": 2,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "up-query-gene:VIM",
+      "engine": "uniprot",
+      "query": "gene:VIM",
+      "config": {
+        "max_results": 2
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": [
+              {
+                "primaryAccession": "Q99999",
+                "uniProtkbId": "Q99999_TEST",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Vimentin-binding protein"
+                    }
+                  }
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "VIMBP"
+                    }
+                  }
+                ],
+                "organism": {
+                  "scientificName": "Homo sapiens"
+                }
+              },
+              {
+                "primaryAccession": "P20152",
+                "uniProtkbId": "P20152_TEST",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Vimentin"
+                    }
+                  }
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "Vim"
+                    }
+                  }
+                ],
+                "organism": {
+                  "scientificName": "Mus musculus"
+                }
+              },
+              {
+                "primaryAccession": "P08670",
+                "uniProtkbId": "P08670_TEST",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Vimentin"
+                    }
+                  }
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "VIM"
+                    }
+                  }
+                ],
+                "organism": {
+                  "scientificName": "Homo sapiens"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=gene%3AVIM&size=6&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.uniprot.org/uniprotkb/P20152/entry",
+            "title": "P20152 \u2014 Vimentin",
+            "content": "Mus musculus \u2014 Gene: Vim",
+            "engine": "uniprot",
+            "position": 1,
+            "score": 2.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://www.uniprot.org/uniprotkb/P08670/entry",
+            "title": "P08670 \u2014 Vimentin",
+            "content": "Homo sapiens \u2014 Gene: VIM",
+            "engine": "uniprot",
+            "position": 2,
+            "score": 2.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "up-query-id:P08670_TEST",
+      "engine": "uniprot",
+      "query": "id:P08670_TEST",
+      "config": {
+        "max_results": 2
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": [
+              {
+                "primaryAccession": "Q99999",
+                "uniProtkbId": "Q99999_TEST",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Vimentin-binding protein"
+                    }
+                  }
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "VIMBP"
+                    }
+                  }
+                ],
+                "organism": {
+                  "scientificName": "Homo sapiens"
+                }
+              },
+              {
+                "primaryAccession": "P20152",
+                "uniProtkbId": "P20152_TEST",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Vimentin"
+                    }
+                  }
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "Vim"
+                    }
+                  }
+                ],
+                "organism": {
+                  "scientificName": "Mus musculus"
+                }
+              },
+              {
+                "primaryAccession": "P08670",
+                "uniProtkbId": "P08670_TEST",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Vimentin"
+                    }
+                  }
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "VIM"
+                    }
+                  }
+                ],
+                "organism": {
+                  "scientificName": "Homo sapiens"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=id%3AP08670_TEST&size=6&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.uniprot.org/uniprotkb/P08670/entry",
+            "title": "P08670 \u2014 Vimentin",
+            "content": "Homo sapiens \u2014 Gene: VIM",
+            "engine": "uniprot",
+            "position": 1,
+            "score": 3.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://www.uniprot.org/uniprotkb/Q99999/entry",
+            "title": "Q99999 \u2014 Vimentin-binding protein",
+            "content": "Homo sapiens \u2014 Gene: VIMBP",
+            "engine": "uniprot",
+            "position": 2,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "up-query-accession:p08670",
+      "engine": "uniprot",
+      "query": "accession:p08670",
+      "config": {
+        "max_results": 2
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": [
+              {
+                "primaryAccession": "Q99999",
+                "uniProtkbId": "Q99999_TEST",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Vimentin-binding protein"
+                    }
+                  }
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "VIMBP"
+                    }
+                  }
+                ],
+                "organism": {
+                  "scientificName": "Homo sapiens"
+                }
+              },
+              {
+                "primaryAccession": "P20152",
+                "uniProtkbId": "P20152_TEST",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Vimentin"
+                    }
+                  }
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "Vim"
+                    }
+                  }
+                ],
+                "organism": {
+                  "scientificName": "Mus musculus"
+                }
+              },
+              {
+                "primaryAccession": "P08670",
+                "uniProtkbId": "P08670_TEST",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Vimentin"
+                    }
+                  }
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "VIM"
+                    }
+                  }
+                ],
+                "organism": {
+                  "scientificName": "Homo sapiens"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=accession%3Ap08670&size=6&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.uniprot.org/uniprotkb/P08670/entry",
+            "title": "P08670 \u2014 Vimentin",
+            "content": "Homo sapiens \u2014 Gene: VIM",
+            "engine": "uniprot",
+            "position": 1,
+            "score": 3.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://www.uniprot.org/uniprotkb/Q99999/entry",
+            "title": "Q99999 \u2014 Vimentin-binding protein",
+            "content": "Homo sapiens \u2014 Gene: VIMBP",
+            "engine": "uniprot",
+            "position": 2,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "up-query- (gene:VIM) AND organism_id:9606 ",
+      "engine": "uniprot",
+      "query": " (gene:VIM) AND organism_id:9606 ",
+      "config": {
+        "max_results": 2
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": [
+              {
+                "primaryAccession": "Q99999",
+                "uniProtkbId": "Q99999_TEST",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Vimentin-binding protein"
+                    }
+                  }
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "VIMBP"
+                    }
+                  }
+                ],
+                "organism": {
+                  "scientificName": "Homo sapiens"
+                }
+              },
+              {
+                "primaryAccession": "P20152",
+                "uniProtkbId": "P20152_TEST",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Vimentin"
+                    }
+                  }
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "Vim"
+                    }
+                  }
+                ],
+                "organism": {
+                  "scientificName": "Mus musculus"
+                }
+              },
+              {
+                "primaryAccession": "P08670",
+                "uniProtkbId": "P08670_TEST",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Vimentin"
+                    }
+                  }
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "VIM"
+                    }
+                  }
+                ],
+                "organism": {
+                  "scientificName": "Homo sapiens"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=+%28gene%3AVIM%29+AND+organism_id%3A9606+&size=6&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.uniprot.org/uniprotkb/Q99999/entry",
+            "title": "Q99999 \u2014 Vimentin-binding protein",
+            "content": "Homo sapiens \u2014 Gene: VIMBP",
+            "engine": "uniprot",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://www.uniprot.org/uniprotkb/P20152/entry",
+            "title": "P20152 \u2014 Vimentin",
+            "content": "Mus musculus \u2014 Gene: Vim",
+            "engine": "uniprot",
+            "position": 2,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "up-query-v",
+      "engine": "uniprot",
+      "query": "v",
+      "config": {
+        "max_results": 2
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": [
+              {
+                "primaryAccession": "Q99999",
+                "uniProtkbId": "Q99999_TEST",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Vimentin-binding protein"
+                    }
+                  }
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "VIMBP"
+                    }
+                  }
+                ],
+                "organism": {
+                  "scientificName": "Homo sapiens"
+                }
+              },
+              {
+                "primaryAccession": "P20152",
+                "uniProtkbId": "P20152_TEST",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Vimentin"
+                    }
+                  }
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "Vim"
+                    }
+                  }
+                ],
+                "organism": {
+                  "scientificName": "Mus musculus"
+                }
+              },
+              {
+                "primaryAccession": "P08670",
+                "uniProtkbId": "P08670_TEST",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Vimentin"
+                    }
+                  }
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "VIM"
+                    }
+                  }
+                ],
+                "organism": {
+                  "scientificName": "Homo sapiens"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=v&size=6&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.uniprot.org/uniprotkb/Q99999/entry",
+            "title": "Q99999 \u2014 Vimentin-binding protein",
+            "content": "Homo sapiens \u2014 Gene: VIMBP",
+            "engine": "uniprot",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://www.uniprot.org/uniprotkb/P20152/entry",
+            "title": "P20152 \u2014 Vimentin",
+            "content": "Mus musculus \u2014 Gene: Vim",
+            "engine": "uniprot",
+            "position": 2,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "up-query- VIM ",
+      "engine": "uniprot",
+      "query": " VIM ",
+      "config": {
+        "max_results": 2
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": [
+              {
+                "primaryAccession": "Q99999",
+                "uniProtkbId": "Q99999_TEST",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Vimentin-binding protein"
+                    }
+                  }
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "VIMBP"
+                    }
+                  }
+                ],
+                "organism": {
+                  "scientificName": "Homo sapiens"
+                }
+              },
+              {
+                "primaryAccession": "P20152",
+                "uniProtkbId": "P20152_TEST",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Vimentin"
+                    }
+                  }
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "Vim"
+                    }
+                  }
+                ],
+                "organism": {
+                  "scientificName": "Mus musculus"
+                }
+              },
+              {
+                "primaryAccession": "P08670",
+                "uniProtkbId": "P08670_TEST",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Vimentin"
+                    }
+                  }
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "VIM"
+                    }
+                  }
+                ],
+                "organism": {
+                  "scientificName": "Homo sapiens"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=%28VIM%29+OR+%28gene%3AVIM%29&size=6&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.uniprot.org/uniprotkb/P20152/entry",
+            "title": "P20152 \u2014 Vimentin",
+            "content": "Mus musculus \u2014 Gene: Vim",
+            "engine": "uniprot",
+            "position": 1,
+            "score": 2.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://www.uniprot.org/uniprotkb/P08670/entry",
+            "title": "P08670 \u2014 Vimentin",
+            "content": "Homo sapiens \u2014 Gene: VIM",
+            "engine": "uniprot",
+            "position": 2,
+            "score": 2.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "up-query-\u212a12345",
+      "engine": "uniprot",
+      "query": "\u212a12345",
+      "config": {
+        "max_results": 2
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": [
+              {
+                "primaryAccession": "Q99999",
+                "uniProtkbId": "Q99999_TEST",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Vimentin-binding protein"
+                    }
+                  }
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "VIMBP"
+                    }
+                  }
+                ],
+                "organism": {
+                  "scientificName": "Homo sapiens"
+                }
+              },
+              {
+                "primaryAccession": "P20152",
+                "uniProtkbId": "P20152_TEST",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Vimentin"
+                    }
+                  }
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "Vim"
+                    }
+                  }
+                ],
+                "organism": {
+                  "scientificName": "Mus musculus"
+                }
+              },
+              {
+                "primaryAccession": "P08670",
+                "uniProtkbId": "P08670_TEST",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Vimentin"
+                    }
+                  }
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "VIM"
+                    }
+                  }
+                ],
+                "organism": {
+                  "scientificName": "Homo sapiens"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=%E2%84%AA12345&size=6&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.uniprot.org/uniprotkb/Q99999/entry",
+            "title": "Q99999 \u2014 Vimentin-binding protein",
+            "content": "Homo sapiens \u2014 Gene: VIMBP",
+            "engine": "uniprot",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://www.uniprot.org/uniprotkb/P20152/entry",
+            "title": "P20152 \u2014 Vimentin",
+            "content": "Mus musculus \u2014 Gene: Vim",
+            "engine": "uniprot",
+            "position": 2,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "up-query-gene:V\u0130M",
+      "engine": "uniprot",
+      "query": "gene:V\u0130M",
+      "config": {
+        "max_results": 2
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": [
+              {
+                "primaryAccession": "Q99999",
+                "uniProtkbId": "Q99999_TEST",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Vimentin-binding protein"
+                    }
+                  }
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "VIMBP"
+                    }
+                  }
+                ],
+                "organism": {
+                  "scientificName": "Homo sapiens"
+                }
+              },
+              {
+                "primaryAccession": "P20152",
+                "uniProtkbId": "P20152_TEST",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Vimentin"
+                    }
+                  }
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "Vim"
+                    }
+                  }
+                ],
+                "organism": {
+                  "scientificName": "Mus musculus"
+                }
+              },
+              {
+                "primaryAccession": "P08670",
+                "uniProtkbId": "P08670_TEST",
+                "proteinDescription": {
+                  "recommendedName": {
+                    "fullName": {
+                      "value": "Vimentin"
+                    }
+                  }
+                },
+                "genes": [
+                  {
+                    "geneName": {
+                      "value": "VIM"
+                    }
+                  }
+                ],
+                "organism": {
+                  "scientificName": "Homo sapiens"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=gene%3AV%C4%B0M&size=6&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.uniprot.org/uniprotkb/Q99999/entry",
+            "title": "Q99999 \u2014 Vimentin-binding protein",
+            "content": "Homo sapiens \u2014 Gene: VIMBP",
+            "engine": "uniprot",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://www.uniprot.org/uniprotkb/P20152/entry",
+            "title": "P20152 \u2014 Vimentin",
+            "content": "Mus musculus \u2014 Gene: Vim",
+            "engine": "uniprot",
+            "position": 2,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "pm-ids-[]",
+      "engine": "pubmed",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "esearchresult": {
+              "idlist": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "result": {
+              "2": {
+                "title": "Two"
+              }
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=test&retmax=10&retmode=json&sort=relevance",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "pm-ids-[1]",
+      "engine": "pubmed",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "esearchresult": {
+              "idlist": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "result": {
+              "2": {
+                "title": "Two"
+              }
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=test&retmax=10&retmode=json&sort=relevance",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "ESearch idlist contains an invalid PMID",
+        "results": []
+      }
+    },
+    {
+      "id": "pm-ids-['']",
+      "engine": "pubmed",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "esearchresult": {
+              "idlist": [
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "result": {
+              "2": {
+                "title": "Two"
+              }
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=test&retmax=10&retmode=json&sort=relevance",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "ESearch idlist contains an invalid PMID",
+        "results": []
+      }
+    },
+    {
+      "id": "pm-ids-['1', '2']",
+      "engine": "pubmed",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "esearchresult": {
+              "idlist": [
+                "1",
+                "2"
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "result": {
+              "2": {
+                "title": "Two"
+              }
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=test&retmax=10&retmode=json&sort=relevance",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=1%2C2&retmode=json",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://pubmed.ncbi.nlm.nih.gov/2/",
+            "title": "Two",
+            "content": "",
+            "engine": "pubmed",
+            "position": 2,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2",
+                "pmid": "2",
+                "publication_types": []
+              },
+              "provenance": {
+                "engine": "pubmed",
+                "adapter_fields": [
+                  "publication_id",
+                  "pmid",
+                  "publication_types"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "pm-authors",
+      "engine": "pubmed",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "esearchresult": {
+              "idlist": [
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "result": {
+              "1": {
+                "title": "T",
+                "authors": [
+                  {
+                    "name": "A"
+                  },
+                  {
+                    "name": "B"
+                  },
+                  {
+                    "name": "C"
+                  },
+                  {
+                    "name": "D"
+                  },
+                  {
+                    "name": "E"
+                  }
+                ],
+                "articleids": [
+                  {
+                    "idtype": "doi",
+                    "value": "10/x"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=test&retmax=10&retmode=json&sort=relevance",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=1&retmode=json",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://pubmed.ncbi.nlm.nih.gov/1/",
+            "title": "T",
+            "content": " \u2014 A, B, C",
+            "engine": "pubmed",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "1",
+                "pmid": "1",
+                "doi": "10/x",
+                "publication_types": [],
+                "authors": [
+                  "A",
+                  "B",
+                  "C",
+                  "D",
+                  "E"
+                ]
+              },
+              "provenance": {
+                "engine": "pubmed",
+                "adapter_fields": [
+                  "publication_id",
+                  "pmid",
+                  "doi",
+                  "publication_types",
+                  "authors"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "epmc-date-2026-99-99",
+      "engine": "europepmc",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "resultList": {
+              "result": [
+                {
+                  "source": "MED",
+                  "id": "1",
+                  "title": "t",
+                  "firstPublicationDate": "2026-99-99",
+                  "journalTitle": [],
+                  "doi": "10/x"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=test&format=json&resultType=lite&pageSize=10",
+          "headers": {
+            "host": "www.ebi.ac.uk",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://europepmc.org/article/MED/1",
+            "title": "t",
+            "content": "Source: Europe PMC / EMBL-EBI (https://europepmc.org)",
+            "engine": "europepmc",
+            "position": 0,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "1",
+                "source": "MED",
+                "pmid": "1",
+                "doi": "10/x",
+                "journal": []
+              },
+              "provenance": {
+                "engine": "europepmc",
+                "adapter_fields": [
+                  "publication_id",
+                  "source",
+                  "pmid",
+                  "doi",
+                  "journal"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "epmc-date-20260102",
+      "engine": "europepmc",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "resultList": {
+              "result": [
+                {
+                  "source": "MED",
+                  "id": "1",
+                  "title": "t",
+                  "firstPublicationDate": "20260102",
+                  "journalTitle": [],
+                  "doi": "10/x"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=test&format=json&resultType=lite&pageSize=10",
+          "headers": {
+            "host": "www.ebi.ac.uk",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://europepmc.org/article/MED/1",
+            "title": "t",
+            "content": "Source: Europe PMC / EMBL-EBI (https://europepmc.org)",
+            "engine": "europepmc",
+            "position": 0,
+            "score": 1.0,
+            "category": "general",
+            "published_date": "2026-01-02",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "1",
+                "source": "MED",
+                "pmid": "1",
+                "doi": "10/x",
+                "journal": []
+              },
+              "provenance": {
+                "engine": "europepmc",
+                "adapter_fields": [
+                  "publication_id",
+                  "source",
+                  "pmid",
+                  "doi",
+                  "journal"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "epmc-date-2026-W01-1",
+      "engine": "europepmc",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "resultList": {
+              "result": [
+                {
+                  "source": "MED",
+                  "id": "1",
+                  "title": "t",
+                  "firstPublicationDate": "2026-W01-1",
+                  "journalTitle": [],
+                  "doi": "10/x"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=test&format=json&resultType=lite&pageSize=10",
+          "headers": {
+            "host": "www.ebi.ac.uk",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://europepmc.org/article/MED/1",
+            "title": "t",
+            "content": "Source: Europe PMC / EMBL-EBI (https://europepmc.org)",
+            "engine": "europepmc",
+            "position": 0,
+            "score": 1.0,
+            "category": "general",
+            "published_date": "2025-12-29",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "1",
+                "source": "MED",
+                "pmid": "1",
+                "doi": "10/x",
+                "journal": []
+              },
+              "provenance": {
+                "engine": "europepmc",
+                "adapter_fields": [
+                  "publication_id",
+                  "source",
+                  "pmid",
+                  "doi",
+                  "journal"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "epmc-date-2026-W01",
+      "engine": "europepmc",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "resultList": {
+              "result": [
+                {
+                  "source": "MED",
+                  "id": "1",
+                  "title": "t",
+                  "firstPublicationDate": "2026-W01",
+                  "journalTitle": [],
+                  "doi": "10/x"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=test&format=json&resultType=lite&pageSize=10",
+          "headers": {
+            "host": "www.ebi.ac.uk",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://europepmc.org/article/MED/1",
+            "title": "t",
+            "content": "Source: Europe PMC / EMBL-EBI (https://europepmc.org)",
+            "engine": "europepmc",
+            "position": 0,
+            "score": 1.0,
+            "category": "general",
+            "published_date": "2025-12-29",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "1",
+                "source": "MED",
+                "pmid": "1",
+                "doi": "10/x",
+                "journal": []
+              },
+              "provenance": {
+                "engine": "europepmc",
+                "adapter_fields": [
+                  "publication_id",
+                  "source",
+                  "pmid",
+                  "doi",
+                  "journal"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "epmc-date-0000-01-01",
+      "engine": "europepmc",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "resultList": {
+              "result": [
+                {
+                  "source": "MED",
+                  "id": "1",
+                  "title": "t",
+                  "firstPublicationDate": "0000-01-01",
+                  "journalTitle": [],
+                  "doi": "10/x"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=test&format=json&resultType=lite&pageSize=10",
+          "headers": {
+            "host": "www.ebi.ac.uk",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://europepmc.org/article/MED/1",
+            "title": "t",
+            "content": "Source: Europe PMC / EMBL-EBI (https://europepmc.org)",
+            "engine": "europepmc",
+            "position": 0,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "1",
+                "source": "MED",
+                "pmid": "1",
+                "doi": "10/x",
+                "journal": []
+              },
+              "provenance": {
+                "engine": "europepmc",
+                "adapter_fields": [
+                  "publication_id",
+                  "source",
+                  "pmid",
+                  "doi",
+                  "journal"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

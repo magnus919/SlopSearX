@@ -571,6 +571,10 @@ def _portal_state(
     enforcement: dict[str, dict[str, Any]] = {}
     if time_range:
         enforcement["time_range"] = resolve_filter_enforcement(selected, "time_range", time_range, _active_engines)
+    if response.date_filter is not None:
+        for name, value in response.date_filter["applied"].items():
+            if value is not None:
+                enforcement[name] = resolve_filter_enforcement(selected, name, value, _active_engines)
     if safesearch:
         enforcement["safesearch"] = resolve_filter_enforcement(selected, "safesearch", safesearch, _active_engines)
     warnings = [str(warning) for warning in response.scope.warnings if str(warning).strip()]
@@ -620,6 +624,8 @@ def _portal_state(
         "engines": engine_selection,
         "language": language,
         "time_range": time_range,
+        "date_from": response.date_filter["applied"]["date_from"] if response.date_filter else None,
+        "date_to": response.date_filter["applied"]["date_to"] if response.date_filter else None,
         "safesearch": safesearch,
         "page": page,
         "category_options": sorted(category_options),
@@ -800,11 +806,17 @@ async def _search_endpoint_impl(request: Request) -> Any:
     and their results are omitted.
     """
     params = dict(request.query_params)
+    duplicate_dates = [key for key in ("date_from", "date_to") if len(request.query_params.getlist(key)) > 1]
     if request.method == "POST":
         content_type = request.headers.get("content-type", "").split(";", 1)[0].strip().lower()
         if content_type == "application/x-www-form-urlencoded":
             body = await request.body()
             form = parse_qs(body.decode("utf-8", errors="replace"), keep_blank_values=True)
+            duplicate_dates.extend(
+                key
+                for key in ("date_from", "date_to")
+                if len(form.get(key, [])) + len(request.query_params.getlist(key)) > 1
+            )
             params.update({key: values[-1] for key, values in form.items() if values})
 
     q = params.get("q", "")
@@ -813,6 +825,30 @@ async def _search_endpoint_impl(request: Request) -> Any:
     engines_param = params.get("engines", "")
     language = params.get("language", "en")
     time_range = params.get("time_range", "")
+    date_from = params.get("date_from")
+    date_to = params.get("date_to")
+    unknown_dates = [
+        key
+        for key in params
+        if (
+            key.lower().replace("_", "").replace("-", "").startswith("date")
+            or key.lower().replace("_", "").replace("-", "")
+            in {"fromdate", "todate", "startdate", "enddate", "timerange"}
+        )
+        and key not in {"date_from", "date_to", "time_range"}
+    ]
+    unknown_dates.extend(duplicate_dates)
+    if unknown_dates:
+        output_format, format_error = _select_format(request, requested_format)
+        if format_error is not None:
+            return format_error
+        return _format_error_response(
+            output_format,
+            400,
+            error="invalid_filter",
+            field=unknown_dates[0],
+            message="Unknown or repeated date parameter.",
+        )
     try:
         pageno = int(params.get("pageno", "1"))
         safesearch = int(params.get("safesearch", "0"))
@@ -870,6 +906,15 @@ async def _search_endpoint_impl(request: Request) -> Any:
     if format_error is not None:
         return format_error
 
+    if (date_from is not None or date_to is not None) and output_format in {"csv", "rss"}:
+        return _format_error_response(
+            output_format,
+            400,
+            error="invalid_filter",
+            field="format",
+            message="Bounded publication-date proof requires json, yaml, or html format.",
+        )
+
     restricted_engines = _portal_restricted_engines(engines_param)
     if restricted_engines:
         return _format_error_response(
@@ -918,6 +963,8 @@ async def _search_endpoint_impl(request: Request) -> Any:
         language=language,
         page=parsed_page,
         time_range=time_range if time_range else None,
+        date_from=date_from,
+        date_to=date_to,
         safesearch=parsed_safesearch,
         client_identifier=request.client.host if request.client else None,
     )
@@ -1055,7 +1102,22 @@ async def root_search(request: Request) -> Any:
     return await _search_endpoint(request)
 
 
-@app.api_route("/search", methods=["GET", "POST"])
+@app.api_route(
+    "/search",
+    methods=["GET", "POST"],
+    openapi_extra={
+        "parameters": [
+            {
+                "name": name,
+                "in": "query",
+                "required": False,
+                "schema": {"type": "string", "format": "date"},
+                "description": "Inclusive publication date; requires engines=openalex and excludes time_range.",
+            }
+            for name in ("date_from", "date_to")
+        ]
+    },
+)
 async def search(request: Request) -> Any:
     """SearXNG-compatible search endpoint."""
 

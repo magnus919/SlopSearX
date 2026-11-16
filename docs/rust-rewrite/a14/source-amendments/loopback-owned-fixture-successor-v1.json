@@ -1,0 +1,112 @@
+{
+  "archive": {
+    "bytes": 114896,
+    "mode": "0644",
+    "path": "docs/rust-rewrite/a14/source-amendments/jobs.rs.7c2.frozen",
+    "sha256": "ec206a92016763f7510f4393e0f14a38429a7950e8bf22118c60c422dbe46a6c"
+  },
+  "caller": {
+    "bytes": 44172,
+    "mode": "0644",
+    "path": "docs/rust-rewrite/a14/cases.json",
+    "sha256": "4d7e4d4208a514c0f2b7b9b137651d07c9953fdaa3836d8c3a30490b6f0cd5c5"
+  },
+  "current": {
+    "bytes": 118691,
+    "mode": "0644",
+    "path": "crates/ssx-infra/src/adapters/jobs.rs",
+    "sha256": "93a7d5007dd782ec0f5fc3c79470f592fd02789b717864c1ebe6de9cc7b1844b"
+  },
+  "edits": [
+    {
+      "at": 32569,
+      "insert_utf8": "#[path = \"../../tests/support/owned_loopback_fixture.rs\"]\nmod owned_loopback_fixture;\n#[cfg(test)]\n",
+      "remove_utf8": ""
+    },
+    {
+      "at": 32581,
+      "insert_utf8": "    use super::owned_loopback_fixture::OwnedLoopback;\n",
+      "remove_utf8": ""
+    },
+    {
+      "at": 66758,
+      "insert_utf8": "        // Both a cold 20ms expiry and a deterministic zero-budget expiry may\n        // finish before any TCP dispatch. Neither permits an unbounded accept join.\n        for timeout_ms in [20, 0] {\n            let listener = TcpListener::bind(\"127.0.0.1:0\").await.unwrap();\n            let address = listener.local_addr().unwrap();\n            let accepted = Arc::new(std::sync::atomic::AtomicUsize::new(0));\n            let observed = accepted.clone();\n            let delayed_server = OwnedLoopback::spawn(async move {\n                let (mut socket, _) = listener.accept().await.unwrap();\n                observed.fetch_add(1, std::sync::atomic::Ordering::SeqCst);\n                let mut bytes = Vec::new();\n                let mut chunk = [0u8; 1024];\n                loop {\n                    let n = socket.read(&mut chunk).await.unwrap();\n                    if n == 0 {\n                        return;\n                    }\n                    bytes.extend_from_slice(&chunk[..n]);\n                    assert!(bytes.len() <= 16 * 1024, \"loopback request header bound\");\n                    if bytes.windows(4).any(|v| v == b\"\\r\\n\\r\\n\") {\n                        break;\n                    }\n                }\n                tokio::time::sleep(Duration::from_millis(100)).await;\n                let body = \"{\\\"jobs\\\":[]}\";\n                let response = format!(\n                    \"HTTP/1.1 200 OK\\r\\ncontent-length: {}\\r\\nconnection: close\\r\\n\\r\\n{body}\",\n                    body.len()\n                );\n                let _ = socket.write_all(response.as_bytes()).await;\n            });\n            let engine = JobsAdapter::greenhouse(\n                Arc::new(AdapterHttp::default()),\n                Arc::new(super::super::AllowAllAdmission),\n                GreenhouseConfig {\n                    base_url: format!(\"http://{address}/v1/boards\"),\n                    timeout_ms: timeout_ms.into(),\n                    ..Default::default()\n                },\n            );\n            let result = run(&engine, \"Engineer at TimeoutCo\").await;\n            delayed_server.stop_and_join().await;\n            assert_eq!(result.status, EngineStatus::Timeout);\n            assert!(result.results.is_empty());\n            assert!(accepted.load(std::sync::atomic::Ordering::SeqCst) <= 1);\n            if timeout_ms == 0 {\n                assert_eq!(accepted.load(std::sync::atomic::Ordering::SeqCst), 0);\n            }\n        }\n\n        // Cancellation before the search future's first poll must also reap a\n        // listener which never saw a connection. This uses the real owner/clock.\n",
+      "remove_utf8": ""
+    },
+    {
+      "at": 66884,
+      "insert_utf8": "        let accepted = Arc::new(std::sync::atomic::AtomicUsize::new(0));\n        let observed = accepted.clone();\n        let waiting = OwnedLoopback::spawn(async move {\n            let _ = listener.accept().await.unwrap();\n            observed.fetch_add(1, std::sync::atomic::Ordering::SeqCst);\n",
+      "remove_utf8": "        let delayed_server = tokio::spawn(async move {\n            let (mut socket, _) = listener.accept().await.unwrap();\n            let mut bytes = Vec::new();\n            let mut chunk = [0u8; 1024];\n            loop {\n                let n = socket.read(&mut chunk).await.unwrap();\n                if n == 0 {\n                    return;\n                }\n                bytes.extend_from_slice(&chunk[..n]);\n                if bytes.windows(4).any(|v| v == b\"\\r\\n\\r\\n\") {\n                    break;\n                }\n            }\n            tokio::time::sleep(Duration::from_millis(100)).await;\n            let body = \"{\\\"jobs\\\":[]}\";\n            let response = format!(\n                \"HTTP/1.1 200 OK\\r\\ncontent-length: {}\\r\\nconnection: close\\r\\n\\r\\n{body}\",\n                body.len()\n            );\n            let _ = socket.write_all(response.as_bytes()).await;\n"
+    },
+    {
+      "at": 67775,
+      "insert_utf8": "        let engine = JobsAdapter::lever(\n",
+      "remove_utf8": "        let engine = JobsAdapter::greenhouse(\n"
+    },
+    {
+      "at": 67922,
+      "insert_utf8": "            LeverConfig {\n                base_url: format!(\"http://{address}/v0/postings\"),\n                timeout_ms: 5_000.into(),\n",
+      "remove_utf8": "            GreenhouseConfig {\n                base_url: format!(\"http://{address}/v1/boards\"),\n                timeout_ms: 20.into(),\n"
+    },
+    {
+      "at": 68120,
+      "insert_utf8": "        let req = request(\"Engineer at CancelBeforeDispatchCo\");\n        let mut search = tokio::spawn(async move { engine.search(&req).await });\n        search.abort();\n        let cancelled = tokio::time::timeout(Duration::from_secs(3), &mut search).await;\n        waiting.stop_and_join().await;\n        assert!(\n            cancelled\n                .expect(\"pre-dispatch abort join was not observed\")\n                .unwrap_err()\n                .is_cancelled()\n        );\n        assert_eq!(accepted.load(std::sync::atomic::Ordering::SeqCst), 0);\n",
+      "remove_utf8": "        let result = run(&engine, \"Engineer at TimeoutCo\").await;\n        assert_eq!(result.status, EngineStatus::Timeout);\n        assert!(result.results.is_empty());\n        delayed_server.await.unwrap();\n"
+    },
+    {
+      "at": 68454,
+      "insert_utf8": "        let accepted = Arc::new(std::sync::atomic::AtomicUsize::new(0));\n        let observed = accepted.clone();\n",
+      "remove_utf8": ""
+    },
+    {
+      "at": 68528,
+      "insert_utf8": "        let peer = OwnedLoopback::spawn(async move {\n",
+      "remove_utf8": "        let peer = tokio::spawn(async move {\n"
+    },
+    {
+      "at": 68641,
+      "insert_utf8": "            observed.fetch_add(1, std::sync::atomic::Ordering::SeqCst);\n",
+      "remove_utf8": ""
+    },
+    {
+      "at": 68939,
+      "insert_utf8": "                assert!(bytes.len() <= 16 * 1024, \"loopback request header bound\");\n",
+      "remove_utf8": ""
+    },
+    {
+      "at": 69805,
+      "insert_utf8": "        let mut search = tokio::spawn(async move { engine.search(&req).await });\n        let readiness = tokio::time::timeout(Duration::from_secs(3), async {\n            tokio::select! { biased;\n                result = &mut search => (false, Some(result)),\n                accepted = accepted_rx => (accepted.is_ok(), None),\n            }\n        })\n        .await;\n        let (ready, completed) = readiness.unwrap_or((false, None));\n",
+      "remove_utf8": "        let search = tokio::spawn(async move { engine.search(&req).await });\n        accepted_rx.await.unwrap();\n"
+    },
+    {
+      "at": 69942,
+      "insert_utf8": "        let cancelled = if completed.is_none() {\n            Some(tokio::time::timeout(Duration::from_secs(3), &mut search).await)\n        } else {\n            None\n        };\n        if !ready {\n            peer.stop_and_join().await;\n            panic!(\n                \"job search did not reach complete loopback request headers before readiness ended: {completed:?}\"\n            );\n        }\n        let closed = peer.finish().await;\n",
+      "remove_utf8": "        let _ = search.await;\n"
+    },
+    {
+      "at": 69989,
+      "insert_utf8": "            cancelled\n                .unwrap()\n                .expect(\"active search abort join was not observed\")\n                .unwrap_err()\n                .is_cancelled()\n        );\n        assert_eq!(accepted.load(std::sync::atomic::Ordering::SeqCst), 1);\n        assert!(\n            closed,\n",
+      "remove_utf8": "            peer.await.unwrap(),\n"
+    },
+    {
+      "at": 70105,
+      "insert_utf8": "\n",
+      "remove_utf8": ""
+    }
+  ],
+  "fixture": {
+    "bytes": 3065,
+    "mode": "0644",
+    "path": "crates/ssx-infra/tests/support/owned_loopback_fixture.rs",
+    "sha256": "1b4ad6f9d7c2af3357bf702f5bb71bb610a75cdcc567ca06a238fa699dcf0406"
+  },
+  "prior": {
+    "bytes": 114896,
+    "mode": "0644",
+    "path": "crates/ssx-infra/src/adapters/jobs.rs",
+    "sha256": "ec206a92016763f7510f4393e0f14a38429a7950e8bf22118c60c422dbe46a6c"
+  },
+  "schema": "A14_OWNED_LOOPBACK_FIXTURE_SUCCESSOR_V1",
+  "scope": "Test-only lifetime correction: exact production prefix unchanged, real20ms provider deadline unchanged, owned async fixture stop/join and failclosed actualwire cancellation; originalA14cases/IDs unchanged",
+  "source_parent": "7c2bb2213fce490f5b55f4a2d93784a4f62e8ac7"
+}

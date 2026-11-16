@@ -1,0 +1,70 @@
+/private/tmp/slopsearx-daily-20261015/.venv/lib/python3.12/site-packages/pydantic_settings/sources/utils.py:47: IncompleteFieldDefinitionWarning: Field 'lifespan' has an incomplete definition: its annotation contains an unresolved forward reference, so settings sources may fail to correctly resolve its value. Call `model_rebuild()` on the model where the field is defined, once all the referenced types are defined.
+  warnings.warn(
+[10/15/26 09:03:07] INFO     StreamableHTTP       streamable_http_manager.py:143
+                             session manager                                    
+                             started                                            
+                    INFO     HTTP Request: GET                   _client.py:1740
+                             http://127.0.0.1:61092/mcp                         
+                             "HTTP/1.1 401 Unauthorized"                        
+                    INFO     Created new          streamable_http_manager.py:301
+                             transport with                                     
+                             session ID:                                        
+                             e60446b515af4ac69a1c                               
+                             0c7550cde4fb                                       
+                    WARNING  MCP startup problem: intent 'images'  server.py:144
+                             has media types matching no enabled                
+                             engines: ['image']                                 
+                    WARNING  MCP startup problem: intent 'videos'  server.py:144
+                             has media types matching no enabled                
+                             engines: ['video']                                 
+                    ERROR    Error handling POST request  streamable_http.py:650
+                             ╭─ Traceback (most recent ─╮                       
+                             │ /private/tmp/slopsearx-d │                       
+                             │ aily-20261015/.venv/lib/ │                       
+                             │ python3.12/site-packages │                       
+                             │ /mcp/server/streamable_h │                       
+                             │ ttp.py:491 in            │                       
+                             │ _handle_post_request     │                       
+                             │                          │                       
+                             │    488 │   │   │   │   r │                       
+                             │    489 │   │   │         │                       
+                             │    490 │   │   │   # Par │                       
+                             │ ❱  491 │   │   │   body  │                       
+                             │    492 │   │   │         │                       
+                             │    493 │   │   │   try:  │                       
+                             │    494 │   │   │   │   r │                       
+                             │                          │                       
+                             │ /private/tmp/slopsearx-d │                       
+                             │ aily-20261015/.venv/lib/ │                       
+                             │ python3.12/site-packages │                       
+                             │ /starlette/requests.py:2 │                       
+                             │ 57 in body               │                       
+                             │                          │                       
+                             │   254 │   async def body │                       
+                             │   255 │   │   if not has │                       
+                             │   256 │   │   │   chunks │                       
+                             │ ❱ 257 │   │   │   async  │                       
+                             │   258 │   │   │   │   ch │                       
+                             │   259 │   │   │   self._ │                       
+                             │   260 │   │   return sel │                       
+                             │                          │                       
+                             │ /private/tmp/slopsearx-d │                       
+                             │ aily-20261015/.venv/lib/ │                       
+                             │ python3.12/site-packages │                       
+                             │ /starlette/requests.py:2 │                       
+                             │ 51 in stream             │                       
+                             │                          │                       
+                             │   248 │   │   │   │   │  │                       
+                             │   249 │   │   │   elif m │                       
+                             │   250 │   │   │   │   se │                       
+                             │ ❱ 251 │   │   │   │   ra │                       
+                             │   252 │   │   yield b""  │                       
+                             │   253 │                  │                       
+                             │   254 │   async def body │                       
+                             ╰──────────────────────────╯                       
+                             ClientDisconnect                                   
+                    ERROR    Received exception from stream:       server.py:713
+                    INFO     StreamableHTTP       streamable_http_manager.py:147
+                             session manager                                    
+                             shutting down                                      
+[{"delay": 0.4, "timeout": 0.05, "elapsed": 0.06833458298933692, "published": false, "error": "unhandled errors in a TaskGroup (1 sub-exception)", "state_cleared": true, "owners_pending": 0, "initialize_requests": 1}]

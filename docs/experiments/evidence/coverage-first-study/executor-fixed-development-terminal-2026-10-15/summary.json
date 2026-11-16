@@ -1,0 +1,41 @@
+{
+  "schema": "coverage-first-development-terminal/1",
+  "status": "terminal-incomplete",
+  "stage": "development",
+  "reference_grading": {
+    "responses_returned": 54,
+    "responses_registered": 54,
+    "independent_closure": "complete"
+  },
+  "selector": {
+    "planned_operations": 39,
+    "dispatched_operations": 2,
+    "uninvoked_operations": 37,
+    "neutral_control": {
+      "status": "completed",
+      "elapsed_ms_approx": 380
+    },
+    "candidate": {
+      "status": "suppressed_by_credential_reflection_guard",
+      "input_card_count": 80,
+      "http_status_metadata": 200,
+      "elapsed_ms_approx": 375,
+      "usage": "unknown",
+      "protected_response_body": "cleared"
+    }
+  },
+  "credential_guard_review": {
+    "offline_source_finding": "substring checking can match a one-byte credential prefix or suffix during normal chunk processing",
+    "observed_response_content_available": false,
+    "credential_presence_in_observed_response_established": false,
+    "false_positive_in_observed_response_established": false
+  },
+  "later_phases": {
+    "answer_calls": 0,
+    "new_search_calls": 0,
+    "new_capture_calls": 0,
+    "confirmation_invoked": false
+  },
+  "quality_result": "none",
+  "quality_credit": false
+}

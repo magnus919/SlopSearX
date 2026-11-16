@@ -1,0 +1,242 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.11, pytest-9.0.3, pluggy-1.6.0 -- /Volumes/tank01/magnus/git/SlopSearX/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /private/tmp/slopsearx-daily-20261014
+configfile: pyproject.toml
+plugins: cov-7.1.0, asyncio-1.4.0, anyio-4.13.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 3 items
+
+tests/test_adaptive_transport.py::test_adaptive_research_journey PASSED  [ 33%]
+tests/test_adaptive_transport.py::test_budget_exhaustion_completion_replays_over_mcp_transport PASSED [ 66%]
+tests/test_adaptive_transport.py::test_exact_query_cap_completion_over_mcp_transport PASSED [100%]
+
+=============================== warnings summary ===============================
+tests/test_adaptive_transport.py::test_adaptive_research_journey
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pydantic_settings/sources/utils.py:47: IncompleteFieldDefinitionWarning: Field 'lifespan' has an incomplete definition: its annotation contains an unresolved forward reference, so settings sources may fail to correctly resolve its value. Call `model_rebuild()` on the model where the field is defined, once all the referenced types are defined.
+    warnings.warn(
+
+tests/test_adaptive_transport.py::test_adaptive_research_journey
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/websockets/legacy/__init__.py:6: DeprecationWarning: websockets.legacy is deprecated; see https://websockets.readthedocs.io/en/stable/howto/upgrade.html for upgrade instructions
+    warnings.warn(  # deprecated in 14.0 - 2024-11-09
+
+tests/test_adaptive_transport.py::test_adaptive_research_journey
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/uvicorn/protocols/websockets/websockets_impl.py:17: DeprecationWarning: websockets.server.WebSocketServerProtocol is deprecated
+    from websockets.server import WebSocketServerProtocol
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 3 passed, 3 warnings in 5.24s =========================
+============================= test session starts ==============================
+platform darwin -- Python 3.12.11, pytest-9.0.3, pluggy-1.6.0 -- /Volumes/tank01/magnus/git/SlopSearX/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /private/tmp/slopsearx-daily-20261014
+configfile: pyproject.toml
+plugins: cov-7.1.0, asyncio-1.4.0, anyio-4.13.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+tests/test_entity_transport.py::test_entity_view_preserves_cached_flat_results PASSED [100%]
+
+=============================== warnings summary ===============================
+tests/test_entity_transport.py::test_entity_view_preserves_cached_flat_results
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pydantic_settings/sources/utils.py:47: IncompleteFieldDefinitionWarning: Field 'lifespan' has an incomplete definition: its annotation contains an unresolved forward reference, so settings sources may fail to correctly resolve its value. Call `model_rebuild()` on the model where the field is defined, once all the referenced types are defined.
+    warnings.warn(
+
+tests/test_entity_transport.py::test_entity_view_preserves_cached_flat_results
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/websockets/legacy/__init__.py:6: DeprecationWarning: websockets.legacy is deprecated; see https://websockets.readthedocs.io/en/stable/howto/upgrade.html for upgrade instructions
+    warnings.warn(  # deprecated in 14.0 - 2024-11-09
+
+tests/test_entity_transport.py::test_entity_view_preserves_cached_flat_results
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/uvicorn/protocols/websockets/websockets_impl.py:17: DeprecationWarning: websockets.server.WebSocketServerProtocol is deprecated
+    from websockets.server import WebSocketServerProtocol
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 1 passed, 3 warnings in 1.46s =========================
+============================= test session starts ==============================
+platform darwin -- Python 3.12.11, pytest-9.0.3, pluggy-1.6.0 -- /Volumes/tank01/magnus/git/SlopSearX/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /private/tmp/slopsearx-daily-20261014
+configfile: pyproject.toml
+plugins: cov-7.1.0, asyncio-1.4.0, anyio-4.13.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 8 items
+
+tests/test_http_pooling.py::test_connection_reuse_probe 
+TCP accepts={'ephemeral': 20, 'pooled': 1}; local milliseconds (p50,p95)={'ephemeral': (9.200999498716556, 10.777332994621247), 'pooled': (0.8546249882783741, 2.361249993555248)}
+PASSED           [ 12%]
+tests/test_http_pooling.py::test_sessions_isolate_cookies_and_injected_transport_ownership PASSED [ 25%]
+tests/test_http_pooling.py::test_proxy_pools_separate_bounded_and_closed PASSED [ 37%]
+tests/test_http_pooling.py::test_environment_proxy_fallback_preserves_httpx_resolution PASSED [ 50%]
+tests/test_http_pooling.py::test_no_proxy_alone_does_not_disable_pooling PASSED [ 62%]
+tests/test_http_pooling.py::test_explicit_tls_options_are_not_silently_ignored[options0] PASSED [ 75%]
+tests/test_http_pooling.py::test_explicit_tls_options_are_not_silently_ignored[options1] PASSED [ 87%]
+tests/test_http_pooling.py::test_explicit_pool_limits_are_forwarded PASSED [100%]
+
+============================== 8 passed in 0.47s ===============================
+============================= test session starts ==============================
+platform darwin -- Python 3.12.11, pytest-9.0.3, pluggy-1.6.0 -- /Volumes/tank01/magnus/git/SlopSearX/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /private/tmp/slopsearx-daily-20261014
+configfile: pyproject.toml
+plugins: cov-7.1.0, asyncio-1.4.0, anyio-4.13.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 30 items
+
+tests/test_mcp_gateway.py::TestGateway::test_dynamic_proxy_registration_preserves_remote_schema PASSED [  3%]
+tests/test_mcp_gateway.py::TestGateway::test_gateway_proxies_tools_and_resources PASSED [  6%]
+tests/test_mcp_gateway.py::TestGateway::test_gateway_rejects_wrong_token PASSED [ 10%]
+tests/test_mcp_gateway.py::test_gateway_structured_results_and_legacy_precedence[structured0-One reading lead.-False-expected0] PASSED [ 13%]
+tests/test_mcp_gateway.py::test_gateway_structured_results_and_legacy_precedence[structured1-{"display": "summary"}-False-expected1] PASSED [ 16%]
+tests/test_mcp_gateway.py::test_gateway_structured_results_and_legacy_precedence[structured2-None-False-expected2] PASSED [ 20%]
+tests/test_mcp_gateway.py::test_gateway_structured_results_and_legacy_precedence[structured3-No reading leads.-False-expected3] PASSED [ 23%]
+tests/test_mcp_gateway.py::test_gateway_structured_results_and_legacy_precedence[None-{"count": 1}-False-expected4] PASSED [ 26%]
+tests/test_mcp_gateway.py::test_gateway_structured_results_and_legacy_precedence[None-Unstructured note.-False-expected5] PASSED [ 30%]
+tests/test_mcp_gateway.py::test_gateway_structured_results_and_legacy_precedence[None-None-False-expected6] PASSED [ 33%]
+tests/test_mcp_gateway.py::test_gateway_structured_results_and_legacy_precedence[structured7-Remote rejected request.-True-expected7] PASSED [ 36%]
+tests/test_mcp_gateway.py::TestCatalogPagination::test_follows_pages_including_empty_cursor[nextCursor] PASSED [ 40%]
+tests/test_mcp_gateway.py::TestCatalogPagination::test_follows_pages_including_empty_cursor[next_cursor] PASSED [ 43%]
+tests/test_mcp_gateway.py::TestCatalogPagination::test_broken_catalog_rejected[cursor] PASSED [ 46%]
+tests/test_mcp_gateway.py::TestCatalogPagination::test_broken_catalog_rejected[duplicate] PASSED [ 50%]
+tests/test_mcp_gateway.py::TestCatalogPagination::test_broken_catalog_rejected[pages] PASSED [ 53%]
+tests/test_mcp_gateway.py::TestCatalogPagination::test_broken_catalog_rejected[tools] PASSED [ 56%]
+tests/test_mcp_gateway.py::TestCatalogPagination::test_broken_catalog_rejected[error] PASSED [ 60%]
+tests/test_mcp_gateway.py::TestCatalogPagination::test_empty_catalog PASSED [ 63%]
+tests/test_mcp_gateway.py::TestCatalogPagination::test_discovery_timeout_leaves_no_session_or_proxies PASSED [ 66%]
+tests/test_mcp_gateway.py::TestCatalogPagination::test_native_sdk_sends_followup_cursor PASSED [ 70%]
+tests/test_mcp_gateway.py::TestInputSchemaFidelity::test_complete_schema_and_nested_copy PASSED [ 73%]
+tests/test_mcp_gateway.py::TestInputSchemaFidelity::test_optional_schema_keeps_direct_registration_compatible PASSED [ 76%]
+tests/test_mcp_gateway.py::TestInputSchemaFidelity::test_nested_values_forwarded_unchanged PASSED [ 80%]
+tests/test_mcp_gateway.py::TestGatewaySessionOwner::test_http_shutdown_is_clean Timeout (0:01:00)!
+Thread 0x00000001ed183f80 (most recent call first):
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/selectors.py", line 566 in select
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/base_events.py", line 1961 in _run_once
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/base_events.py", line 645 in run_forever
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/base_events.py", line 678 in run_until_complete
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 118 in run
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pytest_asyncio/plugin.py", line 905 in inner
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/_pytest/python.py", line 166 in pytest_pyfunc_call
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pluggy/_callers.py", line 121 in _multicall
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pluggy/_manager.py", line 120 in _hookexec
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pluggy/_hooks.py", line 512 in __call__
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/_pytest/python.py", line 1720 in runtest
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pytest_asyncio/plugin.py", line 569 in runtest
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/_pytest/runner.py", line 179 in pytest_runtest_call
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pluggy/_callers.py", line 121 in _multicall
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pluggy/_manager.py", line 120 in _hookexec
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pluggy/_hooks.py", line 512 in __call__
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/_pytest/runner.py", line 245 in <lambda>
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/_pytest/runner.py", line 353 in from_call
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/_pytest/runner.py", line 244 in call_and_report
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/_pytest/runner.py", line 137 in runtestprotocol
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/_pytest/runner.py", line 118 in pytest_runtest_protocol
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pluggy/_callers.py", line 121 in _multicall
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pluggy/_manager.py", line 120 in _hookexec
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pluggy/_hooks.py", line 512 in __call__
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/_pytest/main.py", line 396 in pytest_runtestloop
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pluggy/_callers.py", line 121 in _multicall
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pluggy/_manager.py", line 120 in _hookexec
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pluggy/_hooks.py", line 512 in __call__
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/_pytest/main.py", line 372 in _main
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/_pytest/main.py", line 318 in wrap_session
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/_pytest/main.py", line 365 in pytest_cmdline_main
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pluggy/_callers.py", line 121 in _multicall
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pluggy/_manager.py", line 120 in _hookexec
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pluggy/_hooks.py", line 512 in __call__
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py", line 199 in main
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py", line 223 in console_main
+  File "/private/tmp/slopsearx-daily-20261014/.venv/bin/pytest", line 10 in <module>
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! KeyboardInterrupt !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/runners.py:157: KeyboardInterrupt
+(to show a full traceback on KeyboardInterrupt use --full-trace)
+Traceback (most recent call last):
+  File "/private/tmp/slopsearx-daily-20261014/.venv/bin/pytest", line 10, in <module>
+    sys.exit(console_main())
+             ^^^^^^^^^^^^^^
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py", line 223, in console_main
+    code = main()
+           ^^^^^^
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py", line 199, in main
+    ret: ExitCode | int = config.hook.pytest_cmdline_main(config=config)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pluggy/_callers.py", line 167, in _multicall
+    raise exception
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/_pytest/main.py", line 365, in pytest_cmdline_main
+    return wrap_session(config, _main)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/_pytest/main.py", line 353, in wrap_session
+    config.hook.pytest_sessionfinish(
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pluggy/_callers.py", line 167, in _multicall
+    raise exception
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/_pytest/logging.py", line 873, in pytest_sessionfinish
+    return (yield)
+            ^^^^^
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/_pytest/terminal.py", line 960, in pytest_sessionfinish
+    result = yield
+             ^^^^^
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/_pytest/warnings.py", line 118, in pytest_sessionfinish
+    return (yield)
+            ^^^^^
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/_pytest/runner.py", line 112, in pytest_sessionfinish
+    session._setupstate.teardown_exact(None)
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/_pytest/runner.py", line 555, in teardown_exact
+    fin()
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/_pytest/fixtures.py", line 1053, in finish
+    raise exceptions[0]
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/_pytest/fixtures.py", line 1042, in finish
+    fin()
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pytest_asyncio/plugin.py", line 424, in finalizer
+    runner.run(async_finalizer(), context=context)
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/base_events.py", line 678, in run_until_complete
+    self.run_forever()
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/base_events.py", line 645, in run_forever
+    self._run_once()
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/base_events.py", line 1999, in _run_once
+    handle._run()
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/events.py", line 88, in _run
+    self._context.run(self._callback, *self._args)
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pytest_asyncio/plugin.py", line 416, in async_finalizer
+    await gen_obj.__anext__()
+  File "/private/tmp/slopsearx-daily-20261014/tests/test_mcp_gateway.py", line 437, in offline_remote_server
+    finally:
+        ^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/tasks.py", line 520, in wait_for
+    return await fut
+           ^^^^^^^^^
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/uvicorn/server.py", line 78, in serve
+    with self.capture_signals():
+         ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/contextlib.py", line 144, in __exit__
+    next(self.gen)
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/uvicorn/server.py", line 339, in capture_signals
+    signal.raise_signal(captured_signal)
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 157, in _on_sigint
+    raise KeyboardInterrupt()
+KeyboardInterrupt

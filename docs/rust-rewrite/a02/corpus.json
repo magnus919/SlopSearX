@@ -1,0 +1,4921 @@
+{
+  "schema_version": 1,
+  "plan_id": "A02",
+  "capture": "source-bound Python3.14 offline MockTransport; synthetic regressions, no providers",
+  "source_commit": "025ab2f2d50febcb573ba62579eecf7e2d07ef3a",
+  "source_files": [
+    {
+      "path": "engines/pypi.py",
+      "git_blob": "e10a1da680178cb333dbcd53ef9dbb0dd5be81b4",
+      "sha256": "16b09518585f440ddb20ecdd7bcf398d93004813a4d1e916afc83e18081b9590"
+    },
+    {
+      "path": "engines/rubygems.py",
+      "git_blob": "127ff07eec863a450b3c89e1e876201ecea89880",
+      "sha256": "29c00458aaf2804872565acaa19df9f447463509b3cc0f4869959c33d82e7849"
+    },
+    {
+      "path": "engines/dockerhub.py",
+      "git_blob": "cf1792ec3d34a9e8c535235791c1aeb7a29ea439",
+      "sha256": "4915cf45ba079dc47f776f03884c678ee8cc824f94a551ee80057d8c9a5bcbb9"
+    },
+    {
+      "path": "slopsearx/adapter.py",
+      "git_blob": "664e853d9ab1330596d01899ebe015701de09e88",
+      "sha256": "5883a35c48d0dad1077306fbda21997ee1d32116a8c03633a6b762de0c26d6f3"
+    },
+    {
+      "path": "slopsearx/payload.py",
+      "git_blob": "efa149d48bae401f7a0a9df6e50c8c614adecbb5",
+      "sha256": "a44a95655566f9fadaf62da1bab8c975f71f3ead6c3cc57f48c411a9c093c40d"
+    },
+    {
+      "path": "tests/test_new_engines.py",
+      "git_blob": "4e5293d694bb40332584a9541b6ad41326a01cc0",
+      "sha256": "a6df3df9b68fdc8a4b617d4059a5bd26a8cd82c5d8de1574ac9c48d2d14ad8a4"
+    },
+    {
+      "path": "tests/test_payload.py",
+      "git_blob": "4b5bc1a0940ad6c1214eb55764fb4aea57188de9",
+      "sha256": "a7bc52b2747f0ebc440a4d7ce69671635530c7142d43eb128cb3132e297fb11a"
+    },
+    {
+      "path": "tests/test_dockerhub.py",
+      "git_blob": "ab8e9686fc37305ceb629eb3a6f56651ef49a88b",
+      "sha256": "61fbc8b4c4c876e474330d711b2fd35b993cf52252cbb7919e8d90e086e56994"
+    }
+  ],
+  "cases": [
+    {
+      "id": "pypi_exact",
+      "engine": "pypi",
+      "query": "requests",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"info\": {\"name\": \"requests\", \"version\": \"2.34.2\", \"summary\": \"Python HTTP for Humans.\"}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/requests/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/requests/",
+            "title": "requests 2.34.2",
+            "content": "Python HTTP for Humans.",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "requests",
+                "version": "2.34.2",
+                "summary": "Python HTTP for Humans."
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name",
+                  "version",
+                  "summary"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "pypi_missing",
+      "engine": "pypi",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"info\": {}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/python/",
+            "title": "python ",
+            "content": "Python package: python",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "python"
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "pypi_null",
+      "engine": "pypi",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"info\": null}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "pypi_wrong",
+      "engine": "pypi",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"info\": []}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "pypi_empty_summary",
+      "engine": "pypi",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"info\": {\"name\": \"x\", \"summary\": \"\"}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/x/",
+            "title": "x ",
+            "content": "Python package: x",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "x"
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "pypi_nonmapping_urls",
+      "engine": "pypi",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"info\": {\"project_urls\": [\"url\"]}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/python/",
+            "title": "python ",
+            "content": "Python package: python",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "python"
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "pypi_ordered_urls",
+      "engine": "pypi",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"info\": {\"project_urls\": {\"Homepage\": \"a\", \"Source\": \"first\", \"Repository\": \"second\"}}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/python/",
+            "title": "python ",
+            "content": "Python package: python",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "python",
+                "repository_url": "first"
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name",
+                  "repository_url"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "pypi_payload_full",
+      "engine": "pypi",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"info\": {\"name\": \"requests\", \"version\": \"2.31.0\", \"summary\": \"Python HTTP for Humans.\", \"license\": \"Apache-2.0\", \"home_page\": \"https://requests.readthedocs.io\"}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/requests/",
+            "title": "requests 2.31.0",
+            "content": "Python HTTP for Humans.",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "requests",
+                "version": "2.31.0",
+                "summary": "Python HTTP for Humans.",
+                "license": "Apache-2.0",
+                "homepage": "https://requests.readthedocs.io"
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name",
+                  "version",
+                  "summary",
+                  "license",
+                  "homepage"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "pypi_payload_absent",
+      "engine": "pypi",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"info\": {\"name\": \"requests\", \"version\": \"2.31.0\", \"summary\": \"HTTP for Humans.\"}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/requests/",
+            "title": "requests 2.31.0",
+            "content": "HTTP for Humans.",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "requests",
+                "version": "2.31.0",
+                "summary": "HTTP for Humans."
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name",
+                  "version",
+                  "summary"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "pypi_payload_null",
+      "engine": "pypi",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"info\": {\"name\": null, \"version\": null, \"summary\": null}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/None/",
+            "title": "None None",
+            "content": "Python package: None",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {},
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "pypi_payload_numbers",
+      "engine": "pypi",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"info\": {\"name\": 42, \"version\": false, \"license\": 123}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/42/",
+            "title": "42 False",
+            "content": "Python package: 42",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": 42,
+                "license": 123
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name",
+                  "license"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "pypi_long_summary",
+      "engine": "pypi",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"info\": {\"summary\": \"\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\"}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/python/",
+            "title": "python ",
+            "content": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "python",
+                "summary": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name",
+                  "summary"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "pypi_root_array",
+      "engine": "pypi",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "[]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "pypi_invalid_json",
+      "engine": "pypi",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "pypi_root_null",
+      "engine": "pypi",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "null"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "pypi_fallback_404",
+      "engine": "pypi",
+      "query": "flask",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body": "<html><a href='/simple/flask/'>Ignored text</a></html>"
+        },
+        {
+          "status": 404,
+          "body": ""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/flask/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/flask/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": []
+      }
+    },
+    {
+      "id": "pypi_fallback_429",
+      "engine": "pypi",
+      "query": "flask",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 429,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body": "<html><a href='/simple/flask/'>Ignored text</a></html>"
+        },
+        {
+          "status": 404,
+          "body": ""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/flask/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/flask/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": []
+      }
+    },
+    {
+      "id": "pypi_fallback_500",
+      "engine": "pypi",
+      "query": "flask",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 500,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body": "<html><a href='/simple/flask/'>Ignored text</a></html>"
+        },
+        {
+          "status": 404,
+          "body": ""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/flask/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/flask/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": []
+      }
+    },
+    {
+      "id": "pypi_fallback_html_order",
+      "engine": "pypi",
+      "query": "Fl-As_K",
+      "max_results": 3,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body": "<html><a href='/simple/flask-A/'>other</a><a href='/simple/no/'>flask</a><a href='/simple/flask_A/'>A</a><a href='/simple/flask-A/'>duplicate</a><a href='/simple/flask-z/'>outside cap</a></html>"
+        },
+        {
+          "status": 200,
+          "body": "{\"info\":{\"name\":\"payload-name\",\"version\":\"1\",\"summary\":\"\"}}"
+        },
+        {
+          "status": 500,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body": "{\"info\":{\"version\":\"2\"}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/Fl-As_K/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/flask-A/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/flask_A/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/flask-A/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/flask-A/",
+            "title": "flask-A 1",
+            "content": "",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "payload-name",
+                "version": "1"
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name",
+                  "version"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          },
+          {
+            "url": "https://pypi.org/project/flask-A/",
+            "title": "flask-A 2",
+            "content": "",
+            "engine": "pypi",
+            "position": 2,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "flask-A",
+                "version": "2"
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name",
+                  "version"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "pypi_empty_html",
+      "engine": "pypi",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body": ""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "pypi_no_matches",
+      "engine": "pypi",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body": "<html><a href=\"/simple/no/\">python</a></html>"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": []
+      }
+    },
+    {
+      "id": "pypi_broken_html",
+      "engine": "pypi",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body": "<a href=\"/simple/python/\">x"
+        },
+        {
+          "status": 200,
+          "body": "{\"info\":{}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/python/",
+            "title": "python ",
+            "content": "",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "python"
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "pypi_missing_href",
+      "engine": "pypi",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body": "<a>x</a>"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": []
+      }
+    },
+    {
+      "id": "pypi_timeout_direct",
+      "engine": "pypi",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "timeout": true
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "timeout",
+        "results": []
+      }
+    },
+    {
+      "id": "pypi_timeout_simple",
+      "engine": "pypi",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "timeout": true
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "pypi_timeout_detail",
+      "engine": "pypi",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body": "<a href=\"/simple/python/\">x</a>"
+        },
+        {
+          "timeout": true
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": []
+      }
+    },
+    {
+      "id": "pypi_simple_status_302",
+      "engine": "pypi",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 302,
+          "body": ""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "pypi_simple_status_429",
+      "engine": "pypi",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 429,
+          "body": ""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "pypi_simple_status_500",
+      "engine": "pypi",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 500,
+          "body": ""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "pypi_detail_status_302",
+      "engine": "pypi",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body": "<a href=\"/simple/python/\">x</a>"
+        },
+        {
+          "status": 302,
+          "body": ""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": []
+      }
+    },
+    {
+      "id": "pypi_detail_status_429",
+      "engine": "pypi",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body": "<a href=\"/simple/python/\">x</a>"
+        },
+        {
+          "status": 429,
+          "body": ""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": []
+      }
+    },
+    {
+      "id": "pypi_detail_status_500",
+      "engine": "pypi",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body": "<a href=\"/simple/python/\">x</a>"
+        },
+        {
+          "status": 500,
+          "body": ""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": []
+      }
+    },
+    {
+      "id": "pypi_query_a b",
+      "engine": "pypi",
+      "query": "a b",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"info\": {\"name\": \"requests\", \"version\": \"2.34.2\", \"summary\": \"Python HTTP for Humans.\"}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/a%20b/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/requests/",
+            "title": "requests 2.34.2",
+            "content": "Python HTTP for Humans.",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "requests",
+                "version": "2.34.2",
+                "summary": "Python HTTP for Humans."
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name",
+                  "version",
+                  "summary"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "pypi_query_a/b",
+      "engine": "pypi",
+      "query": "a/b",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"info\": {\"name\": \"requests\", \"version\": \"2.34.2\", \"summary\": \"Python HTTP for Humans.\"}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/a/b/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/requests/",
+            "title": "requests 2.34.2",
+            "content": "Python HTTP for Humans.",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "requests",
+                "version": "2.34.2",
+                "summary": "Python HTTP for Humans."
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name",
+                  "version",
+                  "summary"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "pypi_query_a?b",
+      "engine": "pypi",
+      "query": "a?b",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"info\": {\"name\": \"requests\", \"version\": \"2.34.2\", \"summary\": \"Python HTTP for Humans.\"}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/a?b/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/requests/",
+            "title": "requests 2.34.2",
+            "content": "Python HTTP for Humans.",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "requests",
+                "version": "2.34.2",
+                "summary": "Python HTTP for Humans."
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name",
+                  "version",
+                  "summary"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "pypi_query_a#b",
+      "engine": "pypi",
+      "query": "a#b",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"info\": {\"name\": \"requests\", \"version\": \"2.34.2\", \"summary\": \"Python HTTP for Humans.\"}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/a#b/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/requests/",
+            "title": "requests 2.34.2",
+            "content": "Python HTTP for Humans.",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "requests",
+                "version": "2.34.2",
+                "summary": "Python HTTP for Humans."
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name",
+                  "version",
+                  "summary"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "pypi_query_café",
+      "engine": "pypi",
+      "query": "café",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"info\": {\"name\": \"requests\", \"version\": \"2.34.2\", \"summary\": \"Python HTTP for Humans.\"}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/caf%C3%A9/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/requests/",
+            "title": "requests 2.34.2",
+            "content": "Python HTTP for Humans.",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "requests",
+                "version": "2.34.2",
+                "summary": "Python HTTP for Humans."
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name",
+                  "version",
+                  "summary"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "rubygems_legacy",
+      "engine": "rubygems",
+      "query": "rails",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "[{\"name\": \"rails\", \"version\": \"8.1.3\", \"info\": \"Ruby on Rails web framework\", \"downloads\": 50000000, \"authors\": \"David Heinemeier Hansson\"}, {\"name\": \"rack\", \"version\": \"3.1.0\", \"info\": \"Ruby web server interface\", \"downloads\": 40000000, \"authors\": \"Christian Neukirchen\"}]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=rails",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://rubygems.org/gems/rails",
+            "title": "rails 8.1.3",
+            "content": "Ruby on Rails web framework — by David Heinemeier Hansson | Downloads: 50,000,000",
+            "engine": "rubygems",
+            "position": 1,
+            "score": 50000.0,
+            "payload": null
+          },
+          {
+            "url": "https://rubygems.org/gems/rack",
+            "title": "rack 3.1.0",
+            "content": "Ruby web server interface — by Christian Neukirchen | Downloads: 40,000,000",
+            "engine": "rubygems",
+            "position": 2,
+            "score": 40000.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "rubygems_description",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "[{\"description\": \"fallback\"}]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://rubygems.org/gems/",
+            "title": " ",
+            "content": "fallback",
+            "engine": "rubygems",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "rubygems_authors",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "[{\"authors\": [\"a\", 1]}]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://rubygems.org/gems/",
+            "title": " ",
+            "content": "by ['a', 1]",
+            "engine": "rubygems",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "rubygems_null",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "[{\"name\": null, \"version\": null}]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://rubygems.org/gems/None",
+            "title": "None None",
+            "content": "",
+            "engine": "rubygems",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "rubygems_numeric_info_authors",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "[{\"info\": 12, \"authors\": \"A\"}]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://rubygems.org/gems/",
+            "title": " ",
+            "content": "12 — by A",
+            "engine": "rubygems",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "rubygems_numeric_info",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "[{\"info\": 12}]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "rubygems_long",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "[{\"info\": \"\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\"}]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://rubygems.org/gems/",
+            "title": " ",
+            "content": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+            "engine": "rubygems",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_legacy",
+      "engine": "dockerhub",
+      "query": "nginx",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"nginx\", \"description\": \"Official nginx image\", \"pull_count\": 1000000000, \"star_count\": 15000}, {\"name\": \"ubuntu\", \"description\": \"Official Ubuntu base image\", \"pull_count\": 2000000000, \"star_count\": 12000}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=nginx&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/nginx",
+            "title": "nginx",
+            "content": "Official nginx image — Pulls: 1,000,000,000",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 15000.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/ubuntu",
+            "title": "ubuntu",
+            "content": "Official Ubuntu base image — Pulls: 2,000,000,000",
+            "engine": "dockerhub",
+            "position": 2,
+            "score": 12000.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_scope_python",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"python-tools\", \"namespace\": \"library\"}, {\"name\": \"python\", \"namespace\": \"library\"}, {\"name\": \"python-dev\", \"namespace\": \"library\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/python",
+            "title": "python",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python-tools",
+            "title": "python-tools",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 2,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python-dev",
+            "title": "python-dev",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 3,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_scope_library/python",
+      "engine": "dockerhub",
+      "query": "library/python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"python-tools\", \"namespace\": \"library\"}, {\"name\": \"python\", \"namespace\": \"library\"}, {\"name\": \"python-dev\", \"namespace\": \"library\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/python",
+            "title": "python",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python-tools",
+            "title": "python-tools",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 2,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python-dev",
+            "title": "python-dev",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 3,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_scope_docker.io/library/python:3.13",
+      "engine": "dockerhub",
+      "query": "docker.io/library/python:3.13",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"python-tools\", \"namespace\": \"library\"}, {\"name\": \"python\", \"namespace\": \"library\"}, {\"name\": \"python-dev\", \"namespace\": \"library\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/python",
+            "title": "python",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python-tools",
+            "title": "python-tools",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 2,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python-dev",
+            "title": "python-dev",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 3,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_scope_index.docker.io/library/python@sha256:abc",
+      "engine": "dockerhub",
+      "query": "index.docker.io/library/python@sha256:abc",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"python-tools\", \"namespace\": \"library\"}, {\"name\": \"python\", \"namespace\": \"library\"}, {\"name\": \"python-dev\", \"namespace\": \"library\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/python",
+            "title": "python",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python-tools",
+            "title": "python-tools",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 2,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python-dev",
+            "title": "python-dev",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 3,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_scope_registry-1.docker.io/library/python:tag",
+      "engine": "dockerhub",
+      "query": "registry-1.docker.io/library/python:tag",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"python-tools\", \"namespace\": \"library\"}, {\"name\": \"python\", \"namespace\": \"library\"}, {\"name\": \"python-dev\", \"namespace\": \"library\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/python",
+            "title": "python",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python-tools",
+            "title": "python-tools",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 2,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python-dev",
+            "title": "python-dev",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 3,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_scope_acme/python",
+      "engine": "dockerhub",
+      "query": "acme/python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"python-tools\", \"namespace\": \"acme\"}, {\"name\": \"python\", \"namespace\": \"acme\"}, {\"name\": \"python-dev\", \"namespace\": \"acme\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/r/acme/python",
+            "title": "acme/python",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/r/acme/python-tools",
+            "title": "acme/python-tools",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 2,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/r/acme/python-dev",
+            "title": "acme/python-dev",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 3,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_scope_docker.io/acme/python:3.13",
+      "engine": "dockerhub",
+      "query": "docker.io/acme/python:3.13",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"python-tools\", \"namespace\": \"acme\"}, {\"name\": \"python\", \"namespace\": \"acme\"}, {\"name\": \"python-dev\", \"namespace\": \"acme\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/r/acme/python",
+            "title": "acme/python",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/r/acme/python-tools",
+            "title": "acme/python-tools",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 2,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/r/acme/python-dev",
+            "title": "acme/python-dev",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 3,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_scope_",
+      "engine": "dockerhub",
+      "query": "",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"python-tools\", \"namespace\": \"library\"}, {\"name\": \"python\", \"namespace\": \"library\"}, {\"name\": \"python-dev\", \"namespace\": \"library\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/python-tools",
+            "title": "python-tools",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python",
+            "title": "python",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 2,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python-dev",
+            "title": "python-dev",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 3,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_scope_quay.io/acme/python/image",
+      "engine": "dockerhub",
+      "query": "quay.io/acme/python/image",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"python-tools\", \"namespace\": \"library\"}, {\"name\": \"python\", \"namespace\": \"library\"}, {\"name\": \"python-dev\", \"namespace\": \"library\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=quay.io%2Facme%2Fpython%2Fimage&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/python-tools",
+            "title": "python-tools",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python",
+            "title": "python",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 2,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python-dev",
+            "title": "python-dev",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 3,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_scope_py",
+      "engine": "dockerhub",
+      "query": "py",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"python-tools\", \"namespace\": \"library\"}, {\"name\": \"python\", \"namespace\": \"library\"}, {\"name\": \"python-dev\", \"namespace\": \"library\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=py&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/python-tools",
+            "title": "python-tools",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python",
+            "title": "python",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 2,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python-dev",
+            "title": "python-dev",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 3,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_scope_  PYTHON  ",
+      "engine": "dockerhub",
+      "query": "  PYTHON  ",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"python-tools\", \"namespace\": \"library\"}, {\"name\": \"python\", \"namespace\": \"library\"}, {\"name\": \"python-dev\", \"namespace\": \"library\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/python",
+            "title": "python",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python-tools",
+            "title": "python-tools",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 2,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python-dev",
+            "title": "python-dev",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 3,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_scope_acme///python",
+      "engine": "dockerhub",
+      "query": "acme///python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"python-tools\", \"namespace\": \"acme\"}, {\"name\": \"python\", \"namespace\": \"acme\"}, {\"name\": \"python-dev\", \"namespace\": \"acme\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/r/acme/python",
+            "title": "acme/python",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/r/acme/python-tools",
+            "title": "acme/python-tools",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 2,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/r/acme/python-dev",
+            "title": "acme/python-dev",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 3,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_scope_MÜNCHEN/python",
+      "engine": "dockerhub",
+      "query": "MÜNCHEN/python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"python-tools\", \"namespace\": \"library\"}, {\"name\": \"python\", \"namespace\": \"library\"}, {\"name\": \"python-dev\", \"namespace\": \"library\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/python",
+            "title": "python",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python-tools",
+            "title": "python-tools",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 2,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python-dev",
+            "title": "python-dev",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 3,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_scope_STRASSE/straße",
+      "engine": "dockerhub",
+      "query": "STRASSE/straße",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"python-tools\", \"namespace\": \"library\"}, {\"name\": \"python\", \"namespace\": \"library\"}, {\"name\": \"python-dev\", \"namespace\": \"library\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=strasse&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/python-tools",
+            "title": "python-tools",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python",
+            "title": "python",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 2,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python-dev",
+            "title": "python-dev",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 3,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_cap_0",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 0,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"python-tools\"}, {\"name\": \"python-dev\"}, {\"name\": \"python\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=0",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": []
+      }
+    },
+    {
+      "id": "dockerhub_cap_1",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 1,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"python-tools\"}, {\"name\": \"python-dev\"}, {\"name\": \"python\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=3",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/python",
+            "title": "python",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_cap_2",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 2,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"python-tools\"}, {\"name\": \"python-dev\"}, {\"name\": \"python\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=6",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/python",
+            "title": "python",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python-tools",
+            "title": "python-tools",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 2,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_cap_20",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 20,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"python-tools\"}, {\"name\": \"python-dev\"}, {\"name\": \"python\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=60",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/python",
+            "title": "python",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python-tools",
+            "title": "python-tools",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 2,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python-dev",
+            "title": "python-dev",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 3,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_cap_21",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 21,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"python-tools\"}, {\"name\": \"python-dev\"}, {\"name\": \"python\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=61",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/python",
+            "title": "python",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python-tools",
+            "title": "python-tools",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 2,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python-dev",
+            "title": "python-dev",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 3,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_cap_80",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 80,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"python-tools\"}, {\"name\": \"python-dev\"}, {\"name\": \"python\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=100",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/python",
+            "title": "python",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python-tools",
+            "title": "python-tools",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 2,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python-dev",
+            "title": "python-dev",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 3,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_cap_100",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 100,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"python-tools\"}, {\"name\": \"python-dev\"}, {\"name\": \"python\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=100",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/python",
+            "title": "python",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python-tools",
+            "title": "python-tools",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 2,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python-dev",
+            "title": "python-dev",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 3,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_cap_101",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 101,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"python-tools\"}, {\"name\": \"python-dev\"}, {\"name\": \"python\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=100",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/python",
+            "title": "python",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python-tools",
+            "title": "python-tools",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 2,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/python-dev",
+            "title": "python-dev",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 3,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_namespace_null",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"python\", \"namespace\": null}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/r/None/python",
+            "title": "None/python",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_namespace_empty",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"python\", \"namespace\": \"\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/python",
+            "title": "python",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_namespace_spaces",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"python\", \"namespace\": \"  \"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/python",
+            "title": "python",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_namespace_number",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"python\", \"namespace\": 7}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/r/7/python",
+            "title": "7/python",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_namespace_library_case",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"python\", \"namespace\": \"LiBrArY\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/python",
+            "title": "python",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "rubygems_empty",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "[]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": []
+      }
+    },
+    {
+      "id": "rubygems_object_empty",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": []
+      }
+    },
+    {
+      "id": "rubygems_results_null",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": null}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "rubygems_results_wrong",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": {}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "rubygems_root_null",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "null"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "rubygems_root_string",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "\"str\""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "rubygems_invalid_json",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "rubygems_row_null",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [null]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "rubygems_long_content",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"x\", \"description\": \"\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://rubygems.org/gems/x",
+            "title": "x ",
+            "content": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+            "engine": "rubygems",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "rubygems_status_302",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 302,
+          "body": ""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "rubygems_status_400",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 400,
+          "body": ""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "rubygems_status_404",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "rubygems_status_429",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 429,
+          "body": ""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "rate_limited",
+        "results": []
+      }
+    },
+    {
+      "id": "rubygems_status_500",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 500,
+          "body": ""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "rubygems_timeout",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "timeout": true
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "timeout",
+        "results": []
+      }
+    },
+    {
+      "id": "rubygems_number_hugeint",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "[{\"downloads\":123456789012345678901234567890}]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://rubygems.org/gems/",
+            "title": " ",
+            "content": " | Downloads: 123,456,789,012,345,678,901,234,567,890",
+            "engine": "rubygems",
+            "position": 1,
+            "score": 1.2345678901234568e+26,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "rubygems_number_bool",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "[{\"downloads\":true}]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://rubygems.org/gems/",
+            "title": " ",
+            "content": " | Downloads: 1",
+            "engine": "rubygems",
+            "position": 1,
+            "score": 0.001,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "rubygems_number_float",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "[{\"downloads\":1234.500}]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://rubygems.org/gems/",
+            "title": " ",
+            "content": " | Downloads: 1,234.5",
+            "engine": "rubygems",
+            "position": 1,
+            "score": 1.2345,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "rubygems_number_negative_zero",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "[{\"downloads\":-0.0}]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://rubygems.org/gems/",
+            "title": " ",
+            "content": "",
+            "engine": "rubygems",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "rubygems_number_small_float",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "[{\"downloads\":0.00001}]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://rubygems.org/gems/",
+            "title": " ",
+            "content": " | Downloads: 1e-05",
+            "engine": "rubygems",
+            "position": 1,
+            "score": 1e-08,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "rubygems_number_underflow",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "[{\"downloads\":1e-400}]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://rubygems.org/gems/",
+            "title": " ",
+            "content": "",
+            "engine": "rubygems",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "rubygems_number_null",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "[{\"downloads\":null}]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://rubygems.org/gems/",
+            "title": " ",
+            "content": "",
+            "engine": "rubygems",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "rubygems_number_string",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "[{\"downloads\":\"12\"}]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "rubygems_number_scientific",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "[{\"downloads\":1e20}]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://rubygems.org/gems/",
+            "title": " ",
+            "content": " | Downloads: 1e+20",
+            "engine": "rubygems",
+            "position": 1,
+            "score": 1e+17,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "rubygems_number_precise",
+      "engine": "rubygems",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "[{\"downloads\":1.234567890123456789}]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?query=python",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://rubygems.org/gems/",
+            "title": " ",
+            "content": " | Downloads: 1.2345678901234567",
+            "engine": "rubygems",
+            "position": 1,
+            "score": 0.0012345678901234567,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_empty",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": []
+      }
+    },
+    {
+      "id": "dockerhub_object_empty",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": []
+      }
+    },
+    {
+      "id": "dockerhub_results_null",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": null}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "dockerhub_results_wrong",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": {}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": []
+      }
+    },
+    {
+      "id": "dockerhub_root_null",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "null"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "dockerhub_root_string",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "\"str\""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "dockerhub_invalid_json",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "dockerhub_row_null",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [null]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "dockerhub_long_content",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"x\", \"description\": \"\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\\ud83d\\ude00\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/x",
+            "title": "x",
+            "content": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_status_302",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 302,
+          "body": ""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "dockerhub_status_400",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 400,
+          "body": ""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "dockerhub_status_404",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "dockerhub_status_429",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 429,
+          "body": ""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "rate_limited",
+        "results": []
+      }
+    },
+    {
+      "id": "dockerhub_status_500",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 500,
+          "body": ""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "dockerhub_timeout",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "timeout": true
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "timeout",
+        "results": []
+      }
+    },
+    {
+      "id": "dockerhub_number_hugeint",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\":[{\"pull_count\":123456789012345678901234567890}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/",
+            "title": "",
+            "content": " — Pulls: 123,456,789,012,345,678,901,234,567,890",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 1.2345678901234568e+24,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_number_bool",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\":[{\"pull_count\":true}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/",
+            "title": "",
+            "content": " — Pulls: 1",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 1e-05,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_number_float",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\":[{\"pull_count\":1234.500}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/",
+            "title": "",
+            "content": " — Pulls: 1,234.5",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.012345,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_number_negative_zero",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\":[{\"pull_count\":-0.0}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/",
+            "title": "",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": -0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_number_small_float",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\":[{\"pull_count\":0.00001}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/",
+            "title": "",
+            "content": " — Pulls: 1e-05",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 1e-10,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_number_underflow",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\":[{\"pull_count\":1e-400}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/",
+            "title": "",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_number_null",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\":[{\"pull_count\":null}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "dockerhub_number_string",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\":[{\"pull_count\":\"12\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "dockerhub_number_scientific",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\":[{\"pull_count\":1e20}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/",
+            "title": "",
+            "content": " — Pulls: 1e+20",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 1000000000000000.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_number_precise",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\":[{\"pull_count\":1.234567890123456789}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/",
+            "title": "",
+            "content": " — Pulls: 1.2345678901234567",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 1.2345678901234566e-05,
+            "payload": null
+          }
+        ]
+      }
+    }
+  ]
+}

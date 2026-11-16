@@ -1,0 +1,70 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.7, pytest-9.0.3, pluggy-1.6.0 -- /private/tmp/slopsearx-rust-oracle-py314/bin/python
+rootdir: /Volumes/tank01/magnus/worktrees/slopsearx-o01
+configfile: pyproject.toml
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 55 items / 2 deselected / 53 selected
+
+tests/test_metrics.py::TestCounter::test_increment PASSED                [  1%]
+tests/test_metrics.py::TestCounter::test_multiple_labels PASSED          [  3%]
+tests/test_metrics.py::TestCounter::test_header PASSED                   [  5%]
+tests/test_metrics.py::TestGauge::test_set_and_render PASSED             [  7%]
+tests/test_metrics.py::TestGauge::test_overwrite PASSED                  [  9%]
+tests/test_metrics.py::TestHistogram::test_cumulative_buckets_and_parser PASSED [ 11%]
+tests/test_metrics.py::TestHistogram::test_bounded_retention PASSED      [ 13%]
+tests/test_metrics.py::TestHistogram::test_nonfinite_and_negative_latency_ignored PASSED [ 15%]
+tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets0] PASSED [ 16%]
+tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets1] PASSED [ 18%]
+tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets2] PASSED [ 20%]
+tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets3] PASSED [ 22%]
+tests/test_metrics.py::TestHistogram::test_empty_no_output PASSED        [ 24%]
+tests/test_metrics.py::TestRenderMetrics::test_render_produces_valid_openmetrics PASSED [ 26%]
+tests/test_metrics.py::TestRenderMetrics::test_render_includes_help_and_type PASSED [ 28%]
+tests/test_metrics.py::test_label_escaping_roundtrips PASSED             [ 30%]
+tests/test_metrics.py::test_engine_error_counter_counts_failures_not_empty PASSED [ 32%]
+tests/test_saved_event_metrics.py::test_publication_read_ack_gap_capacity_and_age_are_recorded PASSED [ 33%]
+tests/test_saved_event_metrics.py::test_read_without_events_clears_stale_backlog_age[empty] PASSED [ 35%]
+tests/test_saved_event_metrics.py::test_read_without_events_clears_stale_backlog_age[gap] PASSED [ 37%]
+tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_publication-tenant-secret] PASSED [ 39%]
+tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_read-consumer-secret] PASSED [ 41%]
+tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_ack-event-secret] PASSED [ 43%]
+tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_capacity-query-secret] PASSED [ 45%]
+tests/test_saved_event_metrics.py::test_rendered_metrics_expose_only_closed_operational_dimensions PASSED [ 47%]
+tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[research] PASSED [ 49%]
+tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[dependency_dossier] PASSED [ 50%]
+tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[staged_search] PASSED [ 52%]
+tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[saved_search] PASSED [ 54%]
+tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[retrieval_receipt] PASSED [ 56%]
+tests/test_workflow_metrics.py::test_reconciliation_replaces_stale_gauges_after_recovery PASSED [ 58%]
+tests/test_workflow_metrics.py::test_interrupted_is_a_terminal_outcome_without_becoming_failure PASSED [ 60%]
+tests/test_workflow_metrics.py::test_user_data_cannot_become_a_metric_label PASSED [ 62%]
+tests/test_workflow_metrics.py::test_tenant_facing_health_has_states_without_activity_counts PASSED [ 64%]
+tests/test_audit.py::TestAuditDisconnected::test_record_query_no_cache_noop PASSED [ 66%]
+tests/test_audit.py::TestAuditDisconnected::test_record_query_disconnected_cache_noop PASSED [ 67%]
+tests/test_audit.py::TestAuditDisconnected::test_record_query_no_client_noop PASSED [ 69%]
+tests/test_audit.py::TestAuditAsyncConformance::test_record_query_is_async PASSED [ 71%]
+tests/test_audit.py::TestAuditPipeline::test_pipeline_execute_is_awaited PASSED [ 73%]
+tests/test_audit.py::TestAuditPipeline::test_pipeline_fields_correct PASSED [ 75%]
+tests/test_audit.py::TestAuditPipeline::test_pipeline_error_noop PASSED  [ 77%]
+tests/test_audit.py::TestAuditPipeline::test_expire_set_on_stream PASSED [ 79%]
+tests/test_audit.py::TestAuditPipeline::test_stream_key_includes_date PASSED [ 81%]
+tests/test_audit.py::TestAuditPipeline::test_count_timeout_status_correctly PASSED [ 83%]
+tests/test_stats.py::TestStatsAsyncConformance::test_record_query_is_async PASSED [ 84%]
+tests/test_stats.py::TestStatsTrackerDisconnected::test_record_query_no_cache_noop PASSED [ 86%]
+tests/test_stats.py::TestStatsTrackerDisconnected::test_record_query_disconnected_cache_noop PASSED [ 88%]
+tests/test_stats.py::TestStatsTrackerDisconnected::test_record_query_no_client_noop PASSED [ 90%]
+tests/test_stats.py::TestStatsPipeline::test_pipeline_execute_is_awaited PASSED [ 92%]
+tests/test_stats.py::TestStatsPipeline::test_pipeline_error_noop PASSED  [ 94%]
+tests/test_stats.py::TestStatsPipeline::test_error_and_timeout_increment_errors PASSED [ 96%]
+tests/test_stats.py::TestStatsPipeline::test_ok_status_does_not_increment_errors PASSED [ 98%]
+tests/test_stats.py::TestStatsPipeline::test_rate_limited_status_increments_rate_limited PASSED [100%]
+
+=============================== warnings summary ===============================
+../../../../../private/tmp/slopsearx-rust-oracle-py314/lib/python3.14/site-packages/_pytest/config/__init__.py:1310
+  /private/tmp/slopsearx-rust-oracle-py314/lib/python3.14/site-packages/_pytest/config/__init__.py:1310: PytestConfigWarning: assertions not in test modules or plugins will be ignored because assert statements are not executed by the underlying Python interpreter (are you using python -O?)
+  
+    self._warn_about_missing_assertion(mode)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================= 53 passed, 2 deselected, 1 warning in 0.33s ==================
+O01_ORIGINAL_SOURCE_COMPLETE 53 cases /42 functions;2HTTP nodes explicitly downstream

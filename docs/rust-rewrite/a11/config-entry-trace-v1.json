@@ -1,0 +1,29 @@
+{
+  "original_trace": [
+    {
+      "path": "slopsearx/config.py",
+      "lines": "56-75, 477-483",
+      "fact": "Dataclass annotation does not validate max_results; raw YAML mapping merged into EngineEntry."
+    },
+    {
+      "path": "slopsearx/service.py",
+      "lines": "251-270, 364-370",
+      "fact": "dataclasses.asdict then normalizer removes only blank base_url; every other field retained."
+    },
+    {
+      "path": "slopsearx/adapter.py",
+      "lines": "363-365, 684-690",
+      "fact": "Discovery copies selected engine mapping and constructs adapter; constructor stores mapping."
+    },
+    {
+      "path": "engines/otx.py",
+      "lines": "57, 97, 115",
+      "fact": "Uses max_results as HTTPX query value and Python slice bound; oracle does not invoke these search branches."
+    }
+  ],
+  "native_contract": {
+    "path": "crates/ssx-config/src/lib.rs",
+    "lines": "120-139, 453-478, 640-647, 968-982",
+    "fact": "Approved ConfigScalar accepts scalar bool/i64/f64/text; null/array/object and outside-i64 integer rejected. Preserve this shared contract; no raw API/new coercion. Native A11 factory must prove actual entry-layer refusals separately."
+  }
+}

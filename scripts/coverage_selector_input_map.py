@@ -154,6 +154,10 @@ def build_selector_input_map(
     current_service_source_bytes: bytes,
     expected_builder_source_sha256: str,
     operation_materials: dict[str, dict[str, object]] | None = None,
+    verified_pool_source: object | None = None,
+    saved_corpus_import: object | None = None,
+    initial_registration_sha256: str | None = None,
+    band_companion_sha256: str | None = None,
 ) -> bytes:
     """Rebuild every registered request input from pinned stage material.
 
@@ -174,37 +178,69 @@ def build_selector_input_map(
     ):
         raise SelectorInputMapError("input-map-source-pin-mismatch")
     acquisition_manifest = _strict(acquisition_manifest_bytes)
-    if (
-        type(acquisition_manifest) is not dict
-        or acquisition_manifest.get("stage_uuid") != prepared.stage_uuid
-        or acquisition_manifest.get("source_revision") != prepared.source_revision
-        or acquisition_manifest.get("source_closure_sha256") != prepared.pins.get("qualified_source_closure")
-        or acquisition_manifest.get("protocol_sha256") != prepared.pins.get("protocol")
-    ):
-        raise SelectorInputMapError("acquisition-manifest-binding")
-    try:
-        execution_profile = acquisition.execution_profile_from_manifest(acquisition_manifest)
-    except Exception as exc:
-        raise SelectorInputMapError("acquisition-manifest-profile-invalid") from exc
-    try:
-        verified_snapshot = coverage_live_acquire.verify_pool_snapshot_index(
-            snapshots_directory,
-            expected_index_sha256=acquisition_snapshot_index_sha256,
-            expected_stage_manifest_sha256=acquisition_manifest_sha256,
-            expected_stage_uuid=prepared.stage_uuid,
-            expected_source_revision=prepared.source_revision,
-            expected_execution_profile=execution_profile.identifier,
+    saved_origin_snapshot_sha256: str | None = None
+    saved_origin_manifest_sha256: str | None = None
+    if saved_corpus_import is not None:
+        verified_snapshot, acquisition_manifest = _saved_import_snapshot(
+            prepared=prepared,
+            acquisition_manifest=acquisition_manifest,
+            acquisition_manifest_sha256=acquisition_manifest_sha256,
+            acquisition_snapshot_index_sha256=acquisition_snapshot_index_sha256,
+            snapshots_directory=snapshots_directory,
+            verified_pool_source=verified_pool_source,
+            saved_corpus_import=saved_corpus_import,
+            initial_registration_sha256=initial_registration_sha256,
+            band_companion_sha256=band_companion_sha256,
         )
-    except Exception as exc:
-        raise SelectorInputMapError("acquisition-snapshot-verification-failed") from exc
-    index = verified_snapshot["index"]
-    if (
-        index.get("source_closure_sha256") != prepared.pins.get("qualified_source_closure")
-        or index.get("protocol_sha256") != prepared.pins.get("protocol")
-        or index.get("cohorts_sha256") != acquisition_manifest.get("cohorts_sha256")
-        or index.get("acquisition_plan_sha256") != acquisition_manifest.get("acquisition_plan_sha256")
-    ):
-        raise SelectorInputMapError("acquisition-snapshot-source-binding")
+        saved_origin_snapshot_sha256 = saved_corpus_import.origin_pool_verified.snapshot_index_sha256
+        saved_origin_manifest_sha256 = saved_corpus_import.origin_pool_verified.pool_manifest_sha256
+        index = verified_snapshot["index"]
+    else:
+        if (
+            type(acquisition_manifest) is not dict
+            or acquisition_manifest.get("stage_uuid") != prepared.stage_uuid
+            or acquisition_manifest.get("source_revision") != prepared.source_revision
+            or acquisition_manifest.get("source_closure_sha256") != prepared.pins.get("qualified_source_closure")
+            or acquisition_manifest.get("protocol_sha256") != prepared.pins.get("protocol")
+        ):
+            raise SelectorInputMapError("acquisition-manifest-binding")
+        try:
+            execution_profile = acquisition.execution_profile_from_manifest(acquisition_manifest)
+        except Exception as exc:
+            raise SelectorInputMapError("acquisition-manifest-profile-invalid") from exc
+        if verified_pool_source is not None:
+            from scripts.coverage_frozen_pool_inputs import is_verified_pool_snapshot_source
+
+            if not is_verified_pool_snapshot_source(verified_pool_source) or (
+                verified_pool_source.snapshots_directory != Path(snapshots_directory)
+                or verified_pool_source.snapshot_index_sha256 != acquisition_snapshot_index_sha256
+                or verified_pool_source.pool_manifest_sha256 != acquisition_manifest_sha256
+            ):
+                raise SelectorInputMapError("frozen-pool-source-verification-failed")
+            verified_snapshot = {
+                "index": verified_pool_source.pool_index,
+                "operations": verified_pool_source.operations,
+            }
+        else:
+            try:
+                verified_snapshot = coverage_live_acquire.verify_pool_snapshot_index(
+                    snapshots_directory,
+                    expected_index_sha256=acquisition_snapshot_index_sha256,
+                    expected_stage_manifest_sha256=acquisition_manifest_sha256,
+                    expected_stage_uuid=prepared.stage_uuid,
+                    expected_source_revision=prepared.source_revision,
+                    expected_execution_profile=execution_profile.identifier,
+                )
+            except Exception as exc:
+                raise SelectorInputMapError("acquisition-snapshot-verification-failed") from exc
+        index = verified_snapshot["index"]
+        if (
+            index.get("source_closure_sha256") != prepared.pins.get("qualified_source_closure")
+            or index.get("protocol_sha256") != prepared.pins.get("protocol")
+            or index.get("cohorts_sha256") != acquisition_manifest.get("cohorts_sha256")
+            or index.get("acquisition_plan_sha256") != acquisition_manifest.get("acquisition_plan_sha256")
+        ):
+            raise SelectorInputMapError("acquisition-snapshot-source-binding")
     builder_sha = _sha(Path(__file__).read_bytes())
     if expected_builder_source_sha256 != builder_sha:
         raise SelectorInputMapError("builder-source-pin-mismatch")
@@ -232,6 +268,17 @@ def build_selector_input_map(
         raise SelectorInputMapError("task-input-manifest-invalid")
     if len(pipeline_tasks) != 8 or len(navigation_targets) != 5:
         raise SelectorInputMapError("pipeline-task-count-invalid")
+    if saved_corpus_import is not None:
+        plan_research = acquisition_manifest["research_cases"]
+        plan_navigation = acquisition_manifest["navigation_targets"]
+        if any(
+            case.get("task_id") != row.get("task_id") or case.get("search_query") != row.get("query")
+            for case, row in zip(plan_research, manifest["research_tasks"], strict=True)
+        ) or any(
+            target.get("target_id") != row.get("task_id") or target.get("search_query") != row.get("query")
+            for target, row in zip(plan_navigation, manifest["navigation_tasks"], strict=True)
+        ):
+            raise SelectorInputMapError("saved-import-plan-task-binding-mismatch")
     for row, task in zip(manifest["research_tasks"], pipeline_tasks, strict=True):
         if type(row) is not dict or type(task) is not dict:
             raise SelectorInputMapError("research-task-shape-invalid")
@@ -440,7 +487,225 @@ def build_selector_input_map(
         "builder_source_sha256": builder_sha,
         "operations": ordered_entries,
     }
+    if saved_corpus_import is not None:
+        origin_index = saved_corpus_import.origin_pool_verified.pool_index
+        document.update(
+            {
+                "pool_input_mode": "saved-corpus/1",
+                "origin_pool_snapshot_index_sha256": saved_origin_snapshot_sha256,
+                "origin_pool_manifest_sha256": saved_origin_manifest_sha256,
+                "origin_stage_uuid": origin_index.get("stage_uuid"),
+                "origin_source_revision": origin_index.get("source_revision"),
+                "origin_source_closure_sha256": origin_index.get("source_closure_sha256"),
+                "origin_protocol_sha256": origin_index.get("protocol_sha256"),
+                "origin_cohorts_sha256": origin_index.get("cohorts_sha256"),
+                "origin_acquisition_plan_sha256": origin_index.get("acquisition_plan_sha256"),
+                "saved_import_receipt_sha256": saved_corpus_import.import_receipt_sha256,
+                "derived_capture_manifest_sha256": saved_corpus_import.capture_manifest_sha256,
+            }
+        )
     return _canonical(document)
+
+
+def _saved_import_snapshot(
+    *,
+    prepared: core.PreparedStage,
+    acquisition_manifest: object,
+    acquisition_manifest_sha256: str,
+    acquisition_snapshot_index_sha256: str,
+    snapshots_directory: str | Path,
+    verified_pool_source: object | None,
+    saved_corpus_import: object,
+    initial_registration_sha256: str | None,
+    band_companion_sha256: str | None,
+) -> tuple[dict[str, object], dict[str, object]]:
+    """Resolve source material from the original verified pool, not a new run."""
+    from scripts import coverage_frozen_pool_inputs as frozen_pool
+    from scripts import coverage_saved_corpus
+
+    if (
+        type(acquisition_manifest) is not dict
+        or type(saved_corpus_import) is not coverage_saved_corpus.SavedCorpusImportResult
+    ):
+        raise SelectorInputMapError("saved-import-input-invalid")
+    origin_pool = saved_corpus_import.origin_pool_verified
+    if not frozen_pool.is_verified_pool_snapshot_source(origin_pool):
+        raise SelectorInputMapError("saved-origin-pool-source-unverified")
+    if acquisition_snapshot_index_sha256 != origin_pool.snapshot_index_sha256:
+        raise SelectorInputMapError("saved-origin-snapshot-index-pin-mismatch")
+    if verified_pool_source is not None and (
+        not frozen_pool.is_verified_pool_snapshot_source(verified_pool_source)
+        or verified_pool_source.proof_sha256 != origin_pool.proof_sha256
+        or verified_pool_source.snapshot_index_sha256 != origin_pool.snapshot_index_sha256
+        or verified_pool_source.pool_manifest_sha256 != origin_pool.pool_manifest_sha256
+    ):
+        raise SelectorInputMapError("saved-origin-pool-source-mismatch")
+    receipt_bytes = saved_corpus_import.import_receipt_bytes
+    try:
+        receipt = _strict(receipt_bytes)
+    except Exception as exc:
+        raise SelectorInputMapError("saved-import-receipt-invalid") from exc
+    if type(receipt) is not dict or _sha(receipt_bytes) != saved_corpus_import.import_receipt_sha256:
+        raise SelectorInputMapError("saved-import-receipt-digest-mismatch")
+    try:
+        canonical_receipt = coverage_saved_corpus._canonical(receipt)
+    except Exception as exc:
+        raise SelectorInputMapError("saved-import-receipt-invalid") from exc
+    expected_receipt_bindings = {
+        "schema": coverage_saved_corpus.SCHEMA,
+        "status": "verified-for-fresh-grading",
+        "stage_uuid": prepared.stage_uuid,
+        "stage_kind": prepared.stage_kind,
+        "source_revision": prepared.source_revision,
+        "source_closure_sha256": prepared.pins.get("qualified_source_closure"),
+        "protocol_sha256": prepared.pins.get("protocol"),
+        "cohorts_sha256": acquisition_manifest.get("cohorts_sha256"),
+        "origin_package_sha256": saved_corpus_import.origin_package_sha256,
+        "origin_pool_manifest_sha256": origin_pool.pool_manifest_sha256,
+        "origin_pool_snapshot_index_sha256": origin_pool.snapshot_index_sha256,
+        "origin_collection_receipt_sha256": origin_pool.collector_receipt_sha256,
+        "derived_capture_manifest_sha256": saved_corpus_import.capture_manifest_sha256,
+    }
+    required = {
+        "schema",
+        "status",
+        "stage_uuid",
+        "stage_kind",
+        "source_revision",
+        "source_closure_sha256",
+        "protocol_sha256",
+        "cohorts_sha256",
+        "candidate_identity_sha256",
+        "candidate_endpoint_sha256",
+        "packet_stage_uuid",
+        "origin_stage_uuid",
+        "origin_source_revision",
+        "origin_package_sha256",
+        "origin_pool_manifest_sha256",
+        "origin_pool_snapshot_index_sha256",
+        "origin_collection_receipt_sha256",
+        "origin_capture_manifest_sha256",
+        "origin_capture_inventory_sha256",
+        "derived_capture_manifest_sha256",
+        "import_authority_receipt_sha256",
+        "research_task_ids",
+        "navigation_target_ids",
+        "source_rows",
+        "captured_contexts",
+        "source_failures",
+        "historical_search_calls",
+        "historical_capture_calls",
+        "historical_scrape_calls",
+        "historical_health_calls",
+        "current_search_calls",
+        "current_capture_calls",
+        "quality_credit",
+    }
+    if (
+        set(receipt) != required
+        or canonical_receipt != receipt_bytes
+        or any(receipt.get(key) != value for key, value in expected_receipt_bindings.items())
+        or receipt.get("origin_stage_uuid") != origin_pool.pool_index.get("stage_uuid")
+        or receipt.get("origin_source_revision") != origin_pool.pool_index.get("source_revision")
+        or saved_corpus_import.current_search_calls != 0
+        or saved_corpus_import.current_capture_calls != 0
+        or receipt.get("current_search_calls") != 0
+        or receipt.get("current_capture_calls") != 0
+        or receipt.get("quality_credit") is not False
+        or _sha(saved_corpus_import.capture_manifest_bytes) != saved_corpus_import.capture_manifest_sha256
+        or type(receipt.get("packet_stage_uuid")) is not str
+        or re.fullmatch(
+            r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+            receipt["packet_stage_uuid"],
+        )
+        is None
+        or receipt.get("packet_stage_uuid") == prepared.stage_uuid
+        or type(receipt.get("import_authority_receipt_sha256")) is not str
+        or SHA256.fullmatch(receipt["import_authority_receipt_sha256"]) is None
+    ):
+        raise SelectorInputMapError("saved-import-receipt-binding-mismatch")
+    try:
+        derived_manifest = _strict(saved_corpus_import.capture_manifest_bytes)
+    except Exception as exc:
+        raise SelectorInputMapError("saved-derived-capture-manifest-invalid") from exc
+    if (
+        type(derived_manifest) is not dict
+        or derived_manifest.get("stage_uuid") != prepared.stage_uuid
+        or derived_manifest.get("stage") != prepared.stage_kind
+        or derived_manifest.get("source_revision") != prepared.source_revision
+        or derived_manifest.get("protocol_sha256") != prepared.pins.get("protocol")
+        or derived_manifest.get("cohorts_sha256") != acquisition_manifest.get("cohorts_sha256")
+        or derived_manifest.get("candidate_identity_sha256") != receipt.get("candidate_identity_sha256")
+        or derived_manifest.get("candidate_endpoint_sha256") != receipt.get("candidate_endpoint_sha256")
+        or saved_corpus_import.origin_package_sha256 != receipt.get("origin_package_sha256")
+    ):
+        raise SelectorInputMapError("saved-derived-capture-manifest-binding-mismatch")
+    expected_manifest = {
+        "schema": "coverage-saved-import-plan/1",
+        "stage": prepared.stage_kind,
+        "stage_uuid": prepared.stage_uuid,
+        "source_revision": prepared.source_revision,
+        "source_closure_sha256": prepared.pins.get("qualified_source_closure"),
+        "protocol_sha256": prepared.pins.get("protocol"),
+        "cohorts_sha256": receipt.get("cohorts_sha256"),
+        "acquisition_plan_sha256": prepared.pins.get("acquisition_plan"),
+        "research_cases": acquisition_manifest.get("research_cases"),
+        "navigation_targets": acquisition_manifest.get("navigation_targets"),
+        "packet_stage_uuid": receipt.get("packet_stage_uuid"),
+        "origin_package_sha256": saved_corpus_import.origin_package_sha256,
+    }
+    if any(acquisition_manifest.get(key) != value for key, value in expected_manifest.items()):
+        raise SelectorInputMapError("saved-import-plan-binding-mismatch")
+    research_cases = acquisition_manifest.get("research_cases")
+    navigation_plan = acquisition_manifest.get("navigation_targets")
+    if (
+        type(research_cases) is not list
+        or len(research_cases) != 8
+        or any(type(row) is not dict for row in research_cases)
+        or type(navigation_plan) is not list
+        or len(navigation_plan) != 5
+        or any(type(row) is not dict for row in navigation_plan)
+    ):
+        raise SelectorInputMapError("saved-import-plan-task-inventory-invalid")
+    preacquisition_input = {
+        "schema": "coverage-preacquisition-input-manifest/1",
+        "stage_uuid": prepared.stage_uuid,
+        "protocol_sha256": prepared.pins.get("protocol"),
+        "cohorts_sha256": receipt.get("cohorts_sha256"),
+        "task_ids": [
+            *(row.get("task_id") for row in acquisition_manifest.get("research_cases", [])),
+            *(row.get("target_id") for row in acquisition_manifest.get("navigation_targets", [])),
+        ],
+    }
+    if prepared.selector_input_map_required:
+        if (
+            type(band_companion_sha256) is not str
+            or not SHA256.fullmatch(band_companion_sha256)
+            or type(initial_registration_sha256) is not str
+            or not SHA256.fullmatch(initial_registration_sha256)
+        ):
+            raise SelectorInputMapError("saved-import-registration-pins-required")
+        preacquisition_input.update(
+            {
+                "band_companion_sha256": band_companion_sha256,
+                "initial_registration_sha256": initial_registration_sha256,
+            }
+        )
+    elif initial_registration_sha256 is not None or band_companion_sha256 is not None:
+        raise SelectorInputMapError("saved-import-registration-pins-unexpected")
+    if (
+        type(acquisition_manifest.get("input_manifest_sha256")) is not str
+        or not SHA256.fullmatch(acquisition_manifest["input_manifest_sha256"])
+        or acquisition_manifest["input_manifest_sha256"] != _sha(core._canonical(preacquisition_input))
+    ):
+        raise SelectorInputMapError("saved-import-plan-input-manifest-invalid")
+    if acquisition_manifest_sha256 != _sha(core._canonical(acquisition_manifest)):
+        raise SelectorInputMapError("saved-import-plan-digest-mismatch")
+    if Path(snapshots_directory) != origin_pool.snapshots_directory:
+        raise SelectorInputMapError("saved-origin-snapshot-directory-mismatch")
+    if origin_pool.pool_manifest_sha256 != receipt.get("origin_pool_manifest_sha256"):
+        raise SelectorInputMapError("saved-origin-pool-manifest-mismatch")
+    return {"index": origin_pool.pool_index, "operations": origin_pool.operations}, acquisition_manifest
 
 
 def _entry(operation_id: str, input_bytes: bytes, request_body: bytes, parser_mode: str) -> dict[str, object]:

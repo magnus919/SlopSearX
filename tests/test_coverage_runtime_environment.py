@@ -249,8 +249,18 @@ def test_phase_handoff_carries_canonical_active_environment_receipt() -> None:
     instance = object.__new__(runner.OperatorStageRunner)
     receipt = _receipt()
     instance.active_environment_receipt_bytes = receipt
+    instance._saved_corpus_reference_bytes = None
     stage_uuid = str(uuid.UUID(int=503))
-    instance.plan = SimpleNamespace(stage_uuid=stage_uuid, stage_deadline_monotonic=99.0)
+    instance.plan = SimpleNamespace(
+        stage_kind="development",
+        stage_uuid=stage_uuid,
+        stage_deadline_monotonic=99.0,
+        source_closure_sha256="d" * 64,
+        pool_input_mode="frozen-pool/1",
+        development_receipt_bytes=None,
+        development_receipt_sha256=None,
+        development_stage_uuid=None,
+    )
 
     class Handoff:
         received: dict[str, object] | None = None
@@ -267,9 +277,10 @@ def test_phase_handoff_carries_canonical_active_environment_receipt() -> None:
     bindings = handoff.received["bindings"]
     assert bindings["active_python_environment"] == json.loads(receipt)
     assert bindings["active_python_environment_sha256"] == hashlib.sha256(receipt).hexdigest()
+    assert bindings["source_closure_sha256"] == "d" * 64
     assert bindings["binding"] == "fixture"
 
-    with pytest.raises(runner.OperatorRunnerError, match="active-environment-binding-collision"):
+    with pytest.raises(runner.OperatorRunnerError, match="phase-request-context-binding-collision"):
         asyncio.run(instance._request("preflight", "probe-2", {"active_python_environment": {}}))
 
 

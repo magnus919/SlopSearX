@@ -1,0 +1,44 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__________ test_initialization_deadline_fails_closed_and_cleans_owner __________
+
+    async def test_initialization_deadline_fails_closed_and_cleans_owner() -> None:
+        async def state():
+            return build_fixture_context()
+    
+        port = _free_port()
+        app = DelayedInitialize(make_http_app(create_server(state_factory=state), TOKEN))
+        upstream = uvicorn.Server(
+            uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning", timeout_graceful_shutdown=2)
+        )
+        task = asyncio.create_task(upstream.serve())
+        try:
+            assert await _wait_for_port(port)
+            proxy = FastMCP("initialize-timeout")
+            async with asyncio.timeout(2):
+                with pytest.raises(Exception) as captured:
+                    async with gateway._gateway_lifespan(proxy, f"http://127.0.0.1:{port}/mcp", TOKEN, 0.05):
+>                       pytest.fail("a delayed initialize must not publish readiness")
+E                       Failed: a delayed initialize must not publish readiness
+
+tests/test_mcp_gateway_initialization.py:53: Failed
+------------------------------ Captured log call -------------------------------
+WARNING  slopsearx.mcp.server:server.py:144 MCP startup problem: intent 'images' has media types matching no enabled engines: ['image']
+WARNING  slopsearx.mcp.server:server.py:144 MCP startup problem: intent 'videos' has media types matching no enabled engines: ['video']
+=============================== warnings summary ===============================
+tests/test_mcp_gateway_initialization.py::test_initialization_deadline_fails_closed_and_cleans_owner
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pydantic_settings/sources/utils.py:47: IncompleteFieldDefinitionWarning: Field 'lifespan' has an incomplete definition: its annotation contains an unresolved forward reference, so settings sources may fail to correctly resolve its value. Call `model_rebuild()` on the model where the field is defined, once all the referenced types are defined.
+    warnings.warn(
+
+tests/test_mcp_gateway_initialization.py::test_initialization_deadline_fails_closed_and_cleans_owner
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/websockets/legacy/__init__.py:6: DeprecationWarning: websockets.legacy is deprecated; see https://websockets.readthedocs.io/en/stable/howto/upgrade.html for upgrade instructions
+    warnings.warn(  # deprecated in 14.0 - 2024-11-09
+
+tests/test_mcp_gateway_initialization.py::test_initialization_deadline_fails_closed_and_cleans_owner
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/uvicorn/protocols/websockets/websockets_impl.py:17: DeprecationWarning: websockets.server.WebSocketServerProtocol is deprecated
+    from websockets.server import WebSocketServerProtocol
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_mcp_gateway_initialization.py::test_initialization_deadline_fails_closed_and_cleans_owner
+1 failed, 3 warnings in 2.27s

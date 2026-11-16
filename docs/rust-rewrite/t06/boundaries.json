@@ -1,0 +1,1054 @@
+{
+  "baseline": "6c44976444340cc8f343fef61e2e8d723b189c19",
+  "versions": {
+    "fastmcp": "4.0.11",
+    "mcp": "2.3.0"
+  },
+  "raw_arguments": [
+    {
+      "raw_request": "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"slopsearx_search\",\"arguments\":{\"query\":1e400}}}",
+      "status": 200,
+      "body": "event: message\r\ndata: {\"jsonrpc\":\"2.0\",\"id\":2,\"result\":{\"content\":[{\"text\":\"1 validation error for call[slopsearx_search]\\nquery\\n  Input should be a valid string [type=string_type, input_value=inf, input_type=float]\\n    For further information visit https://errors.pydantic.dev/2.13/v/string_type\",\"type\":\"text\"}],\"isError\":true}}\r\n\r\n",
+      "dispatch_delta": {
+        "wikipedia": 0,
+        "brave": 0,
+        "duckduckgo": 0
+      }
+    },
+    {
+      "raw_request": "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/call\",\"params\":{\"name\":\"slopsearx_search\",\"arguments\":{\"query\":\"q\",\"unexpected\":1e400}}}",
+      "status": 200,
+      "body": "event: message\r\ndata: {\"jsonrpc\":\"2.0\",\"id\":3,\"result\":{\"content\":[{\"text\":\"1 validation error for call[slopsearx_search]\\nunexpected\\n  Unexpected keyword argument [type=unexpected_keyword_argument, input_value=inf, input_type=float]\\n    For further information visit https://errors.pydantic.dev/2.13/v/unexpected_keyword_argument\",\"type\":\"text\"}],\"isError\":true}}\r\n\r\n",
+      "dispatch_delta": {
+        "wikipedia": 0,
+        "brave": 0,
+        "duckduckgo": 0
+      }
+    },
+    {
+      "raw_request": "{\"jsonrpc\":\"2.0\",\"id\":4,\"method\":\"tools/call\",\"params\":{\"name\":\"slopsearx_search\",\"arguments\":{\"query\":\"q\",\"max_results\":1e400}}}",
+      "status": 200,
+      "body": "event: message\r\ndata: {\"jsonrpc\":\"2.0\",\"id\":4,\"result\":{\"content\":[{\"text\":\"1 validation error for call[slopsearx_search]\\nmax_results\\n  Input should be a finite number [type=finite_number, input_value=inf, input_type=float]\\n    For further information visit https://errors.pydantic.dev/2.13/v/finite_number\",\"type\":\"text\"}],\"isError\":true}}\r\n\r\n",
+      "dispatch_delta": {
+        "wikipedia": 0,
+        "brave": 0,
+        "duckduckgo": 0
+      }
+    },
+    {
+      "raw_request": "{\"jsonrpc\":\"2.0\",\"id\":5,\"method\":\"tools/call\",\"params\":{\"name\":\"slopsearx_read_entities\",\"arguments\":{\"cursor\":\"missing\",\"version\":1e400}}}",
+      "status": 200,
+      "body": "event: message\r\ndata: {\"jsonrpc\":\"2.0\",\"id\":5,\"result\":{\"content\":[{\"text\":\"1 validation error for call[slopsearx_read_entities]\\nversion\\n  Input should be a valid integer [type=int_type, input_value=inf, input_type=float]\\n    For further information visit https://errors.pydantic.dev/2.13/v/int_type\",\"type\":\"text\"}],\"isError\":true}}\r\n\r\n",
+      "dispatch_delta": {
+        "wikipedia": 0,
+        "brave": 0,
+        "duckduckgo": 0
+      }
+    },
+    {
+      "raw_request": "{\"jsonrpc\":\"2.0\",\"id\":6,\"method\":\"tools/call\",\"params\":{\"name\":\"slopsearx_search\",\"arguments\":{\"query\":10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000}}}",
+      "status": 200,
+      "body": "event: message\r\ndata: {\"jsonrpc\":\"2.0\",\"id\":6,\"result\":{\"content\":[{\"text\":\"1 validation error for call[slopsearx_search]\\nquery\\n  Input should be a valid string [type=string_type, input_value=1000000000000000000000000...000000000000000000000000, input_type=int]\\n    For further information visit https://errors.pydantic.dev/2.13/v/string_type\",\"type\":\"text\"}],\"isError\":true}}\r\n\r\n",
+      "dispatch_delta": {
+        "wikipedia": 0,
+        "brave": 0,
+        "duckduckgo": 0
+      }
+    },
+    {
+      "raw_request": "{\"jsonrpc\":\"2.0\",\"id\":7,\"method\":\"tools/call\",\"params\":{\"name\":\"slopsearx_search\",\"arguments\":{\"query\":\"q\",\"unexpected\":10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000}}}",
+      "status": 200,
+      "body": "event: message\r\ndata: {\"jsonrpc\":\"2.0\",\"id\":7,\"result\":{\"content\":[{\"text\":\"1 validation error for call[slopsearx_search]\\nunexpected\\n  Unexpected keyword argument [type=unexpected_keyword_argument, input_value=1000000000000000000000000...000000000000000000000000, input_type=int]\\n    For further information visit https://errors.pydantic.dev/2.13/v/unexpected_keyword_argument\",\"type\":\"text\"}],\"isError\":true}}\r\n\r\n",
+      "dispatch_delta": {
+        "wikipedia": 0,
+        "brave": 0,
+        "duckduckgo": 0
+      }
+    }
+  ],
+  "resources": [
+    {
+      "uri": "slopsearx://capabilities",
+      "result": {
+        "contents": [
+          {
+            "mimeType": "text/plain",
+            "text": "# SlopSearX engine catalog\n\n## abuseipdb — AbuseIPDB\n- type: api\n- categories: security, threat-intel\n- auth class: required\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, blocked, error, timeout\n- cost class: freemium\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## arxiv — arXiv\n- type: api\n- categories: science, reference\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## ashby — Ashby\n- type: api\n- categories: jobs\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n- caveats: requires a company name in the query; returns no full job descriptions\n\n## brave — Brave Search API\n- type: api\n- categories: general\n- auth class: required\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, blocked, error, timeout, auth_required, unavailable\n- cost class: unknown\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit, unscoped\n- caveats: safesearch parameter not enforced\n\n## censys — Censys\n- type: api\n- categories: it, security\n- auth class: required\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, blocked, error, timeout\n- cost class: freemium\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## clinicaltrials — ClinicalTrials.gov\n- type: api\n- categories: medical, health, science\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## crates — crates.io\n- type: api\n- categories: it, reference, packages\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## crtsh — CRT.sh (Certificate Transparency)\n- type: api\n- categories: it, security\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, blocked, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## cve — CVE Program (MITRE)\n- type: api\n- categories: it, security\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, blocked, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## dehashed — DeHashed\n- type: api\n- categories: security, threat-intel\n- auth class: required\n- sensitive: True\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, blocked, error, timeout\n- cost class: paid\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## dockerhub — Docker Hub\n- type: api\n- categories: it, reference, packages\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## duckduckgo — DuckDuckGo\n- type: scrape\n- categories: general\n- auth class: none\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, blocked, error, timeout, auth_required, unavailable\n- cost class: unknown\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit, unscoped\n- caveats: scrape adapter — subject to blocking and CAPTCHAs\n\n## edgar — SEC EDGAR\n- type: api\n- categories: finance, reference\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## epss — FIRST EPSS (Exploit Prediction)\n- type: api\n- categories: security, threat-intel\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, blocked, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## europepmc — Europe PMC (EMBL-EBI)\n- type: api\n- categories: science, reference, medical, health\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text, structured\n- supported media types: none\n- failure classes: rate_limited, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## exploitdb — Exploit-DB\n- type: scrape\n- categories: security, exploit\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, blocked, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## fred — FRED\n- type: api\n- categories: finance, reference, economics\n- auth class: required\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, error, timeout\n- cost class: freemium\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## github — GitHub\n- type: api\n- categories: reference, github:code, github:issues, github:prs\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, blocked, error, timeout, unavailable\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n- caveats: pagination hardcoded to page 1\n\n## google — Google Search\n- type: scrape\n- categories: general, news\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, blocked, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit, unscoped\n- caveats: scrape adapter — subject to blocking and CAPTCHAs\n\n## greenhouse — Greenhouse\n- type: api\n- categories: jobs\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n- caveats: requires a company name in the query; returns no full job descriptions\n\n## greynoise — GreyNoise\n- type: api\n- categories: security, threat-intel\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, blocked, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## hackernews — Hacker News\n- type: api\n- categories: general, news\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit, unscoped\n\n## hibp — Have I Been Pwned\n- type: api\n- categories: security, reference\n- auth class: required\n- sensitive: True\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, blocked, error, timeout\n- cost class: freemium\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## huggingface — HuggingFace\n- type: api\n- categories: science, huggingface:datasets, huggingface:papers\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## intelx — Intelligence X (IntelX)\n- type: api\n- categories: security, threat-intel\n- auth class: required\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, blocked, error, timeout\n- cost class: freemium\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## internetarchive — Internet Archive\n- type: api\n- categories: reference, web:archive, historical\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, blocked, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n- caveats: opt-in engine, disabled by default\n\n## lever — Lever\n- type: api\n- categories: jobs\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n- caveats: requires a company name in the query; returns no full job descriptions\n\n## mitreattack — MITRE ATT&CK\n- type: api\n- categories: security, reference\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, blocked, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## musicbrainz — MusicBrainz\n- type: api\n- categories: music, reference\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## nominatim — Nominatim (OSM)\n- type: api\n- categories: geography, reference\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## npm — npm\n- type: api\n- categories: it, reference, packages\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## nvd — NVD (National Vulnerability Database)\n- type: api\n- categories: it, security\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, blocked, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## openalex — OpenAlex\n- type: api\n- categories: science, reference\n- auth class: unknown\n- sensitive: False\n- supported filters: time_range, date_from, date_to\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## openfda — openFDA\n- type: api\n- categories: medical, health, science, government\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## openlibrary — Open Library\n- type: api\n- categories: books, reference\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text, media\n- supported media types: none\n- failure classes: rate_limited, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## otx — AlienVault OTX\n- type: api\n- categories: security, threat-intel\n- auth class: required\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, blocked, error, timeout\n- cost class: freemium\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## oyez — Oyez (SCOTUS)\n- type: api\n- categories: reference, legal\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## pubchem — PubChem\n- type: api\n- categories: science, reference, chemistry, medical\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## pubmed — PubMed\n- type: api\n- categories: science, reference, medical, health\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## pypi — PyPI\n- type: api\n- categories: it, reference, packages\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## reddit — Reddit\n- type: api\n- categories: general, social, reddit:subreddit\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text, media\n- supported media types: none\n- failure classes: rate_limited, blocked, error, timeout, unavailable\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit, unscoped\n\n## rubygems — RubyGems\n- type: api\n- categories: it, reference, packages\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## semanticscholar — Semantic Scholar\n- type: api\n- categories: science, reference\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## shodan — Shodan\n- type: api\n- categories: it, security\n- auth class: required\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, blocked, error, timeout\n- cost class: freemium\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## stackexchange — Stack Exchange\n- type: api\n- categories: general, reference, science, stackexchange:code, stackexchange:serverfault\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, error\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit, unscoped\n\n## tmdb — TMDB\n- type: api\n- categories: movies, entertainment\n- auth class: required\n- sensitive: False\n- supported filters: none\n- supported result types: text, media\n- supported media types: none\n- failure classes: rate_limited, error, timeout\n- cost class: freemium\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## uniprot — UniProt\n- type: api\n- categories: science, reference, biology, medical\n- auth class: unknown\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, error, timeout\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## urlhaus — URLhaus (abuse.ch)\n- type: api\n- categories: security, threat-intel\n- auth class: required\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, blocked, error, timeout, unavailable\n- cost class: free\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## virustotal — VirusTotal\n- type: api\n- categories: security, malware\n- auth class: required\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, blocked, error, timeout\n- cost class: freemium\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## vulncheck — VulnCheck Community\n- type: api\n- categories: security, threat-intel\n- auth class: required\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, blocked, error, timeout\n- cost class: freemium\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit\n\n## wikipedia — Wikipedia\n- type: api\n- categories: general\n- auth class: none\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, blocked, error, timeout, auth_required, unavailable\n- cost class: unknown\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit, unscoped\n",
+            "uri": "slopsearx://capabilities"
+          }
+        ]
+      }
+    },
+    {
+      "uri": "slopsearx://routing-profiles",
+      "result": {
+        "contents": [
+          {
+            "mimeType": "text/plain",
+            "text": "# SlopSearX routing profiles\n\nIntent profiles map an agent's stated intent to engine scopes. Profiles are validated against the live registry at startup; sensitive intents (security) require an operator grant.\n\n## web\n- General-purpose web search across broad engines.\n- categories: general\n\n## news\n- Recent news and headlines.\n- categories: news\n\n## science\n- Papers, scholarly indexes, and scientific references.\n- categories: science\n\n## reference\n- Encyclopedic and reference material.\n- categories: reference\n\n## code\n- Source code, issues, and package registries.\n- engines: github, stackexchange, pypi, npm, crates, rubygems, dockerhub\n\n## social\n- Discussion forums and social sources.\n- engines: reddit, hackernews, brave, duckduckgo\n\n## historical\n- Archives and historical material.\n- categories: historical\n- engines: wikipedia, internetarchive\n\n## jobs\n- Job postings on ATS boards and general boards.\n- engines: greenhouse, ashby, lever, brave, duckduckgo\n\n## security\n- Vulnerabilities, threat intelligence, and exposures.\n- engines: cve, nvd, shodan, censys, crtsh, otx, abuseipdb, virustotal, urlhaus, epss, vulncheck, intelx, exploitdb, mitreattack, greynoise, hibp, dehashed\n- sensitive: requires MCP_GRANT_SECURITY=1\n\n## medical\n- Clinical trials, biomedical literature, and health data.\n- engines: pubmed, clinicaltrials, openfda, pubchem, uniprot\n\n## finance\n- Economic data and SEC filings.\n- categories: finance\n\n## packages\n- Software package registries.\n- categories: packages\n\n## media\n- Music, movies, and books.\n- categories: music, movies, entertainment, books\n\n## images\n- Image search across media-capable engines.\n- media types: image\n\n## videos\n- Video search across media-capable engines.\n- media types: video\n\n## legal\n- Court cases and legal references.\n- categories: legal\n\n## geography\n- Geocoding and place lookup.\n- categories: geography\n\n# Research strategies\n- triangulate\n- broad\n- fresh\n- counterevidence",
+            "uri": "slopsearx://routing-profiles"
+          }
+        ]
+      }
+    },
+    {
+      "uri": "slopsearx://health/summary",
+      "result": {
+        "contents": [
+          {
+            "mimeType": "text/plain",
+            "text": "# SlopSearX service status\n- status: ok (liveness)\n- version: 0.0.0\n- contract version: 1.0\n- valkey connected: False\n- valkey fail-closed: False\n- cache connected: True\n- snapshots available: True\n- job store available: True\n- active engines: 51\n- router enabled: False\n- grants enabled: none\n- policy bounds: max_query_length=500, max_results=50, snapshot_ttl_seconds=3600, job_max_queries=20, job_max_engines_per_query=10, job_max_results=500, job_default_deadline_seconds=600\n- degradation: degraded (causes: Valkey unavailable)\n- freshness: 2026-10-17T03:13:32.031388+00:00\n- engine health: ok=0, rate_limited=0, blocked=0, error=0, timeout=0, unavailable=0, unknown=51\n- engine health note: /health does not actively probe external APIs; use search outcomes for passive engine health",
+            "uri": "slopsearx://health/summary"
+          }
+        ]
+      }
+    },
+    {
+      "uri": "slopsearx://capabilities/wikipedia",
+      "result": {
+        "contents": [
+          {
+            "mimeType": "text/plain",
+            "text": "# wikipedia — Wikipedia\n- type: api\n- categories: general\n- auth class: none\n- sensitive: False\n- supported filters: none\n- supported result types: text\n- supported media types: none\n- failure classes: rate_limited, blocked, error, timeout, auth_required, unavailable\n- cost class: unknown\n- last known status: unknown\n- last known status at: never observed\n- stale: False\n- circuit open: False\n- consecutive errors: 0\n- scope hints: explicit, unscoped",
+            "uri": "slopsearx://capabilities/wikipedia"
+          }
+        ]
+      }
+    },
+    {
+      "uri": "slopsearx://capabilities/UNKNOWN",
+      "result": {
+        "contents": [
+          {
+            "mimeType": "text/plain",
+            "text": "Unknown engine 'UNKNOWN'. Valid engines: abuseipdb, arxiv, ashby, brave, censys, clinicaltrials, crates, crtsh, cve, dehashed, dockerhub, duckduckgo, edgar, epss, europepmc, exploitdb, fred, github, google, greenhouse, greynoise, hackernews, hibp, huggingface, intelx, internetarchive, lever, mitreattack, musicbrainz, nominatim, npm, nvd, openalex, openfda, openlibrary, otx, oyez, pubchem, pubmed, pypi, reddit, rubygems, semanticscholar, shodan, stackexchange, tmdb, uniprot, urlhaus, virustotal, vulncheck, wikipedia",
+            "uri": "slopsearx://capabilities/UNKNOWN"
+          }
+        ]
+      }
+    },
+    {
+      "uri": "slopsearx://missing",
+      "result": {
+        "rpc_error": {
+          "code": -32602,
+          "message": "Resource not found: 'slopsearx://missing'",
+          "data": {
+            "uri": "slopsearx://missing"
+          }
+        }
+      }
+    }
+  ],
+  "specialists": [
+    {
+      "name": "slopsearx_search_jobs",
+      "arguments": {
+        "company": "example",
+        "sources": [
+          "greenhouse"
+        ]
+      },
+      "result": {
+        "content": [
+          {
+            "text": "{\"query\":\"jobs at example\",\"results\":[{\"title\":\"greenhouse result 0\",\"url\":\"https://greenhouse0.example\",\"snippet\":\"Content for greenhouse result 0.\",\"source_engines\":[\"greenhouse\"],\"source_count\":1,\"primary_engine\":\"greenhouse\",\"category\":\"general\",\"published_at\":null,\"score\":1.0,\"position\":1,\"tier\":1,\"citation\":{\"label\":\"greenhouse result 0\",\"url\":\"https://greenhouse0.example\"},\"retrieval\":{\"contract\":\"slopsearx.retrieval_handoff\",\"version\":1,\"eligible\":true,\"url_status\":\"ok\",\"url_reason\":null,\"scheme\":\"https\"},\"result_id\":\"snap-2f3e5f6228b9:0\",\"artifact\":{\"contract\":\"slopsearx.artifact_ref\",\"version\":1,\"kind\":\"result\",\"id\":\"snap-2f3e5f6228b9:0\"}},{\"title\":\"greenhouse result 1\",\"url\":\"https://greenhouse1.example\",\"snippet\":\"Content for greenhouse result 1.\",\"source_engines\":[\"greenhouse\"],\"source_count\":1,\"primary_engine\":\"greenhouse\",\"category\":\"general\",\"published_at\":null,\"score\":1.0,\"position\":2,\"tier\":1,\"citation\":{\"label\":\"greenhouse result 1\",\"url\":\"https://greenhouse1.example\"},\"retrieval\":{\"contract\":\"slopsearx.retrieval_handoff\",\"version\":1,\"eligible\":true,\"url_status\":\"ok\",\"url_reason\":null,\"scheme\":\"https\"},\"result_id\":\"snap-2f3e5f6228b9:1\",\"artifact\":{\"contract\":\"slopsearx.artifact_ref\",\"version\":1,\"kind\":\"result\",\"id\":\"snap-2f3e5f6228b9:1\"}},{\"title\":\"greenhouse result 2\",\"url\":\"https://greenhouse2.example\",\"snippet\":\"Content for greenhouse result 2.\",\"source_engines\":[\"greenhouse\"],\"source_count\":1,\"primary_engine\":\"greenhouse\",\"category\":\"general\",\"published_at\":null,\"score\":1.0,\"position\":3,\"tier\":1,\"citation\":{\"label\":\"greenhouse result 2\",\"url\":\"https://greenhouse2.example\"},\"retrieval\":{\"contract\":\"slopsearx.retrieval_handoff\",\"version\":1,\"eligible\":true,\"url_status\":\"ok\",\"url_reason\":null,\"scheme\":\"https\"},\"result_id\":\"snap-2f3e5f6228b9:2\",\"artifact\":{\"contract\":\"slopsearx.artifact_ref\",\"version\":1,\"kind\":\"result\",\"id\":\"snap-2f3e5f6228b9:2\"}}],\"scope\":{\"requested_intent\":\"jobs\",\"resolved_categories\":[],\"selected_engines\":[\"greenhouse\"],\"routing_reason\":\"explicit engine\",\"excluded_engines\":[],\"routing\":{\"applied\":false}},\"answers\":[],\"corrections\":[],\"infoboxes\":[],\"empty_engines\":[],\"enforcement\":{},\"engine_outcomes\":[{\"engine\":\"greenhouse\",\"status\":\"ok\",\"result_count\":3,\"latency_ms\":2.0,\"message\":null}],\"meta\":{\"query_id\":\"ssx-bf54dc07\",\"cached\":false,\"cached_error\":false,\"response_time_ms\":0,\"partial\":false,\"deadline_exceeded\":false,\"ranking\":\"tier_then_cross_engine_presence\",\"cursor\":\"snap-2f3e5f6228b9\",\"artifact\":{\"contract\":\"slopsearx.artifact_ref\",\"version\":1,\"kind\":\"snapshot\",\"id\":\"snap-2f3e5f6228b9\"},\"suggestions\":[],\"total\":3,\"has_more\":false},\"warnings\":[\"current ATS adapters return title, URL, location, salary/department where available; they provide no full job descriptions and no cross-ATS global search\"]}",
+            "type": "text"
+          }
+        ],
+        "isError": false,
+        "structuredContent": {
+          "query": "jobs at example",
+          "results": [
+            {
+              "title": "greenhouse result 0",
+              "url": "https://greenhouse0.example",
+              "snippet": "Content for greenhouse result 0.",
+              "source_engines": [
+                "greenhouse"
+              ],
+              "source_count": 1,
+              "primary_engine": "greenhouse",
+              "category": "general",
+              "published_at": null,
+              "score": 1.0,
+              "position": 1,
+              "tier": 1,
+              "citation": {
+                "label": "greenhouse result 0",
+                "url": "https://greenhouse0.example"
+              },
+              "retrieval": {
+                "contract": "slopsearx.retrieval_handoff",
+                "version": 1,
+                "eligible": true,
+                "url_status": "ok",
+                "url_reason": null,
+                "scheme": "https"
+              },
+              "result_id": "snap-2f3e5f6228b9:0",
+              "artifact": {
+                "contract": "slopsearx.artifact_ref",
+                "version": 1,
+                "kind": "result",
+                "id": "snap-2f3e5f6228b9:0"
+              }
+            },
+            {
+              "title": "greenhouse result 1",
+              "url": "https://greenhouse1.example",
+              "snippet": "Content for greenhouse result 1.",
+              "source_engines": [
+                "greenhouse"
+              ],
+              "source_count": 1,
+              "primary_engine": "greenhouse",
+              "category": "general",
+              "published_at": null,
+              "score": 1.0,
+              "position": 2,
+              "tier": 1,
+              "citation": {
+                "label": "greenhouse result 1",
+                "url": "https://greenhouse1.example"
+              },
+              "retrieval": {
+                "contract": "slopsearx.retrieval_handoff",
+                "version": 1,
+                "eligible": true,
+                "url_status": "ok",
+                "url_reason": null,
+                "scheme": "https"
+              },
+              "result_id": "snap-2f3e5f6228b9:1",
+              "artifact": {
+                "contract": "slopsearx.artifact_ref",
+                "version": 1,
+                "kind": "result",
+                "id": "snap-2f3e5f6228b9:1"
+              }
+            },
+            {
+              "title": "greenhouse result 2",
+              "url": "https://greenhouse2.example",
+              "snippet": "Content for greenhouse result 2.",
+              "source_engines": [
+                "greenhouse"
+              ],
+              "source_count": 1,
+              "primary_engine": "greenhouse",
+              "category": "general",
+              "published_at": null,
+              "score": 1.0,
+              "position": 3,
+              "tier": 1,
+              "citation": {
+                "label": "greenhouse result 2",
+                "url": "https://greenhouse2.example"
+              },
+              "retrieval": {
+                "contract": "slopsearx.retrieval_handoff",
+                "version": 1,
+                "eligible": true,
+                "url_status": "ok",
+                "url_reason": null,
+                "scheme": "https"
+              },
+              "result_id": "snap-2f3e5f6228b9:2",
+              "artifact": {
+                "contract": "slopsearx.artifact_ref",
+                "version": 1,
+                "kind": "result",
+                "id": "snap-2f3e5f6228b9:2"
+              }
+            }
+          ],
+          "scope": {
+            "requested_intent": "jobs",
+            "resolved_categories": [],
+            "selected_engines": [
+              "greenhouse"
+            ],
+            "routing_reason": "explicit engine",
+            "excluded_engines": [],
+            "routing": {
+              "applied": false
+            }
+          },
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "empty_engines": [],
+          "enforcement": {},
+          "engine_outcomes": [
+            {
+              "engine": "greenhouse",
+              "status": "ok",
+              "result_count": 3,
+              "latency_ms": 2.0,
+              "message": null
+            }
+          ],
+          "meta": {
+            "query_id": "ssx-bf54dc07",
+            "cached": false,
+            "cached_error": false,
+            "response_time_ms": 0,
+            "partial": false,
+            "deadline_exceeded": false,
+            "ranking": "tier_then_cross_engine_presence",
+            "cursor": "snap-2f3e5f6228b9",
+            "artifact": {
+              "contract": "slopsearx.artifact_ref",
+              "version": 1,
+              "kind": "snapshot",
+              "id": "snap-2f3e5f6228b9"
+            },
+            "suggestions": [],
+            "total": 3,
+            "has_more": false
+          },
+          "warnings": [
+            "current ATS adapters return title, URL, location, salary/department where available; they provide no full job descriptions and no cross-ATS global search"
+          ]
+        }
+      },
+      "dispatch_delta": {
+        "wikipedia": 0,
+        "brave": 0,
+        "duckduckgo": 0,
+        "greenhouse": 1,
+        "cve": 0,
+        "openalex": 0
+      }
+    },
+    {
+      "name": "slopsearx_search_jobs",
+      "arguments": {
+        "company": "example",
+        "sources": [
+          "greenhouse"
+        ],
+        "location": "New York",
+        "employment_type": "full_time"
+      },
+      "result": {
+        "content": [
+          {
+            "text": "{\"query\":\"jobs at example\",\"results\":[{\"title\":\"greenhouse result 0\",\"url\":\"https://greenhouse0.example\",\"snippet\":\"Content for greenhouse result 0.\",\"source_engines\":[\"greenhouse\"],\"source_count\":1,\"primary_engine\":\"greenhouse\",\"category\":\"general\",\"published_at\":null,\"score\":1.0,\"position\":1,\"tier\":1,\"citation\":{\"label\":\"greenhouse result 0\",\"url\":\"https://greenhouse0.example\"},\"retrieval\":{\"contract\":\"slopsearx.retrieval_handoff\",\"version\":1,\"eligible\":true,\"url_status\":\"ok\",\"url_reason\":null,\"scheme\":\"https\"},\"result_id\":\"snap-39cd5c1d0773:0\",\"artifact\":{\"contract\":\"slopsearx.artifact_ref\",\"version\":1,\"kind\":\"result\",\"id\":\"snap-39cd5c1d0773:0\"}},{\"title\":\"greenhouse result 1\",\"url\":\"https://greenhouse1.example\",\"snippet\":\"Content for greenhouse result 1.\",\"source_engines\":[\"greenhouse\"],\"source_count\":1,\"primary_engine\":\"greenhouse\",\"category\":\"general\",\"published_at\":null,\"score\":1.0,\"position\":2,\"tier\":1,\"citation\":{\"label\":\"greenhouse result 1\",\"url\":\"https://greenhouse1.example\"},\"retrieval\":{\"contract\":\"slopsearx.retrieval_handoff\",\"version\":1,\"eligible\":true,\"url_status\":\"ok\",\"url_reason\":null,\"scheme\":\"https\"},\"result_id\":\"snap-39cd5c1d0773:1\",\"artifact\":{\"contract\":\"slopsearx.artifact_ref\",\"version\":1,\"kind\":\"result\",\"id\":\"snap-39cd5c1d0773:1\"}},{\"title\":\"greenhouse result 2\",\"url\":\"https://greenhouse2.example\",\"snippet\":\"Content for greenhouse result 2.\",\"source_engines\":[\"greenhouse\"],\"source_count\":1,\"primary_engine\":\"greenhouse\",\"category\":\"general\",\"published_at\":null,\"score\":1.0,\"position\":3,\"tier\":1,\"citation\":{\"label\":\"greenhouse result 2\",\"url\":\"https://greenhouse2.example\"},\"retrieval\":{\"contract\":\"slopsearx.retrieval_handoff\",\"version\":1,\"eligible\":true,\"url_status\":\"ok\",\"url_reason\":null,\"scheme\":\"https\"},\"result_id\":\"snap-39cd5c1d0773:2\",\"artifact\":{\"contract\":\"slopsearx.artifact_ref\",\"version\":1,\"kind\":\"result\",\"id\":\"snap-39cd5c1d0773:2\"}}],\"scope\":{\"requested_intent\":\"jobs\",\"resolved_categories\":[],\"selected_engines\":[\"greenhouse\"],\"routing_reason\":\"explicit engine\",\"excluded_engines\":[],\"routing\":{\"applied\":false}},\"answers\":[],\"corrections\":[],\"infoboxes\":[],\"empty_engines\":[],\"enforcement\":{\"location\":{\"requested\":\"New York\",\"status\":\"unsupported\",\"reason\":\"location is not consumed by current adapters\",\"enforced_by\":[]},\"employment_type\":{\"requested\":\"full_time\",\"status\":\"unsupported\",\"reason\":\"employment_type is not consumed by current adapters\",\"enforced_by\":[]}},\"engine_outcomes\":[{\"engine\":\"greenhouse\",\"status\":\"ok\",\"result_count\":3,\"latency_ms\":2.0,\"message\":null}],\"meta\":{\"query_id\":\"ssx-bf54dc07\",\"cached\":true,\"cached_error\":false,\"response_time_ms\":0,\"partial\":false,\"deadline_exceeded\":false,\"ranking\":\"tier_then_cross_engine_presence\",\"cursor\":\"snap-39cd5c1d0773\",\"artifact\":{\"contract\":\"slopsearx.artifact_ref\",\"version\":1,\"kind\":\"snapshot\",\"id\":\"snap-39cd5c1d0773\"},\"suggestions\":[],\"total\":3,\"has_more\":false},\"warnings\":[\"current ATS adapters return title, URL, location, salary/department where available; they provide no full job descriptions and no cross-ATS global search\",\"location 'New York' is not consumed by current adapters\",\"employment_type 'full_time' is not consumed by current adapters\"]}",
+            "type": "text"
+          }
+        ],
+        "isError": false,
+        "structuredContent": {
+          "query": "jobs at example",
+          "results": [
+            {
+              "title": "greenhouse result 0",
+              "url": "https://greenhouse0.example",
+              "snippet": "Content for greenhouse result 0.",
+              "source_engines": [
+                "greenhouse"
+              ],
+              "source_count": 1,
+              "primary_engine": "greenhouse",
+              "category": "general",
+              "published_at": null,
+              "score": 1.0,
+              "position": 1,
+              "tier": 1,
+              "citation": {
+                "label": "greenhouse result 0",
+                "url": "https://greenhouse0.example"
+              },
+              "retrieval": {
+                "contract": "slopsearx.retrieval_handoff",
+                "version": 1,
+                "eligible": true,
+                "url_status": "ok",
+                "url_reason": null,
+                "scheme": "https"
+              },
+              "result_id": "snap-39cd5c1d0773:0",
+              "artifact": {
+                "contract": "slopsearx.artifact_ref",
+                "version": 1,
+                "kind": "result",
+                "id": "snap-39cd5c1d0773:0"
+              }
+            },
+            {
+              "title": "greenhouse result 1",
+              "url": "https://greenhouse1.example",
+              "snippet": "Content for greenhouse result 1.",
+              "source_engines": [
+                "greenhouse"
+              ],
+              "source_count": 1,
+              "primary_engine": "greenhouse",
+              "category": "general",
+              "published_at": null,
+              "score": 1.0,
+              "position": 2,
+              "tier": 1,
+              "citation": {
+                "label": "greenhouse result 1",
+                "url": "https://greenhouse1.example"
+              },
+              "retrieval": {
+                "contract": "slopsearx.retrieval_handoff",
+                "version": 1,
+                "eligible": true,
+                "url_status": "ok",
+                "url_reason": null,
+                "scheme": "https"
+              },
+              "result_id": "snap-39cd5c1d0773:1",
+              "artifact": {
+                "contract": "slopsearx.artifact_ref",
+                "version": 1,
+                "kind": "result",
+                "id": "snap-39cd5c1d0773:1"
+              }
+            },
+            {
+              "title": "greenhouse result 2",
+              "url": "https://greenhouse2.example",
+              "snippet": "Content for greenhouse result 2.",
+              "source_engines": [
+                "greenhouse"
+              ],
+              "source_count": 1,
+              "primary_engine": "greenhouse",
+              "category": "general",
+              "published_at": null,
+              "score": 1.0,
+              "position": 3,
+              "tier": 1,
+              "citation": {
+                "label": "greenhouse result 2",
+                "url": "https://greenhouse2.example"
+              },
+              "retrieval": {
+                "contract": "slopsearx.retrieval_handoff",
+                "version": 1,
+                "eligible": true,
+                "url_status": "ok",
+                "url_reason": null,
+                "scheme": "https"
+              },
+              "result_id": "snap-39cd5c1d0773:2",
+              "artifact": {
+                "contract": "slopsearx.artifact_ref",
+                "version": 1,
+                "kind": "result",
+                "id": "snap-39cd5c1d0773:2"
+              }
+            }
+          ],
+          "scope": {
+            "requested_intent": "jobs",
+            "resolved_categories": [],
+            "selected_engines": [
+              "greenhouse"
+            ],
+            "routing_reason": "explicit engine",
+            "excluded_engines": [],
+            "routing": {
+              "applied": false
+            }
+          },
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "empty_engines": [],
+          "enforcement": {
+            "location": {
+              "requested": "New York",
+              "status": "unsupported",
+              "reason": "location is not consumed by current adapters",
+              "enforced_by": []
+            },
+            "employment_type": {
+              "requested": "full_time",
+              "status": "unsupported",
+              "reason": "employment_type is not consumed by current adapters",
+              "enforced_by": []
+            }
+          },
+          "engine_outcomes": [
+            {
+              "engine": "greenhouse",
+              "status": "ok",
+              "result_count": 3,
+              "latency_ms": 2.0,
+              "message": null
+            }
+          ],
+          "meta": {
+            "query_id": "ssx-bf54dc07",
+            "cached": true,
+            "cached_error": false,
+            "response_time_ms": 0,
+            "partial": false,
+            "deadline_exceeded": false,
+            "ranking": "tier_then_cross_engine_presence",
+            "cursor": "snap-39cd5c1d0773",
+            "artifact": {
+              "contract": "slopsearx.artifact_ref",
+              "version": 1,
+              "kind": "snapshot",
+              "id": "snap-39cd5c1d0773"
+            },
+            "suggestions": [],
+            "total": 3,
+            "has_more": false
+          },
+          "warnings": [
+            "current ATS adapters return title, URL, location, salary/department where available; they provide no full job descriptions and no cross-ATS global search",
+            "location 'New York' is not consumed by current adapters",
+            "employment_type 'full_time' is not consumed by current adapters"
+          ]
+        }
+      },
+      "dispatch_delta": {
+        "wikipedia": 0,
+        "brave": 0,
+        "duckduckgo": 0,
+        "greenhouse": 0,
+        "cve": 0,
+        "openalex": 0
+      }
+    },
+    {
+      "name": "slopsearx_search_jobs",
+      "arguments": {
+        "company": " ",
+        "sources": [
+          "greenhouse"
+        ]
+      },
+      "result": {
+        "content": [
+          {
+            "text": "{\"error\":{\"code\":\"invalid_input\",\"message\":\"company is required\",\"field\":\"company\"}}",
+            "type": "text"
+          }
+        ],
+        "isError": false,
+        "structuredContent": {
+          "error": {
+            "code": "invalid_input",
+            "message": "company is required",
+            "field": "company"
+          }
+        }
+      },
+      "dispatch_delta": {
+        "wikipedia": 0,
+        "brave": 0,
+        "duckduckgo": 0,
+        "greenhouse": 0,
+        "cve": 0,
+        "openalex": 0
+      }
+    },
+    {
+      "name": "slopsearx_search_security",
+      "arguments": {
+        "query": "q",
+        "engines": [
+          "cve"
+        ]
+      },
+      "result": {
+        "content": [
+          {
+            "text": "{\"query\":\"q\",\"results\":[{\"title\":\"cve result 0\",\"url\":\"https://cve0.example\",\"snippet\":\"Content for cve result 0.\",\"source_engines\":[\"cve\"],\"source_count\":1,\"primary_engine\":\"cve\",\"category\":\"general\",\"published_at\":null,\"score\":1.0,\"position\":1,\"tier\":1,\"citation\":{\"label\":\"cve result 0\",\"url\":\"https://cve0.example\"},\"retrieval\":{\"contract\":\"slopsearx.retrieval_handoff\",\"version\":1,\"eligible\":true,\"url_status\":\"ok\",\"url_reason\":null,\"scheme\":\"https\"},\"result_id\":\"snap-924050d2db80:0\",\"artifact\":{\"contract\":\"slopsearx.artifact_ref\",\"version\":1,\"kind\":\"result\",\"id\":\"snap-924050d2db80:0\"}},{\"title\":\"cve result 1\",\"url\":\"https://cve1.example\",\"snippet\":\"Content for cve result 1.\",\"source_engines\":[\"cve\"],\"source_count\":1,\"primary_engine\":\"cve\",\"category\":\"general\",\"published_at\":null,\"score\":1.0,\"position\":2,\"tier\":1,\"citation\":{\"label\":\"cve result 1\",\"url\":\"https://cve1.example\"},\"retrieval\":{\"contract\":\"slopsearx.retrieval_handoff\",\"version\":1,\"eligible\":true,\"url_status\":\"ok\",\"url_reason\":null,\"scheme\":\"https\"},\"result_id\":\"snap-924050d2db80:1\",\"artifact\":{\"contract\":\"slopsearx.artifact_ref\",\"version\":1,\"kind\":\"result\",\"id\":\"snap-924050d2db80:1\"}},{\"title\":\"cve result 2\",\"url\":\"https://cve2.example\",\"snippet\":\"Content for cve result 2.\",\"source_engines\":[\"cve\"],\"source_count\":1,\"primary_engine\":\"cve\",\"category\":\"general\",\"published_at\":null,\"score\":1.0,\"position\":3,\"tier\":1,\"citation\":{\"label\":\"cve result 2\",\"url\":\"https://cve2.example\"},\"retrieval\":{\"contract\":\"slopsearx.retrieval_handoff\",\"version\":1,\"eligible\":true,\"url_status\":\"ok\",\"url_reason\":null,\"scheme\":\"https\"},\"result_id\":\"snap-924050d2db80:2\",\"artifact\":{\"contract\":\"slopsearx.artifact_ref\",\"version\":1,\"kind\":\"result\",\"id\":\"snap-924050d2db80:2\"}}],\"scope\":{\"requested_intent\":\"security\",\"resolved_categories\":[],\"selected_engines\":[\"cve\"],\"routing_reason\":\"explicit engine\",\"excluded_engines\":[],\"routing\":{\"applied\":false}},\"answers\":[],\"corrections\":[],\"infoboxes\":[],\"empty_engines\":[],\"enforcement\":{},\"engine_outcomes\":[{\"engine\":\"cve\",\"status\":\"ok\",\"result_count\":3,\"latency_ms\":2.0,\"message\":null}],\"meta\":{\"query_id\":\"ssx-e523e97b\",\"cached\":false,\"cached_error\":false,\"response_time_ms\":0,\"partial\":false,\"deadline_exceeded\":false,\"ranking\":\"tier_then_cross_engine_presence\",\"cursor\":\"snap-924050d2db80\",\"artifact\":{\"contract\":\"slopsearx.artifact_ref\",\"version\":1,\"kind\":\"snapshot\",\"id\":\"snap-924050d2db80\"},\"suggestions\":[],\"total\":3,\"has_more\":false},\"warnings\":[\"results are search findings, not a complete security assessment; absence from the selected engines does not mean absence of a vulnerability or exposure\",\"resolved evidence_types: vulnerability\"]}",
+            "type": "text"
+          }
+        ],
+        "isError": false,
+        "structuredContent": {
+          "query": "q",
+          "results": [
+            {
+              "title": "cve result 0",
+              "url": "https://cve0.example",
+              "snippet": "Content for cve result 0.",
+              "source_engines": [
+                "cve"
+              ],
+              "source_count": 1,
+              "primary_engine": "cve",
+              "category": "general",
+              "published_at": null,
+              "score": 1.0,
+              "position": 1,
+              "tier": 1,
+              "citation": {
+                "label": "cve result 0",
+                "url": "https://cve0.example"
+              },
+              "retrieval": {
+                "contract": "slopsearx.retrieval_handoff",
+                "version": 1,
+                "eligible": true,
+                "url_status": "ok",
+                "url_reason": null,
+                "scheme": "https"
+              },
+              "result_id": "snap-924050d2db80:0",
+              "artifact": {
+                "contract": "slopsearx.artifact_ref",
+                "version": 1,
+                "kind": "result",
+                "id": "snap-924050d2db80:0"
+              }
+            },
+            {
+              "title": "cve result 1",
+              "url": "https://cve1.example",
+              "snippet": "Content for cve result 1.",
+              "source_engines": [
+                "cve"
+              ],
+              "source_count": 1,
+              "primary_engine": "cve",
+              "category": "general",
+              "published_at": null,
+              "score": 1.0,
+              "position": 2,
+              "tier": 1,
+              "citation": {
+                "label": "cve result 1",
+                "url": "https://cve1.example"
+              },
+              "retrieval": {
+                "contract": "slopsearx.retrieval_handoff",
+                "version": 1,
+                "eligible": true,
+                "url_status": "ok",
+                "url_reason": null,
+                "scheme": "https"
+              },
+              "result_id": "snap-924050d2db80:1",
+              "artifact": {
+                "contract": "slopsearx.artifact_ref",
+                "version": 1,
+                "kind": "result",
+                "id": "snap-924050d2db80:1"
+              }
+            },
+            {
+              "title": "cve result 2",
+              "url": "https://cve2.example",
+              "snippet": "Content for cve result 2.",
+              "source_engines": [
+                "cve"
+              ],
+              "source_count": 1,
+              "primary_engine": "cve",
+              "category": "general",
+              "published_at": null,
+              "score": 1.0,
+              "position": 3,
+              "tier": 1,
+              "citation": {
+                "label": "cve result 2",
+                "url": "https://cve2.example"
+              },
+              "retrieval": {
+                "contract": "slopsearx.retrieval_handoff",
+                "version": 1,
+                "eligible": true,
+                "url_status": "ok",
+                "url_reason": null,
+                "scheme": "https"
+              },
+              "result_id": "snap-924050d2db80:2",
+              "artifact": {
+                "contract": "slopsearx.artifact_ref",
+                "version": 1,
+                "kind": "result",
+                "id": "snap-924050d2db80:2"
+              }
+            }
+          ],
+          "scope": {
+            "requested_intent": "security",
+            "resolved_categories": [],
+            "selected_engines": [
+              "cve"
+            ],
+            "routing_reason": "explicit engine",
+            "excluded_engines": [],
+            "routing": {
+              "applied": false
+            }
+          },
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "empty_engines": [],
+          "enforcement": {},
+          "engine_outcomes": [
+            {
+              "engine": "cve",
+              "status": "ok",
+              "result_count": 3,
+              "latency_ms": 2.0,
+              "message": null
+            }
+          ],
+          "meta": {
+            "query_id": "ssx-e523e97b",
+            "cached": false,
+            "cached_error": false,
+            "response_time_ms": 0,
+            "partial": false,
+            "deadline_exceeded": false,
+            "ranking": "tier_then_cross_engine_presence",
+            "cursor": "snap-924050d2db80",
+            "artifact": {
+              "contract": "slopsearx.artifact_ref",
+              "version": 1,
+              "kind": "snapshot",
+              "id": "snap-924050d2db80"
+            },
+            "suggestions": [],
+            "total": 3,
+            "has_more": false
+          },
+          "warnings": [
+            "results are search findings, not a complete security assessment; absence from the selected engines does not mean absence of a vulnerability or exposure",
+            "resolved evidence_types: vulnerability"
+          ]
+        }
+      },
+      "dispatch_delta": {
+        "wikipedia": 0,
+        "brave": 0,
+        "duckduckgo": 0,
+        "greenhouse": 0,
+        "cve": 1,
+        "openalex": 0
+      }
+    },
+    {
+      "name": "slopsearx_search_security",
+      "arguments": {
+        "query": "q",
+        "engines": [
+          "cve"
+        ],
+        "evidence_types": [
+          "BAD"
+        ]
+      },
+      "result": {
+        "content": [
+          {
+            "text": "{\"error\":{\"code\":\"invalid_input\",\"message\":\"unknown evidence_type 'BAD'\",\"field\":\"evidence_types\",\"valid_alternatives\":[\"exploit\",\"exposure\",\"malware\",\"reputation\",\"threat_intel\",\"vulnerability\"]}}",
+            "type": "text"
+          }
+        ],
+        "isError": false,
+        "structuredContent": {
+          "error": {
+            "code": "invalid_input",
+            "message": "unknown evidence_type 'BAD'",
+            "field": "evidence_types",
+            "valid_alternatives": [
+              "exploit",
+              "exposure",
+              "malware",
+              "reputation",
+              "threat_intel",
+              "vulnerability"
+            ]
+          }
+        }
+      },
+      "dispatch_delta": {
+        "wikipedia": 0,
+        "brave": 0,
+        "duckduckgo": 0,
+        "greenhouse": 0,
+        "cve": 0,
+        "openalex": 0
+      }
+    },
+    {
+      "name": "slopsearx_search_science",
+      "arguments": {
+        "query": "q",
+        "engines": [
+          "openalex"
+        ]
+      },
+      "result": {
+        "content": [
+          {
+            "text": "{\"query\":\"q\",\"results\":[{\"title\":\"openalex result 0\",\"url\":\"https://openalex0.example\",\"snippet\":\"Content for openalex result 0.\",\"source_engines\":[\"openalex\"],\"source_count\":1,\"primary_engine\":\"openalex\",\"category\":\"general\",\"published_at\":null,\"score\":1.0,\"position\":1,\"tier\":1,\"citation\":{\"label\":\"openalex result 0\",\"url\":\"https://openalex0.example\"},\"retrieval\":{\"contract\":\"slopsearx.retrieval_handoff\",\"version\":1,\"eligible\":true,\"url_status\":\"ok\",\"url_reason\":null,\"scheme\":\"https\"},\"result_id\":\"snap-51fe96460771:0\",\"artifact\":{\"contract\":\"slopsearx.artifact_ref\",\"version\":1,\"kind\":\"result\",\"id\":\"snap-51fe96460771:0\"}},{\"title\":\"openalex result 1\",\"url\":\"https://openalex1.example\",\"snippet\":\"Content for openalex result 1.\",\"source_engines\":[\"openalex\"],\"source_count\":1,\"primary_engine\":\"openalex\",\"category\":\"general\",\"published_at\":null,\"score\":1.0,\"position\":2,\"tier\":1,\"citation\":{\"label\":\"openalex result 1\",\"url\":\"https://openalex1.example\"},\"retrieval\":{\"contract\":\"slopsearx.retrieval_handoff\",\"version\":1,\"eligible\":true,\"url_status\":\"ok\",\"url_reason\":null,\"scheme\":\"https\"},\"result_id\":\"snap-51fe96460771:1\",\"artifact\":{\"contract\":\"slopsearx.artifact_ref\",\"version\":1,\"kind\":\"result\",\"id\":\"snap-51fe96460771:1\"}},{\"title\":\"openalex result 2\",\"url\":\"https://openalex2.example\",\"snippet\":\"Content for openalex result 2.\",\"source_engines\":[\"openalex\"],\"source_count\":1,\"primary_engine\":\"openalex\",\"category\":\"general\",\"published_at\":null,\"score\":1.0,\"position\":3,\"tier\":1,\"citation\":{\"label\":\"openalex result 2\",\"url\":\"https://openalex2.example\"},\"retrieval\":{\"contract\":\"slopsearx.retrieval_handoff\",\"version\":1,\"eligible\":true,\"url_status\":\"ok\",\"url_reason\":null,\"scheme\":\"https\"},\"result_id\":\"snap-51fe96460771:2\",\"artifact\":{\"contract\":\"slopsearx.artifact_ref\",\"version\":1,\"kind\":\"result\",\"id\":\"snap-51fe96460771:2\"}}],\"scope\":{\"requested_intent\":\"science\",\"resolved_categories\":[],\"selected_engines\":[\"openalex\"],\"routing_reason\":\"explicit engine\",\"excluded_engines\":[],\"routing\":{\"applied\":false}},\"answers\":[],\"corrections\":[],\"infoboxes\":[],\"empty_engines\":[],\"enforcement\":{},\"engine_outcomes\":[{\"engine\":\"openalex\",\"status\":\"ok\",\"result_count\":3,\"latency_ms\":2.0,\"message\":null}],\"meta\":{\"query_id\":\"ssx-948c6859\",\"cached\":false,\"cached_error\":false,\"response_time_ms\":0,\"partial\":false,\"deadline_exceeded\":false,\"ranking\":\"tier_then_cross_engine_presence\",\"cursor\":\"snap-51fe96460771\",\"artifact\":{\"contract\":\"slopsearx.artifact_ref\",\"version\":1,\"kind\":\"snapshot\",\"id\":\"snap-51fe96460771\"},\"suggestions\":[],\"total\":3,\"has_more\":false},\"warnings\":[\"source provenance and engine coverage are reported, but peer-review status, study quality, and citation completeness are not inferred from search results\",\"resolved source_types: papers\"]}",
+            "type": "text"
+          }
+        ],
+        "isError": false,
+        "structuredContent": {
+          "query": "q",
+          "results": [
+            {
+              "title": "openalex result 0",
+              "url": "https://openalex0.example",
+              "snippet": "Content for openalex result 0.",
+              "source_engines": [
+                "openalex"
+              ],
+              "source_count": 1,
+              "primary_engine": "openalex",
+              "category": "general",
+              "published_at": null,
+              "score": 1.0,
+              "position": 1,
+              "tier": 1,
+              "citation": {
+                "label": "openalex result 0",
+                "url": "https://openalex0.example"
+              },
+              "retrieval": {
+                "contract": "slopsearx.retrieval_handoff",
+                "version": 1,
+                "eligible": true,
+                "url_status": "ok",
+                "url_reason": null,
+                "scheme": "https"
+              },
+              "result_id": "snap-51fe96460771:0",
+              "artifact": {
+                "contract": "slopsearx.artifact_ref",
+                "version": 1,
+                "kind": "result",
+                "id": "snap-51fe96460771:0"
+              }
+            },
+            {
+              "title": "openalex result 1",
+              "url": "https://openalex1.example",
+              "snippet": "Content for openalex result 1.",
+              "source_engines": [
+                "openalex"
+              ],
+              "source_count": 1,
+              "primary_engine": "openalex",
+              "category": "general",
+              "published_at": null,
+              "score": 1.0,
+              "position": 2,
+              "tier": 1,
+              "citation": {
+                "label": "openalex result 1",
+                "url": "https://openalex1.example"
+              },
+              "retrieval": {
+                "contract": "slopsearx.retrieval_handoff",
+                "version": 1,
+                "eligible": true,
+                "url_status": "ok",
+                "url_reason": null,
+                "scheme": "https"
+              },
+              "result_id": "snap-51fe96460771:1",
+              "artifact": {
+                "contract": "slopsearx.artifact_ref",
+                "version": 1,
+                "kind": "result",
+                "id": "snap-51fe96460771:1"
+              }
+            },
+            {
+              "title": "openalex result 2",
+              "url": "https://openalex2.example",
+              "snippet": "Content for openalex result 2.",
+              "source_engines": [
+                "openalex"
+              ],
+              "source_count": 1,
+              "primary_engine": "openalex",
+              "category": "general",
+              "published_at": null,
+              "score": 1.0,
+              "position": 3,
+              "tier": 1,
+              "citation": {
+                "label": "openalex result 2",
+                "url": "https://openalex2.example"
+              },
+              "retrieval": {
+                "contract": "slopsearx.retrieval_handoff",
+                "version": 1,
+                "eligible": true,
+                "url_status": "ok",
+                "url_reason": null,
+                "scheme": "https"
+              },
+              "result_id": "snap-51fe96460771:2",
+              "artifact": {
+                "contract": "slopsearx.artifact_ref",
+                "version": 1,
+                "kind": "result",
+                "id": "snap-51fe96460771:2"
+              }
+            }
+          ],
+          "scope": {
+            "requested_intent": "science",
+            "resolved_categories": [],
+            "selected_engines": [
+              "openalex"
+            ],
+            "routing_reason": "explicit engine",
+            "excluded_engines": [],
+            "routing": {
+              "applied": false
+            }
+          },
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "empty_engines": [],
+          "enforcement": {},
+          "engine_outcomes": [
+            {
+              "engine": "openalex",
+              "status": "ok",
+              "result_count": 3,
+              "latency_ms": 2.0,
+              "message": null
+            }
+          ],
+          "meta": {
+            "query_id": "ssx-948c6859",
+            "cached": false,
+            "cached_error": false,
+            "response_time_ms": 0,
+            "partial": false,
+            "deadline_exceeded": false,
+            "ranking": "tier_then_cross_engine_presence",
+            "cursor": "snap-51fe96460771",
+            "artifact": {
+              "contract": "slopsearx.artifact_ref",
+              "version": 1,
+              "kind": "snapshot",
+              "id": "snap-51fe96460771"
+            },
+            "suggestions": [],
+            "total": 3,
+            "has_more": false
+          },
+          "warnings": [
+            "source provenance and engine coverage are reported, but peer-review status, study quality, and citation completeness are not inferred from search results",
+            "resolved source_types: papers"
+          ]
+        }
+      },
+      "dispatch_delta": {
+        "wikipedia": 0,
+        "brave": 0,
+        "duckduckgo": 0,
+        "greenhouse": 0,
+        "cve": 0,
+        "openalex": 1
+      }
+    },
+    {
+      "name": "slopsearx_search_science",
+      "arguments": {
+        "query": "q",
+        "engines": [
+          "openalex"
+        ],
+        "date_from": "2024-01-01",
+        "date_to": "2024-12-31"
+      },
+      "result": {
+        "content": [
+          {
+            "text": "{\"error\":{\"code\":\"invalid_input\",\"message\":\"selected adapter does not enforce publication dates\",\"field\":\"engines\"},\"enforcement\":{\"engines\":{\"requested\":[\"openalex\"],\"status\":\"rejected\",\"reason\":\"selected adapter does not enforce publication dates\",\"enforced_by\":[]}}}",
+            "type": "text"
+          }
+        ],
+        "isError": false,
+        "structuredContent": {
+          "error": {
+            "code": "invalid_input",
+            "message": "selected adapter does not enforce publication dates",
+            "field": "engines"
+          },
+          "enforcement": {
+            "engines": {
+              "requested": [
+                "openalex"
+              ],
+              "status": "rejected",
+              "reason": "selected adapter does not enforce publication dates",
+              "enforced_by": []
+            }
+          }
+        }
+      },
+      "dispatch_delta": {
+        "wikipedia": 0,
+        "brave": 0,
+        "duckduckgo": 0,
+        "greenhouse": 0,
+        "cve": 0,
+        "openalex": 0
+      }
+    },
+    {
+      "name": "slopsearx_search_science",
+      "arguments": {
+        "query": "q",
+        "engines": [
+          "openalex"
+        ],
+        "source_types": [
+          "BAD"
+        ]
+      },
+      "result": {
+        "content": [
+          {
+            "text": "{\"error\":{\"code\":\"invalid_input\",\"message\":\"unknown source_type 'BAD'\",\"field\":\"source_types\",\"valid_alternatives\":[\"biomedical\",\"chemistry\",\"datasets\",\"general_reference\",\"papers\",\"scholarly_index\"]}}",
+            "type": "text"
+          }
+        ],
+        "isError": false,
+        "structuredContent": {
+          "error": {
+            "code": "invalid_input",
+            "message": "unknown source_type 'BAD'",
+            "field": "source_types",
+            "valid_alternatives": [
+              "biomedical",
+              "chemistry",
+              "datasets",
+              "general_reference",
+              "papers",
+              "scholarly_index"
+            ]
+          }
+        }
+      },
+      "dispatch_delta": {
+        "wikipedia": 0,
+        "brave": 0,
+        "duckduckgo": 0,
+        "greenhouse": 0,
+        "cve": 0,
+        "openalex": 0
+      }
+    }
+  ]
+}

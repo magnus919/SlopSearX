@@ -1,0 +1,63 @@
+{
+  "source_revision": "2240dc906836c8cb722f2f47334985e43746e658",
+  "status": "inconclusive",
+  "reason": "upstream rate limits prevented eligible corpus collection",
+  "requests": 28,
+  "capture_calls": 0,
+  "jev_calls": 0,
+  "answer_calls": 0,
+  "native_grade_calls": 0,
+  "confirmation_invoked": false,
+  "quality_credit": false,
+  "no_retry": true,
+  "schema": "coverage-collection-outcome/1",
+  "stage_kind": "development",
+  "protocol_sha256": "e4f7a7eaf7b78c9e662e02b48f9672eac368db7bef2992fe4e4c11443500b604",
+  "cohorts_sha256": "377450c59f2b8498c8a7f923bb7b6d05a0b780300467cc9b9f8ef0bd69522595",
+  "http_outcomes": [
+    {
+      "engine": "github",
+      "status": 200,
+      "requests": 7
+    },
+    {
+      "engine": "github",
+      "status": 403,
+      "requests": 6,
+      "classification": "API rate limit exceeded"
+    },
+    {
+      "engine": "arxiv",
+      "status": 429,
+      "requests": 1
+    },
+    {
+      "engine": "openalex",
+      "status": 200,
+      "requests": 6
+    },
+    {
+      "engine": "wikipedia",
+      "status": 200,
+      "requests": 8
+    }
+  ],
+  "eligible_research_cases": 3,
+  "required_research_cases": 8,
+  "eligible_navigation_cases": 3,
+  "required_navigation_cases": 5,
+  "failed_research_cases": [
+    "D26-R04",
+    "D26-R05",
+    "D26-R06",
+    "D26-R07",
+    "D26-R08"
+  ],
+  "failed_navigation_cases": [
+    "D26-N04",
+    "D26-N05"
+  ],
+  "brave_calls": 0,
+  "observation_basis": "Saved collection summary, final HTTP receipts, GitHub error body, and terminal stage inventory; private raw artifacts retained separately.",
+  "production_changed": false
+}

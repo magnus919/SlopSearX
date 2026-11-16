@@ -1,0 +1,79 @@
+{
+  "cases": [
+    {
+      "id": "sentry.dsn.0",
+      "input": "https://publickey@monitor.invalid/12",
+      "output": {
+        "authentication": "Sentry sentry_key=publickey, sentry_version=7, sentry_client=sentry.python/2.71.0",
+        "endpoint": "https://monitor.invalid/api/12/envelope/"
+      }
+    },
+    {
+      "id": "sentry.dsn.1",
+      "input": "http://publickey@127.0.0.1:12345/prefix/00012",
+      "output": {
+        "authentication": "Sentry sentry_key=publickey, sentry_version=7, sentry_client=sentry.python/2.71.0",
+        "endpoint": "http://127.0.0.1:12345/prefix/api/12/envelope/"
+      }
+    },
+    {
+      "id": "sentry.dsn.2",
+      "input": "https://publickey:syntheticsecret@monitor.invalid/+12",
+      "output": {
+        "authentication": "Sentry sentry_key=publickey, sentry_version=7, sentry_client=sentry.python/2.71.0, sentry_secret=syntheticsecret",
+        "endpoint": "https://monitor.invalid/api/12/envelope/"
+      }
+    },
+    {
+      "id": "sentry.dsn.3",
+      "input": "https://publickey@monitor.invalid/١٢",
+      "output": {
+        "authentication": "Sentry sentry_key=publickey, sentry_version=7, sentry_client=sentry.python/2.71.0",
+        "endpoint": "https://monitor.invalid/api/12/envelope/"
+      }
+    },
+    {
+      "id": "sentry.dsn.4",
+      "input": "https://publickey@monitor.invalid/no-project",
+      "output": {
+        "error_type": "BadDsn",
+        "message": "Invalid project in DSN ('no-project')"
+      }
+    },
+    {
+      "id": "sentry.dsn.5",
+      "input": "ftp://publickey@monitor.invalid/12",
+      "output": {
+        "error_type": "BadDsn",
+        "message": "Unsupported scheme 'ftp'"
+      }
+    },
+    {
+      "id": "sentry.dsn.6",
+      "input": "https://monitor.invalid/12",
+      "output": {
+        "error_type": "BadDsn",
+        "message": "Missing public key"
+      }
+    },
+    {
+      "id": "sentry.envelope.event",
+      "input": {
+        "event_id": "1234567890abcdef1234567890abcdef",
+        "level": "error",
+        "logger": "slopsearx",
+        "message": "synthetic offline event",
+        "platform": "python"
+      },
+      "output_utf8": "{\"event_id\":\"1234567890abcdef1234567890abcdef\"}\n{\"type\":\"event\",\"content_type\":\"application/json\",\"length\":140}\n{\"event_id\":\"1234567890abcdef1234567890abcdef\",\"platform\":\"python\",\"level\":\"error\",\"logger\":\"slopsearx\",\"message\":\"synthetic offline event\"}\n"
+    }
+  ],
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "scope": "offline SDK utilities and envelope serializer only; no init/transport/client",
+  "source_root": "/private/tmp/slopsearx-rust-oracle-py314/lib/python3.14/site-packages/sentry_sdk",
+  "source_sha256": {
+    "envelope.py": "1e230771610b24d6a35bd19d53d2b7ea69e350a11ed122d24093ab815bbe501b",
+    "transport.py": "553ff7d5787df191d6ca025da6386dee4e2741dee093b0db7d4676256158e824",
+    "utils.py": "e616a1e7338111d3064a06840286cc1d0ef8460ec5257b9983b8c18d78374f14"
+  }
+}

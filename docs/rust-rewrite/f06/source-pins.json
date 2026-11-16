@@ -1,0 +1,239 @@
+{
+  "baseline": "7cc420f7ffb61127750e77bf6130e225925f9186",
+  "plan_id": "F06",
+  "schema_version": 1,
+  "sources": [
+    {
+      "git_blob": "761db0521d74ec6d955aa8a84fd92a4a62533c43",
+      "path": "slopsearx/config.py"
+    },
+    {
+      "git_blob": "664e853d9ab1330596d01899ebe015701de09e88",
+      "path": "slopsearx/adapter.py"
+    },
+    {
+      "git_blob": "5ef6f90750352fdadbc877561d3520c1fe774fdb",
+      "path": "slopsearx/capabilities.py"
+    },
+    {
+      "git_blob": "2bbb5c01f20b4db16730cbe3460e625b3d27fa23",
+      "path": "slopsearx/jev.py"
+    },
+    {
+      "git_blob": "17b0f42abc2e7f521a92fc49cbf7444282f41912",
+      "path": "engines/__init__.py"
+    },
+    {
+      "git_blob": "df3587a939ba33900b56e2af08a1f306b9e334a2",
+      "path": "README.md"
+    },
+    {
+      "git_blob": "f4b0aaff9b613465e7a7692c52f5e9c00d20c54f",
+      "path": "docs/ENGINE_ADAPTERS.md"
+    },
+    {
+      "git_blob": "6648bc0b628848c303062b3d7a165be87680d961",
+      "path": "engines/abuseipdb.py"
+    },
+    {
+      "git_blob": "58626de5b787ca982a7d0e2ca0bde6dba04c8d32",
+      "path": "engines/arxiv.py"
+    },
+    {
+      "git_blob": "dbaa14b4f850342a3ba9dea012f13972c29b29fe",
+      "path": "engines/ashby.py"
+    },
+    {
+      "git_blob": "8c477b1172fcecd4c02c9e5e2b062767b22bcf3f",
+      "path": "engines/brave.py"
+    },
+    {
+      "git_blob": "3a5ae6f8890eca181114d9ecc848b5975a171486",
+      "path": "engines/censys.py"
+    },
+    {
+      "git_blob": "23c8ab6ba1e1510cc7b9a5ec5e3a7365bf13fb03",
+      "path": "engines/clinicaltrials.py"
+    },
+    {
+      "git_blob": "89308bdf1ff037b924003b7c2c6283006744e621",
+      "path": "engines/crates.py"
+    },
+    {
+      "git_blob": "98ce21737f14a23039e46922eef39e981ef8ead8",
+      "path": "engines/crtsh.py"
+    },
+    {
+      "git_blob": "898fed3a561b938c5391459fe0395dc4fc8a5ad2",
+      "path": "engines/cve.py"
+    },
+    {
+      "git_blob": "9c545575c44e03c1b8a1d65fe214c56c4e378300",
+      "path": "engines/dehashed.py"
+    },
+    {
+      "git_blob": "cf1792ec3d34a9e8c535235791c1aeb7a29ea439",
+      "path": "engines/dockerhub.py"
+    },
+    {
+      "git_blob": "21b7eb2300920c58e9c363ddf6f7276d923a5460",
+      "path": "engines/duckduckgo.py"
+    },
+    {
+      "git_blob": "09fb3d493c74d893331b0a6a5d77a219e00069e6",
+      "path": "engines/edgar.py"
+    },
+    {
+      "git_blob": "c07ece25022adac62a0b0717e6eeb2cfe52e85ca",
+      "path": "engines/epss.py"
+    },
+    {
+      "git_blob": "f1c026cca5fab094e77e7658ef69edebbe3ea7e3",
+      "path": "engines/europepmc.py"
+    },
+    {
+      "git_blob": "13b1b9444485ce0e0de7cc52d597b3c02fe50f53",
+      "path": "engines/exploitdb.py"
+    },
+    {
+      "git_blob": "822978e99603a76556053c0847e05799e2576485",
+      "path": "engines/fred.py"
+    },
+    {
+      "git_blob": "58950161475abc9c4d529637ddc998d96cd9c6d4",
+      "path": "engines/github.py"
+    },
+    {
+      "git_blob": "079a10cd582ce73b45f3dc707671edcead74bffa",
+      "path": "engines/google.py"
+    },
+    {
+      "git_blob": "10c4ded5b7d612b5a6751f96298c4c4a1cf8a591",
+      "path": "engines/greenhouse.py"
+    },
+    {
+      "git_blob": "49e5c8e157a6103979c7aab8cefa49b1737151d0",
+      "path": "engines/greynoise.py"
+    },
+    {
+      "git_blob": "9b3384fa85e391f1c827552292603eeb98cf07a7",
+      "path": "engines/hackernews.py"
+    },
+    {
+      "git_blob": "eea4c9bcecd21e85422f7254cb39ec503a514077",
+      "path": "engines/hibp.py"
+    },
+    {
+      "git_blob": "9dbfc93b66a5c46c80109555e78c0ad2515ec8e1",
+      "path": "engines/huggingface.py"
+    },
+    {
+      "git_blob": "de0431919a1ad7bd4e69c3cde4d48c9e1961d030",
+      "path": "engines/intelx.py"
+    },
+    {
+      "git_blob": "28773026ab0e12e0e3ef00204323de8aeedab2f3",
+      "path": "engines/internetarchive.py"
+    },
+    {
+      "git_blob": "284e2d570f266eb18df4c7396df87fabf5d6e684",
+      "path": "engines/lever.py"
+    },
+    {
+      "git_blob": "4e9a4dc966c3888e872abc2362f42e26a118fdff",
+      "path": "engines/mitreattack.py"
+    },
+    {
+      "git_blob": "e89b4e909335fc26d80f80d8cd9b828fc34ba53e",
+      "path": "engines/musicbrainz.py"
+    },
+    {
+      "git_blob": "69c771990b8c1bc83540f5c9dc98929b809e6573",
+      "path": "engines/nominatim.py"
+    },
+    {
+      "git_blob": "8ef11a1ad4e71437c1fcb0d88c35b4e4140c7c06",
+      "path": "engines/npm.py"
+    },
+    {
+      "git_blob": "2188849adf2bfd22c986a5b05cc34f2e9efed332",
+      "path": "engines/nvd.py"
+    },
+    {
+      "git_blob": "feaf05ec8ce09d16a35dcd6c21d1ffd723ccc387",
+      "path": "engines/openalex.py"
+    },
+    {
+      "git_blob": "91898916e27f77f03d304bfdfb91bd7a91be3945",
+      "path": "engines/openfda.py"
+    },
+    {
+      "git_blob": "f7a0d5aff4d062e1d01c9844a90a6914fe294ea7",
+      "path": "engines/openlibrary.py"
+    },
+    {
+      "git_blob": "c6801f5bcf3b6f76834f00afebd84feab6c176a1",
+      "path": "engines/otx.py"
+    },
+    {
+      "git_blob": "c670def9eb6e1d60fc8a0fa485f18752c5d5910f",
+      "path": "engines/oyez.py"
+    },
+    {
+      "git_blob": "e027508d33240f1fb6eb63d41c7ccceb252eafd7",
+      "path": "engines/pubchem.py"
+    },
+    {
+      "git_blob": "8425948f5a115d0d46afce3a625bce49ee0b0fcd",
+      "path": "engines/pubmed.py"
+    },
+    {
+      "git_blob": "e10a1da680178cb333dbcd53ef9dbb0dd5be81b4",
+      "path": "engines/pypi.py"
+    },
+    {
+      "git_blob": "f46e97fa42eb8c6971a83fb70c9274f871ac375e",
+      "path": "engines/reddit.py"
+    },
+    {
+      "git_blob": "127ff07eec863a450b3c89e1e876201ecea89880",
+      "path": "engines/rubygems.py"
+    },
+    {
+      "git_blob": "ff91b7b2674f0685affdf2bb3ac258ebcb33dc08",
+      "path": "engines/semanticscholar.py"
+    },
+    {
+      "git_blob": "b3974b6ba0d662d77dd0fde84a4d57a9e7970f11",
+      "path": "engines/shodan.py"
+    },
+    {
+      "git_blob": "1ea554802e6358ad2f4d62b5711d14309403d6ff",
+      "path": "engines/stackexchange.py"
+    },
+    {
+      "git_blob": "f89a3ca2625aaf37687426eaf87e46e5f85cffc4",
+      "path": "engines/tmdb.py"
+    },
+    {
+      "git_blob": "2a1564c948e4f2220dd970e564da0ba865348bea",
+      "path": "engines/uniprot.py"
+    },
+    {
+      "git_blob": "49e72b3d99ae36e47e513121a40b4a890f306273",
+      "path": "engines/urlhaus.py"
+    },
+    {
+      "git_blob": "0882c5da14bd7e6edb881c4e446d7f8d38bf1e50",
+      "path": "engines/virustotal.py"
+    },
+    {
+      "git_blob": "33c47ad515e1ae60137ebf265c44702479ffcb77",
+      "path": "engines/vulncheck.py"
+    },
+    {
+      "git_blob": "09c5402799d10426698f2bfab5bf00baacc99d36",
+      "path": "engines/wikipedia.py"
+    }
+  ]
+}

@@ -91,8 +91,34 @@ _ACQUISITION_PROFILES = {
 }
 
 
-def execution_profile_from_protocol(acquisition: object) -> AcquisitionExecutionProfile:
-    """Resolve only the registered legacy policy or the exact prospective v2 policy."""
+def pool_input_mode_for_stage(protocol: Mapping[str, object], stage_kind: str | None = None) -> str:
+    """Select the registered input method without substituting confirmation data."""
+    modes = protocol.get("pool_input_mode_by_stage")
+    if modes is None:
+        return str(protocol.get("pool_input_mode", "live-acquisition/1"))
+    if modes == {"development": "frozen-pool/1", "confirmation": "frozen-pool/1"}:
+        if (
+            protocol.get("schema") != "coverage-first-study-protocol/4"
+            or protocol.get("pool_input_mode") != "frozen-pool/1"
+        ):
+            raise ValueError("unsupported stage input methods")
+        if stage_kind not in {"development", "confirmation"}:
+            raise ValueError("stage kind required for fresh inputs")
+        return modes[stage_kind]
+    if modes != {"development": "saved-corpus/1", "confirmation": "frozen-pool/1"}:
+        raise ValueError("unsupported stage input methods")
+    if stage_kind not in {"development", "confirmation"}:
+        raise ValueError("stage kind required for saved development inputs")
+    inputs = protocol.get("inputs")
+    if type(inputs) is not dict or inputs.get("source_artifact_reuse") != "development-only":
+        raise ValueError("saved development reuse must be explicit")
+    return modes[stage_kind]
+
+
+def execution_profile_from_protocol(
+    acquisition: object, *, pool_input_mode: str = "live-acquisition/1"
+) -> AcquisitionExecutionProfile:
+    """Resolve only registered legacy or exact v2 acquisition descriptors."""
     if type(acquisition) is not dict:
         raise ValueError("acquisition policy must be an object")
     profile_id = acquisition.get("execution_profile")
@@ -125,6 +151,25 @@ def execution_profile_from_protocol(acquisition: object) -> AcquisitionExecution
         "adapter_calls_maximum": MAX_PHYSICAL_REQUESTS_PER_ENGINE,
         "credentials": "keyless public acquisition; no provider key loaded before admitted model phase",
     }
+    if pool_input_mode in {"frozen-pool/1", "saved-corpus/1"}:
+        expected.update(
+            {
+                "pool_failure": (
+                    "Retain every actual provider and acquisition outcome. Admit only a complete provenance-verified "
+                    "natural corpus with all declared slots, registered bands and exact navigation targets. Provider "
+                    "availability is separate; no replacements, concatenation, trimming, padding, engine substitution "
+                    "or retry."
+                ),
+                "rate_limit_policy": (
+                    "An actual dispatched HTTP 429 installs a stage-local cooldown for that engine; later suppression "
+                    "is reported as a rate-limited engine outcome with zero physical dispatch and a reference to the "
+                    "original denial, never as another HTTP response."
+                ),
+                "finalization_reserve_seconds": 300,
+            }
+        )
+    elif pool_input_mode != "live-acquisition/1":
+        raise ValueError("unsupported pool input mode")
     if set(acquisition) != set(expected) or any(acquisition.get(key) != value for key, value in expected.items()):
         raise ValueError("versioned acquisition policy values do not match the fixed profile")
     return profile

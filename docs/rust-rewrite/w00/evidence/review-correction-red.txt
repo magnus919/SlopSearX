@@ -1,0 +1,33 @@
+
+running 4 tests
+configured_max1000_query600=Err(DomainError("invalid saved query"))
+
+thread 'probe_configured_query_limit' (24211944) panicked at tests/probes.rs:1260:489:
+source configured maxquerylength1000 accepts600chars
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test probe_configured_query_limit ... FAILED
+unchanged_query20_loweredmax10=Err(DomainError("saved-search scope rejected"))
+
+thread 'probe_query_limit_does_not_revalidate_untouched_query' (24211946) panicked at tests/probes.rs:1263:735:
+source checks supplied query only
+test probe_query_limit_does_not_revalidate_untouched_query ... FAILED
+large_revision_update=Err(Malformed)
+
+thread 'probe_large_revision_increment' (24211945) panicked at tests/probes.rs:1257:858:
+valid i64 exact revision must increment
+test probe_large_revision_increment ... FAILED
+claimed_baseline=None
+
+thread 'probe_claim_hydrates_live_baseline' (24211943) panicked at tests/probes.rs:1255:949:
+source successful claim hydrates live separate baseline
+test probe_claim_hydrates_live_baseline ... FAILED
+
+failures:
+
+failures:
+    probe_claim_hydrates_live_baseline
+    probe_configured_query_limit
+    probe_large_revision_increment
+    probe_query_limit_does_not_revalidate_untouched_query
+
+test result: FAILED. 0 passed; 4 failed; 0 ignored; 0 measured; 16 filtered out; finished in 0.05s

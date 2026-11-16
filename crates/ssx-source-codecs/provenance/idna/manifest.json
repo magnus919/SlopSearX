@@ -1,0 +1,78 @@
+{
+  "status": "parent-reviewed data integrated into private native IDNA validator; full package qualification pending",
+  "scope": "private strict RFC2231 IDNA2003 validation; exact case-insensitive roundtrip and all-label failure precedence required",
+  "inputs": [
+    {
+      "path": "inputs/CompositionExclusions-3.2.0.txt",
+      "sha256": "1d3a450d0f39902710df4972ac4a60ec31fbcb54ffd4d53cd812fc1200c732cb",
+      "derived_output": "idna-profile-candidate.json",
+      "basis": "Original Unicode3.2 UCD grant"
+    },
+    {
+      "path": "inputs/SpecialCasing-16.0.0.txt",
+      "sha256": "8d5de354eef79f2395a54c9c7dcebbaf3d30fc962d0f85611ea97aa973a0c451",
+      "derived_output": "idna-profile-candidate.json",
+      "basis": "Unicode16 full notice"
+    },
+    {
+      "path": "inputs/UnicodeData-16.0.0.txt",
+      "sha256": "ff58e5823bd095166564a006e47d111130813dcf8bf234ef79fa51a870edb48f",
+      "derived_output": "idna-profile-candidate.json",
+      "basis": "Unicode16 full notice"
+    },
+    {
+      "path": "inputs/UnicodeData-3.2.0.txt",
+      "sha256": "5e444028b6e76d96f9dc509609c5e3222bf609056f35e5fcde7e6fb8a58cd446",
+      "derived_output": "idna-profile-candidate.json",
+      "basis": "Original Unicode3.2 UCD grant"
+    },
+    {
+      "path": "inputs/stringprep.py",
+      "sha256": "60b6c83581093029312efb6670b11c540090b3f78bcf72264467b494f02f21a5",
+      "derived_output": "idna-profile-candidate.json",
+      "basis": "PSF/RFC3454 with complete notices"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "idna-profile-candidate.json",
+      "sha256": "5d6d1c88e4ccf80e10da18bb60d01d7d12616f9eb8c96100b255f2360c10bd8d",
+      "runtime": "formatted into src/idna_data.rs; no runtime JSON loading"
+    }
+  ],
+  "licenses": {
+    "Unicode3.2": "Original accompanying UCD redistribution and extraction grant retained verbatim in UNICODE-3.2-ORIGINAL-NOTICE.html plus original full documentation; current Unicode notice retained separately, no historical notice replacement",
+    "Unicode16": "Unicode-3.0; original SpecialCasing header retained and complete current notice",
+    "CPython": "PSF-2.0; complete root LICENSE and source headers retained",
+    "RFC3454": "Original Internet Society2002 copyright and implementation-assisting derivative permission retained; final package policy classification requires parent review"
+  },
+  "derivation": "Offline Python tooling only: rawUnicode3.2 NFKC/decomposition/order/composition, algorithmic Hangul, source B3exceptions plus Unicode16 single-character lower, source B2 algorithm; no decoder backend invoked by generator",
+  "qualification": "Parent independently compared all1114112 singleton NFKC/B2/flags plus84960 official sequences. Native tests cover complete488 source IDNA parameter outcomes, all1114112 source ACE bytes/outcomes, and2255 punycode/IDNA overflow/precedence controls. Shared whole HTTPX selector/helper/resource qualification remains pending.",
+  "runtime_outputs": [
+    {
+      "path": "src/idna.rs",
+      "sha256": "3c59b8b7679633778b906a084c91a076eb1dcce0e87ca614d6857af7f12775ed",
+      "change": "Native Rust implementation/static table formatting of exact reviewed profile; source originals/notices retained"
+    },
+    {
+      "path": "src/idna_data.rs",
+      "sha256": "719e747cd2cd61ce54ce6d8accf56e4c6b145519a672b6dfedfe9d86356d2a52",
+      "change": "Native Rust implementation/static table formatting of exact reviewed profile; source originals/notices retained"
+    }
+  ],
+  "generator_paths": [
+    "docs/rust-rewrite/a05/oracle/idna_profile_generate.py",
+    "docs/rust-rewrite/a05/oracle/idna_profile_rust.py"
+  ],
+  "source_observations": {
+    "path": "tests/idna-direct-source.json",
+    "sha256": "cf586ffe8275673cea0d4cdd9dd2a876c4d557337f0218750eb45f4efe17c2c0",
+    "whole_httpx_cases": 488,
+    "original_capture_preserved": true
+  },
+  "normalization_controls": {
+    "path": "tests/NormalizationTest-3.2.0.txt",
+    "sha256": "c4513869bb7098d19838be4a1fd5d760843c5804bfe03bd6bbb20623ceb6e57d",
+    "executed_inputs": 84960
+  }
+}

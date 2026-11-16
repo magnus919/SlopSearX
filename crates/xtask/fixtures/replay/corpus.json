@@ -1,0 +1,1302 @@
+{
+  "schema_version": 1,
+  "baseline_commit": "7b2d876307189d7a62000d1f289b3ef4b65eaff6",
+  "provenance": {
+    "license": "Corpus structure and generated observations are MIT-licensed with this repository; embedded sanitized upstream API facts retain their source terms. This corpus does not assert a separate license grant for those facts.",
+    "redaction": "Only existing allowlisted public parser fields are retained; no request/response identity headers, credentials, author/publisher identities, raw errors, or unsanitized provider payloads.",
+    "sources": [
+      {
+        "path": "tests/fixtures/upstream_contracts/npm.json",
+        "git_blob": "76fb9a81b01db87cd001434ef6b93010bb10dbfc"
+      },
+      {
+        "path": "tests/fixtures/upstream_contracts/crates.json",
+        "git_blob": "1409df4adc780242212ea65f17f5abf75d76b878"
+      },
+      {
+        "path": "tests/fixtures/upstream_contracts/openalex.json",
+        "git_blob": "5146f17ccddc24d11d1498f490a06919f049d3e4"
+      },
+      {
+        "path": "tests/test_upstream_contracts.py",
+        "git_blob": "38890808971958c1322b502a885d71f5db5d8d64"
+      },
+      {
+        "path": "scripts/upstream_contracts.py",
+        "git_blob": "5501042cb507cf082b9a2654558e5488e711f6c4"
+      },
+      {
+        "path": "engines/npm.py",
+        "git_blob": "8ef11a1ad4e71437c1fcb0d88c35b4e4140c7c06"
+      },
+      {
+        "path": "engines/crates.py",
+        "git_blob": "89308bdf1ff037b924003b7c2c6283006744e621"
+      },
+      {
+        "path": "engines/openalex.py",
+        "git_blob": "feaf05ec8ce09d16a35dcd6c21d1ffd723ccc387"
+      },
+      {
+        "path": "slopsearx/adapter.py",
+        "git_blob": "664e853d9ab1330596d01899ebe015701de09e88"
+      },
+      {
+        "path": "slopsearx/payload.py",
+        "git_blob": "efa149d48bae401f7a0a9df6e50c8c614adecbb5"
+      },
+      {
+        "path": "tests/fixtures/searxng_api_contract.json",
+        "git_blob": "3b9514fea8f05c663916da4601625a34982a880a"
+      },
+      {
+        "path": "tests/test_searxng_api_contract.py",
+        "git_blob": "38958f0411b5dce2117b81cd754e6048372191e6"
+      },
+      {
+        "path": "tests/test_mcp_harness.py",
+        "git_blob": "5907fa0ceb11fc35e8aec674eb82b0e656ff7700"
+      },
+      {
+        "path": "slopsearx/mcp/harness.py",
+        "git_blob": "b661b6775315da47b462b0345da5cf6d61a78265"
+      },
+      {
+        "path": "slopsearx/server.py",
+        "git_blob": "f60c03fe48ce837f3b2ad65c58d0336ad3b72983"
+      },
+      {
+        "path": "slopsearx/mcp/tools.py",
+        "git_blob": "061593ce45d3e2440e818703af6b50d6e6d99cf1"
+      },
+      {
+        "path": "slopsearx/service.py",
+        "git_blob": "8b45ce71efc3c7cc4a72b962968e146a63e135be"
+      },
+      {
+        "path": "slopsearx/snapshot.py",
+        "git_blob": "fe0e62b9872b3d01cef6a8f843d9720f2cd50a42"
+      },
+      {
+        "path": "slopsearx/config.py",
+        "git_blob": "761db0521d74ec6d955aa8a84fd92a4a62533c43"
+      }
+    ],
+    "oracle": {
+      "path": "docs/rust-rewrite/replay/oracle/export.py",
+      "sha256": "850af1c8cc44fe66ffc2b63b458fbd8471cafda60245ddc22919bef83be9d6fa",
+      "invocation": ".venv/bin/python docs/rust-rewrite/replay/oracle/export.py --source-root /private/tmp/slopsearx-f04-oracle-src --baseline 7b2d876307189d7a62000d1f289b3ef4b65eaff6"
+    }
+  },
+  "cases": [
+    {
+      "id": "upstream-npm-captured",
+      "kind": "adapter_http",
+      "input": {
+        "engine": "npm",
+        "query": "typescript",
+        "params": {},
+        "max_results": 3
+      },
+      "upstream_origin": "https://registry.npmjs.org",
+      "clock": {
+        "unix_seconds": 1792022400,
+        "ids": [
+          "fixture-npm-001"
+        ]
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "target": "/-/v1/search?text=typescript&size=3",
+            "headers": {
+              "accept": "*/*",
+              "accept-encoding": "gzip, deflate",
+              "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+            },
+            "body": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": {
+              "content-type": "application/json"
+            },
+            "body": "{\"objects\":[{\"package\":{\"name\":\"typescript\",\"version\":\"7.0.2\",\"description\":\"TypeScript is a language for application scale JavaScript development\"}},{\"package\":{\"name\":\"@typescript-eslint/eslint-plugin\",\"version\":\"8.69.0\",\"description\":\"TypeScript plugin for ESLint\"}},{\"package\":{\"name\":\"@babel/preset-typescript\",\"version\":\"8.0.1\",\"description\":\"Babel preset for TypeScript.\"}}]}"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "body": {
+          "results": [
+            {
+              "url": "https://www.npmjs.com/package/typescript",
+              "title": "typescript@7.0.2",
+              "content": "TypeScript is a language for application scale JavaScript development",
+              "engine": "npm",
+              "engines": [],
+              "score": 0.0,
+              "position": 1,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": {
+                "domain": "packages",
+                "type": "package",
+                "schema_version": 1,
+                "data": {
+                  "name": "typescript",
+                  "version": "7.0.2",
+                  "summary": "TypeScript is a language for application scale JavaScript development"
+                },
+                "provenance": {
+                  "engine": "npm",
+                  "adapter_fields": [
+                    "name",
+                    "version",
+                    "summary"
+                  ],
+                  "normalized_fields": [],
+                  "inferred_fields": []
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://www.npmjs.com/package/@typescript-eslint/eslint-plugin",
+              "title": "@typescript-eslint/eslint-plugin@8.69.0",
+              "content": "TypeScript plugin for ESLint",
+              "engine": "npm",
+              "engines": [],
+              "score": 0.0,
+              "position": 2,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": {
+                "domain": "packages",
+                "type": "package",
+                "schema_version": 1,
+                "data": {
+                  "name": "@typescript-eslint/eslint-plugin",
+                  "version": "8.69.0",
+                  "summary": "TypeScript plugin for ESLint"
+                },
+                "provenance": {
+                  "engine": "npm",
+                  "adapter_fields": [
+                    "name",
+                    "version",
+                    "summary"
+                  ],
+                  "normalized_fields": [],
+                  "inferred_fields": []
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://www.npmjs.com/package/@babel/preset-typescript",
+              "title": "@babel/preset-typescript@8.0.1",
+              "content": "Babel preset for TypeScript.",
+              "engine": "npm",
+              "engines": [],
+              "score": 0.0,
+              "position": 3,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": {
+                "domain": "packages",
+                "type": "package",
+                "schema_version": 1,
+                "data": {
+                  "name": "@babel/preset-typescript",
+                  "version": "8.0.1",
+                  "summary": "Babel preset for TypeScript."
+                },
+                "provenance": {
+                  "engine": "npm",
+                  "adapter_fields": [
+                    "name",
+                    "version",
+                    "summary"
+                  ],
+                  "normalized_fields": [],
+                  "inferred_fields": []
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "latency_ms": 0.0,
+          "error_message": null
+        }
+      },
+      "candidate": {
+        "status": "ok",
+        "body": {
+          "results": [
+            {
+              "url": "https://www.npmjs.com/package/typescript",
+              "title": "typescript@7.0.2",
+              "content": "TypeScript is a language for application scale JavaScript development",
+              "engine": "npm",
+              "engines": [],
+              "score": 0.0,
+              "position": 1,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": {
+                "domain": "packages",
+                "type": "package",
+                "schema_version": 1,
+                "data": {
+                  "name": "typescript",
+                  "version": "7.0.2",
+                  "summary": "TypeScript is a language for application scale JavaScript development"
+                },
+                "provenance": {
+                  "engine": "npm",
+                  "adapter_fields": [
+                    "name",
+                    "version",
+                    "summary"
+                  ],
+                  "normalized_fields": [],
+                  "inferred_fields": []
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://www.npmjs.com/package/@typescript-eslint/eslint-plugin",
+              "title": "@typescript-eslint/eslint-plugin@8.69.0",
+              "content": "TypeScript plugin for ESLint",
+              "engine": "npm",
+              "engines": [],
+              "score": 0.0,
+              "position": 2,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": {
+                "domain": "packages",
+                "type": "package",
+                "schema_version": 1,
+                "data": {
+                  "name": "@typescript-eslint/eslint-plugin",
+                  "version": "8.69.0",
+                  "summary": "TypeScript plugin for ESLint"
+                },
+                "provenance": {
+                  "engine": "npm",
+                  "adapter_fields": [
+                    "name",
+                    "version",
+                    "summary"
+                  ],
+                  "normalized_fields": [],
+                  "inferred_fields": []
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://www.npmjs.com/package/@babel/preset-typescript",
+              "title": "@babel/preset-typescript@8.0.1",
+              "content": "Babel preset for TypeScript.",
+              "engine": "npm",
+              "engines": [],
+              "score": 0.0,
+              "position": 3,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": {
+                "domain": "packages",
+                "type": "package",
+                "schema_version": 1,
+                "data": {
+                  "name": "@babel/preset-typescript",
+                  "version": "8.0.1",
+                  "summary": "Babel preset for TypeScript."
+                },
+                "provenance": {
+                  "engine": "npm",
+                  "adapter_fields": [
+                    "name",
+                    "version",
+                    "summary"
+                  ],
+                  "normalized_fields": [],
+                  "inferred_fields": []
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "latency_ms": 0.0,
+          "error_message": null
+        }
+      },
+      "volatility": [
+        "/body/latency_ms"
+      ],
+      "oracle": {
+        "command": ".venv/bin/python docs/rust-rewrite/replay/oracle/export.py --source-root /private/tmp/slopsearx-f04-oracle-src --baseline 7b2d876307189d7a62000d1f289b3ef4b65eaff6",
+        "baseline_commit": "7b2d876307189d7a62000d1f289b3ef4b65eaff6",
+        "observation": "Two independent pinned Python adapter executions against this sanitized recorded response; not Rust parity evidence."
+      }
+    },
+    {
+      "id": "upstream-crates-captured",
+      "kind": "adapter_http",
+      "input": {
+        "engine": "crates",
+        "query": "serde",
+        "params": {},
+        "max_results": 3
+      },
+      "upstream_origin": "https://crates.io",
+      "clock": {
+        "unix_seconds": 1792022400,
+        "ids": [
+          "fixture-crates-001"
+        ]
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "target": "/api/v1/crates?q=serde&per_page=3",
+            "headers": {
+              "accept": "*/*",
+              "accept-encoding": "gzip, deflate",
+              "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+            },
+            "body": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": {
+              "content-type": "application/json"
+            },
+            "body": "{\"crates\":[{\"name\":\"serde\",\"max_version\":\"1.0.229\",\"description\":\"A generic serialization/deserialization framework\",\"downloads\":1360042789,\"recent_downloads\":294274544},{\"name\":\"serde-saphyr\",\"max_version\":\"1.2.0\",\"description\":\"YAML (de)serializer for Serde, emphasizing panic-free parsing, fast builds and good error reporting. Supports properties, include, tag and comment capture\",\"downloads\":5986440,\"recent_downloads\":4599565},{\"name\":\"clickhouse\",\"max_version\":\"0.15.2\",\"description\":\"Official Rust client for ClickHouse DB\",\"downloads\":12267833,\"recent_downloads\":3622154}]}"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "body": {
+          "results": [
+            {
+              "url": "https://crates.io/crates/serde",
+              "title": "serde v1.0.229",
+              "content": "A generic serialization/deserialization framework — Total downloads: 1,360,042,789",
+              "engine": "crates",
+              "engines": [],
+              "score": 294274544.0,
+              "position": 1,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": null,
+              "work_group": null
+            },
+            {
+              "url": "https://crates.io/crates/serde-saphyr",
+              "title": "serde-saphyr v1.2.0",
+              "content": "YAML (de)serializer for Serde, emphasizing panic-free parsing, fast builds and good error reporting. Supports properties, include, tag and comment capture — Total downloads: 5,986,440",
+              "engine": "crates",
+              "engines": [],
+              "score": 4599565.0,
+              "position": 2,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": null,
+              "work_group": null
+            },
+            {
+              "url": "https://crates.io/crates/clickhouse",
+              "title": "clickhouse v0.15.2",
+              "content": "Official Rust client for ClickHouse DB — Total downloads: 12,267,833",
+              "engine": "crates",
+              "engines": [],
+              "score": 3622154.0,
+              "position": 3,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": null,
+              "work_group": null
+            }
+          ],
+          "latency_ms": 0.0,
+          "error_message": null
+        }
+      },
+      "candidate": {
+        "status": "ok",
+        "body": {
+          "results": [
+            {
+              "url": "https://crates.io/crates/serde",
+              "title": "serde v1.0.229",
+              "content": "A generic serialization/deserialization framework — Total downloads: 1,360,042,789",
+              "engine": "crates",
+              "engines": [],
+              "score": 294274544.0,
+              "position": 1,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": null,
+              "work_group": null
+            },
+            {
+              "url": "https://crates.io/crates/serde-saphyr",
+              "title": "serde-saphyr v1.2.0",
+              "content": "YAML (de)serializer for Serde, emphasizing panic-free parsing, fast builds and good error reporting. Supports properties, include, tag and comment capture — Total downloads: 5,986,440",
+              "engine": "crates",
+              "engines": [],
+              "score": 4599565.0,
+              "position": 2,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": null,
+              "work_group": null
+            },
+            {
+              "url": "https://crates.io/crates/clickhouse",
+              "title": "clickhouse v0.15.2",
+              "content": "Official Rust client for ClickHouse DB — Total downloads: 12,267,833",
+              "engine": "crates",
+              "engines": [],
+              "score": 3622154.0,
+              "position": 3,
+              "category": "general",
+              "published_date": null,
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": null,
+              "work_group": null
+            }
+          ],
+          "latency_ms": 0.0,
+          "error_message": null
+        }
+      },
+      "volatility": [
+        "/body/latency_ms"
+      ],
+      "oracle": {
+        "command": ".venv/bin/python docs/rust-rewrite/replay/oracle/export.py --source-root /private/tmp/slopsearx-f04-oracle-src --baseline 7b2d876307189d7a62000d1f289b3ef4b65eaff6",
+        "baseline_commit": "7b2d876307189d7a62000d1f289b3ef4b65eaff6",
+        "observation": "Two independent pinned Python adapter executions against this sanitized recorded response; not Rust parity evidence."
+      }
+    },
+    {
+      "id": "upstream-openalex-captured",
+      "kind": "adapter_http",
+      "input": {
+        "engine": "openalex",
+        "query": "Attention Is All You Need",
+        "params": {},
+        "max_results": 3
+      },
+      "upstream_origin": "https://api.openalex.org",
+      "clock": {
+        "unix_seconds": 1792022400,
+        "ids": [
+          "fixture-openalex-001"
+        ]
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "target": "/works?search=Attention%20Is%20All%20You%20Need&per_page=3",
+            "headers": {
+              "accept": "*/*",
+              "accept-encoding": "gzip, deflate",
+              "user-agent": "python-httpx/0.28.1"
+            },
+            "body": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": {
+              "content-type": "application/json"
+            },
+            "body": "{\"results\":[{\"id\":\"https://openalex.org/W2626778328\",\"doi\":\"https://doi.org/10.65215/2q58a426\",\"title\":\"Attention Is All You Need\",\"publication_date\":\"2025-08-23\",\"relevance_score\":15626.1455},{\"id\":\"https://openalex.org/W3163652268\",\"doi\":\"https://doi.org/10.1109/icassp39728.2021.9413901\",\"title\":\"Attention Is All You Need In Speech Separation\",\"publication_date\":\"2021-05-13\",\"relevance_score\":4296.062},{\"id\":\"https://openalex.org/W4390678101\",\"doi\":\"https://doi.org/10.1093/bib/bbad467\",\"title\":\"Attention is all you need: utilizing attention in AI-enabled drug discovery\",\"publication_date\":\"2023-11-22\",\"relevance_score\":2882.9272}]}"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "body": {
+          "results": [
+            {
+              "url": "https://doi.org/10.65215/2q58a426",
+              "title": "Attention Is All You Need",
+              "content": "",
+              "engine": "openalex",
+              "engines": [],
+              "score": 15626.1455,
+              "position": 0,
+              "category": "general",
+              "published_date": "2025-08-23",
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": {
+                "domain": "science",
+                "type": "publication",
+                "schema_version": 1,
+                "data": {
+                  "doi": "https://doi.org/10.65215/2q58a426",
+                  "openalex_id": "https://openalex.org/W2626778328"
+                },
+                "provenance": {
+                  "engine": "openalex",
+                  "adapter_fields": [
+                    "doi",
+                    "openalex_id"
+                  ],
+                  "normalized_fields": [],
+                  "inferred_fields": []
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://doi.org/10.1109/icassp39728.2021.9413901",
+              "title": "Attention Is All You Need In Speech Separation",
+              "content": "",
+              "engine": "openalex",
+              "engines": [],
+              "score": 4296.062,
+              "position": 0,
+              "category": "general",
+              "published_date": "2021-05-13",
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": {
+                "domain": "science",
+                "type": "publication",
+                "schema_version": 1,
+                "data": {
+                  "doi": "https://doi.org/10.1109/icassp39728.2021.9413901",
+                  "openalex_id": "https://openalex.org/W3163652268"
+                },
+                "provenance": {
+                  "engine": "openalex",
+                  "adapter_fields": [
+                    "doi",
+                    "openalex_id"
+                  ],
+                  "normalized_fields": [],
+                  "inferred_fields": []
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://doi.org/10.1093/bib/bbad467",
+              "title": "Attention is all you need: utilizing attention in AI-enabled drug discovery",
+              "content": "",
+              "engine": "openalex",
+              "engines": [],
+              "score": 2882.9272,
+              "position": 0,
+              "category": "general",
+              "published_date": "2023-11-22",
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": {
+                "domain": "science",
+                "type": "publication",
+                "schema_version": 1,
+                "data": {
+                  "doi": "https://doi.org/10.1093/bib/bbad467",
+                  "openalex_id": "https://openalex.org/W4390678101"
+                },
+                "provenance": {
+                  "engine": "openalex",
+                  "adapter_fields": [
+                    "doi",
+                    "openalex_id"
+                  ],
+                  "normalized_fields": [],
+                  "inferred_fields": []
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "latency_ms": 0.0,
+          "error_message": null
+        }
+      },
+      "candidate": {
+        "status": "ok",
+        "body": {
+          "results": [
+            {
+              "url": "https://doi.org/10.65215/2q58a426",
+              "title": "Attention Is All You Need",
+              "content": "",
+              "engine": "openalex",
+              "engines": [],
+              "score": 15626.1455,
+              "position": 0,
+              "category": "general",
+              "published_date": "2025-08-23",
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": {
+                "domain": "science",
+                "type": "publication",
+                "schema_version": 1,
+                "data": {
+                  "doi": "https://doi.org/10.65215/2q58a426",
+                  "openalex_id": "https://openalex.org/W2626778328"
+                },
+                "provenance": {
+                  "engine": "openalex",
+                  "adapter_fields": [
+                    "doi",
+                    "openalex_id"
+                  ],
+                  "normalized_fields": [],
+                  "inferred_fields": []
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://doi.org/10.1109/icassp39728.2021.9413901",
+              "title": "Attention Is All You Need In Speech Separation",
+              "content": "",
+              "engine": "openalex",
+              "engines": [],
+              "score": 4296.062,
+              "position": 0,
+              "category": "general",
+              "published_date": "2021-05-13",
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": {
+                "domain": "science",
+                "type": "publication",
+                "schema_version": 1,
+                "data": {
+                  "doi": "https://doi.org/10.1109/icassp39728.2021.9413901",
+                  "openalex_id": "https://openalex.org/W3163652268"
+                },
+                "provenance": {
+                  "engine": "openalex",
+                  "adapter_fields": [
+                    "doi",
+                    "openalex_id"
+                  ],
+                  "normalized_fields": [],
+                  "inferred_fields": []
+                }
+              },
+              "work_group": null
+            },
+            {
+              "url": "https://doi.org/10.1093/bib/bbad467",
+              "title": "Attention is all you need: utilizing attention in AI-enabled drug discovery",
+              "content": "",
+              "engine": "openalex",
+              "engines": [],
+              "score": 2882.9272,
+              "position": 0,
+              "category": "general",
+              "published_date": "2023-11-22",
+              "thumbnail": null,
+              "img_src": null,
+              "tier": 1,
+              "media": null,
+              "payload": {
+                "domain": "science",
+                "type": "publication",
+                "schema_version": 1,
+                "data": {
+                  "doi": "https://doi.org/10.1093/bib/bbad467",
+                  "openalex_id": "https://openalex.org/W4390678101"
+                },
+                "provenance": {
+                  "engine": "openalex",
+                  "adapter_fields": [
+                    "doi",
+                    "openalex_id"
+                  ],
+                  "normalized_fields": [],
+                  "inferred_fields": []
+                }
+              },
+              "work_group": null
+            }
+          ],
+          "latency_ms": 0.0,
+          "error_message": null
+        }
+      },
+      "volatility": [
+        "/body/latency_ms"
+      ],
+      "oracle": {
+        "command": ".venv/bin/python docs/rust-rewrite/replay/oracle/export.py --source-root /private/tmp/slopsearx-f04-oracle-src --baseline 7b2d876307189d7a62000d1f289b3ef4b65eaff6",
+        "baseline_commit": "7b2d876307189d7a62000d1f289b3ef4b65eaff6",
+        "observation": "Two independent pinned Python adapter executions against this sanitized recorded response; not Rust parity evidence."
+      }
+    },
+    {
+      "id": "search-http-json-contract",
+      "kind": "search_http",
+      "input": {
+        "method": "GET",
+        "path": "/search",
+        "params": {
+          "q": "F04 contract",
+          "format": "json",
+          "engines": "contract"
+        }
+      },
+      "upstream_origin": null,
+      "clock": {
+        "unix_seconds": 1792022400,
+        "ids": [
+          "ssx-f04-search-http"
+        ]
+      },
+      "exchanges": [],
+      "expected": {
+        "status": 200,
+        "body": {
+          "query": "F04 contract",
+          "results": [
+            {
+              "url": "https://example.test/path;param?q=one#section",
+              "title": "Contract result for F04 contract",
+              "content": "Deterministic contract result",
+              "engine": "contract",
+              "engines": [
+                "contract"
+              ],
+              "score": 1.0,
+              "positions": [
+                1
+              ],
+              "category": "general",
+              "publishedDate": null,
+              "pubdate": null,
+              "tier": 2,
+              "length": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "payload": null,
+              "iframe_src": null,
+              "audio_src": null,
+              "views": null,
+              "author": null,
+              "metadata": null,
+              "template": "default.html",
+              "parsed_url": [
+                "https",
+                "example.test",
+                "/path",
+                "param",
+                "q=one",
+                "section"
+              ],
+              "open_group": false,
+              "close_group": false,
+              "priority": ""
+            }
+          ],
+          "engines": [
+            {
+              "engine": "contract",
+              "results": 1
+            }
+          ],
+          "number_of_results": 1,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "suggestions": [],
+          "unresponsive_engines": [],
+          "meta": {
+            "response_time_ms": 0,
+            "cached": false,
+            "query_id": "ssx-f04-search-http",
+            "engine_status": {
+              "contract": {
+                "results": 1,
+                "latency_ms": 1.0,
+                "status": "ok"
+              }
+            },
+            "partial": false,
+            "deadline_exceeded": false
+          }
+        }
+      },
+      "candidate": {
+        "status": 200,
+        "body": {
+          "query": "F04 contract",
+          "results": [
+            {
+              "url": "https://example.test/path;param?q=one#section",
+              "title": "Contract result for F04 contract",
+              "content": "Deterministic contract result",
+              "engine": "contract",
+              "engines": [
+                "contract"
+              ],
+              "score": 1.0,
+              "positions": [
+                1
+              ],
+              "category": "general",
+              "publishedDate": null,
+              "pubdate": null,
+              "tier": 2,
+              "length": null,
+              "thumbnail": null,
+              "img_src": null,
+              "media": null,
+              "payload": null,
+              "iframe_src": null,
+              "audio_src": null,
+              "views": null,
+              "author": null,
+              "metadata": null,
+              "template": "default.html",
+              "parsed_url": [
+                "https",
+                "example.test",
+                "/path",
+                "param",
+                "q=one",
+                "section"
+              ],
+              "open_group": false,
+              "close_group": false,
+              "priority": ""
+            }
+          ],
+          "engines": [
+            {
+              "engine": "contract",
+              "results": 1
+            }
+          ],
+          "number_of_results": 1,
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "suggestions": [],
+          "unresponsive_engines": [],
+          "meta": {
+            "response_time_ms": 0,
+            "cached": false,
+            "query_id": "ssx-f04-search-http",
+            "engine_status": {
+              "contract": {
+                "results": 1,
+                "latency_ms": 1.0,
+                "status": "ok"
+              }
+            },
+            "partial": false,
+            "deadline_exceeded": false
+          }
+        }
+      },
+      "volatility": [
+        "/body/meta/response_time_ms"
+      ],
+      "oracle": {
+        "command": ".venv/bin/python docs/rust-rewrite/replay/oracle/export.py --source-root /private/tmp/slopsearx-f04-oracle-src --baseline 7b2d876307189d7a62000d1f289b3ef4b65eaff6",
+        "baseline_commit": "7b2d876307189d7a62000d1f289b3ef4b65eaff6",
+        "observation": "Two independent FastAPI TestClient executions using the pinned deterministic contract engine; no upstream traffic."
+      }
+    },
+    {
+      "id": "mcp-search-filter-enforcement",
+      "kind": "mcp_search",
+      "input": {
+        "tool": "slopsearx_search",
+        "query": "F04 MCP contract",
+        "engines": [
+          "wikipedia"
+        ],
+        "language": "de",
+        "time_range": "week",
+        "safesearch": "moderate"
+      },
+      "upstream_origin": null,
+      "clock": {
+        "unix_seconds": 1792022400,
+        "ids": [
+          "ssx-f04-mcp-search"
+        ]
+      },
+      "exchanges": [],
+      "expected": {
+        "status": 200,
+        "body": {
+          "query": "F04 MCP contract",
+          "results": [
+            {
+              "title": "wikipedia result 0",
+              "url": "https://wikipedia0.example",
+              "snippet": "Content for wikipedia result 0.",
+              "source_engines": [
+                "wikipedia"
+              ],
+              "source_count": 1,
+              "primary_engine": "wikipedia",
+              "category": "general",
+              "published_at": null,
+              "score": 1.0,
+              "position": 1,
+              "tier": 1,
+              "citation": {
+                "label": "wikipedia result 0",
+                "url": "https://wikipedia0.example"
+              },
+              "retrieval": {
+                "contract": "slopsearx.retrieval_handoff",
+                "version": 1,
+                "eligible": true,
+                "url_status": "ok",
+                "url_reason": null,
+                "scheme": "https"
+              },
+              "result_id": "snap-f04fixedsnap:0",
+              "artifact": {
+                "contract": "slopsearx.artifact_ref",
+                "version": 1,
+                "kind": "result",
+                "id": "snap-f04fixedsnap:0"
+              }
+            },
+            {
+              "title": "wikipedia result 1",
+              "url": "https://wikipedia1.example",
+              "snippet": "Content for wikipedia result 1.",
+              "source_engines": [
+                "wikipedia"
+              ],
+              "source_count": 1,
+              "primary_engine": "wikipedia",
+              "category": "general",
+              "published_at": null,
+              "score": 1.0,
+              "position": 2,
+              "tier": 1,
+              "citation": {
+                "label": "wikipedia result 1",
+                "url": "https://wikipedia1.example"
+              },
+              "retrieval": {
+                "contract": "slopsearx.retrieval_handoff",
+                "version": 1,
+                "eligible": true,
+                "url_status": "ok",
+                "url_reason": null,
+                "scheme": "https"
+              },
+              "result_id": "snap-f04fixedsnap:1",
+              "artifact": {
+                "contract": "slopsearx.artifact_ref",
+                "version": 1,
+                "kind": "result",
+                "id": "snap-f04fixedsnap:1"
+              }
+            }
+          ],
+          "scope": {
+            "requested_intent": "auto",
+            "resolved_categories": [],
+            "selected_engines": [
+              "wikipedia"
+            ],
+            "routing_reason": "explicit engine",
+            "excluded_engines": [],
+            "routing": {
+              "applied": false
+            }
+          },
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "empty_engines": [],
+          "enforcement": {
+            "language": {
+              "requested": "de",
+              "status": "unsupported",
+              "reason": "no selected adapter enforces the language filter",
+              "enforced_by": []
+            },
+            "time_range": {
+              "requested": "week",
+              "status": "unsupported",
+              "reason": "no selected adapter enforces the time_range filter",
+              "enforced_by": []
+            },
+            "safesearch": {
+              "requested": "moderate",
+              "status": "unsupported",
+              "reason": "no selected adapter enforces the safesearch filter",
+              "enforced_by": []
+            }
+          },
+          "engine_outcomes": [
+            {
+              "engine": "wikipedia",
+              "status": "ok",
+              "result_count": 2,
+              "latency_ms": 2.0,
+              "message": null
+            }
+          ],
+          "meta": {
+            "query_id": "ssx-f04-mcp-search",
+            "cached": false,
+            "cached_error": false,
+            "response_time_ms": 0,
+            "partial": false,
+            "deadline_exceeded": false,
+            "ranking": "tier_then_cross_engine_presence",
+            "cursor": "snap-f04fixedsnap",
+            "artifact": {
+              "contract": "slopsearx.artifact_ref",
+              "version": 1,
+              "kind": "snapshot",
+              "id": "snap-f04fixedsnap"
+            },
+            "suggestions": [],
+            "total": 2,
+            "has_more": false
+          },
+          "warnings": [
+            "language 'de' is not enforced by selected adapters",
+            "time_range 'week' is not enforced by selected adapters",
+            "moderate safesearch is requested but may not be enforced by every adapter"
+          ]
+        }
+      },
+      "candidate": {
+        "status": 200,
+        "body": {
+          "query": "F04 MCP contract",
+          "results": [
+            {
+              "title": "wikipedia result 0",
+              "url": "https://wikipedia0.example",
+              "snippet": "Content for wikipedia result 0.",
+              "source_engines": [
+                "wikipedia"
+              ],
+              "source_count": 1,
+              "primary_engine": "wikipedia",
+              "category": "general",
+              "published_at": null,
+              "score": 1.0,
+              "position": 1,
+              "tier": 1,
+              "citation": {
+                "label": "wikipedia result 0",
+                "url": "https://wikipedia0.example"
+              },
+              "retrieval": {
+                "contract": "slopsearx.retrieval_handoff",
+                "version": 1,
+                "eligible": true,
+                "url_status": "ok",
+                "url_reason": null,
+                "scheme": "https"
+              },
+              "result_id": "snap-f04fixedsnap:0",
+              "artifact": {
+                "contract": "slopsearx.artifact_ref",
+                "version": 1,
+                "kind": "result",
+                "id": "snap-f04fixedsnap:0"
+              }
+            },
+            {
+              "title": "wikipedia result 1",
+              "url": "https://wikipedia1.example",
+              "snippet": "Content for wikipedia result 1.",
+              "source_engines": [
+                "wikipedia"
+              ],
+              "source_count": 1,
+              "primary_engine": "wikipedia",
+              "category": "general",
+              "published_at": null,
+              "score": 1.0,
+              "position": 2,
+              "tier": 1,
+              "citation": {
+                "label": "wikipedia result 1",
+                "url": "https://wikipedia1.example"
+              },
+              "retrieval": {
+                "contract": "slopsearx.retrieval_handoff",
+                "version": 1,
+                "eligible": true,
+                "url_status": "ok",
+                "url_reason": null,
+                "scheme": "https"
+              },
+              "result_id": "snap-f04fixedsnap:1",
+              "artifact": {
+                "contract": "slopsearx.artifact_ref",
+                "version": 1,
+                "kind": "result",
+                "id": "snap-f04fixedsnap:1"
+              }
+            }
+          ],
+          "scope": {
+            "requested_intent": "auto",
+            "resolved_categories": [],
+            "selected_engines": [
+              "wikipedia"
+            ],
+            "routing_reason": "explicit engine",
+            "excluded_engines": [],
+            "routing": {
+              "applied": false
+            }
+          },
+          "answers": [],
+          "corrections": [],
+          "infoboxes": [],
+          "empty_engines": [],
+          "enforcement": {
+            "language": {
+              "requested": "de",
+              "status": "unsupported",
+              "reason": "no selected adapter enforces the language filter",
+              "enforced_by": []
+            },
+            "time_range": {
+              "requested": "week",
+              "status": "unsupported",
+              "reason": "no selected adapter enforces the time_range filter",
+              "enforced_by": []
+            },
+            "safesearch": {
+              "requested": "moderate",
+              "status": "unsupported",
+              "reason": "no selected adapter enforces the safesearch filter",
+              "enforced_by": []
+            }
+          },
+          "engine_outcomes": [
+            {
+              "engine": "wikipedia",
+              "status": "ok",
+              "result_count": 2,
+              "latency_ms": 2.0,
+              "message": null
+            }
+          ],
+          "meta": {
+            "query_id": "ssx-f04-mcp-search",
+            "cached": false,
+            "cached_error": false,
+            "response_time_ms": 0,
+            "partial": false,
+            "deadline_exceeded": false,
+            "ranking": "tier_then_cross_engine_presence",
+            "cursor": "snap-f04fixedsnap",
+            "artifact": {
+              "contract": "slopsearx.artifact_ref",
+              "version": 1,
+              "kind": "snapshot",
+              "id": "snap-f04fixedsnap"
+            },
+            "suggestions": [],
+            "total": 2,
+            "has_more": false
+          },
+          "warnings": [
+            "language 'de' is not enforced by selected adapters",
+            "time_range 'week' is not enforced by selected adapters",
+            "moderate safesearch is requested but may not be enforced by every adapter"
+          ]
+        }
+      },
+      "volatility": [
+        "/body/meta/response_time_ms"
+      ],
+      "oracle": {
+        "command": ".venv/bin/python docs/rust-rewrite/replay/oracle/export.py --source-root /private/tmp/slopsearx-f04-oracle-src --baseline 7b2d876307189d7a62000d1f289b3ef4b65eaff6",
+        "baseline_commit": "7b2d876307189d7a62000d1f289b3ef4b65eaff6",
+        "observation": "Two independent calls over the real MCP streamable-HTTP surface with FakeEngine and InMemoryStore; no upstream traffic."
+      }
+    }
+  ]
+}

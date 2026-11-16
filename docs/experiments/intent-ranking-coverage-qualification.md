@@ -1,6 +1,10 @@
 # Coverage-first ranking: prospective qualification checklist
 
-Status: **NO-CALL DESIGN CHECKPOINT / NOT REGISTERED / NOT ADMITTED**.
+**Retry amendment:** the [single replacement development attempt](evidence/coverage-first-study/retry-2026-10-15-research-task-use-v4/README.md) is terminal. Its [collection record](evidence/coverage-first-study/completed-2026-10-15-task-use-retry-collection/README.md) shows the required input checks still failed, so confirmation was not started. That retry allowance is exhausted. The [corrected-input plan](coverage-first-input-correction.md) permits a new, separately registered comparison with two revised queries; quality requirements and the development-before-confirmation condition remain unchanged.
+
+**Latest outcome:** the original comparison [stopped during input collection](evidence/coverage-first-study/completed-2026-10-15-task-use-collection/README.md); its one replacement also [stopped during input collection](evidence/coverage-first-study/completed-2026-10-15-task-use-retry-collection/README.md). Neither reached ranking or grading, and confirmation remains unstarted. The [version-4 method](evidence/coverage-first-study/research-task-use-method-materials/README.md) and earlier results retain their original rules. The checklist below preserves the earlier design checkpoint; it is not a current passing result.
+
+Historical checkpoint status: **NO-CALL DESIGN CHECKPOINT / NOT REGISTERED / NOT ADMITTED**.
 Related to [#516](https://github.com/magnus919/SlopSearX/issues/516).
 
 The maintainer approved the [coverage-first candidate amendment](coverage-first-release-decision.md)

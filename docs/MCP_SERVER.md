@@ -445,6 +445,9 @@ mcp_servers:
   gateway's stderr (visible in Hermes' gateway logs) and opens a browser
   on the Hermes host; afterwards tokens persist in the gateway's token
   file and later runs skip re-authorization.
+- Tool discovery preserves the upstream input schema, including typed array
+  items, nullable unions, nested definitions and constraints. Invocation keeps
+  its existing argument handling; upstream validation remains authoritative.
 - The gateway preserves an upstream `structuredContent` object, including an
   empty object. Text-only tools retain their JSON/plain-text fallback, and
   remote error flags retain the existing normalized error response.
@@ -1100,3 +1103,16 @@ Five prompts are bundled for repeatable workflows: `research_with_source_coverag
 `slopsearx_plan_research`, `slopsearx_plan_query_variants` and `slopsearx_plan_research_followup` require `MCP_GRANT_RESEARCH=1`. All are read-only previews and share current engine policy and execution budgets. Initial previews need no store; follow-up previews require the tenant's research job and unexpired snapshot evidence. The `plan_research_with_evidence` prompt guides decomposition and evidence-conditioned continuation while leaving judgment with the caller.
 
 See [QUERY_PLANNING.md](QUERY_PLANNING.md) for arguments, ready-to-execute payloads, identifier preservation, duplicate handling, policy/expiry/budget errors and rollout/rollback. Ordinary HTTP search and existing research template defaults are unchanged.
+
+The remote gateway owns its upstream MCP session in a dedicated task and awaits
+its cleanup during shutdown. Startup failures remain fail closed; cancelling
+startup also closes the pending upstream connection.
+
+For static-token or unauthenticated connections, the remote gateway applies its
+configured connection timeout independently to the MCP initialization handshake
+and tool discovery. A remote that accepts HTTP
+but does not finish initialization within that budget fails startup before any
+proxy tools or ready session are published. This is a per-phase timeout; it is
+not an end-to-end deadline for interactive OAuth authorization. OAuth mode keeps
+its existing authorization timeout during initialization; it is excluded from
+this shorter initialization deadline, while discovery remains bounded.

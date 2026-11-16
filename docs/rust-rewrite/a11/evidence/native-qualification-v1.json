@@ -1,0 +1,85 @@
+{
+  "purpose": "Actual local qualification references, not final commit/CI/production acceptance; immutable original source captures retain their own producer provenance",
+  "runtime_baseline": "8b48dc9ea0917230f31dfcc9c44ea2698b612b36",
+  "runtime_qualification_sha256": "cfc43b3df07ef731c1edf15a721fc76d8284d1f0d5ed049340e5cadfc8e9863c",
+  "actual_native_commands": 17,
+  "native_tests": 13,
+  "exact_once_completion_cases": 414,
+  "source_observation_profiles": [
+    58,
+    250,
+    3,
+    10
+  ],
+  "exact_reviewed_differences": 370,
+  "typed_F06_entry_controls": 4,
+  "actual_private_wire_rows": 13,
+  "artifacts": [
+    {
+      "path": "/private/tmp/a11-gate-qualification-v1/receipt.json",
+      "sha256": "acadaa94aafb788c8a40702dd0971e67a0cd490811ab29c5aaa2e961a37675fb"
+    },
+    {
+      "path": "/private/tmp/a11-gate-qualification-v1/strict-clippy.log",
+      "sha256": "32fbfd2fab1977a8c57a1d596755194a1f6a1199073a8e6b8431aba7bed8c45e"
+    },
+    {
+      "path": "/private/tmp/a11-gate-qualification-v2/receipt.json",
+      "sha256": "cca2348b5ddbdea2360c85f58b4b8bd6429acb83c3aea37113a457c04eddfa38"
+    },
+    {
+      "path": "/private/tmp/a11-gate-qualification-v2/a11-parsed-report.json",
+      "sha256": "2c651ef2523a7be2ac63281095aa1996b9046fe3a433e67433e12b6923ada24c"
+    },
+    {
+      "path": "/private/tmp/a11-gate-qualification-v2/semantic-summary.json",
+      "sha256": "d4bf0aaa742d73fbedf582d02049ba8a945edc32042862a26f9543eafcdd6dcb"
+    },
+    {
+      "path": "/private/tmp/a11-gate-qualification-v2/observations.json",
+      "sha256": "b088c29b0995d82badfddc67efe50e0fede4577991b0b1dabaadaddcfd19ecc2"
+    },
+    {
+      "path": "/private/tmp/a11-gate-qualification-v2/actual-wire.json",
+      "sha256": "272ff0490b08928702503cfae7b97d51243cea52a998a027742b20afdaa51f98"
+    },
+    {
+      "path": "/private/tmp/a11-gate-qualification-v2/config-observations.json",
+      "sha256": "32ed5f0ed83e9e9e1613a70aa84074a835d584a26557a5270d0f82fa44923bdb"
+    },
+    {
+      "path": "/private/tmp/a11-gate-qualification-v3/receipt.json",
+      "sha256": "cb6059757fc71e3489074d6f79fb59435b66bfcc6ec5f418d14ed99498627b18"
+    },
+    {
+      "path": "/private/tmp/a11-gate-qualification-v4/receipt.json",
+      "sha256": "f484b23568f3594f1ea6f927783d718f2944de4109c2efdae5d97013d7a43af0"
+    },
+    {
+      "path": "/private/tmp/a11-gate-clippy-refinement-v1/receipt.json",
+      "sha256": "fc8eff0e44bee32940da81c79244c8494cc27638182e8dc1413539d957a328df"
+    },
+    {
+      "path": "/private/tmp/a11-f01-index-discovery-v1/receipt.json",
+      "sha256": "e9930ed3c77e3bb8e8e4b9169449fa2bb589533e2d1267d1e25630ea836f986f"
+    },
+    {
+      "path": "/private/tmp/a11-a09-registry-repin-proposal-v1/application-receipt.json",
+      "sha256": "89d28e2dadecb7c5451a45c48633a027bc0fa381bd94f7df4efaa2f395b12f5e"
+    }
+  ],
+  "source_amendment_ledger": [
+    "mechanical gate if-let chain only, qualified fmt/Clippy/full A11",
+    "five producer intent-to-add only for existing F01 tracked discovery, no source bytes",
+    "A09 registry artifact pin and its COVERAGE digest only; actual A09/F01/O06 passed",
+    "these two narrative docs and this evidence file added after recorded tests; no runtime/test/case changes"
+  ],
+  "unperformed_causal_proposal": "a11-causal-proposal-v1 remains unapplied per parent direction",
+  "limits": [
+    "No source provider/public requests",
+    "No production application/MCP/portal composition (W09)",
+    "No global RSS/performance (G03)",
+    "No source public-wire claim for internal nonfinite/lone-surrogate originals",
+    "Native F06 entry refusals remain distinct from adapter wire parity"
+  ]
+}

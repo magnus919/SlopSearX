@@ -1,0 +1,57 @@
+trim trailing whitespace.................................................Passed
+fix end of files.........................................................Passed
+check yaml...........................................(no files to check)Skipped
+check toml...........................................(no files to check)Skipped
+check json...........................................(no files to check)Skipped
+debug statements (python)................................................Passed
+mixed line ending........................................................Passed
+check for merge conflicts................................................Passed
+check for added large files..............................................Passed
+ruff (legacy alias)......................................................Failed
+- hook id: ruff
+- exit code: 1
+
+F821 Undefined name `_field`
+   --> tests/test_mcp_gateway.py:123:40
+    |
+121 |         gateway = create_gateway(url, token=TOKEN)
+122 |         async with Client(url, auth=TOKEN) as direct:
+123 |             remote_tools = {tool.name: _field(tool, "input_schema", "inputSchema") for tool in await direct.list_tools()}
+    |                                        ^^^^^^
+124 |
+125 |         async with _gateway_client(gateway) as client:
+    |
+
+E501 Line too long (121 > 120)
+   --> tests/test_mcp_gateway.py:123:121
+    |
+121 |         gateway = create_gateway(url, token=TOKEN)
+122 |         async with Client(url, auth=TOKEN) as direct:
+123 |             remote_tools = {tool.name: _field(tool, "input_schema", "inputSchema") for tool in await direct.list_tools()}
+    |                                                                                                                         ^
+124 |
+125 |         async with _gateway_client(gateway) as client:
+    |
+
+F821 Undefined name `_field`
+   --> tests/test_mcp_gateway.py:127:32
+    |
+125 |         async with _gateway_client(gateway) as client:
+126 |             tools = await client.list_tools()
+127 |             assert {tool.name: _field(tool, "input_schema", "inputSchema") for tool in tools} == remote_tools
+    |                                ^^^^^^
+128 |             names = [tool.name for tool in tools]
+129 |             assert "slopsearx_search" in names
+    |
+
+Found 3 errors.
+
+ruff format..............................................................Failed
+- hook id: ruff-format
+- files were modified by this hook
+
+1 file reformatted, 1 file left unchanged
+
+vulture..................................................................Passed
+import-linter............................................................Passed
+mypy.....................................................................Passed

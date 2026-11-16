@@ -1,0 +1,1681 @@
+{
+  "schema_version": 1,
+  "baseline_sha": "20109f9083babd014971951e8c02565ae51c2326",
+  "source_note": "Worktree HEAD and origin/main verified equal. plan.json and CASE_STUDY.md cite older planning baseline 2a995f964757df77693747b232aa47738c0c58cc; this inventory pins the assigned source revision.",
+  "surfaces": [
+    {
+      "id": "root-search",
+      "surface": "http",
+      "path": "/",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "formats": [
+        "html",
+        "json",
+        "yaml",
+        "csv",
+        "rss"
+      ],
+      "source": "slopsearx/server.py:root_search -> _search_endpoint -> _search_endpoint_impl",
+      "tests": [
+        "tests/test_server.py",
+        "tests/test_formatter.py",
+        "tests/test_searxng_api_contract.py",
+        "tests/test_portal_browser.py"
+      ],
+      "owner_plan_ids": [
+        "T02",
+        "T03"
+      ],
+      "parity_status": "pending"
+    },
+    {
+      "id": "search",
+      "surface": "http",
+      "path": "/search",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "formats": [
+        "html",
+        "json",
+        "yaml",
+        "csv",
+        "rss"
+      ],
+      "source": "slopsearx/server.py:search -> _search_endpoint -> _search_endpoint_impl",
+      "tests": [
+        "tests/test_server.py",
+        "tests/test_formatter.py",
+        "tests/test_searxng_api_contract.py",
+        "tests/test_portal_browser.py"
+      ],
+      "owner_plan_ids": [
+        "T02",
+        "T03"
+      ],
+      "parity_status": "pending"
+    },
+    {
+      "id": "health",
+      "surface": "http",
+      "path": "/health",
+      "methods": [
+        "GET"
+      ],
+      "formats": [
+        "json"
+      ],
+      "source": "slopsearx/server.py:health",
+      "tests": [
+        "tests/test_observed_health.py",
+        "tests/test_server.py"
+      ],
+      "owner_plan_ids": [
+        "T02",
+        "O01"
+      ],
+      "parity_status": "pending"
+    },
+    {
+      "id": "healthz",
+      "surface": "http",
+      "path": "/healthz",
+      "methods": [
+        "GET"
+      ],
+      "formats": [
+        "text/plain"
+      ],
+      "source": "slopsearx/server.py:healthz",
+      "tests": [
+        "tests/test_server.py"
+      ],
+      "owner_plan_ids": [
+        "T02"
+      ],
+      "parity_status": "pending"
+    },
+    {
+      "id": "metrics",
+      "surface": "http",
+      "path": "/metrics",
+      "methods": [
+        "GET"
+      ],
+      "formats": [
+        "OpenMetrics text/plain; version=0.0.4"
+      ],
+      "source": "slopsearx/server.py:metrics",
+      "tests": [
+        "tests/test_metrics.py",
+        "tests/test_server.py"
+      ],
+      "owner_plan_ids": [
+        "T02",
+        "O01"
+      ],
+      "parity_status": "pending"
+    },
+    {
+      "id": "config",
+      "surface": "http",
+      "path": "/config",
+      "methods": [
+        "GET"
+      ],
+      "formats": [
+        "json"
+      ],
+      "source": "slopsearx/server.py:config",
+      "tests": [
+        "tests/test_service_engine_config.py",
+        "tests/test_server.py"
+      ],
+      "owner_plan_ids": [
+        "T02",
+        "F06"
+      ],
+      "parity_status": "pending"
+    },
+    {
+      "id": "workflow-1",
+      "surface": "http",
+      "path": "/auth/login",
+      "methods": [
+        "GET"
+      ],
+      "formats": [
+        "html"
+      ],
+      "source": "slopsearx/workflow_portal.py:build_workflow_router.login",
+      "tests": [
+        "tests/test_workflow_portal.py",
+        "tests/test_portal_oidc.py",
+        "tests/test_portal_auth.py"
+      ],
+      "owner_plan_ids": [
+        "T09",
+        "W10"
+      ],
+      "parity_status": "pending"
+    },
+    {
+      "id": "workflow-2",
+      "surface": "http",
+      "path": "/auth/callback",
+      "methods": [
+        "GET"
+      ],
+      "formats": [
+        "html"
+      ],
+      "source": "slopsearx/workflow_portal.py:build_workflow_router.callback",
+      "tests": [
+        "tests/test_workflow_portal.py",
+        "tests/test_portal_oidc.py",
+        "tests/test_portal_auth.py"
+      ],
+      "owner_plan_ids": [
+        "T09",
+        "W10"
+      ],
+      "parity_status": "pending"
+    },
+    {
+      "id": "workflow-3",
+      "surface": "http",
+      "path": "/auth/tenant",
+      "methods": [
+        "GET"
+      ],
+      "formats": [
+        "html"
+      ],
+      "source": "slopsearx/workflow_portal.py:build_workflow_router.tenant_get",
+      "tests": [
+        "tests/test_workflow_portal.py",
+        "tests/test_portal_auth.py"
+      ],
+      "owner_plan_ids": [
+        "T09",
+        "W10"
+      ],
+      "parity_status": "pending"
+    },
+    {
+      "id": "workflow-4",
+      "surface": "http",
+      "path": "/auth/tenant",
+      "methods": [
+        "POST"
+      ],
+      "formats": [
+        "html"
+      ],
+      "source": "slopsearx/workflow_portal.py:build_workflow_router.tenant_post",
+      "tests": [
+        "tests/test_workflow_portal.py",
+        "tests/test_portal_auth.py",
+        "tests/test_portal_audit.py"
+      ],
+      "owner_plan_ids": [
+        "T09",
+        "W10"
+      ],
+      "parity_status": "pending"
+    },
+    {
+      "id": "workflow-5",
+      "surface": "http",
+      "path": "/auth/logout",
+      "methods": [
+        "POST"
+      ],
+      "formats": [
+        "html"
+      ],
+      "source": "slopsearx/workflow_portal.py:build_workflow_router.logout",
+      "tests": [
+        "tests/test_workflow_portal.py",
+        "tests/test_portal_auth.py"
+      ],
+      "owner_plan_ids": [
+        "T09",
+        "W10"
+      ],
+      "parity_status": "pending"
+    },
+    {
+      "id": "workflow-6",
+      "surface": "http",
+      "path": "/workflows",
+      "methods": [
+        "GET"
+      ],
+      "formats": [
+        "html"
+      ],
+      "source": "slopsearx/workflow_portal.py:build_workflow_router.workflows_list",
+      "tests": [
+        "tests/test_workflow_portal.py"
+      ],
+      "owner_plan_ids": [
+        "W10"
+      ],
+      "parity_status": "pending"
+    },
+    {
+      "id": "workflow-7",
+      "surface": "http",
+      "path": "/workflows/{kind}/{object_id}",
+      "methods": [
+        "GET"
+      ],
+      "formats": [
+        "html"
+      ],
+      "source": "slopsearx/workflow_portal.py:build_workflow_router.workflow_detail",
+      "tests": [
+        "tests/test_workflow_portal.py"
+      ],
+      "owner_plan_ids": [
+        "W10"
+      ],
+      "parity_status": "pending"
+    },
+    {
+      "id": "workflow-8",
+      "surface": "http",
+      "path": "/workflows/{kind}/{object_id}/{action}",
+      "methods": [
+        "POST"
+      ],
+      "formats": [
+        "html"
+      ],
+      "source": "slopsearx/workflow_portal.py:build_workflow_router.workflow_action",
+      "tests": [
+        "tests/test_workflow_portal.py",
+        "tests/test_portal_audit.py"
+      ],
+      "owner_plan_ids": [
+        "W10"
+      ],
+      "parity_status": "pending"
+    },
+    {
+      "id": "oauth-authorization-metadata",
+      "surface": "mcp_http",
+      "path": "/.well-known/oauth-authorization-server",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "formats": [
+        "application/json"
+      ],
+      "source": "uv.lock FastMCP 4.0.11: fastmcp/server/auth/auth.py:get_routes -> mcp 2.3.0:mcp/server/auth/routes.py:create_auth_routes; application wiring: slopsearx/mcp/oauth.py:oauth_settings_from_policy Runtime inspection: make_http_app(create_server(oauth=...,oauth_provider=...),\"\").routes; Starlette adds implicit HEAD to GET.",
+      "tests": [
+        "tests/test_mcp_oauth.py"
+      ],
+      "owner_plan_ids": [
+        "T01",
+        "T05"
+      ],
+      "parity_status": "pending",
+      "conditional": "Present when MCP HTTP serving is enabled; OAuth routes require oauth.enabled and issuer configuration."
+    },
+    {
+      "id": "oauth-authorization",
+      "surface": "mcp_http",
+      "path": "/authorize",
+      "methods": [
+        "GET",
+        "HEAD",
+        "POST"
+      ],
+      "formats": [
+        "redirect or OAuth error response"
+      ],
+      "source": "uv.lock FastMCP 4.0.11 OAuthProvider route; mcp 2.3.0:create_auth_routes; slopsearx/mcp/server.py:create_server Runtime inspection: make_http_app(create_server(oauth=...,oauth_provider=...),\"\").routes; Starlette adds implicit HEAD to GET.",
+      "tests": [
+        "tests/test_mcp_oauth.py"
+      ],
+      "owner_plan_ids": [
+        "T01",
+        "T05"
+      ],
+      "parity_status": "pending",
+      "conditional": "Present when MCP HTTP serving is enabled; OAuth routes require oauth.enabled and issuer configuration."
+    },
+    {
+      "id": "oauth-dynamic-registration",
+      "surface": "mcp_http",
+      "path": "/register",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "formats": [
+        "application/json"
+      ],
+      "source": "uv.lock FastMCP 4.0.11 OAuthProvider with client_registration_options.enabled; mcp 2.3.0:create_auth_routes; slopsearx/mcp/oauth.py:oauth_settings_from_policy Runtime inspection: make_http_app(create_server(oauth=...,oauth_provider=...),\"\").routes; Starlette adds implicit HEAD to GET.",
+      "tests": [
+        "tests/test_mcp_oauth.py"
+      ],
+      "owner_plan_ids": [
+        "T01",
+        "T05"
+      ],
+      "parity_status": "pending",
+      "conditional": "Present when MCP HTTP serving is enabled; OAuth routes require oauth.enabled and issuer configuration."
+    },
+    {
+      "id": "oauth-token",
+      "surface": "mcp_http",
+      "path": "/token",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "formats": [
+        "application/json"
+      ],
+      "source": "uv.lock FastMCP 4.0.11 OAuthProvider route replaced by FastMCP TokenHandler; mcp 2.3.0:create_auth_routes; handler dispatches to slopsearx/mcp/oauth.py:SlopSearxOAuthProvider Runtime inspection: make_http_app(create_server(oauth=...,oauth_provider=...),\"\").routes; Starlette adds implicit HEAD to GET.",
+      "tests": [
+        "tests/test_mcp_oauth.py"
+      ],
+      "owner_plan_ids": [
+        "T01",
+        "T04",
+        "T05"
+      ],
+      "parity_status": "pending",
+      "conditional": "Present when MCP HTTP serving is enabled; OAuth routes require oauth.enabled and issuer configuration."
+    },
+    {
+      "id": "oauth-revocation",
+      "surface": "mcp_http",
+      "path": "/revoke",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ],
+      "formats": [
+        "application/json"
+      ],
+      "source": "uv.lock FastMCP 4.0.11 OAuthProvider; mcp 2.3.0:create_auth_routes; handler dispatches to slopsearx/mcp/oauth.py:SlopSearxOAuthProvider.revoke_token Runtime inspection: make_http_app(create_server(oauth=...,oauth_provider=...),\"\").routes; Starlette adds implicit HEAD to GET.",
+      "tests": [
+        "tests/test_mcp_oauth.py"
+      ],
+      "owner_plan_ids": [
+        "T01",
+        "T04",
+        "T05"
+      ],
+      "parity_status": "pending",
+      "conditional": "Present when MCP HTTP serving is enabled; OAuth routes require oauth.enabled and issuer configuration."
+    },
+    {
+      "id": "mcp-http-endpoint",
+      "surface": "mcp_http",
+      "path": "/mcp",
+      "methods": [
+        "DELETE",
+        "POST"
+      ],
+      "formats": [
+        "MCP Streamable HTTP / JSON-RPC and optional SSE"
+      ],
+      "source": "uv.lock FastMCP 4.0.11: fastmcp/server/http.py:create_streamable_http_app (stateless methods POST/DELETE); slopsearx/mcp/security.py:make_http_app; tests confirm GET returns 405 Runtime inspection: make_http_app(create_server(oauth=...,oauth_provider=...),\"\").routes; Starlette adds implicit HEAD to GET.",
+      "tests": [
+        "tests/test_mcp_oauth.py",
+        "tests/test_mcp_security.py"
+      ],
+      "owner_plan_ids": [
+        "T01",
+        "T05",
+        "T06"
+      ],
+      "parity_status": "pending",
+      "conditional": "Present in static bearer and OAuth HTTP modes; GET/DELETE behavior follows pinned SDK stateless HTTP mode."
+    },
+    {
+      "id": "oauth-protected-resource-metadata",
+      "surface": "mcp_http",
+      "path": "/.well-known/oauth-protected-resource/mcp",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "formats": [
+        "application/json"
+      ],
+      "source": "uv.lock FastMCP 4.0.11: fastmcp/server/auth/auth.py:OAuthProvider.get_routes -> mcp 2.3.0:mcp/server/auth/routes.py:create_protected_resource_routes; enabled by slopsearx/mcp/oauth.py:oauth_settings_from_policy resource_server_url={issuer}/mcp Runtime inspection: make_http_app(create_server(oauth=...,oauth_provider=...),\"\").routes; Starlette adds implicit HEAD to GET.",
+      "tests": [
+        "tests/test_mcp_oauth.py"
+      ],
+      "owner_plan_ids": [
+        "T01",
+        "T05"
+      ],
+      "parity_status": "pending",
+      "conditional": "Present in OAuth mode when resource_server_url is configured; full route response is SDK-generated and must be captured by the T01 descriptor/route test.",
+      "regression_gap": "Existing tests assert authorization-server metadata and OAuth settings but do not request/assert the RFC 9728 protected-resource metadata response; T01 must add this."
+    },
+    {
+      "id": "mcp-sse-stream",
+      "surface": "mcp_legacy_sse",
+      "path": "/sse",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "formats": [
+        "text/event-stream"
+      ],
+      "source": "uv.lock FastMCP 4.0.11: fastmcp/server/mixins/transport.py:run_http_async -> fastmcp/server/http.py:create_sse_app; MCP 2.3.0: mcp/server/sse.py:SseServerTransport. Reached by slopsearx/mcp/server.py:main when transport=sse. FastMCP settings default sse_path=/sse (fastmcp/settings.py); configurable with FASTMCP_SSE_PATH. Runtime inspection: create_server().http_app(transport=\"sse\").routes; Starlette adds implicit HEAD for GET.",
+      "tests": [],
+      "owner_plan_ids": [
+        "T01",
+        "T06"
+      ],
+      "parity_status": "pending",
+      "conditional": "Mounted only when MCP_TRANSPORT=sse; the current CLI creates the server without OAuth or static-token auth in this branch. Default mount_path is /; FastMCP sse_app(mount_path=...) can prefix the configured path.",
+      "regression_gap": "No SSE transport tests exist at the pinned baseline; T01/T06 must add route and transport contract coverage."
+    },
+    {
+      "id": "mcp-sse-message",
+      "surface": "mcp_legacy_sse",
+      "path": "/messages",
+      "methods": [
+        "*"
+      ],
+      "formats": [
+        "application/json JSON-RPC request; text/plain Accepted response"
+      ],
+      "source": "uv.lock FastMCP 4.0.11: fastmcp/server/mixins/transport.py:run_http_async -> fastmcp/server/http.py:create_sse_app; MCP 2.3.0: mcp/server/sse.py:SseServerTransport. Reached by slopsearx/mcp/server.py:main when transport=sse. FastMCP settings default message_path=/messages/ (fastmcp/settings.py); configurable with FASTMCP_MESSAGE_PATH. SseServerTransport mounts an ASGI app at this prefix. Runtime inspection: create_server().http_app(transport=\"sse\").routes.",
+      "tests": [],
+      "owner_plan_ids": [
+        "T01",
+        "T06"
+      ],
+      "parity_status": "pending",
+      "conditional": "Mounted only when MCP_TRANSPORT=sse. The Starlette Mount itself has no method list; its configured advertised message prefix is /messages/, and the actual Starlette route.path is /messages; handler expects POST with session_id and a JSON-RPC message. Missing session_id or invalid JSON returns 400, unknown session returns 404, accepted messages return 202. No auth is installed by the current SSE CLI branch. T01 runtime capture corrects the earlier route-only inspection: the Mount has no method list, but the locked SDK handler rejects non-POST requests with 405 and enforces its request-body size limit.",
+      "regression_gap": "No SSE transport tests exist at the pinned baseline; T01/T06 must add route, message handling and unauthenticated-mode contract coverage.",
+      "route_kind": "ASGI Mount; the route itself declares no HTTP method allowlist",
+      "handler_method_contract": [
+        "POST"
+      ],
+      "advertised_message_prefix": "/messages/",
+      "mount_path_normalization": "FastMCP passes the trailing-slash message_path /messages/ to Starlette Mount, whose normalized route.path is /messages."
+    }
+  ],
+  "mcp": {
+    "source": "slopsearx/mcp/server.py:create_server and slopsearx/mcp/tool_registry.py:TOOL_DEFINITIONS",
+    "counts": {
+      "tools": 38,
+      "prompts": 5,
+      "fixed_resources": 3,
+      "resource_templates": 1
+    },
+    "transports": [
+      "stdio",
+      "streamable HTTP (http or streamable-http)",
+      "legacy SSE (sse)"
+    ],
+    "tools": [
+      {
+        "name": "slopsearx_search",
+        "source": "slopsearx/mcp/tools.py:slopsearx_search",
+        "tests": [
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "T06"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.search",
+        "required_grants": [],
+        "state_requirement": "snapshot",
+        "mutating": false,
+        "policy_gate": true
+      },
+      {
+        "name": "slopsearx_search_targeted",
+        "source": "slopsearx/mcp/tools.py:slopsearx_search_targeted",
+        "tests": [
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "T06"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.search",
+        "required_grants": [],
+        "state_requirement": "snapshot",
+        "mutating": false,
+        "policy_gate": true
+      },
+      {
+        "name": "slopsearx_search_jobs",
+        "source": "slopsearx/mcp/tools.py:slopsearx_search_jobs",
+        "tests": [
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "T06"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.search.jobs",
+        "required_grants": [
+          "jobs"
+        ],
+        "state_requirement": "snapshot",
+        "mutating": false,
+        "policy_gate": true
+      },
+      {
+        "name": "slopsearx_search_security",
+        "source": "slopsearx/mcp/tools.py:slopsearx_search_security",
+        "tests": [
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "T06"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.search.security",
+        "required_grants": [
+          "security"
+        ],
+        "state_requirement": "snapshot",
+        "mutating": false,
+        "policy_gate": true
+      },
+      {
+        "name": "slopsearx_search_science",
+        "source": "slopsearx/mcp/tools.py:slopsearx_search_science",
+        "tests": [
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "T06"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.search.science",
+        "required_grants": [
+          "science"
+        ],
+        "state_requirement": "snapshot",
+        "mutating": false,
+        "policy_gate": true
+      },
+      {
+        "name": "slopsearx_list_capabilities",
+        "source": "slopsearx/mcp/tools.py:slopsearx_list_capabilities",
+        "tests": [
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "T06"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.capabilities",
+        "required_grants": [],
+        "state_requirement": "none",
+        "mutating": false,
+        "policy_gate": false
+      },
+      {
+        "name": "slopsearx_explain_search_scope",
+        "source": "slopsearx/mcp/tools.py:slopsearx_explain_search_scope",
+        "tests": [
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "T06"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.search.scope",
+        "required_grants": [],
+        "state_requirement": "none",
+        "mutating": false,
+        "policy_gate": true
+      },
+      {
+        "name": "slopsearx_get_service_status",
+        "source": "slopsearx/mcp/tools.py:slopsearx_get_service_status",
+        "tests": [
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "T06"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.service_status",
+        "required_grants": [],
+        "state_requirement": "none",
+        "mutating": false,
+        "policy_gate": false
+      },
+      {
+        "name": "slopsearx_read_results",
+        "source": "slopsearx/mcp/tools.py:slopsearx_read_results",
+        "tests": [
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "T06"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.snapshot.results",
+        "required_grants": [],
+        "state_requirement": "snapshot",
+        "mutating": false,
+        "policy_gate": false
+      },
+      {
+        "name": "slopsearx_read_result",
+        "source": "slopsearx/mcp/tools.py:slopsearx_read_result",
+        "tests": [
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "T06"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.snapshot.result",
+        "required_grants": [],
+        "state_requirement": "snapshot",
+        "mutating": false,
+        "policy_gate": false
+      },
+      {
+        "name": "slopsearx_read_entities",
+        "source": "slopsearx/mcp/tools.py:slopsearx_read_entities",
+        "tests": [
+          "tests/test_entity_transport.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "T06"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.snapshot.entities",
+        "required_grants": [],
+        "state_requirement": "snapshot",
+        "mutating": false,
+        "policy_gate": false
+      },
+      {
+        "name": "slopsearx_plan_research",
+        "source": "slopsearx/mcp/planning_tools.py:slopsearx_plan_research",
+        "tests": [
+          "tests/test_query_planning_transport.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "T06"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.research.planning",
+        "required_grants": [
+          "research"
+        ],
+        "state_requirement": "none",
+        "mutating": false,
+        "policy_gate": true
+      },
+      {
+        "name": "slopsearx_plan_query_variants",
+        "source": "slopsearx/mcp/planning_tools.py:slopsearx_plan_query_variants",
+        "tests": [
+          "tests/test_query_planning_transport.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "T06"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.research.planning",
+        "required_grants": [
+          "research"
+        ],
+        "state_requirement": "none",
+        "mutating": false,
+        "policy_gate": true
+      },
+      {
+        "name": "slopsearx_plan_research_followup",
+        "source": "slopsearx/mcp/planning_tools.py:slopsearx_plan_research_followup",
+        "tests": [
+          "tests/test_query_planning_transport.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "W03"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.research.planning",
+        "required_grants": [
+          "research"
+        ],
+        "state_requirement": "durable",
+        "mutating": false,
+        "policy_gate": true
+      },
+      {
+        "name": "slopsearx_start_research",
+        "source": "slopsearx/mcp/tools.py:slopsearx_start_research",
+        "tests": [
+          "tests/test_adaptive_transport.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "W02",
+          "W03"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.research",
+        "required_grants": [
+          "research"
+        ],
+        "state_requirement": "durable",
+        "mutating": true,
+        "policy_gate": true
+      },
+      {
+        "name": "slopsearx_get_job",
+        "source": "slopsearx/mcp/tools.py:slopsearx_get_job",
+        "tests": [
+          "tests/test_adaptive_transport.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "W02",
+          "W03"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.research",
+        "required_grants": [],
+        "state_requirement": "durable",
+        "mutating": false,
+        "policy_gate": false
+      },
+      {
+        "name": "slopsearx_cancel_job",
+        "source": "slopsearx/mcp/tools.py:slopsearx_cancel_job",
+        "tests": [
+          "tests/test_adaptive_transport.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "W02",
+          "W03"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.research",
+        "required_grants": [],
+        "state_requirement": "durable",
+        "mutating": true,
+        "policy_gate": false
+      },
+      {
+        "name": "slopsearx_retry_research",
+        "source": "slopsearx/mcp/tools.py:slopsearx_retry_research",
+        "tests": [
+          "tests/test_adaptive_transport.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "W02",
+          "W03"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.research",
+        "required_grants": [
+          "research"
+        ],
+        "state_requirement": "durable",
+        "mutating": true,
+        "policy_gate": true
+      },
+      {
+        "name": "slopsearx_extend_research",
+        "source": "slopsearx/mcp/tools.py:slopsearx_extend_research",
+        "tests": [
+          "tests/test_adaptive_transport.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "W02",
+          "W03"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.research",
+        "required_grants": [
+          "research"
+        ],
+        "state_requirement": "durable",
+        "mutating": true,
+        "policy_gate": true
+      },
+      {
+        "name": "slopsearx_update_research",
+        "source": "slopsearx/mcp/tools.py:slopsearx_update_research",
+        "tests": [
+          "tests/test_adaptive_transport.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "W02",
+          "W03"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.research",
+        "required_grants": [
+          "research"
+        ],
+        "state_requirement": "durable",
+        "mutating": true,
+        "policy_gate": false
+      },
+      {
+        "name": "slopsearx_create_saved_search",
+        "source": "slopsearx/mcp/tools.py:slopsearx_create_saved_search",
+        "tests": [
+          "tests/test_saved_transport.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "W00"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.saved_search",
+        "required_grants": [
+          "saved_searches"
+        ],
+        "state_requirement": "durable",
+        "mutating": true,
+        "policy_gate": true
+      },
+      {
+        "name": "slopsearx_get_saved_search",
+        "source": "slopsearx/mcp/tools.py:slopsearx_get_saved_search",
+        "tests": [
+          "tests/test_saved_transport.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "W00"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.saved_search",
+        "required_grants": [
+          "saved_searches"
+        ],
+        "state_requirement": "durable",
+        "mutating": false,
+        "policy_gate": true
+      },
+      {
+        "name": "slopsearx_update_saved_search",
+        "source": "slopsearx/mcp/tools.py:slopsearx_update_saved_search",
+        "tests": [
+          "tests/test_saved_transport.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "W00"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.saved_search",
+        "required_grants": [
+          "saved_searches"
+        ],
+        "state_requirement": "durable",
+        "mutating": true,
+        "policy_gate": true
+      },
+      {
+        "name": "slopsearx_pause_saved_search",
+        "source": "slopsearx/mcp/tools.py:slopsearx_pause_saved_search",
+        "tests": [
+          "tests/test_saved_transport.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "W00"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.saved_search",
+        "required_grants": [
+          "saved_searches"
+        ],
+        "state_requirement": "durable",
+        "mutating": true,
+        "policy_gate": false
+      },
+      {
+        "name": "slopsearx_delete_saved_search",
+        "source": "slopsearx/mcp/tools.py:slopsearx_delete_saved_search",
+        "tests": [
+          "tests/test_saved_transport.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "W00"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.saved_search",
+        "required_grants": [
+          "saved_searches"
+        ],
+        "state_requirement": "durable",
+        "mutating": true,
+        "policy_gate": false
+      },
+      {
+        "name": "slopsearx_read_saved_search_reports",
+        "source": "slopsearx/mcp/tools.py:slopsearx_read_saved_search_reports",
+        "tests": [
+          "tests/test_saved_transport.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "W04"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.saved_search.reports",
+        "required_grants": [
+          "saved_searches"
+        ],
+        "state_requirement": "durable",
+        "mutating": false,
+        "policy_gate": true
+      },
+      {
+        "name": "slopsearx_read_saved_search_events",
+        "source": "slopsearx/mcp/tools.py:slopsearx_read_saved_search_events",
+        "tests": [
+          "tests/test_saved_events_transport.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "W05"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.saved_search_event_batch",
+        "required_grants": [
+          "saved_search_events"
+        ],
+        "state_requirement": "durable",
+        "mutating": false,
+        "policy_gate": true
+      },
+      {
+        "name": "slopsearx_ack_saved_search_events",
+        "source": "slopsearx/mcp/tools.py:slopsearx_ack_saved_search_events",
+        "tests": [
+          "tests/test_saved_events_transport.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "W05"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.saved_search_event_ack",
+        "required_grants": [
+          "saved_search_events"
+        ],
+        "state_requirement": "durable",
+        "mutating": true,
+        "policy_gate": false
+      },
+      {
+        "name": "slopsearx_submit_retrieval_receipt",
+        "source": "slopsearx/mcp/receipt_tools.py:slopsearx_submit_retrieval_receipt",
+        "tests": [
+          "tests/test_retrieval_receipts_transport.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "W07"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.retrieval_receipt",
+        "required_grants": [
+          "retrieval_receipts"
+        ],
+        "state_requirement": "durable",
+        "mutating": true,
+        "policy_gate": false
+      },
+      {
+        "name": "slopsearx_read_retrieval_receipts",
+        "source": "slopsearx/mcp/receipt_tools.py:slopsearx_read_retrieval_receipts",
+        "tests": [
+          "tests/test_retrieval_receipts_transport.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "W07"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.retrieval_receipt",
+        "required_grants": [
+          "retrieval_receipts"
+        ],
+        "state_requirement": "durable",
+        "mutating": false,
+        "policy_gate": false
+      },
+      {
+        "name": "slopsearx_export_research_manifest",
+        "source": "slopsearx/mcp/receipt_tools.py:slopsearx_export_research_manifest",
+        "tests": [
+          "tests/test_retrieval_receipts_transport.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "W07"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.research_manifest",
+        "required_grants": [
+          "retrieval_receipts"
+        ],
+        "state_requirement": "durable",
+        "mutating": false,
+        "policy_gate": false
+      },
+      {
+        "name": "slopsearx_preview_staged_search",
+        "source": "slopsearx/mcp/staged_tools.py:slopsearx_preview_staged_search",
+        "tests": [
+          "tests/test_staged_search.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "W06",
+          "W11"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.staged_search",
+        "required_grants": [
+          "staged_search"
+        ],
+        "state_requirement": "none",
+        "mutating": false,
+        "policy_gate": true
+      },
+      {
+        "name": "slopsearx_search_staged",
+        "source": "slopsearx/mcp/staged_tools.py:slopsearx_search_staged",
+        "tests": [
+          "tests/test_staged_search.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "W06",
+          "W11"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.staged_search",
+        "required_grants": [
+          "staged_search"
+        ],
+        "state_requirement": "durable",
+        "mutating": true,
+        "policy_gate": true
+      },
+      {
+        "name": "slopsearx_get_staged_search",
+        "source": "slopsearx/mcp/staged_tools.py:slopsearx_get_staged_search",
+        "tests": [
+          "tests/test_staged_search.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "W06",
+          "W11"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.staged_search",
+        "required_grants": [
+          "staged_search"
+        ],
+        "state_requirement": "durable",
+        "mutating": false,
+        "policy_gate": true
+      },
+      {
+        "name": "slopsearx_retry_staged_search",
+        "source": "slopsearx/mcp/staged_tools.py:slopsearx_retry_staged_search",
+        "tests": [
+          "tests/test_staged_search.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "W06",
+          "W11"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.staged_search",
+        "required_grants": [
+          "staged_search"
+        ],
+        "state_requirement": "durable",
+        "mutating": true,
+        "policy_gate": true
+      },
+      {
+        "name": "slopsearx_start_dependency_dossier",
+        "source": "slopsearx/mcp/dependency_tools.py:slopsearx_start_dependency_dossier",
+        "tests": [
+          "tests/test_dependency_dossier.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "W08"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.dependency_dossier",
+        "required_grants": [
+          "dependency_dossier",
+          "research",
+          "security"
+        ],
+        "state_requirement": "durable",
+        "mutating": true,
+        "policy_gate": true
+      },
+      {
+        "name": "slopsearx_get_dependency_dossier",
+        "source": "slopsearx/mcp/dependency_tools.py:slopsearx_get_dependency_dossier",
+        "tests": [
+          "tests/test_dependency_dossier.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "W08"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.dependency_dossier",
+        "required_grants": [
+          "dependency_dossier",
+          "research",
+          "security"
+        ],
+        "state_requirement": "durable",
+        "mutating": false,
+        "policy_gate": true
+      },
+      {
+        "name": "slopsearx_get_artifact_lineage",
+        "source": "slopsearx/mcp/lineage_tools.py:slopsearx_get_artifact_lineage",
+        "tests": [
+          "tests/test_retrieval_receipts_transport.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "W07"
+        ],
+        "parity_status": "pending",
+        "contract": "slopsearx.artifact_lineage",
+        "required_grants": [],
+        "state_requirement": "durable",
+        "mutating": false,
+        "policy_gate": true
+      }
+    ],
+    "resources": [
+      {
+        "uri": "slopsearx://capabilities",
+        "source": "slopsearx/mcp/resources.py:render_capabilities",
+        "tests": [
+          "tests/test_mcp_tools.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "T06",
+          "W09"
+        ],
+        "parity_status": "pending"
+      },
+      {
+        "uri": "slopsearx://capabilities/{engine}",
+        "source": "slopsearx/mcp/resources.py:render_engine_capability",
+        "tests": [
+          "tests/test_mcp_tools.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "T06",
+          "W09"
+        ],
+        "parity_status": "pending"
+      },
+      {
+        "uri": "slopsearx://routing-profiles",
+        "source": "slopsearx/mcp/resources.py:render_routing_profiles",
+        "tests": [
+          "tests/test_mcp_tools.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "T06",
+          "W09"
+        ],
+        "parity_status": "pending"
+      },
+      {
+        "uri": "slopsearx://health/summary",
+        "source": "slopsearx/mcp/resources.py:render_health_summary",
+        "tests": [
+          "tests/test_mcp_tools.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "T06",
+          "W09"
+        ],
+        "parity_status": "pending"
+      }
+    ],
+    "prompts": [
+      {
+        "name": "research_with_source_coverage",
+        "arguments": [
+          "question"
+        ],
+        "source": "slopsearx/mcp/prompts.py:research_with_source_coverage",
+        "tests": [
+          "tests/test_mcp_tools.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "T06",
+          "W09"
+        ],
+        "parity_status": "pending"
+      },
+      {
+        "name": "investigate_vulnerability",
+        "arguments": [
+          "target"
+        ],
+        "source": "slopsearx/mcp/prompts.py:investigate_vulnerability",
+        "tests": [
+          "tests/test_mcp_tools.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "T06",
+          "W09"
+        ],
+        "parity_status": "pending"
+      },
+      {
+        "name": "find_company_jobs",
+        "arguments": [
+          "company"
+        ],
+        "source": "slopsearx/mcp/prompts.py:find_company_jobs",
+        "tests": [
+          "tests/test_mcp_tools.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "T06",
+          "W09"
+        ],
+        "parity_status": "pending"
+      },
+      {
+        "name": "compare_package_or_project",
+        "arguments": [
+          "name"
+        ],
+        "source": "slopsearx/mcp/prompts.py:compare_package_or_project",
+        "tests": [
+          "tests/test_mcp_tools.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "T06",
+          "W09"
+        ],
+        "parity_status": "pending"
+      },
+      {
+        "name": "plan_research_with_evidence",
+        "arguments": [
+          "question"
+        ],
+        "source": "slopsearx/mcp/prompts.py:plan_research_with_evidence",
+        "tests": [
+          "tests/test_mcp_tools.py",
+          "tests/test_mcp_harness.py",
+          "tests/test_mcp_tool_registry.py"
+        ],
+        "owner_plan_ids": [
+          "T06",
+          "W09"
+        ],
+        "parity_status": "pending"
+      }
+    ],
+    "sdk_provenance": {
+      "fastmcp": "4.0.11",
+      "mcp": "2.3.0",
+      "locked_by": "uv.lock; declared ranges in pyproject.toml are broader",
+      "oauth_route_evidence": "FastMCP 4.0.11 and MCP 2.3.0 from uv.lock; inspected locked cached source for FastMCP OAuthProvider.get_routes, Streamable HTTP route construction and MCP create_auth_routes/create_protected_resource_routes. The application config enables DCR/revocation and sets resource_server_url={issuer}/mcp. Contract tests cover OAuth discovery/full flow, but do not assert protected-resource metadata; T01 must capture and compare every SDK route/schema at locked versions.",
+      "sse_route_evidence": "FastMCP 4.0.11 from uv.lock; inspected locked cache source for fastmcp/server/mixins/transport.py, fastmcp/server/http.py:create_sse_app, fastmcp/settings.py, and MCP 2.3.0:mcp/server/sse.py:SseServerTransport. The configured message prefix defaults to /messages/ but the actual Starlette Mount.path normalizes to /messages with methods unrestricted (*); successful session posts are sent to the advertised prefix. FASTMCP_SSE_PATH and FASTMCP_MESSAGE_PATH override paths. Current slopsearx.mcp.server.main SSE branch constructs create_server() without OAuth/static bearer config. No baseline SSE route tests exist; create them in T01/T06.",
+      "runtime_route_snapshot": "Inspected local locked environment without lifespan startup/provider/network calls: create_server().http_app(transport=\"sse\").routes yielded /sse GET+implicit HEAD and Mount path /messages (*); make_http_app(create_server(oauth=settings,oauth_provider=provider),\"\").routes yielded OAuth metadata GET+HEAD+OPTIONS, authorize GET+HEAD+POST, token/register/revoke OPTIONS+POST, protected-resource metadata GET+HEAD+OPTIONS, and /mcp DELETE+POST. Preserve advertised message prefix /messages/ separately from normalized Mount.path /messages."
+    }
+  },
+  "commands": [
+    {
+      "id": "mcp-local-stdio",
+      "command": "slopsearx-mcp [--transport stdio]",
+      "source": "slopsearx/mcp/server.py:main",
+      "tests": [
+        "tests/test_mcp_harness.py",
+        "tests/test_mcp_gateway_initialization.py"
+      ],
+      "owner_plan_ids": [
+        "T01",
+        "T06"
+      ],
+      "parity_status": "pending"
+    },
+    {
+      "id": "mcp-http",
+      "command": "MCP_TRANSPORT=http|streamable-http MCP_HOST=... MCP_PORT=... slopsearx-mcp",
+      "source": "slopsearx/mcp/server.py:main; slopsearx/mcp/security.py:make_http_app",
+      "tests": [
+        "tests/test_mcp_security.py",
+        "tests/test_mcp_oauth.py",
+        "tests/test_mcp_harness.py"
+      ],
+      "owner_plan_ids": [
+        "T01",
+        "T05",
+        "T06"
+      ],
+      "parity_status": "pending"
+    },
+    {
+      "id": "mcp-sse",
+      "command": "MCP_TRANSPORT=sse slopsearx-mcp",
+      "source": "slopsearx/mcp/server.py:main",
+      "tests": [
+        "tests/test_mcp_harness.py",
+        "tests/test_mcp_security.py"
+      ],
+      "owner_plan_ids": [
+        "T01",
+        "T06"
+      ],
+      "parity_status": "pending"
+    },
+    {
+      "id": "mcp-gateway-token",
+      "command": "slopsearx-mcp --remote URL [--token TOKEN]",
+      "source": "slopsearx/mcp/server.py:main; slopsearx/mcp/gateway.py:create_gateway",
+      "tests": [
+        "tests/test_mcp_gateway.py",
+        "tests/test_mcp_gateway_lifecycle.py"
+      ],
+      "owner_plan_ids": [
+        "T07"
+      ],
+      "parity_status": "pending"
+    },
+    {
+      "id": "mcp-gateway-oauth",
+      "command": "slopsearx-mcp --remote URL --oauth [--oauth-callback-port PORT] [--oauth-no-browser] [--oauth-token-file PATH]",
+      "source": "slopsearx/mcp/oauth_client.py; slopsearx/mcp/gateway.py:create_gateway",
+      "tests": [
+        "tests/test_mcp_oauth_client.py",
+        "tests/test_mcp_gateway.py"
+      ],
+      "owner_plan_ids": [
+        "T07"
+      ],
+      "parity_status": "pending"
+    },
+    {
+      "id": "http-container",
+      "command": "uvicorn slopsearx.server:app --host 0.0.0.0 --port 8080",
+      "source": "Dockerfile:CMD",
+      "tests": [
+        "tests/test_server.py",
+        "tests/test_deployment_artifacts.py"
+      ],
+      "owner_plan_ids": [
+        "T02",
+        "O04"
+      ],
+      "parity_status": "pending"
+    },
+    {
+      "id": "docker-compose",
+      "command": "docker compose build; docker compose up -d; docker compose down",
+      "source": "docker-compose.yml; Dockerfile; docs/runbooks.md",
+      "tests": [
+        "tests/test_deployment_artifacts.py"
+      ],
+      "owner_plan_ids": [
+        "O02",
+        "O04",
+        "G05"
+      ],
+      "parity_status": "pending"
+    },
+    {
+      "id": "kubernetes",
+      "command": "kubectl apply -f k8s/deployment.yaml; kubectl rollout status deployment/slopsearx",
+      "source": "k8s/deployment.yaml; docs/PORTAL_DEPLOYMENT.md",
+      "tests": [
+        "tests/test_deployment_artifacts.py"
+      ],
+      "owner_plan_ids": [
+        "O02",
+        "O04",
+        "G05"
+      ],
+      "parity_status": "pending"
+    },
+    {
+      "id": "healthcheck",
+      "command": "python docker/healthcheck.py",
+      "source": "Dockerfile:HEALTHCHECK; docker/healthcheck.py",
+      "tests": [
+        "tests/test_deployment_artifacts.py"
+      ],
+      "owner_plan_ids": [
+        "O02",
+        "O04"
+      ],
+      "parity_status": "pending"
+    },
+    {
+      "id": "ssx",
+      "command": "./ssx [subcommand]",
+      "source": "ssx",
+      "tests": [],
+      "owner_plan_ids": [
+        "T08"
+      ],
+      "parity_status": "pending",
+      "regression_gap": "No CLI-specific tests exist at the pinned baseline; native CLI parity tests must be added under T08."
+    },
+    {
+      "id": "compose-source-build",
+      "command": "DEBIAN_SECURITY_REFRESH=<stamp> docker compose --profile build up -d slopsearx-build",
+      "source": "docker-compose.yml; Dockerfile; README.md",
+      "tests": [
+        "tests/test_deployment_artifacts.py"
+      ],
+      "owner_plan_ids": [
+        "O04",
+        "G05"
+      ],
+      "parity_status": "pending"
+    },
+    {
+      "id": "compose-mcp-profile",
+      "command": "docker compose --profile mcp up -d slopsearx-mcp",
+      "source": "docker-compose.yml; docs/PORTAL_DEPLOYMENT.md; docs/MCP_SERVER.md",
+      "tests": [
+        "tests/test_deployment_artifacts.py"
+      ],
+      "owner_plan_ids": [
+        "O04",
+        "T06"
+      ],
+      "parity_status": "pending"
+    },
+    {
+      "id": "compose-verify-jev",
+      "command": "docker compose exec -T slopsearx sh -c 'test -n \"$TYPESAFE_API_KEY\"'; docker compose --profile mcp exec -T slopsearx-mcp sh -c 'test -n \"$TYPESAFE_API_KEY\"'",
+      "source": "docs/PORTAL_DEPLOYMENT.md",
+      "tests": [
+        "tests/test_deployment_artifacts.py"
+      ],
+      "owner_plan_ids": [
+        "G05"
+      ],
+      "parity_status": "pending"
+    },
+    {
+      "id": "digest-resolution",
+      "command": "docker buildx imagetools inspect ghcr.io/magnus919/slopsearx:<short-sha> --format <manifest-digest-template>",
+      "source": "README.md; docs/PORTAL_DEPLOYMENT.md",
+      "tests": [
+        "tests/test_deployment_artifacts.py"
+      ],
+      "owner_plan_ids": [
+        "O04",
+        "G05"
+      ],
+      "parity_status": "pending"
+    },
+    {
+      "id": "manual-container-run",
+      "command": "docker run valkey/valkey:8-alpine; docker run ghcr.io/magnus919/slopsearx:latest -p 8080:8080",
+      "source": "README.md",
+      "tests": [
+        "tests/test_deployment_artifacts.py"
+      ],
+      "owner_plan_ids": [
+        "O04",
+        "G05"
+      ],
+      "parity_status": "pending"
+    },
+    {
+      "id": "release-portal-smoke",
+      "command": "python3 scripts/portal_release_smoke.py --base-url http://127.0.0.1:8080 --expected-theme dark",
+      "source": "scripts/portal_release_smoke.py; .github/workflows/docker.yml",
+      "tests": [
+        "tests/test_deployment_artifacts.py"
+      ],
+      "owner_plan_ids": [
+        "O02",
+        "O04",
+        "G06"
+      ],
+      "parity_status": "pending"
+    },
+    {
+      "id": "manual-health-recovery",
+      "command": "docker compose exec valkey redis-cli PING; docker compose restart valkey; docker compose build; docker compose down; docker compose up -d --no-build",
+      "source": "docs/runbooks.md",
+      "tests": [
+        "tests/test_deployment_artifacts.py"
+      ],
+      "owner_plan_ids": [
+        "O02",
+        "G05"
+      ],
+      "parity_status": "pending"
+    },
+    {
+      "id": "search-smoke",
+      "command": "curl http://localhost:8080/search?q=hello+world&format=json",
+      "source": "README.md",
+      "tests": [
+        "tests/test_server.py"
+      ],
+      "owner_plan_ids": [
+        "T02",
+        "G06"
+      ],
+      "parity_status": "pending"
+    }
+  ],
+  "surface_counts": {
+    "application_http_route_declarations": 14,
+    "streamable_http_endpoint_records": 1,
+    "conditional_oauth_streamable_http_routes": 6,
+    "legacy_sse_endpoint_records": 2,
+    "distinct_paths_across_listed_modes": 22,
+    "total_route_records": 23
+  }
+}

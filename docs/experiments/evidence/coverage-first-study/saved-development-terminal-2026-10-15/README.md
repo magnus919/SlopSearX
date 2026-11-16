@@ -1,0 +1,7 @@
+# Saved-development attempt ended before a ranking result
+
+The development attempt is terminal and incomplete. All 54 registered native reference grades returned, and independent reference closure completed. The first selector operation's generated request matched its frozen request byte-for-byte, but the local verifier refused the selector-input map: the saved-corpus map contained 27 fields while the executor accepted only 16, omitting 11 valid saved-mode and provenance fields. The refusal occurred before permit validation, request claim, archival, or transport, so no Jev network call occurred. This is a verifier compatibility failure; no selector result or ranking-quality evidence was produced.
+
+No answer calls, new search calls, or new capture calls occurred in this attempt. Confirmation was not invoked. There is no ranking or quality result, and this attempt does not qualify the candidate. The original start receipt remains available in the [registration snapshot](../saved-handoff-registration-2026-10-15/development-start.json); it records zero counts only as of startup, not as final totals.
+
+The source revision was `ebeb9cee521612e6a868730812b154933d4863f2`, with source-closure digest `0ffd4f8fea03e6503cc6d6a5e66b78929553fb8a5a334673035bd6142ea471ca`. The terminal summary contains only public-safe stage identifiers and outcome fields. The original start receipt and frozen input files are preserved unchanged.

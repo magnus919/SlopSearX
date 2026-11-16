@@ -1,0 +1,41 @@
+use super::prelude::*;
+
+#[tokio::test]
+async fn nowrap() -> Result<()> {
+	let child = CommandWrap::with_new("echo", |command| {
+		command.stdout(Stdio::null());
+	})
+	.spawn()?;
+
+	assert_eq!(child.id(), child.inner().id());
+
+	Ok(())
+}
+
+#[cfg(feature = "process-group")]
+#[tokio::test]
+async fn process_group() -> Result<()> {
+	let child = CommandWrap::with_new("echo", |command| {
+		command.stdout(Stdio::null());
+	})
+	.wrap(ProcessGroup::leader())
+	.spawn()?;
+
+	assert_eq!(child.id(), child.inner().id());
+
+	Ok(())
+}
+
+#[cfg(feature = "process-session")]
+#[tokio::test]
+async fn process_session() -> Result<()> {
+	let child = CommandWrap::with_new("echo", |command| {
+		command.stdout(Stdio::null());
+	})
+	.wrap(ProcessSession)
+	.spawn()?;
+
+	assert_eq!(child.id(), child.inner().id());
+
+	Ok(())
+}

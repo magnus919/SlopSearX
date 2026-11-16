@@ -1,0 +1,1050 @@
+{
+  "schema": "ssx-reference-capture-v1",
+  "classification": "reference observations from local source with mocked transport; not native CLI acceptance",
+  "uncaught_traceback_note": "Captured Python tracebacks include the runpy capture harness call frame; for uncaught search exceptions, use only exception class/message and exit status as source observations, not the full stderr bytes as a standalone CLI golden.",
+  "source": {
+    "path": "ssx",
+    "bytes": 8927,
+    "sha256": "4c45e876fc79dffc0f7da8ccccc9c6ba67d4f4cc9e0bd9e8194f74184b96c65b"
+  },
+  "capture_runtime": "3.13.6",
+  "capture_executable": "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+  "cases": [
+    {
+      "id": "search-yaml-default",
+      "argv": [
+        "ssx",
+        "search",
+        "quantum",
+        "search"
+      ],
+      "environment": {
+        "SSX_URL": "http://fixture.invalid:8080///"
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://fixture.invalid:8080/search?q=quantum+search&language=en&pageno=1&format=yaml",
+          "path": "/search",
+          "query": [
+            [
+              "q",
+              "quantum search"
+            ],
+            [
+              "language",
+              "en"
+            ],
+            [
+              "pageno",
+              "1"
+            ],
+            [
+              "format",
+              "yaml"
+            ]
+          ],
+          "accept": "text/vnd.yaml+markdown",
+          "timeout_seconds": 15,
+          "response_fixture_index": 0
+        }
+      ],
+      "response_fixtures": [
+        {
+          "path": "/search",
+          "kind": "body",
+          "raw_body_text": "---\nquery: café\ntitle: 漢字 😃\n"
+        }
+      ],
+      "response_order": [
+        0
+      ],
+      "stdout": "---\nquery: café\ntitle: 漢字 😃\n\n",
+      "stderr": "",
+      "exit_status": 0
+    },
+    {
+      "id": "search-json-flag-unicode",
+      "argv": [
+        "ssx",
+        "search",
+        "café",
+        "R&D?",
+        "--categories",
+        "science,news",
+        "-e",
+        "openalex",
+        "-l",
+        "fr",
+        "--time-range",
+        "month",
+        "--pageno",
+        "2",
+        "--json"
+      ],
+      "environment": {
+        "SSX_URL": "http://fixture.invalid:8080///"
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://fixture.invalid:8080/search?q=caf%C3%A9+R%26D%3F&categories=science%2Cnews&engines=openalex&language=fr&time_range=month&pageno=2&format=json",
+          "path": "/search",
+          "query": [
+            [
+              "q",
+              "café R&D?"
+            ],
+            [
+              "categories",
+              "science,news"
+            ],
+            [
+              "engines",
+              "openalex"
+            ],
+            [
+              "language",
+              "fr"
+            ],
+            [
+              "time_range",
+              "month"
+            ],
+            [
+              "pageno",
+              "2"
+            ],
+            [
+              "format",
+              "json"
+            ]
+          ],
+          "accept": "application/json",
+          "timeout_seconds": 15,
+          "response_fixture_index": 0
+        }
+      ],
+      "response_fixtures": [
+        {
+          "path": "/search",
+          "kind": "body",
+          "raw_body_text": "{\"query\": \"café R&D?\", \"title\": \"漢字 😃\", \"large\": 9223372036854775808, \"special\": NaN}"
+        }
+      ],
+      "response_order": [
+        0
+      ],
+      "stdout": "{\n  \"query\": \"caf\\u00e9 R&D?\",\n  \"title\": \"\\u6f22\\u5b57 \\ud83d\\ude03\",\n  \"large\": 9223372036854775808,\n  \"special\": NaN\n}\n",
+      "stderr": "",
+      "exit_status": 0
+    },
+    {
+      "id": "search-json-env-case",
+      "argv": [
+        "ssx",
+        "search",
+        "quantum"
+      ],
+      "environment": {
+        "SSX_URL": "http://fixture.invalid:8080///",
+        "SSX_FORMAT": "JsOn"
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://fixture.invalid:8080/search?q=quantum&language=en&pageno=1&format=json",
+          "path": "/search",
+          "query": [
+            [
+              "q",
+              "quantum"
+            ],
+            [
+              "language",
+              "en"
+            ],
+            [
+              "pageno",
+              "1"
+            ],
+            [
+              "format",
+              "json"
+            ]
+          ],
+          "accept": "application/json",
+          "timeout_seconds": 15,
+          "response_fixture_index": 0
+        }
+      ],
+      "response_fixtures": [
+        {
+          "path": "/search",
+          "kind": "body",
+          "raw_body_text": "{\"query\": \"café R&D?\", \"title\": \"漢字 😃\", \"large\": 9223372036854775808, \"special\": NaN}"
+        }
+      ],
+      "response_order": [
+        0
+      ],
+      "stdout": "{\n  \"query\": \"caf\\u00e9 R&D?\",\n  \"title\": \"\\u6f22\\u5b57 \\ud83d\\ude03\",\n  \"large\": 9223372036854775808,\n  \"special\": NaN\n}\n",
+      "stderr": "",
+      "exit_status": 0
+    },
+    {
+      "id": "search-flag-overrides-yaml-env",
+      "argv": [
+        "ssx",
+        "search",
+        "quantum",
+        "--json"
+      ],
+      "environment": {
+        "SSX_URL": "http://fixture.invalid:8080///",
+        "SSX_FORMAT": "yaml"
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://fixture.invalid:8080/search?q=quantum&language=en&pageno=1&format=json",
+          "path": "/search",
+          "query": [
+            [
+              "q",
+              "quantum"
+            ],
+            [
+              "language",
+              "en"
+            ],
+            [
+              "pageno",
+              "1"
+            ],
+            [
+              "format",
+              "json"
+            ]
+          ],
+          "accept": "application/json",
+          "timeout_seconds": 15,
+          "response_fixture_index": 0
+        }
+      ],
+      "response_fixtures": [
+        {
+          "path": "/search",
+          "kind": "body",
+          "raw_body_text": "{\"query\": \"café R&D?\", \"title\": \"漢字 😃\", \"large\": 9223372036854775808, \"special\": NaN}"
+        }
+      ],
+      "response_order": [
+        0
+      ],
+      "stdout": "{\n  \"query\": \"caf\\u00e9 R&D?\",\n  \"title\": \"\\u6f22\\u5b57 \\ud83d\\ude03\",\n  \"large\": 9223372036854775808,\n  \"special\": NaN\n}\n",
+      "stderr": "",
+      "exit_status": 0
+    },
+    {
+      "id": "search-zero-page",
+      "argv": [
+        "ssx",
+        "search",
+        "zero",
+        "--pageno",
+        "0"
+      ],
+      "environment": {
+        "SSX_URL": "http://fixture.invalid:8080///"
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://fixture.invalid:8080/search?q=zero&language=en&format=yaml",
+          "path": "/search",
+          "query": [
+            [
+              "q",
+              "zero"
+            ],
+            [
+              "language",
+              "en"
+            ],
+            [
+              "format",
+              "yaml"
+            ]
+          ],
+          "accept": "text/vnd.yaml+markdown",
+          "timeout_seconds": 15,
+          "response_fixture_index": 0
+        }
+      ],
+      "response_fixtures": [
+        {
+          "path": "/search",
+          "kind": "body",
+          "raw_body_text": "---\nquery: café\ntitle: 漢字 😃\n"
+        }
+      ],
+      "response_order": [
+        0
+      ],
+      "stdout": "---\nquery: café\ntitle: 漢字 😃\n\n",
+      "stderr": "",
+      "exit_status": 0
+    },
+    {
+      "id": "search-negative-page",
+      "argv": [
+        "ssx",
+        "search",
+        "negative",
+        "--pageno",
+        "-2"
+      ],
+      "environment": {
+        "SSX_URL": "http://fixture.invalid:8080///"
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://fixture.invalid:8080/search?q=negative&language=en&pageno=-2&format=yaml",
+          "path": "/search",
+          "query": [
+            [
+              "q",
+              "negative"
+            ],
+            [
+              "language",
+              "en"
+            ],
+            [
+              "pageno",
+              "-2"
+            ],
+            [
+              "format",
+              "yaml"
+            ]
+          ],
+          "accept": "text/vnd.yaml+markdown",
+          "timeout_seconds": 15,
+          "response_fixture_index": 0
+        }
+      ],
+      "response_fixtures": [
+        {
+          "path": "/search",
+          "kind": "body",
+          "raw_body_text": "---\nquery: café\ntitle: 漢字 😃\n"
+        }
+      ],
+      "response_order": [
+        0
+      ],
+      "stdout": "---\nquery: café\ntitle: 漢字 😃\n\n",
+      "stderr": "",
+      "exit_status": 0
+    },
+    {
+      "id": "search-page-over-i64",
+      "argv": [
+        "ssx",
+        "search",
+        "large",
+        "--pageno",
+        "9223372036854775808"
+      ],
+      "environment": {
+        "SSX_URL": "http://fixture.invalid:8080///"
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://fixture.invalid:8080/search?q=large&language=en&pageno=9223372036854775808&format=yaml",
+          "path": "/search",
+          "query": [
+            [
+              "q",
+              "large"
+            ],
+            [
+              "language",
+              "en"
+            ],
+            [
+              "pageno",
+              "9223372036854775808"
+            ],
+            [
+              "format",
+              "yaml"
+            ]
+          ],
+          "accept": "text/vnd.yaml+markdown",
+          "timeout_seconds": 15,
+          "response_fixture_index": 0
+        }
+      ],
+      "response_fixtures": [
+        {
+          "path": "/search",
+          "kind": "body",
+          "raw_body_text": "---\nquery: café\ntitle: 漢字 😃\n"
+        }
+      ],
+      "response_order": [
+        0
+      ],
+      "stdout": "---\nquery: café\ntitle: 漢字 😃\n\n",
+      "stderr": "",
+      "exit_status": 0
+    },
+    {
+      "id": "search-blank-query",
+      "argv": [
+        "ssx",
+        "search",
+        "   "
+      ],
+      "environment": {
+        "SSX_URL": "http://fixture.invalid:8080///"
+      },
+      "requests": [],
+      "response_fixtures": [],
+      "response_order": [],
+      "stdout": "",
+      "stderr": "error: query is required\n",
+      "exit_status": 1
+    },
+    {
+      "id": "search-invalid-page-arg",
+      "argv": [
+        "ssx",
+        "search",
+        "x",
+        "--pageno",
+        "nope"
+      ],
+      "environment": {
+        "SSX_URL": "http://fixture.invalid:8080///"
+      },
+      "requests": [],
+      "response_fixtures": [],
+      "response_order": [],
+      "stdout": "",
+      "stderr": "usage: ssx search [-h] [--categories CATEGORIES] [--engines ENGINES]\n                  [--language LANGUAGE] [--time-range TIME_RANGE]\n                  [--pageno PAGENO] [--json]\n                  query [query ...]\nssx search: error: argument --pageno: invalid int value: 'nope'\n",
+      "exit_status": 2
+    },
+    {
+      "id": "search-no-subcommand",
+      "argv": [
+        "ssx"
+      ],
+      "environment": {
+        "SSX_URL": "http://fixture.invalid:8080///"
+      },
+      "requests": [],
+      "response_fixtures": [],
+      "response_order": [],
+      "stdout": "",
+      "stderr": "usage: ssx [-h] {search,engines,health,config} ...\nssx: error: the following arguments are required: command\n",
+      "exit_status": 2
+    },
+    {
+      "id": "engines-yaml",
+      "argv": [
+        "ssx",
+        "engines"
+      ],
+      "environment": {
+        "SSX_URL": "http://fixture.invalid:8080///"
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://fixture.invalid:8080/health",
+          "path": "/health",
+          "query": [],
+          "accept": "application/json",
+          "timeout_seconds": 15,
+          "response_fixture_index": 0
+        },
+        {
+          "method": "GET",
+          "url": "http://fixture.invalid:8080/config",
+          "path": "/config",
+          "query": [],
+          "accept": "application/json",
+          "timeout_seconds": 15,
+          "response_fixture_index": 1
+        }
+      ],
+      "response_fixtures": [
+        {
+          "path": "/health",
+          "kind": "body",
+          "raw_body_text": "{\"status\": \"ok\", \"engines\": {\"zeta\": {\"status\": \"down\", \"detail\": \"private detail\"}, \"alpha\": {\"status\": \"ok\", \"detail\": \"healthy detail\"}}}"
+        },
+        {
+          "path": "/config",
+          "kind": "body",
+          "raw_body_text": "{\"categories\": {\"zeta-cat\": [\"zeta\", \"alpha\"], \"alpha-cat\": [\"beta\"]}, \"version\": 4}"
+        }
+      ],
+      "response_order": [
+        0,
+        1
+      ],
+      "stdout": "---\nserver_status: ok\nengine_count: 2\nengines:\n  - name: alpha\n    status: ok\n    categories: [zeta-cat]\n  - name: zeta\n    status: down\n    categories: [zeta-cat]\n",
+      "stderr": "",
+      "exit_status": 0
+    },
+    {
+      "id": "engines-json",
+      "argv": [
+        "ssx",
+        "engines",
+        "--json"
+      ],
+      "environment": {
+        "SSX_URL": "http://fixture.invalid:8080///"
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://fixture.invalid:8080/health",
+          "path": "/health",
+          "query": [],
+          "accept": "application/json",
+          "timeout_seconds": 15,
+          "response_fixture_index": 0
+        },
+        {
+          "method": "GET",
+          "url": "http://fixture.invalid:8080/config",
+          "path": "/config",
+          "query": [],
+          "accept": "application/json",
+          "timeout_seconds": 15,
+          "response_fixture_index": 1
+        }
+      ],
+      "response_fixtures": [
+        {
+          "path": "/health",
+          "kind": "body",
+          "raw_body_text": "{\"status\": \"ok\", \"engines\": {\"zeta\": {\"status\": \"down\", \"detail\": \"private detail\"}, \"alpha\": {\"status\": \"ok\", \"detail\": \"healthy detail\"}}}"
+        },
+        {
+          "path": "/config",
+          "kind": "body",
+          "raw_body_text": "{\"categories\": {\"zeta-cat\": [\"zeta\", \"alpha\"], \"alpha-cat\": [\"beta\"]}, \"version\": 4}"
+        }
+      ],
+      "response_order": [
+        0,
+        1
+      ],
+      "stdout": "{\n  \"alpha\": {\n    \"status\": \"ok\",\n    \"categories\": [\n      \"zeta-cat\"\n    ]\n  },\n  \"zeta\": {\n    \"status\": \"down\",\n    \"categories\": [\n      \"zeta-cat\"\n    ]\n  }\n}\n",
+      "stderr": "",
+      "exit_status": 0
+    },
+    {
+      "id": "health-yaml",
+      "argv": [
+        "ssx",
+        "health"
+      ],
+      "environment": {
+        "SSX_URL": "http://fixture.invalid:8080///"
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://fixture.invalid:8080/health",
+          "path": "/health",
+          "query": [],
+          "accept": "application/json",
+          "timeout_seconds": 15,
+          "response_fixture_index": 0
+        }
+      ],
+      "response_fixtures": [
+        {
+          "path": "/health",
+          "kind": "body",
+          "raw_body_text": "{\"status\": \"ok\", \"engines\": {\"zeta\": {\"status\": \"down\", \"detail\": \"private detail\"}, \"alpha\": {\"status\": \"ok\", \"detail\": \"healthy detail\"}}}"
+        }
+      ],
+      "response_order": [
+        0
+      ],
+      "stdout": "---\nserver_status: ok\nengines_ok: 1/2\nengine_status:\n  alpha: ok\n  zeta: down\n",
+      "stderr": "",
+      "exit_status": 0
+    },
+    {
+      "id": "health-json",
+      "argv": [
+        "ssx",
+        "health",
+        "--json"
+      ],
+      "environment": {
+        "SSX_URL": "http://fixture.invalid:8080///"
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://fixture.invalid:8080/health",
+          "path": "/health",
+          "query": [],
+          "accept": "application/json",
+          "timeout_seconds": 15,
+          "response_fixture_index": 0
+        }
+      ],
+      "response_fixtures": [
+        {
+          "path": "/health",
+          "kind": "body",
+          "raw_body_text": "{\"status\": \"ok\", \"engines\": {\"zeta\": {\"status\": \"down\", \"detail\": \"private detail\"}, \"alpha\": {\"status\": \"ok\", \"detail\": \"healthy detail\"}}}"
+        }
+      ],
+      "response_order": [
+        0
+      ],
+      "stdout": "{\n  \"status\": \"ok\",\n  \"engines\": {\n    \"zeta\": {\n      \"status\": \"down\",\n      \"detail\": \"private detail\"\n    },\n    \"alpha\": {\n      \"status\": \"ok\",\n      \"detail\": \"healthy detail\"\n    }\n  }\n}\n",
+      "stderr": "",
+      "exit_status": 0
+    },
+    {
+      "id": "config-yaml",
+      "argv": [
+        "ssx",
+        "config"
+      ],
+      "environment": {
+        "SSX_URL": "http://fixture.invalid:8080///"
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://fixture.invalid:8080/config",
+          "path": "/config",
+          "query": [],
+          "accept": "application/json",
+          "timeout_seconds": 15,
+          "response_fixture_index": 0
+        }
+      ],
+      "response_fixtures": [
+        {
+          "path": "/config",
+          "kind": "body",
+          "raw_body_text": "{\"categories\": {\"zeta-cat\": [\"zeta\", \"alpha\"], \"alpha-cat\": [\"beta\"]}, \"version\": 4}"
+        }
+      ],
+      "response_order": [
+        0
+      ],
+      "stdout": "---\ncategory_count: 2\ncategories:\n  alpha-cat:\n    - beta\n  zeta-cat:\n    - alpha\n    - zeta\n\n## Engine Category Reference\n\nEach engine can be queried with `?engines=<name>` or reached\nvia any of its assigned categories with `?categories=<cat>`.\n",
+      "stderr": "",
+      "exit_status": 0
+    },
+    {
+      "id": "config-json",
+      "argv": [
+        "ssx",
+        "config",
+        "--json"
+      ],
+      "environment": {
+        "SSX_URL": "http://fixture.invalid:8080///"
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://fixture.invalid:8080/config",
+          "path": "/config",
+          "query": [],
+          "accept": "application/json",
+          "timeout_seconds": 15,
+          "response_fixture_index": 0
+        }
+      ],
+      "response_fixtures": [
+        {
+          "path": "/config",
+          "kind": "body",
+          "raw_body_text": "{\"categories\": {\"zeta-cat\": [\"zeta\", \"alpha\"], \"alpha-cat\": [\"beta\"]}, \"version\": 4}"
+        }
+      ],
+      "response_order": [
+        0
+      ],
+      "stdout": "{\n  \"categories\": {\n    \"zeta-cat\": [\n      \"zeta\",\n      \"alpha\"\n    ],\n    \"alpha-cat\": [\n      \"beta\"\n    ]\n  },\n  \"version\": 4\n}\n",
+      "stderr": "",
+      "exit_status": 0
+    },
+    {
+      "id": "search-network-failure",
+      "argv": [
+        "ssx",
+        "search",
+        "offline",
+        "--json"
+      ],
+      "environment": {
+        "SSX_URL": "http://fixture.invalid:8080///"
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://fixture.invalid:8080/search?q=offline&language=en&pageno=1&format=json",
+          "path": "/search",
+          "query": [
+            [
+              "q",
+              "offline"
+            ],
+            [
+              "language",
+              "en"
+            ],
+            [
+              "pageno",
+              "1"
+            ],
+            [
+              "format",
+              "json"
+            ]
+          ],
+          "accept": "application/json",
+          "timeout_seconds": 15,
+          "response_fixture_index": 0
+        }
+      ],
+      "response_fixtures": [
+        {
+          "path": "/search",
+          "kind": "exception",
+          "exception_class": "OSError",
+          "message": "fixture offline"
+        }
+      ],
+      "response_order": [
+        0
+      ],
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/Volumes/tank01/magnus/rust-builds/slopsearx/t08-contract-preparation-20261027/capture_ssx_reference.py\", line 88, in run\n    ssx[\"main\"]()\n    ~~~~~~~~~~~^^\n  File \"/Volumes/tank01/magnus/git/SlopSearX/ssx\", line 255, in main\n    commands[args.command](args)\n    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"/Volumes/tank01/magnus/git/SlopSearX/ssx\", line 91, in cmd_search\n    data = _fetch_json(url)\n  File \"/Volumes/tank01/magnus/git/SlopSearX/ssx\", line 53, in _fetch_json\n    raw = _fetch(url, \"application/json\")\n  File \"/Volumes/tank01/magnus/git/SlopSearX/ssx\", line 48, in _fetch\n    with urlopen(req, timeout=15) as resp:\n         ~~~~~~~^^^^^^^^^^^^^^^^^\n  File \"/Volumes/tank01/magnus/rust-builds/slopsearx/t08-contract-preparation-20261027/capture_ssx_reference.py\", line 75, in fake_urlopen\n    raise body\nOSError: fixture offline\n",
+      "exit_status": 1
+    },
+    {
+      "id": "health-network-failure",
+      "argv": [
+        "ssx",
+        "health"
+      ],
+      "environment": {
+        "SSX_URL": "http://fixture.invalid:8080///"
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://fixture.invalid:8080/health",
+          "path": "/health",
+          "query": [],
+          "accept": "application/json",
+          "timeout_seconds": 15,
+          "response_fixture_index": 0
+        }
+      ],
+      "response_fixtures": [
+        {
+          "path": "/health",
+          "kind": "exception",
+          "exception_class": "OSError",
+          "message": "fixture offline"
+        }
+      ],
+      "response_order": [
+        0
+      ],
+      "stdout": "",
+      "stderr": "error: cannot reach SlopSearX — fixture offline\n",
+      "exit_status": 1
+    },
+    {
+      "id": "engines-health-network-failure",
+      "argv": [
+        "ssx",
+        "engines"
+      ],
+      "environment": {
+        "SSX_URL": "http://fixture.invalid:8080///"
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://fixture.invalid:8080/health",
+          "path": "/health",
+          "query": [],
+          "accept": "application/json",
+          "timeout_seconds": 15,
+          "response_fixture_index": 0
+        }
+      ],
+      "response_fixtures": [
+        {
+          "path": "/health",
+          "kind": "exception",
+          "exception_class": "OSError",
+          "message": "fixture offline"
+        },
+        {
+          "path": "/config",
+          "kind": "body",
+          "raw_body_text": "{\"categories\": {\"zeta-cat\": [\"zeta\", \"alpha\"], \"alpha-cat\": [\"beta\"]}, \"version\": 4}"
+        }
+      ],
+      "response_order": [
+        0
+      ],
+      "stdout": "",
+      "stderr": "error: cannot reach SlopSearX — fixture offline\n",
+      "exit_status": 1
+    },
+    {
+      "id": "engines-config-network-failure",
+      "argv": [
+        "ssx",
+        "engines"
+      ],
+      "environment": {
+        "SSX_URL": "http://fixture.invalid:8080///"
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://fixture.invalid:8080/health",
+          "path": "/health",
+          "query": [],
+          "accept": "application/json",
+          "timeout_seconds": 15,
+          "response_fixture_index": 0
+        },
+        {
+          "method": "GET",
+          "url": "http://fixture.invalid:8080/config",
+          "path": "/config",
+          "query": [],
+          "accept": "application/json",
+          "timeout_seconds": 15,
+          "response_fixture_index": 1
+        }
+      ],
+      "response_fixtures": [
+        {
+          "path": "/health",
+          "kind": "body",
+          "raw_body_text": "{\"status\": \"ok\", \"engines\": {\"zeta\": {\"status\": \"down\", \"detail\": \"private detail\"}, \"alpha\": {\"status\": \"ok\", \"detail\": \"healthy detail\"}}}"
+        },
+        {
+          "path": "/config",
+          "kind": "exception",
+          "exception_class": "OSError",
+          "message": "fixture offline"
+        }
+      ],
+      "response_order": [
+        0,
+        1
+      ],
+      "stdout": "",
+      "stderr": "error: cannot reach SlopSearX — fixture offline\n",
+      "exit_status": 1
+    },
+    {
+      "id": "health-http-503",
+      "argv": [
+        "ssx",
+        "health"
+      ],
+      "environment": {
+        "SSX_URL": "http://fixture.invalid:8080///"
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://fixture.invalid:8080/health",
+          "path": "/health",
+          "query": [],
+          "accept": "application/json",
+          "timeout_seconds": 15,
+          "response_fixture_index": 0
+        }
+      ],
+      "response_fixtures": [
+        {
+          "path": "/health",
+          "kind": "http_error",
+          "exception_class": "HTTPError",
+          "message": "HTTP Error 503: unavailable",
+          "status": 503,
+          "url": "http://fixture.invalid:8080/health"
+        }
+      ],
+      "response_order": [
+        0
+      ],
+      "stdout": "",
+      "stderr": "error: cannot reach SlopSearX — HTTP Error 503: unavailable\n",
+      "exit_status": 1
+    },
+    {
+      "id": "health-malformed-json",
+      "argv": [
+        "ssx",
+        "health",
+        "--json"
+      ],
+      "environment": {
+        "SSX_URL": "http://fixture.invalid:8080///"
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://fixture.invalid:8080/health",
+          "path": "/health",
+          "query": [],
+          "accept": "application/json",
+          "timeout_seconds": 15,
+          "response_fixture_index": 0
+        }
+      ],
+      "response_fixtures": [
+        {
+          "path": "/health",
+          "kind": "body",
+          "raw_body_text": "not-json"
+        }
+      ],
+      "response_order": [
+        0
+      ],
+      "stdout": "",
+      "stderr": "error: cannot reach SlopSearX — Expecting value: line 1 column 1 (char 0)\n",
+      "exit_status": 1
+    },
+    {
+      "id": "search-malformed-json",
+      "argv": [
+        "ssx",
+        "search",
+        "bad",
+        "--json"
+      ],
+      "environment": {
+        "SSX_URL": "http://fixture.invalid:8080///"
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://fixture.invalid:8080/search?q=bad&language=en&pageno=1&format=json",
+          "path": "/search",
+          "query": [
+            [
+              "q",
+              "bad"
+            ],
+            [
+              "language",
+              "en"
+            ],
+            [
+              "pageno",
+              "1"
+            ],
+            [
+              "format",
+              "json"
+            ]
+          ],
+          "accept": "application/json",
+          "timeout_seconds": 15,
+          "response_fixture_index": 0
+        }
+      ],
+      "response_fixtures": [
+        {
+          "path": "/search",
+          "kind": "body",
+          "raw_body_text": "not-json"
+        }
+      ],
+      "response_order": [
+        0
+      ],
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/Volumes/tank01/magnus/rust-builds/slopsearx/t08-contract-preparation-20261027/capture_ssx_reference.py\", line 88, in run\n    ssx[\"main\"]()\n    ~~~~~~~~~~~^^\n  File \"/Volumes/tank01/magnus/git/SlopSearX/ssx\", line 255, in main\n    commands[args.command](args)\n    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"/Volumes/tank01/magnus/git/SlopSearX/ssx\", line 91, in cmd_search\n    data = _fetch_json(url)\n  File \"/Volumes/tank01/magnus/git/SlopSearX/ssx\", line 54, in _fetch_json\n    return _json.loads(raw)\n           ~~~~~~~~~~~^^^^^\n  File \"/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/json/__init__.py\", line 346, in loads\n    return _default_decoder.decode(s)\n           ~~~~~~~~~~~~~~~~~~~~~~~^^^\n  File \"/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/json/decoder.py\", line 345, in decode\n    obj, end = self.raw_decode(s, idx=_w(s, 0).end())\n               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/json/decoder.py\", line 363, in raw_decode\n    raise JSONDecodeError(\"Expecting value\", s, err.value) from None\njson.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)\n",
+      "exit_status": 1
+    },
+    {
+      "id": "engines-malformed-config-json",
+      "argv": [
+        "ssx",
+        "engines",
+        "--json"
+      ],
+      "environment": {
+        "SSX_URL": "http://fixture.invalid:8080///"
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://fixture.invalid:8080/health",
+          "path": "/health",
+          "query": [],
+          "accept": "application/json",
+          "timeout_seconds": 15,
+          "response_fixture_index": 0
+        },
+        {
+          "method": "GET",
+          "url": "http://fixture.invalid:8080/config",
+          "path": "/config",
+          "query": [],
+          "accept": "application/json",
+          "timeout_seconds": 15,
+          "response_fixture_index": 1
+        }
+      ],
+      "response_fixtures": [
+        {
+          "path": "/health",
+          "kind": "body",
+          "raw_body_text": "{\"status\": \"ok\", \"engines\": {\"zeta\": {\"status\": \"down\", \"detail\": \"private detail\"}, \"alpha\": {\"status\": \"ok\", \"detail\": \"healthy detail\"}}}"
+        },
+        {
+          "path": "/config",
+          "kind": "body",
+          "raw_body_text": "not-json"
+        }
+      ],
+      "response_order": [
+        0,
+        1
+      ],
+      "stdout": "",
+      "stderr": "error: cannot reach SlopSearX — Expecting value: line 1 column 1 (char 0)\n",
+      "exit_status": 1
+    }
+  ]
+}

@@ -1,0 +1,329 @@
+{
+  "schema_version": 1,
+  "plan_id": "W11",
+  "issue": 911,
+  "baseline": "1e9dd82d62456fe6f511cc5ade88bae619fac027",
+  "branch": "codex/rust-w11-staged-store",
+  "implementation_commit": null,
+  "delivery_state": "staged_review_packet_no_commit_no_publication",
+  "source_binding": "Hashes describe final corrected staged source, excluding this self-describing qualification packet. No implementation commit/publication. Actual command stdout/stderr and source snapshots are in named hashed local evidence.",
+  "staged_tree_before_packet": "7a707248698a3f74c7273efadeb7e62fab61ab7d",
+  "platform": "aarch64-apple-darwin",
+  "toolchain": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: aarch64-apple-darwin\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+  "valkey": {
+    "sha256": "810015ba337b8efbd63f1f566715bd509a529d07e154519c17922b41cce2c496",
+    "valkey_executable": "/private/tmp/ssx-f07-valkey-pinned/bin/valkey-server",
+    "version": "Valkey server v=8.1.10 sha=00000000:1 malloc=libc bits=64 build=1077e069f05e24b5\n"
+  },
+  "executed_cases": [
+    {
+      "executed_case_ids": [
+        "source_identity_and_schema_array_normalization",
+        "malformed_records_never_panic_or_invent_budget"
+      ],
+      "package": "ssx-domain",
+      "plan_id": "W11"
+    },
+    {
+      "executed_case_ids": [
+        "admission_rejects_unbound_query_filters_http_origin_and_revoked_scope",
+        "admission_conflict_quota_and_lost_tenant_index",
+        "competing_claims_stale_tokens_and_immutable_completion",
+        "interruptions_retry_replay_budget_conservation_and_index_repair",
+        "fenced_save_storage_loss_and_partial_script_writes_require_reconciliation",
+        "two_stage_owned_completion_and_skipped_fallback_keep_immutable_history",
+        "stale_prepared_claim_cannot_reuse_attempt_after_complete_retry_cycle",
+        "legacy_index_ids_and_stable_cursor_ordering",
+        "completion_unknown_and_durable_restart_reconcile_without_refund",
+        "deadline_terminalization_and_live_orphan_recovery_preserve_charge"
+      ],
+      "package": "ssx-infra",
+      "plan_id": "W11"
+    }
+  ],
+  "checks": [
+    {
+      "command": "cargo fmt --all --check",
+      "result": "passed",
+      "log_path": "/private/tmp/w11-repair-fmt.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": "cargo clippy --locked -p ssx-domain -p ssx-infra -p xtask --all-targets -- -D warnings",
+      "result": "passed",
+      "log_path": "/private/tmp/w11-repair-clippy.log",
+      "sha256": "34fb86da3caa9f855b70249fcb797bf6d5cf171bc6de2b660cfc2c0f4f64ee81"
+    },
+    {
+      "command": "cargo build --locked -p ssx-domain -p ssx-infra -p xtask",
+      "result": "passed",
+      "log_path": "/private/tmp/w11-repair-build.log",
+      "sha256": "2b054cf4f66072f4f5e4afcdedb82948fd4a8db2c099558fa55da7ab881ff4eb"
+    },
+    {
+      "command": "cargo test --locked -p xtask w11_gate_rejects_fixture_mutation",
+      "result": "passed",
+      "log_path": "/private/tmp/w11-repair-mutation.log",
+      "sha256": "76eff722215fa957b91aff1bb9f8cfa85f0b2965badd758be0affab38232f9f9"
+    },
+    {
+      "command": "cargo xtask check F01 --output /private/tmp/w11-repair-f01.json",
+      "result": "passed",
+      "evidence_path": "/private/tmp/w11-repair-f01.json",
+      "evidence_sha256": "a0df2e1ae0cf00d2592682c5f3113315d3648c072cdb850da446f8fb87b42f84"
+    },
+    {
+      "command": "cargo xtask check W11 --output /private/tmp/w11-repair-w11.json",
+      "result": "passed",
+      "evidence_path": "/private/tmp/w11-repair-w11.json",
+      "evidence_sha256": "dc7b89c52bbdb13615065f1cc410fafaef18ea253b7f44465a2dc3bafef87224"
+    },
+    {
+      "command": "pre-commit run --all-files",
+      "result": "failed_unrelated_baseline_formatting_only",
+      "log_path": "/private/tmp/w11-repair-precommit.log",
+      "sha256": "1590fa97d80d333f5a524929385bb8c3669f5186f78bcbf7692e59fc528e4224"
+    },
+    {
+      "command": "pre-commit run --files docs/rust-rewrite/w11/oracle/export.py",
+      "result": "passed",
+      "log_path": "/private/tmp/w11-repair-precommit-owned.log",
+      "sha256": "3255e913d29e2efa534161953b0335ab77eede41e08394091ff47e488f20db14"
+    },
+    {
+      "command": "graphify update .",
+      "result": "passed",
+      "log_path": "/private/tmp/w11-repair-graphify.log",
+      "sha256": "eee1462dba2ed6ac1b226c2b70c2550e37471f0f84382fc9411824c0e76ed63f"
+    }
+  ],
+  "artifact_bindings": {
+    "artifact_hashes": [
+      [
+        "crates/xtask/fixtures/w11/corpus.json",
+        "a72814e0071a806421b188e73451c91034164438b7942a3055496be4f6562726"
+      ],
+      [
+        "docs/rust-rewrite/w11/oracle/export.py",
+        "4f7e3bf96331c12c10f7faf1cfdff3cf370832d410492be59886682f60e43ac3"
+      ],
+      [
+        "crates/ssx-infra/src/valkey/staged_scripts/claim_guard.lua",
+        "aec7e11b7ad49c829ed042e41633d724018e8530491f7d0902f4b420b3fc2f4e"
+      ],
+      [
+        "crates/ssx-infra/src/valkey/staged_scripts/save_guard.lua",
+        "9701c226cc45db3f5a8eff300ca9b88186a9db4cf5ad344d57a6cb88340e807b"
+      ],
+      [
+        "crates/xtask/fixtures/w11/source-controls.json",
+        "d342c77900bba7ce6c892da4b625b07a409d13861feafe7cb50142265cca9d7c"
+      ]
+    ],
+    "plan_id": "W11",
+    "providers_dispatched": 0,
+    "runtime": "native",
+    "source_baseline": "1e9dd82d62456fe6f511cc5ade88bae619fac027"
+  },
+  "source_manifest": [
+    {
+      "path": "crates/ssx-domain/src/lib.rs",
+      "sha256": "6d3e50cce3ff876cb5d6a07eb7146e39953b7bbf23305a1e4301dcd60905598f",
+      "git_blob": "f14bcc1642e852eb91ce71fd8bb5397504e03eba"
+    },
+    {
+      "path": "crates/ssx-domain/src/staged.rs",
+      "sha256": "9d6b7ff55ca64adbd7baa16eb5f0d06b7e05bba4043e9a6bbdc69ebd239f2b57",
+      "git_blob": "07ba8b045f8e0982ae2a34c6ed0283c746ff9d79"
+    },
+    {
+      "path": "crates/ssx-domain/tests/w11.rs",
+      "sha256": "35d9cb7b32927b38f64b0399909978ff9d220dd27cd938d62195efa54dbcf335",
+      "git_blob": "00f2367e23b6d4ca80103aeb75bed5ffea8b9312"
+    },
+    {
+      "path": "crates/ssx-infra/src/valkey/mod.rs",
+      "sha256": "af6c08918a7e2524c2a80d4d3d638bc11f6802ec412f2fcac4e3ce796bdbe073",
+      "git_blob": "111c74059f1a104163ac61d83e7ed09dac093e15"
+    },
+    {
+      "path": "crates/ssx-infra/src/valkey/staged.rs",
+      "sha256": "5f3bb33f304c2aa0d9941677f7564900e0078d3b8baff9813ecb523405b07266",
+      "git_blob": "592719da1186ae04ee3894ff7cba831d1110e21e"
+    },
+    {
+      "path": "crates/ssx-infra/src/valkey/staged_scripts/claim_guard.lua",
+      "sha256": "aec7e11b7ad49c829ed042e41633d724018e8530491f7d0902f4b420b3fc2f4e",
+      "git_blob": "76feaf8010c4c392db7e104d2a01393ddbf51938"
+    },
+    {
+      "path": "crates/ssx-infra/src/valkey/staged_scripts/save_guard.lua",
+      "sha256": "9701c226cc45db3f5a8eff300ca9b88186a9db4cf5ad344d57a6cb88340e807b",
+      "git_blob": "90d4501095f73bafa441b434134249325482d5d3"
+    },
+    {
+      "path": "crates/ssx-infra/tests/w11.rs",
+      "sha256": "103eb7e8ae7e921f9bf1914ab83bf5328f4d4cee64c067ce7cd66de8b6a8d6da",
+      "git_blob": "240f246b9694df764444bc09ee23209e3b78e0d1"
+    },
+    {
+      "path": "crates/xtask/fixtures/F01.json",
+      "sha256": "943622bd2a3fed44301e646fe98b811a2fe44001720526437f031caef4a68937",
+      "git_blob": "aac9e728c59f77f4e8951e5f200f3d58da5fa389"
+    },
+    {
+      "path": "crates/xtask/fixtures/w11/corpus.json",
+      "sha256": "a72814e0071a806421b188e73451c91034164438b7942a3055496be4f6562726",
+      "git_blob": "2f8bca8b39962343929d1f4464784eb81f4849af"
+    },
+    {
+      "path": "crates/xtask/fixtures/w11/source-controls.json",
+      "sha256": "d342c77900bba7ce6c892da4b625b07a409d13861feafe7cb50142265cca9d7c",
+      "git_blob": "17ef4af119fe2ee6dfa28a7009cd33c464cf8db6"
+    },
+    {
+      "path": "crates/xtask/src/main.rs",
+      "sha256": "3e6e8e642fb3add29fa6da77cf0e55a298e9a47f31c30eaf5073b6a00b6ce74e",
+      "git_blob": "33818851bc5d7f355b500e2a7bf539d8fcea0c8d"
+    },
+    {
+      "path": "crates/xtask/src/w11.rs",
+      "sha256": "e7510368515ee926f578848a319ecd92f8a48593e670986dfb0ad91e9f20f8bc",
+      "git_blob": "d5538915f6cf809acfd1a441f5937fcaafc35291"
+    },
+    {
+      "path": "docs/rust-rewrite/inventory/DRIFT.md",
+      "sha256": "49c5bd4ab82f77cdd41549f5593a44857bd83178fef18658ca816d1039131850",
+      "git_blob": "12f75f805a206a072110aa575949ef04d289fa82"
+    },
+    {
+      "path": "docs/rust-rewrite/inventory/python-disposition.json",
+      "sha256": "8fb5dbd35e3fb8ca5c83d1fe80f57faff1e78f1409b1cab324d378cfc45cb704",
+      "git_blob": "40867d889aef11324a3930fb16c0bf0853f5a88c"
+    },
+    {
+      "path": "docs/rust-rewrite/inventory/python-invocations.json",
+      "sha256": "bb84dbb7169bfc8681005e5c16d0ed27189d08034cdec0215a48927ce269da63",
+      "git_blob": "ab95ec36d0da7df04b5a127ca38b09bb1f997d02"
+    },
+    {
+      "path": "docs/rust-rewrite/w11/README.md",
+      "sha256": "3564651973f559e90ea05bc05e163be6c3e936ecf7d5ab8dce31e882d587b94e",
+      "git_blob": "75f71cf37dd9f7d74c81fec90dba2cf4ff439e38"
+    },
+    {
+      "path": "docs/rust-rewrite/w11/evidence/export-v1.source.txt",
+      "sha256": "0c38c3d146e2f0a159ba8c34a5c0ccbd7254d84497ae815de6d96bd447f3bb6f",
+      "git_blob": "83adf230938622a349d0f324ed0e24781cb116be"
+    },
+    {
+      "path": "docs/rust-rewrite/w11/evidence/source-controls-before-format.json",
+      "sha256": "2ac1d3f28a87399848326a4cf527e22f3372c6e560f394e8fecaf50e2aeb39aa",
+      "git_blob": "f60bfec963a9f75a1760adf3ad8cbe3951d38cca"
+    },
+    {
+      "path": "docs/rust-rewrite/w11/evidence/source-controls-v1.json",
+      "sha256": "0dc2dde5ac53f6636048d3394b3f75da2ec55afd7ae3b18537a047f23354ffa7",
+      "git_blob": "cea5520643b7a9364587f17996711a182b127d92"
+    },
+    {
+      "path": "docs/rust-rewrite/w11/inventory-proposal.json",
+      "sha256": "614d72a7f3cd04039b84d703aaa387db8e285def8eccf2eb6569343cee049e7b",
+      "git_blob": "e8ac5d98c1185b3f10d20e8039fcd85e543e607c"
+    },
+    {
+      "path": "docs/rust-rewrite/w11/oracle/export.py",
+      "sha256": "4f7e3bf96331c12c10f7faf1cfdff3cf370832d410492be59886682f60e43ac3",
+      "git_blob": "3e6edaa6fd4a32043b84d8eacb5829256b846309"
+    },
+    {
+      "path": "docs/rust-rewrite/w11/parity.json",
+      "sha256": "df82b0173a010a2b6eb857603f9ebb246f084a74ecd1ce5baea1d18253bfe5dd",
+      "git_blob": "adb4f0cd8ab3b560b0e4c57692555711a6982dda"
+    }
+  ],
+  "constraints": {
+    "provider_calls": 0,
+    "paid_calls": 0,
+    "scientific_calls": 0,
+    "production_access": false,
+    "runtime_python": false,
+    "mandatory_gate_python": false,
+    "disposable_valkey_only": true
+  },
+  "negative_evidence": [
+    "first test build rejected numeric Value IndexMut; corrected to explicit array mutation",
+    "malformed-record negative test incorrectly treated valid retry_keys=[] as malformed; corrected expectation",
+    "RDB restart first stale connection returned F07 Unavailable; source connection slot retains failed handle until that failed operation; separate later read reconnects and preserves exact record",
+    "actual CompletionUnknown occurred after fenced save committed; later independent observation found terminal record and conserved charge",
+    "actual Lua wrongtype error after claim writes left running record/reservation; orphan reconciliation preserved charges",
+    "original expiry expressions were authored source-inspection controls; retained and superseded by actual source read/real-Valkey retry controls",
+    "optimized source-oracle review found assertion-side-effect RESP framing/startup hazards; fixed explicit reads/errors and bounded kill fallback, recaptured under python -O"
+  ],
+  "remaining_acceptance": [
+    "parent acceptance of reviewed correction and recorded unrelated baseline format failure",
+    "signed conventional commit/ready-for-review PR, exact-head CI/review and accepted merge by parent",
+    "downstream W06 runner/provider/public surface integration; no runner execution claimed"
+  ],
+  "inventory_note": "Parent applied preserved complete-record inventory385/tooling262/developer26 and updated F01 exporter pin after optimized-oracle repair; historical application receipt precedes final exporter one-field pin update.",
+  "superseded_qualification": {
+    "reason": "reviewed ownership-test assertion strengthening and pre-commit exporter formatting changed source/artifact identity",
+    "previous_check_bindings": [
+      {
+        "command": "cargo fmt --all --check",
+        "result": "passed",
+        "log_path": "/private/tmp/ssx-w11-fmt-final.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "command": "cargo clippy --locked -p ssx-domain -p ssx-infra -p xtask --all-targets -- -D warnings",
+        "result": "passed",
+        "log_path": "/private/tmp/ssx-w11-clippy-final.log",
+        "sha256": "f038f8476c60d65a45e134f8ef2c6ddfbbb947cd0e5ef1c4db2e63b78d8758a7"
+      },
+      {
+        "command": "cargo build --locked -p ssx-domain -p ssx-infra -p xtask",
+        "result": "passed",
+        "log_path": "/private/tmp/ssx-w11-build-final.log",
+        "sha256": "7956d91416cd8e7024d1ef74cb530f4259c23f01f2dfabe3c7db5b5e3d6570f3"
+      },
+      {
+        "command": "cargo test --locked -p xtask w11_gate_rejects_fixture_mutation",
+        "result": "passed",
+        "log_path": "/private/tmp/ssx-w11-gate-mutation-final.log",
+        "sha256": "23c9a29ef5ee0b1dc6a6daa5f57db1e9af8789979d2458a2ad0f85731d7f25cb"
+      },
+      {
+        "command": "cargo xtask check F01 --output /private/tmp/ssx-w11-f01-final.json",
+        "result": "passed",
+        "evidence_sha256": "865b433107ba1df0b5f181056aa5579309394f74e3ca7300afab13e4b2f872fd",
+        "evidence_path": "/private/tmp/ssx-w11-f01-final.json"
+      },
+      {
+        "command": "cargo xtask check W11 --output /private/tmp/ssx-w11-qualification-final.json",
+        "result": "passed",
+        "evidence_sha256": "fbcc458975dce902ec72486f0e1e0d197ad8f4356a6d161b59aebf94fdae074b",
+        "evidence_path": "/private/tmp/ssx-w11-qualification-final.json"
+      },
+      {
+        "command": "graphify update .",
+        "result": "passed",
+        "log_path": "/private/tmp/ssx-w11-graphify-final.log",
+        "sha256": "8e3a376c749a6ec7480685a0bd46df8abd42217ff8e42cf763744c6b4b427c67"
+      }
+    ]
+  },
+  "publication_qualification_repair": {
+    "ownership_regression": "Parent independent review found the competing-claim test selected one outcome without asserting exactly one winner. Parent strengthened it to assert one winner plus persisted reservation1/attemptlen1; preserved and executed by final W11 gate.",
+    "independent_review_path": "/private/tmp/w11-independent-review.json",
+    "independent_review_sha256": "6d04dfb7472df08d8448033b334046b688f25061c9821d1952ae6e9de7b88593",
+    "parent_correction_evidence": "/private/tmp/w11-parent-correction-gate.json",
+    "parent_correction_sha256": "869eaccc2aa5b561da88c395c91975187e2c377fdfa50ac62ae62ae3666f1d00",
+    "exporter": "Ruff-format and top-level import corrections; source controls recaptured under python -O. Observational payload identical except exporter_sha256. Original preformat controls retained as evidence/source-controls-before-format.json.",
+    "unrelated_baseline_failure": "Full pre-commit all hooks pass except ruff-format rewriting tests/test_coverage_saved_method_materials.py lines94-96; exact unrelated change restored from unchanged index. No unrelated source changes staged or retained.",
+    "exporter_sha256": "4f7e3bf96331c12c10f7faf1cfdff3cf370832d410492be59886682f60e43ac3",
+    "controls_sha256": "d342c77900bba7ce6c892da4b625b07a409d13861feafe7cb50142265cca9d7c",
+    "mandatory_native_gates_passed": true,
+    "full_precommit_passed": false
+  }
+}

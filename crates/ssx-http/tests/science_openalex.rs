@@ -1,0 +1,1109 @@
+//! Public HTTP uses the same actual adapter/service/store as the MCP cases.
+#[path = "../../ssx-infra/tests/support/science_openalex.rs"]
+mod common;
+use common::owned_loopback_fixture::OwnedLoopback;
+use common::{FixtureCore as Fixture, *};
+use scraper::{Html, Selector};
+use serde_json::{Value, json};
+use ssx_domain::{PublicationDateProof, storage};
+use ssx_http::{HttpState, html::PublicHtml, native_router};
+use ssx_infra::observability::{Options as TelemetryOptions, Telemetry};
+use std::{
+    sync::{Arc, atomic::Ordering},
+    time::Duration,
+};
+
+struct Native {
+    address: std::net::SocketAddr,
+    stop: tokio::sync::oneshot::Sender<()>,
+    owner: OwnedLoopback<std::io::Result<()>>,
+    telemetry: Arc<Telemetry>,
+    client: reqwest::Client,
+}
+impl Native {
+    async fn start(fixture: &Fixture) -> Self {
+        Self::start_with_portal(fixture, false).await
+    }
+    async fn start_with_portal(fixture: &Fixture, use_public_portal: bool) -> Self {
+        let telemetry = Telemetry::new(
+            TelemetryOptions {
+                audit: false,
+                ..Default::default()
+            },
+            None,
+            vec!["openalex".into(), "brave".into()],
+            vec!["science".into(), "general".into()],
+        )
+        .unwrap();
+        let (discovery, health_contexts) = if use_public_portal {
+            let active = ["openalex".to_owned()];
+            let built = ssx_http::discovery::build(
+                &fixture.registry,
+                &ssx_config::Config::default(),
+                &active,
+                &fixture.policy,
+                "offline-openalex-portal",
+            )
+            .unwrap();
+            (built.config, built.health_contexts)
+        } else {
+            (
+                ssx_json::json!({"categories":["science","general"]}),
+                Default::default(),
+            )
+        };
+        let state = HttpState {
+            search: fixture.service.clone(),
+            policy: fixture.policy.clone(),
+            telemetry: telemetry.clone(),
+            formats: ["json", "yaml", "html", "csv", "rss"]
+                .into_iter()
+                .map(str::to_owned)
+                .collect(),
+            discovery,
+            health_contexts,
+            valkey_connected: Arc::new(|| true),
+            valkey_fail_closed: false,
+            valkey_quota_configured: false,
+            html: Arc::new(PublicHtml::default()),
+        };
+        let state = if use_public_portal {
+            state.with_public_portal("dark")
+        } else {
+            state
+        };
+        let router = native_router(state);
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let (stop, stopping) = tokio::sync::oneshot::channel();
+        let owner = OwnedLoopback::spawn(async move {
+            axum::serve(
+                listener,
+                router.into_make_service_with_connect_info::<std::net::SocketAddr>(),
+            )
+            .with_graceful_shutdown(async {
+                let _ = stopping.await;
+            })
+            .await
+        });
+        let client = reqwest::Client::builder()
+            .no_proxy()
+            .redirect(reqwest::redirect::Policy::none())
+            .timeout(Duration::from_secs(10))
+            .build()
+            .unwrap();
+        Self {
+            address,
+            stop,
+            owner,
+            telemetry,
+            client,
+        }
+    }
+    async fn request(&self, path: &str, method: &str, params: &[(&str, &str)]) -> (u16, String) {
+        let encoded = url::form_urlencoded::Serializer::new(String::new())
+            .extend_pairs(params.iter().copied())
+            .finish();
+        let base = format!("http://{}", self.address);
+        let request = if method == "GET" {
+            self.client.get(format!("{base}{path}?{encoded}"))
+        } else {
+            self.client
+                .post(format!("{base}{path}"))
+                .header("content-type", "application/x-www-form-urlencoded")
+                .body(encoded)
+        };
+        let response = request.send().await.unwrap();
+        (response.status().as_u16(), response.text().await.unwrap())
+    }
+    async fn follow(&self, href: &str) -> (u16, String) {
+        let response = self
+            .client
+            .get(format!("http://{}{href}", self.address))
+            .send()
+            .await
+            .unwrap();
+        (response.status().as_u16(), response.text().await.unwrap())
+    }
+    async fn close(self) {
+        self.stop.send(()).unwrap();
+        self.owner.finish().await.unwrap();
+        self.telemetry.shutdown().await;
+    }
+}
+fn decode(body: &str, format: &str) -> Value {
+    if format == "yaml" {
+        serde_saphyr::from_str(body.split_once("---\n").unwrap().0).unwrap()
+    } else {
+        serde_json::from_str(body).unwrap()
+    }
+}
+fn assert_http(value: &Value, format: &str, days: &[&str], expected: &Value, cached: bool) {
+    assert_eq!(value["meta"]["date_filter"], *expected);
+    assert_eq!(value["meta"]["cached"], cached);
+    assert_eq!(value["meta"]["engine_status"].as_object().unwrap().len(), 1);
+    assert_eq!(value["meta"]["engine_status"]["openalex"]["status"], "ok");
+    let mut actual: Vec<_> = value["results"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|r| {
+            assert_eq!(r["engine"], "openalex");
+            assert_eq!(r["engines"], json!(["openalex"]));
+            r[if format == "yaml" {
+                "published"
+            } else {
+                "publishedDate"
+            }]
+            .as_str()
+            .unwrap()
+        })
+        .collect();
+    actual.sort_unstable();
+    assert_eq!(actual, days);
+}
+
+#[tokio::test]
+#[should_panic(expected = "expected request count must be positive")]
+async fn science_openalex_fixture_rejects_zero_expected_requests() {
+    let _ = Fixture::new(Mode::Audited, 200, equal_body(), Some(0)).await;
+}
+
+#[tokio::test]
+async fn native_http_real_openalex_routes_bounds_formats_and_cache_reacquisition() {
+    // Every URI/method pair acquires each bound through actual OpenAlex. YAML
+    // then reads the canonical JSON acquisition; two corrupt proofs reacquire.
+    let fixture = Fixture::new(Mode::Audited, 200, equal_body(), Some(23)).await;
+    let native = Native::start(&fixture).await;
+    let mut equal_key = None;
+    let mut equal_wire = String::new();
+    let mut acquired = 0;
+    for (index, (suffix, from, to, days)) in [
+        (
+            "lower_leap",
+            Some("2024-02-29"),
+            None,
+            vec!["2024-02-29", "2024-03-01"],
+        ),
+        (
+            "upper_leap",
+            None,
+            Some("2024-02-29"),
+            vec!["2024-02-28", "2024-02-29"],
+        ),
+        (
+            "equal_leap",
+            Some("2024-02-29"),
+            Some("2024-02-29"),
+            vec!["2024-02-29"],
+        ),
+        (
+            "both_span",
+            Some("2024-02-28"),
+            Some("2024-03-01"),
+            vec!["2024-02-28", "2024-02-29", "2024-03-01"],
+        ),
+        (
+            "upper_calendar_max",
+            None,
+            Some("9999-12-31"),
+            vec!["2024-02-28", "2024-02-29", "2024-03-01"],
+        ),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let c = corpus();
+        // Additive native calendar maximum: reuse the unchanged upstream body
+        // and both_span's three retained URL/day pairs, with an independent
+        // literal outbound expectation rather than a fabricated source record.
+        let fixture_suffix = if suffix == "upper_calendar_max" {
+            "both_span"
+        } else {
+            suffix
+        };
+        let row = c["records"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|r| r["id"].as_str().unwrap().ends_with(fixture_suffix))
+            .unwrap();
+        let wire = if suffix == "upper_calendar_max" {
+            "GET /works?search=date%20control%20/%20%2B&per_page=10&filter=to_publication_date%3A9999-12-31 HTTP/1.1".to_owned()
+        } else {
+            format!(
+                "GET {} HTTP/1.1",
+                row["requests"][0]["url"]
+                    .as_str()
+                    .unwrap()
+                    .strip_prefix("https://api.openalex.org")
+                    .unwrap()
+            )
+        };
+        let mut bound_key: Option<String> = None;
+        for path in ["/", "/search"] {
+            for method in ["GET", "POST"] {
+                if let Some(key) = &bound_key {
+                    let mut conn = fixture.connection().await;
+                    let removed: u64 = redis::cmd("DEL")
+                        .arg(key)
+                        .query_async(&mut conn)
+                        .await
+                        .unwrap();
+                    assert_eq!(
+                        removed, 1,
+                        "evict only this private fixture's known bound key"
+                    );
+                }
+                let mut first = true;
+                for format in ["json", "yaml"] {
+                    let mut params = vec![
+                        ("q", "date control / +"),
+                        ("engines", "openalex"),
+                        ("format", format),
+                    ];
+                    if let Some(v) = from {
+                        params.push(("date_from", v));
+                    }
+                    if let Some(v) = to {
+                        params.push(("date_to", v));
+                    }
+                    let before = fixture.keys("search:*").await;
+                    let quota_before = fixture.counts.client.load(Ordering::SeqCst);
+                    let (status, body) = native.request(path, method, &params).await;
+                    assert_eq!(status, 200, "{path} {method} {format}: {body}");
+                    assert_eq!(
+                        fixture.counts.client.load(Ordering::SeqCst),
+                        quota_before + 1,
+                        "real HTTP peer must exercise client admission even on cache hits"
+                    );
+                    let value = decode(&body, format);
+                    assert_http(&value, format, &days, &proof(from, to), !first);
+                    // Bind projection to the pinned adapter fixture's actual URL/day pairs.
+                    let date_field = if format == "yaml" {
+                        "published"
+                    } else {
+                        "publishedDate"
+                    };
+                    let mut actual: Vec<_> = value["results"]
+                        .as_array()
+                        .unwrap()
+                        .iter()
+                        .map(|r| (r["url"].as_str().unwrap(), r[date_field].as_str().unwrap()))
+                        .collect();
+                    let mut source: Vec<_> = row["output"]["results"]
+                        .as_array()
+                        .unwrap()
+                        .iter()
+                        .map(|r| {
+                            (
+                                r["url"].as_str().unwrap(),
+                                r["published_date"].as_str().unwrap(),
+                            )
+                        })
+                        .collect();
+                    actual.sort_unstable();
+                    source.sort_unstable();
+                    assert_eq!(actual, source);
+                    let after = fixture.keys("search:*").await;
+                    assert_eq!(after.len(), index + 1, "bound-specific canonical identity");
+                    if first {
+                        acquired += 1;
+                        bound_key =
+                            Some(after.iter().find(|k| !before.contains(k)).unwrap().clone());
+                        assert_eq!(after.iter().filter(|k| !before.contains(k)).count(), 1);
+                        if suffix == "equal_leap" {
+                            equal_key =
+                                Some(after.iter().find(|k| !before.contains(k)).unwrap().clone());
+                            equal_wire = wire.clone();
+                        }
+                    } else {
+                        assert_eq!(before, after);
+                    }
+                    assert_eq!(fixture.upstream.lines().len(), acquired);
+                    assert_eq!(fixture.upstream.lines()[acquired - 1], wire);
+                    first = false;
+                }
+            }
+        }
+    }
+    let key = equal_key.unwrap();
+    let mut conn = fixture.connection().await;
+    let original: String = redis::cmd("GET")
+        .arg(&key)
+        .query_async(&mut conn)
+        .await
+        .unwrap();
+    let original: ssx_json::Value = ssx_json::from_str(&original).unwrap();
+    for (index, mutation) in ["missing", "mismatched"].into_iter().enumerate() {
+        let mut corrupted = original.clone();
+        if mutation == "missing" {
+            corrupted
+                .as_object_mut()
+                .unwrap()
+                .shift_remove("date_filter");
+        } else {
+            corrupted["date_filter"] = PublicationDateProof::openalex(
+                Some("2024-02-28".into()),
+                Some("2024-02-28".into()),
+            )
+            .unwrap()
+            .to_value();
+        }
+        let _: () = redis::cmd("SET")
+            .arg(&key)
+            .arg(ssx_json::to_string(&corrupted).unwrap())
+            .query_async(&mut conn)
+            .await
+            .unwrap();
+        let params = [
+            ("q", "date control / +"),
+            ("engines", "openalex"),
+            ("date_from", "2024-02-29"),
+            ("date_to", "2024-02-29"),
+            ("format", "json"),
+        ];
+        let (status, body) = native.request("/search", "GET", &params).await;
+        assert_eq!(status, 200);
+        assert_http(
+            &decode(&body, "json"),
+            "json",
+            &["2024-02-29"],
+            &proof(Some("2024-02-29"), Some("2024-02-29")),
+            false,
+        );
+        assert_eq!(fixture.upstream.lines().len(), index + 21);
+        assert_eq!(fixture.upstream.lines()[index + 20], equal_wire);
+        let repaired: String = redis::cmd("GET")
+            .arg(&key)
+            .query_async(&mut conn)
+            .await
+            .unwrap();
+        let repaired = storage::decode_response(ssx_json::from_str(&repaired).unwrap()).unwrap();
+        assert_eq!(
+            repaired.date_filter.unwrap().to_value(),
+            ssx_json::Value::from(proof(Some("2024-02-29"), Some("2024-02-29")))
+        );
+        assert_eq!(repaired.scope.selected_engines, ["openalex"]);
+        assert_eq!(
+            repaired.results[0].published_date.as_deref(),
+            Some("2024-02-29")
+        );
+        assert_eq!(fixture.keys("search:*").await.len(), 5);
+    }
+    // The same actual adapter still supports ordinary unbounded machine views.
+    for format in ["json", "yaml", "csv", "rss"] {
+        let (status, body) = native
+            .request(
+                "/search",
+                "GET",
+                &[
+                    ("q", "date control / +"),
+                    ("engines", "openalex"),
+                    ("format", format),
+                ],
+            )
+            .await;
+        assert_eq!(status, 200, "{format}: {body}");
+        if matches!(format, "json" | "yaml") {
+            let value = decode(&body, format);
+            assert!(value["meta"].get("date_filter").is_none());
+            assert_eq!(value["results"].as_array().unwrap().len(), 7);
+        } else if format == "csv" {
+            assert!(body.starts_with("title,url,content,engine,publishedDate\n"));
+            assert_eq!(body.matches(",openalex,").count(), 7);
+            assert!(body.ends_with('\n'));
+        } else {
+            assert!(body.starts_with(
+                "<?xml version='1.0' encoding='utf-8'?>\n<rss version=\"2.0\"><channel>"
+            ));
+            assert!(body.ends_with("</channel></rss>"));
+            assert_eq!(body.matches("<item>").count(), 7);
+            assert_eq!(body.matches("</item>").count(), 7);
+        }
+    }
+    assert_eq!(fixture.upstream.lines().len(), 23);
+    assert_eq!(
+        fixture.upstream.lines()[22],
+        "GET /works?search=date%20control%20/%20%2B&per_page=10 HTTP/1.1"
+    );
+    assert_eq!(fixture.counts.adapter.load(Ordering::SeqCst), 23);
+    drop(conn);
+    native.close().await;
+    fixture.close().await;
+    // Keep the sealed T06 top-level inventory while extending this actual
+    // adapter/service/Valkey/HTTP qualification with portal-owned subcases.
+    native_portal_real_openalex_preserves_bounds_and_machine_proof().await;
+    native_portal_real_openalex_inclusive_bound_matrix_preserves_forms_and_views().await;
+    native_portal_date_constraints_keep_empty_and_failed_acquisition_distinct().await;
+    portal_does_not_invent_proof_from_request_or_enforcement_preview();
+}
+
+async fn native_portal_real_openalex_preserves_bounds_and_machine_proof() {
+    let fixture = Fixture::new(Mode::Audited, 200, equal_body(), Some(2)).await;
+    let native = Native::start_with_portal(&fixture, true).await;
+    let params = [
+        ("q", "date control / +"),
+        ("engines", "openalex"),
+        ("date_from", "2024-02-29"),
+        ("date_to", "2024-02-29"),
+    ];
+    let (status, html) = native.request("/search", "GET", &params).await;
+    assert_eq!(status, 200, "{html}");
+    assert!(html.contains("data-filter=\"date_from\" data-status=\"enforced\""));
+    assert!(html.contains("data-filter=\"date_to\" data-status=\"enforced\""));
+    assert!(html.contains("2024-02-29"));
+    assert_portal_proof(&html, Some("2024-02-29"), Some("2024-02-29"), "results");
+    assert_eq!(fixture.upstream.lines().len(), 1);
+    assert_eq!(
+        fixture.upstream.lines()[0],
+        "GET /works?search=date%20control%20/%20%2B&per_page=10&filter=from_publication_date%3A2024-02-29%2Cto_publication_date%3A2024-02-29 HTTP/1.1"
+    );
+
+    let document = Html::parse_document(&html);
+    let form_selector = Selector::parse("form").unwrap();
+    let input_selector = Selector::parse("input[name]").unwrap();
+    let forms: Vec<_> = document.select(&form_selector).collect();
+    assert_eq!(forms.len(), 2, "both rendered search forms must be present");
+    for form in forms {
+        assert_eq!(form.value().attr("action"), Some("/search"));
+        assert_eq!(form.value().attr("method"), Some("get"));
+        let fields: std::collections::BTreeMap<_, _> = form
+            .select(&input_selector)
+            .filter_map(|input| {
+                Some((
+                    input.value().attr("name")?.to_owned(),
+                    input.value().attr("value").unwrap_or_default().to_owned(),
+                ))
+            })
+            .collect();
+        assert_eq!(
+            fields.get("q").map(String::as_str),
+            Some("date control / +")
+        );
+        assert_eq!(fields.get("engines").map(String::as_str), Some("openalex"));
+        assert_eq!(
+            fields.get("date_from").map(String::as_str),
+            Some("2024-02-29")
+        );
+        assert_eq!(
+            fields.get("date_to").map(String::as_str),
+            Some("2024-02-29")
+        );
+        let pairs: Vec<_> = fields
+            .iter()
+            .map(|(key, value)| (key.as_str(), value.as_str()))
+            .collect();
+        let (resubmitted, _) = native.request("/search", "GET", &pairs).await;
+        assert_eq!(resubmitted, 200);
+        assert_eq!(
+            fixture.upstream.lines().len(),
+            1,
+            "form views should use the same cached acquisition"
+        );
+    }
+
+    let link_selector = Selector::parse("a.rail-link").unwrap();
+    let machine_links: Vec<_> = document
+        .select(&link_selector)
+        .filter_map(|link| {
+            Some((
+                link.text().collect::<String>(),
+                link.value().attr("href")?.to_owned(),
+            ))
+        })
+        .collect();
+    assert_eq!(machine_links.len(), 2);
+    let mut machine_formats = std::collections::BTreeSet::new();
+    for (label, href) in &machine_links {
+        let parsed = url::Url::parse(&format!("http://portal.invalid{href}")).unwrap();
+        let query: std::collections::BTreeMap<_, _> = parsed.query_pairs().into_owned().collect();
+        assert_eq!(query.get("engines").map(String::as_str), Some("openalex"));
+        assert_eq!(
+            query.get("date_from").map(String::as_str),
+            Some("2024-02-29")
+        );
+        assert_eq!(query.get("date_to").map(String::as_str), Some("2024-02-29"));
+        let format = query
+            .get("format")
+            .map(String::as_str)
+            .expect("machine link should name its output format");
+        let expected_label = match format {
+            "json" => "Open JSON view ↗",
+            "yaml" => "Open YAML view ↗",
+            other => panic!("unexpected machine-link format {other:?}"),
+        };
+        assert_eq!(label, expected_label);
+        machine_formats.insert(format.to_owned());
+        let (actual, body) = native.follow(href).await;
+        assert_eq!(actual, 200, "{label}: {body}");
+        assert_http(
+            &decode(&body, format),
+            format,
+            &["2024-02-29"],
+            &proof(Some("2024-02-29"), Some("2024-02-29")),
+            true,
+        );
+        assert_eq!(
+            fixture.upstream.lines().len(),
+            1,
+            "machine links should reuse the HTML acquisition"
+        );
+    }
+    assert_eq!(
+        machine_formats,
+        ["json".to_owned(), "yaml".to_owned()].into()
+    );
+    let pagination = Selector::parse("a[aria-label=\"Try next result page\"]").unwrap();
+    let next = document.select(&pagination).next().expect("next-page link");
+    let next_url = url::Url::parse(&format!(
+        "http://portal.invalid{}",
+        next.value().attr("href").unwrap()
+    ))
+    .unwrap();
+    let next_query: std::collections::BTreeMap<_, _> =
+        next_url.query_pairs().into_owned().collect();
+    assert_eq!(next_query.get("pageno").map(String::as_str), Some("2"));
+    assert_eq!(
+        next_query.get("date_from").map(String::as_str),
+        Some("2024-02-29")
+    );
+    assert_eq!(
+        next_query.get("date_to").map(String::as_str),
+        Some("2024-02-29")
+    );
+
+    let mut conn = fixture.connection().await;
+    let keys = fixture.keys("search:*").await;
+    assert_eq!(keys.len(), 1);
+    let original: String = redis::cmd("GET")
+        .arg(&keys[0])
+        .query_async(&mut conn)
+        .await
+        .unwrap();
+    let mut corrupted: ssx_json::Value = ssx_json::from_str(&original).unwrap();
+    corrupted
+        .as_object_mut()
+        .unwrap()
+        .shift_remove("date_filter");
+    let _: () = redis::cmd("SET")
+        .arg(&keys[0])
+        .arg(ssx_json::to_string(&corrupted).unwrap())
+        .query_async(&mut conn)
+        .await
+        .unwrap();
+    let (actual, body) = native.follow(&machine_links[0].1).await;
+    assert_eq!(actual, 200, "{body}");
+    assert_http(
+        &decode(&body, "json"),
+        "json",
+        &["2024-02-29"],
+        &proof(Some("2024-02-29"), Some("2024-02-29")),
+        false,
+    );
+    assert_eq!(fixture.upstream.lines().len(), 2);
+    assert_eq!(
+        fixture.upstream.lines()[1],
+        "GET /works?search=date%20control%20/%20%2B&per_page=10&filter=from_publication_date%3A2024-02-29%2Cto_publication_date%3A2024-02-29 HTTP/1.1"
+    );
+    native.close().await;
+    fixture.close().await;
+}
+
+#[tokio::test]
+async fn native_http_date_denials_have_zero_real_acquisition() {
+    for (mode, label, changes, field) in [
+        (
+            Mode::Audited,
+            "malformed",
+            vec![("date_from", "2024-2-29")],
+            "date_from",
+        ),
+        (
+            Mode::Audited,
+            "invalid_leap",
+            vec![("date_from", "1900-02-29")],
+            "date_from",
+        ),
+        (
+            Mode::Audited,
+            "reference_invalid_lower",
+            vec![("date_from", "2023-02-29")],
+            "date_from",
+        ),
+        (
+            Mode::Audited,
+            "reference_invalid_upper",
+            vec![("date_to", "2024-02-30")],
+            "date_to",
+        ),
+        (
+            Mode::Audited,
+            "reference_relative_day",
+            vec![("time_range", "day")],
+            "time_range",
+        ),
+        (
+            Mode::Audited,
+            "unknown_fromDate",
+            vec![("fromDate", "2024-02-29")],
+            "fromDate",
+        ),
+        (
+            Mode::Audited,
+            "unknown_timeRange",
+            vec![("timeRange", "week")],
+            "timeRange",
+        ),
+        (
+            Mode::Audited,
+            "unknown_DateFrom",
+            vec![("DateFrom", "2024-02-29")],
+            "DateFrom",
+        ),
+        (
+            Mode::Audited,
+            "unknown_dateFrom",
+            vec![("dateFrom", "2024-02-29")],
+            "dateFrom",
+        ),
+        (
+            Mode::Audited,
+            "duplicate_bad_first",
+            vec![("date_from", "bad"), ("date_from", "2024-02-29")],
+            "date_from",
+        ),
+        (Mode::Audited, "empty", vec![("date_from", "")], "date_from"),
+        (
+            Mode::Audited,
+            "reversed",
+            vec![("date_from", "2024-03-01")],
+            "date_from",
+        ),
+        (
+            Mode::Audited,
+            "relative",
+            vec![("time_range", "week")],
+            "time_range",
+        ),
+        (Mode::Audited, "implicit", vec![("engines", "")], "engines"),
+        (
+            Mode::Audited,
+            "category",
+            vec![("engines", ""), ("categories", "science")],
+            "engines",
+        ),
+        (
+            Mode::BroadAvailable,
+            "mixed",
+            vec![("engines", "openalex,brave")],
+            "engines",
+        ),
+        (
+            Mode::BroadAvailable,
+            "unsupported",
+            vec![("engines", "brave")],
+            "engines",
+        ),
+        (Mode::Unaudited, "unaudited", vec![], "engines"),
+        (Mode::Unavailable, "unavailable", vec![], "engines"),
+        (
+            Mode::Audited,
+            "unknown",
+            vec![("date_start", "2024-02-29")],
+            "date_start",
+        ),
+        (
+            Mode::Audited,
+            "duplicate",
+            vec![("date_from", "2024-02-29")],
+            "date_from",
+        ),
+        (Mode::Audited, "csv", vec![("format", "csv")], "format"),
+        (Mode::Audited, "rss", vec![("format", "rss")], "format"),
+    ] {
+        let fixture = Fixture::new(mode, 200, equal_body(), None).await;
+        let native = Native::start(&fixture).await;
+        for path in ["/", "/search"] {
+            for method in ["GET", "POST"] {
+                let mut params = vec![
+                    ("q", "date control / +"),
+                    ("engines", "openalex"),
+                    ("date_from", "2024-02-29"),
+                    ("date_to", "2024-02-29"),
+                    ("format", "json"),
+                ];
+                if label == "duplicate_bad_first" {
+                    params.retain(|(k, _)| *k != "date_from");
+                }
+                for (key, value) in &changes {
+                    if !label.starts_with("duplicate") {
+                        params.retain(|(k, _)| k != key);
+                    }
+                    params.push((*key, *value));
+                }
+                let (status, body) = native.request(path, method, &params).await;
+                assert_eq!(status, 400, "{label} {path} {method}: {body}");
+                if matches!(label, "csv" | "rss") {
+                    assert!(
+                        body.contains(
+                            "Bounded publication-date proof requires json, yaml, or html format."
+                        ),
+                        "{label}: {body}"
+                    );
+                    if label == "csv" {
+                        assert!(body.contains("invalid_filter"));
+                    } else {
+                        assert!(body.starts_with("<?xml"));
+                    }
+                } else {
+                    let value: Value = serde_json::from_str(&body).unwrap();
+                    assert_eq!(value["error"], "invalid_filter", "{label}: {body}");
+                    assert_eq!(value["field"], field, "{label}: {body}");
+                }
+                assert_eq!(fixture.counts.observations(), [0; 4], "{label}");
+                assert!(fixture.upstream.lines().is_empty(), "{label}");
+                assert!(fixture.keys("*").await.is_empty(), "{label}");
+            }
+        }
+        // URI plus form duplicates are one combined control stream.
+        if label == "duplicate" {
+            let (status, body) = native
+                .request(
+                    "/search?date_from=2024-02-29",
+                    "POST",
+                    &[
+                        ("q", "date control / +"),
+                        ("engines", "openalex"),
+                        ("date_from", "2024-02-29"),
+                        ("format", "json"),
+                    ],
+                )
+                .await;
+            assert_eq!(status, 400, "{body}");
+            assert_eq!(fixture.counts.observations(), [0; 4]);
+        }
+        native.close().await;
+        fixture.close().await;
+    }
+}
+
+#[tokio::test]
+async fn native_http_real_openalex_failure_and_empty_have_distinct_status_outcomes() {
+    for (upstream, status, outcome) in [(200, 200, "ok"), (500, 503, "error")] {
+        for format in ["json", "yaml"] {
+            let fixture = Fixture::new(
+                Mode::Audited,
+                upstream,
+                br#"{"results":[]}"#.to_vec(),
+                Some(1),
+            )
+            .await;
+            let native = Native::start(&fixture).await;
+            let (actual, body) = native
+                .request(
+                    "/search",
+                    "GET",
+                    &[
+                        ("q", "date control / +"),
+                        ("engines", "openalex"),
+                        ("date_from", "2024-02-29"),
+                        ("date_to", "2024-02-29"),
+                        ("format", format),
+                    ],
+                )
+                .await;
+            assert_eq!(actual, status, "{body}");
+            let value = decode(&body, format);
+            assert_eq!(
+                value["meta"]["engine_status"]["openalex"]["status"],
+                outcome
+            );
+            assert_eq!(
+                value["meta"]["date_filter"],
+                proof(Some("2024-02-29"), Some("2024-02-29"))
+            );
+            assert!(value["results"].as_array().unwrap().is_empty());
+            assert_eq!(fixture.upstream.lines().len(), 1);
+            assert_eq!(
+                fixture.upstream.lines()[0],
+                "GET /works?search=date%20control%20/%20%2B&per_page=10&filter=from_publication_date%3A2024-02-29%2Cto_publication_date%3A2024-02-29 HTTP/1.1"
+            );
+            native.close().await;
+            fixture.close().await;
+        }
+    }
+}
+
+fn assert_portal_proof(html: &str, from: Option<&str>, to: Option<&str>, outcome: &str) {
+    let document = Html::parse_document(html);
+    let selector = Selector::parse("[data-publication-date-proof]").unwrap();
+    let sections: Vec<_> = document.select(&selector).collect();
+    assert_eq!(
+        sections.len(),
+        1,
+        "one canonical proof, not a scope preview"
+    );
+    let section = sections[0];
+    assert!(
+        section
+            .text()
+            .collect::<String>()
+            .contains("Bounds are inclusive.")
+    );
+    for (key, bound) in [("date_from", from), ("date_to", to)] {
+        let selector = Selector::parse(&format!("[data-date-bound=\"{key}\"]")).unwrap();
+        let nodes: Vec<_> = section.select(&selector).collect();
+        assert_eq!(nodes.len(), usize::from(bound.is_some()));
+        if let Some(bound) = bound {
+            for field in ["data-date-requested", "data-date-applied"] {
+                let selector = Selector::parse(&format!("[{field}]")).unwrap();
+                assert_eq!(
+                    nodes[0]
+                        .select(&selector)
+                        .next()
+                        .unwrap()
+                        .text()
+                        .collect::<String>(),
+                    bound
+                );
+            }
+        }
+    }
+    for (field, expected) in [
+        ("data-date-status", "enforced"),
+        ("data-date-engine", "openalex"),
+        ("data-date-provenance", "upstream:openalex"),
+    ] {
+        let selector = Selector::parse(&format!("[{field}]")).unwrap();
+        assert_eq!(
+            section
+                .select(&selector)
+                .next()
+                .unwrap()
+                .text()
+                .collect::<String>(),
+            expected
+        );
+    }
+    let selector = Selector::parse("[data-date-acquisition]").unwrap();
+    let acquired = section.select(&selector).next().unwrap();
+    assert_eq!(
+        acquired.value().attr("data-date-acquisition"),
+        Some(outcome)
+    );
+    let expected = match outcome {
+        "results" => "OpenAlex returned results for this search.",
+        "empty" => "OpenAlex responded with no matching results.",
+        "unavailable" => "OpenAlex did not return a usable response. See the source outcome below.",
+        _ => panic!("unexpected tested acquisition outcome"),
+    };
+    assert_eq!(acquired.text().collect::<String>(), expected);
+}
+
+fn portal_does_not_invent_proof_from_request_or_enforcement_preview() {
+    use ssx_http::native::HtmlRenderer;
+    let request = ssx_domain::SearchRequest {
+        query: "no canonical proof".into(),
+        engines: Some(vec!["openalex".into()]),
+        date_from: Some("2024-02-29".into()),
+        ..Default::default()
+    };
+    let response = ssx_domain::SearchResponse::default();
+    let meta = ssx_json::json!({
+        "enforcement":{"date_from":{"requested":"2024-02-29","status":"enforced"}},
+        "date_filter": proof(Some("2024-02-29"), None)
+    });
+    let html = ssx_http::portal::PublicPortal::default().search(&response, &meta, &request);
+    assert!(!html.contains("data-publication-date-proof"));
+    assert!(!html.contains("upstream:openalex"));
+    assert!(!html.contains("data-date-acquisition"));
+}
+
+async fn native_portal_real_openalex_inclusive_bound_matrix_preserves_forms_and_views() {
+    for (suffix, from, to, days) in [
+        (
+            "lower_leap",
+            Some("2024-02-29"),
+            None,
+            vec!["2024-02-29", "2024-03-01"],
+        ),
+        (
+            "upper_leap",
+            None,
+            Some("2024-02-29"),
+            vec!["2024-02-28", "2024-02-29"],
+        ),
+        (
+            "both_span",
+            Some("2024-02-28"),
+            Some("2024-03-01"),
+            vec!["2024-02-28", "2024-02-29", "2024-03-01"],
+        ),
+    ] {
+        let corpus = corpus();
+        let row = corpus["records"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|row| row["id"].as_str().unwrap().ends_with(suffix))
+            .unwrap();
+        let wire = format!(
+            "GET {} HTTP/1.1",
+            row["requests"][0]["url"]
+                .as_str()
+                .unwrap()
+                .strip_prefix("https://api.openalex.org")
+                .unwrap()
+        );
+        for path in ["/", "/search"] {
+            for method in ["GET", "POST"] {
+                let fixture = Fixture::new(Mode::Audited, 200, equal_body(), Some(2)).await;
+                let native = Native::start_with_portal(&fixture, true).await;
+                let mut params = vec![("q", "date control / +"), ("engines", "openalex")];
+                for (key, bound) in [("date_from", from), ("date_to", to)] {
+                    if let Some(bound) = bound {
+                        params.push((key, bound));
+                    }
+                }
+                let (status, html) = native.request(path, method, &params).await;
+                assert_eq!(status, 200, "{suffix} {path} {method}: {html}");
+                assert_portal_proof(&html, from, to, "results");
+                assert_eq!(fixture.upstream.lines(), vec![wire.clone()]);
+                let document = Html::parse_document(&html);
+                let forms = Selector::parse("form").unwrap();
+                let controls = Selector::parse("input[name], select[name]").unwrap();
+                assert_eq!(document.select(&forms).count(), 2);
+                for form in document.select(&forms) {
+                    let fields: Vec<_> = form
+                        .select(&controls)
+                        .filter_map(|control| {
+                            let name = control.value().attr("name")?;
+                            let value = if control.value().name() == "select" {
+                                control
+                                    .select(&Selector::parse("option[selected]").unwrap())
+                                    .next()?
+                                    .value()
+                                    .attr("value")
+                                    .unwrap_or("")
+                            } else {
+                                control.value().attr("value").unwrap_or("")
+                            };
+                            Some((name.to_owned(), value.to_owned()))
+                        })
+                        .collect();
+                    for (key, bound) in [("date_from", from), ("date_to", to)] {
+                        let values: Vec<_> = fields
+                            .iter()
+                            .filter(|(name, _)| name == key)
+                            .map(|(_, value)| value.as_str())
+                            .collect();
+                        if let Some(bound) = bound {
+                            assert_eq!(values, vec![bound]);
+                        } else {
+                            assert!(
+                                values.is_empty() || values == [""],
+                                "missing bound stays absent/blank"
+                            );
+                        }
+                    }
+                    assert!(
+                        fields
+                            .iter()
+                            .any(|(key, value)| key == "engines" && value == "openalex")
+                    );
+                    let pairs: Vec<_> = fields
+                        .iter()
+                        .map(|(key, value)| (key.as_str(), value.as_str()))
+                        .collect();
+                    let (status, body) = native.request("/search", "GET", &pairs).await;
+                    assert_eq!(status, 200, "{body}");
+                    assert_portal_proof(&body, from, to, "results");
+                    assert_eq!(
+                        fixture.upstream.lines().len(),
+                        1,
+                        "resubmit reuses canonical acquisition"
+                    );
+                }
+                let links = Selector::parse("a.rail-link").unwrap();
+                assert_eq!(document.select(&links).count(), 2);
+                for link in document.select(&links) {
+                    let href = link.value().attr("href").unwrap();
+                    let url = url::Url::parse(&format!("http://portal.invalid{href}")).unwrap();
+                    let query: std::collections::BTreeMap<_, _> =
+                        url.query_pairs().into_owned().collect();
+                    assert_eq!(query.get("engines").map(String::as_str), Some("openalex"));
+                    for (key, bound) in [("date_from", from), ("date_to", to)] {
+                        assert_eq!(query.get(key).map(String::as_str), bound);
+                    }
+                    let format = query["format"].as_str();
+                    assert!(matches!(format, "json" | "yaml"));
+                    let (status, body) = native.follow(href).await;
+                    assert_eq!(status, 200);
+                    assert_http(
+                        &decode(&body, format),
+                        format,
+                        &days,
+                        &proof(from, to),
+                        true,
+                    );
+                    assert_eq!(fixture.upstream.lines().len(), 1);
+                }
+                let next = Selector::parse("a[aria-label=\"Try next result page\"]").unwrap();
+                let href = document
+                    .select(&next)
+                    .next()
+                    .unwrap()
+                    .value()
+                    .attr("href")
+                    .unwrap();
+                let (status, body) = native.follow(href).await;
+                assert_eq!(status, 200);
+                assert_portal_proof(&body, from, to, "results");
+                assert_eq!(
+                    fixture.upstream.lines(),
+                    vec![wire.clone(), wire.clone()],
+                    "page identity reacquires with the same inclusive upstream filter"
+                );
+                native.close().await;
+                fixture.close().await;
+            }
+        }
+    }
+}
+
+async fn native_portal_date_constraints_keep_empty_and_failed_acquisition_distinct() {
+    for (upstream, status, outcome) in [(200, 200, "empty"), (500, 503, "unavailable")] {
+        let fixture = Fixture::new(
+            Mode::Audited,
+            upstream,
+            br#"{"results":[]}"#.to_vec(),
+            Some(1),
+        )
+        .await;
+        let native = Native::start_with_portal(&fixture, true).await;
+        let (actual, html) = native
+            .request(
+                "/search",
+                "GET",
+                &[
+                    ("q", "date outcomes"),
+                    ("engines", "openalex"),
+                    ("date_from", "2024-02-29"),
+                    ("date_to", "2024-02-29"),
+                ],
+            )
+            .await;
+        assert_eq!(actual, status);
+        assert_portal_proof(&html, Some("2024-02-29"), Some("2024-02-29"), outcome);
+        assert!(!html.contains("OpenAlex returned results for this search."));
+        if upstream == 500 {
+            assert!(html.contains("No configured source returned a result."));
+        } else {
+            assert!(html.contains("No results found"));
+        }
+        assert_eq!(fixture.upstream.lines().len(), 1);
+        native.close().await;
+        fixture.close().await;
+    }
+}

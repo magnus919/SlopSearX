@@ -1,0 +1,403 @@
+"""AST-only migration traceability. Reads source; never imports a backend or calls providers.
+
+Temporary authoring tool, retired with W03 oracle producers at G08. The native
+W03 gate consumes and validates the emitted frozen manifest without Python.
+"""
+
+from __future__ import annotations
+
+import ast
+import hashlib
+import json
+import subprocess
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[3]
+BASELINE = "87af8096d46359241421ac747ed6aa1ad07f38ec"
+SOURCE_TESTS = [
+    "tests/test_adaptive_research.py",
+    "tests/test_adaptive_valkey.py",
+    "tests/test_adaptive_transport.py",
+    "tests/test_query_planning.py",
+    "tests/test_query_planning_transport.py",
+]
+OWN = "ssx-infra/w03/"
+WIRE = "ssx-mcp/w03/"
+W01 = "ssx-infra/w01/"
+W02 = "ssx-infra/w02/"
+CASES = {
+    "test_rate_limit_error_remains_a_compatibility_export": [],
+    "test_plan_followup_progress_completion_and_immutable_history": [
+        OWN + "evidence_preview_extend_replay_and_history_roundtrip",
+        WIRE + "actual_authenticated_http_preview_execute_followup_replay_and_completion",
+    ],
+    "test_invalid_plan_is_atomic": [
+        OWN + "invalid_initial_admission_matrix_is_atomic_and_snapshots_stay_complete",
+        OWN + "malformed_decomposition_matrix_is_atomic",
+    ],
+    "test_result_budget_admits_records_without_truncating_snapshot": [
+        OWN + "cross_tenant_and_unadmitted_snapshot_records_never_authorize",
+        WIRE + "budget_exhaustion_completion_and_exact_cap_replay_over_actual_http",
+    ],
+    "test_every_execution_budget_stops_dispatch_without_caller_completion": [
+        OWN + "all_execution_budget_caps_stop_dispatch_without_implicit_caller_completion"
+    ],
+    "test_exact_query_cap_can_be_completed_after_deadline_without_changing_execution": [
+        OWN + "exact_query_and_result_cap_completion_survives_reload_and_deadline"
+    ],
+    "test_result_exhaustion_takes_precedence_over_exact_query_cap": [
+        OWN + "exact_query_and_result_cap_completion_survives_reload_and_deadline"
+    ],
+    "test_budget_exhausted_completion_is_metadata_only_after_deadline": [
+        OWN + "exact_query_and_result_cap_completion_survives_reload_and_deadline"
+    ],
+    "test_completion_replay_requires_original_subquestion_request": [
+        OWN + "exact_query_and_result_cap_completion_survives_reload_and_deadline"
+    ],
+    "test_legacy_completed_record_replay_requires_matching_nonempty_assertion": [
+        OWN + "nonbudget_late_completion_and_legacy_completion_replay_keep_metadata_contract"
+    ],
+    "test_deadline_crossing_between_preflight_and_fenced_claim": [
+        OWN + "deadline_cancellation_and_completion_during_evidence_read_never_append_or_spend",
+        W01 + "prepared_mutation_reloads_terminal_evidence_and_preserves_guards",
+        OWN + "exact_query_and_result_cap_completion_survives_reload_and_deadline",
+    ],
+    "test_completion_conflict_is_fenced_against_stale_preflight_copy": [
+        OWN + "deadline_cancellation_and_completion_during_evidence_read_never_append_or_spend",
+        W01 + "prepared_mutation_reloads_terminal_evidence_and_preserves_guards",
+        W01 + "same_token_concurrent_writers_cannot_lose_history",
+    ],
+    "test_metadata_only_completion_does_not_expire_non_budget_terminal_job": [
+        OWN + "nonbudget_late_completion_and_legacy_completion_replay_keep_metadata_contract"
+    ],
+    "test_lower_attempt_budget_survives_retry": [
+        OWN + "lower_retry_attempt_cap_and_current_policy_matrix_preserve_original_attempts"
+    ],
+    "test_completed_job_continuation_race_holds_lease": [
+        OWN + "concurrent_extension_serializes_last_slot_and_keeps_history"
+    ],
+    "test_revoked_policy_and_tenant_links": [
+        OWN + "cross_tenant_and_unadmitted_snapshot_records_never_authorize",
+        OWN + "denied_grants_and_evidence_intent_replay_reject_before_spend",
+    ],
+    "test_legacy_running_attempt_is_charged_once_before_recovery": [
+        OWN + "native_recovery_retains_uncertain_attempt_and_prior_admitted_evidence",
+        W01 + "initialization_and_work_cannot_evade_scope_or_legacy_charges",
+    ],
+    "test_orphan_terminalization_preserves_history_and_closes_attempt": [
+        OWN + "orphan_cancellation_expiry_and_caller_completion_preserve_attempt_history_and_charges"
+    ],
+    "test_current_policy_rechecked_before_retry_dispatch": [
+        OWN + "lower_retry_attempt_cap_and_current_policy_matrix_preserve_original_attempts",
+        W02 + "denied_workflow_audit_survives_restored_authority_retry_without_actual_call_charge",
+    ],
+    "test_unexpected_dispatch_failure_has_fresh_durable_attempt": [
+        W02 + "partial_retry_preserves_success_and_failed_snapshot_bytes"
+    ],
+    "test_worker_death_after_engine_return_is_conservatively_recovered": [
+        W02 + "process_kill_restart_discovers_orphan_and_conserves_unknown_spend",
+        OWN + "native_recovery_retains_uncertain_attempt_and_prior_admitted_evidence",
+    ],
+    "test_worker_death_after_snapshot_write_preserves_orphan_and_recovers": [
+        W02 + "snapshot_write_cancel_can_leave_tenant_orphan_but_never_stale_job_link",
+        W02 + "snapshot_write_cancellation_reports_completion_unknown",
+    ],
+    "test_lifecycle_during_dispatch_retains_evidence_and_stops_next_query": [
+        W02 + "durable_cancel_interrupts_owned_capture_and_settles_truthfully",
+        W02 + "deadline_during_held_query_is_failed_with_conserved_attempt",
+    ],
+    "test_completed_job_race_reserves_last_slot_once": [
+        OWN + "concurrent_extension_serializes_last_slot_and_keeps_history"
+    ],
+    "test_budget_completion_survives_valkey_reconnect_and_preserves_execution": [
+        OWN + "exact_query_and_result_cap_completion_survives_reload_and_deadline"
+    ],
+    "test_exact_query_cap_completion_survives_valkey_reload": [
+        OWN + "exact_query_and_result_cap_completion_survives_reload_and_deadline"
+    ],
+    "test_recovery_charges_uncertain_attempt_and_fences_same_owner_token": [
+        W01 + "recovered_attempt_rejects_stale_application_completion_with_current_lease",
+        W02 + "lease_loss_joins_held_loopback_socket_and_preserves_reclaimer",
+    ],
+    "test_extension_serializes_with_lifecycle_requests": [
+        OWN + "concurrent_extension_serializes_last_slot_and_keeps_history",
+        W02 + "concurrent_retry_holds_authority_and_preserves_empty_attempt_snapshot",
+        W01 + "observed_side_key_cancellation_cannot_be_erased_by_callback",
+    ],
+    "test_planning_evidence_survives_real_valkey_reload": [
+        OWN + "evidence_preview_extend_replay_and_history_roundtrip"
+    ],
+    "test_adaptive_research_journey": [
+        WIRE + "actual_authenticated_http_preview_execute_followup_replay_and_completion"
+    ],
+    "test_budget_exhaustion_completion_replays_over_mcp_transport": [
+        WIRE + "budget_exhaustion_completion_and_exact_cap_replay_over_actual_http"
+    ],
+    "test_exact_query_cap_completion_over_mcp_transport": [
+        WIRE + "budget_exhaustion_completion_and_exact_cap_replay_over_actual_http"
+    ],
+    "test_decomposition_preview_to_durable_execution": [
+        OWN + "decomposition_preview_execution_parity_and_no_preview_writes"
+    ],
+    "test_variant_identifier_preservation_rechecked_at_execution": [
+        OWN + "variant_identifiers_revalidated_after_edited_preview"
+    ],
+    "test_identifier_matching_rejects_prefix_collision": [OWN + "identifiers_exact_prefix_unicode_and_punctuation"],
+    "test_variants_reject_duplicate_without_dispatch": [
+        OWN + "duplicate_variants_and_edited_initial_plans_never_persist"
+    ],
+    "test_evidence_preview_execution_and_replay_preserve_history": [
+        OWN + "evidence_preview_extend_replay_and_history_roundtrip"
+    ],
+    "test_followup_rejection_is_read_only": [OWN + "malformed_followups_reject_without_budget_or_dispatch"],
+    "test_cross_tenant_unadmitted_expired_and_resolved_evidence": [
+        OWN + "cross_tenant_and_unadmitted_snapshot_records_never_authorize",
+        OWN + "stale_snapshot_and_actual_provenance_denied_without_evidence_disclosure_or_spend",
+        OWN + "resolved_progress_and_completed_plans_revalidate_before_admission",
+    ],
+    "test_preview_cannot_authorize_changed_progress_or_policy": [
+        OWN + "resolved_progress_and_completed_plans_revalidate_before_admission",
+        OWN + "denied_grants_and_evidence_intent_replay_reject_before_spend",
+    ],
+    "test_recovered_query_rechecks_captured_evidence_scope": [
+        OWN + "denied_grants_and_evidence_intent_replay_reject_before_spend",
+        W02 + "workflow_mixed_sensitive_plan_denies_before_first_dispatch",
+    ],
+    "test_legacy_digest_and_payload_remain_compatible": [
+        OWN + "legacy_untagged_repeat_and_digest_remain_compatible",
+        OWN + "legacy_nullable_planning_collections_and_digest_preserve_source_contract",
+    ],
+    "test_grants_and_exhaustion": [
+        OWN + "denied_grants_and_evidence_intent_replay_reject_before_spend",
+        OWN + "all_execution_budget_caps_stop_dispatch_without_implicit_caller_completion",
+    ],
+    "test_evidence_replay_rechecks_revoked_parent_intent": [
+        OWN + "denied_grants_and_evidence_intent_replay_reject_before_spend"
+    ],
+    "test_followup_running_missing_store_and_expired_job": [
+        OWN + "followup_state_deadline_workflow_store_and_terminal_parent_matrix"
+    ],
+    "test_resolved_state_race_invalidates_leased_execution": [
+        OWN + "progress_changes_during_snapshot_read_fail_at_authoritative_claim_before_budget"
+    ],
+    "test_actual_snapshot_provenance_checked_before_disclosure": [
+        OWN + "stale_snapshot_and_actual_provenance_denied_without_evidence_disclosure_or_spend"
+    ],
+    "test_nullable_legacy_planning_lists_load_as_empty": [
+        OWN + "legacy_nullable_planning_collections_and_digest_preserve_source_contract"
+    ],
+    "test_edited_initial_plan_duplicates_rejected_before_persistence": [
+        OWN + "duplicate_variants_and_edited_initial_plans_never_persist"
+    ],
+    "test_tagged_duplicate_continuation_rejected_but_legacy_retained": [
+        OWN + "legacy_untagged_repeat_and_digest_remain_compatible"
+    ],
+    "test_query_planning_mcp_journey": [
+        WIRE + "actual_authenticated_http_preview_execute_followup_replay_and_completion",
+        WIRE + "real_native_stdio_process_preserves_complete_descriptors_preview_and_evidence_replay",
+        WIRE + "actual_authenticated_legacy_sse_preview_has_exact_output_and_zero_dispatch",
+    ],
+}
+DIFFERENCES = {
+    "test_rate_limit_error_remains_a_compatibility_export": ["W03-D04"],
+    "test_unexpected_dispatch_failure_has_fresh_durable_attempt": ["W03-D05"],
+    "test_lifecycle_during_dispatch_retains_evidence_and_stops_next_query": ["W03-D02"],
+    "test_worker_death_after_engine_return_is_conservatively_recovered": ["W03-D02"],
+}
+FUNCTIONS = {
+    "slopsearx/research_planning.py": None,
+    "slopsearx/mcp/planning_tools.py": None,
+    "slopsearx/research.py": {"plan_research_queries"},
+    "slopsearx/mcp/tools.py": {
+        "_research_dispatch_error",
+        "bind_research_policy",
+        "_research_metadata",
+        "_prepare_research_query",
+        "_validate_research_associations",
+        "_research_limit",
+        "slopsearx_start_research",
+        "_resolve_deadline",
+        "slopsearx_get_job",
+        "slopsearx_cancel_job",
+        "slopsearx_retry_research",
+        "slopsearx_extend_research",
+        "_completion_replay_matches",
+        "slopsearx_update_research",
+        "_job_summary",
+    },
+}
+
+
+def sha(data):
+    return hashlib.sha256(data).hexdigest()
+
+
+def source(path):
+    data = (ROOT / path).read_bytes()
+    return data, data.decode(), ast.parse(data)
+
+
+def literal(node):
+    try:
+        return ast.literal_eval(node)
+    except ValueError:
+        if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Mult):
+            left, right = literal(node.left), literal(node.right)
+            if isinstance(left, (list, tuple)) and type(right) is int:
+                return left * right
+        # The only computed source fixture is this fixed eleven-element evidence list.
+        if isinstance(node, ast.ListComp) and ast.unparse(node) == "[f'a:{i}' for i in range(11)]":
+            return [f"a:{i}" for i in range(11)]
+        if isinstance(node, ast.List):
+            return [literal(v) for v in node.elts]
+        if isinstance(node, ast.Tuple):
+            return tuple(literal(v) for v in node.elts)
+        if isinstance(node, ast.Dict):
+            return {literal(k): literal(v) for k, v in zip(node.keys, node.values)}
+        raise RuntimeError("nonliteral parameterization requires explicit mapping: " + ast.unparse(node))
+
+
+def rows():
+    rows = []
+    for path in SOURCE_TESTS:
+        data, text, tree = source(path)
+        for node in tree.body:
+            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) or not node.name.startswith("test_"):
+                continue
+            if node.name not in CASES:
+                raise RuntimeError("unmapped original test: " + node.name)
+            parameters = []
+            for decorator in node.decorator_list:
+                if (
+                    isinstance(decorator, ast.Call)
+                    and isinstance(decorator.func, ast.Attribute)
+                    and decorator.func.attr == "parametrize"
+                ):
+                    parameters.append({"names": literal(decorator.args[0]), "cases": literal(decorator.args[1])})
+            assertions = []
+            for assertion in ast.walk(node):
+                if isinstance(assertion, ast.Assert):
+                    assertions.append(
+                        {
+                            "line": assertion.lineno,
+                            "expression": ast.unparse(assertion.test),
+                            "ast_sha256": sha(ast.dump(assertion, include_attributes=False).encode()),
+                        }
+                    )
+                elif (
+                    isinstance(assertion, ast.Call)
+                    and isinstance(assertion.func, ast.Attribute)
+                    and assertion.func.attr == "raises"
+                ):
+                    assertions.append(
+                        {
+                            "line": assertion.lineno,
+                            "expression": ast.unparse(assertion),
+                            "ast_sha256": sha(ast.dump(assertion, include_attributes=False).encode()),
+                        }
+                    )
+            rows.append(
+                {
+                    "path": path,
+                    "function": node.name,
+                    "start": node.lineno,
+                    "end": node.end_lineno,
+                    "function_ast_sha256": sha(ast.dump(node, include_attributes=False).encode()),
+                    "parameterizations": parameters,
+                    "assertion_families": sorted(assertions, key=lambda x: x["line"]),
+                    "native_cases": CASES[node.name],
+                    "intentional_differences": DIFFERENCES.get(node.name, []),
+                }
+            )
+    return rows
+
+
+SYMBOLS = {
+    "_completion_replay_matches": ["AdaptiveResearch::update"],
+    "_entry": ["entry"],
+    "_initial_preview": ["AdaptiveResearch::preview_initial"],
+    "_job_summary": ["job_summary", "iso_timestamp"],
+    "_limits": ["AdaptiveResearch::limits"],
+    "_prepare_research_query": ["AdaptiveResearch::prepare_query"],
+    "_research_dispatch_error": ["SearchService::prepare_research_plan", "ResearchRunner::execute_claim"],
+    "_research_limit": ["AdaptiveResearch::limits"],
+    "_research_metadata": ["metadata"],
+    "_resolve_deadline": ["resolve_deadline_at", "parse_iso_deadline"],
+    "_validate_research_associations": ["AdaptiveResearch::associations", "AdaptiveResearch::evidence"],
+    "bind_research_policy": ["SearchService::prepare_research_plan", "ResearchRunner::execute_claim"],
+    "plan_research_queries": ["AdaptiveResearch::plan_defaults", "PolicyService::research_template_scope"],
+    "query_identity": ["query_identity"],
+    "slopsearx_cancel_job": ["AdaptiveResearch::cancel", "PlanningRegistry::execute"],
+    "slopsearx_extend_research": ["AdaptiveResearch::extend", "ResearchStore::claim_prepared"],
+    "slopsearx_get_job": ["AdaptiveResearch::get_job", "job_summary", "PlanningRegistry::execute"],
+    "slopsearx_plan_query_variants": ["AdaptiveResearch::preview_initial", "PlanningRegistry::execute"],
+    "slopsearx_plan_research": ["AdaptiveResearch::preview_initial", "PlanningRegistry::execute"],
+    "slopsearx_plan_research_followup": [
+        "AdaptiveResearch::preview_followup",
+        "AdaptiveResearch::evidence",
+        "PlanningRegistry::execute",
+    ],
+    "slopsearx_retry_research": ["AdaptiveResearch::retry_public", "ResearchRunner::retry"],
+    "slopsearx_start_research": ["AdaptiveResearch::admit", "PlanningRegistry::execute"],
+    "slopsearx_update_research": ["AdaptiveResearch::update"],
+    "validate_planning_metadata": ["validate_metadata"],
+    "validate_variant": ["validate_variant", "identifiers"],
+}
+
+functions = []
+for path, names in FUNCTIONS.items():
+    data, text, tree = source(path)
+    for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and (names is None or node.name in names):
+            functions.append(
+                {
+                    "path": path,
+                    "function": node.name,
+                    "start": node.lineno,
+                    "end": node.end_lineno,
+                    "function_ast_sha256": sha(ast.dump(node, include_attributes=False).encode()),
+                    "native_owner": "ssx-infra::research_planning + accepted shared policy/store/runner",
+                    "native_symbols": SYMBOLS[node.name],
+                }
+            )
+paths = sorted(
+    set(SOURCE_TESTS)
+    | set(FUNCTIONS)
+    | {
+        "slopsearx/research_models.py",
+        "slopsearx/research_budget.py",
+        "slopsearx/capabilities.py",
+        "slopsearx/snapshot.py",
+        "tests/test_research_retry_followup.py",
+    }
+)
+sources = []
+for p in paths:
+    data = (ROOT / p).read_bytes()
+    blob = subprocess.check_output(["git", "rev-parse", f"{BASELINE}:{p}"], cwd=ROOT, text=True).strip()
+    sources.append({"path": p, "git_blob": blob, "sha256": sha(data)})
+manifest = {
+    "contract": "slopsearx.rust.w03.parity-map",
+    "version": 1,
+    "plan_id": "W03",
+    "baseline": BASELINE,
+    "current_native_baseline": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
+    "sources": sources,
+    "functions": functions,
+    "tests": rows(),
+    "claim": (
+        "Every original test function, literal parameterization and assertion family is bound individually; "
+        "bindings require semantic review and actual native execution, not count equality."
+    ),
+}
+(ROOT / "docs/rust-rewrite/w03/regression-map.json").write_text(json.dumps(manifest, indent=2) + "\n")
+print(
+    json.dumps(
+        {
+            "source_functions": len(functions),
+            "source_tests": len(manifest["tests"]),
+            "assertion_families": sum(len(t["assertion_families"]) for t in manifest["tests"]),
+            "sources": len(sources),
+        }
+    )
+)

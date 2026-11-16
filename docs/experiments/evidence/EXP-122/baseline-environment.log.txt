@@ -1,0 +1,91 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_ OperatorRunnerConfigTests.test_preflight_only_runs_static_checks_without_clock_dirs_or_handoff _
+
+self = <tests.test_coverage_operator_runner.OperatorRunnerConfigTests testMethod=test_preflight_only_runs_static_checks_without_clock_dirs_or_handoff>
+
+    @unittest.skipUnless(
+        sys.version_info[:2] == (3, 12) and sys.prefix != sys.base_prefix,
+        "the registered environment smoke test requires the isolated Python 3.12 study venv",
+    )
+    def test_preflight_only_runs_static_checks_without_clock_dirs_or_handoff(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            config, pin, directories = self._registered_config(root)
+            real_subprocess_run = subprocess.run
+            real_monotonic = runner.time.monotonic
+    
+            def clean_checkout_audit(command, **kwargs):
+                if command[:3] == ["git", "status", "--porcelain"]:
+                    return SimpleNamespace(stdout="")
+                return real_subprocess_run(command, **kwargs)
+    
+            def forbid_stage_clock():
+                frame = inspect.currentframe().f_back
+                if frame.f_globals.get("__name__") == runner.__name__ and frame.f_code.co_name == "_build_plan":
+                    raise AssertionError("stage clock must not start")
+                return real_monotonic()
+    
+            output = io.StringIO()
+            with (
+                source_bootstrap_for_test(root),
+                mock.patch.object(runner.subprocess, "run", side_effect=clean_checkout_audit),
+                mock.patch.object(runner.time, "monotonic", side_effect=forbid_stage_clock),
+                mock.patch.object(asyncio, "run", side_effect=AssertionError("phase graph must not run")),
+                contextlib.redirect_stdout(output),
+            ):
+                for secret_path in json.loads(config.read_bytes())["private_paths"].values():
+                    Path(secret_path).unlink()
+                exit_code = runner.main(["--config", str(config), "--config-sha256", pin, "--preflight-only"])
+    
+>           self.assertEqual(exit_code, 0, output.getvalue())
+E           AssertionError: 1 != 0 : {"error_code": "active-environment-preflight-failed", "status": "refused-or-terminal"}
+
+tests/test_coverage_operator_runner.py:642: AssertionError
+_ test_documented_source_launcher_accepts_real_locked_venv_with_source_egg_info _
+
+tmp_path = PosixPath('/private/var/folders/gn/gpr8z9bn72z5kqm_fmjndj180000gn/T/pytest-of-magnus/pytest-220/test_documented_source_launche0')
+
+    def test_documented_source_launcher_accepts_real_locked_venv_with_source_egg_info(tmp_path: Path) -> None:
+        if Path(sys.prefix).resolve() == Path(sys.base_prefix).resolve():
+            pytest.skip("requires the uv-synced study venv; the default CI test interpreter is not a venv")
+        python = Path(sys.executable)
+        source_metadata = REPOSITORY / "slopsearx.egg-info"
+        assert not source_metadata.exists(), "do not overwrite pre-existing source metadata"
+        source_metadata.mkdir()
+        (source_metadata / "PKG-INFO").write_text(
+            "Metadata-Version: 2.1\nName: slopsearx\nVersion: 0.6.0\n", encoding="utf-8"
+        )
+        try:
+            script = r"""
+    import hashlib, json, sys
+    from pathlib import Path
+    from scripts.coverage_operator_launcher import configure_source_import
+    cache = configure_source_import()
+    try:
+        from scripts.coverage_runtime_environment import verify_active_environment
+        lock = (Path.cwd() / "uv.lock").read_bytes()
+        receipt = verify_active_environment(lock, expected_lock_sha256=hashlib.sha256(lock).hexdigest())
+        print(json.dumps({"status": "verified", "receipt_sha256": hashlib.sha256(receipt).hexdigest()}))
+    finally:
+        import shutil
+        shutil.rmtree(cache, ignore_errors=True)
+    """
+            completed = subprocess.run(
+                [str(python), "-c", script], cwd=REPOSITORY, check=False, capture_output=True, text=True, timeout=15
+            )
+>           assert completed.returncode == 0, completed.stderr
+E           AssertionError: Traceback (most recent call last):
+E               File "<string>", line 9, in <module>
+E               File "/private/tmp/slopsearx-exp122-baseline/scripts/coverage_runtime_environment.py", line 280, in verify_active_environment
+E                 raise RuntimeEnvironmentError("active-environment-distribution-inventory-mismatch")
+E             scripts.coverage_runtime_environment.RuntimeEnvironmentError: active-environment-distribution-inventory-mismatch
+E             
+E           assert 1 == 0
+E            +  where 1 = CompletedProcess(args=['/Volumes/tank01/magnus/git/SlopSearX/.venv/bin/python', '-c', '\nimport hashlib, json, sys\nfr...)\nscripts.coverage_runtime_environment.RuntimeEnvironmentError: active-environment-distribution-inventory-mismatch\n').returncode
+
+tests/test_coverage_runtime_environment.py:205: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coverage_operator_runner.py::OperatorRunnerConfigTests::test_preflight_only_runs_static_checks_without_clock_dirs_or_handoff
+FAILED tests/test_coverage_runtime_environment.py::test_documented_source_launcher_accepts_real_locked_venv_with_source_egg_info
+2 failed in 1.11s

@@ -1,0 +1,27 @@
+{
+  "command": [
+    "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+    "/Volumes/tank01/magnus/git/slopsearx-a10/docs/rust-rewrite/a10/capture_regressions.py",
+    "--allow-original-oracle",
+    "--output",
+    "/Volumes/tank01/magnus/git/slopsearx-a10/docs/rust-rewrite/a10/source-regressions-v1.json"
+  ],
+  "exit": 0,
+  "producer_sha256": "0845f8b68a05999315f12d37e3b37b8059601f5bc8fb3b137840eaacf843ed92",
+  "output_sha256": "d3a54d23dd3f22c22ef910e91c1f71f72b0b0284975c9cd0f7ece944b10ce1b3",
+  "log_sha256": "2b57835079312012e07f02e776df63562a46f96065b69ec2d5fc1631c862582b",
+  "guards": [
+    {
+      "guard": "normal",
+      "exit": 1,
+      "explicit_RuntimeError": true,
+      "output_absent": true
+    },
+    {
+      "guard": "optimized",
+      "exit": 1,
+      "explicit_RuntimeError": true,
+      "output_absent": true
+    }
+  ]
+}

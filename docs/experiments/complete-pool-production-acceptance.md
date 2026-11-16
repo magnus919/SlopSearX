@@ -1,10 +1,34 @@
 # Production acceptance checklist: explicit-purpose complete-pool Jev selection
 
+Current status: the executor-fixed development attempt is terminal-incomplete after all 54 reference grades and independent closure. Selector execution stopped after two dispatches, leaving 37 planned operations uninvoked; no ranking or quality result exists, and confirmation was not invoked. See the [terminal record](evidence/coverage-first-study/executor-fixed-development-terminal-2026-10-15/README.md). The earlier saved-handoff attempt remains a separate terminal record.
+
+Earlier completed attempts remain separate: one development attempt stopped before grading when two requests were rejected by strict-schema validation, leaving 52 packets unstarted ([terminal record](evidence/coverage-first-study/completed-2026-10-15-native-schema-rejection/README.md)); an earlier attempt completed 53 grading calls but failed validation of one response ([terminal record](evidence/coverage-first-study/completed-2026-10-15-native-grade-schema/README.md)). The preceding selector-map-admission attempt completed 54 grades but stopped before ranking ([terminal record](evidence/coverage-first-study/completed-2026-10-15-selector-map-admission/README.md)). The saved-handoff attempt and executor-fixed attempt are documented in separate terminal records. Coverage-first remains unqualified for implementation.
+
 Implementation acceptance plan inspected against SlopSearX `3d5e8bac38b619aec1bd7a679f1a7667f1fc1abf` and experimental GroktoCrawl X `3612affba3b51e7240a0e60d079499739052c0b1`. This is a checklist of required work, not a claim of delivery. EXP-050 is bounded identifier-based source-information capture, not source-quality measurement or selector qualification. The production selector still requires a separately qualified, frozen candidate and fresh confirmation. Metadata presence or richer cards alone cannot satisfy either gate.
 
 The cross-service boundary follows accepted X ADR-0082: GroktoCrawl owns the caller's question, constraints, evidence sufficiency and completion; SlopSearX owns bounded search dispatch, merge/ranking and immutable result snapshots. Keep the SlopSearX ordinary HTTP behavior unchanged when the option is absent. The proposed ADR-0093 provenance work is not an accepted substitute for candidate quality evidence.
 
-## Current evidence and next action (2026-10-07)
+## Current production baseline
+
+Source comparison shows that, for inputs accepted by both versions, the frozen W0 control and current Jev provider use the same model, scoring instructions, top-40 projection and stable score ordering; the remaining results stay in place. Current production adds stricter input/JSON validation and a 2 MB response cap. Those protections must remain in any integration and are not candidate relevance improvements. Four targeted offline tests (14 cases) checked projection, top-40/tail ordering, malformed-response fallback and strict parsing without provider calls. The control's age alone therefore does not require another relevance study; the existing frozen comparison still needs to pass its registered gates.
+
+The product already supports generic Jev reranking. The remaining proposed change is carrying an explicit caller purpose and critical facets consistently through the shared request, provider, cache, HTTP, MCP, portal and research paths, if the comparison qualifies it. Routing intent continues to select engines and categories; it is not a ranking objective.
+
+## Earlier delivery state (2026-10-15)
+
+The earlier study passed import and late registration. All 53 required native grading calls returned; 52 responses passed schema validation and one failed. The independent grade validator closed that study as incomplete. No ranking, answer or confirmation call ran. This earlier failure remains historical evidence; its responses were not reused in later attempts. The native adapter repair added structured-output schema binding and early response validation; it is engineering hardening, not ranking-quality evidence. The next attempt stopped on two rejected schema requests before any grades completed. The preceding October 15 selector-map-admission attempt then completed 54 reference grades and their independent closure, but produced no ranking result.
+
+## Earlier delivery state (2026-10-14)
+
+PR #843 added saved-result import and offline engine replay; PR #844 repaired setup against the complete archive. PR #845 recorded the test before execution. Runner and issuer static checks passed, but the actual saved-import admission path refused the single invocation. No scientific call occurred.
+
+The admission repair reconstructs the live clock in the actual issuer and distinguishes the new runner revision from the immutable archive revision. Its offline regression exercises the real issuer and receipt validator, reproduces the old failure, and rejects stale or tampered clocks and malformed revisions. The focused checks passed 59 tests and 12 subtests. The failed study is terminal; these repair tests provide no ranking-quality credit.
+
+A further offline check found missing saved-import receipt fields in the later ranking and answer requests. The [downstream check](evidence/coverage-first-study/saved-downstream-offline-check-2026-10-14/README.md) verifies that the repaired runner carries those fields into all three consumers. The complete real archive reconstructed successfully with temporary engineering fixtures and zero scientific calls. This is a setup check, not a quality comparison.
+
+The remaining release requirements are a passing development comparison, a passing fresh confirmation, and implementation of the complete compatibility and recovery checklist below. Historical records provide no current-stage quality credit.
+
+## Retained evidence and next action at 2026-10-07
 
 [EXP-094](EXP-094-sol-assessments.md) retained five valid Sol source assignments before the app rejected the sixth agent spawn for reaching this chat's thread limit. The process is gone and the eight-hour deadline expired; the [interruption readout](evidence/EXP-094/completed/readout.md) preserves the partial outcome and conservative accounting. This is platform/interruption evidence, not a model-validation failure. No complete ranking/task-use comparison or confirmation was run. A successor must prospectively freeze all five valid inputs and use fresh independent tasks for the remaining assignments under unchanged gates and ceilings. Previous EXP-093 remains terminal/inconclusive with its wrong-source citation rejection; its response is not repaired or reused.
 
@@ -12,7 +36,7 @@ The immediate evidence gap is a complete independently validated source-referenc
 
 | Release requirement | Current evidence | State |
 | --- | --- | --- |
-| Complete valid development references | Carried card references and five valid Sol source assignments exist; 43 source and 32 answer assessments remain | Incomplete |
+| Complete valid development references | Latest run: 54 successful native grades and independent closure; selector-map admission then failed before ranking | References complete in the stopped run; no qualifying comparison |
 | Registered development ranking and task-use gates | No complete qualifying comparison | Unproven |
 | Wholly fresh untouched confirmation | Not run | Incomplete |
 | Purpose/facet integration, compatibility and recovery checks | Checklist below remains required after candidate qualification | Not delivered by these experiments |

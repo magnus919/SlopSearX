@@ -1,0 +1,23 @@
+
+running 2 tests
+load_array_baseline=Err(Malformed)
+max_revision_repair=Err(Malformed)
+max_revision_delete=Err(Malformed)
+
+thread 'independent_max_revision_delete_and_repair' (24354962) panicked at tests/probes.rs:1768:1033:
+valid max revision remains deletable
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test independent_max_revision_delete_and_repair ... FAILED
+claim_array_baseline=Ok(Some(SavedClaim { definition: SavedDefinition { search_id: "saved-one", revision: 1, paused: false, deleted: false, .. }, .. }))
+
+thread 'independent_nonobject_baseline_refuses_before_claim' (24354963) panicked at tests/probes.rs:1770:798:
+malformed baseline must not publish lease
+test independent_nonobject_baseline_refuses_before_claim ... FAILED
+
+failures:
+
+failures:
+    independent_max_revision_delete_and_repair
+    independent_nonobject_baseline_refuses_before_claim
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 24 filtered out; finished in 0.05s

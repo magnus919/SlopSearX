@@ -1,0 +1,179 @@
+........................ERROR:    ASGI callable returned without completing response.
+<Task pending name='Task-692' coro=<ResearchJobRunner._worker() running at /private/tmp/slopsearx-daily-20261014/slopsearx/research.py:614> wait_for=<Future pending cb=[Task.task_wakeup()]> cb=[gather.<locals>._done_callback() at /Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/tasks.py:767]>
+  File "/private/tmp/slopsearx-daily-20261014/slopsearx/research.py", line 614, in _worker
+    await asyncio.sleep(self._poll_interval)
+Stack for <Task pending name='Task-692' coro=<ResearchJobRunner._worker() running at /private/tmp/slopsearx-daily-20261014/slopsearx/research.py:614> wait_for=<Future pending cb=[Task.task_wakeup()]> cb=[gather.<locals>._done_callback() at /Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/tasks.py:767]> (most recent call last):
+<Task pending name='mcp.shared.session.BaseSession._receive_loop' coro=<BaseSession._receive_loop() running at /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/mcp/shared/session.py:357> wait_for=<Future pending cb=[Task.task_wakeup()]> cb=[TaskGroup._spawn.<locals>.task_done() at /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:821]>
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/mcp/shared/session.py", line 357, in _receive_loop
+    async for message in self._read_stream:
+Stack for <Task pending name='mcp.shared.session.BaseSession._receive_loop' coro=<BaseSession._receive_loop() running at /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/mcp/shared/session.py:357> wait_for=<Future pending cb=[Task.task_wakeup()]> cb=[TaskGroup._spawn.<locals>.task_done() at /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:821]> (most recent call last):
+<Task pending name='Task-688' coro=<StagedSearchRunner.run_forever() running at /private/tmp/slopsearx-daily-20261014/slopsearx/staged.py:708> wait_for=<Future pending cb=[Task.task_wakeup()]>>
+  File "/private/tmp/slopsearx-daily-20261014/slopsearx/staged.py", line 708, in run_forever
+    await asyncio.sleep(1)
+Stack for <Task pending name='Task-688' coro=<StagedSearchRunner.run_forever() running at /private/tmp/slopsearx-daily-20261014/slopsearx/staged.py:708> wait_for=<Future pending cb=[Task.task_wakeup()]>> (most recent call last):
+<Task pending name='Task-678' coro=<Client._session_runner() running at /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/fastmcp/client/client.py:702> wait_for=<Future pending cb=[Task.task_wakeup()]>>
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/fastmcp/client/client.py", line 702, in _session_runner
+    await stack.enter_async_context(self._context_manager())
+Stack for <Task pending name='Task-678' coro=<Client._session_runner() running at /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/fastmcp/client/client.py:702> wait_for=<Future pending cb=[Task.task_wakeup()]>> (most recent call last):
+<Task pending name='Task-677' coro=<TestGatewaySessionOwner.test_http_shutdown_is_clean() running at /private/tmp/slopsearx-daily-20261014/tests/test_mcp_gateway.py:459> wait_for=<Future pending cb=[Task.task_wakeup()]> cb=[_run_until_complete_cb() at /Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/base_events.py:181]>
+  File "/private/tmp/slopsearx-daily-20261014/tests/test_mcp_gateway.py", line 459, in test_http_shutdown_is_clean
+    async with Client(url, auth=TOKEN) as direct:
+Stack for <Task pending name='Task-677' coro=<TestGatewaySessionOwner.test_http_shutdown_is_clean() running at /private/tmp/slopsearx-daily-20261014/tests/test_mcp_gateway.py:459> wait_for=<Future pending cb=[Task.task_wakeup()]> cb=[_run_until_complete_cb() at /Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/base_events.py:181]> (most recent call last):
+<Task pending name='mcp.server.streamable_http_manager.StreamableHTTPSessionManager._handle_stateful_request.<locals>.run_server' coro=<StreamableHTTPSessionManager._handle_stateful_request.<locals>.run_server() running at /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/mcp/server/streamable_http_manager.py:319> wait_for=<Future pending cb=[Task.task_wakeup()]> cb=[TaskGroup._spawn.<locals>.task_done() at /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:821]>
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/mcp/server/streamable_http_manager.py", line 319, in run_server
+    await self.app.run(
+Stack for <Task pending name='mcp.server.streamable_http_manager.StreamableHTTPSessionManager._handle_stateful_request.<locals>.run_server' coro=<StreamableHTTPSessionManager._handle_stateful_request.<locals>.run_server() running at /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/mcp/server/streamable_http_manager.py:319> wait_for=<Future pending cb=[Task.task_wakeup()]> cb=[TaskGroup._spawn.<locals>.task_done() at /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:821]> (most recent call last):
+<Task pending name='Task-687' coro=<ResearchJobRunner.run_forever() running at /private/tmp/slopsearx-daily-20261014/slopsearx/research.py:588> wait_for=<_GatheringFuture pending cb=[Task.task_wakeup()]>>
+  File "/private/tmp/slopsearx-daily-20261014/slopsearx/research.py", line 588, in run_forever
+    await asyncio.gather(*workers)
+Stack for <Task pending name='Task-687' coro=<ResearchJobRunner.run_forever() running at /private/tmp/slopsearx-daily-20261014/slopsearx/research.py:588> wait_for=<_GatheringFuture pending cb=[Task.task_wakeup()]>> (most recent call last):
+<Task pending name='mcp.server.session.ServerSession._receive_loop' coro=<ServerSession._receive_loop() running at /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/mcp/server/session.py:173> wait_for=<Future pending cb=[Task.task_wakeup()]> cb=[TaskGroup._spawn.<locals>.task_done() at /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:821]>
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/mcp/server/session.py", line 173, in _receive_loop
+    await super()._receive_loop()
+Stack for <Task pending name='mcp.server.session.ServerSession._receive_loop' coro=<ServerSession._receive_loop() running at /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/mcp/server/session.py:173> wait_for=<Future pending cb=[Task.task_wakeup()]> cb=[TaskGroup._spawn.<locals>.task_done() at /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:821]> (most recent call last):
+<Task pending name='mcp.client.streamable_http.StreamableHTTPTransport.post_writer' coro=<StreamableHTTPTransport.post_writer() running at /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/mcp/client/streamable_http.py:536> wait_for=<Future pending cb=[Task.task_wakeup()]> cb=[TaskGroup._spawn.<locals>.task_done() at /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:821]>
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/mcp/client/streamable_http.py", line 536, in post_writer
+    async for session_message in write_stream_reader:
+Stack for <Task pending name='mcp.client.streamable_http.StreamableHTTPTransport.post_writer' coro=<StreamableHTTPTransport.post_writer() running at /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/mcp/client/streamable_http.py:536> wait_for=<Future pending cb=[Task.task_wakeup()]> cb=[TaskGroup._spawn.<locals>.task_done() at /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:821]> (most recent call last):
+<Task pending name='Task-671' coro=<LifespanOn.main() running at /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/uvicorn/lifespan/on.py:86> wait_for=<Future pending cb=[Task.task_wakeup()]>>
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/uvicorn/lifespan/on.py", line 86, in main
+    await app(scope, self.receive, self.send)
+Stack for <Task pending name='Task-671' coro=<LifespanOn.main() running at /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/uvicorn/lifespan/on.py:86> wait_for=<Future pending cb=[Task.task_wakeup()]>> (most recent call last):
+<Task pending name='Task-670' coro=<Server.serve() running at /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/uvicorn/server.py:79> wait_for=<Future pending cb=[Task.task_wakeup()]>>
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/uvicorn/server.py", line 79, in serve
+    await self._serve(sockets)
+Stack for <Task pending name='Task-670' coro=<Server.serve() running at /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/uvicorn/server.py:79> wait_for=<Future pending cb=[Task.task_wakeup()]>> (most recent call last):
+<Task pending name='Task-689' coro=<SavedSearchRunner.run_forever() running at /private/tmp/slopsearx-daily-20261014/slopsearx/saved_runner.py:208> wait_for=<Future pending cb=[Task.task_wakeup()]>>
+  File "/private/tmp/slopsearx-daily-20261014/slopsearx/saved_runner.py", line 208, in run_forever
+    await asyncio.sleep(self._poll_interval)
+Stack for <Task pending name='Task-689' coro=<SavedSearchRunner.run_forever() running at /private/tmp/slopsearx-daily-20261014/slopsearx/saved_runner.py:208> wait_for=<Future pending cb=[Task.task_wakeup()]>> (most recent call last):
+<Task pending name='mcp.server.streamable_http.StreamableHTTPServerTransport.connect.<locals>.message_router' coro=<StreamableHTTPServerTransport.connect.<locals>.message_router() running at /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/mcp/server/streamable_http.py:1012> wait_for=<Future pending cb=[Task.task_wakeup()]> cb=[TaskGroup._spawn.<locals>.task_done() at /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:821]>
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/mcp/server/streamable_http.py", line 1012, in message_router
+    async for session_message in write_stream_reader:
+Stack for <Task pending name='mcp.server.streamable_http.StreamableHTTPServerTransport.connect.<locals>.message_router' coro=<StreamableHTTPServerTransport.connect.<locals>.message_router() running at /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/mcp/server/streamable_http.py:1012> wait_for=<Future pending cb=[Task.task_wakeup()]> cb=[TaskGroup._spawn.<locals>.task_done() at /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:821]> (most recent call last):
+F.....
+=================================== FAILURES ===================================
+_____________ TestGatewaySessionOwner.test_http_shutdown_is_clean ______________
+
+self = <tests.test_mcp_gateway.TestGatewaySessionOwner object at 0x10a42ef60>
+offline_remote_server = 54693
+caplog = <_pytest.logging.LogCaptureFixture object at 0x11006b3e0>
+
+    async def test_http_shutdown_is_clean(self, offline_remote_server: Any, caplog: Any) -> None:
+        from slopsearx.mcp import gateway
+    
+        def dump_tasks():
+            for task in asyncio.all_tasks():
+                print(repr(task), flush=True)
+                task.print_stack()
+    
+        timer = asyncio.get_running_loop().call_later(8, dump_tasks)
+        try:
+            async with asyncio.timeout(12):
+                url = f"http://127.0.0.1:{offline_remote_server}/mcp"
+                controls = [
+                    ("slopsearx_list_capabilities", {"include_auth_requirements": False}),
+                    ("slopsearx_search", {"query": "offline", "intent": "not-real"}),
+                ]
+>               async with Client(url, auth=TOKEN) as direct:
+                           ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_mcp_gateway.py:459: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/fastmcp/client/client.py:535: in __aenter__
+    return await self._connect()
+           ^^^^^^^^^^^^^^^^^^^^^
+/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/fastmcp/client/client.py:571: in _connect
+    await self._session_state.ready_event.wait()
+/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:1804: in wait
+    await self._event.wait()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <asyncio.locks.Event object at 0x11006b260 [set]>
+
+    async def wait(self):
+        """Block until the internal flag is true.
+    
+        If the internal flag is true on entry, return True
+        immediately.  Otherwise, block until another coroutine calls
+        set() to set the flag to true, then return True.
+        """
+        if self._value:
+            return True
+    
+        fut = self._get_loop().create_future()
+        self._waiters.append(fut)
+        try:
+>           await fut
+E           asyncio.exceptions.CancelledError
+
+/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/locks.py:212: CancelledError
+
+The above exception was the direct cause of the following exception:
+
+self = <tests.test_mcp_gateway.TestGatewaySessionOwner object at 0x10a42ef60>
+offline_remote_server = 54693
+caplog = <_pytest.logging.LogCaptureFixture object at 0x11006b3e0>
+
+    async def test_http_shutdown_is_clean(self, offline_remote_server: Any, caplog: Any) -> None:
+        from slopsearx.mcp import gateway
+    
+        def dump_tasks():
+            for task in asyncio.all_tasks():
+                print(repr(task), flush=True)
+                task.print_stack()
+    
+        timer = asyncio.get_running_loop().call_later(8, dump_tasks)
+        try:
+>           async with asyncio.timeout(12):
+                       ^^^^^^^^^^^^^^^^^^^
+
+tests/test_mcp_gateway.py:453: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Timeout [expired]>
+exc_type = <class 'asyncio.exceptions.CancelledError'>
+exc_val = CancelledError(), exc_tb = <traceback object at 0x11017eb00>
+
+    async def __aexit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> Optional[bool]:
+        assert self._state in (_State.ENTERED, _State.EXPIRING)
+    
+        if self._timeout_handler is not None:
+            self._timeout_handler.cancel()
+            self._timeout_handler = None
+    
+        if self._state is _State.EXPIRING:
+            self._state = _State.EXPIRED
+    
+            if self._task.uncancel() <= self._cancelling and exc_type is exceptions.CancelledError:
+                # Since there are no new cancel requests, we're
+                # handling this.
+>               raise TimeoutError from exc_val
+E               TimeoutError
+
+/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/timeouts.py:115: TimeoutError
+------------------------------ Captured log call -------------------------------
+WARNING  slopsearx.mcp.server:server.py:144 MCP startup problem: intent 'images' has media types matching no enabled engines: ['image']
+WARNING  slopsearx.mcp.server:server.py:144 MCP startup problem: intent 'videos' has media types matching no enabled engines: ['video']
+=============================== warnings summary ===============================
+tests/test_mcp_gateway.py::TestGateway::test_gateway_proxies_tools_and_resources
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pydantic_settings/sources/utils.py:47: IncompleteFieldDefinitionWarning: Field 'lifespan' has an incomplete definition: its annotation contains an unresolved forward reference, so settings sources may fail to correctly resolve its value. Call `model_rebuild()` on the model where the field is defined, once all the referenced types are defined.
+    warnings.warn(
+
+tests/test_mcp_gateway.py::TestGateway::test_gateway_proxies_tools_and_resources
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/websockets/legacy/__init__.py:6: DeprecationWarning: websockets.legacy is deprecated; see https://websockets.readthedocs.io/en/stable/howto/upgrade.html for upgrade instructions
+    warnings.warn(  # deprecated in 14.0 - 2024-11-09
+
+tests/test_mcp_gateway.py::TestGateway::test_gateway_proxies_tools_and_resources
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/uvicorn/protocols/websockets/websockets_impl.py:17: DeprecationWarning: websockets.server.WebSocketServerProtocol is deprecated
+    from websockets.server import WebSocketServerProtocol
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_mcp_gateway.py::TestGatewaySessionOwner::test_http_shutdown_is_clean
+1 failed, 29 passed, 3 warnings in 15.51s

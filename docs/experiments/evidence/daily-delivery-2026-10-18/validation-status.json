@@ -1,0 +1,51 @@
+[
+  {
+    "name": "build",
+    "args": [
+      "cargo",
+      "build",
+      "--locked",
+      "--workspace",
+      "--all-targets"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "clippy",
+    "args": [
+      "cargo",
+      "clippy",
+      "--locked",
+      "--workspace",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "F01",
+    "args": [
+      "cargo",
+      "xtask",
+      "check",
+      "F01",
+      "--output",
+      "/private/tmp/ssx-20261018-validation/F01.json"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "O06",
+    "args": [
+      "cargo",
+      "xtask",
+      "check",
+      "O06",
+      "--output",
+      "/private/tmp/ssx-20261018-validation/O06.json"
+    ],
+    "exit_code": 0
+  }
+]

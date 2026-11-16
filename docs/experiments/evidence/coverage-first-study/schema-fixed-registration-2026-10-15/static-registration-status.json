@@ -1,0 +1,103 @@
+{
+  "acquisition_profile": "coverage-acquisition-profile/2",
+  "authority": "Prospective public static materials only. No stage admission, phase permit, execution authority, invocation, or qualification is included or inferred.",
+  "band_companion_contract": {
+    "path": "band-companion-contract.json",
+    "same_bytes_for_both_stages": true,
+    "sha256": "e71660f3dbabe03c7d15e983f3c8b8cc666560d5f900a3323508b407cdef87b6"
+  },
+  "candidate_runtime_identity_sha256": "ce4723f03f1beec9d87a630520a39cddf89fcf20d0f1f98d79dcc396cdb237d1",
+  "cohorts": {
+    "path": "../saved-development-method-materials/cohorts.json",
+    "sha256": "377450c59f2b8498c8a7f923bb7b6d05a0b780300467cc9b9f8ef0bd69522595"
+  },
+  "input_methods": {
+    "confirmation": "frozen-pool/1",
+    "development": "saved-corpus/1"
+  },
+  "late_phase_materials": "stage-bound placeholders only; no acquired task inputs, capture receipts, blind assignments, selector maps, or answer assignments",
+  "lineage": {
+    "all_four_new_and_distinct": true,
+    "all_new_stage_and_packet_ids_excluded_from_retired_inventory": true,
+    "confirmation_is_new_and_uninvoked": true,
+    "confirmation_packet_stage_uuid": "9a436526-d3a0-49dc-8441-8a04b6275487",
+    "confirmation_stage_uuid": "ac6c38ba-5c11-4996-8403-b2e2b50c9aa6",
+    "development_packet_stage_uuid": "7a050e3f-ca88-410b-bca7-d724b6ca0b77",
+    "development_pass_receipt": null,
+    "development_stage_uuid": "43d304b9-02b8-42fd-8c89-8b135cc72262"
+  },
+  "protocol": {
+    "path": "protocol.json",
+    "sha256": "647d1a09b9594f04798a9b891e609ed710c37111da62ecbf3e8e34d1b183c2bb"
+  },
+  "qualified_source_closure": {
+    "path": "current-qualified-source-closure.json",
+    "sha256": "90bab15df4630fadbb90f2fdcff226e8201a78d796c1a473f1e2d5403b91c73e"
+  },
+  "quality_result": "none; full qualification pending",
+  "retired_identity_ledger_sha256": "d6512fd456e0e23e76b78321678b9d863952ebab3ab02b0cfe865176c3e5954f",
+  "retired_stage_uuid_count": 71,
+  "schema": "coverage-frozen-input-static-registration-status/1",
+  "scientific_provider_dispatches_under_this_registration": 0,
+  "source_revision": "43e5fa5a217c0366c33203c0b8ffcc9d3dbec728",
+  "stages": {
+    "confirmation": {
+      "acquisition_manifest_preview_sha256": "14bb76e1d7c5eb986776af461e8f628c1f014a5266bb2bdf8a1c817db916441b",
+      "acquisition_plan_sha256": "dd7b97d973d345d948da3ecf8693e9683602fef94bafe7c3832c2ecf25ac659a",
+      "admission_status": "not_admitted",
+      "capture_plan_sha256": "4124fae654be2f76ea8fc44a62a8e7f9c308f434671740d59456f89c4aca7e86",
+      "execution_outcome": "not_invoked",
+      "full_static_preflight": "not_run_root_owned",
+      "initial_registration_sha256": "ab47b811eb5afabb3533151e328d561a8dbfa4beefcc236bf82ed53e82b8a71b",
+      "navigation_target_count": 5,
+      "packet_stage_uuid": "9a436526-d3a0-49dc-8441-8a04b6275487",
+      "research_case_count": 8,
+      "selector_operation_count": 39,
+      "stage_uuid": "ac6c38ba-5c11-4996-8403-b2e2b50c9aa6",
+      "static_material_status": "prepared_offline_unqualified",
+      "static_pins": {
+        "acquisition_plan": "dd7b97d973d345d948da3ecf8693e9683602fef94bafe7c3832c2ecf25ac659a",
+        "answer_assessment_plan": "2aa0316c57df79900595d248523bc3b7ebb91b0e5bc0e531b43dda79b149cbc8",
+        "capture_plan": "4124fae654be2f76ea8fc44a62a8e7f9c308f434671740d59456f89c4aca7e86",
+        "coverage_source": "806746b4fa5c497f269933008db76650e2c1113dbd35a08b011d86c4d81f11ca",
+        "dependency_lock": "8ecfcd029d2461631d44a2910ef5cfaa23a436da9cbc9a96ed0302e1d96861d0",
+        "production_rerank_source": "93ea486848ccdc7778a0ce49973773402d84fbb2ca1b9a64eaabf5f37da6e078",
+        "protocol": "647d1a09b9594f04798a9b891e609ed710c37111da62ecbf3e8e34d1b183c2bb",
+        "qualified_source_closure": "90bab15df4630fadbb90f2fdcff226e8201a78d796c1a473f1e2d5403b91c73e",
+        "reference_manifest": "edefb43ed4be91445ab26e68fff39cd5522695f8ca807a81c7a99b928f353e4e",
+        "source_capture_manifest": "1c5cc8311d39da81356733866c1349ad28cd5174be5fc41fb3a75fc0f310cdb4",
+        "task_input_manifest": "da8fe22b9f54e8cf0e4ca4baec63ea6efecf8ac753b8d8b9cb3d0a797944abbf"
+      }
+    },
+    "development": {
+      "acquisition_manifest_preview_sha256": "287b6248a1a4ae59cbb85d60e08f736cff97fab23a65303a8092a71f53440be3",
+      "acquisition_plan_sha256": "a3d356b7b86b46f5ef1fcb6afc1fd20118ce16d3af472fef8c00befd54f495a0",
+      "admission_status": "not_admitted",
+      "capture_plan_sha256": "932ee5372b4a392c2c7b60b539e5b57d8fafccd23fb5b5715558afb6202fe8bc",
+      "execution_outcome": "not_invoked",
+      "full_static_preflight": "not_run_root_owned",
+      "initial_registration_sha256": "ed391f087a2297a6a5b41d1fb16af4ba4899cdaab2091ede51d1c98711dc54c2",
+      "navigation_target_count": 5,
+      "packet_stage_uuid": "7a050e3f-ca88-410b-bca7-d724b6ca0b77",
+      "research_case_count": 8,
+      "selector_operation_count": 39,
+      "stage_uuid": "43d304b9-02b8-42fd-8c89-8b135cc72262",
+      "static_material_status": "prepared_offline_unqualified",
+      "static_pins": {
+        "acquisition_plan": "a3d356b7b86b46f5ef1fcb6afc1fd20118ce16d3af472fef8c00befd54f495a0",
+        "answer_assessment_plan": "3d11c941bde060c1432fff742fde10316f38663acf4a158253910f8db62c5700",
+        "capture_plan": "932ee5372b4a392c2c7b60b539e5b57d8fafccd23fb5b5715558afb6202fe8bc",
+        "coverage_source": "806746b4fa5c497f269933008db76650e2c1113dbd35a08b011d86c4d81f11ca",
+        "dependency_lock": "8ecfcd029d2461631d44a2910ef5cfaa23a436da9cbc9a96ed0302e1d96861d0",
+        "production_rerank_source": "93ea486848ccdc7778a0ce49973773402d84fbb2ca1b9a64eaabf5f37da6e078",
+        "protocol": "647d1a09b9594f04798a9b891e609ed710c37111da62ecbf3e8e34d1b183c2bb",
+        "qualified_source_closure": "90bab15df4630fadbb90f2fdcff226e8201a78d796c1a473f1e2d5403b91c73e",
+        "reference_manifest": "29241639725aff3a259281916e4ae7a6ef6754a5e5704b7c12628e4f01ecf746",
+        "source_capture_manifest": "72aee0ecddd764fcb2b1f88fdd8d88cef4972a571f01e8de9e044c21c2ee63a7",
+        "task_input_manifest": "a2c33282b799a62c161933e4ea4d961aa41e02fc0307954a221dda1e7e1c6894"
+      }
+    }
+  },
+  "status": "prospective_static_materials_prepared_offline_not_admitted_or_invoked",
+  "superseded_public_registration_merge_commit": "593738d8874417c5e3c60cb4b2e455849743a654"
+}

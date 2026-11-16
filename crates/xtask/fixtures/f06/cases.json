@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "plan_id": "F06",
+  "cases": [
+    {
+      "id": "defaults",
+      "source": "slopsearx/config.py::_DEFAULT_ENGINES",
+      "expected": "51 descriptors; documented per-engine defaults, 49 enabled and EuropePMC plus Internet Archive disabled"
+    },
+    {
+      "id": "empty_yaml",
+      "source": "slopsearx/config.py::load_config",
+      "expected": "missing, empty, null, false, zero and empty-string files retain built-in defaults"
+    },
+    {
+      "id": "partial_overlay",
+      "source": "slopsearx/config.py::load_config",
+      "expected": "known engine fields overlay defaults; environment overrides file"
+    },
+    {
+      "id": "custom_engine",
+      "source": "slopsearx/config.py::load_config",
+      "expected": "custom engine mapping starts from EngineEntry defaults"
+    },
+    {
+      "id": "env_precedence",
+      "source": "slopsearx/config.py::_apply_env_overrides",
+      "expected": "ENGINE_<NAME>_<FIELD> overrides file values using source scalar origin; aliases resolve before coercion"
+    },
+    {
+      "id": "empty_categories",
+      "source": "slopsearx/config.py::_apply_env_overrides",
+      "expected": "category env value replaces all categories; empty value yields an empty list"
+    },
+    {
+      "id": "formats_and_globals",
+      "source": "slopsearx/config.py::_apply_env_overrides",
+      "expected": "cache TTL must be positive; log level uppercases; engine list strips Python whitespace and preserves empty entries; formats trim, lowercase and drop empties"
+    },
+    {
+      "id": "hf_alias",
+      "source": "slopsearx/config.py::_load_env_overrides",
+      "expected": "HF_TOKEN maps to HuggingFace API key unless the exact explicit variable is present"
+    },
+    {
+      "id": "dual_credentials",
+      "source": "engines/censys.py::CensysAdapter.search",
+      "expected": "Censys consumes both API key and API secret; catalog auth_configured reports API key presence only"
+    },
+    {
+      "id": "file_credentials",
+      "source": "slopsearx/config.py::load_config and EngineEntry",
+      "expected": "YAML credentials are accepted, environment credentials override them, and neither value appears in diagnostics or capabilities"
+    },
+    {
+      "id": "bad_yaml_redaction",
+      "source": "slopsearx/config.py::load_config",
+      "expected": "malformed YAML fails without reproducing credential values in the error"
+    },
+    {
+      "id": "invalid_numeric",
+      "source": "slopsearx/config.py::_coerce_type",
+      "expected": "invalid integer and floating-point environment values raise a configuration error"
+    },
+    {
+      "id": "root_scalar",
+      "source": "slopsearx/config.py::load_config",
+      "expected": "truthy non-mapping root fails; falsey root values use defaults"
+    },
+    {
+      "id": "registry_completeness",
+      "source": "slopsearx/adapter.py::list_engines and slopsearx/jev.py::validate_routing_cards",
+      "expected": "51 unique descriptors and 51 roles, including 44 complete specialist cards"
+    },
+    {
+      "id": "routing_card_mapping",
+      "source": "slopsearx/jev.py::ROUTING_CARDS and role sets",
+      "expected": "each named engine matches its exact frozen source role, purpose and use_when fields"
+    },
+    {
+      "id": "routing_same_count_swap",
+      "source": "slopsearx/jev.py::ROUTING_CARDS and role sets",
+      "expected": "the gate rejects a per-engine routing-card swap even when aggregate role counts stay unchanged"
+    },
+    {
+      "id": "duplicate_registration",
+      "source": "slopsearx/adapter.py::register_engine",
+      "expected": "native descriptor duplicates fail closed"
+    },
+    {
+      "id": "fixture_adapter",
+      "source": "slopsearx/adapter.py::register_engine",
+      "expected": "fixture factory registration requires no orchestration changes"
+    },
+    {
+      "id": "filter_layers",
+      "source": "slopsearx/adapter.py::EngineAdapter and slopsearx/capabilities.py",
+      "expected": "supported filters remain separate from enforced filter layers; only declared upstream/local layer is emitted"
+    },
+    {
+      "id": "auth_redaction",
+      "source": "slopsearx/capabilities.py::CapabilityCatalog",
+      "expected": "capability exposes auth class/configured boolean and never secret bytes"
+    }
+  ]
+}

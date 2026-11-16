@@ -1,0 +1,426 @@
+{
+  "schema_version": 1,
+  "purpose": "temporary offline source oracle; retire G08",
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "oracle_sha256": "02105a7e850b7144f17c9e7ce86f5d8fc9e866242b30136f6031f3435b97a018",
+  "source_sha256": {
+    "/Users/magnus/.codex/worktrees/rust-a03-community-adapters/SlopSearX/engines/arxiv.py": "4e174dc8af03bafc662b4ccadd724d4727ec63a1ea02579de27af5fe9fa2f408",
+    "/private/tmp/slopsearx-rust-oracle-py314/lib/python3.14/site-packages/httpx/_models.py": "e3ffc6bb2bf580bc6e6428708a6f247d036220e709f5a72b785392babbd97e6b",
+    "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/xml/etree/ElementTree.py": "9623c9e6c2f45c906fae8d4b221648a7efb8ac81bd4f6cd79c5eb2698fb015ef"
+  },
+  "records": [
+    {
+      "id": "arxiv.decode.00",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "XHVkODAw",
+          "headers": {
+            "content-type": "text/plain; charset=unicode_escape"
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'utf-8' codec can't encode character '\\ud800' in position 0: surrogates not allowed",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        55296
+      ],
+      "xml_error": {
+        "type": "UnicodeEncodeError",
+        "message": "'utf-8' codec can't encode character '\\ud800' in position 0: surrogates not allowed"
+      }
+    },
+    {
+      "id": "arxiv.decode.01",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "YVx1ZDgwMFx1ZGZmZg==",
+          "headers": {
+            "content-type": "text/plain; charset=unicode_escape"
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'utf-8' codec can't encode characters in position 1-2: surrogates not allowed",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        97,
+        55296,
+        57343
+      ],
+      "xml_error": {
+        "type": "UnicodeEncodeError",
+        "message": "'utf-8' codec can't encode characters in position 1-2: surrogates not allowed"
+      }
+    },
+    {
+      "id": "arxiv.decode.02",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "XHVkODAwYVx1ZGZmZg==",
+          "headers": {
+            "content-type": "text/plain; charset=unicode_escape"
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'utf-8' codec can't encode character '\\ud800' in position 0: surrogates not allowed",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        55296,
+        97,
+        57343
+      ],
+      "xml_error": {
+        "type": "UnicodeEncodeError",
+        "message": "'utf-8' codec can't encode character '\\ud800' in position 0: surrogates not allowed"
+      }
+    },
+    {
+      "id": "arxiv.decode.03",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "XHVkZmZm",
+          "headers": {
+            "content-type": "text/plain; charset=unicode_escape"
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'utf-8' codec can't encode character '\\udfff' in position 0: surrogates not allowed",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        57343
+      ],
+      "xml_error": {
+        "type": "UnicodeEncodeError",
+        "message": "'utf-8' codec can't encode character '\\udfff' in position 0: surrogates not allowed"
+      }
+    },
+    {
+      "id": "arxiv.decode.04",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQ+XHVkODAwPC9mZWVkPg==",
+          "headers": {
+            "content-type": "text/plain; charset=unicode_escape"
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'utf-8' codec can't encode character '\\ud800' in position 6: surrogates not allowed",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        102,
+        101,
+        101,
+        100,
+        62,
+        55296,
+        60,
+        47,
+        102,
+        101,
+        101,
+        100,
+        62
+      ],
+      "xml_error": {
+        "type": "UnicodeEncodeError",
+        "message": "'utf-8' codec can't encode character '\\ud800' in position 6: surrogates not allowed"
+      }
+    },
+    {
+      "id": "arxiv.decode.05",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "XFUwMDEwZmZmZg==",
+          "headers": {
+            "content-type": "text/plain; charset=unicode_escape"
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        1114111
+      ],
+      "xml_error": {
+        "type": "ParseError",
+        "message": "not well-formed (invalid token): line 1, column 0"
+      }
+    },
+    {
+      "id": "arxiv.decode.06",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "",
+          "headers": {
+            "content-type": "text/plain; charset=unicode_escape"
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [],
+      "xml_error": {
+        "type": "ParseError",
+        "message": "no element found: line 1, column 0"
+      }
+    },
+    {
+      "id": "arxiv.decode.07",
+      "engine": "arxiv",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "body_b64": "PG5vdHhtbA==",
+          "headers": {
+            "content-type": "text/plain; charset=unicode_escape"
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        110,
+        111,
+        116,
+        120,
+        109,
+        108
+      ],
+      "xml_error": {
+        "type": "ParseError",
+        "message": "unclosed token: line 1, column 0"
+      }
+    }
+  ]
+}

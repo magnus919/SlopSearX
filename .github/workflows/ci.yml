@@ -49,10 +49,102 @@ jobs:
           python-version: "3.12"
           cache: pip
 
-      - name: Install dependencies
+      - name: Install locked runtime and development dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          python -m pip install "uv==0.11.18"
+          echo "UV_PROJECT_ENVIRONMENT=$RUNNER_TEMP/python-dependency-audit-venv" >> "$GITHUB_ENV"
+          UV_PROJECT_ENVIRONMENT="$RUNNER_TEMP/python-dependency-audit-venv" uv sync --locked --extra dev --python "$(command -v python)"
+          echo "$RUNNER_TEMP/python-dependency-audit-venv/bin" >> "$GITHUB_PATH"
+
+      - name: Audit locked runtime and development dependencies
+        run: |
+          set -euo pipefail
+          audit_dir="$RUNNER_TEMP/python-dependency-audit"
+          mkdir -p "$audit_dir"
+          uv --version | tee "$audit_dir/uv-version.txt"
+          python --version | tee "$audit_dir/python-version.txt"
+          python -m pip_audit --version | tee "$audit_dir/pip-audit-version.txt"
+          printf 'PyPI JSON vulnerability service: https://pypi.org/pypi/<package>/<version>/json\n' > "$audit_dir/vulnerability-service.txt"
+          uv lock --check
+          python -m pip check
+          python -m pip list --format=json > "$audit_dir/installed-packages.json"
+          python -m pip_audit --local --skip-editable --vulnerability-service pypi --format json --output "$audit_dir/installed.json"
+          uv export --locked --no-dev --no-emit-project --format requirements-txt --output-file "$audit_dir/runtime-requirements.txt"
+          python -m pip_audit --requirement "$audit_dir/runtime-requirements.txt" --no-deps --disable-pip --strict --vulnerability-service pypi --format json --output "$audit_dir/runtime.json"
+          python - "$audit_dir/installed-packages.json" "$audit_dir/installed.json" "$audit_dir/runtime.json" <<'PY'
+          import json
+          import re
+          import sys
+          from pathlib import Path
+
+          def fail(message):
+              raise SystemExit(message)
+
+          def read_json(path):
+              with Path(path).open(encoding="utf-8") as stream:
+                  return json.load(stream)
+
+          def package_name(record, label):
+              if not isinstance(record, dict):
+                  fail(f"{label}: package record is not an object")
+              name = record.get("name")
+              if not isinstance(name, str) or not name:
+                  fail(f"{label}: package name is missing")
+              return re.sub(r"[-_.]+", "-", name).lower()
+
+          inventory = read_json(sys.argv[1])
+          if not isinstance(inventory, list) or not inventory:
+              fail("installed package inventory is empty or malformed")
+          inventory_names = [package_name(record, "pip list") for record in inventory]
+          if len(inventory_names) != len(set(inventory_names)):
+              fail("pip list contains duplicate normalized package names")
+
+          def validate_report(path, label, allowed_skips, expected_names=None):
+              report = read_json(path)
+              if not isinstance(report, dict) or not isinstance(report.get("dependencies"), list):
+                  fail(f"{label}: malformed pip-audit report")
+              dependencies = report["dependencies"]
+              if not dependencies:
+                  fail(f"{label}: pip-audit reported no dependencies")
+              names = []
+              skipped = []
+              for record in dependencies:
+                  name = package_name(record, label)
+                  names.append(name)
+                  if "skip_reason" in record:
+                      if set(record) != {"name", "skip_reason"} or not isinstance(record["skip_reason"], str):
+                          fail(f"{label}: malformed skipped dependency record")
+                      skipped.append((name, record["skip_reason"]))
+                  else:
+                      if not isinstance(record.get("version"), str) or not record["version"] or not isinstance(record.get("vulns"), list):
+                          fail(f"{label}: incomplete audited dependency record for {name}")
+                      if record["vulns"]:
+                          fail(f"{label}: vulnerability findings for {name}")
+              if len(names) != len(set(names)):
+                  fail(f"{label}: duplicate normalized package names")
+              if expected_names is not None and set(names) != expected_names:
+                  fail(f"{label}: package inventory mismatch; missing={sorted(expected_names - set(names))}, extra={sorted(set(names) - expected_names)}")
+              if sorted(skipped) != sorted(allowed_skips):
+                  fail(f"{label}: unexpected skipped dependencies: {skipped!r}")
+              print(f"{label}: {len(names) - len(skipped)} audited, {len(skipped)} allowed skips, zero findings")
+
+          validate_report(
+              sys.argv[2],
+              "installed audit",
+              {("slopsearx", "distribution marked as editable")},
+              set(inventory_names),
+          )
+          validate_report(sys.argv[3], "runtime audit", set())
+          PY
+
+      - name: Retain dependency audit reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: python-dependency-audit
+          path: ${{ runner.temp }}/python-dependency-audit/
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Lint with ruff
         run: ruff check .
@@ -73,7 +165,7 @@ jobs:
         run: lint-imports
 
       - name: Unused dependency check with deptry
-        run: deptry . --per-rule-ignores "DEP002=lxml|uvicorn|pytest|pytest-asyncio|ruff|cssselect|mypy|pytest-cov|pip-tools|pre-commit|radon|vulture|import-linter|deptry|pip-audit|fastmcp|prometheus-client,DEP003=starlette"
+        run: deptry .
 
   valkey-integration:
     runs-on: ubuntu-latest
@@ -174,6 +266,199 @@ jobs:
           PORTAL_BROWSER_SMOKE: "1"
         run: pytest --no-cov -q tests/test_portal_browser.py
 
+
+  native-portal-theme-browser:
+    name: Native portal theme browser
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install wire-only browser client dependencies
+        run: python -m pip install pytest pytest-cov "playwright>=1.50"
+      - name: Install deterministic Chromium runtime
+        run: python -m playwright install --with-deps chromium
+      - name: Install repository-pinned Rust toolchain
+        run: |
+          toolchain="$(sed -n 's/^channel = "\([^"]*\)"/\1/p' rust-toolchain.toml)"
+          test "$toolchain" = "1.99.0"
+          rustup toolchain install "$toolchain" --profile minimal
+      - name: Confirm pinned Rust toolchain
+        run: rustup run 1.99.0 rustc --version --verbose
+      - name: Build native HTTP fixture
+        run: cargo build --locked -p ssx-http --example t02_fixture
+      - name: Exercise the native HTML theme over HTTP
+        env:
+          PORTAL_NATIVE_HTML_THEME_SMOKE: "1"
+        run: |
+          set -euo pipefail
+          server_pid=""
+          fifo=""
+          stem=""
+          stop_fixture() {
+            if [ -n "$server_pid" ]; then
+              if kill -0 "$server_pid" 2>/dev/null; then
+                printf 'STOP\n' >&3 2>/dev/null || true
+                for attempt in $(seq 1 50); do
+                  if ! kill -0 "$server_pid" 2>/dev/null; then break; fi
+                  sleep 0.1
+                done
+                if kill -0 "$server_pid" 2>/dev/null; then kill -TERM "$server_pid"; fi
+                for attempt in $(seq 1 20); do
+                  if ! kill -0 "$server_pid" 2>/dev/null; then break; fi
+                  sleep 0.1
+                done
+                if kill -0 "$server_pid" 2>/dev/null; then kill -KILL "$server_pid"; fi
+              fi
+              exec 3>&- || true
+              wait "$server_pid" 2>/dev/null || true
+              server_pid=""
+            fi
+            if [ -n "$fifo" ]; then rm -f "$fifo"; fifo=""; fi
+            if [ -n "$stem" ]; then rm -f "$stem.log" "$stem.calls"; stem=""; fi
+          }
+          trap stop_fixture EXIT
+          run_theme() {
+            local theme="$1"
+            stem="$RUNNER_TEMP/native-theme-$theme"
+            fifo="$stem.stdin"
+            local log="$stem.log"
+            local calls="$stem.calls"
+            mkfifo "$fifo"
+            env -i PATH="$PATH" target/debug/examples/t02_fixture \
+              "$calls" "$theme" stdin contract <"$fifo" >"$log" 2>&1 &
+            server_pid=$!
+            exec 3<>"$fifo"
+            local ready=""
+            for attempt in $(seq 1 50); do
+              if grep -q '"address"' "$log"; then ready=1; break; fi
+              if ! kill -0 "$server_pid" 2>/dev/null; then cat "$log" >&2; return 1; fi
+              sleep 0.1
+            done
+            if [ -z "$ready" ]; then echo "native fixture startup timed out" >&2; cat "$log" >&2; return 1; fi
+            local address
+            address="$(sed -n 's/.*"address":"\([^"]*\)".*/\1/p' "$log" | head -n 1)"
+            if [ -z "$address" ]; then echo "native fixture did not publish its loopback address" >&2; cat "$log" >&2; return 1; fi
+            local output
+            if output="$(PORTAL_NATIVE_HTML_THEME_SMOKE=1 \
+                PORTAL_NATIVE_HTML_BASE_URL="http://$address/" \
+                PORTAL_NATIVE_HTML_DEFAULT_THEME="$theme" \
+                python -m pytest --no-cov -q tests/test_native_html_theme_browser.py 2>&1)"; then
+              :
+            else
+              local result=$?
+              printf '%s\n' "$output"
+              return "$result"
+            fi
+            printf '%s\n' "$output"
+            if ! printf '%s\n' "$output" | grep -Eq '^1 passed(, [0-9]+ warnings?)? in [0-9.]+s$'; then
+              echo "expected exactly one passing native theme browser test" >&2
+              return 1
+            fi
+            if printf '%s\n' "$output" | grep -Eq 'skipped'; then
+              echo "native theme browser test must not skip" >&2
+              return 1
+            fi
+            if [ ! -e "$calls" ] || [ -s "$calls" ]; then
+              echo "theme landing/toggle requests unexpectedly dispatched a search" >&2
+              if [ -e "$calls" ]; then cat "$calls" >&2; fi
+              return 1
+            fi
+            printf 'STOP\n' >&3
+            for attempt in $(seq 1 50); do
+              if ! kill -0 "$server_pid" 2>/dev/null; then break; fi
+              sleep 0.1
+            done
+            if kill -0 "$server_pid" 2>/dev/null; then
+              echo "native fixture did not stop after STOP" >&2
+              return 1
+            fi
+            exec 3>&-
+            if ! wait "$server_pid"; then echo "native fixture exited unsuccessfully" >&2; return 1; fi
+            server_pid=""
+            rm -f "$fifo" "$log" "$calls"
+            fifo=""
+            stem=""
+          }
+          run_theme dark
+          run_theme darker
+
+  native-t03-browser:
+    name: Native T03 browser acceptance
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      T03_BROWSER_DIR: crates/ssx-http/tests/t03-browser
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up pinned Node major
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: crates/ssx-http/tests/t03-browser/package-lock.json
+      - name: Prepare isolated T03 run directories
+        run: |
+          set -euo pipefail
+          run_root="$RUNNER_TEMP/slopsearx-t03"
+          mkdir -p "$run_root/target/rust-evidence" "$run_root/tmp" "$run_root/evidence" "$run_root/npm-cache" "$run_root/playwright"
+          {
+            echo "CARGO_TARGET_DIR=$run_root/target"
+            echo "TMPDIR=$run_root/tmp"
+            echo "TMP=$run_root/tmp"
+            echo "TEMP=$run_root/tmp"
+            echo "T03_EVIDENCE_DIR=$run_root/evidence"
+            echo "NPM_CONFIG_CACHE=$run_root/npm-cache"
+            echo "PLAYWRIGHT_BROWSERS_PATH=$run_root/playwright"
+          } >> "$GITHUB_ENV"
+      - name: Install repository-pinned Rust toolchain
+        run: |
+          toolchain="$(sed -n 's/^channel = "\([^"]*\)"/\1/p' rust-toolchain.toml)"
+          test "$toolchain" = "1.99.0"
+          rustup toolchain install "$toolchain" --profile minimal
+      - name: Confirm pinned Rust toolchain
+        run: rustup run 1.99.0 rustc --version --verbose
+      - name: Install locked browser client dependencies
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+        run: npm ci --prefix "$T03_BROWSER_DIR" --no-audit --no-fund
+      - name: Install the lock-matched Chromium and Firefox runtimes
+        run: "$T03_BROWSER_DIR/node_modules/.bin/playwright-core install --with-deps chromium firefox webkit"
+      - name: Run native Rust portal HTTP and browser acceptance
+        run: |
+          set -euo pipefail
+          cargo xtask check T03 --output "$T03_EVIDENCE_DIR/T03.json"
+          if [ ! -s "$T03_EVIDENCE_DIR/T03.json" ]; then
+            echo "::error::T03 gate exited zero without writing $T03_EVIDENCE_DIR/T03.json"
+            exit 1
+          fi
+          if ! git diff --exit-code; then
+            echo "::error::T03 gate modified tracked files"
+            git status --porcelain=v1
+            exit 1
+          fi
+          staged="$(git diff --cached --name-only)"
+          if [ -n "$staged" ]; then
+            echo "::error::T03 gate left staged changes"
+            echo "$staged"
+            exit 1
+          fi
+      - name: Retain T03 browser and Rust evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: t03-native-browser-${{ github.sha }}
+          path: ${{ runner.temp }}/slopsearx-t03/evidence/
+          if-no-files-found: warn
+      - name: Retire reproducible T03 artifacts
+        if: always()
+        run: |
+          rm -rf "$CARGO_TARGET_DIR" "$TMPDIR" "$T03_EVIDENCE_DIR" "$NPM_CONFIG_CACHE" "$PLAYWRIGHT_BROWSERS_PATH"
+          rm -rf crates/ssx-http/tests/t03-browser/node_modules
+
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -204,6 +489,8 @@ jobs:
             tests/test_entity_transport.py
             tests/test_http_pooling.py
             tests/test_mcp_gateway.py
+            tests/test_mcp_gateway_lifecycle.py
+            tests/test_mcp_gateway_initialization.py
             tests/test_mcp_harness.py
             tests/test_mcp_oauth.py
             tests/test_mcp_oauth_client.py
@@ -243,8 +530,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - name: Check native Docker Hub mirror helper
+        run: bash tests/test_ci_dockerhub_mirror_shell.sh
       - name: Configure hosted-runner Docker Hub cache
-        run: python3 scripts/configure_ci_dockerhub_mirror.py
+        run: bash scripts/configure_ci_dockerhub_mirror.sh
       - name: Validate Prometheus rules and firing behavior
         run: |
           docker run --rm --entrypoint /bin/promtool -v "$PWD/docs/alerting:/rules:ro" prom/prometheus:v3.2.1 check rules /rules/rules.yml

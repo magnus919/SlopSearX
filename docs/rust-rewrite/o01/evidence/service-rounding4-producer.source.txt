@@ -1,0 +1,69 @@
+"""Temporary offline actual-service audit timing source capture, G08 retirement."""
+import asyncio
+import hashlib
+import json
+from pathlib import Path
+import socket
+import sys
+from types import SimpleNamespace
+ROOT = Path('/Volumes/tank01/magnus/worktrees/slopsearx-o01')
+PINS = json.loads(Path(__file__).with_name('source-pins.json').read_text())
+for row in PINS:
+    if hashlib.sha256((ROOT / row['path']).read_bytes()).hexdigest() != row['sha256']:
+        raise RuntimeError('source drift: ' + row['path'])
+def forbidden(*args, **kwargs):
+    raise RuntimeError('offline service oracle forbids network')
+socket.socket.connect = forbidden
+socket.create_connection = forbidden
+sys.path.insert(0, str(ROOT))
+from slopsearx.adapter import AdapterResponse, EngineAdapter
+from slopsearx.audit import QueryAuditLogger
+import slopsearx.audit as audit
+from slopsearx.service import AppContext, SearchRequest, SearchService
+import slopsearx.service as source
+class Pipeline:
+    def __init__(self):
+        self.commands = []
+        self.executed = asyncio.Event()
+    def __getattr__(self, name):
+        def command(*args):
+            self.commands.append([name, *args])
+            return self
+        return command
+    async def execute(self):
+        self.executed.set()
+class Cache:
+    is_connected = True
+    def __init__(self):
+        self._client = self
+        self.pipe = Pipeline()
+    def pipeline(self):
+        return self.pipe
+class Engine(EngineAdapter):
+    name = 'fixture'
+    categories = ['general']
+    calls = 0
+    async def search(self, query, params=None):
+        self.calls += 1
+        return AdapterResponse(results=[])
+async def capture():
+    cases = []
+    for elapsed in [0.0004, 0.0006, 0.1234, 0.1236]:
+        cache = Cache()
+        logger = QueryAuditLogger(cache)
+        logger._stream_key = lambda: 'query_audit:2026-10-17'
+        audit._iso_timestamp = lambda: '2026-10-17T12:00:00.000Z'
+        ticks = iter([0.0])
+        source.time = SimpleNamespace(monotonic=lambda: next(ticks, elapsed))
+        engine = Engine()
+        service = SearchService(AppContext(active_engines={'fixture': engine}, tier1_engines={'fixture'}, audit_logger=logger))
+        response = await service.search(SearchRequest(query='synthetic query', client_identifier='192.0.2.12', generate_suggestions=False))
+        await asyncio.wait_for(cache.pipe.executed.wait(), 1.0)
+        fields = cache.pipe.commands[0]
+        latency = fields[fields.index('latency_ms') + 1]
+        expected = round(elapsed * 1000)
+        if engine.calls != 1 or response.response_time_ms != expected or latency != str(expected):
+            raise RuntimeError('actual source service timing contract failed')
+        cases.append({'id': 'actual-service.elapsed.' + repr(elapsed), 'input_seconds': elapsed, 'response_time_ms': response.response_time_ms, 'dispatches': engine.calls, 'commands': cache.pipe.commands})
+    return cases
+print(json.dumps({'scope': 'actual original SearchService with synthetic engine/in-memory pipeline; no provider', 'source_pins': PINS, 'cases': asyncio.run(capture())}, indent=2, sort_keys=True))

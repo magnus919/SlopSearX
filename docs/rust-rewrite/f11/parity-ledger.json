@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "plan_id": "F11",
+  "baseline": "7cc420f7ffb61127750e77bf6130e225925f9186",
+  "parity": [
+    "ordered presence and RRF with complete records and engine attribution",
+    "raw duplicate quotas, first-contribution RRF positions, stable and normalized URL ties",
+    "identifier conflicts, partial maps, version chronology and requested revisions",
+    "64-member and 64000-byte joins decline without member loss",
+    "manifestation metadata, source notices and full member provenance",
+    "structural retrieval status reason scheme and unchanged eligible URL",
+    "canonical WHATWG and numeric-only native IP candidates without DNS",
+    "shared F05 Unicode casefold DOI and publication validation",
+    "urllib final-segment params splitting by scheme, nonempty reinsertion and empty delimiter removal",
+    "PMC complete path regex IGNORECASE with Unicode extras and negative near-miss paths"
+  ],
+  "intentional_differences": [
+    {
+      "boundary": "caller evidence",
+      "source": "PresenceRanker mutates admitted SearchResult objects and their engine sets",
+      "native": "rank borrows immutable input and updates cloned view rows",
+      "reason": "F11 explicitly requires immutable evidence distinct from views; ordered returned values remain source-equivalent"
+    },
+    {
+      "boundary": "numeric resolver platform",
+      "source": "AI_NUMERICHOST differs across Darwin and production Linux",
+      "native": "Preserve bounded Linux numeric candidate grammar on every target; reject malformed all-numeric hosts that only Darwin would parse",
+      "reason": "Darwin-only candidates can loosen Linux eligibility for 018.1.1.1 or overflowing 4429711368; independent stdlib numeric-only Linux observations prove the candidate difference",
+      "evidence": "numeric-platforms.json; seven corpus cases retain Darwin observations and explicit Linux expected outputs",
+      "acceptance": "Linux-native CI replay remains required before merge; no source code was exported to the Linux host"
+    }
+  ],
+  "limits": [
+    "No search execution or provider availability claim; F14 integrates the pure algorithms",
+    "No relevance uplift, reranking, DNS safety or downstream fetch claim",
+    "Typed native records cannot carry Python object cycles or lone-surrogate strings"
+  ]
+}

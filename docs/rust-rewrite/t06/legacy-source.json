@@ -1,0 +1,28 @@
+{
+  "baseline": "6c44976444340cc8f343fef61e2e8d723b189c19",
+  "versions": {
+    "fastmcp": "4.0.11",
+    "mcp": "2.3.0"
+  },
+  "observations": [
+    {
+      "case": "initialize_owner",
+      "http_status": 202,
+      "response_id": 1,
+      "sse_owner_received_search_results": false,
+      "engine_dispatch_delta": 0
+    },
+    {
+      "case": "different_verified_client",
+      "http_status": 404,
+      "engine_dispatch_delta": 0
+    },
+    {
+      "case": "same_client_rotated_token",
+      "http_status": 202,
+      "response_id": 3,
+      "sse_owner_received_search_results": true,
+      "engine_dispatch_delta": 1
+    }
+  ]
+}

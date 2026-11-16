@@ -216,6 +216,7 @@ def build_pipeline_inputs(
     candidate_identity_sha256: str,
     candidate_endpoint_sha256: str,
     expected_execution_profile: str = "coverage-acquisition-profile/1",
+    verified_frozen_corpus: object | None = None,
 ) -> dict[str, object]:
     """Build inputs only from externally pinned, durable native-pool snapshots."""
     if type(stage_uuid) is not str:
@@ -246,17 +247,31 @@ def build_pipeline_inputs(
         cohort_by_task[task_id] = item
         original_case_by_task[task_id] = row
 
-    try:
-        verified = verify_pool_snapshot_index(
-            snapshots_directory,
-            expected_index_sha256=expected_snapshot_index_sha256,
-            expected_stage_manifest_sha256=expected_stage_manifest_sha256,
-            expected_stage_uuid=stage_uuid,
-            expected_source_revision=source_revision,
-            expected_execution_profile=expected_execution_profile,
-        )
-    except LiveAcquisitionError as exc:
-        raise PipelineInputError(f"pool-snapshot-invalid:{exc}") from exc
+    frozen_mode = verified_frozen_corpus is not None
+    if frozen_mode:
+        from scripts.coverage_frozen_pool_inputs import is_verified_pool_evidence
+
+        if (
+            not is_verified_pool_evidence(verified_frozen_corpus)
+            or verified_frozen_corpus.snapshots_directory != Path(snapshots_directory)
+            or verified_frozen_corpus.snapshot_index_sha256 != expected_snapshot_index_sha256
+            or verified_frozen_corpus.pool_manifest_sha256 != expected_stage_manifest_sha256
+            or verified_frozen_corpus.execution_profile != expected_execution_profile
+        ):
+            raise PipelineInputError("frozen-pool-verification-binding-mismatch")
+        verified = {"index": verified_frozen_corpus.pool_index, "operations": verified_frozen_corpus.operations}
+    else:
+        try:
+            verified = verify_pool_snapshot_index(
+                snapshots_directory,
+                expected_index_sha256=expected_snapshot_index_sha256,
+                expected_stage_manifest_sha256=expected_stage_manifest_sha256,
+                expected_stage_uuid=stage_uuid,
+                expected_source_revision=source_revision,
+                expected_execution_profile=expected_execution_profile,
+            )
+        except LiveAcquisitionError as exc:
+            raise PipelineInputError(f"pool-snapshot-invalid:{exc}") from exc
     snapshot_index = verified["index"]
     if (
         snapshot_index.get("protocol_sha256") != pins["protocol_sha256"]
@@ -267,8 +282,14 @@ def build_pipeline_inputs(
     index_rows = snapshot_index["operations"]
     if type(index_rows) is not list or len(index_rows) != 13:
         raise PipelineInputError("acquisition-operation-count")
-    if any(type(row) is not dict or row.get("status") != "complete" for row in index_rows):
-        raise PipelineInputError("acquisition-operation-incomplete")
+    if any(
+        type(row) is not dict
+        or (row.get("pool_status") != "complete" if frozen_mode else row.get("status") != "complete")
+        for row in index_rows
+    ):
+        raise PipelineInputError(
+            "frozen-pool-operation-incomplete" if frozen_mode else "acquisition-operation-incomplete"
+        )
     expected_research_ids = tuple(cohort_by_task)
     operations = []
     navigation_operations = []
@@ -277,15 +298,19 @@ def build_pipeline_inputs(
         operation_id = row.get("operation_id")
         artifact = verified["operations"].get(operation_id)
         op = _rehydrate_pool_artifact(artifact)
-        if op.status != "complete" or row.get("kind") != op.kind:
-            raise PipelineInputError("acquisition-operation-incomplete")
+        if (not frozen_mode and op.status != "complete") or row.get("kind") != op.kind:
+            raise PipelineInputError(
+                "frozen-pool-operation-kind-mismatch" if frozen_mode else "acquisition-operation-incomplete"
+            )
         ordered_ids.append(operation_id)
         (operations if op.kind == "research" else navigation_operations).append(op)
     if len(operations) != 8 or len(navigation_operations) != 5:
         raise PipelineInputError("acquisition-operation-count")
     if tuple(operation.operation_id for operation in operations) != expected_research_ids:
         raise PipelineInputError("cohort-acquisition-task-mismatch")
-    if any(operation.status != "complete" or operation.band_valid is not True for operation in operations):
+    if not frozen_mode and any(
+        operation.status != "complete" or operation.band_valid is not True for operation in operations
+    ):
         raise PipelineInputError("research-pool-not-complete-and-in-band")
 
     source_by_canonical_url: dict[str, str] = {}

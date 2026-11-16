@@ -1,0 +1,896 @@
+{
+  "schema_version": 1,
+  "plan_id": "F14",
+  "source_commit": "d207d4496129d496fe8a74b040ebe1a71151b6f9",
+  "python": "3.14.7",
+  "source_files": {
+    "slopsearx/service.py": {
+      "sha256": "45903193ef89987f7be83c1e593e44b7752251a54eb8719eae15a241840102ac",
+      "git_blob": "82eb29d50c4ca98a237949d4d8994cfe3cbeca9f"
+    },
+    "slopsearx/filters.py": {
+      "sha256": "f0edd2f633cc9a42c49660ca74b225732cbc82937a15ad58a5b0dbeb76e103a9",
+      "git_blob": "e1a1cac35c5fcbbf2e6fb7728241953aa8047669"
+    },
+    "slopsearx/adapter.py": {
+      "sha256": "5883a35c48d0dad1077306fbda21997ee1d32116a8c03633a6b762de0c26d6f3",
+      "git_blob": "664e853d9ab1330596d01899ebe015701de09e88"
+    },
+    "engines/openalex.py": {
+      "sha256": "537f1da9deda5f75ffde429167620c0006d93c485d0e5e8723b5c39f6c102e59",
+      "git_blob": "feaf05ec8ce09d16a35dcd6c21d1ffd723ccc387"
+    },
+    "slopsearx/formatter.py": {
+      "sha256": "8eaf74e1215ebaebc7a9d81438e02512aa56b9f5a7929ebb2df35e5b2f632e7a",
+      "git_blob": "8fa2bb950dc341adace7b9524b5755e98a4da406"
+    },
+    "slopsearx/server.py": {
+      "sha256": "6984dea478e4a43d5c9e72e7a72d5af23824de6dfbc0695cb8fdef79176a90dc",
+      "git_blob": "412ad973735f0199be9a32da4763437f55a584bb"
+    },
+    "slopsearx/mcp/tools.py": {
+      "sha256": "6bbbdb270f14fda7d90ae8dbe1983aae33526df430f76a960f0c7483417eb35a",
+      "git_blob": "d06ecd475b9b523addf79781d2762eddd92f4911"
+    },
+    "tests/test_filter_semantics.py": {
+      "sha256": "61fde352e67eade0aa64f102641bcc69f47b814a086102d7bab692a9e1291def",
+      "git_blob": "6475f5fff325f8476976d664dbb798f42296bafa"
+    },
+    "tests/test_server.py": {
+      "sha256": "fd852c9c117040eda675ce20a4a65cd3070ed634f17cb83c466d905de2c8f558",
+      "git_blob": "ec95d1c7d79e3cbdee3eac7251cd8a23914912fe"
+    },
+    "tests/test_mcp_enforcement.py": {
+      "sha256": "ac1dad5e5af6c4d2ed9aff304e417dcb34bb62a1ab5b91bd6d00b8a85af9c03b",
+      "git_blob": "aa2a9be0b47e3e36d106c5af69610dec87f048d2"
+    },
+    "tests/test_mcp_tools.py": {
+      "sha256": "f503f109d706f7808132baf9a1cdd5975f27202604524937953b5aa212d89549",
+      "git_blob": "9804b31ace1575fc1253dd82549d4f3a17bcebda"
+    }
+  },
+  "provenance": "Actual amended Python source with local synthetic adapters and memory cache; no provider calls.",
+  "normalizations": [
+    "query_id",
+    "response_time_ms"
+  ],
+  "cases": [
+    {
+      "id": "from",
+      "request": {
+        "engines": [
+          "openalex"
+        ],
+        "date_from": "2025-01-01"
+      },
+      "layers": null,
+      "output": {
+        "query": "date",
+        "results": [
+          {
+            "url": "https://example.test/paper",
+            "title": "paper",
+            "content": "body",
+            "engine": "openalex",
+            "engines": [
+              "openalex"
+            ],
+            "score": 1.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 2,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "scope": {
+          "selected_engines": [
+            "openalex"
+          ],
+          "resolved_categories": [],
+          "routing_rule": "explicit engine",
+          "matched_topic": null,
+          "warnings": [],
+          "excluded_engines": [],
+          "routing_fallback": false,
+          "routing_budget_applied": false,
+          "routing_tradeoffs": [],
+          "jev_added_engines": [],
+          "jev_scores": {}
+        },
+        "engine_outcomes": [
+          {
+            "engine": "openalex",
+            "status": "ok",
+            "result_count": 1,
+            "latency_ms": 5.0,
+            "message": null
+          }
+        ],
+        "suggestions": [],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "query_id": "<query-id>",
+        "date_filter": {
+          "requested": {
+            "date_from": "2025-01-01",
+            "date_to": null,
+            "time_range": null
+          },
+          "applied": {
+            "date_from": "2025-01-01",
+            "date_to": null
+          },
+          "status": "enforced",
+          "reason": "Publication dates enforced by the audited OpenAlex adapter.",
+          "enforced_by": [
+            "upstream:openalex"
+          ],
+          "engines": [
+            "openalex"
+          ],
+          "warnings": []
+        },
+        "cached": false,
+        "ranking_explanation": "tier_then_cross_engine_presence",
+        "response_time_ms": 0,
+        "partial": false,
+        "deadline_exceeded": false,
+        "all_unresponsive": false,
+        "empty_engines": [],
+        "cached_error": false,
+        "dispatched_engine_count": 1
+      },
+      "calls": {
+        "openalex": [
+          [
+            "date",
+            {
+              "language": "en",
+              "safesearch": 0,
+              "pageno": 1,
+              "time_range": null,
+              "date_from": "2025-01-01",
+              "date_to": null,
+              "categories": [
+                "general"
+              ],
+              "media_type": null
+            }
+          ]
+        ],
+        "brave": []
+      },
+      "quota": 1,
+      "cache_reads": 1,
+      "cache_writes": 1
+    },
+    {
+      "id": "to",
+      "request": {
+        "engines": [
+          "openalex"
+        ],
+        "date_to": "2025-12-31"
+      },
+      "layers": null,
+      "output": {
+        "query": "date",
+        "results": [
+          {
+            "url": "https://example.test/paper",
+            "title": "paper",
+            "content": "body",
+            "engine": "openalex",
+            "engines": [
+              "openalex"
+            ],
+            "score": 1.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 2,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "scope": {
+          "selected_engines": [
+            "openalex"
+          ],
+          "resolved_categories": [],
+          "routing_rule": "explicit engine",
+          "matched_topic": null,
+          "warnings": [],
+          "excluded_engines": [],
+          "routing_fallback": false,
+          "routing_budget_applied": false,
+          "routing_tradeoffs": [],
+          "jev_added_engines": [],
+          "jev_scores": {}
+        },
+        "engine_outcomes": [
+          {
+            "engine": "openalex",
+            "status": "ok",
+            "result_count": 1,
+            "latency_ms": 5.0,
+            "message": null
+          }
+        ],
+        "suggestions": [],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "query_id": "<query-id>",
+        "date_filter": {
+          "requested": {
+            "date_from": null,
+            "date_to": "2025-12-31",
+            "time_range": null
+          },
+          "applied": {
+            "date_from": null,
+            "date_to": "2025-12-31"
+          },
+          "status": "enforced",
+          "reason": "Publication dates enforced by the audited OpenAlex adapter.",
+          "enforced_by": [
+            "upstream:openalex"
+          ],
+          "engines": [
+            "openalex"
+          ],
+          "warnings": []
+        },
+        "cached": false,
+        "ranking_explanation": "tier_then_cross_engine_presence",
+        "response_time_ms": 0,
+        "partial": false,
+        "deadline_exceeded": false,
+        "all_unresponsive": false,
+        "empty_engines": [],
+        "cached_error": false,
+        "dispatched_engine_count": 1
+      },
+      "calls": {
+        "openalex": [
+          [
+            "date",
+            {
+              "language": "en",
+              "safesearch": 0,
+              "pageno": 1,
+              "time_range": null,
+              "date_from": null,
+              "date_to": "2025-12-31",
+              "categories": [
+                "general"
+              ],
+              "media_type": null
+            }
+          ]
+        ],
+        "brave": []
+      },
+      "quota": 1,
+      "cache_reads": 1,
+      "cache_writes": 1
+    },
+    {
+      "id": "both",
+      "request": {
+        "engines": [
+          "openalex"
+        ],
+        "date_from": "2025-01-01",
+        "date_to": "2025-12-31"
+      },
+      "layers": null,
+      "output": {
+        "query": "date",
+        "results": [
+          {
+            "url": "https://example.test/paper",
+            "title": "paper",
+            "content": "body",
+            "engine": "openalex",
+            "engines": [
+              "openalex"
+            ],
+            "score": 1.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "tier": 2,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "scope": {
+          "selected_engines": [
+            "openalex"
+          ],
+          "resolved_categories": [],
+          "routing_rule": "explicit engine",
+          "matched_topic": null,
+          "warnings": [],
+          "excluded_engines": [],
+          "routing_fallback": false,
+          "routing_budget_applied": false,
+          "routing_tradeoffs": [],
+          "jev_added_engines": [],
+          "jev_scores": {}
+        },
+        "engine_outcomes": [
+          {
+            "engine": "openalex",
+            "status": "ok",
+            "result_count": 1,
+            "latency_ms": 5.0,
+            "message": null
+          }
+        ],
+        "suggestions": [],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "query_id": "<query-id>",
+        "date_filter": {
+          "requested": {
+            "date_from": "2025-01-01",
+            "date_to": "2025-12-31",
+            "time_range": null
+          },
+          "applied": {
+            "date_from": "2025-01-01",
+            "date_to": "2025-12-31"
+          },
+          "status": "enforced",
+          "reason": "Publication dates enforced by the audited OpenAlex adapter.",
+          "enforced_by": [
+            "upstream:openalex"
+          ],
+          "engines": [
+            "openalex"
+          ],
+          "warnings": []
+        },
+        "cached": false,
+        "ranking_explanation": "tier_then_cross_engine_presence",
+        "response_time_ms": 0,
+        "partial": false,
+        "deadline_exceeded": false,
+        "all_unresponsive": false,
+        "empty_engines": [],
+        "cached_error": false,
+        "dispatched_engine_count": 1
+      },
+      "calls": {
+        "openalex": [
+          [
+            "date",
+            {
+              "language": "en",
+              "safesearch": 0,
+              "pageno": 1,
+              "time_range": null,
+              "date_from": "2025-01-01",
+              "date_to": "2025-12-31",
+              "categories": [
+                "general"
+              ],
+              "media_type": null
+            }
+          ]
+        ],
+        "brave": []
+      },
+      "quota": 1,
+      "cache_reads": 1,
+      "cache_writes": 1
+    },
+    {
+      "id": "implicit",
+      "request": {
+        "date_from": "2025-01-01"
+      },
+      "layers": null,
+      "output": {
+        "error": "QueryValidationError",
+        "field": "engines",
+        "message": "absolute dates require explicit engines=['openalex']"
+      },
+      "calls": {
+        "openalex": [],
+        "brave": []
+      },
+      "quota": 0,
+      "cache_reads": 0,
+      "cache_writes": 0
+    },
+    {
+      "id": "other",
+      "request": {
+        "engines": [
+          "brave"
+        ],
+        "date_from": "2025-01-01"
+      },
+      "layers": null,
+      "output": {
+        "error": "QueryValidationError",
+        "field": "engines",
+        "message": "absolute dates require explicit engines=['openalex']"
+      },
+      "calls": {
+        "openalex": [],
+        "brave": []
+      },
+      "quota": 0,
+      "cache_reads": 0,
+      "cache_writes": 0
+    },
+    {
+      "id": "mixed",
+      "request": {
+        "engines": [
+          "openalex",
+          "brave"
+        ],
+        "date_from": "2025-01-01"
+      },
+      "layers": null,
+      "output": {
+        "error": "QueryValidationError",
+        "field": "engines",
+        "message": "absolute dates require explicit engines=['openalex']"
+      },
+      "calls": {
+        "openalex": [],
+        "brave": []
+      },
+      "quota": 0,
+      "cache_reads": 0,
+      "cache_writes": 0
+    },
+    {
+      "id": "duplicate",
+      "request": {
+        "engines": [
+          "openalex",
+          "openalex"
+        ],
+        "date_from": "2025-01-01"
+      },
+      "layers": null,
+      "output": {
+        "error": "QueryValidationError",
+        "field": "engines",
+        "message": "absolute dates require explicit engines=['openalex']"
+      },
+      "calls": {
+        "openalex": [],
+        "brave": []
+      },
+      "quota": 0,
+      "cache_reads": 0,
+      "cache_writes": 0
+    },
+    {
+      "id": "media",
+      "request": {
+        "engines": [
+          "openalex"
+        ],
+        "media_type": "images",
+        "date_from": "2025-01-01"
+      },
+      "layers": null,
+      "output": {
+        "error": "QueryValidationError",
+        "field": "engines",
+        "message": "absolute dates require explicit engines=['openalex']"
+      },
+      "calls": {
+        "openalex": [],
+        "brave": []
+      },
+      "quota": 0,
+      "cache_reads": 0,
+      "cache_writes": 0
+    },
+    {
+      "id": "relative-empty",
+      "request": {
+        "engines": [
+          "openalex"
+        ],
+        "time_range": "",
+        "date_from": "2025-01-01"
+      },
+      "layers": null,
+      "output": {
+        "error": "QueryValidationError",
+        "field": "time_range",
+        "message": "absolute dates cannot be combined with time_range"
+      },
+      "calls": {
+        "openalex": [],
+        "brave": []
+      },
+      "quota": 0,
+      "cache_reads": 0,
+      "cache_writes": 0
+    },
+    {
+      "id": "relative-day",
+      "request": {
+        "engines": [
+          "openalex"
+        ],
+        "time_range": "day",
+        "date_from": "2025-01-01"
+      },
+      "layers": null,
+      "output": {
+        "error": "QueryValidationError",
+        "field": "time_range",
+        "message": "absolute dates cannot be combined with time_range"
+      },
+      "calls": {
+        "openalex": [],
+        "brave": []
+      },
+      "quota": 0,
+      "cache_reads": 0,
+      "cache_writes": 0
+    },
+    {
+      "id": "malformed-precedes-scope",
+      "request": {
+        "engines": [
+          "brave"
+        ],
+        "time_range": "",
+        "date_from": "bad"
+      },
+      "layers": null,
+      "output": {
+        "error": "QueryValidationError",
+        "field": "date_from",
+        "message": "date_from must be a valid YYYY-MM-DD calendar date"
+      },
+      "calls": {
+        "openalex": [],
+        "brave": []
+      },
+      "quota": 0,
+      "cache_reads": 0,
+      "cache_writes": 0
+    },
+    {
+      "id": "reversed",
+      "request": {
+        "engines": [
+          "openalex"
+        ],
+        "date_from": "2025-12-31",
+        "date_to": "2025-01-01"
+      },
+      "layers": null,
+      "output": {
+        "error": "QueryValidationError",
+        "field": "date_from",
+        "message": "date_from must be on or before date_to"
+      },
+      "calls": {
+        "openalex": [],
+        "brave": []
+      },
+      "quota": 0,
+      "cache_reads": 0,
+      "cache_writes": 0
+    },
+    {
+      "id": "missing-layer",
+      "request": {
+        "engines": [
+          "openalex"
+        ],
+        "date_from": "2025-01-01"
+      },
+      "layers": {
+        "date_from": "upstream"
+      },
+      "output": {
+        "error": "QueryValidationError",
+        "field": "engines",
+        "message": "selected adapter does not enforce publication dates"
+      },
+      "calls": {
+        "openalex": [],
+        "brave": []
+      },
+      "quota": 0,
+      "cache_reads": 0,
+      "cache_writes": 0
+    },
+    {
+      "id": "local-layer",
+      "request": {
+        "engines": [
+          "openalex"
+        ],
+        "date_from": "2025-01-01"
+      },
+      "layers": {
+        "date_from": "upstream",
+        "date_to": "local"
+      },
+      "output": {
+        "error": "QueryValidationError",
+        "field": "engines",
+        "message": "selected adapter does not enforce publication dates"
+      },
+      "calls": {
+        "openalex": [],
+        "brave": []
+      },
+      "quota": 0,
+      "cache_reads": 0,
+      "cache_writes": 0
+    },
+    {
+      "id": "cache-unchanged",
+      "kind": "cache",
+      "mutation": "unchanged",
+      "cached": true,
+      "engine_calls": 1,
+      "proof": {
+        "requested": {
+          "date_from": "2025-01-01",
+          "date_to": null,
+          "time_range": null
+        },
+        "applied": {
+          "date_from": "2025-01-01",
+          "date_to": null
+        },
+        "status": "enforced",
+        "reason": "Publication dates enforced by the audited OpenAlex adapter.",
+        "enforced_by": [
+          "upstream:openalex"
+        ],
+        "engines": [
+          "openalex"
+        ],
+        "warnings": []
+      },
+      "scope": [
+        "openalex"
+      ]
+    },
+    {
+      "id": "cache-missing",
+      "kind": "cache",
+      "mutation": "missing",
+      "cached": false,
+      "engine_calls": 2,
+      "proof": {
+        "requested": {
+          "date_from": "2025-01-01",
+          "date_to": null,
+          "time_range": null
+        },
+        "applied": {
+          "date_from": "2025-01-01",
+          "date_to": null
+        },
+        "status": "enforced",
+        "reason": "Publication dates enforced by the audited OpenAlex adapter.",
+        "enforced_by": [
+          "upstream:openalex"
+        ],
+        "engines": [
+          "openalex"
+        ],
+        "warnings": []
+      },
+      "scope": [
+        "openalex"
+      ]
+    },
+    {
+      "id": "cache-requested",
+      "kind": "cache",
+      "mutation": "requested",
+      "cached": false,
+      "engine_calls": 2,
+      "proof": {
+        "requested": {
+          "date_from": "2025-01-01",
+          "date_to": null,
+          "time_range": null
+        },
+        "applied": {
+          "date_from": "2025-01-01",
+          "date_to": null
+        },
+        "status": "enforced",
+        "reason": "Publication dates enforced by the audited OpenAlex adapter.",
+        "enforced_by": [
+          "upstream:openalex"
+        ],
+        "engines": [
+          "openalex"
+        ],
+        "warnings": []
+      },
+      "scope": [
+        "openalex"
+      ]
+    },
+    {
+      "id": "cache-applied",
+      "kind": "cache",
+      "mutation": "applied",
+      "cached": false,
+      "engine_calls": 2,
+      "proof": {
+        "requested": {
+          "date_from": "2025-01-01",
+          "date_to": null,
+          "time_range": null
+        },
+        "applied": {
+          "date_from": "2025-01-01",
+          "date_to": null
+        },
+        "status": "enforced",
+        "reason": "Publication dates enforced by the audited OpenAlex adapter.",
+        "enforced_by": [
+          "upstream:openalex"
+        ],
+        "engines": [
+          "openalex"
+        ],
+        "warnings": []
+      },
+      "scope": [
+        "openalex"
+      ]
+    },
+    {
+      "id": "cache-enforced_by",
+      "kind": "cache",
+      "mutation": "enforced_by",
+      "cached": false,
+      "engine_calls": 2,
+      "proof": {
+        "requested": {
+          "date_from": "2025-01-01",
+          "date_to": null,
+          "time_range": null
+        },
+        "applied": {
+          "date_from": "2025-01-01",
+          "date_to": null
+        },
+        "status": "enforced",
+        "reason": "Publication dates enforced by the audited OpenAlex adapter.",
+        "enforced_by": [
+          "upstream:openalex"
+        ],
+        "engines": [
+          "openalex"
+        ],
+        "warnings": []
+      },
+      "scope": [
+        "openalex"
+      ]
+    },
+    {
+      "id": "cache-engines",
+      "kind": "cache",
+      "mutation": "engines",
+      "cached": false,
+      "engine_calls": 2,
+      "proof": {
+        "requested": {
+          "date_from": "2025-01-01",
+          "date_to": null,
+          "time_range": null
+        },
+        "applied": {
+          "date_from": "2025-01-01",
+          "date_to": null
+        },
+        "status": "enforced",
+        "reason": "Publication dates enforced by the audited OpenAlex adapter.",
+        "enforced_by": [
+          "upstream:openalex"
+        ],
+        "engines": [
+          "openalex"
+        ],
+        "warnings": []
+      },
+      "scope": [
+        "openalex"
+      ]
+    },
+    {
+      "id": "cache-scope",
+      "kind": "cache",
+      "mutation": "scope",
+      "cached": false,
+      "engine_calls": 2,
+      "proof": {
+        "requested": {
+          "date_from": "2025-01-01",
+          "date_to": null,
+          "time_range": null
+        },
+        "applied": {
+          "date_from": "2025-01-01",
+          "date_to": null
+        },
+        "status": "enforced",
+        "reason": "Publication dates enforced by the audited OpenAlex adapter.",
+        "enforced_by": [
+          "upstream:openalex"
+        ],
+        "engines": [
+          "openalex"
+        ],
+        "warnings": []
+      },
+      "scope": [
+        "openalex"
+      ]
+    },
+    {
+      "id": "cache-scope-self-consistent",
+      "kind": "cache",
+      "mutation": "scope-self-consistent",
+      "cached": true,
+      "engine_calls": 1,
+      "proof": {
+        "requested": {
+          "date_from": "2025-01-01",
+          "date_to": null,
+          "time_range": null
+        },
+        "applied": {
+          "date_from": "2025-01-01",
+          "date_to": null
+        },
+        "status": "enforced",
+        "reason": "Publication dates enforced by the audited OpenAlex adapter.",
+        "enforced_by": [
+          "upstream:openalex"
+        ],
+        "engines": [
+          "brave"
+        ],
+        "warnings": []
+      },
+      "scope": [
+        "brave"
+      ]
+    }
+  ]
+}

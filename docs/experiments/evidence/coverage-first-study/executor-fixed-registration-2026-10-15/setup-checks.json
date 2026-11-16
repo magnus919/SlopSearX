@@ -1,0 +1,27 @@
+{
+  "schema": "coverage-static-preflight-summary/1",
+  "source_revision": "cb7f3c20e1b2e263bea5d37291c737e97ed9b9bb",
+  "full_static_preflight": "passed",
+  "static_preflight_scientific_calls": 0,
+  "static_preflight_stage_directories_created": false,
+  "quality_credit": false,
+  "stages": {
+    "development": {
+      "runner_preflight": "passed",
+      "issuer_preflight": "passed",
+      "status": "development-reference-grading-in-progress",
+      "invoked": true,
+      "reference_packets_handed_off": 54,
+      "new_search_calls_as_of_start": 0,
+      "new_capture_calls_as_of_start": 0
+    },
+    "confirmation": {
+      "runner_preflight": "passed",
+      "issuer_preflight": "passed",
+      "status": "not_invoked",
+      "invoked": false,
+      "runtime_eligible": false,
+      "eligibility_condition": "valid passing development receipt"
+    }
+  }
+}

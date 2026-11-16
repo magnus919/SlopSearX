@@ -1,0 +1,47 @@
+{
+  "test_target": "tokio_windows",
+  "features": "all",
+  "tests": [
+    "tokio_windows::creation_flags_job_object::leaves_explicit_suspension_in_both_orders",
+    "tokio_windows::creation_flags_job_object::preserves_flags_and_resumes_in_both_orders",
+    "tokio_windows::id_same_as_inner::job_object",
+    "tokio_windows::id_same_as_inner::nowrap",
+    "tokio_windows::inner_read_stdout::job_object",
+    "tokio_windows::inner_read_stdout::nowrap",
+    "tokio_windows::into_inner_write_stdin::job_object",
+    "tokio_windows::into_inner_write_stdin::nowrap",
+    "tokio_windows::job_accounting::fixture_process",
+    "tokio_windows::job_accounting::leader_exit_does_not_cache_success_while_descendant_is_active",
+    "tokio_windows::job_accounting::try_wait_before_final_wait_preserves_original_job_completion",
+    "tokio_windows::job_object_kill_on_drop::descendant_leaf",
+    "tokio_windows::job_object_kill_on_drop::descendant_parent",
+    "tokio_windows::job_object_kill_on_drop::job_detects_kill_on_drop_in_both_orders",
+    "tokio_windows::kill_and_try_wait::job_object",
+    "tokio_windows::kill_and_try_wait::nowrap",
+    "tokio_windows::process_handle::job_object_falls_back_through_a_legacy_inline_child",
+    "tokio_windows::process_handle::job_object_falls_back_through_a_legacy_transparent_child",
+    "tokio_windows::process_handle::job_object_rejects_an_opaque_child_and_cleans_it_up",
+    "tokio_windows::process_handle::job_object_uses_delegated_handle_and_preserves_the_direct_child",
+    "tokio_windows::process_handle::opaque_child_defaults_to_no_process_handle_without_traversing",
+    "tokio_windows::process_handle::transparent_child_delegates_the_native_process_handle",
+    "tokio_windows::try_wait_after_die::job_object",
+    "tokio_windows::try_wait_after_die::nowrap",
+    "tokio_windows::wait_after_die::job_object",
+    "tokio_windows::wait_after_die::nowrap",
+    "tokio_windows::wait_twice::job_object",
+    "tokio_windows::wait_twice::nowrap",
+    "tokio_windows::wait_with_output::job_object",
+    "tokio_windows::wait_with_output::nowrap"
+  ],
+  "original_ignored": [
+    "tokio_windows::job_object_kill_on_drop::descendant_leaf",
+    "tokio_windows::job_object_kill_on_drop::descendant_parent"
+  ],
+  "new_controls": [
+    "tokio_windows::job_accounting::fixture_process",
+    "tokio_windows::job_accounting::leader_exit_does_not_cache_success_while_descendant_is_active",
+    "tokio_windows::job_accounting::try_wait_before_final_wait_preserves_original_job_completion"
+  ],
+  "expected_passed": 28,
+  "expected_ignored": 2
+}

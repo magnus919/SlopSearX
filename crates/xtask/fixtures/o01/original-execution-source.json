@@ -1,0 +1,925 @@
+{
+  "status": "source-only-temporary-oracle",
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "pytest": "9.0.3",
+  "exit": 0,
+  "args": [
+    "-p",
+    "no:cacheprovider",
+    "-p",
+    "pytest_asyncio.plugin",
+    "-o",
+    "addopts=",
+    "-o",
+    "asyncio_mode=auto",
+    "-vv",
+    "--tb=short",
+    "tests/test_metrics.py",
+    "tests/test_saved_event_metrics.py",
+    "tests/test_workflow_metrics.py",
+    "tests/test_audit.py",
+    "tests/test_stats.py",
+    "--deselect=tests/test_metrics.py::TestMetricsEndpoint::test_metrics_endpoint_returns_200",
+    "--deselect=tests/test_metrics.py::test_user_input_does_not_create_unbounded_metric_series"
+  ],
+  "pins": [
+    {
+      "path": "slopsearx/metrics.py",
+      "sha256": "2df238e07c692be05f73bdc3b1e7896dbae576df1d5128a445e6a9fe196c0edc"
+    },
+    {
+      "path": "slopsearx/stats.py",
+      "sha256": "04dd73d675394d3d0cea39a9841db4fad19d9de16515236d227c00bbc12d1169"
+    },
+    {
+      "path": "slopsearx/audit.py",
+      "sha256": "11896df807d77088ae4985540936705a8c27a463cd1aa4f7ecca5bbd4a1f5c32"
+    },
+    {
+      "path": "slopsearx/logging.py",
+      "sha256": "b4208d3c051914bea94404de16248959abee4ca61dffcaa641cc5b2e4d18652e"
+    },
+    {
+      "path": "slopsearx/service.py",
+      "sha256": "45903193ef89987f7be83c1e593e44b7752251a54eb8719eae15a241840102ac"
+    },
+    {
+      "path": "tests/test_metrics.py",
+      "sha256": "ca0a9862b2551dc9d1e9705f2bbd616548caca7de8438ae0f7670d91d8308306"
+    },
+    {
+      "path": "tests/test_saved_event_metrics.py",
+      "sha256": "f5d1e75b4fbdc5dc20d4dcd1308ddb586eacab1b1eb9df5a2560f0d09545aae6"
+    },
+    {
+      "path": "tests/test_workflow_metrics.py",
+      "sha256": "ecd288c89f1a146541a5665667c271bc4ba0c6c103e64202983ac7ee3b7374b4"
+    },
+    {
+      "path": "tests/test_audit.py",
+      "sha256": "899b5d078cb5c2d942c1fdcc66831e435cde497a1135f8edeb899ddf2c03b43c"
+    },
+    {
+      "path": "tests/test_observed_health.py",
+      "sha256": "40e1000319fa048ee63ee6eb8906fefdfd0c7e7832d834693cdf216ff98b0a83"
+    }
+  ],
+  "collected": [
+    "tests/test_metrics.py::TestCounter::test_increment",
+    "tests/test_metrics.py::TestCounter::test_multiple_labels",
+    "tests/test_metrics.py::TestCounter::test_header",
+    "tests/test_metrics.py::TestGauge::test_set_and_render",
+    "tests/test_metrics.py::TestGauge::test_overwrite",
+    "tests/test_metrics.py::TestHistogram::test_cumulative_buckets_and_parser",
+    "tests/test_metrics.py::TestHistogram::test_bounded_retention",
+    "tests/test_metrics.py::TestHistogram::test_nonfinite_and_negative_latency_ignored",
+    "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets0]",
+    "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets1]",
+    "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets2]",
+    "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets3]",
+    "tests/test_metrics.py::TestHistogram::test_empty_no_output",
+    "tests/test_metrics.py::TestRenderMetrics::test_render_produces_valid_openmetrics",
+    "tests/test_metrics.py::TestRenderMetrics::test_render_includes_help_and_type",
+    "tests/test_metrics.py::test_label_escaping_roundtrips",
+    "tests/test_metrics.py::test_engine_error_counter_counts_failures_not_empty",
+    "tests/test_saved_event_metrics.py::test_publication_read_ack_gap_capacity_and_age_are_recorded",
+    "tests/test_saved_event_metrics.py::test_read_without_events_clears_stale_backlog_age[empty]",
+    "tests/test_saved_event_metrics.py::test_read_without_events_clears_stale_backlog_age[gap]",
+    "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_publication-tenant-secret]",
+    "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_read-consumer-secret]",
+    "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_ack-event-secret]",
+    "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_capacity-query-secret]",
+    "tests/test_saved_event_metrics.py::test_rendered_metrics_expose_only_closed_operational_dimensions",
+    "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[research]",
+    "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[dependency_dossier]",
+    "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[staged_search]",
+    "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[saved_search]",
+    "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[retrieval_receipt]",
+    "tests/test_workflow_metrics.py::test_reconciliation_replaces_stale_gauges_after_recovery",
+    "tests/test_workflow_metrics.py::test_interrupted_is_a_terminal_outcome_without_becoming_failure",
+    "tests/test_workflow_metrics.py::test_user_data_cannot_become_a_metric_label",
+    "tests/test_workflow_metrics.py::test_tenant_facing_health_has_states_without_activity_counts",
+    "tests/test_audit.py::TestAuditDisconnected::test_record_query_no_cache_noop",
+    "tests/test_audit.py::TestAuditDisconnected::test_record_query_disconnected_cache_noop",
+    "tests/test_audit.py::TestAuditDisconnected::test_record_query_no_client_noop",
+    "tests/test_audit.py::TestAuditAsyncConformance::test_record_query_is_async",
+    "tests/test_audit.py::TestAuditPipeline::test_pipeline_execute_is_awaited",
+    "tests/test_audit.py::TestAuditPipeline::test_pipeline_fields_correct",
+    "tests/test_audit.py::TestAuditPipeline::test_pipeline_error_noop",
+    "tests/test_audit.py::TestAuditPipeline::test_expire_set_on_stream",
+    "tests/test_audit.py::TestAuditPipeline::test_stream_key_includes_date",
+    "tests/test_audit.py::TestAuditPipeline::test_count_timeout_status_correctly",
+    "tests/test_stats.py::TestStatsAsyncConformance::test_record_query_is_async",
+    "tests/test_stats.py::TestStatsTrackerDisconnected::test_record_query_no_cache_noop",
+    "tests/test_stats.py::TestStatsTrackerDisconnected::test_record_query_disconnected_cache_noop",
+    "tests/test_stats.py::TestStatsTrackerDisconnected::test_record_query_no_client_noop",
+    "tests/test_stats.py::TestStatsPipeline::test_pipeline_execute_is_awaited",
+    "tests/test_stats.py::TestStatsPipeline::test_pipeline_error_noop",
+    "tests/test_stats.py::TestStatsPipeline::test_error_and_timeout_increment_errors",
+    "tests/test_stats.py::TestStatsPipeline::test_ok_status_does_not_increment_errors",
+    "tests/test_stats.py::TestStatsPipeline::test_rate_limited_status_increments_rate_limited"
+  ],
+  "deselected": [
+    "tests/test_metrics.py::TestMetricsEndpoint::test_metrics_endpoint_returns_200",
+    "tests/test_metrics.py::test_user_input_does_not_create_unbounded_metric_series"
+  ],
+  "reports": [
+    {
+      "nodeid": "tests/test_metrics.py::TestCounter::test_increment",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestCounter::test_increment",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestCounter::test_increment",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestCounter::test_multiple_labels",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestCounter::test_multiple_labels",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestCounter::test_multiple_labels",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestCounter::test_header",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestCounter::test_header",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestCounter::test_header",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestGauge::test_set_and_render",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestGauge::test_set_and_render",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestGauge::test_set_and_render",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestGauge::test_overwrite",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestGauge::test_overwrite",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestGauge::test_overwrite",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestHistogram::test_cumulative_buckets_and_parser",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestHistogram::test_cumulative_buckets_and_parser",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestHistogram::test_cumulative_buckets_and_parser",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestHistogram::test_bounded_retention",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestHistogram::test_bounded_retention",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestHistogram::test_bounded_retention",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestHistogram::test_nonfinite_and_negative_latency_ignored",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestHistogram::test_nonfinite_and_negative_latency_ignored",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestHistogram::test_nonfinite_and_negative_latency_ignored",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets0]",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets0]",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets0]",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets1]",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets1]",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets1]",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets2]",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets2]",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets2]",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets3]",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets3]",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets3]",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestHistogram::test_empty_no_output",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestHistogram::test_empty_no_output",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestHistogram::test_empty_no_output",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestRenderMetrics::test_render_produces_valid_openmetrics",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestRenderMetrics::test_render_produces_valid_openmetrics",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestRenderMetrics::test_render_produces_valid_openmetrics",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestRenderMetrics::test_render_includes_help_and_type",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestRenderMetrics::test_render_includes_help_and_type",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::TestRenderMetrics::test_render_includes_help_and_type",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::test_label_escaping_roundtrips",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::test_label_escaping_roundtrips",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::test_label_escaping_roundtrips",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::test_engine_error_counter_counts_failures_not_empty",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::test_engine_error_counter_counts_failures_not_empty",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_metrics.py::test_engine_error_counter_counts_failures_not_empty",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_saved_event_metrics.py::test_publication_read_ack_gap_capacity_and_age_are_recorded",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_saved_event_metrics.py::test_publication_read_ack_gap_capacity_and_age_are_recorded",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_saved_event_metrics.py::test_publication_read_ack_gap_capacity_and_age_are_recorded",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_saved_event_metrics.py::test_read_without_events_clears_stale_backlog_age[empty]",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_saved_event_metrics.py::test_read_without_events_clears_stale_backlog_age[empty]",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_saved_event_metrics.py::test_read_without_events_clears_stale_backlog_age[empty]",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_saved_event_metrics.py::test_read_without_events_clears_stale_backlog_age[gap]",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_saved_event_metrics.py::test_read_without_events_clears_stale_backlog_age[gap]",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_saved_event_metrics.py::test_read_without_events_clears_stale_backlog_age[gap]",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_publication-tenant-secret]",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_publication-tenant-secret]",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_publication-tenant-secret]",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_read-consumer-secret]",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_read-consumer-secret]",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_read-consumer-secret]",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_ack-event-secret]",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_ack-event-secret]",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_ack-event-secret]",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_capacity-query-secret]",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_capacity-query-secret]",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_capacity-query-secret]",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_saved_event_metrics.py::test_rendered_metrics_expose_only_closed_operational_dimensions",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_saved_event_metrics.py::test_rendered_metrics_expose_only_closed_operational_dimensions",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_saved_event_metrics.py::test_rendered_metrics_expose_only_closed_operational_dimensions",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[research]",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[research]",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[research]",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[dependency_dossier]",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[dependency_dossier]",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[dependency_dossier]",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[staged_search]",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[staged_search]",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[staged_search]",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[saved_search]",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[saved_search]",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[saved_search]",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[retrieval_receipt]",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[retrieval_receipt]",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[retrieval_receipt]",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_workflow_metrics.py::test_reconciliation_replaces_stale_gauges_after_recovery",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_workflow_metrics.py::test_reconciliation_replaces_stale_gauges_after_recovery",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_workflow_metrics.py::test_reconciliation_replaces_stale_gauges_after_recovery",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_workflow_metrics.py::test_interrupted_is_a_terminal_outcome_without_becoming_failure",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_workflow_metrics.py::test_interrupted_is_a_terminal_outcome_without_becoming_failure",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_workflow_metrics.py::test_interrupted_is_a_terminal_outcome_without_becoming_failure",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_workflow_metrics.py::test_user_data_cannot_become_a_metric_label",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_workflow_metrics.py::test_user_data_cannot_become_a_metric_label",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_workflow_metrics.py::test_user_data_cannot_become_a_metric_label",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_workflow_metrics.py::test_tenant_facing_health_has_states_without_activity_counts",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_workflow_metrics.py::test_tenant_facing_health_has_states_without_activity_counts",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_workflow_metrics.py::test_tenant_facing_health_has_states_without_activity_counts",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_audit.py::TestAuditDisconnected::test_record_query_no_cache_noop",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_audit.py::TestAuditDisconnected::test_record_query_no_cache_noop",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_audit.py::TestAuditDisconnected::test_record_query_no_cache_noop",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_audit.py::TestAuditDisconnected::test_record_query_disconnected_cache_noop",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_audit.py::TestAuditDisconnected::test_record_query_disconnected_cache_noop",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_audit.py::TestAuditDisconnected::test_record_query_disconnected_cache_noop",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_audit.py::TestAuditDisconnected::test_record_query_no_client_noop",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_audit.py::TestAuditDisconnected::test_record_query_no_client_noop",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_audit.py::TestAuditDisconnected::test_record_query_no_client_noop",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_audit.py::TestAuditAsyncConformance::test_record_query_is_async",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_audit.py::TestAuditAsyncConformance::test_record_query_is_async",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_audit.py::TestAuditAsyncConformance::test_record_query_is_async",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_audit.py::TestAuditPipeline::test_pipeline_execute_is_awaited",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_audit.py::TestAuditPipeline::test_pipeline_execute_is_awaited",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_audit.py::TestAuditPipeline::test_pipeline_execute_is_awaited",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_audit.py::TestAuditPipeline::test_pipeline_fields_correct",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_audit.py::TestAuditPipeline::test_pipeline_fields_correct",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_audit.py::TestAuditPipeline::test_pipeline_fields_correct",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_audit.py::TestAuditPipeline::test_pipeline_error_noop",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_audit.py::TestAuditPipeline::test_pipeline_error_noop",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_audit.py::TestAuditPipeline::test_pipeline_error_noop",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_audit.py::TestAuditPipeline::test_expire_set_on_stream",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_audit.py::TestAuditPipeline::test_expire_set_on_stream",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_audit.py::TestAuditPipeline::test_expire_set_on_stream",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_audit.py::TestAuditPipeline::test_stream_key_includes_date",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_audit.py::TestAuditPipeline::test_stream_key_includes_date",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_audit.py::TestAuditPipeline::test_stream_key_includes_date",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_audit.py::TestAuditPipeline::test_count_timeout_status_correctly",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_audit.py::TestAuditPipeline::test_count_timeout_status_correctly",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_audit.py::TestAuditPipeline::test_count_timeout_status_correctly",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_stats.py::TestStatsAsyncConformance::test_record_query_is_async",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_stats.py::TestStatsAsyncConformance::test_record_query_is_async",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_stats.py::TestStatsAsyncConformance::test_record_query_is_async",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_stats.py::TestStatsTrackerDisconnected::test_record_query_no_cache_noop",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_stats.py::TestStatsTrackerDisconnected::test_record_query_no_cache_noop",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_stats.py::TestStatsTrackerDisconnected::test_record_query_no_cache_noop",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_stats.py::TestStatsTrackerDisconnected::test_record_query_disconnected_cache_noop",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_stats.py::TestStatsTrackerDisconnected::test_record_query_disconnected_cache_noop",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_stats.py::TestStatsTrackerDisconnected::test_record_query_disconnected_cache_noop",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_stats.py::TestStatsTrackerDisconnected::test_record_query_no_client_noop",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_stats.py::TestStatsTrackerDisconnected::test_record_query_no_client_noop",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_stats.py::TestStatsTrackerDisconnected::test_record_query_no_client_noop",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_stats.py::TestStatsPipeline::test_pipeline_execute_is_awaited",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_stats.py::TestStatsPipeline::test_pipeline_execute_is_awaited",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_stats.py::TestStatsPipeline::test_pipeline_execute_is_awaited",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_stats.py::TestStatsPipeline::test_pipeline_error_noop",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_stats.py::TestStatsPipeline::test_pipeline_error_noop",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_stats.py::TestStatsPipeline::test_pipeline_error_noop",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_stats.py::TestStatsPipeline::test_error_and_timeout_increment_errors",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_stats.py::TestStatsPipeline::test_error_and_timeout_increment_errors",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_stats.py::TestStatsPipeline::test_error_and_timeout_increment_errors",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_stats.py::TestStatsPipeline::test_ok_status_does_not_increment_errors",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_stats.py::TestStatsPipeline::test_ok_status_does_not_increment_errors",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_stats.py::TestStatsPipeline::test_ok_status_does_not_increment_errors",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_stats.py::TestStatsPipeline::test_rate_limited_status_increments_rate_limited",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_stats.py::TestStatsPipeline::test_rate_limited_status_increments_rate_limited",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_stats.py::TestStatsPipeline::test_rate_limited_status_increments_rate_limited",
+      "when": "teardown",
+      "outcome": "passed"
+    }
+  ],
+  "network_attempts": [],
+  "retirement": "G08 remove executable source oracle; native gate consumes immutable JSON only"
+}

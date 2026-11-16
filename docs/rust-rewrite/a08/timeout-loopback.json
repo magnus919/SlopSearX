@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "unicode": "16.0.0",
+  "producer_sha256": "8fb0ab865e80aeeece54a145e62d8d082f7dc7542103aba2c046530779d6e7e6",
+  "scope": "actual source HTTPX private loopback, held response, source timer and socket closure; no mock transport or provider calls",
+  "records": [
+    {
+      "id": "edgar-loopback-timeout-0",
+      "engine": "edgar",
+      "timeout_ms": 0,
+      "status": "timeout",
+      "error_message": null,
+      "requests": [],
+      "socket_eof": []
+    },
+    {
+      "id": "edgar-loopback-timeout--1",
+      "engine": "edgar",
+      "timeout_ms": -1,
+      "status": "timeout",
+      "error_message": null,
+      "requests": [],
+      "socket_eof": [
+        true
+      ]
+    },
+    {
+      "id": "edgar-loopback-timeout-50",
+      "engine": "edgar",
+      "timeout_ms": 50,
+      "status": "timeout",
+      "error_message": null,
+      "requests": [
+        "GET /slow?q=test&limit=10&offset=0 HTTP/1.1"
+      ],
+      "socket_eof": [
+        true
+      ]
+    },
+    {
+      "id": "fred-loopback-timeout-0",
+      "engine": "fred",
+      "timeout_ms": 0,
+      "status": "timeout",
+      "error_message": null,
+      "requests": [],
+      "socket_eof": [
+        true
+      ]
+    },
+    {
+      "id": "fred-loopback-timeout--1",
+      "engine": "fred",
+      "timeout_ms": -1,
+      "status": "timeout",
+      "error_message": null,
+      "requests": [],
+      "socket_eof": [
+        true
+      ]
+    },
+    {
+      "id": "fred-loopback-timeout-50",
+      "engine": "fred",
+      "timeout_ms": 50,
+      "status": "timeout",
+      "error_message": null,
+      "requests": [
+        "GET /slow?api_key=<synthetic-key>&file_type=json&search_text=test&limit=10&order_by=popularity&sort_order=desc HTTP/1.1"
+      ],
+      "socket_eof": [
+        true
+      ]
+    },
+    {
+      "id": "openfda-loopback-timeout-0",
+      "engine": "openfda",
+      "timeout_ms": 0,
+      "status": "timeout",
+      "error_message": null,
+      "requests": [],
+      "socket_eof": [
+        true
+      ]
+    },
+    {
+      "id": "openfda-loopback-timeout--1",
+      "engine": "openfda",
+      "timeout_ms": -1,
+      "status": "timeout",
+      "error_message": null,
+      "requests": [],
+      "socket_eof": [
+        true
+      ]
+    },
+    {
+      "id": "openfda-loopback-timeout-50",
+      "engine": "openfda",
+      "timeout_ms": 50,
+      "status": "timeout",
+      "error_message": null,
+      "requests": [
+        "GET /slow?search=openfda.brand_name.exact%3A%22test%22+openfda.brand_name.exact%3A%22TEST%22+openfda.brand_name.exact%3A%22Test%22+openfda.generic_name.exact%3A%22test%22+openfda.generic_name.exact%3A%22TEST%22+openfda.generic_name.exact%3A%22Test%22+openfda.substance_name.exact%3A%22test%22+openfda.substance_name.exact%3A%22TEST%22+openfda.substance_name.exact%3A%22Test%22&limit=10 HTTP/1.1"
+      ],
+      "socket_eof": [
+        true
+      ]
+    },
+    {
+      "id": "oyez-loopback-timeout-0",
+      "engine": "oyez",
+      "timeout_ms": 0,
+      "status": "timeout",
+      "error_message": null,
+      "requests": [],
+      "socket_eof": [
+        true
+      ]
+    },
+    {
+      "id": "oyez-loopback-timeout--1",
+      "engine": "oyez",
+      "timeout_ms": -1,
+      "status": "timeout",
+      "error_message": null,
+      "requests": [],
+      "socket_eof": [
+        true
+      ]
+    },
+    {
+      "id": "oyez-loopback-timeout-50",
+      "engine": "oyez",
+      "timeout_ms": 50,
+      "status": "timeout",
+      "error_message": null,
+      "requests": [
+        "POST /slow HTTP/1.1"
+      ],
+      "socket_eof": [
+        true
+      ]
+    }
+  ]
+}

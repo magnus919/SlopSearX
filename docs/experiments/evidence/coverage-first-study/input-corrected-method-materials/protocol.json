@@ -1,0 +1,215 @@
+{
+  "acquisition": {
+    "adapter_calls_maximum": {
+      "arxiv": 2,
+      "github": 1,
+      "openalex": 1,
+      "wikipedia": 2
+    },
+    "arxiv_physical_pacing_seconds": 3,
+    "brave_calls": 0,
+    "brave_remaining_reserved": 2,
+    "categories": [
+      "reference"
+    ],
+    "credentials": "keyless public acquisition; no provider key loaded before admitted model phase",
+    "engines": [
+      "arxiv",
+      "openalex",
+      "github",
+      "wikipedia"
+    ],
+    "execution_profile": "coverage-acquisition-profile/2",
+    "finalization_reserve_seconds": 300,
+    "logical_query_timeout_seconds": 30,
+    "max_physical_http_calls": 53,
+    "ordinary_failure_policy": "continue-planned-operations",
+    "pacing_seconds": 7,
+    "per_engine_results": 20,
+    "pool_failure": "Retain every actual provider and acquisition outcome. Admit only a complete provenance-verified natural corpus with all declared slots, registered bands and exact navigation targets. Provider availability is separate; no replacements, concatenation, trimming, padding, engine substitution or retry.",
+    "rate_limit_policy": "An actual dispatched HTTP 429 installs a stage-local cooldown for that engine; later suppression is reported as a rate-limited engine outcome with zero physical dispatch and a reference to the original denial, never as another HTTP response.",
+    "response_bytes": 2000000,
+    "retries": 0,
+    "timeout_seconds": 30
+  },
+  "authority": {
+    "confirmation": "separate untouched C27 cases and fresh collection/capture; new source-bound admission only after independently sealed D27 development pass; stop on incomplete collection",
+    "failed_partial_slots": "sealed terminal inventory plus later uninvoked slots; no successful replay claim for failure bytes",
+    "historical_clocks_or_leases": false,
+    "new_stage_uuid_and_durable_one_shot_identity_required": true,
+    "preflight_helpers_create_authority": false
+  },
+  "candidate_source_sha256": "d6e3d22d6e484c26469f2de08d2f08b442942a10ca51f2cbf3c7e38e6aa71f64",
+  "capture": {
+    "context_unicode_characters": 8000,
+    "internal_scraper_fanout": "unknown unless exposed, not counted as zero",
+    "max_health_calls": 1,
+    "max_owned_http_calls": 641,
+    "max_owned_scrape_calls": 640,
+    "one_attempt_per_distinct_public_url": true,
+    "raw_contents": "private; publish sanitized counts/digests only",
+    "response_bytes": 2000000,
+    "retries": 0,
+    "source_chunk_maximum": 20,
+    "timeout_seconds": 30
+  },
+  "cohorts_sha256": "ad731b5d99907242dbc7c6be0c671049e179df76d50a2148886e7e34b6b28b30",
+  "consumer": {
+    "answer_words_maximum": 800,
+    "answerer_alias": "free",
+    "answerer_calls_maximum": 18,
+    "answerer_output_tokens_requested": 8192,
+    "assessor_concurrency_maximum": 2,
+    "grader_input_bytes_maximum": 384000,
+    "grader_output_bytes_maximum": 2000000,
+    "max_combined_logical_model_submissions": 130,
+    "max_logical_grader_submissions": 112,
+    "maximum_successful_sources": 5,
+    "prefix": 10,
+    "same_opening_availability_and_context_for_both_arms": true,
+    "scientific_assessor_model": "gpt-6.1-sol",
+    "source_context_unicode_characters": 8000,
+    "usage_not_exposed": "report unavailable; never invent billing/tokens"
+  },
+  "inputs": {
+    "candidate_purpose": "task_question + newline + purpose; same full task supplied to both downstream consumer arms",
+    "confirmation_tasks_fresh": 8,
+    "declared_tasks_per_stage": 8,
+    "development_dataset": "Freshly acquired public results and newly captured sources for D27; no imported pools, captures, source artifacts, grades, clocks, permits, identities, or decisions.",
+    "grader_labels_as_candidate_inputs": false,
+    "high_band_cases": 4,
+    "higher_band": "41-80 natural canonical results",
+    "incidental_url_recurrence": "Retain and report natural URL recurrence; both stages acquire fresh pools and captures, both receive fresh blind references; no source, artifact, or grade carry-forward.",
+    "intent_cases_per_band": 2,
+    "intents": [
+      "evidence_seeking",
+      "source_discovery"
+    ],
+    "low_band_cases": 4,
+    "lower_band": "1-40 natural canonical results",
+    "minimum_higher_band_cases": 4,
+    "navigation_targets_per_stage": 5,
+    "projection": "fixed original service bounded title/url/snippet projection on every card, sealed before grades; no pool truncation, dynamic shrinking or splitting",
+    "source_artifact_reuse": "development-only"
+  },
+  "ordering": [
+    "Freeze the D27 and C27 cohorts, schema-4 protocol, exact source/prompt/assignment closure, and companion contract before registration.",
+    "Register fresh development and untouched confirmation identities and source closures; do not create admission during static preflight.",
+    "Acquire D27 public pools and source captures once; preserve every failure and terminal outcome.",
+    "Persist fresh blind assessment bindings and exact packets before independent grading; persist validated closure before any task Jev score.",
+    "Seal the complete model-input manifest and publish D27 selector admission only after its registered evidence checks pass.",
+    "Run the registered provider schedule once, archive before parsing, and use the original parser and selector.",
+    "Create equal-budget paired answers and fresh blind assessor packets; grade independently and close outputs before unblinding.",
+    "Evaluate all gates once. Task-use remains the primary outcome; the full mixed-workload ranking gate, navigation, stability, correctness, resources and elapsed limits remain hard requirements. Useful-count loss is diagnostic-only under schema 4.",
+    "Only a complete D27 pass admitted by the independent verifier can authorize already registered untouched C27 confirmation."
+  ],
+  "outstanding_before_registration": [],
+  "pending_phase_materials": [
+    "acquisition permit",
+    "stage-bound protected-capture and source-capture permits",
+    "late task-input and source-capture seals plus blind source/card assignments",
+    "selector input-map admission and per-operation permits",
+    "answer permit and blind answer-assessment assignments",
+    "independent confirmation admission after development passes"
+  ],
+  "phase_limits": {
+    "includes": "stage wall includes construction, serialization, exchange, archival fsync, original parsing/selection, gate calculation, and final decision inventory fsync; post-end closeout receipt fsync is excluded and independently bound",
+    "selector_phase_ms": 1000,
+    "stage_wall_seconds": 28800
+  },
+  "pool_input_mode": "frozen-pool/1",
+  "pool_input_mode_by_stage": {
+    "confirmation": "frozen-pool/1",
+    "development": "frozen-pool/1"
+  },
+  "primary_control": {
+    "current_main_parser": "not substituted for deployed V1",
+    "model": "jev-1.13.0",
+    "provider_configured": true,
+    "ranking_strategy": "presence",
+    "rerank_source_sha256": "93ea486848ccdc7778a0ce49973773402d84fbb2ca1b9a64eaabf5f37da6e078",
+    "scope": "fixed explicit engines; original first-40 query Score path; original V1 parser; untouched deterministic tail",
+    "source_revision": "8f3577d022e2d98fcd405d915b5c3b9b16e899bf",
+    "stable_presence": "diagnostic only; no additional provider calls"
+  },
+  "provider_schedule": {
+    "call_input_maximum_and_reserve": 128000,
+    "call_output_maximum_and_reserve": 32000,
+    "capacity": "remaining reserve must fit before each call; no guaranteed fit assumed from serialized JSON bytes",
+    "concurrency": 1,
+    "historical_ceiling_retained": 44,
+    "max_planned_calls": 39,
+    "navigation_calls_maximum": 5,
+    "readiness": "synthetic W0-first40 and candidate-80, no task-quality credit; after merged qualification/admission and blind reference closure",
+    "readiness_calls": 2,
+    "repeat_rotate_calls": 16,
+    "research_base_calls": 16,
+    "retries": 0,
+    "stage_token_input_maximum": 3000000,
+    "stage_token_output_maximum": 256000,
+    "unknown_usage": "terminal stop"
+  },
+  "quality": {
+    "bands_and_intents": "report each separately as diagnostics; unchanged numeric gates apply to the eight-task mixed workload, independently for A/B references and R1/R2 assessors; no separate size-band or intent qualification is claimed",
+    "bootstrap_95_lower_bound": "strictly positive",
+    "bootstrap_draws": 10000,
+    "bootstrap_seed": 7701,
+    "candidate_complete_pool_permutation_required": true,
+    "candidate_top10_overlap_minimum": 0.8,
+    "exact_navigation_targets_acquired_and_top1_required": 5,
+    "independent_references": [
+      "A",
+      "B"
+    ],
+    "mean_ndcg10_gain_minimum": 0.02,
+    "per_case_delta_minimum": -0.03,
+    "release_claim_scope": "Research-task completion is the primary user outcome. Ranking remains an independent hard quality guard for this registered mixed workload: retain mean nDCG10 gain, positive bootstrap lower bound, per-case floor, and no useful-facet loss. Useful-card count loss is reported as a diagnostic and cannot alone fail schema 4.",
+    "useful_count_role": "diagnostic_only",
+    "useful_facet_loss_allowed": 0,
+    "useful_lead_grade_minimum": 2
+  },
+  "schema": "coverage-first-study-protocol/4",
+  "selector_input_map_schema": "coverage-selector-input-map/2-registered",
+  "selector_input_map_status": "registered",
+  "simulation": "Engine replay and synthetic scenarios verify plumbing only; they supply no ranking quality evidence and cannot replace confirmation cases.",
+  "stage_finalization": {
+    "actual_elapsed": "A source-bound closeout receipt measures stage start through final decision inventory file and directory fsync. Its own fsync is excluded.",
+    "deadline_seconds": 28800,
+    "final_decision": "All unchanged numeric gates are calculated once from closed evidence and the pending lower bound; the non-authoritative decision inventory is durably fsynced before sampling actual elapsed time.",
+    "historical_stages": "Prior terminal stages remain terminal with no new quality credit. This study uses newly acquired D27 and C27 pools and fresh captures, references, clocks, permits, and decisions.",
+    "independent_verifier": "Only a separate verifier may report gates-pass-awaiting-independent-decision, and only when all artifact pins match, every frozen gate is true, and verified actual elapsed is strictly below the unchanged deadline. Any actual elapsed at or above the deadline terminal-invalidates the stage, regardless of the preliminary gate status.",
+    "pending_elapsed": "A source-bound lower-bound sample is fsynced before calculation and supplied to the unchanged stage-wall predicate.",
+    "status": "registered"
+  },
+  "status": "registered",
+  "stop": "one invocation per declared stage; failure or inconclusive result terminates this fixed study; no rescue, retry, tuning, replacement or automatic product implementation; both stages must pass before optional product delivery",
+  "task_use": {
+    "abstention_counts_as_completion": false,
+    "additional_completed_tasks_each_minimum": 2,
+    "bibliographic_only": "useful for discovery when justified; not substantive evidence for factual-answer claims",
+    "candidate_critical_qualification_or_contradiction_omissions_allowed": 0,
+    "candidate_material_unsupported_claims_allowed": 0,
+    "candidate_target_or_version_errors_allowed": 0,
+    "candidate_unearned_completion_assurances_allowed": 0,
+    "critical_evidence": "all checks supported, applicable, delivered and correctly used",
+    "incumbent_completion_loss_allowed": 0,
+    "independent_assessors": [
+      "R1",
+      "R2"
+    ],
+    "paired_completion_bootstrap": "10000 draws, seed7701; descriptive uncertainty, not an additional significance gate",
+    "unknown_or_invalid_required_packet": "inconclusive; never repaired/imputed/averaged away"
+  },
+  "variants": {
+    "canonical_candidate_rotation": "canonical compiler may remove permutation before dispatch; not evidence of robustness to distinct provider-input order",
+    "repeat": "identical frozen request",
+    "rotation": "Candidate: rotate the supplied card array by one while keeping stable card IDs and base incumbent fallback; canonical compilation may remove that permutation. W0: rotate only the fixed first-40 membership, keep the tail fixed, use original positional request IDs and original production fallback for that variant; map output objects to sealed global card IDs.",
+    "task_indices": [
+      1,
+      4,
+      7,
+      8
+    ],
+    "w0_fallback": "Native variant input order, as original production code defines; never substitute candidate fallback policy or select a better variant."
+  }
+}

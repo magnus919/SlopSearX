@@ -1,0 +1,45 @@
+{
+  "schema": "coverage-static-preflight-public-summary/1",
+  "source_revision": "943f0b7ef670b3ffe4a3abb03b2aee54570e6a0c",
+  "qualified_source_closure_sha256": "ddee79982489f275a676eec1f857cb8f0d67720fd3b38f914d33f92218fdebc5",
+  "scientific_provider_dispatches": 0,
+  "stage_invocations": 0,
+  "preflights": [
+    {
+      "stage_kind": "development",
+      "boundary": "runner",
+      "status": "static-preflight-passed",
+      "stage_execution_directories_exist": false
+    },
+    {
+      "stage_kind": "development",
+      "boundary": "issuer",
+      "status": "issuer-static-preflight-passed",
+      "stage_execution_directories_exist": false
+    },
+    {
+      "stage_kind": "confirmation",
+      "boundary": "runner",
+      "status": "static-preflight-passed",
+      "stage_execution_directories_exist": false
+    },
+    {
+      "stage_kind": "confirmation",
+      "boundary": "issuer",
+      "status": "issuer-static-preflight-passed",
+      "stage_execution_directories_exist": false
+    }
+  ],
+  "setup_outcomes": [
+    {
+      "source_revision": "326dc1f05a6dc7a6d0d1406301e0ce58e2b5fb82",
+      "outcome": "static preflight rejected the fresh-input stage map; corrected by PR872",
+      "scientific_provider_dispatches": 0
+    },
+    {
+      "source_revision": "943f0b7ef670b3ffe4a3abb03b2aee54570e6a0c",
+      "outcome": "isolated environment initially omitted required dev extra; synced with uv sync --frozen --extra dev, then all four preflights passed",
+      "scientific_provider_dispatches": 0
+    }
+  ]
+}

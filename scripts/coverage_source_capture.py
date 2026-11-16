@@ -241,8 +241,18 @@ def _validate_protocol(protocol_bytes: bytes) -> tuple[dict[str, object], str]:
     if type(obj) is not dict or obj.get("schema") not in {
         "coverage-first-study-protocol/1",
         "coverage-first-study-protocol/2",
+        "coverage-first-study-protocol/3",
+        "coverage-first-study-protocol/4",
     }:
         raise SourceCaptureError("protocol-schema")
+    if obj.get("schema") == "coverage-first-study-protocol/4":
+        quality = obj.get("quality")
+        if (
+            type(quality) is not dict
+            or quality.get("useful_count_role") != "diagnostic_only"
+            or "useful_count_loss_allowed" in quality
+        ):
+            raise SourceCaptureError("protocol-useful-count-policy-invalid")
     capture = obj.get("capture")
     if type(capture) is not dict or (
         capture.get("context_unicode_characters") != MAX_SOURCE_CHARS

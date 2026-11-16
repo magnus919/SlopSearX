@@ -1,0 +1,53 @@
+{
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "groups": [
+    {
+      "codec": "utf-7",
+      "source": "unicode/utf-7.json.zlib",
+      "source_sha256": "54452e9d49add51279ce05fa0dc523dc96469bcd75a69c7b4b2924a06914b044",
+      "cases": 132354,
+      "file": "unicode-utf-7.json.zlib.strict.zlib",
+      "sha256": "f385130e43b3a8f29bd3ded9803c8fd70361aa69847180a026713615fe97de92",
+      "counts_unicode_valid": [
+        50417,
+        81937
+      ]
+    },
+    {
+      "codec": "raw-unicode-escape",
+      "source": "raw-unicode-escape-source.json",
+      "source_sha256": "63425d0a87921e1a64af7a1e30472f03264d30495c08fcf8c6b95910f53c675d",
+      "cases": 70,
+      "file": "raw-unicode-escape-source.json.strict.zlib",
+      "sha256": "67776ca2ee2b67aaadcddf364930aca36831d200956a854e4f9fc611e3db386b",
+      "counts_unicode_valid": [
+        52,
+        18
+      ]
+    },
+    {
+      "codec": "unicode-escape",
+      "source": "unicode-escape-source.json",
+      "source_sha256": "b707048a3943128a985ef76bddada3ac153d7c75b3b6208200d01a0dde70ea45",
+      "cases": 340,
+      "file": "unicode-escape-source.json.strict.zlib",
+      "sha256": "4e02e9c195188e6b04285a13e9b3edc709ee596ca74dd7acf608be6789aa3780",
+      "counts_unicode_valid": [
+        62,
+        278
+      ]
+    },
+    {
+      "codec": "unicode-escape",
+      "source": "unicode-name-source.json",
+      "source_sha256": "d4af24adcbe1aba41380e983ab29f549178b98df58926c5b2dedad9e53735f66",
+      "cases": 104357,
+      "file": "unicode-name-source.json.strict.zlib",
+      "sha256": "3271039f0c3fc22ce44e6f09e142bcdd7113589a3aa321fe317fac88a4a25454",
+      "counts_unicode_valid": [
+        984,
+        103373
+      ]
+    }
+  ]
+}

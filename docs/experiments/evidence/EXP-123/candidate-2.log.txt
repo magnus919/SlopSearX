@@ -1,0 +1,56 @@
+/private/tmp/slopsearx-daily-20261015/.venv/lib/python3.12/site-packages/pydantic_settings/sources/utils.py:47: IncompleteFieldDefinitionWarning: Field 'lifespan' has an incomplete definition: its annotation contains an unresolved forward reference, so settings sources may fail to correctly resolve its value. Call `model_rebuild()` on the model where the field is defined, once all the referenced types are defined.
+  warnings.warn(
+[10/15/26 09:03:10] INFO     StreamableHTTP       streamable_http_manager.py:143
+                             session manager                                    
+                             started                                            
+                    INFO     HTTP Request: GET                   _client.py:1740
+                             http://127.0.0.1:61113/mcp                         
+                             "HTTP/1.1 401 Unauthorized"                        
+                    INFO     Created new          streamable_http_manager.py:301
+                             transport with                                     
+                             session ID:                                        
+                             12fd57d4da154ee18480                               
+                             4bc94af63d3d                                       
+                    WARNING  MCP startup problem: intent 'images'  server.py:144
+                             has media types matching no enabled                
+                             engines: ['image']                                 
+                    WARNING  MCP startup problem: intent 'videos'  server.py:144
+                             has media types matching no enabled                
+                             engines: ['video']                                 
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:61113/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Received session ID:         streamable_http.py:181
+                             12fd57d4da154ee184804bc94af6                       
+                             3d3d                                               
+                    INFO     Negotiated protocol version: streamable_http.py:193
+                             2025-11-25                                         
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:61113/mcp                         
+                             "HTTP/1.1 202 Accepted"                            
+                    INFO     HTTP Request: GET                   _client.py:1740
+                             http://127.0.0.1:61113/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:61113/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Processing request of type            server.py:733
+                             ListToolsRequest                                   
+                    INFO     Remote gateway connected to          gateway.py:498
+                             http://127.0.0.1:61113/mcp (38 tools               
+                             registered)                                        
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:61113/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     Terminating session:         streamable_http.py:788
+                             12fd57d4da154ee184804bc94af6                       
+                             3d3d                                               
+                    INFO     HTTP Request: DELETE                _client.py:1740
+                             http://127.0.0.1:61113/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     StreamableHTTP       streamable_http_manager.py:147
+                             session manager                                    
+                             shutting down                                      
+[{"delay": 0, "timeout": 1, "elapsed": 0.04725079200579785, "published": true, "error": null, "state_cleared": true, "owners_pending": 0, "initialize_requests": 1}]

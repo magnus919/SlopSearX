@@ -1,0 +1,66 @@
+{
+  "baseline": "3c5936ad5250eb37d32bc9d0fbb79b098bfd63fe",
+  "qualified_source_sha256": "e412b7eadf3b12a52de317a48a5547659bd1ed751636948b6de2efe392dedafb",
+  "raw_receipts": [
+    {
+      "path": "selected-held-writer.stdout.gz.base64.txt",
+      "raw_sha256": "99f3c293c89db5b7d731345f7b4d137187da1743554fda04efacda80edf2b345",
+      "gzip_sha256": "1115fb5640b2fe172bea01165f3826e8af6a8f16805e2ccba8089ec10cba7c34",
+      "encoding": "base64(gzip(raw))",
+      "encoded_sha256": "6bb55209a4fb4587ba2b506faaa4187bd0adcb0375990fe5cd78b559340c8369"
+    },
+    {
+      "path": "selected-held-writer.stderr.gz.base64.txt",
+      "raw_sha256": "db52ab7d762ec3a8302329ccaefc23294541110d9e1744fe064bad5bb50709ea",
+      "gzip_sha256": "62f24e166008387f95c247c9e230edce914787765fe6b27750619c06cadac630",
+      "encoding": "base64(gzip(raw))",
+      "encoded_sha256": "14696182eff503b6139b0e754314e078e6e7a20662be8ac92ccbc87482881d1f"
+    },
+    {
+      "path": "candidate-full-lib.stdout.gz.base64.txt",
+      "raw_sha256": "5ca3a477d00b6cb55879a00081c140b6b6dba1b198ba5a8b85e4155f7befa65e",
+      "gzip_sha256": "840a4d013840d2742ee70cb94105fd724881d10b404a6444762c486083f90af1",
+      "encoding": "base64(gzip(raw))",
+      "encoded_sha256": "c5d3090001f859f7e703213c8bacde7d348f096b07c57d02b4c1e0597930adce"
+    },
+    {
+      "path": "candidate-full-lib.stderr.gz.base64.txt",
+      "raw_sha256": "37585501fb00fd89c286c0a5c9ae0ff4444a8acbeb3fdab8d62c7f9a1872cd07",
+      "gzip_sha256": "f4b782d3ed31c594ef61e29bd95e13914471fb3fc8b3348e1cca60be95cbda1f",
+      "encoding": "base64(gzip(raw))",
+      "encoded_sha256": "2bf321614b7c4b7baed9443cdc02772b2cc52d62ceb536432c32ae2521d5e760"
+    },
+    {
+      "path": "candidate-full-lib-attempt2.stdout.gz.base64.txt",
+      "raw_sha256": "33760dd01177a1e9f290ce10867ff1f83d0bb418b3a9c02b64f8bc2729f29baa",
+      "gzip_sha256": "d52d525daba664f99190fe0543cb7defa8314a7335c501253c8da07e237237b4",
+      "encoding": "base64(gzip(raw))",
+      "encoded_sha256": "e3a07fd4bd0b537d6b256eb3846d4e1acf838a888f7013cf4075861bf21347b5"
+    },
+    {
+      "path": "candidate-full-lib-attempt2.stderr.gz.base64.txt",
+      "raw_sha256": "01e13450d32d1473d5a9716f9349035bd21ce63352d3e7007ba2dbc6a1cd7ede",
+      "gzip_sha256": "47259c094911f1d1ba33cd2d5cff893fe750f4509673082a552e7438225bf236",
+      "encoding": "base64(gzip(raw))",
+      "encoded_sha256": "704b48c6889b0d907f9177a57df48cb09b7bde7fc5742bae7f6942306493e8ce"
+    },
+    {
+      "path": "attempt2-prerequisite-workspace-all-target-build.stderr.gz.base64.txt",
+      "raw_sha256": "3feac00b57845334eae59a45bbf015abd68dbeee8d4bbdd9b768d73d5be2c0de",
+      "gzip_sha256": "d2306c80817f3090e1ea27fdc1f8043d09589858765eb413be070c246014ce4b",
+      "encoding": "base64(gzip(raw))",
+      "encoded_sha256": "bc91e72070c065fc20dfa533c56333c9c3bcf21f94c686d782b3a011cb7f7e87"
+    },
+    {
+      "path": "attempt2-workspace-all-target-clippy.stderr.gz.base64.txt",
+      "raw_sha256": "134e21cbd1f5846bdf6a7eb76a9001e74eae2d2527d1774809f79034088a4aa5",
+      "gzip_sha256": "6142d5d5cc5cdd664d4c2d9002a6b2be926986808a4ee88c447dfd0318c253f2",
+      "encoding": "base64(gzip(raw))",
+      "encoded_sha256": "e17c002da4db391f00f6cc5d7e5b63eb98110110550d96d69c5160f14cf718c4"
+    }
+  ],
+  "qualification": "Darwin positive only; fresh Linux CI required",
+  "historical_ARM_job": "https://github.com/magnus919/SlopSearX/actions/runs/39060165746/job/117476307035",
+  "historical_ETXTBSY_cause": "unknown; controlled writable descriptor is not historical FD tracing",
+  "encoding_note": "Decode Base64 text, then gzip, to recover byte-exact original receipts. Existing compressed and raw hashes are unchanged."
+}

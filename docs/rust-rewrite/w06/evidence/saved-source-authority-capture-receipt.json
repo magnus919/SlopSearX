@@ -1,0 +1,53 @@
+{
+  "plan_id": "W06",
+  "producer_sha256": "b40e1f04bb1101b64d807721d1ae64c25cf99299595347e3d32d7a434cfe0794",
+  "producer_copy": "docs/rust-rewrite/w06/evidence/saved-source-authority-producer.source.txt",
+  "source_sha256": "7b3f1375ee478af9fbb7aaa8e975390ee5c5427e8beab976b41955a54922f079",
+  "repeated_capture_identical": true,
+  "provider_calls": 0,
+  "retirement_owner": "G08",
+  "native_runtime_dependency": false,
+  "mandatory_gate_dependency": false,
+  "commands": [
+    {
+      "argv": [
+        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+        "/private/tmp/w06-saved-source-authority-capture.py"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"cases\": 13, \"sha256\": \"7b3f1375ee478af9fbb7aaa8e975390ee5c5427e8beab976b41955a54922f079\"}\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+        "-O",
+        "/private/tmp/w06-saved-source-authority-capture.py"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"cases\": 13, \"sha256\": \"7b3f1375ee478af9fbb7aaa8e975390ee5c5427e8beab976b41955a54922f079\"}\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+        "-O",
+        "/private/tmp/w06-saved-source-authority-capture.py"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"cases\": 13, \"sha256\": \"7b3f1375ee478af9fbb7aaa8e975390ee5c5427e8beab976b41955a54922f079\"}\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+        "-O",
+        "/private/tmp/w06-saved-source-authority-capture.py",
+        "--wrong-source-hash"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/private/tmp/w06-saved-source-authority-capture.py\", line 13, in <module>\n    raise RuntimeError('source drift: ' + path)\nRuntimeError: source drift: slopsearx/mcp/composition.py\n"
+    }
+  ]
+}

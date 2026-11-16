@@ -1,0 +1,269 @@
+{
+  "schema": "slopsearx.a08-f08.default-user-agent-successor.v1",
+  "status": "SOURCE_ONLY_NATIVE_PENDING",
+  "historical_main": "d5615ace90b827f31789ccf04c72aaad4516e8f7",
+  "published_A06": "6e4ed9e90c59f304f28206ec0bb61b3a2b365938",
+  "auto_union_tree": "40a4a69448dec27b94a03b7ae347ffec28ccfd7e",
+  "fixed_sources": [
+    {
+      "path": "docs/rust-rewrite/a08/coverage.json",
+      "sha256": "4bd65113eded80d605b3fede32f9cb5e97d12b47c4b1756314ed28757f653856",
+      "bytes": 47496,
+      "mode": 420
+    },
+    {
+      "path": "docs/rust-rewrite/a08/header-differences.json",
+      "sha256": "a1034125c9ff8047e85559537a29be85872d9c04a5ee057fa21739e1d71904f8",
+      "bytes": 92194,
+      "mode": 420
+    },
+    {
+      "path": "docs/rust-rewrite/f08/coverage.json",
+      "sha256": "f37c387f06fd266870a679ba7fb1e92439c5c1ba8f4a0891a4f14871ba1f9634",
+      "bytes": 2594,
+      "mode": 420
+    },
+    {
+      "path": "docs/rust-rewrite/a08/source.json",
+      "sha256": "a16bcf6bde89876645cb76f4a7a68c7d0cd96795ead4e77f971190184f6b8539",
+      "bytes": 505466,
+      "mode": 420
+    },
+    {
+      "path": "docs/rust-rewrite/a08/regressions.json",
+      "sha256": "d4fc84fd63b856a3a7f8559a8a8a6565e171383a79294788f72c660aa7fe2d15",
+      "bytes": 98752,
+      "mode": 420
+    },
+    {
+      "path": "docs/rust-rewrite/a08/differences.json",
+      "sha256": "be4b89f76f48126fc7316684ce45cd5b8ad232036840e37dd602aac527029c34",
+      "bytes": 65486,
+      "mode": 420
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "d7383efcb512764e820ac778a5fed9b990fbf734ce75d525e077e7e905587dd3",
+      "bytes": 1984,
+      "mode": 420
+    },
+    {
+      "path": "crates/ssx-infra/Cargo.toml",
+      "sha256": "349c3dc8db94a995d7eef27acbe8b5eeccb9f6cff1ccdd3e8308f638d301f51e",
+      "bytes": 1254,
+      "mode": 420
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/edgar.rs",
+      "sha256": "b5646b3433ff302293162fbf31f8f0ffa58570697d7f5f35e182df4efe597eb5",
+      "bytes": 11845,
+      "mode": 420
+    },
+    {
+      "path": "docs/rust-rewrite/a07/source-amendments/pure-a06-composition-v1.json",
+      "sha256": "58cfde8aa2635d2150792a386c2f0b4570ca544d869967c6c2f80bf9e1c3a0ec",
+      "bytes": 64752,
+      "mode": 420
+    },
+    {
+      "path": "crates/ssx-infra/tests/support/default_ca_environment.rs",
+      "sha256": "00aee0178f3f111449e5a6e99f495538a1eafa29ec95ced7d8343a3a8ee1108c",
+      "bytes": 959,
+      "mode": 420
+    }
+  ],
+  "transitions": [
+    {
+      "before": {
+        "path": "crates/ssx-infra/tests/a08_factories.rs",
+        "sha256": "54dd24f4d93bf509ba7a8d6ce83b811e572ed385cabea4bfcc6dd4860301160a",
+        "bytes": 28737,
+        "mode": 420
+      },
+      "archive": {
+        "path": "docs/rust-rewrite/a08/source-amendments/default-user-agent-v1/d561/crates/ssx-infra/tests/a08_factories.rs.frozen",
+        "sha256": "54dd24f4d93bf509ba7a8d6ce83b811e572ed385cabea4bfcc6dd4860301160a",
+        "bytes": 28737,
+        "mode": 420
+      },
+      "after": {
+        "path": "crates/ssx-infra/tests/a08_factories.rs",
+        "sha256": "329ff395b82e91eed0a0ab384367bbb745e1011812584391ce03f44210c24a92",
+        "bytes": 28889,
+        "mode": 420
+      },
+      "edits": [
+        {
+          "at": 7851,
+          "remove_utf8": "                    !String::from_utf8_lossy(&data[..count])\n",
+          "insert_utf8": "                    String::from_utf8_lossy(&data[..count])\n"
+        },
+        {
+          "at": 7958,
+          "remove_utf8": "                        .contains(\"user-agent:\")\n",
+          "insert_utf8": "                        .contains(&format!(\n                            \"user-agent: {}\",\n                            ssx_infra::http::DEFAULT_USER_AGENT.to_ascii_lowercase()\n                        ))\n"
+        }
+      ]
+    },
+    {
+      "before": {
+        "path": "crates/ssx-infra/tests/http.rs",
+        "sha256": "e0f9fc2d7700e9069e18ad80d74e0e349d9901528c76137e4c3fe02ed297144a",
+        "bytes": 44907,
+        "mode": 420
+      },
+      "archive": {
+        "path": "docs/rust-rewrite/a08/source-amendments/default-user-agent-v1/d561/crates/ssx-infra/tests/http.rs.frozen",
+        "sha256": "e0f9fc2d7700e9069e18ad80d74e0e349d9901528c76137e4c3fe02ed297144a",
+        "bytes": 44907,
+        "mode": 420
+      },
+      "after": {
+        "path": "crates/ssx-infra/tests/http.rs",
+        "sha256": "df7664be092158f461decd98300907698ad67d240c4c4fe39eba8d00e4b126c1",
+        "bytes": 48900,
+        "mode": 420
+      },
+      "edits": [
+        {
+          "at": 13834,
+          "remove_utf8": "                    Request::get(\"https://fixture.invalid/\").unwrap(),\n",
+          "insert_utf8": "                    native_expected(Request::get(\"https://fixture.invalid/\").unwrap()),\n"
+        },
+        {
+          "at": 15184,
+          "remove_utf8": "        Request::get(\"https://fixture.invalid/\").unwrap(),\n",
+          "insert_utf8": "        native_expected(Request::get(\"https://fixture.invalid/\").unwrap()),\n"
+        },
+        {
+          "at": 17208,
+          "remove_utf8": "                request.clone(),\n",
+          "insert_utf8": "                native_expected(request.clone()),\n"
+        },
+        {
+          "at": 17345,
+          "remove_utf8": "                second,\n",
+          "insert_utf8": "                native_expected(second),\n"
+        },
+        {
+          "at": 18229,
+          "remove_utf8": "        Request::get(\"https://fixture.invalid/\").unwrap(),\n",
+          "insert_utf8": "        native_expected(Request::get(\"https://fixture.invalid/\").unwrap()),\n"
+        },
+        {
+          "at": 31475,
+          "remove_utf8": "            expected,\n",
+          "insert_utf8": "            native_expected(expected),\n"
+        },
+        {
+          "at": 38673,
+          "remove_utf8": "            Request::get(\"https://fixture.invalid/\").unwrap(),\n",
+          "insert_utf8": "            native_expected(Request::get(\"https://fixture.invalid/\").unwrap()),\n"
+        },
+        {
+          "at": 44907,
+          "remove_utf8": "",
+          "insert_utf8": "\n// Native replay templates declare the reviewed shared default explicitly;\n// Replay itself still compares complete headers without normalizing expectations.\nfn native_expected(mut request: Request) -> Request {\n    if !request.headers.contains_key(header::USER_AGENT) {\n        request.headers.insert(\n            header::USER_AGENT,\n            HeaderValue::from_static(DEFAULT_USER_AGENT),\n        );\n    }\n    request\n}\n\n#[tokio::test]\nasync fn native_user_agent_socket_precedence_redirect_and_session_identity_isolation() {\n    if default_ca_environment(\n        \"native_user_agent_socket_precedence_redirect_and_session_identity_isolation\",\n    ) {\n        return;\n    }\n    assert_eq!(\n        DEFAULT_USER_AGENT,\n        concat!(\n            \"SlopSearX/\",\n            env!(\"CARGO_PKG_VERSION\"),\n            \" (meta search engine; agent-native)\"\n        )\n    );\n    let s = server().await;\n    let http = AdapterHttp::default();\n    let url = format!(\"{}/ok\", s.url);\n    let mut first = session(&http);\n    first.execute(Request::get(&url).unwrap()).await.unwrap();\n    first.headers.insert(\n        header::USER_AGENT,\n        HeaderValue::from_static(\"session-agent\"),\n    );\n    first.headers.insert(\n        header::AUTHORIZATION,\n        HeaderValue::from_static(\"Bearer tenant-one\"),\n    );\n    let mut request = Request::get(&url).unwrap();\n    request.headers.insert(\n        header::USER_AGENT,\n        HeaderValue::from_static(\"request-agent\"),\n    );\n    first.execute(request).await.unwrap();\n    first.execute(Request::get(&url).unwrap()).await.unwrap();\n    drop(first);\n    session(&http)\n        .execute(Request::get(&url).unwrap())\n        .await\n        .unwrap();\n    let mut redirect = http\n        .session(\n            Options {\n                trust_env: false,\n                follow_redirects: true,\n                ..Default::default()\n            },\n            tokio::time::Instant::now() + Duration::from_secs(5),\n            Cancellation::default(),\n        )\n        .unwrap();\n    redirect.headers.insert(\n        header::USER_AGENT,\n        HeaderValue::from_static(\"session-redirect\"),\n    );\n    redirect.headers.insert(\n        header::AUTHORIZATION,\n        HeaderValue::from_static(\"Bearer route\"),\n    );\n    let mut request = Request::get(&format!(\"{}/redirect307\", s.url)).unwrap();\n    request.headers.insert(\n        header::USER_AGENT,\n        HeaderValue::from_static(\"request-redirect\"),\n    );\n    redirect.execute(request).await.unwrap();\n    drop(redirect);\n    session(&http)\n        .execute(Request::get(&url).unwrap())\n        .await\n        .unwrap();\n    {\n        let seen = s.seen.lock().unwrap();\n        assert_eq!(seen.len(), 7);\n        let value = |at: usize, name: &str| {\n            seen[at].lines().find_map(|line| {\n                line.split_once(':')\n                    .filter(|(n, _)| n.eq_ignore_ascii_case(name))\n                    .map(|(_, v)| v.trim().to_owned())\n            })\n        };\n        for at in [0, 3, 6] {\n            assert_eq!(value(at, \"user-agent\").as_deref(), Some(DEFAULT_USER_AGENT));\n            assert!(value(at, \"authorization\").is_none());\n            assert!(value(at, \"cookie\").is_none());\n        }\n        assert_eq!(value(1, \"user-agent\").as_deref(), Some(\"request-agent\"));\n        assert_eq!(value(2, \"user-agent\").as_deref(), Some(\"session-agent\"));\n        for at in [1, 2] {\n            assert_eq!(\n                value(at, \"authorization\").as_deref(),\n                Some(\"Bearer tenant-one\")\n            );\n            assert_eq!(value(at, \"cookie\").as_deref(), Some(\"session=one\"));\n        }\n        for at in [4, 5] {\n            assert_eq!(value(at, \"user-agent\").as_deref(), Some(\"request-redirect\"));\n            assert_eq!(value(at, \"authorization\").as_deref(), Some(\"Bearer route\"));\n        }\n    }\n    http.shutdown_and_wait().await;\n}\n"
+        }
+      ]
+    },
+    {
+      "before": {
+        "path": "crates/ssx-infra/tests/a08_regulatory.rs",
+        "sha256": "8c7e0b4ada32143817ff19b2c755415a0dedcff41d494b7892cfd7cd5130e260",
+        "bytes": 12392,
+        "mode": 420
+      },
+      "archive": {
+        "path": "docs/rust-rewrite/a08/source-amendments/default-user-agent-v1/d561/crates/ssx-infra/tests/a08_regulatory.rs.frozen",
+        "sha256": "8c7e0b4ada32143817ff19b2c755415a0dedcff41d494b7892cfd7cd5130e260",
+        "bytes": 12392,
+        "mode": 420
+      },
+      "after": {
+        "path": "crates/ssx-infra/tests/a08_regulatory.rs",
+        "sha256": "64ca51a260c2d106e63f65aae06c4a912050ab2d8814958b69816ffae4e81254",
+        "bytes": 12831,
+        "mode": 420
+      },
+      "edits": [
+        {
+          "at": 441,
+          "remove_utf8": "const HEADER_DIFFERENCES: &str =\n    include_str!(\"../../../docs/rust-rewrite/a08/header-differences.json\");\n",
+          "insert_utf8": "const HEADER_DIFFERENCES: &str = include_str!(\n    \"../../../docs/rust-rewrite/a08/source-amendments/default-user-agent-effective-v1.json\"\n);\n"
+        },
+        {
+          "at": 10612,
+          "remove_utf8": "            for request in &mut expected_requests {\n                request[\"headers\"]\n                    .as_object_mut()\n                    .unwrap()\n                    .remove(\"user-agent\");\n",
+          "insert_utf8": "            // Both identities were asserted above; derive the explicit native\n            // request view without changing captured source/native observations.\n            for (request, native) in expected_requests\n                .iter_mut()\n                .zip(header[\"native_values\"].as_array().unwrap())\n            {\n                let headers = request[\"headers\"].as_object_mut().unwrap();\n                if native.is_null() {\n                    headers.remove(\"user-agent\");\n                } else {\n                    headers.insert(\"user-agent\".into(), native.clone());\n                }\n"
+        }
+      ]
+    },
+    {
+      "before": {
+        "path": "docs/rust-rewrite/a08/README.md",
+        "sha256": "73452b2a6e66aa62958d5b7baa48b18136bca9b81b6e0330e76d482724b1ece7",
+        "bytes": 7231,
+        "mode": 420
+      },
+      "archive": {
+        "path": "docs/rust-rewrite/a08/source-amendments/default-user-agent-v1/d561/docs/rust-rewrite/a08/README.md.frozen",
+        "sha256": "73452b2a6e66aa62958d5b7baa48b18136bca9b81b6e0330e76d482724b1ece7",
+        "bytes": 7231,
+        "mode": 420
+      },
+      "after": {
+        "path": "docs/rust-rewrite/a08/README.md",
+        "sha256": "6d183ec7f2d5852d9b963dbed8eb242a45ac4d60954998c6d69a34ff2c0495fd",
+        "bytes": 7591,
+        "mode": 420
+      },
+      "edits": [
+        {
+          "at": 2204,
+          "remove_utf8": "differences are frozen in `header-differences.json`; real native loopback\nconfirms absence for FDA/FRED/Oyez. No full transport-header parity is claimed. Only integer versus f64 encoding of a\n",
+          "insert_utf8": "differences remain frozen in `header-differences.json`. Prior source-bound\nnative loopback observations of absence for FDA/FRED/Oyez remain historical.\nThe A06 versioned default User-Agent is a candidate successor; validation of\nthe combined source is pending. Its explicit effective-current header artifact\n(`source-amendments/default-user-agent-effective-v1.json`) retains the frozen\nrow identities and source values, while EDGAR's authored override remains\nrequired. No full transport-header parity is claimed. Only integer versus f64 encoding of a\n"
+        }
+      ]
+    }
+  ],
+  "effective_headers": {
+    "path": "docs/rust-rewrite/a08/source-amendments/default-user-agent-effective-v1.json",
+    "sha256": "4f8d8717336afdc116f41f146828a7b0c1aeb2b7b6c38ea2a0df1bf5adadd947",
+    "bytes": 124127,
+    "mode": 420
+  },
+  "http_transition_reference": {
+    "capsule_path": "docs/rust-rewrite/a07/source-amendments/pure-a06-composition-v1.json",
+    "capsule_sha256": "58cfde8aa2635d2150792a386c2f0b4570ca544d869967c6c2f80bf9e1c3a0ec",
+    "transition_index": 0,
+    "before": {
+      "path": "crates/ssx-infra/src/http.rs",
+      "bytes": 54774,
+      "sha256": "c5116d9a0081a0497a12643440053f001b6d68b48e9b4bf8c5feabf81eed5d10",
+      "mode": 420
+    },
+    "archive": {
+      "path": "docs/rust-rewrite/a07/source-amendments/pure-a06-v1/d561/crates/ssx-infra/src/http.rs.frozen",
+      "bytes": 54774,
+      "sha256": "c5116d9a0081a0497a12643440053f001b6d68b48e9b4bf8c5feabf81eed5d10",
+      "mode": 420
+    },
+    "after": {
+      "path": "crates/ssx-infra/src/http.rs",
+      "bytes": 92689,
+      "sha256": "7b97e19cca0dca7913ec5562428663d4af6c1b670c299497f5703fd6bb44ce75",
+      "mode": 420
+    }
+  },
+  "f08_added_test": "native_user_agent_socket_precedence_redirect_and_session_identity_isolation",
+  "scope": {
+    "header": "user-agent",
+    "original_row_count": 232,
+    "request_values": 240,
+    "native_default": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+    "edgar_override": "SlopSearX/0.1.0 (meta search engine; research)",
+    "unchanged": "All original row IDs/source_values, native case identities, non-UA request properties, provider results, TLS/proxy/auth/redirect/cookie isolation assertions remain; F08 effective test inventory appends exactly one UA socket/precedence/isolation control to frozen24; unit4 unchanged."
+  },
+  "current_manifest_origin": "Exact pure auto-union tree40a4a694; manifests bind the unchanged workspace package version0.1.0 for UA construction. Existing A06 vendor/source XML dependency changes are separate reviewed composition, not an effect authorized by this header successor."
+}

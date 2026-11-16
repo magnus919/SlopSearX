@@ -1,0 +1,54 @@
+{
+  "plan_id": "W06",
+  "review_id": "W06-R04",
+  "producer_sha256": "4b3a5e6fb340d3be8f71fab2b45904092482928c8daf6c81d102948aa68d5624",
+  "producer_copy": "docs/rust-rewrite/w06/evidence/huge-integer-truthiness-producer.source.txt",
+  "source_sha256": "4bce3df0415a2c49b3df348bf997462864af20efa984d5ca574650ee024c8487",
+  "repeated_capture_identical": true,
+  "provider_calls": 0,
+  "retirement_owner": "G08",
+  "native_runtime_dependency": false,
+  "mandatory_gate_dependency": false,
+  "commands": [
+    {
+      "argv": [
+        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+        "/private/tmp/w06-huge-integer-truthiness-capture.py"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"cases\": 16, \"sha256\": \"4bce3df0415a2c49b3df348bf997462864af20efa984d5ca574650ee024c8487\"}\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+        "-O",
+        "/private/tmp/w06-huge-integer-truthiness-capture.py"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"cases\": 16, \"sha256\": \"4bce3df0415a2c49b3df348bf997462864af20efa984d5ca574650ee024c8487\"}\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+        "-O",
+        "/private/tmp/w06-huge-integer-truthiness-capture.py"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"cases\": 16, \"sha256\": \"4bce3df0415a2c49b3df348bf997462864af20efa984d5ca574650ee024c8487\"}\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+        "-O",
+        "/private/tmp/w06-huge-integer-truthiness-capture.py",
+        "--wrong-source-hash"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/private/tmp/w06-huge-integer-truthiness-capture.py\", line 12, in <module>\n    raise RuntimeError('source drift: ' + path)\nRuntimeError: source drift: slopsearx/mcp/staged_tools.py\n"
+    }
+  ]
+}

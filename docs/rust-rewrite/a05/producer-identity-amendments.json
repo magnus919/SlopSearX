@@ -1,0 +1,2368 @@
+{
+  "schema_version": 1,
+  "original_capture_source_commit": "db1c6c20fa46a324ef1b31b630f203439c026b39",
+  "scope": "Current AST-equivalent maintenance identities; historical actual capture/generation manifests remain original and unchanged. Ordered Import split is the sole AST normalization. No provider/source recapture claim.",
+  "ruff_version": "0.15.17",
+  "producers": [
+    {
+      "path": "docs/rust-rewrite/a05/oracle/algorithm_strict_source.py",
+      "before_sha256": "ad378feb6e7cf2a1ac52f4b1273eea47b375a8baf5ae7ef0ed4bdd9e4026c47b",
+      "after_sha256": "c16d209dd46d10e9fc7bcaa24dcdfe625998ea915addf14cbfa798f808294651",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {
+        "3": [
+          "I001"
+        ]
+      },
+      "original_git_blob": "9888863134e8cfbcf3af7646e35858b6bf955dcf",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/algorithm_strict_source.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Actual strict outcomes over existing complete Unicode/escape source vectors.; imports: argparse,hashlib,json,sys,zlib,warnings,pathlib; codec call examples: ('\\\\N{' + r[0] + '}').encode()",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "ad378feb6e7cf2a1ac52f4b1273eea47b375a8baf5ae7ef0ed4bdd9e4026c47b",
+        "bytes": 2139,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "hashlib",
+            "json",
+            "sys",
+            "zlib",
+            "warnings",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "a.output / 'manifest.json'",
+            "a.output / file"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/alias_only_generate.py",
+      "before_sha256": "f1c12fb7fe7026f87cc2091e8ec844b0cdcdb1134afeaecd3355c23fa6a76b93",
+      "after_sha256": "6a2eb57b1a959e1cabbcc71eac358b84466bbdf974babb6780b8af8c5c517185",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {},
+      "original_git_blob": "bb7322fa92a638914e9f0ef9909b301041ed0482",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/alias_only_generate.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Source registry aliases only; separate from direct codec-module names.; imports: argparse,ast,hashlib,json,pathlib; codec call examples: s.encode()",
+        "reason": "offline derivation or verifier tooling; native runtime and mandatory gates do not execute Python.",
+        "sha256": "f1c12fb7fe7026f87cc2091e8ec844b0cdcdb1134afeaecd3355c23fa6a76b93",
+        "bytes": 1914,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "ast",
+            "hashlib",
+            "json",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "a.output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/bound_inventory.py",
+      "before_sha256": "2bd1e33902c1d15243973e9b5acad51baad9a9242269545a8ba5fcaa422b6948",
+      "after_sha256": "6c8fa67953e526880c32f607282046e7ccdd98ce3c9f6986434eefbfd1d40a8e",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {},
+      "original_git_blob": "8aa4de5797cf26faeb296787d9c70071b6c77d62",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/bound_inventory.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Offline implementation/table bound inventory; no decoder/oracle backend.; imports: argparse,hashlib,json,re,struct,pathlib",
+        "reason": "offline derivation or verifier tooling; native runtime and mandatory gates do not execute Python.",
+        "sha256": "2bd1e33902c1d15243973e9b5acad51baad9a9242269545a8ba5fcaa422b6948",
+        "bytes": 4799,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "hashlib",
+            "json",
+            "re",
+            "struct",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "args.output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/cjk_strict_error_records.py",
+      "before_sha256": "04919ce45ada073c2eb87de653fc26a67d71f97a5c6de6bd313fc4817e1954c2",
+      "after_sha256": "f86ea2edbe0260316a5b61d2b6a1fd6fcaa46d10734d4bc52e67a70d06a2446e",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {},
+      "original_git_blob": "868aa37dae843e810eccbbd08768b05bb09349e2",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/cjk_strict_error_records.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Explicit CJK strict error keys from validity bits and approved native record keys.; imports: argparse,hashlib,json,struct,pathlib",
+        "reason": "offline derivation or verifier tooling; native runtime and mandatory gates do not execute Python.",
+        "sha256": "04919ce45ada073c2eb87de653fc26a67d71f97a5c6de6bd313fc4817e1954c2",
+        "bytes": 4413,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "hashlib",
+            "json",
+            "struct",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "a.output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/cjk_strict_validity_source.py",
+      "before_sha256": "468bd56d07d86bfc23fd96c7cef897755276fd682f2fbde3e9906dd39e069a65",
+      "after_sha256": "f3cbc74c0b41f337d12ebae278871117b7fc66512d08a59b43e71aea7fdd97c9",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {},
+      "original_git_blob": "f489e95816a0a31487ba20c37903c3cbf5aac151",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/cjk_strict_validity_source.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Actual source strict validity only; never emits HKSCS Unicode values.; imports: argparse,hashlib,json,sys,pathlib",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "468bd56d07d86bfc23fd96c7cef897755276fd682f2fbde3e9906dd39e069a65",
+        "bytes": 1230,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "hashlib",
+            "json",
+            "sys",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "a.output / 'manifest.json'",
+            "out"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/doublebyte.py",
+      "before_sha256": "da28054ecb3e14ca1c872226e8e32948c690ddc5d21cb1ad0373886db924fe0c",
+      "after_sha256": "760ec03f9e2636d2ad49bd5f9e6077779e827f551cc24bea79f1d7703a1d64ca",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {
+        "1": [
+          "I001"
+        ]
+      },
+      "original_git_blob": "f8d02eca879f424d60e715e044b250f8a6486dc0",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/doublebyte.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "imports: argparse,struct,json,random,pathlib; codec call examples: raw.decode(codec, 'replace'); bytes([byte]).decode(codec, 'strict')",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "da28054ecb3e14ca1c872226e8e32948c690ddc5d21cb1ad0373886db924fe0c",
+        "bytes": 2766,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "struct",
+            "json",
+            "random",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "args.output / 'manifest.json'",
+            "args.output / (codec + '.source-pairs.bin')",
+            "args.output / (codec + '.source-streams.json')",
+            "args.output / (codec + '.triples.bin')",
+            "args.output / (codec + '.source-triples.bin')",
+            "args.output / (codec + '.single.bin')",
+            "args.output / (codec + '.pairs.bin')"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/euckr_vectors.py",
+      "before_sha256": "4054573c20b9620013fa24de14260bf82da7e7d1fe55717d6442eaa11ec67265",
+      "after_sha256": "645566354a554c3ad1370ad4b6d98d55fe638130e3f4c337dd3faa6b8c2c4df0",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {
+        "1": [
+          "I001"
+        ],
+        "39": [
+          "E741"
+        ]
+      },
+      "original_git_blob": "1ccab8574c7e9ad8a827017d385083f6e98a9969",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/euckr_vectors.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "imports: json,argparse,pathlib; codec call examples: raw.decode('euc_kr', 'replace')",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "4054573c20b9620013fa24de14260bf82da7e7d1fe55717d6442eaa11ec67265",
+        "bytes": 847,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "json",
+            "argparse",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "args.output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/export.py",
+      "before_sha256": "358e00b97469e58b9ab4b7ef3b2100f9a4626a2763effc865c878e4e8a3d3efd",
+      "after_sha256": "d1107e9c145ef3c8c76f834f9b3bbae9be2c3f2ae8f69855e31749670a60d29b",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {},
+      "original_git_blob": "06109e9e56a53086821596d42f2f960d9ee07037",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/export.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_retire_before_backend_removal",
+        "evidence": "A05 offline CPython3.14.7/httpx0.28.1/lxml6.1.1 complete HTML adapter outcomes and outbound exchanges; mandatory native gates consume frozen JSON only.",
+        "reason": "No provider calls, runtime or optional-client exception; G08 retires executable Python and retains historical JSON.",
+        "introduced_after_baseline": "01876639fb8d87123f12293c02821981cff3f8b9"
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/gb18030_vectors.py",
+      "before_sha256": "1667824de7890adb02dfc281a8e07ea2e29a10a9f8fa33dd10d4ae106b1692e1",
+      "after_sha256": "d1354809dcba79a39e50cf8883285a5d2214b95f8bf20c5c18b146f46a614620",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {},
+      "original_git_blob": "fe160823f2fa6fd3b70565aa49ccd9bae1ea1cea",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/gb18030_vectors.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "imports: argparse,struct,zlib,pathlib; codec call examples: bytes([a, b, c, d]).decode('gb18030', 'replace')",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "1667824de7890adb02dfc281a8e07ea2e29a10a9f8fa33dd10d4ae106b1692e1",
+        "bytes": 667,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "struct",
+            "zlib",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "args.output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/hkscs_independent.py",
+      "before_sha256": "af1ad394bc146d2dc3fb5f2e6fc892e1ae6b366231d977f2c6b630bcac803d15",
+      "after_sha256": "d7f7bed42a008ff14a72ecdc35853aa81567ee0f7dbe5d949b966abdbdb2e93a",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {},
+      "original_git_blob": "dfb6656ea921c182e747c678b17ca6fe76e1de98",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/hkscs_independent.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Offline native mapping derivation; reads only three independently pinned inputs.; imports: argparse,hashlib,re,struct,pathlib",
+        "reason": "offline derivation or verifier tooling; native runtime and mandatory gates do not execute Python.",
+        "sha256": "af1ad394bc146d2dc3fb5f2e6fc892e1ae6b366231d977f2c6b630bcac803d15",
+        "bytes": 2704,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "hashlib",
+            "re",
+            "struct",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "args.output",
+            "args.single_output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/hkscs_validity.py",
+      "before_sha256": "5d661561b682fffb9e030a65be487a181d6f25d8e460d31c1dea7695d9915d95",
+      "after_sha256": "2ff96a7477006ef70c4f150360233580744bae4e09235e975f24672d095a2ccf",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {},
+      "original_git_blob": "dfe81de336dc8946fd881c2dbf380b7221aa597f",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/hkscs_validity.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Temporary source validity-only oracle. Stores no decoded Unicode values.; imports: argparse,pathlib; codec call examples: pair.to_bytes(2, 'big').decode('big5hkscs', 'strict')",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "5d661561b682fffb9e030a65be487a181d6f25d8e460d31c1dea7695d9915d95",
+        "bytes": 512,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "args.output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/http_charset_pipeline.py",
+      "before_sha256": "239a85e704b6a7299d99c304b63acc2e9f194a36f3df6925dba46ad74d77163a",
+      "after_sha256": "b8d9daf9d119b7244a6131a118aa2c28ef0346096a4d924ca186f21943d49f8e",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {},
+      "original_git_blob": "ef69f2de2d42147f83a002c5236ef4e2e4fbc486",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/http_charset_pipeline.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Actual original HTML adapters, offline HTTPX header selection; temporary G08 oracle.; imports argparse,asyncio,hashlib,importlib.util,json,pathlib",
+        "reason": "temporary actual-source migration oracle; never runtime/client/required native gate.",
+        "sha256": "239a85e704b6a7299d99c304b63acc2e9f194a36f3df6925dba46ad74d77163a",
+        "bytes": 4254,
+        "retirement_owner": "G08",
+        "retirement": "Remove executable producer before final backend removal; retain immutable captures, licensed inputs and native successors.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "asyncio",
+            "hashlib",
+            "importlib.util",
+            "json",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/hz_vectors.py",
+      "before_sha256": "f922b8da4290dd6e0b4d5fa74ec1971929e064723e95b73e3a87e12dd72e8564",
+      "after_sha256": "090851b3884bc82ca10000e501378636b62ac46a38d95026f02c7bb0ffc2a6db",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {
+        "1": [
+          "I001"
+        ]
+      },
+      "original_git_blob": "6808b300831c284be2a74407a6f9cba61187fab2",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/hz_vectors.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "imports: json,zlib,argparse,pathlib; codec call examples: json.dumps(rows, separators=(',', ':')).encode(); body.decode('hz', 'replace')",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "f922b8da4290dd6e0b4d5fa74ec1971929e064723e95b73e3a87e12dd72e8564",
+        "bytes": 481,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "json",
+            "zlib",
+            "argparse",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "args.output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/idna_all_points_source.py",
+      "before_sha256": "185897f56c0c986d27db0e18164b5a0b2a82d71cb0a5b45848ca1f65e54f243a",
+      "after_sha256": "5ec01c0800617d8baec3965dd45751af31d3ad741465111d181e5b2cc36cd907",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {},
+      "original_git_blob": "be8e75c82e5ab38d61274ef3e9b9d548cfe94af3",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/idna_all_points_source.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Temporary actual source ACE/strict outcome corpus; no native derivation input.; imports: argparse,encodings.idna,encodings.punycode,hashlib,json,struct,sys,zlib,pathlib; codec call examples: chr(c).encode('punycode'); label.decode('idna', 'strict')",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "185897f56c0c986d27db0e18164b5a0b2a82d71cb0a5b45848ca1f65e54f243a",
+        "bytes": 1135,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "encodings.idna",
+            "encodings.punycode",
+            "hashlib",
+            "json",
+            "struct",
+            "sys",
+            "zlib",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "a.output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/idna_allocation_bound.py",
+      "before_sha256": "10e459ad6b5f5a1a08053dadf57578dd173656315f234fbc47b021ae424765da",
+      "after_sha256": "781212d14fe3d5de2f5b7e40bb43ad97ea7f6386a4db6973488595703cf7c8c8",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {},
+      "original_git_blob": "b5a30596578e8a3e67a1c976caf72396a9b5e5fc",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/idna_allocation_bound.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Derive private IDNA scratch sequence bounds from the reviewed data only.; imports argparse,hashlib,json,pathlib",
+        "reason": "offline derivation generator; never runtime/client/required native gate.",
+        "sha256": "10e459ad6b5f5a1a08053dadf57578dd173656315f234fbc47b021ae424765da",
+        "bytes": 1655,
+        "retirement_owner": "G08",
+        "retirement": "Remove executable producer before final backend removal; retain immutable captures, licensed inputs and native successors.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "hashlib",
+            "json",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "args.output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/idna_direct_source.py",
+      "before_sha256": "3bc824ea75ba233195ad64d428da0a00b34833736dd93b51cef1d8016982f164",
+      "after_sha256": "e5176f768755f5b0e7d5d8b580e77e5c338a80de8ad49a8e89c82a53da699bff",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {
+        "3": [
+          "I001"
+        ]
+      },
+      "original_git_blob": "592e8c4a1fbc07a28b231b17f41f095e688c2c01",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/idna_direct_source.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Temporary original strict-IDNA/whole-HTTPX observations; G08 retirement required.; imports: argparse,json,hashlib,sys,encodings.idna,pathlib; codec call examples: bytes.fromhex(case['parameter_bytes_hex']).decode('idna', 'strict')",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "3bc824ea75ba233195ad64d428da0a00b34833736dd93b51cef1d8016982f164",
+        "bytes": 1291,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "json",
+            "hashlib",
+            "sys",
+            "encodings.idna",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "args.output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/idna_profile_generate.py",
+      "before_sha256": "9df9ee67d9778219b4899a4c293ea55f332c2f256b1522a1b5c3cc7d18881634",
+      "after_sha256": "76b634fc7d6c83cfeb2c5bef7be124e5d9b7729fc902e699d32791e4337e91af",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {
+        "4": [
+          "E402",
+          "I001"
+        ],
+        "5": [
+          "E402"
+        ],
+        "6": [
+          "E402"
+        ],
+        "7": [
+          "E402"
+        ],
+        "8": [
+          "E402"
+        ],
+        "9": [
+          "E402"
+        ],
+        "51": [
+          "E741"
+        ]
+      },
+      "original_git_blob": "5bebabd37d9c9e91254012dbccc334d4c958510d",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/idna_profile_generate.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Offline candidate generator, no codec/runtime backend. Not adopted.; imports: argparse,ast,functools,json,hashlib,pathlib; codec call examples: (json.dumps(out, separators=(',', ':'), ensure_ascii=True) + '\\n').encode()",
+        "reason": "offline derivation or verifier tooling; native runtime and mandatory gates do not execute Python.",
+        "sha256": "9df9ee67d9778219b4899a4c293ea55f332c2f256b1522a1b5c3cc7d18881634",
+        "bytes": 5563,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "ast",
+            "functools",
+            "json",
+            "hashlib",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "args.output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/idna_profile_rust.py",
+      "before_sha256": "d6ca989a7fedbabd9f6cb9a18babd825e4a666065c5b9dd1468276d70c9d9030",
+      "after_sha256": "9532cab1456c255867066db4b15344f2b5f3f7335f8fc99cab2f3dc437cbeaeb",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {},
+      "original_git_blob": "52b57ff5cc65c116574b2d94fd51fd6ac8ff439f",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/idna_profile_rust.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Format approved immutable profile data as native static Rust; offline tooling.; imports: argparse,hashlib,json,pathlib",
+        "reason": "offline derivation or verifier tooling; native runtime and mandatory gates do not execute Python.",
+        "sha256": "d6ca989a7fedbabd9f6cb9a18babd825e4a666065c5b9dd1468276d70c9d9030",
+        "bytes": 1662,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "hashlib",
+            "json",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "a.output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/idna_selector.py",
+      "before_sha256": "73c898fa583b4c3753d5eb78e0f1fe2c15c993961465e3a7021c39492a589819",
+      "after_sha256": "94e257198d0d7c91098f9aad948cf07c169209779cd202508ebac0268d5ab5cc",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {
+        "3": [
+          "I001"
+        ]
+      },
+      "original_git_blob": "9b64c676135031c2c0467189abcea395c891c57d",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/idna_selector.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Temporary whole-HTTPX IDNA selector observations; no runtime implementation.; imports: argparse,codecs,hashlib,json,sys,pathlib,httpx,urllib.parse; codec call examples: x.encode(); codecs.lookup(response.encoding)",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "73c898fa583b4c3753d5eb78e0f1fe2c15c993961465e3a7021c39492a589819",
+        "bytes": 2475,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "codecs",
+            "hashlib",
+            "json",
+            "sys",
+            "pathlib",
+            "httpx",
+            "urllib.parse"
+          ],
+          "declared_output_expressions": [
+            "args.output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/iso_maps.py",
+      "before_sha256": "3705fd6abd84d74d533411c12da7789412261db937719ab3a651776dafdcb1e9",
+      "after_sha256": "e31517a2d67d1f3b1ebe93886ee9dc8fe0d3c6ca0ca6e1e2f71048557c574d7c",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {
+        "1": [
+          "I001"
+        ]
+      },
+      "original_git_blob": "75605d3a2ac9c43873dea09e9029186ec7368fdf",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/iso_maps.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "imports: argparse,struct,json,pathlib; codec call examples: raw.decode(codec, 'strict')",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "3705fd6abd84d74d533411c12da7789412261db937719ab3a651776dafdcb1e9",
+        "bytes": 1169,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "struct",
+            "json",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "args.output / 'manifest.json'",
+            "args.output / (name + '.bin')"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/iso_vectors.py",
+      "before_sha256": "b6497c14a6662aced68cd3abd4b0cfe45dbff17be01a483e8d26b2ae5ede60e7",
+      "after_sha256": "5fddb69718b5b62d31b7e6532d8c634cd52d07c03c1579ad6b40c8fc6a0afb92",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {
+        "1": [
+          "I001"
+        ]
+      },
+      "original_git_blob": "fa3621126dff1a788659af6cc5b7871d3e65ce17",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/iso_vectors.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "imports: argparse,json,struct,zlib,random,pathlib; codec call examples: raw.decode(codec, 'replace')",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "b6497c14a6662aced68cd3abd4b0cfe45dbff17be01a483e8d26b2ae5ede60e7",
+        "bytes": 2660,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "json",
+            "struct",
+            "zlib",
+            "random",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "args.output / 'manifest.json'",
+            "args.output / 'targeted.json'",
+            "args.output / (name + '.zlib')",
+            "args.output / (name + '.errors.json')"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/label_alias_source.py",
+      "before_sha256": "a873c481472a4ccba50ca19d42d7e75e1569f30796b9d383506bdd1ff8652044",
+      "after_sha256": "9c56635c49d15db92b2693e40bbfc0dc72a517a19203180f4b7f1a4ca2ef8027",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {
+        "3": [
+          "I001"
+        ],
+        "21": [
+          "E741"
+        ]
+      },
+      "original_git_blob": "0154fbfe2501a200fce9bfba87542122dcb497a4",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/label_alias_source.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Actual codec normalization plus ordered raw-header HTTPX outcomes.; imports: argparse,codecs,encodings,hashlib,httpx,json,sys,pathlib; codec call examples: ('text/plain; charset*=' + label + \"''cp437\").encode(); codecs.lookup(label)",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "a873c481472a4ccba50ca19d42d7e75e1569f30796b9d383506bdd1ff8652044",
+        "bytes": 1891,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "codecs",
+            "encodings",
+            "hashlib",
+            "httpx",
+            "json",
+            "sys",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "a.output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/label_alnum_generate.py",
+      "before_sha256": "59d7040aca2f05d8e7a50f122f6a8b819958dda1fcec435c76dee4f3a0c9d85a",
+      "after_sha256": "78a87df8452b6d35ea4539715e04a633d2f79593b82117533ed1a39445986c30",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {},
+      "original_git_blob": "72cc17ed53f578146e1db298fb55604498a6e76d",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/label_alnum_generate.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Narrow source Unicode16 codec-label alphanumeric classifier, no runtime backend.; imports: argparse,hashlib,json,pathlib; codec call examples: (json.dumps({'unicode_version': '16.0.0', 'source_sha256': PIN, 'ranges_half_open': merged}, indent=2) + '\\n').encode(); raw.decode()",
+        "reason": "offline derivation or verifier tooling; native runtime and mandatory gates do not execute Python.",
+        "sha256": "59d7040aca2f05d8e7a50f122f6a8b819958dda1fcec435c76dee4f3a0c9d85a",
+        "bytes": 1153,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "hashlib",
+            "json",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "a.output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/label_alnum_rust.py",
+      "before_sha256": "acabe2f5720ccf1565c4365bffa3a06c20b5be476098f432dea2f8a71e53cb56",
+      "after_sha256": "4c3d64f3b3f1883740f9c2254cbacf611d1cd89e586f181b39a12728d24acb3c",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {},
+      "original_git_blob": "6858c9bc17cda6104cd95f63863c78a5e774d2ca",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/label_alnum_rust.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Format the pin-verified classifier as Rust; no Unicode backend or source oracle.; imports: argparse,hashlib,json,pathlib; codec call examples: output.encode()",
+        "reason": "offline derivation or verifier tooling; native runtime and mandatory gates do not execute Python.",
+        "sha256": "acabe2f5720ccf1565c4365bffa3a06c20b5be476098f432dea2f8a71e53cb56",
+        "bytes": 1157,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "hashlib",
+            "json",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "args.output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/label_alnum_source.py",
+      "before_sha256": "6678c47aa73513892bd596bde6f5e6f2006d15960396c70edf331d036c06bd37",
+      "after_sha256": "b210a6bfd1f5b37012798414d631dfd4fcf67bb6488731e5daeed0ba47031834",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {},
+      "original_git_blob": "e42cad37e72d2b264bb23f534424f24832a24112",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/label_alnum_source.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Actual pinned CPython full-range classifier oracle; no native mapping data.; imports: argparse,hashlib,json,sys,zlib,pathlib",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "6678c47aa73513892bd596bde6f5e6f2006d15960396c70edf331d036c06bd37",
+        "bytes": 990,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "hashlib",
+            "json",
+            "sys",
+            "zlib",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "a.output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/label_dotted_source.py",
+      "before_sha256": "228567d55bb310d6ee4f181529dc55a1cc89f040b903ba5f404e65f7f0c6281f",
+      "after_sha256": "fdb6be874a77c89e6677e9ca13578d61684f913daac2a790e0ab53e19e849289",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {
+        "3": [
+          "I001"
+        ]
+      },
+      "original_git_blob": "7b8bfbc57f0135e1978753744489e924edd2b55b",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/label_dotted_source.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Actual source alias/module precedence and whole-HTTPX dotted label controls.; imports: argparse,codecs,encodings,hashlib,httpx,json,sys,pathlib; codec call examples: ('text/plain; charset=' + label if form == 'direct' else 'text/plain; charset*=' + label + \"''cp437\").encode(); codecs.lookup(label)",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "228567d55bb310d6ee4f181529dc55a1cc89f040b903ba5f404e65f7f0c6281f",
+        "bytes": 2089,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "codecs",
+            "encodings",
+            "hashlib",
+            "httpx",
+            "json",
+            "sys",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "a.output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/long_query.py",
+      "before_sha256": "79f398f2588446feca27fb8679e643cfeab1df429c03be16bbc68e348ad5ef79",
+      "after_sha256": "a2c305c9d076541fd16657589cbbfe338bf988e484e13485509a742d37a4f53d",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {},
+      "original_git_blob": "c5323e0edab42e3eb4b86d23f7d809f6b8d9cca1",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/long_query.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Actual whole-source long-query controls; offline, temporary G08 oracle.; imports: argparse,asyncio,importlib.util,json,pathlib",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "79f398f2588446feca27fb8679e643cfeab1df429c03be16bbc68e348ad5ef79",
+        "bytes": 1805,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "asyncio",
+            "importlib.util",
+            "json",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/lower_ascii.py",
+      "before_sha256": "45def383ca663108e8e2d2839616ccc80eecf1f341a217e080d775ca2a7610dc",
+      "after_sha256": "f7053bcd36241ef1d015fcd744527b45d07c0a2fa23df0d7d0ac654aa60c8e37",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {},
+      "original_git_blob": "dfe35fdfae7fdeb20011886409e5a5848fcd23b7",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/lower_ascii.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Pinned source lowercase preimages and substring controls; G08 temporary.; imports: argparse,json,random,pathlib",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "45def383ca663108e8e2d2839616ccc80eecf1f341a217e080d775ca2a7610dc",
+        "bytes": 1334,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "json",
+            "random",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "args.output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/media_nfkc_membership.py",
+      "before_sha256": "8d88145aa7a761ace4d1ceafe1f23a26873e86a8bbe2b21b0fd4fb0aaeca5405",
+      "after_sha256": "8d88145aa7a761ace4d1ceafe1f23a26873e86a8bbe2b21b0fd4fb0aaeca5405",
+      "byte_changed": false,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {},
+      "original_git_blob": "c73c3fb2525c37cc708739b102aefdbd4bc2f747",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/media_nfkc_membership.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Temporary offline CPython oracle; retire from final backend at G08.; imports argparse,hashlib,json,sys,unicodedata,urllib.parse,pathlib",
+        "reason": "temporary actual-source migration oracle; never runtime/client/required native gate.",
+        "sha256": "8d88145aa7a761ace4d1ceafe1f23a26873e86a8bbe2b21b0fd4fb0aaeca5405",
+        "bytes": 2036,
+        "retirement_owner": "G08",
+        "retirement": "Remove executable producer before final backend removal; retain immutable captures, licensed inputs and native successors.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "hashlib",
+            "json",
+            "sys",
+            "unicodedata",
+            "urllib.parse",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "args.output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/nul_expanded.py",
+      "before_sha256": "76bb4ffdb94e82b49e1c4a423e7d001ac5332ac740498ae8de0d5fbd972dbe14",
+      "after_sha256": "4a69be0c9a7de30756e345da4dd63c76c7b064edbee4af7477133ba4cde56ebe",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {
+        "1": [
+          "I001"
+        ],
+        "6": [
+          "F401"
+        ],
+        "19": [
+          "E402",
+          "F401"
+        ],
+        "20": [
+          "E402"
+        ]
+      },
+      "original_git_blob": "d32be00cffee6839c94431113f4088b3c7b88614",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/nul_expanded.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "imports: asyncio,importlib.util,json,subprocess,struct,hashlib,argparse,pathlib,httpx,lxml.html; codec call examples: text.encode('utf8')",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "76bb4ffdb94e82b49e1c4a423e7d001ac5332ac740498ae8de0d5fbd972dbe14",
+        "bytes": 3115,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "asyncio",
+            "importlib.util",
+            "json",
+            "subprocess",
+            "struct",
+            "hashlib",
+            "argparse",
+            "pathlib",
+            "httpx",
+            "lxml.html"
+          ],
+          "declared_output_expressions": [
+            "args.output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/nul_versions.py",
+      "before_sha256": "4a7c4e9b311f160c9ce5726b410ef63412176c99d09ce4714ade66d5ff0843e1",
+      "after_sha256": "220953e3109433f642546cac1156081c4bc87e5df0912c7e9ceecf59b392597a",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {
+        "1": [
+          "I001"
+        ],
+        "6": [
+          "F401"
+        ],
+        "19": [
+          "E402",
+          "F401"
+        ],
+        "20": [
+          "E402"
+        ]
+      },
+      "original_git_blob": "e528ca19eb159cccf38f11d409bf88402028b568",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/nul_versions.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "imports: asyncio,importlib.util,json,subprocess,struct,hashlib,argparse,pathlib,httpx,lxml.html; codec call examples: text.encode('utf8')",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "4a7c4e9b311f160c9ce5726b410ef63412176c99d09ce4714ade66d5ff0843e1",
+        "bytes": 3218,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "asyncio",
+            "importlib.util",
+            "json",
+            "subprocess",
+            "struct",
+            "hashlib",
+            "argparse",
+            "pathlib",
+            "httpx",
+            "lxml.html"
+          ],
+          "declared_output_expressions": [
+            "args.output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/punycode_vectors.py",
+      "before_sha256": "4b0e9c675d4d3a8c7f6e7e7e2bd8c6b1c007a5fc387fab90acaf405125e1f192",
+      "after_sha256": "9d667ab62f1717be87b56e70a34ef305f0346e1eabd4f99f75db581c7d1126ca",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {
+        "1": [
+          "I001"
+        ]
+      },
+      "original_git_blob": "446e99cd04c72603d46299e982f750ec76f24858",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/punycode_vectors.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "imports: random,json,pathlib; codec call examples: text.encode('punycode'); b.decode('punycode', 'replace')",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "4b0e9c675d4d3a8c7f6e7e7e2bd8c6b1c007a5fc387fab90acaf405125e1f192",
+        "bytes": 580,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "random",
+            "json",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "Path(__import__('sys').argv[1])"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/rawescape_vectors.py",
+      "before_sha256": "94fb2f96c193fa02f95ef0386efcf645a281e54dcc2d607a69264ac1fad53483",
+      "after_sha256": "709ecda2c23d63799d3749e2d079246dc7a6301b2deed5b1bac35d7eb7c8fadf",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {},
+      "original_git_blob": "21215c2868a1ab953496c49e71d5e4806ca13e13",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/rawescape_vectors.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "imports: json,pathlib; codec call examples: b.decode('raw_unicode_escape', 'replace')",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "94fb2f96c193fa02f95ef0386efcf645a281e54dcc2d607a69264ac1fad53483",
+        "bytes": 559,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "json",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "Path(__import__('sys').argv[1])"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/singlebyte_icu_compare.py",
+      "before_sha256": "66dd8db5e7b4d6ed4959902082fa64fbf16a2d68da6b59c7755e57bfef19b94b",
+      "after_sha256": "8ba1e07340a67ffc0caf7d6d740796a81a00a46d923964dcfbda8f5ba3fa2644",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {},
+      "original_git_blob": "e5d0499e2006e704ebf20281eb8d6b64509c1de5",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/singlebyte_icu_compare.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Complete comparison verifier, separate from independent native derivation.; imports: argparse,hashlib,json,re,struct,pathlib",
+        "reason": "offline derivation or verifier tooling; native runtime and mandatory gates do not execute Python.",
+        "sha256": "66dd8db5e7b4d6ed4959902082fa64fbf16a2d68da6b59c7755e57bfef19b94b",
+        "bytes": 2071,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "hashlib",
+            "json",
+            "re",
+            "struct",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "args.output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/singlebyte_icu_independent.py",
+      "before_sha256": "cdbcd8a1c9ab229e9f91cea41a04c4a72dc1441054c49ea81537636c7f1d9474",
+      "after_sha256": "917547d668481612e918bcfd59cfd0e46a16c975c742446713e39e932d6a3b17",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {},
+      "original_git_blob": "6a5c200bafa4163835d31602640e85194a57113a",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/singlebyte_icu_independent.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Independent two-table derivation; only pinned ICU UCM inputs accepted.; imports: argparse,hashlib,json,re,struct,pathlib",
+        "reason": "offline derivation or verifier tooling; native runtime and mandatory gates do not execute Python.",
+        "sha256": "cdbcd8a1c9ab229e9f91cea41a04c4a72dc1441054c49ea81537636c7f1d9474",
+        "bytes": 2127,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "hashlib",
+            "json",
+            "re",
+            "struct",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "args.output / (name + '.single.bin')"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/singlebyte_icu_source.py",
+      "before_sha256": "c1bac4b83d67f00b52ca4669d8a7aa80883f1fbdc9096e98c17ff142827a182e",
+      "after_sha256": "004283789ec50d3a005debaf4e628fb3b856b4e4e1edc8615ec974ae903a7c8d",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {},
+      "original_git_blob": "876fc137f1f8e1d4a6cb41cc85b2d5b4093bfdac",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/singlebyte_icu_source.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Actual pinned source observations only; not an input to native derivation.; imports: argparse,codecs,hashlib,importlib,json,platform,sys,pathlib; codec call examples: body.decode(name, 'replace'); codecs.lookup(name)",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "c1bac4b83d67f00b52ca4669d8a7aa80883f1fbdc9096e98c17ff142827a182e",
+        "bytes": 1163,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "codecs",
+            "hashlib",
+            "importlib",
+            "json",
+            "platform",
+            "sys",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "args.output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/singlebyte_native_input.py",
+      "before_sha256": "e024024d70ce4cad118ef44d557fd0ce3418f4b4a3c8fa65f0ca3464600f0651",
+      "after_sha256": "8635a9a024c8bbc6d05dedb5408666c978e55f155447ff0a7a4d7f5599d359e6",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {},
+      "original_git_blob": "ba95464eb1a883d993013e342a4631e9005550f8",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/singlebyte_native_input.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Export source-only metadata and 67 mapping arrays for independent native derivation.; imports: argparse,hashlib,json,pathlib; codec call examples: (json.dumps({'source_policy_sha256': pin, 'canonical_codecs': rows}, ensure_ascii=False, indent=2) + '\\n').encode()",
+        "reason": "offline derivation or verifier tooling; native runtime and mandatory gates do not execute Python.",
+        "sha256": "e024024d70ce4cad118ef44d557fd0ce3418f4b4a3c8fa65f0ca3464600f0651",
+        "bytes": 1175,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "hashlib",
+            "json",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "a.output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/singlebyte_strict_validity.py",
+      "before_sha256": "1e86f5e77fcab958537e7bda8495500aff5209360af6d156217b65d321a1a34f",
+      "after_sha256": "a5e738b39df57190514fc3ae347494a5da8059d2a773018f05feaf9a8b06d79a",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {
+        "4": [
+          "F401"
+        ]
+      },
+      "original_git_blob": "d67915b33ce5fb5d42d83e4efc72011be5000629",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/singlebyte_strict_validity.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Temporary source validity-only oracle; emits no Unicode mapping values.; imports: argparse,codecs,hashlib,importlib,json,sys,pathlib",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "1e86f5e77fcab958537e7bda8495500aff5209360af6d156217b65d321a1a34f",
+        "bytes": 1242,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "codecs",
+            "hashlib",
+            "importlib",
+            "json",
+            "sys",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "a.output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/singlebyte_tables.py",
+      "before_sha256": "b016c2e8b81e18b8aece1de2076786ef38cf5eb6a5fc13edcb6db6fa6bd85220",
+      "after_sha256": "beb3f04c29b40dc4232377af31340281ceb48bd31c551cb5f90189025a3b300e",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {},
+      "original_git_blob": "8fa3a874ed1305e894268cffbab8e1a0717a24cc",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/singlebyte_tables.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Derive 67 source tables plus two independently pinned ICU tables.; imports: argparse,hashlib,json,struct,pathlib",
+        "reason": "offline derivation or verifier tooling; native runtime and mandatory gates do not execute Python.",
+        "sha256": "b016c2e8b81e18b8aece1de2076786ef38cf5eb6a5fc13edcb6db6fa6bd85220",
+        "bytes": 3395,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "hashlib",
+            "json",
+            "struct",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "args.output / 'src/singlebyte.rs'",
+            "args.output / 'src/aliases.rs'"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/stateful_strict_source.py",
+      "before_sha256": "b8a6607de73018551f8fd1b6c785303fb48601027e92a9e65bf0f013982c728b",
+      "after_sha256": "a0e644473a57872a1a32b8b85f34541ce916c3846b9c429ae2137ae7a4022c26",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {},
+      "original_git_blob": "afcf2761e8c6a25823c60d175e6193c385590ef1",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/stateful_strict_source.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Source strict-mode classifications; valid text remains in original full corpus.; imports: argparse,hashlib,json,sys,zlib,pathlib",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "b8a6607de73018551f8fd1b6c785303fb48601027e92a9e65bf0f013982c728b",
+        "bytes": 2565,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "hashlib",
+            "json",
+            "sys",
+            "zlib",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "a.output / 'iso-targeted.modes.zlib'",
+            "a.output / 'manifest.json'",
+            "a.output / file",
+            "a.output / file"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/storage_kind.py",
+      "before_sha256": "172dc99a2ee4a43429c2d0db509b25d631acc27e3ba8ea3e7667fc2c7d6e0721",
+      "after_sha256": "32e53cc1e33e63202978a98efbfa7deb5e6ea9d955131c7bc4007e01bb447bfa",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {
+        "3": [
+          "I001"
+        ]
+      },
+      "original_git_blob": "b35a26e3d1b071d144649b4198ff6512136d9fbc",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/storage_kind.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Temporary pinned offline CPython/HTTPX storage evidence; retire at G08.; imports: argparse,ctypes,hashlib,json,sys,sysconfig,pathlib,httpx,lxml; codec call examples: text.encode(codec)",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "172dc99a2ee4a43429c2d0db509b25d631acc27e3ba8ea3e7667fc2c7d6e0721",
+        "bytes": 3113,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "ctypes",
+            "hashlib",
+            "json",
+            "sys",
+            "sysconfig",
+            "pathlib",
+            "httpx",
+            "lxml"
+          ],
+          "declared_output_expressions": [
+            "Path(args.output)"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/strict_overflow_source.py",
+      "before_sha256": "0cc65f465716eead1beb3a7dd8ff284bfeab9f6138b69e9e25d32fe3c4931512",
+      "after_sha256": "a99c5b494140fced0aa30b2b92e8e9584e649fba74eca433b0093157ceab9a21",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {
+        "3": [
+          "I001"
+        ]
+      },
+      "original_git_blob": "5822e8d33b613828263bd9264ce82b8f2358e859",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/strict_overflow_source.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Actual strict punycode/IDNA overflow and precedence observations.; imports: argparse,encodings.idna,encodings.punycode,hashlib,json,sys,pathlib,urllib.parse,httpx",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "0cc65f465716eead1beb3a7dd8ff284bfeab9f6138b69e9e25d32fe3c4931512",
+        "bytes": 2891,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "encodings.idna",
+            "encodings.punycode",
+            "hashlib",
+            "json",
+            "sys",
+            "pathlib",
+            "urllib.parse",
+            "httpx"
+          ],
+          "declared_output_expressions": [
+            "a.output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/strict_parameter_source.py",
+      "before_sha256": "b610b50093f9e4e73c0f4bf62b80c20cd6b879d4f0ba788715ef96ba78c2eb00",
+      "after_sha256": "675d71373904ad8d0f84b57cb8a19abd82985aec0b41a7165a9014684697623b",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {
+        "4": [
+          "F401"
+        ]
+      },
+      "original_git_blob": "cf80ccbe7e34375fcf1d47f1cf68fa961e51afbb",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/strict_parameter_source.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Actual nonincremental strict str(bytes,encoding) observations, not body decoding.; imports: argparse,codecs,hashlib,json,sys,pathlib; codec call examples: 'cp437'.encode('utf-16le'); 'cp437'.encode('utf-16be')",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "b610b50093f9e4e73c0f4bf62b80c20cd6b879d4f0ba788715ef96ba78c2eb00",
+        "bytes": 2072,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "codecs",
+            "hashlib",
+            "json",
+            "sys",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "a.output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/strict_validity_generate.py",
+      "before_sha256": "105ec8ea8b92cee0f29298cf043221323aa7555a4ba8617d8c92e1910ea24d44",
+      "after_sha256": "f43af6d443459f2cf5e90e9887b3486db75964d26a5dd2584e3b77f1112089f9",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {},
+      "original_git_blob": "b4943c49a3b57bbd747872ae61a705ff76fff8bb",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/strict_validity_generate.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Native 67+2 validity bits only; no Unicode mapping value arrays are read.; imports: argparse,hashlib,json,re,pathlib; codec call examples: b.decode()",
+        "reason": "offline derivation or verifier tooling; native runtime and mandatory gates do not execute Python.",
+        "sha256": "105ec8ea8b92cee0f29298cf043221323aa7555a4ba8617d8c92e1910ea24d44",
+        "bytes": 1755,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "hashlib",
+            "json",
+            "re",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "a.output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/surrogates.py",
+      "before_sha256": "b854f7d65c2fe55e4c9d66a963ac3e479d70bb3247cb6959e6f8befa5d7474ea",
+      "after_sha256": "b180221eddf5d262a91f4f7e28bb432c5ae18d6bdd34e943a0d0faecd8e2b068",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {
+        "10": [
+          "E402"
+        ],
+        "11": [
+          "E402"
+        ]
+      },
+      "original_git_blob": "48bac0b3c3fa90b37c6445c72aeca5c5b7d3c61c",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/surrogates.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "imports: asyncio,importlib.util,json,pathlib,httpx,lxml.html,argparse; codec call examples: text.encode(codec)",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "b854f7d65c2fe55e4c9d66a963ac3e479d70bb3247cb6959e6f8befa5d7474ea",
+        "bytes": 2988,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "asyncio",
+            "importlib.util",
+            "json",
+            "pathlib",
+            "httpx",
+            "lxml.html",
+            "argparse"
+          ],
+          "declared_output_expressions": [
+            "Path(OUTPUT)"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/timeout_config_source.py",
+      "before_sha256": "808f07d72f446dd00363b9ed6abdd4128ce1d38f233ac75465dc0ae4d19928c5",
+      "after_sha256": "b9ff055fb2c2dea6fae39d6d3c04cc47d0ae70832891beff8c3e9818de99f07f",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {
+        "7": [
+          "I001"
+        ],
+        "13": [
+          "F401"
+        ],
+        "23": [
+          "E402",
+          "I001"
+        ],
+        "24": [
+          "E402"
+        ],
+        "25": [
+          "E402",
+          "F401"
+        ],
+        "26": [
+          "E402"
+        ],
+        "27": [
+          "E402"
+        ],
+        "28": [
+          "E402"
+        ]
+      },
+      "original_git_blob": "8e67f8885f2d3a09c6c7e1e30b637c3bb7d6a4d3",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/timeout_config_source.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Temporary layered-config/adapter timing oracle; MockTransport, no provider calls.; imports argparse,asyncio,dataclasses,hashlib,importlib.util,json,math,os,pathlib,struct,sys,tempfile,unittest.mock,httpx,yaml,engines,slopsearx.adapter,slopsearx.config,slopsearx.service",
+        "reason": "temporary actual-source migration oracle; never runtime/client/required native gate.",
+        "sha256": "808f07d72f446dd00363b9ed6abdd4128ce1d38f233ac75465dc0ae4d19928c5",
+        "bytes": 6794,
+        "retirement_owner": "G08",
+        "retirement": "Remove executable producer before final backend removal; retain immutable captures, licensed inputs and native successors.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "asyncio",
+            "dataclasses",
+            "hashlib",
+            "importlib.util",
+            "json",
+            "math",
+            "os",
+            "pathlib",
+            "struct",
+            "sys",
+            "tempfile",
+            "unittest.mock",
+            "httpx",
+            "yaml",
+            "engines",
+            "slopsearx.adapter",
+            "slopsearx.config",
+            "slopsearx.service"
+          ],
+          "declared_output_expressions": [
+            "output",
+            "path"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/timeout_loopback_source.py",
+      "before_sha256": "d040fb37dcf47f8dcfdc0f31914bf68afb15e2477c061849c0f367a56e876035",
+      "after_sha256": "ff17e815773a4ebf152f4a17696c6a448137939990b9cfb6e056d0c47ef973f0",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {
+        "7": [
+          "I001"
+        ],
+        "26": [
+          "F401"
+        ],
+        "130": [
+          "N815"
+        ],
+        "131": [
+          "N815"
+        ]
+      },
+      "original_git_blob": "8830c7b247768bbe910e0ff85d5be691b509e211",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/timeout_loopback_source.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Temporary actual-HTTPX loopback timing evidence; no provider calls (G08).; imports argparse,asyncio,dataclasses,hashlib,importlib.util,json,os,pathlib,subprocess,sys,threading,time,http.server,engines,slopsearx.adapter",
+        "reason": "temporary actual-source migration oracle; never runtime/client/required native gate.",
+        "sha256": "d040fb37dcf47f8dcfdc0f31914bf68afb15e2477c061849c0f367a56e876035",
+        "bytes": 8115,
+        "retirement_owner": "G08",
+        "retirement": "Remove executable producer before final backend removal; retain immutable captures, licensed inputs and native successors.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "asyncio",
+            "dataclasses",
+            "hashlib",
+            "importlib.util",
+            "json",
+            "os",
+            "pathlib",
+            "subprocess",
+            "sys",
+            "threading",
+            "time",
+            "http.server",
+            "engines",
+            "slopsearx.adapter"
+          ],
+          "declared_output_expressions": [
+            "output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/unicode_name_all.py",
+      "before_sha256": "f6938ce7c47802c44c76a8bbef0c876e3d2945d71d934d2507d6d4cdb67d2c62",
+      "after_sha256": "d3bb69801add1e1b3812d7e3c982be8ca70c58767b511a1d6476805ea0c717fd",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {},
+      "original_git_blob": "1947a3193a3999c1b86ebb8dd4fd6d5b621f8d15",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/unicode_name_all.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Actual pinned codec observations for every generated name and range control.; imports: argparse,json,re,pathlib; codec call examples: name.encode('utf8'); body.decode('unicode_escape', 'replace')",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "f6938ce7c47802c44c76a8bbef0c876e3d2945d71d934d2507d6d4cdb67d2c62",
+        "bytes": 1721,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "json",
+            "re",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "args.output"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/unicode_name_probes.py",
+      "before_sha256": "6dc382c6b0da21bfd666bbfdd42ed48eca66d39913094351ed40224ba2b15b29",
+      "after_sha256": "74adff9f8988e0277b87986bcf6f44cbcd51b7777fcb4b7d0175ea647113a40b",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {},
+      "original_git_blob": "3193242723e6e2240e6c3a8cb6dab9751f17f525",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/unicode_name_probes.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "imports: json,unicodedata,pathlib; codec call examples: name.encode('utf8'); body.decode('unicode_escape', 'replace')",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "6dc382c6b0da21bfd666bbfdd42ed48eca66d39913094351ed40224ba2b15b29",
+        "bytes": 974,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "json",
+            "unicodedata",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "Path(__import__('sys').argv[1])"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/unicode_names.py",
+      "before_sha256": "3cbd16aa86aff8cff5063cc9b5e513fbd5d49be092d4788f085ddab3191475d4",
+      "after_sha256": "9bedfeb6cc0002fbbf26f4ad98195e94a7feeb4ca88be26c6ad2c207e590c16d",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {
+        "1": [
+          "I001"
+        ],
+        "3": [
+          "F401"
+        ],
+        "77": [
+          "E741"
+        ]
+      },
+      "original_git_blob": "0d407bb79083b59570b7582d9baef3eb8b2842a8",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/unicode_names.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "imports: argparse,json,hashlib,re,pathlib",
+        "reason": "offline derivation or verifier tooling; native runtime and mandatory gates do not execute Python.",
+        "sha256": "3cbd16aa86aff8cff5063cc9b5e513fbd5d49be092d4788f085ddab3191475d4",
+        "bytes": 2166,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "json",
+            "hashlib",
+            "re",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "args.output / 'unicode_names.rs'",
+            "args.output / 'unicode_name_ranges.rs'"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/unicode_vectors.py",
+      "before_sha256": "479fc60d906dcf14631f7ee734057d9763089f89fe664de41fb0959325522215",
+      "after_sha256": "841e2ce9771a1c25446ea6ee346b5926d545f97d3b47eaee911c6e36bcd01a84",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {
+        "1": [
+          "I001"
+        ]
+      },
+      "original_git_blob": "255838e9350ed7b37a48e7a62a2e7183999cabbc",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/unicode_vectors.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "imports: argparse,json,zlib,random,httpx._decoders,pathlib; codec call examples: chr(n).encode('utf7'); json.dumps(rows, separators=(',', ':')).encode()",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "479fc60d906dcf14631f7ee734057d9763089f89fe664de41fb0959325522215",
+        "bytes": 1916,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "json",
+            "zlib",
+            "random",
+            "httpx._decoders",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "args.output / 'manifest.json'",
+            "args.output / file"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/unicodeescape_vectors.py",
+      "before_sha256": "b8e2d7503eadd355322264579d7eccc3ce6967dcf0ed4c55c3fb8b623081bcff",
+      "after_sha256": "86576c44e3df2afd2fe9557cbebd6d304320439d97ec3060aa9d54c49f424eb4",
+      "byte_changed": true,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {},
+      "original_git_blob": "e20017deb3995a5d67345c316f05aff660e5b70b",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/oracle/unicodeescape_vectors.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "imports: json,random,pathlib; codec call examples: b.decode('unicode_escape', 'replace')",
+        "reason": "temporary actual-source migration oracle; native runtime and mandatory gates do not execute Python.",
+        "sha256": "b8e2d7503eadd355322264579d7eccc3ce6967dcf0ed4c55c3fb8b623081bcff",
+        "bytes": 760,
+        "retirement_owner": "G08",
+        "retirement": "Retire executable Python before backend removal; retain original captures, pinned input/output hashes, notices and native test successors. Replace active regeneration with native tooling or retain its implementation solely as inert historical evidence.",
+        "source_inspection": {
+          "imports": [
+            "json",
+            "random",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "Path(__import__('sys').argv[1])"
+          ]
+        }
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/a05/provenance/media_nfkc.py",
+      "before_sha256": "7a6e620a642432e5409469203fc0446c92ffaca7297a7c427896c9a52cde8f89",
+      "after_sha256": "7a6e620a642432e5409469203fc0446c92ffaca7297a7c427896c9a52cde8f89",
+      "byte_changed": false,
+      "normalized_ast_equal": true,
+      "normalization": "split ast.Import aliases into consecutive singleton imports, preserving exact order; no other normalization",
+      "line_local_suppressions": {},
+      "original_git_blob": "600417d25ba835c0f631236dff69ea3a82accdc9",
+      "original_classification_record": {
+        "path": "docs/rust-rewrite/a05/provenance/media_nfkc.py",
+        "classification": "backend-coupled tooling/test",
+        "migration_owner": "A05",
+        "migration_owners": [
+          "A05",
+          "G08"
+        ],
+        "disposition": "temporary_developer_oracle_or_generator_retire_before_backend_removal",
+        "evidence": "Offline developer generator; no provider/Python runtime backend dependency.; imports argparse,hashlib,json,textwrap,pathlib",
+        "reason": "offline derivation generator; never runtime/client/required native gate.",
+        "sha256": "7a6e620a642432e5409469203fc0446c92ffaca7297a7c427896c9a52cde8f89",
+        "bytes": 1453,
+        "retirement_owner": "G08",
+        "retirement": "Remove executable producer before final backend removal; retain immutable captures, licensed inputs and native successors.",
+        "source_inspection": {
+          "imports": [
+            "argparse",
+            "hashlib",
+            "json",
+            "textwrap",
+            "pathlib"
+          ],
+          "declared_output_expressions": [
+            "args.output"
+          ]
+        }
+      }
+    }
+  ],
+  "historical_json_captures": [
+    {
+      "path": "docs/rust-rewrite/a05/adoption-evidence-manifest.json",
+      "sha256": "aff844551f4869edf48131f9e1290b9c484a55aa20c2e3307dcde021e92719aa"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/binding-c-symbol-audit.json",
+      "sha256": "ea18c76a5f06a0277e3051e50a5945b4380155e3fb7424e5ea5f3d8fe328a189"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/binding-new-package-policy.json",
+      "sha256": "97b9e3adbdd8c69e24a20866e5ae5dbadd333c3f068381e03ca06c5d6b974e39"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/binding-proposed-lock-diff.json",
+      "sha256": "24ff2b030884a53c584ead66c1b9c3eaf34582f2344390080ea4eb225eadc98f"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/codec-family-bound-evidence.json",
+      "sha256": "d7e28a21a30ff6630a126651b9350faeaf2c6f14ed54d4f4682041b1289a969c"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/codec-source-notice-manifest.json",
+      "sha256": "9d2eb28e8db0068e4775bb047baa96666aec23e69952a42020678c5711604bb4"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/corpus-preflight.json",
+      "sha256": "b7987cfde39592dbd2bdb99286b6f06b7d5f87cb1705f5e3ed42a7bc09933f5f"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/corpus-review-2.json",
+      "sha256": "fa247104d9829f24ec5d3ddd62c1c47cfb640e9dedd5e7edd8823fc4900302d2"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/corpus-review.json",
+      "sha256": "63bb5265fbc7e2228b121d44823a476b544a1968bbfd823791f50cdad515e81e"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/corpus.json",
+      "sha256": "4a83fb3db44894679213ba96941915dc12ad0bf00ad5cbfc691fb0410a86fc2e"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/http-charset-pipeline-source.json",
+      "sha256": "1d91dfdcf14a1e0d63bdeb0624849e144facaf473c4dae0478ffbe8fa6100d46"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/long-query-observations.json",
+      "sha256": "7cafe30cb6f30fc045e6212b5680e2ddefd0d2435a7e6e770ec928d1728116d2"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/media-nfkc-source.json",
+      "sha256": "1167bed50c192398a1b4c29224dcb3e70490c8a4593e3533c59a325a455e523e"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/media-sanitizer-provenance.json",
+      "sha256": "7a89611d7b851866fcb8410917667d0411616f8df862f23b4087515b5f8e2931"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/nul-expanded-observations.json",
+      "sha256": "a91ae76db2474398bcc3ffce492a0a36c01c4788287fc9c59890e75453460737"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/nul-version-observations.json",
+      "sha256": "e2b2f7f7585a4e26b05f7bd915596396299b4305e30d691651af4b98f1c765fa"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/source-codec-policy.json",
+      "sha256": "4951aac7dc41d9a92b1d6fdeaf6d1888307ff7fc84f878d9c0dbab216215fcf6"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/surrogate-iconv-version-comparison.json",
+      "sha256": "d184ec91f1b1e6a49f02da8b63729b6f5f82b16f07a8208784391288eba5d12d"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/surrogate-pipeline-observations.json",
+      "sha256": "69e4594300a116e547a3eeca1b98a47a3f57dd3eade381bf083c1c7c57e97b4c"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/timeout-config-extra-source.json",
+      "sha256": "dd6b42fcc66ef2ad6dbd20e87c26e09ea995b013516efaed6fa7d4a00df04494"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/timeout-config-source.json",
+      "sha256": "9f182126bb56ef732cd237d1e31ed43fbcf81376ca5f994eaa0b89a5cfa9a92b"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/timeout-loopback-owned-source.json",
+      "sha256": "07a0f9cb4cbf5dcf907d4e2e6f12a3a0b2ce92ac5eaeac4498f494cae67596b7"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/timeout-loopback-source.json",
+      "sha256": "4cadb6fa4e76054e717e1b86a09099e769fcf3b4e03434977043558711fd294d"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/timeout-loopback-stalled-owned-source.json",
+      "sha256": "f9dd91022d9b562c621e6fc184d69fd362f147ca3ef5d03c244702fd1429ecef"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/timeout-loopback-stalled-source.json",
+      "sha256": "4f8c1fa3604dc152f95db1e7f0e9d7f48aa268c3a189dcc089594e3d2e8ac48b"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/unicode-name-observations.json",
+      "sha256": "1da423129d29bce6abadbfcccbd658aa6f95f616795ac13de6acd21660ef31e8"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/unicode-name-provenance-proposal.json",
+      "sha256": "59ac8ac5ad3c3c36403bd1a0779bbebbab3221f3f28e1b8fec589e6277860364"
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "schema": "W07_EVIDENCE_ADDITIVE_SUCCESSOR_V3",
+  "baseline": "233c7934f9e2da5c2e94f0c1213945335d786502",
+  "test": "search::tests::current_policy_source_is_construction_only_and_preserves_default_generation",
+  "sources": [
+    {
+      "path": "crates/ssx-infra/src/search.rs",
+      "prior": {
+        "bytes": 86121,
+        "sha256": "fcac2929eb6637960d5e1086c321f0eac62fc0f8446cf73f22d6b43406137b12"
+      },
+      "current": {
+        "bytes": 89900,
+        "sha256": "23989888f2434630b9185d339f8548a8e73e8e08846ce00419609be4b439c05c"
+      },
+      "edits": [
+        {
+          "at": 10435,
+          "before": "",
+          "after": "    /// Observe the caller's existing signal without creating an owner or task.\n    pub async fn cancelled(&self) {\n        cancelled(&mut self.0.subscribe()).await;\n    }\n"
+        },
+        {
+          "at": 11122,
+          "before": "",
+          "after": "/// Trusted, bounded, in-memory current policy. Never caller input or I/O.\npub trait CurrentPolicy: Send + Sync {\n    fn current(&self) -> PolicyService;\n}\n"
+        },
+        {
+          "at": 11293,
+          "before": "",
+          "after": "    policy_source: Option<Arc<dyn CurrentPolicy>>,\n"
+        },
+        {
+          "at": 17536,
+          "before": "",
+          "after": "    /// Install only before sharing, with the exact initial dependency policy.\n    /// Dynamic consumers still use the existing shared policy methods.\n    pub fn with_policy_source(\n        mut self,\n        source: Arc<dyn CurrentPolicy>,\n    ) -> Result<Self, SearchError> {\n        let inner = Arc::get_mut(&mut self.0).ok_or(SearchError::InvalidConfiguration)?;\n        if format!(\"{:?}\", source.current()) != format!(\"{:?}\", inner.deps.policy) {\n            return Err(SearchError::InvalidConfiguration);\n        }\n        inner.policy_source = Some(source);\n        Ok(self)\n    }\n"
+        },
+        {
+          "at": 20505,
+          "before": "",
+          "after": "            policy_source: None,\n"
+        },
+        {
+          "at": 21356,
+          "before": "        let mut policy = self.0.deps.policy.clone();\n",
+          "after": "        let mut policy = self\n            .0\n            .policy_source\n            .as_ref()\n            .map_or_else(|| self.0.deps.policy.clone(), |source| source.current());\n"
+        },
+        {
+          "at": 81705,
+          "before": "",
+          "after": "    #[test]\n    fn current_policy_source_is_construction_only_and_preserves_default_generation() {\n        struct Current(std::sync::RwLock<PolicyService>);\n        impl CurrentPolicy for Current {\n            fn current(&self) -> PolicyService {\n                self.0.read().unwrap().clone()\n            }\n        }\n        let policy = PolicyService {\n            policy: SearchPolicy::default(),\n            catalog: CatalogSnapshot::new(vec![]).unwrap(),\n            resolver: ScopeResolver::default(),\n        };\n        let current = Arc::new(Current(std::sync::RwLock::new(policy.clone())));\n        let service = SearchService::new(\n            SearchConfig::default(),\n            SearchDependencies {\n                policy: policy.clone(),\n                engines: BTreeMap::new(),\n                routing_identity: RoutingIdentity {\n                    catalog: None,\n                    sensitive: Default::default(),\n                    tier1: Default::default(),\n                    budget: None,\n                    ranking_strategy: \"presence\".into(),\n                    work_group_version: \"scholarly-work-v3\".into(),\n                    rerank_identity: None,\n                    routing_extension: None,\n                },\n                cache: None,\n                client_admission: None,\n                suggestions: None,\n                jev: None,\n                routing_cache: None,\n                metrics: Arc::new(NoopSink),\n                supervisor: Arc::new(NoopSink),\n                audit: Arc::new(NoopSink),\n                cooldowns: None,\n                owned_http: vec![],\n                owned_stores: vec![],\n                clock: Arc::new(SystemSearchClock),\n                reranker: None,\n            },\n        )\n        .unwrap();\n        assert_eq!(\n            format!(\n                \"{:?}\",\n                service\n                    .current_policy(WallClockTimestamp::new(1.0).unwrap())\n                    .unwrap()\n            ),\n            format!(\"{policy:?}\")\n        );\n        let service = service.with_policy_source(current.clone()).unwrap();\n        current.0.write().unwrap().policy.sensitive_allowed = true;\n        assert!(\n            service\n                .current_policy(WallClockTimestamp::new(1.0).unwrap())\n                .unwrap()\n                .policy\n                .sensitive_allowed\n        );\n        assert!(!service.0.deps.policy.policy.sensitive_allowed);\n        let clone = service.clone();\n        assert!(matches!(\n            service.with_policy_source(current),\n            Err(SearchError::InvalidConfiguration)\n        ));\n        drop(clone);\n    }\n\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/xtask/src/a13.rs",
+      "prior": {
+        "bytes": 56700,
+        "sha256": "a0396a72539e782ba129f6fb35d51e4097848242fa53dad1d7912c1232eb00bc"
+      },
+      "current": {
+        "bytes": 57322,
+        "sha256": "cbaabdef5996afb5300cf7b13c620eac94be6fd71babb19abf184c595e3e6a6c"
+      },
+      "edits": [
+        {
+          "at": 34330,
+          "before": "",
+          "after": "        names.push(a06_source_successor::w07_evidence_successor::TEST.into());\n"
+        },
+        {
+          "at": 49740,
+          "before": "",
+          "after": "        a06_source_successor::w07_evidence_successor::controls(&root).unwrap();\n"
+        },
+        {
+          "at": 54878,
+          "before": "",
+          "after": "        let w07 = a06_source_successor::w07_evidence_successor::TEST;\n        assert_eq!(count(w07), 1);\n        let mut omitted_w07 = exact.clone();\n        omitted_w07.retain(|name| name != w07);\n        assert!(same(&omitted_w07, &exact, \"W07 missing additive identity\").is_err());\n        let mut duplicate_w07 = exact.clone();\n        duplicate_w07.push(w07.into());\n        assert!(same(&duplicate_w07, &exact, \"W07 duplicate additive identity\").is_err());\n"
+        }
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/a13/source-amendments/validator.rs",
+      "prior": {
+        "bytes": 49533,
+        "sha256": "2e4aa935fb96dbf9795035247131ee7e27c694c56b361bb8890faba276e019e4"
+      },
+      "current": {
+        "bytes": 50431,
+        "sha256": "a0752936363e5b3053f2e96dc04eac746b6f955f1bf40a14a34671a5f2120bfe"
+      },
+      "edits": [
+        {
+          "at": 24333,
+          "before": "",
+          "after": "        let current = if source_path == \"crates/ssx-infra/src/search.rs\" {\n            use causal_successor::a06_source_successor::w07_evidence_successor::{\n                self, SearchOperand,\n            };\n            w07_evidence_successor::search_operand(\n                root,\n                SearchOperand::RuntimePin,\n                &amendment[\"successor\"],\n                &current,\n            )?\n        } else {\n            current\n        };\n"
+        },
+        {
+          "at": 40771,
+          "before": "",
+          "after": "            } else if path == \"crates/ssx-infra/src/search.rs\" {\n                use causal_successor::a06_source_successor::w07_evidence_successor::{\n                    self, SearchOperand,\n                };\n                w07_evidence_successor::search_operand(\n                    root,\n                    SearchOperand::AdditiveControl,\n                    &entry[\"successor\"],\n                    &actual_current,\n                )?\n"
+        }
+      ]
+    }
+  ],
+  "predecessor": {
+    "path": "docs/rust-rewrite/a06/source-amendments/w07-evidence-successor-v2.json",
+    "sha256": "8ad6a2eb0e1a574bbc1958ee5b157d47b806ead711e47d77d5e5ac1edf13155b"
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "api_key_env": "ENGINE_OPENFDA_API_KEY",
+  "api_secret_env": null,
+  "auth_class": "none",
+  "categories": [
+    "medical",
+    "health",
+    "science",
+    "government"
+  ],
+  "caveats": [],
+  "cost_class": "free",
+  "defaults": {
+    "base_url": "",
+    "enabled": true,
+    "max_results": 10,
+    "rate_limit": null,
+    "timeout_ms": 5000,
+    "type": "api",
+    "weight": 1.0
+  },
+  "display_name": "openFDA",
+  "enabled_by_default": true,
+  "enforced_filters": {},
+  "engine_type": "api",
+  "failure_classes": [
+    "rate_limited",
+    "error",
+    "timeout"
+  ],
+  "implementation": "unavailable",
+  "name": "openfda",
+  "routing": {
+    "purpose": "FDA drugs, devices, labels, and adverse events",
+    "role": "specialist",
+    "use_when": "the query seeks regulated medical-product data"
+  },
+  "sensitive": false,
+  "supported_filters": {
+    "date_from": false,
+    "date_to": false,
+    "language": false,
+    "pagination": false,
+    "safesearch": false,
+    "time_range": false
+  },
+  "supported_media_types": [],
+  "supported_result_types": [
+    "text"
+  ]
+}

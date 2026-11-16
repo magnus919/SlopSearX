@@ -25,12 +25,15 @@ from typing import Any, Awaitable, Callable, Mapping, Sequence
 from scripts import coverage_answer_execution as answer_execution
 from scripts import coverage_assessment_packets as packets
 from scripts import coverage_consumer_inputs as consumer
+from scripts import coverage_frozen_pool_inputs as frozen_pool
 from scripts import coverage_live_acquire, coverage_resource_evidence
 from scripts import coverage_pipeline_inputs as pipeline
+from scripts import coverage_saved_corpus as saved_corpus
 from scripts import coverage_source_capture as source_capture
 from scripts import coverage_study_acquire as acquisition
 from scripts import coverage_study_core as core
 from scripts import intent_ranking_receipts as receipts
+from scripts.coverage_atomic_io import write_new as _atomic_write_new
 from scripts.coverage_selector_admission import VerifiedSelectorAdmission
 
 SCHEMA = "coverage-stage-orchestration-inventory/1"
@@ -79,6 +82,16 @@ class StagePlan:
     stage_started_monotonic: float
     stage_deadline_monotonic: float
     expected_acquisition_manifest_sha256: str
+    pool_input_mode: str = "live-acquisition/1"
+    band_companion_bytes: bytes | None = None
+    band_companion_sha256: str | None = None
+    initial_registration_bytes: bytes | None = None
+    initial_registration_sha256: str | None = None
+    band_companion_source_pins: Mapping[str, str] | None = None
+    saved_origin: saved_corpus.SavedCorpusOrigin | None = None
+    development_receipt_bytes: bytes | None = None
+    development_receipt_sha256: str | None = None
+    development_stage_uuid: str | None = None
 
 
 @dataclass(frozen=True)
@@ -89,6 +102,67 @@ class AcquisitionEvidence:
     acquisition_manifest_sha256: str
     receipt_sha256: str
     source_bound_receipt_status: str
+
+
+@dataclass(frozen=True)
+class FrozenPoolCollectionEvidence:
+    """Externally admitted files returned by the registered frozen collector."""
+
+    evidence: frozen_pool.FrozenPoolEvidence
+    registration: frozen_pool.FrozenPoolRegistrationContext
+    receipt_directory: Path
+    receipt_inventory_sha256: str
+    collector_status: str
+
+
+@dataclass(frozen=True)
+class FrozenPoolStageEvidence:
+    collection: FrozenPoolCollectionEvidence
+    phase_result: frozen_pool.FrozenPoolPhaseResult
+
+    @property
+    def snapshots_directory(self) -> Path:
+        return self.collection.evidence.snapshots_directory
+
+    @property
+    def snapshot_index_sha256(self) -> str:
+        return self.phase_result.verified.snapshot_index_sha256
+
+    @property
+    def acquisition_manifest_sha256(self) -> str:
+        return self.phase_result.verified.pool_manifest_sha256
+
+
+@dataclass(frozen=True)
+class SavedCorpusStageEvidence:
+    origin: saved_corpus.SavedCorpusOrigin
+    imported: saved_corpus.SavedCorpusImportResult
+    receipt_directory: Path
+
+    @property
+    def snapshots_directory(self) -> Path:
+        return self.origin.collection_directory
+
+    @property
+    def snapshot_index_sha256(self) -> str:
+        return self.imported.origin_pool_verified.snapshot_index_sha256
+
+    @property
+    def acquisition_manifest_sha256(self) -> str:
+        return self.imported.origin_pool_verified.pool_manifest_sha256
+
+
+@dataclass(frozen=True)
+class SavedCaptureEvidence:
+    imported: saved_corpus.SavedCorpusImportResult
+    inventory_bytes: bytes
+    context_artifacts: Mapping[str, bytes]
+    receipt_sha256: str
+
+    @property
+    def result(self) -> source_capture.SourceCaptureResult:
+        # Original capture identity remains intact; this is not a fresh scrape.
+        return self.imported.origin_capture_result
 
 
 @dataclass(frozen=True)
@@ -252,6 +326,8 @@ class GateEvaluation:
     band_diagnostics: Mapping[str, object]
     metrics_sha256: str
     calculation_receipt_sha256: str
+    companion_status: str | None = None
+    companion_sha256: str | None = None
 
 
 @dataclass(frozen=True)
@@ -270,6 +346,14 @@ class StageExecutors:
     # The issuer/verifier is external and must validate its sealed receipt
     # against current source, registration, protocol, and post-acquisition map.
     verify_selector_admission: Callable[..., Awaitable[VerifiedSelectorAdmission]] | None = None
+    collect_frozen_pool: Callable[[StagePlan], Awaitable[FrozenPoolCollectionEvidence]] | None = None
+    verify_frozen_pool: Callable[[StagePlan, FrozenPoolCollectionEvidence], Awaitable[bool]] | None = None
+    prepare_after_frozen_pool: (
+        Callable[[StagePlan, FrozenPoolStageEvidence, Mapping[str, object]], Awaitable[LatePreparationEvidence]] | None
+    ) = None
+    persist_reference_closure: Callable[..., Awaitable[str]] | None = None
+    import_saved_corpus: Callable[[StagePlan], Awaitable[SavedCorpusStageEvidence]] | None = None
+    prepare_after_saved_corpus: Callable[..., Awaitable[LatePreparationEvidence]] | None = None
 
 
 @dataclass(frozen=True)
@@ -335,6 +419,15 @@ def _validate_plan_static(plan: StagePlan) -> dict[str, object]:
         raise OrchestrationError("preacquisition-plan-required")
     if plan.stage_kind not in {"development", "confirmation"}:
         raise OrchestrationError("stage-kind-invalid")
+    receipt_values = (
+        plan.development_receipt_bytes,
+        plan.development_receipt_sha256,
+        plan.development_stage_uuid,
+    )
+    if any(value is not None for value in receipt_values) and not all(value is not None for value in receipt_values):
+        raise OrchestrationError("development-receipt-binding-incomplete")
+    if plan.stage_kind == "development" and any(value is not None for value in receipt_values):
+        raise OrchestrationError("development-receipt-unexpected")
     if str(uuid.UUID(plan.stage_uuid)) != plan.stage_uuid:
         raise OrchestrationError("stage-uuid-invalid")
     if type(plan.source_revision) is not str or not re.fullmatch(r"[0-9a-f]{40}", plan.source_revision):
@@ -358,6 +451,69 @@ def _validate_plan_static(plan: StagePlan) -> dict[str, object]:
         raise OrchestrationError("acquisition-manifest-pin-invalid")
     if _sha(plan.acquisition_manifest_bytes) != plan.expected_acquisition_manifest_sha256:
         raise OrchestrationError("acquisition-manifest-pin-mismatch")
+    if plan.development_receipt_bytes is not None:
+        if (
+            type(plan.development_receipt_bytes) is not bytes
+            or len(plan.development_receipt_bytes) > core.MAX_MANIFEST_BYTES
+            or type(plan.development_receipt_sha256) is not str
+            or not _SHA256.fullmatch(plan.development_receipt_sha256)
+            or type(plan.development_stage_uuid) is not str
+        ):
+            raise OrchestrationError("development-receipt-binding-invalid")
+        try:
+            core._verify_development_receipt(
+                plan.development_receipt_bytes,
+                expected_sha256=plan.development_receipt_sha256,
+                current_stage_uuid=plan.stage_uuid,
+                expected_development_stage_uuid=plan.development_stage_uuid,
+                forbidden_stage_uuids=(),
+                protocol_sha256=protocol_sha,
+                source_revision=plan.source_revision,
+                source_closure_sha256=plan.source_closure_sha256,
+            )
+        except core.StudyError as exc:
+            raise OrchestrationError("development-receipt-invalid") from exc
+    if (plan.band_companion_bytes is None) != (plan.band_companion_sha256 is None):
+        raise OrchestrationError("band-companion-binding-incomplete")
+    if (plan.band_companion_bytes is None) != (plan.initial_registration_bytes is None):
+        raise OrchestrationError("band-companion-registration-binding-incomplete")
+    if (plan.band_companion_bytes is None) != (plan.band_companion_source_pins is None):
+        raise OrchestrationError("band-companion-source-pins-incomplete")
+    if plan.band_companion_source_pins is not None and (
+        type(plan.band_companion_source_pins) is not dict
+        or not plan.band_companion_source_pins
+        or any(
+            type(name) is not str or type(value) is not str or not _SHA256.fullmatch(value)
+            for name, value in plan.band_companion_source_pins.items()
+        )
+    ):
+        raise OrchestrationError("band-companion-source-pins-invalid")
+    if (plan.initial_registration_bytes is None) != (plan.initial_registration_sha256 is None):
+        raise OrchestrationError("initial-registration-binding-incomplete")
+    if (
+        plan.initial_registration_bytes is not None
+        and _sha(plan.initial_registration_bytes) != plan.initial_registration_sha256
+    ):
+        raise OrchestrationError("initial-registration-pin-mismatch")
+    if plan.band_companion_bytes is not None:
+        if type(plan.band_companion_bytes) is not bytes or not plan.band_companion_bytes:
+            raise OrchestrationError("band-companion-bytes-invalid")
+        if type(plan.band_companion_sha256) is not str or not _SHA256.fullmatch(plan.band_companion_sha256):
+            raise OrchestrationError("band-companion-pin-invalid")
+        if _sha(plan.band_companion_bytes) != plan.band_companion_sha256:
+            raise OrchestrationError("band-companion-pin-mismatch")
+        try:
+            registration = core._parse_registration(plan.initial_registration_bytes)
+        except Exception as exc:
+            raise OrchestrationError("band-companion-registration-invalid") from exc
+        if (
+            registration.get("stage_uuid") != plan.stage_uuid
+            or registration.get("stage_kind") != plan.stage_kind
+            or registration.get("source_revision") != plan.source_revision
+            or registration.get("pins", {}).get("protocol") != protocol_sha
+            or registration.get("band_companion_sha256") != plan.band_companion_sha256
+        ):
+            raise OrchestrationError("band-companion-registration-binding-mismatch")
     if type(plan.source_closure_sha256) is not str or not _SHA256.fullmatch(plan.source_closure_sha256):
         raise OrchestrationError("source-closure-pin-invalid")
     if type(plan.packet_stage_uuid) is not str or str(uuid.UUID(plan.packet_stage_uuid)) != plan.packet_stage_uuid:
@@ -368,6 +524,26 @@ def _validate_plan_static(plan: StagePlan) -> dict[str, object]:
     cohorts = _strict_json(plan.cohorts_bytes, "cohorts")
     if type(protocol) is not dict or type(cohorts) is not dict:
         raise OrchestrationError("study-material-shape")
+    try:
+        protocol_pool_mode = acquisition.pool_input_mode_for_stage(protocol, plan.stage_kind)
+    except ValueError as exc:
+        raise OrchestrationError("pool-input-mode-invalid") from exc
+    if protocol_pool_mode not in {"live-acquisition/1", "frozen-pool/1", "saved-corpus/1"}:
+        raise OrchestrationError("pool-input-mode-invalid")
+    if plan.pool_input_mode != protocol_pool_mode:
+        raise OrchestrationError("pool-input-mode-protocol-mismatch")
+    if protocol_pool_mode in {"frozen-pool/1", "saved-corpus/1"}:
+        from scripts import coverage_band_companion as band_companion
+
+        if plan.band_companion_bytes is None:
+            raise OrchestrationError("frozen-pool-band-companion-required")
+        expected_companion = band_companion.contract_sha256_for(_sha(plan.protocol_bytes), _sha(plan.cohorts_bytes))
+        if plan.band_companion_sha256 != expected_companion:
+            raise OrchestrationError("frozen-pool-band-companion-pin-invalid")
+        if plan.initial_registration_bytes is None or plan.initial_registration_sha256 is None:
+            raise OrchestrationError("frozen-pool-initial-registration-required")
+        if plan.band_companion_source_pins is None:
+            raise OrchestrationError("frozen-pool-band-companion-source-pins-required")
     if protocol.get("selector_input_map_schema") == "coverage-selector-input-map/2-registered":
         if protocol.get("selector_input_map_status") != "registered":
             raise OrchestrationError("selector-map-registration-status-required")
@@ -408,24 +584,81 @@ def _validate_plan_static(plan: StagePlan) -> dict[str, object]:
     }
     if any(count != 2 for counts in intent_counts.values() for count in counts.values()):
         raise OrchestrationError("mixed-workload-intent-balance")
+    if plan.band_companion_bytes is not None:
+        try:
+            companion_doc = _strict_json(plan.band_companion_bytes, "band-companion")
+            from scripts.coverage_band_companion import validate_contract
+
+            validate_contract(
+                companion_doc,
+                stage_kind=plan.stage_kind,
+                protocol_sha256=protocol_sha,
+                cohorts_sha256=cohorts_sha,
+            )
+            if _canonical(companion_doc) != plan.band_companion_bytes:
+                raise ValueError("noncanonical-companion")
+        except Exception as exc:
+            raise OrchestrationError("band-companion-contract-invalid") from exc
     acquisition_manifest = _strict_json(plan.acquisition_manifest_bytes, "acquisition-manifest")
     if type(acquisition_manifest) is not dict:
         raise OrchestrationError("acquisition-manifest-shape")
+    if protocol_pool_mode == "saved-corpus/1" and type(plan.saved_origin) is saved_corpus.SavedCorpusOrigin:
+        try:
+            # Validate the fixed package plan or its explicitly pinned sidecar
+            # before stage execution can reach any assessment provider.
+            saved_corpus.origin_acquisition_plan_bytes(plan.saved_origin)
+        except saved_corpus.SavedCorpusError as exc:
+            raise OrchestrationError("saved-origin-acquisition-plan-invalid") from exc
+        try:
+            saved_corpus.verify_historical_operation_runner_module(plan.saved_origin)
+        except saved_corpus.SavedCorpusError as exc:
+            raise OrchestrationError("saved-origin-control-source-invalid") from exc
     try:
         from scripts import coverage_live_acquire
 
-        _checked_manifest, canonical_manifest_bytes, _ids, _reserved, _limits = (
-            coverage_live_acquire._validate_manifest(acquisition_manifest, plan.acquisition_plan_bytes)
-        )
+        if protocol_pool_mode == "saved-corpus/1":
+            origin = plan.saved_origin
+            if (
+                type(origin) is not saved_corpus.SavedCorpusOrigin
+                or plan.stage_kind != "development"
+                or origin.registration.stage_kind != "development"
+                or origin.research_cases != plan.research_cases
+                or origin.navigation_targets != plan.navigation_targets
+                or plan.stage_uuid == origin.registration.stage_uuid
+                or plan.packet_stage_uuid == origin.registration.stage_uuid
+                or acquisition_manifest.get("schema") != "coverage-saved-import-plan/1"
+                or acquisition_manifest.get("packet_stage_uuid") != plan.packet_stage_uuid
+                or acquisition_manifest.get("origin_package_sha256") != origin.expected_package_sha256
+                or protocol.get("saved_development_origin", {}).get("package_sha256") != origin.expected_package_sha256
+            ):
+                raise ValueError("saved input plan does not match its registered origin")
+            total = core.validate_acquisition_plan(
+                plan.acquisition_plan_bytes,
+                expected_sha256=_sha(plan.acquisition_plan_bytes),
+                expected_stage_uuid=plan.stage_uuid,
+                expected_task_ids=tuple(research_ids + navigation_ids),
+            )
+            if total != 0:
+                raise ValueError("saved input plan must not reserve new search calls")
+            canonical_manifest_bytes = _canonical(acquisition_manifest)
+        else:
+            _checked_manifest, canonical_manifest_bytes, _ids, _reserved, _limits = (
+                coverage_live_acquire._validate_manifest(acquisition_manifest, plan.acquisition_plan_bytes)
+            )
     except Exception as exc:
         raise OrchestrationError("acquisition-manifest-invalid") from exc
     if canonical_manifest_bytes != plan.acquisition_manifest_bytes:
         raise OrchestrationError("acquisition-manifest-not-canonical")
     try:
         profile = acquisition.execution_profile_from_protocol(
-            _strict_json(plan.protocol_bytes, "protocol").get("acquisition")
+            _strict_json(plan.protocol_bytes, "protocol").get("acquisition"),
+            pool_input_mode=protocol_pool_mode,
         )
-        manifest_profile = acquisition.execution_profile_from_manifest(acquisition_manifest)
+        manifest_profile = (
+            profile
+            if protocol_pool_mode == "saved-corpus/1"
+            else acquisition.execution_profile_from_manifest(acquisition_manifest)
+        )
     except Exception as exc:
         raise OrchestrationError("acquisition-profile-binding-invalid") from exc
     if profile != manifest_profile:
@@ -450,9 +683,12 @@ def _validate_plan_static(plan: StagePlan) -> dict[str, object]:
         "cohorts_sha256": cohorts_sha,
         "task_ids": research_ids + navigation_ids,
     }
+    if plan.band_companion_sha256 is not None:
+        preacquisition_input["band_companion_sha256"] = plan.band_companion_sha256
+        preacquisition_input["initial_registration_sha256"] = plan.initial_registration_sha256
     if acquisition_manifest.get("input_manifest_sha256") != _sha(_canonical(preacquisition_input)):
         raise OrchestrationError("preacquisition-input-manifest-binding-mismatch")
-    return {
+    identity = {
         "protocol_sha256": protocol_sha,
         "cohorts_sha256": cohorts_sha,
         "task_ids": research_ids + navigation_ids,
@@ -466,12 +702,18 @@ def _validate_plan_static(plan: StagePlan) -> dict[str, object]:
         "intent_counts_by_band": intent_counts,
         "scope": "mixed-workload-only",
     }
+    if plan.band_companion_sha256 is not None:
+        identity["band_companion_sha256"] = plan.band_companion_sha256
+        identity["initial_registration_sha256"] = plan.initial_registration_sha256
+    return identity
 
 
 def _validate_plan(plan: StagePlan) -> dict[str, object]:
     """Validate a static plan and its active runtime deadline."""
     if type(plan) is not StagePlan:
         raise OrchestrationError("preacquisition-plan-required")
+    if plan.stage_kind == "confirmation" and plan.development_receipt_bytes is None:
+        raise OrchestrationError("confirmation-development-receipt-required")
     if (
         type(plan.stage_started_monotonic) not in {int, float}
         or type(plan.stage_deadline_monotonic) not in {int, float}
@@ -481,7 +723,8 @@ def _validate_plan(plan: StagePlan) -> dict[str, object]:
         raise OrchestrationError("stage-deadline-invalid")
     if not plan.stage_started_monotonic <= _monotonic() < plan.stage_deadline_monotonic:
         raise OrchestrationError("stage-deadline-inactive")
-    return _validate_plan_static(plan)
+    validated = _validate_plan_static(plan)
+    return validated
 
 
 def _private_root(path: str | os.PathLike[str]) -> Path:
@@ -498,26 +741,10 @@ def _private_root(path: str | os.PathLike[str]) -> Path:
 
 
 def _write_new(path: Path, raw: bytes) -> str:
-    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0)
     try:
-        fd = os.open(path, flags, 0o600)
+        _atomic_write_new(path, raw)
     except FileExistsError as exc:
         raise OrchestrationError("stage-inventory-already-exists") from exc
-    try:
-        view = memoryview(raw)
-        while view:
-            size = os.write(fd, view)
-            if size <= 0:
-                raise OrchestrationError("stage-inventory-short-write")
-            view = view[size:]
-        os.fsync(fd)
-    finally:
-        os.close(fd)
-    parent = os.open(path.parent, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0))
-    try:
-        os.fsync(parent)
-    finally:
-        os.close(parent)
     return _sha(raw)
 
 
@@ -764,6 +991,39 @@ def _validate_acquisition(plan: StagePlan, evidence: AcquisitionEvidence) -> Non
         raise OrchestrationError("acquisition-receipt-invalid")
 
 
+def _validate_frozen_pool_collection(
+    plan: StagePlan, collection: FrozenPoolCollectionEvidence, stage_dir: Path
+) -> FrozenPoolStageEvidence:
+    if type(collection) is not FrozenPoolCollectionEvidence:
+        raise OrchestrationError("frozen-pool-collection-evidence-type")
+    expected_root = stage_dir / "collection"
+    if (
+        collection.evidence.snapshots_directory != expected_root
+        or collection.receipt_directory != expected_root
+        or collection.collector_status != "complete"
+        or type(collection.receipt_inventory_sha256) is not str
+        or not _SHA256.fullmatch(collection.receipt_inventory_sha256)
+    ):
+        raise OrchestrationError("frozen-pool-collection-path-or-pin-invalid")
+    try:
+        actual_receipt_inventory = coverage_resource_evidence.receipt_inventory_sha256(expected_root)
+        if actual_receipt_inventory != collection.receipt_inventory_sha256:
+            raise ValueError("receipt inventory pin mismatch")
+        phase_result = frozen_pool.run_frozen_pool_input_phase(
+            list(plan.research_cases),
+            evidence=collection.evidence,
+            registration=collection.registration,
+            stage_started_monotonic=plan.stage_started_monotonic,
+            stage_deadline_monotonic=plan.stage_deadline_monotonic,
+            now_monotonic=_monotonic(),
+        )
+    except Exception as exc:
+        raise OrchestrationError("frozen-pool-verification-failed") from exc
+    if phase_result.verified.snapshots_directory != expected_root:
+        raise OrchestrationError("frozen-pool-snapshot-root-mismatch")
+    return FrozenPoolStageEvidence(collection=collection, phase_result=phase_result)
+
+
 def _validate_late_preparation(
     plan: StagePlan, evidence: LatePreparationEvidence, pipeline_inputs: Mapping[str, object]
 ) -> None:
@@ -901,20 +1161,29 @@ def _check_selector(
 
 
 def _sealed_navigation_observations(
-    plan: StagePlan, evidence: AcquisitionEvidence, selector: SelectorEvidence
+    plan: StagePlan,
+    evidence: AcquisitionEvidence | FrozenPoolStageEvidence | SavedCorpusStageEvidence,
+    selector: SelectorEvidence,
 ) -> dict[str, dict[str, object]]:
     """Re-read navigation URLs only from the pinned complete snapshot artifacts."""
     try:
-        verified = coverage_live_acquire.verify_pool_snapshot_index(
-            evidence.snapshots_directory,
-            expected_index_sha256=evidence.snapshot_index_sha256,
-            expected_stage_manifest_sha256=evidence.acquisition_manifest_sha256,
-            expected_stage_uuid=plan.stage_uuid,
-            expected_source_revision=plan.source_revision,
-            expected_execution_profile=acquisition.execution_profile_from_manifest(
-                _strict_json(plan.acquisition_manifest_bytes, "acquisition-manifest")
-            ).identifier,
-        )
+        if type(evidence) is SavedCorpusStageEvidence:
+            verified = {"operations": evidence.imported.origin_pool_verified.operations}
+        elif type(evidence) is FrozenPoolStageEvidence:
+            verified = {
+                "operations": evidence.phase_result.verified.operations,
+            }
+        else:
+            verified = coverage_live_acquire.verify_pool_snapshot_index(
+                evidence.snapshots_directory,
+                expected_index_sha256=evidence.snapshot_index_sha256,
+                expected_stage_manifest_sha256=evidence.acquisition_manifest_sha256,
+                expected_stage_uuid=plan.stage_uuid,
+                expected_source_revision=plan.source_revision,
+                expected_execution_profile=acquisition.execution_profile_from_manifest(
+                    _strict_json(plan.acquisition_manifest_bytes, "acquisition-manifest")
+                ).identifier,
+            )
         operations = verified["operations"]
         result: dict[str, dict[str, object]] = {}
         for target in plan.navigation_targets:
@@ -1000,6 +1269,39 @@ def _prepare_answer_tasks(
     return tuple(answer_tasks), input_bodies
 
 
+def _selector_map_build_kwargs(plan, prepared, late_preparation, pipeline_inputs, acq, operation_materials):
+    from scripts import coverage_selector_input_map
+
+    repository_root = Path(__file__).parents[1]
+    return {
+        "prepared": prepared,
+        "task_input_manifest_bytes": late_preparation.input_manifest_bytes,
+        "pipeline_tasks": pipeline_inputs["tasks"],
+        "navigation_targets": plan.navigation_targets,
+        "snapshots_directory": acq.snapshots_directory,
+        "acquisition_snapshot_index_sha256": acq.snapshot_index_sha256,
+        "acquisition_manifest_bytes": plan.acquisition_manifest_bytes,
+        "acquisition_manifest_sha256": (
+            _sha(plan.acquisition_manifest_bytes)
+            if type(acq) is SavedCorpusStageEvidence
+            else acq.acquisition_manifest_sha256
+        ),
+        "saved_corpus_import": (acq.imported if type(acq) is SavedCorpusStageEvidence else None),
+        "initial_registration_sha256": plan.initial_registration_sha256,
+        "band_companion_sha256": plan.band_companion_sha256,
+        "verified_pool_source": (acq.phase_result.verified if type(acq) is FrozenPoolStageEvidence else None),
+        "neutral_fixture_bytes": (
+            repository_root / "docs/experiments/evidence/coverage-first-study/draft-v2/selector-readiness-inputs.json"
+        ).read_bytes(),
+        "frozen_v1_source_bytes": (
+            repository_root / "docs/experiments/evidence/coverage-first-study/w0-rerank-v1.py.txt"
+        ).read_bytes(),
+        "current_service_source_bytes": (repository_root / "slopsearx/service.py").read_bytes(),
+        "expected_builder_source_sha256": _sha(Path(coverage_selector_input_map.__file__).read_bytes()),
+        "operation_materials": operation_materials,
+    }
+
+
 async def coordinate_coverage_stage(
     *, plan: StagePlan, executors: StageExecutors, inventory_root: str | os.PathLike[str]
 ) -> StageResult:
@@ -1026,7 +1328,13 @@ async def coordinate_coverage_stage(
     except OSError as exc:
         raise OrchestrationError("stage-inventory-directory-create-failed") from exc
 
-    phase_rows = [{"phase": name, "status": "not-invoked"} for name in PHASES]
+    phase_names = list(PHASES)
+    if plan.pool_input_mode == "frozen-pool/1":
+        phase_names[0] = "frozen_pool_input"
+    phase_rows = [{"phase": name, "status": "not-invoked"} for name in phase_names]
+    if plan.pool_input_mode == "saved-corpus/1":
+        phase_rows[0]["phase"] = "saved_corpus_import"
+        phase_rows[3]["phase"] = "saved_capture_import"
     inventory: dict[str, object] = {
         "schema": SCHEMA,
         "stage_uuid": plan.stage_uuid,
@@ -1042,6 +1350,14 @@ async def coordinate_coverage_stage(
                     "acquisition_plan_sha256": identity["acquisition_plan_sha256"],
                     "task_ids": identity["task_ids"],
                     "source_closure_sha256": identity["source_closure_sha256"],
+                    **(
+                        {
+                            "band_companion_sha256": identity["band_companion_sha256"],
+                            "initial_registration_sha256": identity["initial_registration_sha256"],
+                        }
+                        if plan.band_companion_sha256 is not None
+                        else {}
+                    ),
                 }
             )
         ),
@@ -1065,6 +1381,11 @@ async def coordinate_coverage_stage(
         "gate_result_authoritative": False,
         "phases": phase_rows,
     }
+    if plan.pool_input_mode != "live-acquisition/1":
+        inventory["pool_input_mode"] = plan.pool_input_mode
+    if plan.band_companion_sha256 is not None:
+        inventory["band_companion_sha256"] = identity["band_companion_sha256"]
+        inventory["initial_registration_sha256"] = identity["initial_registration_sha256"]
     inventory_path = stage_dir / "inventory.json"
     _write_new(inventory_path, _canonical(inventory))
     artifacts: dict[str, object] = {}
@@ -1093,55 +1414,132 @@ async def coordinate_coverage_stage(
             raise
 
     try:
+        if plan.pool_input_mode == "live-acquisition/1":
 
-        async def acquire_and_verify() -> AcquisitionEvidence:
-            evidence = await executors.acquire(plan)
-            _validate_acquisition(plan, evidence)
-            if await _await(executors.verify_acquisition(plan, evidence)) is not True:
-                raise OrchestrationError("acquisition-source-bound-receipt-unverified")
-            from scripts.coverage_resource_evidence import receipt_inventory_sha256
+            async def acquire_and_verify() -> AcquisitionEvidence:
+                evidence = await executors.acquire(plan)
+                _validate_acquisition(plan, evidence)
+                if await _await(executors.verify_acquisition(plan, evidence)) is not True:
+                    raise OrchestrationError("acquisition-source-bound-receipt-unverified")
+                from scripts.coverage_resource_evidence import receipt_inventory_sha256
 
-            # Seal at acquisition completion, before capture/grading can run.
-            # A freshly recomputed expected pin during collection would accept
-            # receipt replacement between those two phase boundaries.
-            sealed_inventory = receipt_inventory_sha256(evidence.snapshots_directory)
-            artifacts["acquisition_receipt_inventory_sha256"] = sealed_inventory
-            inventory["acquisition_receipt_inventory_sha256"] = sealed_inventory
-            return evidence
+                sealed_inventory = receipt_inventory_sha256(evidence.snapshots_directory)
+                artifacts["acquisition_receipt_inventory_sha256"] = sealed_inventory
+                inventory["acquisition_receipt_inventory_sha256"] = sealed_inventory
+                return evidence
 
-        acq = await phase(
-            0,
-            "acquisition",
-            acquire_and_verify,
-            lambda value: _phase_digest(
-                value.receipt_sha256,
-                value.snapshot_index_sha256,
-                artifacts["acquisition_receipt_inventory_sha256"],
-            ),
-        )
-        pipeline_inputs = await phase(
-            1,
-            "pipeline_inputs",
-            lambda: pipeline.build_pipeline_inputs(
-                list(plan.research_cases),
-                snapshots_directory=acq.snapshots_directory,
-                expected_snapshot_index_sha256=acq.snapshot_index_sha256,
-                expected_stage_manifest_sha256=acq.acquisition_manifest_sha256,
-                stage_uuid=plan.stage_uuid,
-                source_revision=plan.source_revision,
-                protocol_sha256=identity["protocol_sha256"],
-                cohorts_sha256=identity["cohorts_sha256"],
-                candidate_identity_sha256=identity["candidate_identity_sha256"],
-                candidate_endpoint_sha256=identity["candidate_endpoint_sha256"],
-                expected_execution_profile=acquisition.execution_profile_from_manifest(
-                    _strict_json(plan.acquisition_manifest_bytes, "acquisition-manifest")
-                ).identifier,
-            ),
-            lambda value: _pipeline_receipt(value, plan.stage_uuid),
-        )
+            acq = await phase(
+                0,
+                "acquisition",
+                acquire_and_verify,
+                lambda value: _phase_digest(
+                    value.receipt_sha256,
+                    value.snapshot_index_sha256,
+                    artifacts["acquisition_receipt_inventory_sha256"],
+                ),
+            )
+            pipeline_inputs = await phase(
+                1,
+                "pipeline_inputs",
+                lambda: pipeline.build_pipeline_inputs(
+                    list(plan.research_cases),
+                    snapshots_directory=acq.snapshots_directory,
+                    expected_snapshot_index_sha256=acq.snapshot_index_sha256,
+                    expected_stage_manifest_sha256=acq.acquisition_manifest_sha256,
+                    stage_uuid=plan.stage_uuid,
+                    source_revision=plan.source_revision,
+                    protocol_sha256=identity["protocol_sha256"],
+                    cohorts_sha256=identity["cohorts_sha256"],
+                    candidate_identity_sha256=identity["candidate_identity_sha256"],
+                    candidate_endpoint_sha256=identity["candidate_endpoint_sha256"],
+                    expected_execution_profile=acquisition.execution_profile_from_manifest(
+                        _strict_json(plan.acquisition_manifest_bytes, "acquisition-manifest")
+                    ).identifier,
+                ),
+                lambda value: _pipeline_receipt(value, plan.stage_uuid),
+            )
+        elif plan.pool_input_mode == "saved-corpus/1":
+            if not callable(executors.import_saved_corpus):
+                raise OrchestrationError("saved-corpus-import-executor-required")
+
+            async def import_saved_inputs():
+                evidence = await executors.import_saved_corpus(plan)
+                if (
+                    type(evidence) is not SavedCorpusStageEvidence
+                    or evidence.origin != plan.saved_origin
+                    or type(evidence.imported) is not saved_corpus.SavedCorpusImportResult
+                    or evidence.imported.origin_package_sha256 != plan.saved_origin.expected_package_sha256
+                    or evidence.imported.pipeline_inputs.get("stage_uuid") != plan.stage_uuid
+                    or _sha(evidence.imported.import_receipt_bytes) != evidence.imported.import_receipt_sha256
+                    or evidence.imported.current_search_calls != 0
+                    or evidence.imported.current_capture_calls != 0
+                ):
+                    raise OrchestrationError("saved-corpus-import-binding-invalid")
+                artifacts["acquisition_receipt_inventory_sha256"] = (
+                    evidence.origin.expected_collection_receipt_inventory_sha256
+                )
+                inventory["saved_corpus_import_receipt_sha256"] = evidence.imported.import_receipt_sha256
+                inventory["saved_corpus_origin_package_sha256"] = evidence.imported.origin_package_sha256
+                return evidence
+
+            acq = await phase(
+                0,
+                "saved_corpus_import",
+                import_saved_inputs,
+                lambda value: _phase_digest(value.imported.import_receipt_sha256, value.imported.origin_package_sha256),
+            )
+            pipeline_inputs = await phase(
+                1,
+                "pipeline_inputs",
+                lambda: acq.imported.pipeline_inputs,
+                lambda value: _pipeline_receipt(value, plan.stage_uuid),
+            )
+        else:
+            if not callable(executors.collect_frozen_pool) or not callable(executors.verify_frozen_pool):
+                raise OrchestrationError("frozen-pool-collector-executor-required")
+
+            async def collect_and_verify_frozen() -> FrozenPoolStageEvidence:
+                collection = await executors.collect_frozen_pool(plan)
+                if await _await(executors.verify_frozen_pool(plan, collection)) is not True:
+                    raise OrchestrationError("frozen-pool-external-admission-unverified")
+                stage_evidence = _validate_frozen_pool_collection(plan, collection, stage_dir)
+                artifacts["acquisition_receipt_inventory_sha256"] = collection.receipt_inventory_sha256
+                inventory["acquisition_receipt_inventory_sha256"] = collection.receipt_inventory_sha256
+                inventory["frozen_pool_evidence_sha256"] = collection.registration.evidence_sha256
+                inventory["frozen_pool_collector_receipt_sha256"] = collection.registration.collector_receipt_sha256
+                inventory["frozen_pool_availability_sha256"] = collection.registration.availability_sha256
+                _write_inventory(inventory_path, inventory)
+                return stage_evidence
+
+            acq = await phase(
+                0,
+                "frozen_pool_input",
+                collect_and_verify_frozen,
+                lambda value: _phase_digest(
+                    value.phase_result.verified.evidence_sha256,
+                    value.phase_result.verified.snapshot_index_sha256,
+                    value.phase_result.verified.collector_receipt_sha256,
+                    artifacts["acquisition_receipt_inventory_sha256"],
+                ),
+            )
+            pipeline_inputs = await phase(
+                1,
+                "pipeline_inputs",
+                lambda: acq.phase_result.pipeline_inputs,
+                lambda value: _pipeline_receipt(value, plan.stage_uuid),
+            )
 
         async def late_prepare_and_verify() -> LatePreparationEvidence:
-            evidence = await executors.prepare_after_acquisition(plan, acq, pipeline_inputs)
+            if plan.pool_input_mode == "saved-corpus/1":
+                if not callable(executors.prepare_after_saved_corpus):
+                    raise OrchestrationError("saved-corpus-late-preflight-executor-required")
+                evidence = await executors.prepare_after_saved_corpus(plan, acq, pipeline_inputs)
+            elif plan.pool_input_mode == "frozen-pool/1":
+                if not callable(executors.prepare_after_frozen_pool):
+                    raise OrchestrationError("frozen-pool-late-preflight-executor-required")
+                evidence = await executors.prepare_after_frozen_pool(plan, acq, pipeline_inputs)
+            else:
+                evidence = await executors.prepare_after_acquisition(plan, acq, pipeline_inputs)
             _validate_late_preparation(plan, evidence, pipeline_inputs)
             if await _await(executors.verify_late_preflight(plan, evidence)) is not True:
                 raise OrchestrationError("late-preflight-external-binding-unverified")
@@ -1157,27 +1555,53 @@ async def coordinate_coverage_stage(
             ),
         )
         prepared = late_preparation.prepared
-        captured = await phase(
-            3,
-            "capture",
-            lambda: executors.capture(plan, pipeline_inputs),
-            lambda value: (
-                _validate_capture(plan, pipeline_inputs, value)
-                and _phase_digest(value.receipt_sha256, _sha(value.inventory_bytes))
-            ),
-        )
+        if plan.pool_input_mode == "saved-corpus/1":
+            captured = await phase(
+                3,
+                "saved_capture_import",
+                lambda: SavedCaptureEvidence(
+                    acq.imported,
+                    acq.imported.capture_inventory_bytes,
+                    acq.imported.context_artifacts,
+                    acq.imported.import_receipt_sha256,
+                ),
+                lambda value: _phase_digest(value.receipt_sha256, _sha(value.inventory_bytes)),
+            )
+        else:
+            captured = await phase(
+                3,
+                "capture",
+                lambda: executors.capture(plan, pipeline_inputs),
+                lambda value: (
+                    _validate_capture(plan, pipeline_inputs, value)
+                    and _phase_digest(value.receipt_sha256, _sha(value.inventory_bytes))
+                ),
+            )
         capture_inventory = _strict_json(captured.inventory_bytes, "capture-inventory")
-        prepared_references = await phase(
-            4,
-            "reference_packet_preparation",
-            lambda: packets.prepare_assessment_packets(
+
+        def prepare_reference_packets():
+            # Validate the actual saved-source map before any paid grading.
+            # This builds inputs only; it neither admits nor runs a selector.
+            if type(acq) is SavedCorpusStageEvidence:
+                from scripts import coverage_selector_input_map
+
+                preflight_map = coverage_selector_input_map.build_selector_input_map(
+                    **_selector_map_build_kwargs(plan, prepared, late_preparation, pipeline_inputs, acq, {})
+                )
+                inventory["saved_selector_map_preflight_sha256"] = _sha(preflight_map)
+            return packets.prepare_assessment_packets(
                 packet_stage_uuid=plan.packet_stage_uuid,
                 pipeline_inputs=pipeline_inputs,
                 research_cases=list(plan.research_cases),
                 capture_inventory_bytes=captured.inventory_bytes,
                 expected_capture_inventory_sha256=_sha(captured.inventory_bytes),
                 context_artifacts=captured.context_artifacts,
-            ),
+            )
+
+        prepared_references = await phase(
+            4,
+            "reference_packet_preparation",
+            prepare_reference_packets,
             lambda value: _phase_digest(
                 _sha(value.preassessment_manifest_bytes),
                 value.private_binding_sha256,
@@ -1193,15 +1617,26 @@ async def coordinate_coverage_stage(
         )
         from scripts import coverage_grade_closure as grade_closure
 
-        closed_references = await phase(
-            6,
-            "reference_grade_closure",
-            lambda: grade_closure.close_preassessment(
+        async def close_reference_grades():
+            closed = grade_closure.close_preassessment(
                 prepared_references,
                 reference_submissions,
                 expected_manifest_sha256=preassessment_manifest_pin,
                 expected_private_binding_sha256=private_binding_pin,
-            ),
+            )
+            if executors.persist_reference_closure is not None:
+                checkpoint_sha = await _await(
+                    executors.persist_reference_closure(prepared_references, reference_submissions, closed)
+                )
+                if type(checkpoint_sha) is not str or not _SHA256.fullmatch(checkpoint_sha):
+                    raise OrchestrationError("reference-closure-checkpoint-invalid")
+                inventory["reference_closure_checkpoint_sha256"] = checkpoint_sha
+            return closed
+
+        closed_references = await phase(
+            6,
+            "reference_grade_closure",
+            close_reference_grades,
             lambda value: _phase_digest(value.receipt_sha256),
         )
 
@@ -1221,29 +1656,15 @@ async def coordinate_coverage_stage(
             # remain untouched and continue to report these fields unknown.
             from scripts import coverage_selector_input_map
 
-            repository_root = Path(__file__).parents[1]
             operation_materials: dict[str, dict[str, object]] = {}
-            selector_map_kwargs = {
-                "prepared": prepared,
-                "task_input_manifest_bytes": late_preparation.input_manifest_bytes,
-                "pipeline_tasks": pipeline_inputs["tasks"],
-                "navigation_targets": plan.navigation_targets,
-                "snapshots_directory": acq.snapshots_directory,
-                "acquisition_snapshot_index_sha256": acq.snapshot_index_sha256,
-                "acquisition_manifest_bytes": plan.acquisition_manifest_bytes,
-                "acquisition_manifest_sha256": acq.acquisition_manifest_sha256,
-                "neutral_fixture_bytes": (
-                    repository_root
-                    / "docs/experiments/evidence/coverage-first-study/draft-v2/selector-readiness-inputs.json"
-                ).read_bytes(),
-                "frozen_v1_source_bytes": (
-                    repository_root / "docs/experiments/evidence/coverage-first-study/w0-rerank-v1.py.txt"
-                ).read_bytes(),
-                "current_service_source_bytes": (repository_root / "slopsearx/service.py").read_bytes(),
-                "expected_builder_source_sha256": _sha(Path(coverage_selector_input_map.__file__).read_bytes()),
-                "operation_materials": operation_materials,
-            }
+            selector_map_kwargs = _selector_map_build_kwargs(
+                plan, prepared, late_preparation, pipeline_inputs, acq, operation_materials
+            )
             selector_input_map_bytes = coverage_selector_input_map.build_selector_input_map(**selector_map_kwargs)
+            if type(acq) is SavedCorpusStageEvidence and _sha(selector_input_map_bytes) != inventory.get(
+                "saved_selector_map_preflight_sha256"
+            ):
+                raise OrchestrationError("saved-selector-map-changed-after-grading")
             selector_input_map_sha256 = _write_new(stage_dir / "selector-input-map.json", selector_input_map_bytes)
             from scripts import coverage_jev_execution
 
@@ -1284,6 +1705,7 @@ async def coordinate_coverage_stage(
             selector_pipeline_inputs["selector_input_map_bytes"] = selector_input_map_bytes
             selector_pipeline_inputs["selector_input_map_sha256"] = selector_input_map_sha256
             selector_pipeline_inputs["selector_operation_materials"] = operation_materials
+            selector_pipeline_inputs["task_input_manifest_bytes"] = late_preparation.input_manifest_bytes
             if map_schema == "coverage-selector-input-map/2-draft":
                 # Preserve the original draft hard stop. Only the new
                 # registered schema can proceed, after its externally pinned
@@ -1399,6 +1821,7 @@ async def coordinate_coverage_stage(
             report = coverage_resource_evidence.collect_resource_evidence(
                 deadline_monotonic=plan.stage_deadline_monotonic,
                 stage_uuid=plan.stage_uuid,
+                stage_kind=plan.stage_kind,
                 source_revision=plan.source_revision,
                 protocol_bytes=plan.protocol_bytes,
                 cohorts_bytes=plan.cohorts_bytes,
@@ -1444,6 +1867,10 @@ async def coordinate_coverage_stage(
                 expected_selector_input_map_sha256=(
                     selector_input_map_sha256 if verified_selector_map is not None else None
                 ),
+                verified_pool_source=(acq.phase_result.verified if type(acq) is FrozenPoolStageEvidence else None),
+                saved_corpus_import=(acq.imported if type(acq) is SavedCorpusStageEvidence else None),
+                saved_origin=plan.saved_origin,
+                stage_started_monotonic=plan.stage_started_monotonic,
             )
             collector_receipt_bytes = _canonical(
                 {
@@ -1547,6 +1974,9 @@ async def coordinate_coverage_stage(
             "resource_evidence_receipt_sha256": artifacts["resource_evidence_receipt_sha256"],
             "pending_time_receipt_sha256": pending_time_sha,
         }
+        if plan.band_companion_sha256 is not None:
+            gate_inputs["band_companion_sha256"] = identity["band_companion_sha256"]
+            gate_inputs["initial_registration_sha256"] = identity["initial_registration_sha256"]
         gate_input_bytes = _canonical(gate_inputs)
         gate_input_sha = _sha(gate_input_bytes)
         inventory["gate_input_manifest_sha256"] = gate_input_sha
@@ -1574,6 +2004,10 @@ async def coordinate_coverage_stage(
                 navigation_observations=navigation_observations,
                 resource_evidence=resource_evidence,
                 input_manifest_sha256=gate_input_sha,
+                band_companion_bytes=plan.band_companion_bytes,
+                stage_kind=plan.stage_kind,
+                cohorts_sha256=identity["cohorts_sha256"],
+                protocol_sha256=identity["protocol_sha256"],
             )
             receipt_path = stage_dir / "gate-calculation-receipt.json"
             _write_new(receipt_path, report.receipt_bytes)
@@ -1592,8 +2026,20 @@ async def coordinate_coverage_stage(
             ),
         )
         inventory["status"] = "pending-independent-closeout"
-        inventory["terminal_reason"] = None if gates.status == "pass" else f"gate-{gates.status}"
         inventory["gate_status"] = gates.status
+        if gates.companion_status is None:
+            inventory["terminal_reason"] = None if gates.status == "pass" else f"gate-{gates.status}"
+        else:
+            inventory["band_companion_status"] = gates.companion_status
+            inventory["release_qualification_status"] = (
+                "inconclusive"
+                if gates.status == "inconclusive" or gates.companion_status == "inconclusive"
+                else "fail"
+                if gates.status == "fail" or gates.companion_status == "fail"
+                else "pass"
+            )
+            qualification_status = inventory["release_qualification_status"]
+            inventory["terminal_reason"] = None if qualification_status == "pass" else f"gate-{qualification_status}"
         inventory["gate_result_authoritative"] = False
         inventory["gate_scope"] = gates.scope
         inventory["band_diagnostics_sha256"] = _sha(_canonical(gates.band_diagnostics))

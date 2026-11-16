@@ -1,0 +1,7 @@
+{
+  "plan_id":"W05",
+  "runs":[
+    {"status":"failed","command":"/private/tmp/slopsearx-rust-oracle-py314/bin/python docs/rust-rewrite/w05/capture_source.py --allow-original-oracle --output docs/rust-rewrite/w05/source.json","failure":"Replacing socket.socket with a function prevented ssl.SSLSocket subclass initialization. No output created, no network attempted."},
+    {"status":"completed","command":"/private/tmp/slopsearx-rust-oracle-py314/bin/python docs/rust-rewrite/w05/capture_source.py --allow-original-oracle --output docs/rust-rewrite/w05/source.json","producer_sha256":"85ed07e9f915183037d126cda5132dad00acce86f51eb9cc78fbb03359cf5dd3","output":"docs/rust-rewrite/w05/source.json","output_sha256":"bfa6a97cc9912f97054e78b56fd3ead683f417d0da293440d5c173f5d579dccf","inputs_sha256":"09381cd39ecb3dede754b7fd73b0a96a2e7d4a9e672761f4dff5904ce6faa5ed","network_connections":0,"provider_calls":0,"mode":"manual temporary original pure reference; not mandatory gate/runtime"}
+  ]
+}

@@ -1,0 +1,45 @@
+from pathlib import Path
+import ast,json,hashlib,subprocess,sys,difflib,time
+r=Path('/Volumes/tank01/magnus/git/slopsearx-a11');docs=r/'docs/rust-rewrite/a11';out=Path('/private/tmp/a11-producer-style-amendment-v1');out.mkdir(exist_ok=False);names=['capture_boundaries.py','capture_supplement.py','capture_representation.py','capture_config_reachability.py'];sha=lambda b:hashlib.sha256(b).hexdigest();before={n:(docs/n).read_bytes()for n in names}
+for n,b in before.items():(out/(n+'.before')).write_bytes(b)
+for n,b in before.items():
+ s=b.decode()
+ if n=='capture_config_reachability.py':
+  s=s.replace('from __future__ import annotations','from __future__ import annotations\n# ruff: noqa: E402 -- explicit grant/network/source guards precede backend imports',1)
+  s=s.replace('from slopsearx.config import load_config','# isort: off -- retain audited backend import order after all guards\nfrom slopsearx.config import load_config',1).replace('from engines.otx import OTXAdapter','from engines.otx import OTXAdapter\n# isort: on',1)
+  old='sha = lambda data: hashlib.sha256(data).hexdigest()';new='def sha(data):\n    return hashlib.sha256(data).hexdigest()'
+ else:old='sha = lambda b: hashlib.sha256(b).hexdigest()';new='def sha(b):\n    return hashlib.sha256(b).hexdigest()'
+ if s.count(old)!=1:raise RuntimeError('unexpected sha helper')
+ (docs/n).write_text(s.replace(old,new))
+ruff='/Volumes/tank01/magnus/rust-builds/slopsearx/pre-commit-cache/repo7dgyo0vq/py_env-python3.12/bin/ruff';results=[]
+for args in[['check','--no-cache','--fix','--select','E401,I001'],['format'],['check','--no-cache']]:
+ cmd=[ruff,*args,*[str(docs/n)for n in names]];v=subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT);log=out/('command-'+str(len(results))+'.log');log.write_bytes(v.stdout);results.append(dict(command=cmd,actual_exit_code=v.returncode,log=str(log),sha256=sha(v.stdout)))
+ if v.returncode:raise RuntimeError('producer style command failed')
+# Check semantic source protocol modulo only stdlib import grouping/order and the
+# exact pure SHA helper Lambda→def shape. Backend import order and all other AST
+# statement order/contents stay exact. This is explicitly not full AST identity.
+def normalized(data):
+ module=ast.parse(data);body=[]
+ for node in module.body:
+  if isinstance(node,ast.FunctionDef)and node.name=='sha'and not node.decorator_list and len(node.body)==1 and isinstance(node.body[0],ast.Return):node=ast.Assign(targets=[ast.Name(id='sha',ctx=ast.Store())],value=ast.Lambda(args=node.args,body=node.body[0].value))
+  body.append(node)
+ result=[];index=0
+ while index<len(body):
+  node=body[index]
+  if isinstance(node,(ast.Import,ast.ImportFrom)):
+   group=[]
+   while index<len(body)and isinstance(body[index],(ast.Import,ast.ImportFrom)):
+    part=body[index]
+    if isinstance(part,ast.Import):group.extend(ast.Import(names=[alias])for alias in part.names)
+    else:group.append(part)
+    index+=1
+   std=all((part.names[0].name.split('.')[0]if isinstance(part,ast.Import)else(part.module or'').split('.')[0])in sys.stdlib_module_names|{'__future__'}for part in group)
+   rendered=[ast.dump(part,include_attributes=False)for part in group];result.append(('stdlib-import-block'if std else'ordered-backend-import-block',sorted(rendered)if std else rendered))
+  else:result.append(('statement',ast.dump(node,include_attributes=False)));index+=1
+ return result
+rows=[]
+for n,b in before.items():
+ a=(docs/n).read_bytes();normal=normalized(b)
+ if normal!=normalized(a):raise RuntimeError('unexpected producer AST/protocol change: '+n)
+ pp=out/(n+'.patch');pp.write_text(''.join(difflib.unified_diff(b.decode().splitlines(True),a.decode().splitlines(True),fromfile='before/'+n,tofile='after/'+n)));rows.append(dict(path=str((docs/n).relative_to(r)),before_sha256=sha(b),current_producer_sha256=sha(a),patch_path=str(pp),patch_sha256=sha(pp.read_bytes()),literal_ast_equal=ast.dump(ast.parse(b),include_attributes=False)==ast.dump(ast.parse(a),include_attributes=False),normalized_protocol_ast_equal=True,normalized_protocol_ast_sha256=sha(json.dumps(normal,separators=(',',':')).encode()),executed_after_amendment=False))
+d=dict(purpose='Current manual oracle style only, not a new observed invocation. Executed archives and all source capture JSON stay unchanged.',created=time.time(),analysis_python=sys.version,scope='Split/sort only contiguous standard-library imports, sha lambda→def same return expression, E402 guard-position comment. Config backend import order explicitly retained. No other AST statement/order changes; no native runtime or hook exclusions.',normalizer_source=str(Path(__file__)),normalizer_sha256=sha(Path(__file__).read_bytes()),commands=results,rows=rows);(out/'receipt.json').write_text(json.dumps(d,indent=2)+'\n');(docs/'evidence/producer-style-amendment-v1.json').write_bytes((out/'receipt.json').read_bytes());print(json.dumps(d,indent=2))

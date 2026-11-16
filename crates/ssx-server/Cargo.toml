@@ -1,0 +1,21 @@
+[package]
+name = "ssx-server"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+ssx-application.workspace = true
+ssx-config.workspace = true
+ssx-registry.workspace = true
+ssx-domain.workspace = true
+ssx-infra.workspace = true
+ssx-http.workspace = true
+tokio.workspace = true
+clap.workspace = true
+serde_json.workspace = true

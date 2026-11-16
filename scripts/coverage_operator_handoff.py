@@ -19,12 +19,22 @@ import uuid
 from pathlib import Path
 from typing import Mapping
 
+from scripts.coverage_atomic_io import write_new as _atomic_write_new
+
 SCHEMA = "coverage-operator-phase-handoff/1"
 _SHA = re.compile(r"[0-9a-f]{64}\Z")
 _SCOPE = re.compile(r"[a-z][a-z0-9-]{0,47}\Z")
 _REQUEST_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,95}\Z")
+_ARTIFACT_NAME = re.compile(r"[a-z][a-z0-9_-]{0,63}\Z")
 MAX_REQUEST_BYTES = 128_000
 MAX_RECEIPT_BYTES = 16_384
+MAX_ARTIFACT_COUNT = 128
+# A registered 640-source manifest can contain up to 640 * 4,096 URL bytes;
+# an answer batch can contain 18 * 384,000 request bytes. Keep the larger
+# individual-file allowance and 8MB aggregate allowance above those existing
+# source limits without copying raw acquisition response bodies.
+MAX_ARTIFACT_BYTES = 4_000_000
+MAX_ARTIFACT_TOTAL_BYTES = 8_000_000
 # The selector's complete one-shot permit batch is a single receipt.  Its
 # exact frozen 39-operation response is 37,607 bytes, so give only that scope
 # a separately bounded envelope; individual permits and every other handoff
@@ -103,23 +113,7 @@ def _check_no_secret_keys(value: object) -> None:
 
 
 def _write_new(path: Path, raw: bytes) -> None:
-    descriptor = os.open(
-        path,
-        os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0),
-        0o600,
-    )
-    try:
-        with os.fdopen(descriptor, "wb", closefd=False) as stream:
-            stream.write(raw)
-            stream.flush()
-            os.fsync(stream.fileno())
-    finally:
-        os.close(descriptor)
-    parent_fd = os.open(path.parent, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0))
-    try:
-        os.fsync(parent_fd)
-    finally:
-        os.close(parent_fd)
+    _atomic_write_new(path, raw)
 
 
 def _read_private(path: Path, maximum: int) -> bytes:
@@ -139,6 +133,140 @@ def _read_private(path: Path, maximum: int) -> bytes:
         os.close(descriptor)
 
 
+def _artifact_manifest(
+    stage_uuid: str, scope: str, request_id: str, artifacts: Mapping[str, bytes]
+) -> tuple[dict, dict[str, bytes]]:
+    if type(artifacts) is not dict or not artifacts or len(artifacts) > MAX_ARTIFACT_COUNT:
+        raise OperatorHandoffError("handoff-artifact-inventory-invalid")
+    if any(type(name) is not str or not _ARTIFACT_NAME.fullmatch(name) for name in artifacts):
+        raise OperatorHandoffError("handoff-artifact-entry-invalid")
+    rows = []
+    total = 0
+    safe: dict[str, bytes] = {}
+    for name in sorted(artifacts):
+        raw = artifacts[name]
+        if type(raw) is not bytes:
+            raise OperatorHandoffError("handoff-artifact-entry-invalid")
+        if not raw or len(raw) > MAX_ARTIFACT_BYTES:
+            raise OperatorHandoffError("handoff-artifact-over-cap")
+        total += len(raw)
+        if total > MAX_ARTIFACT_TOTAL_BYTES:
+            raise OperatorHandoffError("handoff-artifacts-over-cap")
+        safe[name] = raw
+        rows.append({"name": name, "sha256": _sha(raw), "bytes": len(raw)})
+    return {
+        "schema": "coverage-operator-phase-artifacts/1",
+        "stage_uuid": stage_uuid,
+        "scope": scope,
+        "request_id": request_id,
+        "files": rows,
+    }, safe
+
+
+def load_request_artifacts(
+    *,
+    root: str | os.PathLike[str],
+    stage_uuid: str,
+    scope: str,
+    request_id: str,
+    request_bytes: bytes,
+    expected_source_closure_sha256: str | None = None,
+) -> dict[str, bytes]:
+    """Read and verify a request's bounded, private, source-bound artifact bundle."""
+    try:
+        try:
+            if str(uuid.UUID(stage_uuid)) != stage_uuid:
+                raise ValueError
+        except (TypeError, ValueError) as exc:
+            raise OperatorHandoffError("handoff-artifact-stage-invalid") from exc
+        if (
+            type(scope) is not str
+            or not _SCOPE.fullmatch(scope)
+            or type(request_id) is not str
+            or not _REQUEST_ID.fullmatch(request_id)
+        ):
+            raise OperatorHandoffError("handoff-artifact-request-identity-invalid")
+        envelope = _strict(request_bytes)
+        if type(envelope) is not dict or envelope.get("schema") != SCHEMA:
+            raise OperatorHandoffError("handoff-artifact-request-invalid")
+        bindings = envelope.get("bindings")
+        manifest = envelope.get("phase_artifacts")
+        if type(bindings) is not dict or type(manifest) is not dict:
+            raise OperatorHandoffError("handoff-artifact-manifest-missing")
+        if (
+            set(envelope)
+            != {
+                "schema",
+                "stage_uuid",
+                "scope",
+                "request_id",
+                "request_sha256",
+                "bindings",
+                "phase_artifacts",
+                "phase_artifacts_sha256",
+            }
+            or envelope.get("request_sha256") != _sha(_canonical(bindings))
+            or set(manifest) != {"schema", "stage_uuid", "scope", "request_id", "files"}
+            or envelope.get("stage_uuid") != stage_uuid
+            or envelope.get("scope") != scope
+            or envelope.get("request_id") != request_id
+            or manifest.get("schema") != "coverage-operator-phase-artifacts/1"
+            or manifest.get("stage_uuid") != stage_uuid
+            or manifest.get("scope") != scope
+            or manifest.get("request_id") != request_id
+            or envelope.get("phase_artifacts_sha256") != _sha(_canonical(manifest))
+            or (
+                expected_source_closure_sha256 is not None
+                and bindings.get("source_closure_sha256") != expected_source_closure_sha256
+            )
+        ):
+            raise OperatorHandoffError("handoff-artifact-binding-mismatch")
+        rows = manifest.get("files")
+        if type(rows) is not list or not rows or len(rows) > MAX_ARTIFACT_COUNT:
+            raise OperatorHandoffError("handoff-artifact-inventory-invalid")
+        private_root = _private_root(root)
+        base = private_root
+        for component in (stage_uuid, scope, "artifacts", request_id):
+            base = base / component
+            metadata = base.lstat()
+            if (
+                stat.S_ISLNK(metadata.st_mode)
+                or not stat.S_ISDIR(metadata.st_mode)
+                or stat.S_IMODE(metadata.st_mode) != 0o700
+                or metadata.st_uid != getattr(os, "geteuid", lambda: metadata.st_uid)()
+            ):
+                raise OperatorHandoffError("handoff-artifact-root-not-private")
+        out: dict[str, bytes] = {}
+        total = 0
+        previous = ""
+        for row in rows:
+            if (
+                type(row) is not dict
+                or set(row) != {"name", "sha256", "bytes"}
+                or type(row.get("name")) is not str
+                or not _ARTIFACT_NAME.fullmatch(row["name"])
+                or row["name"] <= previous
+                or type(row.get("sha256")) is not str
+                or not _SHA.fullmatch(row["sha256"])
+                or type(row.get("bytes")) is not int
+                or not 1 <= row["bytes"] <= MAX_ARTIFACT_BYTES
+            ):
+                raise OperatorHandoffError("handoff-artifact-entry-invalid")
+            previous = row["name"]
+            raw = _read_private(base / f"{row['name']}.bin", MAX_ARTIFACT_BYTES)
+            if len(raw) != row["bytes"] or _sha(raw) != row["sha256"]:
+                raise OperatorHandoffError("handoff-artifact-pin-mismatch")
+            total += len(raw)
+            if total > MAX_ARTIFACT_TOTAL_BYTES:
+                raise OperatorHandoffError("handoff-artifacts-over-cap")
+            out[row["name"]] = raw
+        return out
+    except OperatorHandoffError:
+        raise
+    except (OSError, TypeError, ValueError) as exc:
+        raise OperatorHandoffError("handoff-artifacts-unavailable") from exc
+
+
 class OperatorReceiptHandoff:
     """One-shot request/receipt exchange over a fixed private directory tree."""
 
@@ -156,6 +284,7 @@ class OperatorReceiptHandoff:
         request_id: str,
         bindings: Mapping[str, object],
         deadline_monotonic: float,
+        artifacts: Mapping[str, bytes] | None = None,
     ) -> tuple[bytes, str]:
         try:
             if type(stage_uuid) is not str or str(uuid.UUID(stage_uuid)) != stage_uuid:
@@ -199,6 +328,21 @@ class OperatorReceiptHandoff:
             "request_sha256": request_sha,
             "bindings": _strict(binding_bytes),
         }
+        if artifacts is not None:
+            manifest, safe_artifacts = _artifact_manifest(stage_uuid, scope, request_id, artifacts)
+            artifact_parent = scope_root / "artifacts"
+            artifact_parent.mkdir(mode=0o700, exist_ok=True)
+            if (
+                artifact_parent.is_symlink()
+                or stat.S_IMODE(artifact_parent.stat(follow_symlinks=False).st_mode) != 0o700
+            ):
+                raise OperatorHandoffError("handoff-artifact-root-not-private")
+            artifact_root = artifact_parent / request_id
+            artifact_root.mkdir(mode=0o700, exist_ok=False)
+            for name, raw in safe_artifacts.items():
+                _write_new(artifact_root / f"{name}.bin", raw)
+            request["phase_artifacts"] = manifest
+            request["phase_artifacts_sha256"] = _sha(_canonical(manifest))
         try:
             _write_new(request_root / f"{request_id}.json", _canonical(request))
         except FileExistsError as exc:

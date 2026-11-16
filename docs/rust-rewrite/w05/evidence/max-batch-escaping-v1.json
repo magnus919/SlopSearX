@@ -1,0 +1,10 @@
+{
+  "stdout_sha256": "03c949c1376ea2327016700d2c2746d0b6914a9043ca29a2cb0eaa5eba7a010a",
+  "stdout": "   Compiling ssx-mcp v0.1.0 (/Volumes/tank01/magnus/git/slopsearx-w05/crates/ssx-mcp)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.83s\n     Running tests/w05.rs (/Volumes/tank01/magnus/rust-builds/slopsearx/w05/debug/deps/w05-2b9b4760ea10281c)\n\nrunning 1 test\nW05_MAX_BATCH_ESCAPING_CHARACTERIZATION:variant=quote-backslash;events=100;stored_event_bytes=65536;http_bytes=19656020;text_bytes=6556434;structured_bytes=6556434;all_per_event_ssx_json_equal=true\nW05_MAX_BATCH_ESCAPING_CHARACTERIZATION:variant=control-heavy;events=100;stored_event_bytes=65536;http_bytes=16385620;text_bytes=6556434;structured_bytes=6556434;all_per_event_ssx_json_equal=true\ntest actual_worst_escaping_maximum_batch_raw_http_characterization ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 6.92s\n\n",
+  "receipt": {
+    "exit_code": 0,
+    "kind": "quote/backslash and control-heavy maximum batch through focused private HTTP; shared profile still pending",
+    "test_before_sha256": "2412f0c884268b080bf09319ea478e97aea6bdbb27bb416d598e261658c4a67b",
+    "restoration": "byte_exact"
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "schema": "O02_PORTAL_SMOKE_TRANSITION_V1",
+  "issue": 919,
+  "plan_id": "O02",
+  "baseline": "b47579e113bcc2652105e05e7c2d6915c3dffb58",
+  "scope": "Current Docker release smoke runtime is native; no full O02 acceptance or Python retirement is claimed.",
+  "historical_python_source": {
+    "path": "scripts/portal_release_smoke.py",
+    "f01_git_blob": "bcb6ede74e95dd8c61eb870d3275b93ad191fb1a",
+    "disposition": "Retain exact bytes as frozen migration evidence until the separately reviewed G08 source-retirement amendment.",
+    "active_invocation": false
+  },
+  "former_invocations": [
+    {
+      "path": ".github/workflows/docker.yml",
+      "theme": "dark",
+      "command": "python3 scripts/portal_release_smoke.py --base-url http://localhost:8080 --expected-theme dark"
+    },
+    {
+      "path": ".github/workflows/docker.yml",
+      "theme": "darker",
+      "command": "python3 scripts/portal_release_smoke.py --base-url http://localhost:8081 --expected-theme darker"
+    }
+  ],
+  "current_invocations": [
+    {
+      "path": ".github/workflows/docker.yml",
+      "theme": "dark",
+      "command": "cargo xtask ci-helper portal-release-smoke --base-url http://localhost:8080 --expected-theme dark"
+    },
+    {
+      "path": ".github/workflows/docker.yml",
+      "theme": "darker",
+      "command": "cargo xtask ci-helper portal-release-smoke --base-url http://localhost:8081 --expected-theme darker"
+    }
+  ],
+  "parity": [
+    "Landing page requires HTTP 200, the search form, exact configured theme, and CSP.",
+    "Healthz requires HTTP 200 and trimmed body OK.",
+    "Search uses the empty __portal_smoke__ category, accepts HTTP 200 or 503, and requires JSON query preservation and a results array.",
+    "Query parameters are encoded; probe order and Accept headers match the predecessor.",
+    "For non-loopback proxy bypass, explicitly present lowercase no_proxy takes precedence over NO_PROXY even when empty; only absent lowercase falls back to uppercase. The chosen value is passed to both curl child variables so no_proxy=empty with NO_PROXY=* still uses the configured proxy, matching urllib."
+  ],
+  "intentional_improvements": [
+    "Declared bodies over 1 MiB are rejected before reading; unknown-length streams are rejected before body accumulation would exceed 1 MiB.",
+    "Each probe, including its redirect chain, shares one 30-second deadline; response headers are limited to 64 KiB and at most ten HTTP(S) redirects are followed.",
+    "Curl's default configuration is disabled. Loopback targets bypass proxies; non-loopback targets use the caller's proxy environment. For HTTP URLs, uppercase HTTP_PROXY is exposed to curl as lowercase http_proxy only when lowercase http_proxy is absent and REQUEST_METHOD is unset, matching urllib's CGI safeguard; an explicitly empty lowercase value is preserved.",
+    "The URL is supplied to curl over stdin rather than command-line arguments. Base URL credentials, query, and fragment are rejected; redirect credentials are also rejected; diagnostics omit URLs, query text, headers, and response bodies.",
+    "Responses are not decompressed, matching urllib's raw-byte behavior before UTF-8 replacement decoding."
+  ],
+  "non_goals": [
+    "No third-party provider is contacted.",
+    "No image is built, pushed, promoted, deployed, or rolled back by this helper.",
+    "The Python source and frozen historical invocation/disposition inventories are not deleted or rewritten.",
+    "This is not full O02 acceptance; cargo xtask check O02 remains unimplemented and the other O02 workflow tools remain in scope."
+  ],
+  "verification": [
+    "Rust 1.99.0: cargo fmt --all -- --check passed.",
+    "At published baseline b5405e666a54cac8ea00482b81fa62d372eae41c, Rust 1.99.0 cargo test --locked --offline -p xtask o02_portal_smoke -- --nocapture passed (14 tests, 0 failures).",
+    "At published baseline b5405e666a54cac8ea00482b81fa62d372eae41c, Rust 1.99.0 cargo test --locked --offline -p xtask -- --test-threads=8 passed (214 tests, 0 failures; 330.80 seconds).",
+    "A loopback smoke test passed with HTTP_PROXY, http_proxy, and ALL_PROXY set to a dead local proxy and NO_PROXY/no_proxy empty.",
+    "A non-loopback HTTP request reached a local fake proxy through the uppercase HTTP_PROXY fallback; precedence tests cover lowercase values, explicitly empty lowercase, REQUEST_METHOD, HTTPS, and loopback.",
+    "The sealed T08A source-custody test passed with Cargo.lock and crates/xtask/Cargo.toml unchanged.",
+    "At published baseline b5405e666a54cac8ea00482b81fa62d372eae41c, Rust 1.99.0 cargo clippy --locked --offline -p xtask --all-targets -- -D warnings passed.",
+    "Rust 1.99.0: cargo xtask ci-helper inventory and source-hygiene passed; cargo xtask check O06 passed with 15 controls.",
+    "The HTTP_PROXY follow-up run02 passed cargo fmt --all -- --check; 16 focused portal-smoke tests passed with inherited NO_PROXY=no_proxy=*; and cargo clippy --locked --offline -p xtask --all-targets -- -D warnings passed under Rust 1.99.0.",
+    "The historical Python script's git blob remains bcb6ede74e95dd8c61eb870d3275b93ad191fb1a.",
+    "Before merge, exact-head Docker CI must pass the native smoke on both amd64 and arm64; local tests do not establish container-runtime parity.",
+    "The no_proxy follow-up run03 on candidate source based on 848467c868c315cf9e4207c096cf4e8a495c437b reproduced both the precedence-unit and HTTP-proxy regression failures before the fix, then passed all 18 focused portal-smoke tests under Rust 1.99.0. Deterministic precedence cases include absent, nonempty, and explicitly empty lowercase/uppercase values; a loopback fake HTTP proxy captured the absolute-form non-loopback request for lowercase no_proxy=empty versus uppercase NO_PROXY=*. Tests inject values without process-global environment mutation. Rust 1.99.0 cargo fmt --all -- --check and scoped xtask Clippy with warnings denied passed."
+  ],
+  "updated_gate_sources": [
+    "docker.yml:build-and-push"
+  ]
+}

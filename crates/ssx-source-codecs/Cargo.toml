@@ -1,0 +1,14 @@
+[package]
+name = "ssx-source-codecs"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99"
+license = "MIT AND PSF-2.0 AND Unicode-3.0 AND BSD-3-Clause"
+publish = false
+[lints]
+workspace = true
+[dependencies]
+ssx-owned-budget.workspace = true
+[dev-dependencies]
+flate2.workspace = true
+serde_json.workspace = true

@@ -1,0 +1,33 @@
+import asyncio,json,sys,time
+from pathlib import Path
+from fastmcp import FastMCP
+import uvicorn
+from slopsearx.mcp import gateway
+from slopsearx.mcp.server import create_server
+from slopsearx.mcp.harness import build_fixture_context
+from slopsearx.mcp.security import make_http_app
+from tests.test_mcp_gateway import TOKEN,_free_port,_wait_for_port
+class DelayInitialize:
+ def __init__(self,app,delay):self.app=app;self.delay=delay;self.initializes=0
+ async def __call__(self,scope,receive,send):
+  if scope['type']=='http' and scope['method']=='POST' and self.initializes==0:
+   self.initializes+=1
+   await asyncio.sleep(self.delay)
+async def case(delay,timeout):
+ async def state():return build_fixture_context()
+ remote=create_server(state_factory=state);app=DelayInitialize(make_http_app(remote,TOKEN),delay);port=_free_port();host=uvicorn.Server(uvicorn.Config(app,host='127.0.0.1',port=port,log_level='warning'));task=asyncio.create_task(host.serve())
+ try:
+  if not await _wait_for_port(port):raise RuntimeError('upstream failed')
+  proxy=FastMCP('startup-probe');began=time.monotonic();error=None;published=False;control=None
+  try:
+   async with gateway._gateway_lifespan(proxy,f'http://127.0.0.1:{port}/mcp',TOKEN,timeout):
+    elapsed=time.monotonic()-began;published=True;control=(await gateway._get_session().call_tool('slopsearx_list_capabilities',{'include_auth_requirements':False})).model_dump(mode='json',by_alias=True)
+  except Exception as exc:elapsed=time.monotonic()-began;error=str(exc)
+  tools=await proxy.list_tools()
+  return {'delay':delay,'timeout':timeout,'elapsed':elapsed,'published':published,'error':error,'control':control,'tools':[{'name':t.name,'description':t.description,'parameters':t.parameters} for t in tools],'state_cleared':gateway._state is None,'owners_pending':sum(t.get_name()=='slopsearx-gateway-upstream' for t in asyncio.all_tasks()),'initialize_requests':app.initializes}
+ finally:host.should_exit=True;await asyncio.wait_for(task,5)
+async def main():
+ rows=[]
+ for delay,timeout in [(0.4,0.05),(0.8,0.05),(0,1)]:rows.append(await case(delay,timeout))
+ p=Path(sys.argv[1]);p.write_text(json.dumps({'rows':rows,'provider_calls':0},indent=2)+'\n');print(json.dumps([{k:v for k,v in r.items() if k!='tools'} for r in rows]))
+asyncio.run(main())

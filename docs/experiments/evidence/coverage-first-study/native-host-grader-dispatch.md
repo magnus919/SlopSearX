@@ -3,7 +3,7 @@
 The registered stage's native grader handoff writes immutable request packets
 under `<grader_handoff>/<packet_stage_uuid>/<phase>/`. For a fresh operator-runner
 stage, `NativeGraderHandoff` requires a host transcript for every result before
-it returns any `GradeSubmission`. The exact `coverage-native-host-transcript/2`
+it returns any `GradeSubmission`. The exact `coverage-native-host-transcript/3`
 records are checked against the request packet bytes, model, stage, phase,
 thread, completed turn, and exact final response bytes. The closed handoff
 receipt records each transcript digest. Missing, extra, malformed, or mismatched
@@ -22,14 +22,19 @@ python -m scripts.coverage_native_host_dispatch \
   --deadline-seconds REMAINING_REGISTERED_STAGE_SECONDS
 ```
 
-The collector writes an exclusive `phase-deadline.json` receipt containing the
-original stage deadline. The dispatcher checks that binding and clamps the
-requested remaining duration to it; invoking this command cannot start a fresh
-eight-hour allowance. A bound failed dispatch summary stops collection promptly.
+The collector writes an exclusive `phase-deadline.json` receipt with UTC creation
+and expiry timestamps derived from the remaining stage monotonic budget. The
+dispatcher validates the stage/phase and eight-hour ceiling, translates the
+remaining UTC duration into its own monotonic clock, and clamps the requested
+remaining duration to it. This works across the Linux operator and Mac grader
+hosts; invoking this command cannot start a fresh eight-hour allowance. A bound
+failed dispatch summary stops collection promptly.
 
-Before any turn, the dispatcher disables supported tools and configured MCP
-servers, including stable environment-tool advertisement, verifies the effective
-MCP inventory, and saves private sanitized `tool-policy-evidence.json`. The
+Before any turn, the dispatcher disables currently supported built-in tool
+features, web search, image viewing, and every configured MCP server. It reads
+the CLI's JSON MCP inventory, validates server names and boolean enabled states,
+and saves only sanitized names, states, and digests in private
+`tool-policy-evidence.json`. The
 handoff checks its hash and stage, phase and CLI bindings alongside the transcript
 tool policy before accepting a grade.
 
@@ -43,10 +48,21 @@ thread setup or a turn fails, the packet remains terminal and cannot be retried.
 The app-server client opts into experimental API fields during `initialize`, because the
 selected `thread/start` request uses `allowProviderModelFallback`, `ephemeral`,
 `environments`, and `dynamicTools`. Transcript verification requires that exact
-capability declaration. It also requires a completed turn with a full item view;
-`summary` or `notLoaded` turn items are terminally rejected rather than treated as
-complete transcript evidence. This matches the locally installed app-server's
-generated protocol schema; the CLI version is recorded in each transcript.
+capability declaration. It proves the completed item inventory from the exact
+`item/started` and `item/completed` notifications, bound to the same thread and
+turn and ordered between `turn/started` and `turn/completed`. Item IDs must have
+one matching start and completion, timestamps must be ordered, unsupported or
+tool items are rejected, and both started and completed user messages must match
+the request packet. A `full` completion snapshot must match the event inventory;
+a `summary` snapshot must contain only unique, matching item summaries;
+`notLoaded` must be empty. Ephemeral threads remain enabled; no thread-history
+request is made. This matches the locally installed app-server's generated
+protocol schema; the CLI version is recorded in each transcript. If a turn was
+started but fails validation or reports a non-success status, the dispatcher
+retains its bounded JSON-RPC event prefix in a separate mode-0600
+`failures/<packet_id>.events.json` receipt. The receipt has a fixed safe failure
+classification; its original event payload remains private diagnostic evidence,
+is never printed, and is never accepted as a transcript or grade result.
 
 The Codex CLI must use the operator's existing authorized host configuration.
 The dispatcher pins the executable bytes but does not inspect or export

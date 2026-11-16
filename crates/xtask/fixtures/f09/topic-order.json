@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "plan_id": "F09",
+  "cases": [
+    {
+      "name": "named",
+      "yaml": "routing:\n  topics:\n    zebra: {keywords: [overlap], engines: [wikipedia]}\n    alpha: {keywords: [overlap], engines: [brave]}\n",
+      "order": [
+        "zebra",
+        "alpha"
+      ],
+      "selected": [
+        "wikipedia"
+      ],
+      "topic": "zebra"
+    },
+    {
+      "name": "duplicate",
+      "yaml": "routing:\n  topics:\n    zebra: {keywords: [overlap], engines: [wikipedia]}\n    alpha: {keywords: [overlap], engines: [brave]}\n    zebra: {keywords: [overlap], engines: [reddit]}\n",
+      "order": [
+        "zebra",
+        "alpha"
+      ],
+      "selected": [
+        "reddit"
+      ],
+      "topic": "zebra"
+    },
+    {
+      "name": "alias",
+      "yaml": "topics: &topics\n  zebra: {keywords: [overlap], engines: [wikipedia]}\n  alpha: {keywords: [overlap], engines: [brave]}\nrouting: {topics: *topics}\n",
+      "order": [
+        "zebra",
+        "alpha"
+      ],
+      "selected": [
+        "wikipedia"
+      ],
+      "topic": "zebra"
+    },
+    {
+      "name": "merge",
+      "yaml": "a: &a\n  zebra: {keywords: [overlap], engines: [wikipedia]}\n  common: {keywords: [overlap], engines: [reddit]}\nb: &b\n  alpha: {keywords: [overlap], engines: [brave]}\n  common: {keywords: [overlap], engines: [google]}\nrouting:\n  topics:\n    <<: [*a, *b]\n    alpha: {keywords: [overlap], engines: [stackexchange]}\n",
+      "order": [
+        "alpha",
+        "common",
+        "zebra"
+      ],
+      "selected": [
+        "stackexchange"
+      ],
+      "topic": "alpha"
+    },
+    {
+      "name": "list",
+      "yaml": "routing:\n  topics:\n    - {name: zebra, keywords: [overlap], engines: [wikipedia]}\n    - {name: alpha, keywords: [overlap], engines: [brave]}\n",
+      "order": [],
+      "selected": [
+        "wikipedia"
+      ],
+      "topic": "zebra"
+    }
+  ]
+}

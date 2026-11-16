@@ -1,0 +1,52 @@
+{
+  "api_key_env": "ENGINE_EUROPEPMC_API_KEY",
+  "api_secret_env": null,
+  "auth_class": "none",
+  "categories": [
+    "science",
+    "reference",
+    "medical",
+    "health"
+  ],
+  "caveats": [],
+  "cost_class": "free",
+  "defaults": {
+    "base_url": "https://www.ebi.ac.uk/europepmc/webservices/rest",
+    "enabled": false,
+    "max_results": 10,
+    "rate_limit": 0.5,
+    "timeout_ms": 5000,
+    "type": "api",
+    "weight": 0.8
+  },
+  "display_name": "Europe PMC (EMBL-EBI)",
+  "enabled_by_default": false,
+  "enforced_filters": {},
+  "engine_type": "api",
+  "failure_classes": [
+    "rate_limited",
+    "error",
+    "timeout"
+  ],
+  "implementation": "unavailable",
+  "name": "europepmc",
+  "routing": {
+    "purpose": "biomedical publication and preprint metadata",
+    "role": "specialist",
+    "use_when": "the query seeks biomedical literature including preprints beyond PubMed"
+  },
+  "sensitive": false,
+  "supported_filters": {
+    "date_from": false,
+    "date_to": false,
+    "language": false,
+    "pagination": false,
+    "safesearch": false,
+    "time_range": false
+  },
+  "supported_media_types": [],
+  "supported_result_types": [
+    "text",
+    "structured"
+  ]
+}

@@ -1,0 +1,2062 @@
+{
+  "schema_version": 1,
+  "plan_id": "F01",
+  "sources": [
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna/idna.py",
+      "git_blob": "0c90b4c9fe18fad8e2fa6f0dbb7ae39edb0726a3"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna/inputs/aliases.py",
+      "git_blob": "8b175772c58e0d2ab2a11ee02cd9516963b87ed9"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna/inputs/stringprep.py",
+      "git_blob": "44ecdb266ce8b95a0e5c9142ded9e43ac2e0235a"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna/mkstringprep.py",
+      "git_blob": "427188389a3b87cf485837c203f35a430e41d464"
+    },
+    {
+      "path": "docker/healthcheck.py",
+      "git_blob": "39bcbc736bed7e441531ab00f3e6d540e4b3af65"
+    },
+    {
+      "path": "docs/rust-rewrite/a02/oracle/export.py",
+      "git_blob": "aa873deb8f9211b00530988eea46f87bebbcfc99"
+    },
+    {
+      "path": "docs/rust-rewrite/a02/oracle/export_extra.py",
+      "git_blob": "f7c9920a72487140586e87ffb362a8a36babf805"
+    },
+    {
+      "path": "docs/rust-rewrite/a03/capture.py",
+      "git_blob": "8888dec2f5aedd826bfab49b54a30b36a96bab0f"
+    },
+    {
+      "path": "docs/rust-rewrite/a04/oracle/export_cases.py",
+      "git_blob": "82d74f31a03bf4e6509e937e1f2c193d0930365b"
+    },
+    {
+      "path": "docs/rust-rewrite/a04/oracle/export_matrix.py",
+      "git_blob": "f0c02454cd89b42b38387b1953572d6a96c1b182"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/algorithm_strict_source.py",
+      "git_blob": "a59b6093ded47a83719bc0bf177dd44f122f9f32"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/alias_only_generate.py",
+      "git_blob": "c7821ffde6961cb1dabe715bc408c2e8042b3f88"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/bound_inventory.py",
+      "git_blob": "3250c6dfc5c7979c8b3cd06a10dcf3b0193e961a"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/cjk_strict_error_records.py",
+      "git_blob": "041aec5a37bc3f0660e7c1d27c0157dcb2cdbdd0"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/cjk_strict_validity_source.py",
+      "git_blob": "4434523c679728afe6570044db07e9a3875d7f33"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/doublebyte.py",
+      "git_blob": "0fb9f6c7efa04f974d0382e08632c3b72f4fc80a"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/euckr_vectors.py",
+      "git_blob": "935b216e1fc02cb87ec4238c00d639fc3658704a"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/export.py",
+      "git_blob": "9591bd10ec198e2eb851202adff7e5912763a4a8"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/gb18030_vectors.py",
+      "git_blob": "e0d164934f09cd70006e170b4189fa1f81d5a933"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/hkscs_independent.py",
+      "git_blob": "f41e81699ff815f8bb7bfbf31179d3ab89b9acbb"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/hkscs_validity.py",
+      "git_blob": "2a416d2569244dcd2f37c5e750cc3f5a56d86f51"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/http_charset_pipeline.py",
+      "git_blob": "523c72f7643b8e2d82aeb8fd48b00aa6c2fdfd53"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/hz_vectors.py",
+      "git_blob": "b2871c8fe74736ae66b4f8c47d0c8b1c365ffc2c"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/idna_all_points_source.py",
+      "git_blob": "9ff5ad1a866685c300a52f19af658099ea7799fe"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/idna_allocation_bound.py",
+      "git_blob": "4ef40adbe17d884a5f7ee2c1506c6e2c05982c23"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/idna_direct_source.py",
+      "git_blob": "6439937b9b9ea907d33bc004db9fc0b9271b39c2"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/idna_profile_generate.py",
+      "git_blob": "01959d4b57acdf58f0120a5de7a99b2cc5151af5"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/idna_profile_rust.py",
+      "git_blob": "34c721fc677c77491032d18c6694fe5d965d6945"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/idna_selector.py",
+      "git_blob": "f85f5ccaaa1398fb606f8d7ebd198ec560ca0721"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/iso_maps.py",
+      "git_blob": "9502f52a65bb3420b6d2f483328a4538f2fe3fd3"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/iso_vectors.py",
+      "git_blob": "38d9fc969aab8fd510c809476fc17c4efcfd18c2"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/label_alias_source.py",
+      "git_blob": "302e1e984de5c12bf9e46a69b37cb778e9d72cfa"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/label_alnum_generate.py",
+      "git_blob": "445dbc3980842bbbf4e4f551d568c74703a4e406"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/label_alnum_rust.py",
+      "git_blob": "c630ca96ee49ea9a9076479f8e916fd1a45440fc"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/label_alnum_source.py",
+      "git_blob": "4b49794b5d6a8e3c7d57330e5651c3d31738fa9b"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/label_dotted_source.py",
+      "git_blob": "21e52a327e307e72dab3ecd0fcf49f075da2343e"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/long_query.py",
+      "git_blob": "7a28b142b417e8e39b9db6a4c17bb25ffa00f16c"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/lower_ascii.py",
+      "git_blob": "ca34a670808fc0b642ce31b819ce9230dc4f00f6"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/media_nfkc_membership.py",
+      "git_blob": "c73c3fb2525c37cc708739b102aefdbd4bc2f747"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/nul_expanded.py",
+      "git_blob": "bbb6b052ab8989b91210cfaef4daaa5778b36c0a"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/nul_versions.py",
+      "git_blob": "bed19a198eb7648013ec9d8f8f3751e7906640bd"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/punycode_vectors.py",
+      "git_blob": "45360509e983b75e74b3b9cc43c2c9ff07dbdffd"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/rawescape_vectors.py",
+      "git_blob": "29b9f5338052b6e4d6d7d118ea05a903f1dce65b"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/singlebyte_icu_compare.py",
+      "git_blob": "7143c051687afd8d24d4aae71e03c76181c403c9"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/singlebyte_icu_independent.py",
+      "git_blob": "d6670d17e0591e7fd60b4f2c8d536b5396aad9ed"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/singlebyte_icu_source.py",
+      "git_blob": "d0d9447ad6c7baa7151ef662b3d5fe439477929d"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/singlebyte_native_input.py",
+      "git_blob": "fad3c4679d2db9e3d55b5a81353d05d96fc32e8f"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/singlebyte_strict_validity.py",
+      "git_blob": "1bbd4cb3c3e805e01ccb12bd80cd0932474ddf72"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/singlebyte_tables.py",
+      "git_blob": "5bba573e7464d37436690658260653fec4928060"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/stateful_strict_source.py",
+      "git_blob": "26dd6b28cc962618e5cea54a86b4c1ea44f54fad"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/storage_kind.py",
+      "git_blob": "72444ded8f1135b9c9e50cb78602c9936c55aa4c"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/strict_overflow_source.py",
+      "git_blob": "3df3f23bde228bf6d28005ec9931da6710c5be10"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/strict_parameter_source.py",
+      "git_blob": "58d786c885df839beb44ddada3c48e1b9dda3dd1"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/strict_validity_generate.py",
+      "git_blob": "711e0bbdc8be3a24cb16c2a5ed1528ba0eb5b58d"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/surrogates.py",
+      "git_blob": "061b842f0638d65aba0da98ceaf975516b556a6b"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/timeout_config_source.py",
+      "git_blob": "daafe63ad640a88acb103f51c88340d2a1c47131"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/timeout_loopback_source.py",
+      "git_blob": "0e5889e5e5d8b4720488d06c931822ac14bed31a"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/unicode_name_all.py",
+      "git_blob": "42c7e04bfd1eace378f319c80362552accf81855"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/unicode_name_probes.py",
+      "git_blob": "323a2491d229c72e97c76f7ac0f12b772ec0a6d7"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/unicode_names.py",
+      "git_blob": "fc9a59512ffa0c2c1648017fe75b32f7ad42b955"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/unicode_vectors.py",
+      "git_blob": "57a4fbd8666df4931e27fd751484e4d84a5fc07f"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/unicodeescape_vectors.py",
+      "git_blob": "5bc4b4a2053e6e9553670f1de34df4612ed4cad7"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/provenance/media_nfkc.py",
+      "git_blob": "600417d25ba835c0f631236dff69ea3a82accdc9"
+    },
+    {
+      "path": "docs/rust-rewrite/a06/oracle/export_atom_decode.py",
+      "git_blob": "7826ef4956e15e9fdfc0acd1cef2bd5060dabecb"
+    },
+    {
+      "path": "docs/rust-rewrite/a06/oracle/export_charset.py",
+      "git_blob": "da7cfa5d9a6ca05ed35d1805ee56909348fa92ec"
+    },
+    {
+      "path": "docs/rust-rewrite/a06/oracle/export_charset_boundaries.py",
+      "git_blob": "aafd83234a62faa1a72be770186b598522f930ed"
+    },
+    {
+      "path": "docs/rust-rewrite/a06/oracle/export_config.py",
+      "git_blob": "31d76f1f94a194ef0caa5dc7fcdb8dba7f7f2e55"
+    },
+    {
+      "path": "docs/rust-rewrite/a06/oracle/export_float_lexical.py",
+      "git_blob": "a3b37afb9f5fccfa85db77613363b15b92f9d808"
+    },
+    {
+      "path": "docs/rust-rewrite/a06/oracle/export_hostname_lower.py",
+      "git_blob": "4850e70f561407d2ef8a2de2921f609ef0f90cf0"
+    },
+    {
+      "path": "docs/rust-rewrite/a06/oracle/export_json_matrix.py",
+      "git_blob": "226a975df274b69fa6410c511bf727097e0bbc94"
+    },
+    {
+      "path": "docs/rust-rewrite/a06/oracle/export_openalex_order.py",
+      "git_blob": "0647f23910096c434deec16c7f8e7f2318c083dd"
+    },
+    {
+      "path": "docs/rust-rewrite/a06/oracle/export_shared.py",
+      "git_blob": "8e0e1c05595e7fb3803b7d39d349b15f05942713"
+    },
+    {
+      "path": "docs/rust-rewrite/a06/oracle/export_source.py",
+      "git_blob": "13a2206d3ee500950a05901c00aacff108f70bfe"
+    },
+    {
+      "path": "docs/rust-rewrite/a06/oracle/export_wire.py",
+      "git_blob": "72ea33973d9669e1b25b8a3e11ad1e459f98e926"
+    },
+    {
+      "path": "docs/rust-rewrite/a06/oracle/export_xml.py",
+      "git_blob": "f0685047285d3b22a8e2564263751193b475b974"
+    },
+    {
+      "path": "docs/rust-rewrite/a06/oracle/export_xml_grammar.py",
+      "git_blob": "061bf394c2e30173b51806158f5250316943b43a"
+    },
+    {
+      "path": "docs/rust-rewrite/a06/oracle/export_xml_stress.py",
+      "git_blob": "aab456634286392a6aff5e3ef5d8fcd8a5aea363"
+    },
+    {
+      "path": "docs/rust-rewrite/a06/oracle/native_qualification.py",
+      "git_blob": "c0c7acc338de4a5461099ea72e0b69af0ee499c9"
+    },
+    {
+      "path": "docs/rust-rewrite/a07/oracle/export_complete.py",
+      "git_blob": "82af5455c30970e21ade3cbfe8ac4f76fe5c760d"
+    },
+    {
+      "path": "docs/rust-rewrite/a07/oracle/export_date_grammar.py",
+      "git_blob": "36222538c1bfa78f4ba6288f78aec8162a755017"
+    },
+    {
+      "path": "docs/rust-rewrite/a07/oracle/export_digits.py",
+      "git_blob": "2147484a581185092654da88c3431e9049e9cc6d"
+    },
+    {
+      "path": "docs/rust-rewrite/a07/oracle/export_empty_iterables.py",
+      "git_blob": "6d80133046170c0acdf7624b94818a73eb39cf06"
+    },
+    {
+      "path": "docs/rust-rewrite/a07/oracle/export_gene_shapes.py",
+      "git_blob": "18e99d89755c8c87558eed4978527f36f794b5b1"
+    },
+    {
+      "path": "docs/rust-rewrite/a07/oracle/export_numeric.py",
+      "git_blob": "8e1accc47a5854bbf1373c9e2f5979bb84ae2670"
+    },
+    {
+      "path": "docs/rust-rewrite/a07/oracle/export_payload_adapter_controls.py",
+      "git_blob": "3c99e877c4858b8c3d4e8db9b6bdc7b9b2b4fa37"
+    },
+    {
+      "path": "docs/rust-rewrite/a07/oracle/export_sequences.py",
+      "git_blob": "4b17a7fc9399e3e65fe4e69f48d76c0576690bb8"
+    },
+    {
+      "path": "docs/rust-rewrite/a07/oracle/export_source.py",
+      "git_blob": "d851d5e89c021f55dd2079d4ded70dc6b9cfdf00"
+    },
+    {
+      "path": "docs/rust-rewrite/a07/oracle/export_source_repr.py",
+      "git_blob": "ff22289ff7205ff24060b32fb2702a68de221fd8"
+    },
+    {
+      "path": "docs/rust-rewrite/a07/oracle/export_supplement.py",
+      "git_blob": "89f88ec581e6f2fe19467bd1887370752604a7be"
+    },
+    {
+      "path": "docs/rust-rewrite/a07/oracle/export_timeout_loopback.py",
+      "git_blob": "7e5001730daee31ff2eaf8d357875239822385d4"
+    },
+    {
+      "path": "docs/rust-rewrite/a08/oracle/export_case.py",
+      "git_blob": "51fe58f34557fa76934fff57e3aeb0d60fdc398b"
+    },
+    {
+      "path": "docs/rust-rewrite/a08/oracle/export_regressions.py",
+      "git_blob": "5e539bb9cc0b5049a4b5e1762f73f690bdb38a09"
+    },
+    {
+      "path": "docs/rust-rewrite/a08/oracle/export_source.py",
+      "git_blob": "6518e8be8be4f7f652387b403284ed7025575250"
+    },
+    {
+      "path": "docs/rust-rewrite/a08/oracle/export_timeout.py",
+      "git_blob": "21cbf680c3cf2355cf6e48a97db4a8305d8add10"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/oracle/export_regressions.py",
+      "git_blob": "ac0a9cfe68f5308d41ca5110a920a0d34295e3e7"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/oracle/export_source.py",
+      "git_blob": "30d0243e823e46d811bc389b616a1249c89755f0"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/oracle/export_timeouts.py",
+      "git_blob": "664170e46e5ae2c2ee715fc9a13b4c94a5c6f44b"
+    },
+    {
+      "path": "docs/rust-rewrite/a09/oracle/export_word.py",
+      "git_blob": "f5ea351b8d7dfcb29c234d6394355302932a638a"
+    },
+    {
+      "path": "docs/rust-rewrite/a10/capture_boundaries.py",
+      "git_blob": "90b07f7ac1996e4f3fc9d79385de0a31da8492f1"
+    },
+    {
+      "path": "docs/rust-rewrite/a10/capture_regressions.py",
+      "git_blob": "cd4f93ecc4c76d695fb8286622b96eb325d3e690"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/capture_boundaries.py",
+      "git_blob": "fe0da6a527731d838d05a791002b33a25e8f52df"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/capture_config_reachability.py",
+      "git_blob": "f40093ece78156e930d25a2db53ee69cfba4fbd0"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/capture_credential_ascii.py",
+      "git_blob": "d65af680931ddb426c9342ae70dad9e13bcc91f6"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/capture_regressions.py",
+      "git_blob": "4657c6ab36027de42cd3d89deb5df2b4469bb683"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/capture_representation.py",
+      "git_blob": "b79085d6cef67c21d6a09ca2f3b7c2ca40baa050"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/capture_supplement.py",
+      "git_blob": "49626b85c67d49ca55bf6a1556e8ebceedd1b106"
+    },
+    {
+      "path": "docs/rust-rewrite/f05/oracle/export.py",
+      "git_blob": "650a47a473f3f6e19118773dfc32fc54b0c5f586"
+    },
+    {
+      "path": "docs/rust-rewrite/f09/oracle/export.py",
+      "git_blob": "cca9dc3d5ccbe57e5b6f9bbe0ed2a53016aef7af"
+    },
+    {
+      "path": "docs/rust-rewrite/f10/oracle/export.py",
+      "git_blob": "5bdc1cc2189f036ce77999bd1a9387ccf7cc4902"
+    },
+    {
+      "path": "docs/rust-rewrite/f11/oracle/export.py",
+      "git_blob": "137d2af01f941343ee8eebabf9ab1e0d6ae63fa7"
+    },
+    {
+      "path": "docs/rust-rewrite/f12/oracle/export.py",
+      "git_blob": "de0879e3b7aaa9c55d0ec7ec255d8a63c086898e"
+    },
+    {
+      "path": "docs/rust-rewrite/f13/capture.py",
+      "git_blob": "c189f6e6601f05de560cac49b747f4a96cd79ba0"
+    },
+    {
+      "path": "docs/rust-rewrite/f14/capture.py",
+      "git_blob": "3c88688393bfc68e40ef23a33d3bf199c6bc852c"
+    },
+    {
+      "path": "docs/rust-rewrite/f14/capture_dates.py",
+      "git_blob": "811e84daeccaab116e41a82114e9de74f57223ea"
+    },
+    {
+      "path": "docs/rust-rewrite/f15/capture.py",
+      "git_blob": "b4d7cef44afd26f36ed51950d0f2834e7f203620"
+    },
+    {
+      "path": "docs/rust-rewrite/f15/capture_headers.py",
+      "git_blob": "b0c1477609ff3b67f50af8c7465c4d56b572a8b5"
+    },
+    {
+      "path": "docs/rust-rewrite/inventory/DRIFT.md",
+      "git_blob": "73fedcbf810ee7d8a2d0af8b115f2296f0b15008"
+    },
+    {
+      "path": "docs/rust-rewrite/inventory/README.md",
+      "git_blob": "028850d7532335b4b8a16d8a0db1f665ebf1f9d7"
+    },
+    {
+      "path": "docs/rust-rewrite/inventory/core-contracts.json",
+      "git_blob": "e3fb72501c53b2308ae0b85a62eb9e5846e33f4e"
+    },
+    {
+      "path": "docs/rust-rewrite/inventory/core-contracts.md",
+      "git_blob": "01a249f1fb259620b2f67c17713222a0f7af6bc3"
+    },
+    {
+      "path": "docs/rust-rewrite/inventory/o03-active-tooling.json",
+      "git_blob": "92416a57a087d5f2e1b13f04c94dfd8cbd5b49e7"
+    },
+    {
+      "path": "docs/rust-rewrite/inventory/python-boundary.md",
+      "git_blob": "ceb41e527385cfef044db2c4cfb28fcd569ab0ae"
+    },
+    {
+      "path": "docs/rust-rewrite/inventory/python-disposition.json",
+      "git_blob": "6234517809ced8386354de2140dcb41ec76cb534"
+    },
+    {
+      "path": "docs/rust-rewrite/inventory/python-invocations.json",
+      "git_blob": "f1f1666e803a55076e6892677d4f52df0a515cec"
+    },
+    {
+      "path": "docs/rust-rewrite/inventory/surface-contracts.md",
+      "git_blob": "3b373f15fca6076efbd4d2097b3e0f63f4c86709"
+    },
+    {
+      "path": "docs/rust-rewrite/inventory/surfaces.json",
+      "git_blob": "537cd27f69a9eeb3c56d53ac4a01bc7518a38f0f"
+    },
+    {
+      "path": "docs/rust-rewrite/inventory/validation.json",
+      "git_blob": "290fa22134b6ac21fb1722be76dc35e57d56737c"
+    },
+    {
+      "path": "docs/rust-rewrite/replay/oracle/export.py",
+      "git_blob": "0efc1b2917d7be5c66bb7fe08697273807728598"
+    },
+    {
+      "path": "docs/rust-rewrite/replay/oracle/export_mcp.py",
+      "git_blob": "3c3104a3bc8a275454c4a8eca48e4b427c2a45ca"
+    },
+    {
+      "path": "docs/rust-rewrite/t04/capture.py",
+      "git_blob": "a9ebd31d5ce256fbb7f4c7c4ce54982d63f9ac98"
+    },
+    {
+      "path": "docs/rust-rewrite/t05/capture.py",
+      "git_blob": "a05f67a97254a6094a8f7ac2ac0fa11d1b05c5a9"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/boundaries_capture.py",
+      "git_blob": "6b99f3f22d9fe0ff87819d092eccb9ddcf8111ff"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/bounds_capture.py",
+      "git_blob": "c659f1f0738c56fde5a8ff278ac1cd51e042d070"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/capture.py",
+      "git_blob": "fe8d40e40be1938adaef2346aefc3afc58f2f44d"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/capture_guarded.py",
+      "git_blob": "582ccf8e18299fb8380b159e9708564d5c7af69d"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/entities_capture.py",
+      "git_blob": "0878af8dbb9c049e5c240bb018be44d6ac3f5b88"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/legacy_capture.py",
+      "git_blob": "6e4c0ad9e03d945a1cbdd878f2039e0b8a9a3708"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/policy_capture.py",
+      "git_blob": "6cafa0cfa6eabe27c5783985aebdf095f7934083"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/prompts_capture.py",
+      "git_blob": "ad57bfbf79c0fcaae6310a400f27ac51386c1084"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/prompts_envelope_capture.py",
+      "git_blob": "47fd88221ba423ab0f386319ccae2b1387cd9f21"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/prompts_raw_capture.py",
+      "git_blob": "65879d7208f10839e0fabb57076c446909cc5757"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/prompts_unknown_capture.py",
+      "git_blob": "c9780ccb369ace6857f8b1ad096c38840378b2ed"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/snapshots_capture.py",
+      "git_blob": "e117e5997e56e49c59b9d7b23a8f659844e587c2"
+    },
+    {
+      "path": "docs/rust-rewrite/t09/capture.py",
+      "git_blob": "154bc57a340ab8973a83a983579adb19bb0745dd"
+    },
+    {
+      "path": "docs/rust-rewrite/w00/capture_source.py",
+      "git_blob": "cb906a2b280bf1be1cce0b20e6169afa0d694b14"
+    },
+    {
+      "path": "docs/rust-rewrite/w01/oracle/export.py",
+      "git_blob": "68f43e6e82178b7e33aad1145a1b5c17894066f2"
+    },
+    {
+      "path": "docs/rust-rewrite/w01/oracle/identity.py",
+      "git_blob": "7f5566691b6995cfd15047da95e30940a4639106"
+    },
+    {
+      "path": "docs/rust-rewrite/w04/capture_source.py",
+      "git_blob": "3cfb4ce55c8d2bf81af4dd463f79e37922b3a0a5"
+    },
+    {
+      "path": "docs/rust-rewrite/w05/capture_source.py",
+      "git_blob": "e1b057b91011953cc3a532632767376ac56f8e6d"
+    },
+    {
+      "path": "docs/rust-rewrite/w06/capture_source.py",
+      "git_blob": "4a3485e50d4abb979943cf40778828943ada66e5"
+    },
+    {
+      "path": "docs/rust-rewrite/w11/oracle/export.py",
+      "git_blob": "3e6edaa6fd4a32043b84d8eacb5829256b846309"
+    },
+    {
+      "path": "engines/__init__.py",
+      "git_blob": "17b0f42abc2e7f521a92fc49cbf7444282f41912"
+    },
+    {
+      "path": "engines/abuseipdb.py",
+      "git_blob": "6648bc0b628848c303062b3d7a165be87680d961"
+    },
+    {
+      "path": "engines/arxiv.py",
+      "git_blob": "58626de5b787ca982a7d0e2ca0bde6dba04c8d32"
+    },
+    {
+      "path": "engines/ashby.py",
+      "git_blob": "dbaa14b4f850342a3ba9dea012f13972c29b29fe"
+    },
+    {
+      "path": "engines/brave.py",
+      "git_blob": "8c477b1172fcecd4c02c9e5e2b062767b22bcf3f"
+    },
+    {
+      "path": "engines/censys.py",
+      "git_blob": "3a5ae6f8890eca181114d9ecc848b5975a171486"
+    },
+    {
+      "path": "engines/clinicaltrials.py",
+      "git_blob": "23c8ab6ba1e1510cc7b9a5ec5e3a7365bf13fb03"
+    },
+    {
+      "path": "engines/crates.py",
+      "git_blob": "89308bdf1ff037b924003b7c2c6283006744e621"
+    },
+    {
+      "path": "engines/crtsh.py",
+      "git_blob": "98ce21737f14a23039e46922eef39e981ef8ead8"
+    },
+    {
+      "path": "engines/cve.py",
+      "git_blob": "898fed3a561b938c5391459fe0395dc4fc8a5ad2"
+    },
+    {
+      "path": "engines/dehashed.py",
+      "git_blob": "9c545575c44e03c1b8a1d65fe214c56c4e378300"
+    },
+    {
+      "path": "engines/dockerhub.py",
+      "git_blob": "cf1792ec3d34a9e8c535235791c1aeb7a29ea439"
+    },
+    {
+      "path": "engines/duckduckgo.py",
+      "git_blob": "21b7eb2300920c58e9c363ddf6f7276d923a5460"
+    },
+    {
+      "path": "engines/edgar.py",
+      "git_blob": "09fb3d493c74d893331b0a6a5d77a219e00069e6"
+    },
+    {
+      "path": "engines/epss.py",
+      "git_blob": "c07ece25022adac62a0b0717e6eeb2cfe52e85ca"
+    },
+    {
+      "path": "engines/europepmc.py",
+      "git_blob": "f1c026cca5fab094e77e7658ef69edebbe3ea7e3"
+    },
+    {
+      "path": "engines/exploitdb.py",
+      "git_blob": "13b1b9444485ce0e0de7cc52d597b3c02fe50f53"
+    },
+    {
+      "path": "engines/fred.py",
+      "git_blob": "822978e99603a76556053c0847e05799e2576485"
+    },
+    {
+      "path": "engines/github.py",
+      "git_blob": "58950161475abc9c4d529637ddc998d96cd9c6d4"
+    },
+    {
+      "path": "engines/google.py",
+      "git_blob": "079a10cd582ce73b45f3dc707671edcead74bffa"
+    },
+    {
+      "path": "engines/greenhouse.py",
+      "git_blob": "10c4ded5b7d612b5a6751f96298c4c4a1cf8a591"
+    },
+    {
+      "path": "engines/greynoise.py",
+      "git_blob": "49e5c8e157a6103979c7aab8cefa49b1737151d0"
+    },
+    {
+      "path": "engines/hackernews.py",
+      "git_blob": "9b3384fa85e391f1c827552292603eeb98cf07a7"
+    },
+    {
+      "path": "engines/hibp.py",
+      "git_blob": "eea4c9bcecd21e85422f7254cb39ec503a514077"
+    },
+    {
+      "path": "engines/huggingface.py",
+      "git_blob": "9dbfc93b66a5c46c80109555e78c0ad2515ec8e1"
+    },
+    {
+      "path": "engines/intelx.py",
+      "git_blob": "de0431919a1ad7bd4e69c3cde4d48c9e1961d030"
+    },
+    {
+      "path": "engines/internetarchive.py",
+      "git_blob": "28773026ab0e12e0e3ef00204323de8aeedab2f3"
+    },
+    {
+      "path": "engines/lever.py",
+      "git_blob": "284e2d570f266eb18df4c7396df87fabf5d6e684"
+    },
+    {
+      "path": "engines/mitreattack.py",
+      "git_blob": "4e9a4dc966c3888e872abc2362f42e26a118fdff"
+    },
+    {
+      "path": "engines/musicbrainz.py",
+      "git_blob": "e89b4e909335fc26d80f80d8cd9b828fc34ba53e"
+    },
+    {
+      "path": "engines/nominatim.py",
+      "git_blob": "69c771990b8c1bc83540f5c9dc98929b809e6573"
+    },
+    {
+      "path": "engines/npm.py",
+      "git_blob": "8ef11a1ad4e71437c1fcb0d88c35b4e4140c7c06"
+    },
+    {
+      "path": "engines/nvd.py",
+      "git_blob": "2188849adf2bfd22c986a5b05cc34f2e9efed332"
+    },
+    {
+      "path": "engines/openalex.py",
+      "git_blob": "feaf05ec8ce09d16a35dcd6c21d1ffd723ccc387"
+    },
+    {
+      "path": "engines/openfda.py",
+      "git_blob": "91898916e27f77f03d304bfdfb91bd7a91be3945"
+    },
+    {
+      "path": "engines/openlibrary.py",
+      "git_blob": "f7a0d5aff4d062e1d01c9844a90a6914fe294ea7"
+    },
+    {
+      "path": "engines/otx.py",
+      "git_blob": "c6801f5bcf3b6f76834f00afebd84feab6c176a1"
+    },
+    {
+      "path": "engines/oyez.py",
+      "git_blob": "c670def9eb6e1d60fc8a0fa485f18752c5d5910f"
+    },
+    {
+      "path": "engines/pubchem.py",
+      "git_blob": "e027508d33240f1fb6eb63d41c7ccceb252eafd7"
+    },
+    {
+      "path": "engines/pubmed.py",
+      "git_blob": "8425948f5a115d0d46afce3a625bce49ee0b0fcd"
+    },
+    {
+      "path": "engines/pypi.py",
+      "git_blob": "e10a1da680178cb333dbcd53ef9dbb0dd5be81b4"
+    },
+    {
+      "path": "engines/reddit.py",
+      "git_blob": "f46e97fa42eb8c6971a83fb70c9274f871ac375e"
+    },
+    {
+      "path": "engines/rubygems.py",
+      "git_blob": "127ff07eec863a450b3c89e1e876201ecea89880"
+    },
+    {
+      "path": "engines/semanticscholar.py",
+      "git_blob": "ff91b7b2674f0685affdf2bb3ac258ebcb33dc08"
+    },
+    {
+      "path": "engines/shodan.py",
+      "git_blob": "b3974b6ba0d662d77dd0fde84a4d57a9e7970f11"
+    },
+    {
+      "path": "engines/stackexchange.py",
+      "git_blob": "1ea554802e6358ad2f4d62b5711d14309403d6ff"
+    },
+    {
+      "path": "engines/tmdb.py",
+      "git_blob": "f89a3ca2625aaf37687426eaf87e46e5f85cffc4"
+    },
+    {
+      "path": "engines/uniprot.py",
+      "git_blob": "2a1564c948e4f2220dd970e564da0ba865348bea"
+    },
+    {
+      "path": "engines/urlhaus.py",
+      "git_blob": "49e72b3d99ae36e47e513121a40b4a890f306273"
+    },
+    {
+      "path": "engines/virustotal.py",
+      "git_blob": "0882c5da14bd7e6edb881c4e446d7f8d38bf1e50"
+    },
+    {
+      "path": "engines/vulncheck.py",
+      "git_blob": "33c47ad515e1ae60137ebf265c44702479ffcb77"
+    },
+    {
+      "path": "engines/wikipedia.py",
+      "git_blob": "09c5402799d10426698f2bfab5bf00baacc99d36"
+    },
+    {
+      "path": "scripts/configure_ci_dockerhub_mirror.py",
+      "git_blob": "8aa7d1cd005fd43a68b4e4eb33f67aea82d4642c"
+    },
+    {
+      "path": "scripts/coverage_answer_execution.py",
+      "git_blob": "7b840fd852562b0f7a879c2544b53ca999911ea5"
+    },
+    {
+      "path": "scripts/coverage_assessment_checkpoint.py",
+      "git_blob": "8d2f9683b4fdcd66aa3c09bdaeddfcb164e40ae8"
+    },
+    {
+      "path": "scripts/coverage_assessment_packets.py",
+      "git_blob": "b62d32345facc4e46551df4a3560d8353277fe8d"
+    },
+    {
+      "path": "scripts/coverage_atomic_io.py",
+      "git_blob": "1c19a07ff7b9cd8534fc0c88aeabd065e42fa72f"
+    },
+    {
+      "path": "scripts/coverage_band_companion.py",
+      "git_blob": "56ebb97f03358fd843fe564060d40a6c9c1848c7"
+    },
+    {
+      "path": "scripts/coverage_consumer_inputs.py",
+      "git_blob": "94ae941bacc74b24ee94e6ea456bf751cf6d65bd"
+    },
+    {
+      "path": "scripts/coverage_engine_replay.py",
+      "git_blob": "ebf1eafc244d0480d3875f43f82c80a002e04ed1"
+    },
+    {
+      "path": "scripts/coverage_execution_controls.py",
+      "git_blob": "07066c9de9a23b1cc6269cce6c5c74a580e67106"
+    },
+    {
+      "path": "scripts/coverage_external_controller.py",
+      "git_blob": "0ab906ded72c9794a578a6004f92494de6d5b107"
+    },
+    {
+      "path": "scripts/coverage_external_invocation.py",
+      "git_blob": "f06280fae3acfcec93bd2575fcf139d3251cecae"
+    },
+    {
+      "path": "scripts/coverage_external_issuer.py",
+      "git_blob": "5224746f3ff83f9ef46ec590710df3c193f08f5e"
+    },
+    {
+      "path": "scripts/coverage_frozen_pool_collect.py",
+      "git_blob": "4edb4b618d2d2b3abcaedd88e694a5db4ad3254a"
+    },
+    {
+      "path": "scripts/coverage_frozen_pool_inputs.py",
+      "git_blob": "232d86c516a86b8c07d5597fbf7bc14f6d042d33"
+    },
+    {
+      "path": "scripts/coverage_gate_calculation.py",
+      "git_blob": "6a3a84003f3d40d0baacadd8d2f8804309cca330"
+    },
+    {
+      "path": "scripts/coverage_grade_closure.py",
+      "git_blob": "e5220971c7001d21aeaa31e88feeae1ad5867c33"
+    },
+    {
+      "path": "scripts/coverage_guarded_driver.py",
+      "git_blob": "84736c4cb3ac204fed1a31f3a01a3f02336f393e"
+    },
+    {
+      "path": "scripts/coverage_jev_execution.py",
+      "git_blob": "006f35e2fb60bc94e8289c4a82d8e5b0f4f9b02c"
+    },
+    {
+      "path": "scripts/coverage_late_registration.py",
+      "git_blob": "aa54225377b6544d5bca6101e09dcd92346c075f"
+    },
+    {
+      "path": "scripts/coverage_legacy_control.py",
+      "git_blob": "ab7e634d51e8fe5e4554dbee0a6b44a7a134a1f8"
+    },
+    {
+      "path": "scripts/coverage_live_acquire.py",
+      "git_blob": "206aa54c759b040acbeeb8d65e8ae2af53d5a86b"
+    },
+    {
+      "path": "scripts/coverage_local_authority.py",
+      "git_blob": "742b7b88f21a196de1a72457f41c34a004dd01d9"
+    },
+    {
+      "path": "scripts/coverage_native_grader_handoff.py",
+      "git_blob": "6e78cc628364b92768fd1b2242c9fe96b65b5c23"
+    },
+    {
+      "path": "scripts/coverage_native_host_dispatch.py",
+      "git_blob": "e479bddda4b50e3af074be953b35ba7e383109da"
+    },
+    {
+      "path": "scripts/coverage_operator_handoff.py",
+      "git_blob": "835e9c8b15b65aafcfccc5baf0bbf6e47f3b8be3"
+    },
+    {
+      "path": "scripts/coverage_operator_launcher.py",
+      "git_blob": "8f30fa07abeceeb26d84eff6c04221353a475a7a"
+    },
+    {
+      "path": "scripts/coverage_operator_runner.py",
+      "git_blob": "c209c917a8682f79e53e22925e5ad0e47b292f0a"
+    },
+    {
+      "path": "scripts/coverage_pipeline_inputs.py",
+      "git_blob": "4e0d62831929634d32392798db2f05f3ec766669"
+    },
+    {
+      "path": "scripts/coverage_resource_evidence.py",
+      "git_blob": "0ec65f35cb2fae6e7fedfb9898a71b7d677f4806"
+    },
+    {
+      "path": "scripts/coverage_runtime_environment.py",
+      "git_blob": "58433ff0a3a48f29f0f8c4342f4c01b09e10655e"
+    },
+    {
+      "path": "scripts/coverage_saved_corpus.py",
+      "git_blob": "4cfdd5ecd399ac5a170c66449d1dacdaed343316"
+    },
+    {
+      "path": "scripts/coverage_selector_admission.py",
+      "git_blob": "1f8dc483231b26a01fcada6e7833c91f41ca1e78"
+    },
+    {
+      "path": "scripts/coverage_selector_input_map.py",
+      "git_blob": "9ff0157743ffa29f59c72eabe8f8dd751fb4960a"
+    },
+    {
+      "path": "scripts/coverage_source_capture.py",
+      "git_blob": "74c845b06ff1b8edba065c33634216607eb7ca5a"
+    },
+    {
+      "path": "scripts/coverage_stage_finalization.py",
+      "git_blob": "b4a226920fdeeb26b1373c752e4ccd9388e1226e"
+    },
+    {
+      "path": "scripts/coverage_stage_orchestration.py",
+      "git_blob": "13997a6df6173dcf043ffc02d76319f4dfc2294e"
+    },
+    {
+      "path": "scripts/coverage_stage_runtime.py",
+      "git_blob": "69988f15e53ab87c114ff8fbb195849f9ad2c3b8"
+    },
+    {
+      "path": "scripts/coverage_study_acquire.py",
+      "git_blob": "3cbdbc96cf001d9d9f5bb46b083866f14df236d4"
+    },
+    {
+      "path": "scripts/coverage_study_core.py",
+      "git_blob": "743b41e5c2b8164e28fd08f7c3851ec6c848a7da"
+    },
+    {
+      "path": "scripts/intent_ranking_coverage.py",
+      "git_blob": "fd36988adc1ae158631f8eee8e8b90d8132d013f"
+    },
+    {
+      "path": "scripts/intent_ranking_receipts.py",
+      "git_blob": "84807d6e98a42efe6a2477e04880adb8cdab0c04"
+    },
+    {
+      "path": "scripts/intent_ranking_replay.py",
+      "git_blob": "272a9a7eafecd49d6e528c9bd248e163ec7343a1"
+    },
+    {
+      "path": "scripts/portal_release_smoke.py",
+      "git_blob": "bcb6ede74e95dd8c61eb870d3275b93ad191fb1a"
+    },
+    {
+      "path": "scripts/promote_image_digest.py",
+      "git_blob": "f7fd073d5e48edf249a56cb5a22af9328e8979ab"
+    },
+    {
+      "path": "scripts/upstream_contracts.py",
+      "git_blob": "5501042cb507cf082b9a2654558e5488e711f6c4"
+    },
+    {
+      "path": "scripts/verify_docker_base_digest.py",
+      "git_blob": "3f43f9bc1f90b4b2cd85381d2a54e54387cfab18"
+    },
+    {
+      "path": "slopsearx/__init__.py",
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "slopsearx/adapter.py",
+      "git_blob": "664e853d9ab1330596d01899ebe015701de09e88"
+    },
+    {
+      "path": "slopsearx/advisories.py",
+      "git_blob": "ebeb860f3021fb13949a8ca99b5d9923cba87f41"
+    },
+    {
+      "path": "slopsearx/artifacts.py",
+      "git_blob": "2cea4d16eb901b4c0ac0a2f5c0795add57f1f869"
+    },
+    {
+      "path": "slopsearx/audit.py",
+      "git_blob": "b37ad2f3d2c9f60e2b109ff31fbc5f06de8426f6"
+    },
+    {
+      "path": "slopsearx/cache.py",
+      "git_blob": "354dbc179c4ca6ebc4ac9f85dd66a40d07ba3c09"
+    },
+    {
+      "path": "slopsearx/capabilities.py",
+      "git_blob": "5ef6f90750352fdadbc877561d3520c1fe774fdb"
+    },
+    {
+      "path": "slopsearx/config.py",
+      "git_blob": "761db0521d74ec6d955aa8a84fd92a4a62533c43"
+    },
+    {
+      "path": "slopsearx/dependency_dossier.py",
+      "git_blob": "180febf9337ea22e846155229ac7d3bcca4253ea"
+    },
+    {
+      "path": "slopsearx/filters.py",
+      "git_blob": "e1a1cac35c5fcbbf2e6fb7728241953aa8047669"
+    },
+    {
+      "path": "slopsearx/formatter.py",
+      "git_blob": "8fa2bb950dc341adace7b9524b5755e98a4da406"
+    },
+    {
+      "path": "slopsearx/jev.py",
+      "git_blob": "2bbb5c01f20b4db16730cbe3460e625b3d27fa23"
+    },
+    {
+      "path": "slopsearx/jobs_utils.py",
+      "git_blob": "d33a18497ed868f32b8724bc24c5807dd1fc6421"
+    },
+    {
+      "path": "slopsearx/logging.py",
+      "git_blob": "d9851d25c6b168cbd06c2088274bf135aefe36ae"
+    },
+    {
+      "path": "slopsearx/mcp/__init__.py",
+      "git_blob": "bfb547d37c0aa1b40df95917551513ae5ad3298f"
+    },
+    {
+      "path": "slopsearx/mcp/__main__.py",
+      "git_blob": "2d4b16a8b22673822cde40f32010cc515d376575"
+    },
+    {
+      "path": "slopsearx/mcp/composition.py",
+      "git_blob": "5075688749c909e1824fb26243ecae1ae06d1015"
+    },
+    {
+      "path": "slopsearx/mcp/dependency_tools.py",
+      "git_blob": "1f952c47aa55617d9c421c302bbfb78a4a0b7cc0"
+    },
+    {
+      "path": "slopsearx/mcp/entity_projection.py",
+      "git_blob": "07d63a5d842bbc815b0dab34c2c3f4bde01bf079"
+    },
+    {
+      "path": "slopsearx/mcp/gateway.py",
+      "git_blob": "50177f2936f92ee9bd1380e375b84c43b686ec8e"
+    },
+    {
+      "path": "slopsearx/mcp/harness.py",
+      "git_blob": "b661b6775315da47b462b0345da5cf6d61a78265"
+    },
+    {
+      "path": "slopsearx/mcp/lineage_tools.py",
+      "git_blob": "5eeb4acce9a85d5368fcbc3d4dba7c1826dbab6b"
+    },
+    {
+      "path": "slopsearx/mcp/oauth.py",
+      "git_blob": "6c29136856842ef57a2878d1a7651d30df40931b"
+    },
+    {
+      "path": "slopsearx/mcp/oauth_client.py",
+      "git_blob": "7e7a634e873faae9bbc5fbb6e1d7504f8cdf0c14"
+    },
+    {
+      "path": "slopsearx/mcp/planning_tools.py",
+      "git_blob": "ab7c79cc2afe615dad59266b4f00bbf7ba3ae7c8"
+    },
+    {
+      "path": "slopsearx/mcp/prompts.py",
+      "git_blob": "7e00162d7bd346c942dc69ac202e9f2bcc1bfacf"
+    },
+    {
+      "path": "slopsearx/mcp/receipt_tools.py",
+      "git_blob": "7c334514db0b84e8e31c878256100aa07171db8c"
+    },
+    {
+      "path": "slopsearx/mcp/resources.py",
+      "git_blob": "f9a1c499c1b3f07a8b372bb5c4be4249c868f7bb"
+    },
+    {
+      "path": "slopsearx/mcp/result_serialization.py",
+      "git_blob": "d4b3b42b9a08caafd09d946dcae05fba59374ec1"
+    },
+    {
+      "path": "slopsearx/mcp/security.py",
+      "git_blob": "a0d6300d0883f2cca19e3bbd70ce7126b33ee6a9"
+    },
+    {
+      "path": "slopsearx/mcp/server.py",
+      "git_blob": "f5f7c6c368e2b6dc3f8056090e978f3bd6243649"
+    },
+    {
+      "path": "slopsearx/mcp/staged_tools.py",
+      "git_blob": "53c63e759baed2edb7cdd4c7b2fe2033c635c5d0"
+    },
+    {
+      "path": "slopsearx/mcp/state.py",
+      "git_blob": "b99bcc2574cb15dd14cc2844248e52b4c3d204ce"
+    },
+    {
+      "path": "slopsearx/mcp/tool_registry.py",
+      "git_blob": "7f56df7883662a8cff4cbc0e39c154bcffaa1187"
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "git_blob": "d06ecd475b9b523addf79781d2762eddd92f4911"
+    },
+    {
+      "path": "slopsearx/merger.py",
+      "git_blob": "75585f5a7b285c9db5e7aee2c67b7ce177b636ee"
+    },
+    {
+      "path": "slopsearx/metrics.py",
+      "git_blob": "70d9a045d25bdbca6caf5b9491caa4a15071e453"
+    },
+    {
+      "path": "slopsearx/middleware.py",
+      "git_blob": "b212ff2684534f5f88aa87b1bc83a7b19e856834"
+    },
+    {
+      "path": "slopsearx/payload.py",
+      "git_blob": "efa149d48bae401f7a0a9df6e50c8c614adecbb5"
+    },
+    {
+      "path": "slopsearx/portal_audit.py",
+      "git_blob": "39f26695660e3c86ba936c91d9e6c21de451384f"
+    },
+    {
+      "path": "slopsearx/portal_auth.py",
+      "git_blob": "45a7f2017ffff5f1e919f67669bdc2cc846cfdb0"
+    },
+    {
+      "path": "slopsearx/portal_oidc.py",
+      "git_blob": "16575389c0583f6f54b7eb2174b41e3ec4caeff5"
+    },
+    {
+      "path": "slopsearx/portal_rate_limit.py",
+      "git_blob": "d7fb8ffdb0c5e1cc02fb145fcad10e4a8c7022b9"
+    },
+    {
+      "path": "slopsearx/proxypool.py",
+      "git_blob": "006aab63744e626c307717faf3e26a202ee252db"
+    },
+    {
+      "path": "slopsearx/publication_metadata.py",
+      "git_blob": "c97fa68236b517af3531bdbabb20d0e49f4a89fc"
+    },
+    {
+      "path": "slopsearx/ratelimit.py",
+      "git_blob": "5c7cd57a679591879b2a4e2d2bf2fb520d9d7eb5"
+    },
+    {
+      "path": "slopsearx/rerank.py",
+      "git_blob": "0e462dbfe0520683e4b37980b8407f320b87a7d6"
+    },
+    {
+      "path": "slopsearx/research.py",
+      "git_blob": "6770daf3cbbaa160b6c6ee29583c72872cb07289"
+    },
+    {
+      "path": "slopsearx/research_budget.py",
+      "git_blob": "39b1be8c8dfde7a8f4b2a15d3ab7472e4d8a905b"
+    },
+    {
+      "path": "slopsearx/research_models.py",
+      "git_blob": "7eaf08e310083f19da5324d6f50760d8672a1913"
+    },
+    {
+      "path": "slopsearx/research_planning.py",
+      "git_blob": "b98b8bcfb996429e2de8f3d71384eadd1e30fd8d"
+    },
+    {
+      "path": "slopsearx/research_store.py",
+      "git_blob": "2059939629cbd1da911dc11448b062c995d92238"
+    },
+    {
+      "path": "slopsearx/retrieval_receipts.py",
+      "git_blob": "f3fe56bd172f084cc26aa02bff67c4f6b1350fa9"
+    },
+    {
+      "path": "slopsearx/retrieval_url.py",
+      "git_blob": "bb4ac3c8eb3adafcd012ecb93fa8aef8a47ec6d4"
+    },
+    {
+      "path": "slopsearx/router.py",
+      "git_blob": "ef14e463d2d49bcdb2af60dd02691649cd80a639"
+    },
+    {
+      "path": "slopsearx/routing.py",
+      "git_blob": "ffa2afc58add323cc9d321505800c3f3ed038853"
+    },
+    {
+      "path": "slopsearx/saved_events.py",
+      "git_blob": "137dcbf8e1d1c7d9691423ceb9b8df6e3e52c221"
+    },
+    {
+      "path": "slopsearx/saved_models.py",
+      "git_blob": "f9f3e893e06a317f604357ee05030dfe277d7a27"
+    },
+    {
+      "path": "slopsearx/saved_runner.py",
+      "git_blob": "b313cc7983afa1629ced33e379672c6cd7fdc1ee"
+    },
+    {
+      "path": "slopsearx/saved_store.py",
+      "git_blob": "5999e14a71539529fb410fe27715c2a71fc3ebd7"
+    },
+    {
+      "path": "slopsearx/scholarly.py",
+      "git_blob": "9d0fa36c8e9c7321d8c26270dbe466a171f00315"
+    },
+    {
+      "path": "slopsearx/server.py",
+      "git_blob": "412ad973735f0199be9a32da4763437f55a584bb"
+    },
+    {
+      "path": "slopsearx/service.py",
+      "git_blob": "82eb29d50c4ca98a237949d4d8994cfe3cbeca9f"
+    },
+    {
+      "path": "slopsearx/snapshot.py",
+      "git_blob": "fe0e62b9872b3d01cef6a8f843d9720f2cd50a42"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "git_blob": "26a80af7fa217eda44836710ed3887146a3ef655"
+    },
+    {
+      "path": "slopsearx/stats.py",
+      "git_blob": "2af5a474951944a39c134994e060aa8f5dacdb9e"
+    },
+    {
+      "path": "slopsearx/suggest.py",
+      "git_blob": "09a8d1bced385507f2a0e1d689133ffa3da0e79f"
+    },
+    {
+      "path": "slopsearx/workflow_console.py",
+      "git_blob": "8eee086a5a1fe6549b16eda5b6d2c1d87127069e"
+    },
+    {
+      "path": "slopsearx/workflow_portal.py",
+      "git_blob": "efde7e2899011328cc4ce72cc2b05080bb734027"
+    },
+    {
+      "path": "ssx",
+      "git_blob": "1070cc9765fff6f46050032e95a45572347c3cff"
+    },
+    {
+      "path": "tests/__init__.py",
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "tests/conftest.py",
+      "git_blob": "41e91243ee2ef047bdaf4ed14773b878135a26fd"
+    },
+    {
+      "path": "tests/jev_replay.py",
+      "git_blob": "aad1353a6b746874d730be25f102af117e062e2a"
+    },
+    {
+      "path": "tests/test_abuseipdb.py",
+      "git_blob": "49776cbd71a1bcaa26f906c121743eb823f9d69a"
+    },
+    {
+      "path": "tests/test_adapter.py",
+      "git_blob": "c127212cc12e71643963e0699234a64e72b180b7"
+    },
+    {
+      "path": "tests/test_adapters.py",
+      "git_blob": "788f5747f84438f96bacbec5c6d813dea44ef4cd"
+    },
+    {
+      "path": "tests/test_adaptive_research.py",
+      "git_blob": "2d489e019832f208aeba87982fe978b9031cc4a5"
+    },
+    {
+      "path": "tests/test_adaptive_transport.py",
+      "git_blob": "33da989a6e43de912cc31ab54f4424da22a6bc3f"
+    },
+    {
+      "path": "tests/test_adaptive_valkey.py",
+      "git_blob": "ae83e4eec2f71c1b9104d350f5947a9cd53bb002"
+    },
+    {
+      "path": "tests/test_advisories.py",
+      "git_blob": "f2e9917d447863b2220bf15aefcf1289673d1e20"
+    },
+    {
+      "path": "tests/test_artifact_lineage.py",
+      "git_blob": "342735834720a629d036b01023218a206568763b"
+    },
+    {
+      "path": "tests/test_artifact_lineage_valkey.py",
+      "git_blob": "7569490578317b761868743d648a2d1c5723e0bb"
+    },
+    {
+      "path": "tests/test_arxiv_relevance.py",
+      "git_blob": "67abee487d8054b6cd8d02ddd6d0bb180cbd623a"
+    },
+    {
+      "path": "tests/test_audit.py",
+      "git_blob": "ba5c64ac7f3642ded90001e19f751fbd3463e1b6"
+    },
+    {
+      "path": "tests/test_cache.py",
+      "git_blob": "8830f11cd664d68dd169c4e6deaba48b9fc1106c"
+    },
+    {
+      "path": "tests/test_cache_integration.py",
+      "git_blob": "f4b7eb88f5693f2d1dfcc76de48de1e5d8c2b3c7"
+    },
+    {
+      "path": "tests/test_capabilities.py",
+      "git_blob": "50e9ddccc5e1c8b4eaf54264c0d5e1e2a3b9a94c"
+    },
+    {
+      "path": "tests/test_capability_catalog.py",
+      "git_blob": "9a698d2d1f15d05a531cf9393707108d2ae30cba"
+    },
+    {
+      "path": "tests/test_categories.py",
+      "git_blob": "4d3f3153a7c099ee106832ea7d2bbc762eac84e8"
+    },
+    {
+      "path": "tests/test_censys.py",
+      "git_blob": "8363212a7599819434e3c34ce16b6194e7d119f9"
+    },
+    {
+      "path": "tests/test_ci_dockerhub_mirror.py",
+      "git_blob": "ba7fab313404703cb3b8b073b09f177fb2c9bcc6"
+    },
+    {
+      "path": "tests/test_concurrency.py",
+      "git_blob": "c85ccc5357cc64840c8514e70d1e0d3673356b2b"
+    },
+    {
+      "path": "tests/test_config.py",
+      "git_blob": "ab1b85cb9ee446f99e87dedfcbb3c8babb41686b"
+    },
+    {
+      "path": "tests/test_coverage_answer_execution.py",
+      "git_blob": "4eebb6d72958b640588093a55680bc29902dea73"
+    },
+    {
+      "path": "tests/test_coverage_assessment_checkpoint.py",
+      "git_blob": "d89f6bb8e015a2bc050e281a9e42591fc3fa0e5a"
+    },
+    {
+      "path": "tests/test_coverage_assessment_packets.py",
+      "git_blob": "8b3cc53db812a40b6d5cf6f4b1935399fc890083"
+    },
+    {
+      "path": "tests/test_coverage_atomic_io.py",
+      "git_blob": "b05b3f746f733fedd0735d76ee9ae240bbd5a251"
+    },
+    {
+      "path": "tests/test_coverage_band_companion.py",
+      "git_blob": "898e0746dd656b22b0edfa57197450effaeef50a"
+    },
+    {
+      "path": "tests/test_coverage_consumer_inputs.py",
+      "git_blob": "0eb2a1354d65307aebde134509e04467a5fa0529"
+    },
+    {
+      "path": "tests/test_coverage_engine_replay.py",
+      "git_blob": "cf090f34d914ae23e4f46b00a6934e232a583988"
+    },
+    {
+      "path": "tests/test_coverage_external_issuer.py",
+      "git_blob": "731bf6aca1cc5c4d48b3cc8f29152ad7b96e730b"
+    },
+    {
+      "path": "tests/test_coverage_external_lifecycle.py",
+      "git_blob": "4b72dd696c0c83b3ebdcd8c9d32a03189b8ac012"
+    },
+    {
+      "path": "tests/test_coverage_frozen_pool_collect.py",
+      "git_blob": "48770286e9763150534101b20d62554b6f86ed5b"
+    },
+    {
+      "path": "tests/test_coverage_frozen_resource_evidence.py",
+      "git_blob": "b792dfcdf5c9d1fb32350af64ab229a0cdce9f25"
+    },
+    {
+      "path": "tests/test_coverage_gate_calculation.py",
+      "git_blob": "abe504a212fb133c8846bef80bd798445a67185c"
+    },
+    {
+      "path": "tests/test_coverage_grade_closure.py",
+      "git_blob": "9470dfe877314cf6938530fd616e7b2f979d9fdc"
+    },
+    {
+      "path": "tests/test_coverage_guarded_driver.py",
+      "git_blob": "2b1fa5ff0445a608ed0db0a23c6fb63e7374fa8c"
+    },
+    {
+      "path": "tests/test_coverage_jev_execution.py",
+      "git_blob": "aa46d521e27663a15b00782d7659e673aa28fd73"
+    },
+    {
+      "path": "tests/test_coverage_jev_resource_observations.py",
+      "git_blob": "07a61f6f2cf00eae69bd401a2d976af69f06bc3b"
+    },
+    {
+      "path": "tests/test_coverage_jev_saved_selector_map.py",
+      "git_blob": "7d8f3f15e0937dc8bdb7b995d7fad472ca17586c"
+    },
+    {
+      "path": "tests/test_coverage_late_registration.py",
+      "git_blob": "8bc090a33df094ef45c3ae5c0c5af2c5f310748e"
+    },
+    {
+      "path": "tests/test_coverage_legacy_control.py",
+      "git_blob": "9777f34536ca58d2f065ab38db1803aa76f0f0e9"
+    },
+    {
+      "path": "tests/test_coverage_live_acquire.py",
+      "git_blob": "86f890cab4393b4734b723d1d8896666e5ba49e6"
+    },
+    {
+      "path": "tests/test_coverage_local_authority.py",
+      "git_blob": "f02f13befd60863c83184b48ee8b65af2171f4f2"
+    },
+    {
+      "path": "tests/test_coverage_native_grader_handoff.py",
+      "git_blob": "a5c907282f1deb48edf6cf6875fe9e2f4aaaafec"
+    },
+    {
+      "path": "tests/test_coverage_native_host_dispatch.py",
+      "git_blob": "8e5435dbd654fa66cc7eecdb99ca726148669a44"
+    },
+    {
+      "path": "tests/test_coverage_operator_handoff.py",
+      "git_blob": "cdfab98eb0308bacedb83f0dee7e5db85002665c"
+    },
+    {
+      "path": "tests/test_coverage_operator_runner.py",
+      "git_blob": "424c7c3a7c8ca54a4b8775de639e06c736de51b2"
+    },
+    {
+      "path": "tests/test_coverage_phase_registration_context.py",
+      "git_blob": "8d7e137dc4c95db39f0257d1e73f78ab251252fa"
+    },
+    {
+      "path": "tests/test_coverage_pipeline_inputs.py",
+      "git_blob": "18871d7fc0c0061e02a0d4527e3f10f03fd00956"
+    },
+    {
+      "path": "tests/test_coverage_registered_selector_schedule.py",
+      "git_blob": "bf012f9f10b575e0d4514fd6b329cf471b969162"
+    },
+    {
+      "path": "tests/test_coverage_resource_evidence.py",
+      "git_blob": "a4ab27588ae01d85902cb7fbd9d6509bbd77669f"
+    },
+    {
+      "path": "tests/test_coverage_runtime_environment.py",
+      "git_blob": "3cf545a37ebc4f6719d1d29af99446680d4def9f"
+    },
+    {
+      "path": "tests/test_coverage_saved_corpus.py",
+      "git_blob": "b2aa6f2775a3be0567c1dc693c84bcf87e9c0638"
+    },
+    {
+      "path": "tests/test_coverage_saved_corpus_authority.py",
+      "git_blob": "c1052140f229cd244ea72b853b1efda3bd8e6ba3"
+    },
+    {
+      "path": "tests/test_coverage_saved_import_clock_admission.py",
+      "git_blob": "633048f8d5cf7ee626e95146faf0c58fea10e32d"
+    },
+    {
+      "path": "tests/test_coverage_saved_import_request_bindings.py",
+      "git_blob": "08bf66b013d2ff97ad01697ccd8f2abc57e9fbea"
+    },
+    {
+      "path": "tests/test_coverage_saved_method_materials.py",
+      "git_blob": "e5d978473e3d1c41977cfcbb765678bbc0276d8c"
+    },
+    {
+      "path": "tests/test_coverage_saved_plan_sidecar.py",
+      "git_blob": "56dcfb7fc5c2c96b4ea8c41cec94be2aaf66f0c4"
+    },
+    {
+      "path": "tests/test_coverage_saved_resource_accounting.py",
+      "git_blob": "c5ea778033494b722f408c564ca73acae5aaa448"
+    },
+    {
+      "path": "tests/test_coverage_saved_stage_integration.py",
+      "git_blob": "5f13cbb46fcdb54310ed4d84d249cf1f85521e12"
+    },
+    {
+      "path": "tests/test_coverage_selector_admission.py",
+      "git_blob": "1f6fcc90bb318fde8344d61538f39fb5395fc596"
+    },
+    {
+      "path": "tests/test_coverage_selector_input_map.py",
+      "git_blob": "4dfde7d610280fe7d05aaa7fa1dc514fa41f24fe"
+    },
+    {
+      "path": "tests/test_coverage_selector_input_map_saved.py",
+      "git_blob": "e33718bde89d897b9c146090c9a60cdf7141e4a7"
+    },
+    {
+      "path": "tests/test_coverage_selector_map_saved_authority.py",
+      "git_blob": "9c036359650da34a3a63893008c920eb5799fe3c"
+    },
+    {
+      "path": "tests/test_coverage_source_capture.py",
+      "git_blob": "81185190882cb4fd5da220ae474b52c48ed8cf39"
+    },
+    {
+      "path": "tests/test_coverage_stage_finalization.py",
+      "git_blob": "d8983362a373cde218019f742d0db0c6c6d62b4d"
+    },
+    {
+      "path": "tests/test_coverage_stage_orchestration.py",
+      "git_blob": "0f5c264c01086f75ec2aa4f2942a0ea4e4ef1dce"
+    },
+    {
+      "path": "tests/test_coverage_stage_runtime.py",
+      "git_blob": "8afea2673a7874b8848ce05486efb6d60a9593ec"
+    },
+    {
+      "path": "tests/test_coverage_stage_runtime_checkpoint.py",
+      "git_blob": "3aef2b5bb360d28a74388fc8643c4679bd89a699"
+    },
+    {
+      "path": "tests/test_coverage_study_acquire.py",
+      "git_blob": "76dd9fa6d0ee87ecf55c914616679f42ad196e17"
+    },
+    {
+      "path": "tests/test_coverage_study_core.py",
+      "git_blob": "7b395d8cf40f2c581126e4b79f8a5b20bbd54d93"
+    },
+    {
+      "path": "tests/test_coverage_task_use_materials.py",
+      "git_blob": "29f24bcaa20a642c1f851abda644b26adaca7e22"
+    },
+    {
+      "path": "tests/test_coverage_v2_snapshot_consumers.py",
+      "git_blob": "6cbcef85108d92dd2f9c08578e60c650473457a4"
+    },
+    {
+      "path": "tests/test_crtsh.py",
+      "git_blob": "94e003fab7e8290a724177327309b50e3c64653a"
+    },
+    {
+      "path": "tests/test_cve.py",
+      "git_blob": "9e30d52a891d763e171bf3b52ea046b9467dcc92"
+    },
+    {
+      "path": "tests/test_dehashed.py",
+      "git_blob": "2a7f33577e2f4d91bd7520dd27cfba4f830cb92a"
+    },
+    {
+      "path": "tests/test_dependency_dossier.py",
+      "git_blob": "9bd8182a284138298cd7a066a1b1ebf1df7de67d"
+    },
+    {
+      "path": "tests/test_deployment_artifacts.py",
+      "git_blob": "649650e35656bfff78d7930052085270811343fd"
+    },
+    {
+      "path": "tests/test_disabled_review_workflows.py",
+      "git_blob": "794035e594830080a417c042049423b2adf0f5ab"
+    },
+    {
+      "path": "tests/test_dockerhub.py",
+      "git_blob": "ab8e9686fc37305ceb629eb3a6f56651ef49a88b"
+    },
+    {
+      "path": "tests/test_duckduckgo_resilience.py",
+      "git_blob": "03379c9d34a7437a875e0713a326ffd48b921efa"
+    },
+    {
+      "path": "tests/test_edgar_url_contract.py",
+      "git_blob": "d471850c05029e2063634e270be9e195f68333a9"
+    },
+    {
+      "path": "tests/test_entity_projection.py",
+      "git_blob": "3de99ca14f30891ace67fb4d89f0d6e9e33c94c0"
+    },
+    {
+      "path": "tests/test_entity_transport.py",
+      "git_blob": "011c1e06020681f109505bbdd7b7f36b1039fa7d"
+    },
+    {
+      "path": "tests/test_epss.py",
+      "git_blob": "896c9267987609e0c00708e33ca76a685f287a68"
+    },
+    {
+      "path": "tests/test_europepmc.py",
+      "git_blob": "ff799d71c78066952fbe872cbad23a43afa04f97"
+    },
+    {
+      "path": "tests/test_exploitdb.py",
+      "git_blob": "8fd9a9f26693624f5a0e286af780c542bbbaff51"
+    },
+    {
+      "path": "tests/test_fail_closed.py",
+      "git_blob": "ad87fdca3977ca2660c6f84325997ab443a7806e"
+    },
+    {
+      "path": "tests/test_filter_semantics.py",
+      "git_blob": "6475f5fff325f8476976d664dbb798f42296bafa"
+    },
+    {
+      "path": "tests/test_formatter.py",
+      "git_blob": "012c9365c62fa4523c3cac67081024995975bdc3"
+    },
+    {
+      "path": "tests/test_fred.py",
+      "git_blob": "7cf83b57095ead0120cb748d5f226bc8de3b4160"
+    },
+    {
+      "path": "tests/test_github.py",
+      "git_blob": "46e84d0020f16768414da0fd9badf206697846e4"
+    },
+    {
+      "path": "tests/test_google_adapter.py",
+      "git_blob": "8f75c72fe63469f4d01202aa356eb7a002dc3581"
+    },
+    {
+      "path": "tests/test_greynoise.py",
+      "git_blob": "b5376dce08a17c447bfa6f00a0ade7e1b94f4394"
+    },
+    {
+      "path": "tests/test_hibp.py",
+      "git_blob": "611365f9c4d21d231388a99f0754c481436fc7c6"
+    },
+    {
+      "path": "tests/test_http_pooling.py",
+      "git_blob": "5f6a0cd70a4c7200d528c74acd7c8e24c8b4c692"
+    },
+    {
+      "path": "tests/test_integration.py",
+      "git_blob": "ef87c338c98c36185a432700cc3a3d40d717acff"
+    },
+    {
+      "path": "tests/test_intelx.py",
+      "git_blob": "cc8b9c7460df472b2e6c46eadc60ea3f0b9866cc"
+    },
+    {
+      "path": "tests/test_intent_ranking_coverage.py",
+      "git_blob": "0f8b63356012f62ba611b5cfeb754ad4d17b3a5e"
+    },
+    {
+      "path": "tests/test_intent_ranking_receipts.py",
+      "git_blob": "68dc800155d21517b88071dd6bba73250cbb1192"
+    },
+    {
+      "path": "tests/test_intent_ranking_replay.py",
+      "git_blob": "72771008025a4fdaab583b520ed9ecc572377930"
+    },
+    {
+      "path": "tests/test_interactive_deadline.py",
+      "git_blob": "d406af2adc49a11ee8de58f376a41b15e35ba956"
+    },
+    {
+      "path": "tests/test_internetarchive_adapter.py",
+      "git_blob": "a3f974f03511fde7e8efda605a36fa8081d0d251"
+    },
+    {
+      "path": "tests/test_jev.py",
+      "git_blob": "7374e5bfc13166685b5cf5586d2020b22cabda17"
+    },
+    {
+      "path": "tests/test_jev_replay.py",
+      "git_blob": "788d0f07e2d0b880d77616bc1b87f84c8a755388"
+    },
+    {
+      "path": "tests/test_jobs_adapters.py",
+      "git_blob": "739c82162d70eb9c88706380bd3f3192f1153306"
+    },
+    {
+      "path": "tests/test_mcp_enforcement.py",
+      "git_blob": "aa2a9be0b47e3e36d106c5af69610dec87f048d2"
+    },
+    {
+      "path": "tests/test_mcp_gateway.py",
+      "git_blob": "1d569afaf7011f6f8f619139f7698526b8d50460"
+    },
+    {
+      "path": "tests/test_mcp_gateway_initialization.py",
+      "git_blob": "fe36081b4cca5680d3052156eab1c5bab9e18b6f"
+    },
+    {
+      "path": "tests/test_mcp_gateway_lifecycle.py",
+      "git_blob": "5b73aa8a1f2f9ca8c9181b2bdd83011d4f2abf5b"
+    },
+    {
+      "path": "tests/test_mcp_harness.py",
+      "git_blob": "5907fa0ceb11fc35e8aec674eb82b0e656ff7700"
+    },
+    {
+      "path": "tests/test_mcp_oauth.py",
+      "git_blob": "f889dbe1f3b9890bd1b6f7c08474c7a9759ae75a"
+    },
+    {
+      "path": "tests/test_mcp_oauth_client.py",
+      "git_blob": "02e9021ac34159db990870649ce3bdcfbf9676ec"
+    },
+    {
+      "path": "tests/test_mcp_research.py",
+      "git_blob": "767478d369f27a003a26669625aa31a47d15cf71"
+    },
+    {
+      "path": "tests/test_mcp_security.py",
+      "git_blob": "1f45cee42ecb4bd59e21ead4c26abfbd52eb0f7e"
+    },
+    {
+      "path": "tests/test_mcp_snapshots.py",
+      "git_blob": "783f710689c16cdf12d51cc443d1ad30efb87b0c"
+    },
+    {
+      "path": "tests/test_mcp_tool_registry.py",
+      "git_blob": "965070df5c39d4883d3159722d429c688b31df8c"
+    },
+    {
+      "path": "tests/test_mcp_tools.py",
+      "git_blob": "9804b31ace1575fc1253dd82549d4f3a17bcebda"
+    },
+    {
+      "path": "tests/test_media_contract.py",
+      "git_blob": "37dd3e6e1cca7e648d7fe3f8604f697bed0481ed"
+    },
+    {
+      "path": "tests/test_merger.py",
+      "git_blob": "c3f7cf4e10315cc9d80e8818857b1c57e0fee98e"
+    },
+    {
+      "path": "tests/test_metrics.py",
+      "git_blob": "216742199a92237fe4ffc23d4e453174be8e286d"
+    },
+    {
+      "path": "tests/test_misc_polish.py",
+      "git_blob": "5844fc6fa5354efeb35f4134c505b3c3be282aa8"
+    },
+    {
+      "path": "tests/test_mitreattack.py",
+      "git_blob": "99b0098a978f15b47a1305e92d45ab0f76dcf49c"
+    },
+    {
+      "path": "tests/test_native_html_theme_browser.py",
+      "git_blob": "3ae3c76b87e0f4ce5662ec72024965a8d2e80043"
+    },
+    {
+      "path": "tests/test_new_engines.py",
+      "git_blob": "4e5293d694bb40332584a9541b6ad41326a01cc0"
+    },
+    {
+      "path": "tests/test_nvd.py",
+      "git_blob": "f83542252bd534752ceffa541db9369eba36b486"
+    },
+    {
+      "path": "tests/test_observed_health.py",
+      "git_blob": "69b83cdfea82a07e90ada68fca31810aace72bb3"
+    },
+    {
+      "path": "tests/test_openalex_adapter.py",
+      "git_blob": "da42177cac822dc6bf67f8a5445283e65d1761bc"
+    },
+    {
+      "path": "tests/test_openfda.py",
+      "git_blob": "00fda6fc622ab02c6c85b847ce0930a1b3ef620f"
+    },
+    {
+      "path": "tests/test_openlibrary_url_contract.py",
+      "git_blob": "b5de811610efd5cf93006b356cd322370f319216"
+    },
+    {
+      "path": "tests/test_otx.py",
+      "git_blob": "423f72c00df004ceb42d37662b6dff8434abb805"
+    },
+    {
+      "path": "tests/test_oyez_relevance.py",
+      "git_blob": "b0bb8089a8aa3cc079623f852f5f45495828e3b2"
+    },
+    {
+      "path": "tests/test_packaging.py",
+      "git_blob": "ac494e13092c3cdda6b24f2cd3241dc62da4d69a"
+    },
+    {
+      "path": "tests/test_payload.py",
+      "git_blob": "4b5bc1a0940ad6c1214eb55764fb4aea57188de9"
+    },
+    {
+      "path": "tests/test_policy_gate.py",
+      "git_blob": "156071458542a70190c874d91b8155659ca413fd"
+    },
+    {
+      "path": "tests/test_portal_audit.py",
+      "git_blob": "94a13218f02b4b425e9e1144c0abdc1e60a2bdf3"
+    },
+    {
+      "path": "tests/test_portal_auth.py",
+      "git_blob": "00005e63db989558c9a09fe3d6e28296c195f4b7"
+    },
+    {
+      "path": "tests/test_portal_browser.py",
+      "git_blob": "b423606405ec8ef352f1321fd15bb2c3f3823170"
+    },
+    {
+      "path": "tests/test_portal_oidc.py",
+      "git_blob": "f74202f397eedd877aadc54ffad930826739c006"
+    },
+    {
+      "path": "tests/test_portal_rate_limit.py",
+      "git_blob": "119244dc8e55cccaec7550ed17d172decc2eca2e"
+    },
+    {
+      "path": "tests/test_pubmed.py",
+      "git_blob": "cbaa16ba298efba77ae5ae85935e66573e4b08ac"
+    },
+    {
+      "path": "tests/test_query_planning.py",
+      "git_blob": "602196b61e5e3422602e798ab23ef52b8d81ac63"
+    },
+    {
+      "path": "tests/test_query_planning_transport.py",
+      "git_blob": "f3ea383fafc68596e97c828eb4c6f80ce38273e0"
+    },
+    {
+      "path": "tests/test_rank_fusion.py",
+      "git_blob": "1fcd2bb150cab630bd23d8e6def13a08e7fb1e7c"
+    },
+    {
+      "path": "tests/test_ratelimit.py",
+      "git_blob": "ca7c0ecaa79878ba363d881b77e692866ed9faa1"
+    },
+    {
+      "path": "tests/test_reddit.py",
+      "git_blob": "38783f488facecd1bac49eaba2e4205e97ea8a34"
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "git_blob": "1a4dd6f8dc3e7551d2cd21386dc0a3e09a2deb09"
+    },
+    {
+      "path": "tests/test_research_coverage.py",
+      "git_blob": "9579ee1b6805c5f2bed7f66fa59c39ae5284c263"
+    },
+    {
+      "path": "tests/test_research_durability.py",
+      "git_blob": "b39a762ef2bc5e991a00e243b34e37719d13f585"
+    },
+    {
+      "path": "tests/test_research_queue_integration.py",
+      "git_blob": "f498e102f16b99341f01ae2b5247e2db7dee9d85"
+    },
+    {
+      "path": "tests/test_research_retry_followup.py",
+      "git_blob": "e5700d40e73d18debbae41108e778efcc2512fca"
+    },
+    {
+      "path": "tests/test_result_contract.py",
+      "git_blob": "839bb7a21f3d393e2e4403e3b8ab9143461e0eac"
+    },
+    {
+      "path": "tests/test_retrieval_handoff.py",
+      "git_blob": "e342a0989d43bc4b2fdf0ec104990e91ac7394c6"
+    },
+    {
+      "path": "tests/test_retrieval_receipts.py",
+      "git_blob": "652ec02dd7b396dfe8f550758d7b5cfc517002f9"
+    },
+    {
+      "path": "tests/test_retrieval_receipts_transport.py",
+      "git_blob": "881997bdec57b74a98044dcffb5bf8a87c8d4337"
+    },
+    {
+      "path": "tests/test_retrieval_receipts_valkey.py",
+      "git_blob": "b4f868c72a2d1536007df5cfccbc2c63039b106a"
+    },
+    {
+      "path": "tests/test_routing.py",
+      "git_blob": "4c901838b308ee67f0d11d5ef6524fbaca5b7c10"
+    },
+    {
+      "path": "tests/test_routing_eval.py",
+      "git_blob": "383945a5de7f74480b38dc93a2124b22271d882d"
+    },
+    {
+      "path": "tests/test_routing_service.py",
+      "git_blob": "83ab159f1d59f73fe46668651ddd2fc14d14e9aa"
+    },
+    {
+      "path": "tests/test_saved_event_metrics.py",
+      "git_blob": "6b69f550594ae6a0ba170321399b4561c7fecc8a"
+    },
+    {
+      "path": "tests/test_saved_events.py",
+      "git_blob": "3171c84c9a7076ba6b46cd6784fb2f1060772a09"
+    },
+    {
+      "path": "tests/test_saved_events_transport.py",
+      "git_blob": "f1f58500bc65432c7b892ef64b019927ad34a635"
+    },
+    {
+      "path": "tests/test_saved_events_valkey.py",
+      "git_blob": "1be462746d56040ec90392ff6725adf84dbfbc92"
+    },
+    {
+      "path": "tests/test_saved_models.py",
+      "git_blob": "a8e47d6b8cca8aac7b7b5b44478e8e3a147298f7"
+    },
+    {
+      "path": "tests/test_saved_searches.py",
+      "git_blob": "8d870d43bbfdf45e9026f549b3e2cdee5827fea2"
+    },
+    {
+      "path": "tests/test_saved_transport.py",
+      "git_blob": "d6fe845787bcd34a4b82073cfe411abcf94b57ae"
+    },
+    {
+      "path": "tests/test_saved_valkey.py",
+      "git_blob": "6f1d0690110763e4436d09aaa331c2356dbcb2ed"
+    },
+    {
+      "path": "tests/test_scholarly.py",
+      "git_blob": "d2f2dc1aa937b12a1bde6ddbc832b2ca90a1e485"
+    },
+    {
+      "path": "tests/test_scholarly_arxiv_html_identity.py",
+      "git_blob": "050997d8a769f4b9d4b7d42b9c0257fc09efdd3a"
+    },
+    {
+      "path": "tests/test_searxng_api_contract.py",
+      "git_blob": "38958f0411b5dce2117b81cd754e6048372191e6"
+    },
+    {
+      "path": "tests/test_semanticscholar_cooldown.py",
+      "git_blob": "229c7f6577c08692818c5cd90c0f7c486f8979ce"
+    },
+    {
+      "path": "tests/test_server.py",
+      "git_blob": "ec95d1c7d79e3cbdee3eac7251cd8a23914912fe"
+    },
+    {
+      "path": "tests/test_service.py",
+      "git_blob": "ecfa8043b9e881b24c1bc0c5b63fbe318cc02aaa"
+    },
+    {
+      "path": "tests/test_service_engine_config.py",
+      "git_blob": "e99b4f11496cf5359ecc758fbc071eaab2563d4a"
+    },
+    {
+      "path": "tests/test_shodan.py",
+      "git_blob": "db442e922ce13d645ac19658d0c59d96e37972a2"
+    },
+    {
+      "path": "tests/test_stackexchange_adapter.py",
+      "git_blob": "7a70dd10e66d2c9c95aaf18dd18a38461214df38"
+    },
+    {
+      "path": "tests/test_staged_search.py",
+      "git_blob": "e535a8a961ed5ef3632e5b795005e4f1a27ab004"
+    },
+    {
+      "path": "tests/test_staged_valkey_integration.py",
+      "git_blob": "573a6bf1cceefe1baa79e31ca45f81e8572c7ba8"
+    },
+    {
+      "path": "tests/test_stats.py",
+      "git_blob": "dc16dff1a14c14ba4b57be28fb55eafa1103dc3a"
+    },
+    {
+      "path": "tests/test_tier1_adapters.py",
+      "git_blob": "453cb90bfb4a31870f4e1a7370fcd1816dcb2d3c"
+    },
+    {
+      "path": "tests/test_tmdb.py",
+      "git_blob": "a5353f644636d915a127be7174da16a10ab74695"
+    },
+    {
+      "path": "tests/test_uniprot.py",
+      "git_blob": "9c56e830fab2c57bcf5195b7c0a9b6dde56f7619"
+    },
+    {
+      "path": "tests/test_upstream_contracts.py",
+      "git_blob": "38890808971958c1322b502a885d71f5db5d8d64"
+    },
+    {
+      "path": "tests/test_urlhaus.py",
+      "git_blob": "9de57c212f5940f0b8b82da4e9f3b6bb258a7c59"
+    },
+    {
+      "path": "tests/test_virustotal.py",
+      "git_blob": "ed8e087d4535b36188fb3b7be9d99f526cfc11f5"
+    },
+    {
+      "path": "tests/test_vulncheck.py",
+      "git_blob": "9162d79506b59599af4ef257e93c7a73c4517025"
+    },
+    {
+      "path": "tests/test_wikipedia.py",
+      "git_blob": "7f067aede0d6fa8c8ad49b5ffc9b7cc14b054596"
+    },
+    {
+      "path": "tests/test_workflow_composition.py",
+      "git_blob": "7f9db0f4e72f01775b23ad1819aa2611e36ec74a"
+    },
+    {
+      "path": "tests/test_workflow_composition_transport.py",
+      "git_blob": "faf6a43ad4b03eefc272a2e223b10170941149e1"
+    },
+    {
+      "path": "tests/test_workflow_console_policy.py",
+      "git_blob": "cf19ed2f9cf78eb988ba70c4e62acdd9cbb90dd2"
+    },
+    {
+      "path": "tests/test_workflow_metrics.py",
+      "git_blob": "c2bfc4623369c4af6fdfe8de58ad830e900eb89d"
+    },
+    {
+      "path": "tests/test_workflow_portal.py",
+      "git_blob": "438627c644cf5755cd15efc847392df95d85527a"
+    },
+    {
+      "path": "tests/test_workflow_portal_config.py",
+      "git_blob": "cae7090540f29b5116cdf46bdad992d081cd5b5f"
+    },
+    {
+      "path": "tests/test_workflow_recent_indexes.py",
+      "git_blob": "0cd352d9c80cd52ca6aa41d929654dea714b4221"
+    }
+  ]
+}

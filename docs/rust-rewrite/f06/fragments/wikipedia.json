@@ -1,0 +1,54 @@
+{
+  "api_key_env": "ENGINE_WIKIPEDIA_API_KEY",
+  "api_secret_env": null,
+  "auth_class": "none",
+  "categories": [
+    "general",
+    "science",
+    "reference"
+  ],
+  "caveats": [],
+  "cost_class": "free",
+  "defaults": {
+    "base_url": "https://en.wikipedia.org/w/api.php",
+    "enabled": true,
+    "max_results": 3,
+    "rate_limit": 200,
+    "timeout_ms": 3000,
+    "type": "api",
+    "weight": 0.9
+  },
+  "display_name": "Wikipedia",
+  "enabled_by_default": true,
+  "enforced_filters": {},
+  "engine_type": "api",
+  "failure_classes": [
+    "rate_limited",
+    "blocked",
+    "error",
+    "timeout"
+  ],
+  "implementation": "unavailable",
+  "name": "wikipedia",
+  "routing": {
+    "purpose": null,
+    "role": "broad_support",
+    "use_when": null
+  },
+  "sensitive": false,
+  "supported_filters": {
+    "date_from": false,
+    "date_to": false,
+    "language": false,
+    "pagination": false,
+    "safesearch": false,
+    "time_range": false
+  },
+  "supported_media_types": [],
+  "supported_result_types": [
+    "text",
+    "corrections",
+    "infoboxes",
+    "media"
+  ]
+}

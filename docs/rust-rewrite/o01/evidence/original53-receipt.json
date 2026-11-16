@@ -1,0 +1,117 @@
+{
+  "scope": "temporary original source oracle only, no native or bootstrap claim",
+  "actual": {
+    "command": [
+      "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+      "-O",
+      "/private/tmp/o01-original42-source-execution/run-v2.py"
+    ],
+    "exit": 0,
+    "source_functions": 42,
+    "parameter_cases": 53,
+    "all_setup_call_teardown_passed": 159,
+    "deselected_downstream_http": [
+      "tests/test_metrics.py::TestMetricsEndpoint::test_metrics_endpoint_returns_200",
+      "tests/test_metrics.py::test_user_input_does_not_create_unbounded_metric_series"
+    ],
+    "network_attempts": 0
+  },
+  "initial": {
+    "command": [
+      "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+      "-O",
+      "/private/tmp/o01-original42-source-execution/run-v1.py"
+    ],
+    "runner_exit": 1,
+    "pytest_exit": 0,
+    "source_passed": 53,
+    "cause": "preliminary49 collector count assertion wrong; actual42functions parameterize53; not source behavior failure"
+  },
+  "artifacts": [
+    {
+      "path": "/private/tmp/o01-original42-source-execution/run.py",
+      "sha256": "4b12ec2a9fd810492d0d2659aaebbe955e881fb8a488b884a10ff1b4683b5a4d"
+    },
+    {
+      "path": "/private/tmp/o01-original42-source-execution/run-v1.py",
+      "sha256": "4b12ec2a9fd810492d0d2659aaebbe955e881fb8a488b884a10ff1b4683b5a4d"
+    },
+    {
+      "path": "/private/tmp/o01-original42-source-execution/expected.rb",
+      "sha256": "8524c534e01dd7874cd6154347f6183d4da33e56a94492a8a7af7235e818b293"
+    },
+    {
+      "path": "/private/tmp/o01-original42-source-execution/expected53.json",
+      "sha256": "dd90181bce7679859cbc1d0a008fa9b62a60bca3f611d571893fd366dc473038"
+    },
+    {
+      "path": "/private/tmp/o01-original42-source-execution/output.log",
+      "sha256": "1c4a92df6e337d0a9cae654a8d6ff54ac224dd81a6ba29818eb41ce936cd3643"
+    },
+    {
+      "path": "/private/tmp/o01-original42-source-execution/result.json",
+      "sha256": "620fa5b1b72c16fca55acb55a886530295003fc797f5e104b5dbcbb2adcd1edc"
+    },
+    {
+      "path": "/private/tmp/o01-original42-source-execution/run-v2.py",
+      "sha256": "653f3b65b2cd768875756cc84ead1161f210b2a0bad9ac629ddceaa288a8427f"
+    },
+    {
+      "path": "/private/tmp/o01-original42-source-execution/output-v2.log",
+      "sha256": "227d2b9a1291789581373625347f1d18e94c203e6f2d0b36ef6ecce8a9352cd9"
+    },
+    {
+      "path": "/private/tmp/o01-original42-source-execution/result-v2.json",
+      "sha256": "4ccf891e07cf2b0e344df434e2cbc22ca249c5f5bc954ab3e2db47797d76cc9d"
+    }
+  ],
+  "pins": [
+    {
+      "path": "slopsearx/metrics.py",
+      "sha256": "2df238e07c692be05f73bdc3b1e7896dbae576df1d5128a445e6a9fe196c0edc"
+    },
+    {
+      "path": "slopsearx/stats.py",
+      "sha256": "04dd73d675394d3d0cea39a9841db4fad19d9de16515236d227c00bbc12d1169"
+    },
+    {
+      "path": "slopsearx/audit.py",
+      "sha256": "11896df807d77088ae4985540936705a8c27a463cd1aa4f7ecca5bbd4a1f5c32"
+    },
+    {
+      "path": "slopsearx/logging.py",
+      "sha256": "b4208d3c051914bea94404de16248959abee4ca61dffcaa641cc5b2e4d18652e"
+    },
+    {
+      "path": "slopsearx/service.py",
+      "sha256": "45903193ef89987f7be83c1e593e44b7752251a54eb8719eae15a241840102ac"
+    },
+    {
+      "path": "tests/test_metrics.py",
+      "sha256": "ca0a9862b2551dc9d1e9705f2bbd616548caca7de8438ae0f7670d91d8308306"
+    },
+    {
+      "path": "tests/test_saved_event_metrics.py",
+      "sha256": "f5d1e75b4fbdc5dc20d4dcd1308ddb586eacab1b1eb9df5a2560f0d09545aae6"
+    },
+    {
+      "path": "tests/test_workflow_metrics.py",
+      "sha256": "ecd288c89f1a146541a5665667c271bc4ba0c6c103e64202983ac7ee3b7374b4"
+    },
+    {
+      "path": "tests/test_audit.py",
+      "sha256": "899b5d078cb5c2d942c1fdcc66831e435cde497a1135f8edeb899ddf2c03b43c"
+    },
+    {
+      "path": "tests/test_observed_health.py",
+      "sha256": "40e1000319fa048ee63ee6eb8906fefdfd0c7e7832d834693cdf216ff98b0a83"
+    }
+  ],
+  "limitations": [
+    "pytest assertion rewriting active under-O; warning about non-test assertions preserved",
+    "autoload disabled; only asyncio plugin explicit; default coverage addopts overridden for scoped source oracle",
+    "initial pytest cache write warning preserved; v2 disables cacheprovider",
+    "actual Python manual invocation must enter final inventory with executed/current producer identities",
+    "native gate must consume JSON only; G08 retire runnable Python/backend source"
+  ]
+}

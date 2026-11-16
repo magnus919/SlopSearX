@@ -1,0 +1,3024 @@
+{
+  "contract": "slopsearx.rust.w03.parity-map",
+  "version": 1,
+  "plan_id": "W03",
+  "baseline": "87af8096d46359241421ac747ed6aa1ad07f38ec",
+  "current_native_baseline": "a8a7b3e05ccb7ee2e536c0651163c429384f8738",
+  "sources": [
+    {
+      "path": "slopsearx/capabilities.py",
+      "git_blob": "5ef6f90750352fdadbc877561d3520c1fe774fdb",
+      "sha256": "ed4e332a4df1de32d83b9dd2b62dddb622082ab4c236c0c9cef8d8d23336fd6f"
+    },
+    {
+      "path": "slopsearx/mcp/planning_tools.py",
+      "git_blob": "ab7c79cc2afe615dad59266b4f00bbf7ba3ae7c8",
+      "sha256": "5325f687b11c3e77a258a378a59359e48de1501513bd41ca0c9e5b80345c8477"
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "git_blob": "d06ecd475b9b523addf79781d2762eddd92f4911",
+      "sha256": "6bbbdb270f14fda7d90ae8dbe1983aae33526df430f76a960f0c7483417eb35a"
+    },
+    {
+      "path": "slopsearx/research.py",
+      "git_blob": "6770daf3cbbaa160b6c6ee29583c72872cb07289",
+      "sha256": "f19757296ab9b7878b05c61df904dea201faa2af6b13167949bb9706a41c63bb"
+    },
+    {
+      "path": "slopsearx/research_budget.py",
+      "git_blob": "39b1be8c8dfde7a8f4b2a15d3ab7472e4d8a905b",
+      "sha256": "574f0d4098917adf9ce5265453d21b384a536687602a27d42a3b27cb32e32721"
+    },
+    {
+      "path": "slopsearx/research_models.py",
+      "git_blob": "7eaf08e310083f19da5324d6f50760d8672a1913",
+      "sha256": "48fe3f399746d584b98fa688285ca0c4f5807c9d63dfa8676a17bbe056e6820b"
+    },
+    {
+      "path": "slopsearx/research_planning.py",
+      "git_blob": "b98b8bcfb996429e2de8f3d71384eadd1e30fd8d",
+      "sha256": "c0dbe24143cd071ba4e104b1f4fd021e525ee3ec0222af8c4c09bffc2455b4ac"
+    },
+    {
+      "path": "slopsearx/snapshot.py",
+      "git_blob": "fe0e62b9872b3d01cef6a8f843d9720f2cd50a42",
+      "sha256": "85c88b483635003a4a395f40cf48eb83a564b8dd3965ed8a139ba65c1ea88377"
+    },
+    {
+      "path": "tests/test_adaptive_research.py",
+      "git_blob": "2d489e019832f208aeba87982fe978b9031cc4a5",
+      "sha256": "9cbd9291d640a2b1faa85aca14b42c37e122c1239cc0c31490907c5a6a552e9e"
+    },
+    {
+      "path": "tests/test_adaptive_transport.py",
+      "git_blob": "33da989a6e43de912cc31ab54f4424da22a6bc3f",
+      "sha256": "2249b168649a011044b827eeb38a7da285dc7a59f4d9399a20dbc7e8b46edaec"
+    },
+    {
+      "path": "tests/test_adaptive_valkey.py",
+      "git_blob": "ae83e4eec2f71c1b9104d350f5947a9cd53bb002",
+      "sha256": "74cb7f028c4653f6841063134de5785a8db3fb051a7789eeed1be5431507ba21"
+    },
+    {
+      "path": "tests/test_query_planning.py",
+      "git_blob": "602196b61e5e3422602e798ab23ef52b8d81ac63",
+      "sha256": "557fbeeed36abe014b046a97462c88fcb36f04854176462ef5a5a584cded5a15"
+    },
+    {
+      "path": "tests/test_query_planning_transport.py",
+      "git_blob": "f3ea383fafc68596e97c828eb4c6f80ce38273e0",
+      "sha256": "c4721629d49a96013814ef9b3fbb5ed5500cd616bf54c561fd955bde08b2619b"
+    },
+    {
+      "path": "tests/test_research_retry_followup.py",
+      "git_blob": "e5700d40e73d18debbae41108e778efcc2512fca",
+      "sha256": "14b0657b699cb2c53919a97e15665f84ea15828eef5f9d90d15edff3a27fc7ae"
+    }
+  ],
+  "functions": [
+    {
+      "path": "slopsearx/research_planning.py",
+      "function": "validate_planning_metadata",
+      "start": 16,
+      "end": 30,
+      "function_ast_sha256": "69e4368001846836cb1ec64d9ce616a8737f1881099ad79221278901efb322fe",
+      "native_owner": "ssx-infra::research_planning + accepted shared policy/store/runner",
+      "native_symbols": [
+        "validate_metadata"
+      ]
+    },
+    {
+      "path": "slopsearx/research_planning.py",
+      "function": "validate_variant",
+      "start": 33,
+      "end": 38,
+      "function_ast_sha256": "268c184da449fb8c70e3b2c59382d3e4133b7aa8ea044f6c750a517ed1e872c5",
+      "native_owner": "ssx-infra::research_planning + accepted shared policy/store/runner",
+      "native_symbols": [
+        "validate_variant",
+        "identifiers"
+      ]
+    },
+    {
+      "path": "slopsearx/research_planning.py",
+      "function": "query_identity",
+      "start": 41,
+      "end": 43,
+      "function_ast_sha256": "bda08eca01ba98656349fd2a296a61f26b1f2d4f8d663f33b8fd2a4e869df257",
+      "native_owner": "ssx-infra::research_planning + accepted shared policy/store/runner",
+      "native_symbols": [
+        "query_identity"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/planning_tools.py",
+      "function": "_entry",
+      "start": 19,
+      "end": 33,
+      "function_ast_sha256": "fc08c0a3d355f5380861134fca0f13bd3dc6d461b4841d526e484e601b309766",
+      "native_owner": "ssx-infra::research_planning + accepted shared policy/store/runner",
+      "native_symbols": [
+        "entry"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/planning_tools.py",
+      "function": "_limits",
+      "start": 36,
+      "end": 50,
+      "function_ast_sha256": "c7c0745edef21fbca9666b06c4a3bf54bb156d632e7883c6719b1e8770fc5b2e",
+      "native_owner": "ssx-infra::research_planning + accepted shared policy/store/runner",
+      "native_symbols": [
+        "AdaptiveResearch::limits"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/planning_tools.py",
+      "function": "_initial_preview",
+      "start": 53,
+      "end": 98,
+      "function_ast_sha256": "315c83461557b4073f6f1ba8ac83e6d400761b61b69fda25263b1700fa2330be",
+      "native_owner": "ssx-infra::research_planning + accepted shared policy/store/runner",
+      "native_symbols": [
+        "AdaptiveResearch::preview_initial"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/planning_tools.py",
+      "function": "slopsearx_plan_research",
+      "start": 101,
+      "end": 150,
+      "function_ast_sha256": "ac6448a5b30a51d0ae74961ffd1c659d1d1b48b071a00eb29e6b63a930d79a50",
+      "native_owner": "ssx-infra::research_planning + accepted shared policy/store/runner",
+      "native_symbols": [
+        "AdaptiveResearch::preview_initial",
+        "PlanningRegistry::execute"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/planning_tools.py",
+      "function": "slopsearx_plan_query_variants",
+      "start": 153,
+      "end": 189,
+      "function_ast_sha256": "6775a5a977eda62bf15157ad91c4ee43caaf74a5bc86c4b2fb7aad2bb0bfef35",
+      "native_owner": "ssx-infra::research_planning + accepted shared policy/store/runner",
+      "native_symbols": [
+        "AdaptiveResearch::preview_initial",
+        "PlanningRegistry::execute"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/planning_tools.py",
+      "function": "slopsearx_plan_research_followup",
+      "start": 192,
+      "end": 283,
+      "function_ast_sha256": "6d5867b484804f16427c490cf465a84a538238e4b2961e5bff9df38a933ae18e",
+      "native_owner": "ssx-infra::research_planning + accepted shared policy/store/runner",
+      "native_symbols": [
+        "AdaptiveResearch::preview_followup",
+        "AdaptiveResearch::evidence",
+        "PlanningRegistry::execute"
+      ]
+    },
+    {
+      "path": "slopsearx/research.py",
+      "function": "plan_research_queries",
+      "start": 167,
+      "end": 236,
+      "function_ast_sha256": "0dc532c7339e2cae4e1617b13ebbe82190492dde390cbba45fcf2c40afb33c34",
+      "native_owner": "ssx-infra::research_planning + accepted shared policy/store/runner",
+      "native_symbols": [
+        "AdaptiveResearch::plan_defaults",
+        "PolicyService::research_template_scope"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "_research_dispatch_error",
+      "start": 1686,
+      "end": 1716,
+      "function_ast_sha256": "8d002713e5283d5f22f6100adde3bf00692a94414069427558a06eb534d6cce6",
+      "native_owner": "ssx-infra::research_planning + accepted shared policy/store/runner",
+      "native_symbols": [
+        "SearchService::prepare_research_plan",
+        "ResearchRunner::execute_claim"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "bind_research_policy",
+      "start": 1719,
+      "end": 1721,
+      "function_ast_sha256": "0ff752e40c75c58cca93b63f4eeb605e8bf9337336c199c4e3cc083043bf4e42",
+      "native_owner": "ssx-infra::research_planning + accepted shared policy/store/runner",
+      "native_symbols": [
+        "SearchService::prepare_research_plan",
+        "ResearchRunner::execute_claim"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "_research_metadata",
+      "start": 1724,
+      "end": 1729,
+      "function_ast_sha256": "d1814ab4bbfc32e5ddc37940bc5ed41aeda5add34c3d9e19f8e952b3e7ececd4",
+      "native_owner": "ssx-infra::research_planning + accepted shared policy/store/runner",
+      "native_symbols": [
+        "metadata"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "_prepare_research_query",
+      "start": 1732,
+      "end": 1791,
+      "function_ast_sha256": "2fef23b2994a0c38575ac7c3972d8c9a5c36db08138008936f79247384b97264",
+      "native_owner": "ssx-infra::research_planning + accepted shared policy/store/runner",
+      "native_symbols": [
+        "AdaptiveResearch::prepare_query"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "_validate_research_associations",
+      "start": 1794,
+      "end": 1831,
+      "function_ast_sha256": "53128ce0ec55cc24ad99943ae7d72b8d129f48855b212c27251ea04b71fdc473",
+      "native_owner": "ssx-infra::research_planning + accepted shared policy/store/runner",
+      "native_symbols": [
+        "AdaptiveResearch::associations",
+        "AdaptiveResearch::evidence"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "_research_limit",
+      "start": 1834,
+      "end": 1839,
+      "function_ast_sha256": "ec669fbabdc32120603799dcf02beb1fa9e7dde6d2fe8a763107fe62e2a6310f",
+      "native_owner": "ssx-infra::research_planning + accepted shared policy/store/runner",
+      "native_symbols": [
+        "AdaptiveResearch::limits"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "slopsearx_start_research",
+      "start": 1842,
+      "end": 2055,
+      "function_ast_sha256": "d4edb2f91e47a0b68861bd639e8726fd1a905f35dfc37647b437e3da6fae66ed",
+      "native_owner": "ssx-infra::research_planning + accepted shared policy/store/runner",
+      "native_symbols": [
+        "AdaptiveResearch::admit",
+        "PlanningRegistry::execute"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "_resolve_deadline",
+      "start": 2058,
+      "end": 2072,
+      "function_ast_sha256": "afbb1f74dfc730f24d017e02a847881ce5021bebdc155837a60dcf3b38ed3e04",
+      "native_owner": "ssx-infra::research_planning + accepted shared policy/store/runner",
+      "native_symbols": [
+        "resolve_deadline_at",
+        "parse_iso_deadline"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "slopsearx_get_job",
+      "start": 2075,
+      "end": 2089,
+      "function_ast_sha256": "c79b7a69a87974834a17824ffa2c9afb3bfe0efa352dc661bfa23eab3e9a6926",
+      "native_owner": "ssx-infra::research_planning + accepted shared policy/store/runner",
+      "native_symbols": [
+        "AdaptiveResearch::get_job",
+        "job_summary",
+        "PlanningRegistry::execute"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "slopsearx_cancel_job",
+      "start": 2092,
+      "end": 2135,
+      "function_ast_sha256": "e9a93a42d4112bc29717976b5817e784609dde01cc3768152438cd735bb24cf4",
+      "native_owner": "ssx-infra::research_planning + accepted shared policy/store/runner",
+      "native_symbols": [
+        "AdaptiveResearch::cancel",
+        "PlanningRegistry::execute"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "slopsearx_retry_research",
+      "start": 2138,
+      "end": 2226,
+      "function_ast_sha256": "2e22706f673040223587e27d8cdacfc07467f3ba860763e84b4b930c6eb260bb",
+      "native_owner": "ssx-infra::research_planning + accepted shared policy/store/runner",
+      "native_symbols": [
+        "AdaptiveResearch::retry_public",
+        "ResearchRunner::retry"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "slopsearx_extend_research",
+      "start": 2229,
+      "end": 2459,
+      "function_ast_sha256": "9e101b599a11e83b76ea1d5210ec6312791b9c0961bc15b76ebdafd011b9dcf3",
+      "native_owner": "ssx-infra::research_planning + accepted shared policy/store/runner",
+      "native_symbols": [
+        "AdaptiveResearch::extend",
+        "ResearchStore::claim_prepared"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "_completion_replay_matches",
+      "start": 2462,
+      "end": 2469,
+      "function_ast_sha256": "9c9821f5830f459f64f263c20948b59ec1a33ca53295d62e0011f3a78258524f",
+      "native_owner": "ssx-infra::research_planning + accepted shared policy/store/runner",
+      "native_symbols": [
+        "AdaptiveResearch::update"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "slopsearx_update_research",
+      "start": 2472,
+      "end": 2545,
+      "function_ast_sha256": "cc5d5d100c364f6891e5345df4d16a07ba0605888b3b36242f371fd32e25be15",
+      "native_owner": "ssx-infra::research_planning + accepted shared policy/store/runner",
+      "native_symbols": [
+        "AdaptiveResearch::update"
+      ]
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "function": "_job_summary",
+      "start": 2548,
+      "end": 2628,
+      "function_ast_sha256": "735473199832a696e54576380caea6e376861def76609f0d2fff2dd2acc9eda7",
+      "native_owner": "ssx-infra::research_planning + accepted shared policy/store/runner",
+      "native_symbols": [
+        "job_summary",
+        "iso_timestamp"
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "path": "tests/test_adaptive_research.py",
+      "function": "test_rate_limit_error_remains_a_compatibility_export",
+      "start": 17,
+      "end": 18,
+      "function_ast_sha256": "7631d01e5c8a5ca438756feab514ddf13f45b030303bca5f326d9f2083a9e201",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 18,
+          "expression": "RateLimitExceededError is ServiceRateLimitExceededError",
+          "ast_sha256": "49eb3a63efb6c306579591200f4c0efe7da936d5ee6ed3bcfcb7a7ff19e03f23"
+        }
+      ],
+      "native_cases": [],
+      "intentional_differences": [
+        "W03-D04"
+      ]
+    },
+    {
+      "path": "tests/test_adaptive_research.py",
+      "function": "test_plan_followup_progress_completion_and_immutable_history",
+      "start": 50,
+      "end": 99,
+      "function_ast_sha256": "5657941b81767a3069d600a6f7fb417ddf1f0ca90a21794c786d8492d8f307e3",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 53,
+          "expression": "first['stop_reason'] == 'plan_executed'",
+          "ast_sha256": "85abb8101e49c6c12fc1cb062617976d86ab42f5d62f9927890ef6d0c8ae0533"
+        },
+        {
+          "line": 54,
+          "expression": "first['unresolved_subquestions'] == ['a', 'b']",
+          "ast_sha256": "bf683b97769acf346182a6b3eaefa04af9bcf862fd3b1c2fb6ff46c323fa1c4e"
+        },
+        {
+          "line": 64,
+          "expression": "'error' not in response",
+          "ast_sha256": "c1ac967d394c6e4d43db3489705d7d7ac1b7f4d2b204766b339b23b27123a4db"
+        },
+        {
+          "line": 65,
+          "expression": "response['queries'][0]['attempts'] == prior",
+          "ast_sha256": "a45bd27cdb38ea64e4792e95f6a90f9f2059faa165512b9a34aaaa9e8dded717"
+        },
+        {
+          "line": 66,
+          "expression": "response['queries'][1]['parent_attempt_id'] == prior[0]['attempt_id']",
+          "ast_sha256": "1b88d811d4b44c6dc484c45b44bd7bf0079cc4a6f46810dd0247e793348ad6b8"
+        },
+        {
+          "line": 67,
+          "expression": "response['budgets']['used']['attempts'] == 2",
+          "ast_sha256": "0fe08da78d9f843a887138341be8b540871196ed52367a3a322c81745d748c80"
+        },
+        {
+          "line": 77,
+          "expression": "again['queries'] == response['queries']",
+          "ast_sha256": "99648a87d6661d0d55004b37587adc625b2b46b7d9afd0aa366004b59ae5c758"
+        },
+        {
+          "line": 81,
+          "expression": "conflict['error']['code'] == 'idempotency_conflict'",
+          "ast_sha256": "751206cd89481cad5ecc2fd2e7f467aa36bb1ef6efcdb59824def9c12f4523a6"
+        },
+        {
+          "line": 83,
+          "expression": "complete['unresolved_subquestions'] == ['b']",
+          "ast_sha256": "9e87f612e3d795532b1efedbb0e724902332f74e020280a20dbe9fcb7d002e53"
+        },
+        {
+          "line": 84,
+          "expression": "complete['stop_reason'] == 'caller_completed'",
+          "ast_sha256": "a300970d1bdd070fb635786812082ecd5d8d61d294ccf6a9b6ddedb2e1ceb41c"
+        },
+        {
+          "line": 85,
+          "expression": "complete['queries'][0]['attempts'] == prior",
+          "ast_sha256": "1149d5b9a2cab4b01370e4e58d5dd8af2bccec00e1376cb4a917de1347c6b9ea"
+        },
+        {
+          "line": 95,
+          "expression": "replay_after_completion['caller_completed'] is True",
+          "ast_sha256": "2585dab74b9a619a369d6f01dcf8b76fc279517ba0687e0208375b43bad29999"
+        },
+        {
+          "line": 96,
+          "expression": "replay_after_completion['queries'] == complete['queries']",
+          "ast_sha256": "fb9e1f0bab0a000dfdeb79919288232e25c1b56fad79adac87aad0440a5b68b2"
+        },
+        {
+          "line": 98,
+          "expression": "blocked['error']['code'] == 'invalid_job_state'",
+          "ast_sha256": "278c49b8c2afe3f609410b98f34aaf69f312e2ef745bdd19ec8390319e2691a4"
+        },
+        {
+          "line": 99,
+          "expression": "(await t.slopsearx_retry_research(first['job_id']))['state'] == 'succeeded'",
+          "ast_sha256": "8ee7c8a59099a43387f689c5e21b2c75ec40377a397230299156ba5da5ccee4f"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/evidence_preview_extend_replay_and_history_roundtrip",
+        "ssx-mcp/w03/actual_authenticated_http_preview_execute_followup_replay_and_completion"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_adaptive_research.py",
+      "function": "test_invalid_plan_is_atomic",
+      "start": 117,
+      "end": 122,
+      "function_ast_sha256": "347e52c3c7cd868a86417ad4aea8d610fe9280c55c6ec50e3edbbc18531f7cf7",
+      "parameterizations": [
+        {
+          "names": "field,value",
+          "cases": [
+            [
+              "max_queries",
+              0
+            ],
+            [
+              "max_attempts",
+              -1
+            ],
+            [
+              "max_attempts",
+              true
+            ],
+            [
+              "max_results",
+              false
+            ],
+            [
+              "max_engine_attempts",
+              0
+            ],
+            [
+              "initial_plan",
+              []
+            ],
+            [
+              "initial_plan",
+              [
+                {
+                  "query": "x",
+                  "engines": []
+                }
+              ]
+            ],
+            [
+              "initial_plan",
+              [
+                {
+                  "query": "x",
+                  "engines": [
+                    "wikipedia"
+                  ],
+                  "subquestion_id": "missing"
+                }
+              ]
+            ],
+            [
+              "initial_plan",
+              [
+                {
+                  "query": "x",
+                  "engines": [
+                    "wikipedia"
+                  ],
+                  "parent_attempt_id": "elsewhere"
+                }
+              ]
+            ],
+            [
+              "subquestions",
+              [
+                {
+                  "id": "a",
+                  "question": "x"
+                },
+                {
+                  "id": "a",
+                  "question": "y"
+                }
+              ]
+            ]
+          ]
+        }
+      ],
+      "assertion_families": [
+        {
+          "line": 120,
+          "expression": "'error' in response",
+          "ast_sha256": "cf37b94dd2cdb2e8ac6c44aa428ed4a939f2bf23e11c1c378a14cec5f2be3504"
+        },
+        {
+          "line": 121,
+          "expression": "state.job_store._store._data == before",
+          "ast_sha256": "6652ac0f0780bb9324dd24800fd048086014dad13268faba7008fa1bb54d4a87"
+        },
+        {
+          "line": 122,
+          "expression": "state.ctx.active_engines['wikipedia'].calls == 0",
+          "ast_sha256": "7af152c52234ee4c06c5544fad4ccd345ac2b95c744abfc137789b64012acf8b"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/invalid_initial_admission_matrix_is_atomic_and_snapshots_stay_complete",
+        "ssx-infra/w03/malformed_decomposition_matrix_is_atomic"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_adaptive_research.py",
+      "function": "test_result_budget_admits_records_without_truncating_snapshot",
+      "start": 125,
+      "end": 134,
+      "function_ast_sha256": "46e9cefbf74cf0a1c078a9d6fe4020cbb9134754c3cf7af19f219a06962ea808",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 128,
+          "expression": "len(attempt['admitted_result_ids']) == 1",
+          "ast_sha256": "cc8c21e32fb5efac915ece3b37db43fbb261804684b531845f4b0194d70e8be5"
+        },
+        {
+          "line": 129,
+          "expression": "attempt['result_count'] == 3",
+          "ast_sha256": "0d674f8be9d2ae876404601c349d42c3292c41aabb32077348248d40055e7354"
+        },
+        {
+          "line": 130,
+          "expression": "first['stop_reason'] == 'result_budget_exhausted'",
+          "ast_sha256": "c7c46de22fd11af9b2b1d338bb409d9daabd942ebb9330954a21dc26d8678bb8"
+        },
+        {
+          "line": 132,
+          "expression": "len(flat['results']) == 3",
+          "ast_sha256": "78b3303a5f620460f68d5b8db959f227f805b367a10c9f4358de4f682018fcc7"
+        },
+        {
+          "line": 134,
+          "expression": "next_query['error']['code'] == 'job_budget_exceeded'",
+          "ast_sha256": "d31d78f137399b339e4b19a995bf3c98434d0567a1e626d6f87152ce647cb5b6"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/cross_tenant_and_unadmitted_snapshot_records_never_authorize",
+        "ssx-mcp/w03/budget_exhaustion_completion_and_exact_cap_replay_over_actual_http"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_adaptive_research.py",
+      "function": "test_every_execution_budget_stops_dispatch_without_caller_completion",
+      "start": 146,
+      "end": 158,
+      "function_ast_sha256": "358d18f66b2ae40d183394bc3ffe36806b615891bc39ea3a259f9263bc17a7be",
+      "parameterizations": [
+        {
+          "names": [
+            "kwargs",
+            "follow_up"
+          ],
+          "cases": [
+            [
+              {
+                "max_queries": 1
+              },
+              true
+            ],
+            [
+              {
+                "max_results": 1
+              },
+              false
+            ],
+            [
+              {
+                "max_attempts": 1
+              },
+              true
+            ],
+            [
+              {
+                "max_engine_attempts": 1
+              },
+              true
+            ]
+          ]
+        }
+      ],
+      "assertion_families": [
+        {
+          "line": 151,
+          "expression": "response['error']['code'] == 'job_budget_exceeded'",
+          "ast_sha256": "bafdc0d1e67c055425bb5aa436568df57bb164f657ff53f37f29a68ff3114170"
+        },
+        {
+          "line": 153,
+          "expression": "first['stop_reason'] == 'query_budget_exhausted'",
+          "ast_sha256": "e6a0faee71a443de56ab0031300b2fd9029584548c12a92362b11a1059b4d50e"
+        },
+        {
+          "line": 155,
+          "expression": "first['stop_reason'] == 'result_budget_exhausted'",
+          "ast_sha256": "c7c46de22fd11af9b2b1d338bb409d9daabd942ebb9330954a21dc26d8678bb8"
+        },
+        {
+          "line": 157,
+          "expression": "current.caller_completed is False",
+          "ast_sha256": "16ae363627ea64dc19d60036e874c795299624ac9ae7aa635928dcffd14fe7d2"
+        },
+        {
+          "line": 158,
+          "expression": "state.ctx.active_engines['wikipedia'].calls == calls",
+          "ast_sha256": "4e1384f5fd9235db8b69bcc7830c20d476bedfa4b24c7b7cd1c75338c5f7f7cf"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/all_execution_budget_caps_stop_dispatch_without_implicit_caller_completion"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_adaptive_research.py",
+      "function": "test_exact_query_cap_can_be_completed_after_deadline_without_changing_execution",
+      "start": 161,
+      "end": 185,
+      "function_ast_sha256": "ac9084d76a43ab66d200d01acd6e0fe810f298431e294852e692167f8e5f65bc",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 164,
+          "expression": "before.state == 'succeeded'",
+          "ast_sha256": "ac95e729745344191248b75f2fa195108512d7302363652151efc9ef153360e1"
+        },
+        {
+          "line": 165,
+          "expression": "before.stop_reason == 'query_budget_exhausted'",
+          "ast_sha256": "13e5fe3562d8061eb685f07af91821f77b8f0dce4dd084ced297b81a2ec7cd8e"
+        },
+        {
+          "line": 166,
+          "expression": "before.caller_completed is False",
+          "ast_sha256": "600bc7f223c4e447f6203a1b22d6f9c5d172a5248d289aba33c414f16934d3d4"
+        },
+        {
+          "line": 174,
+          "expression": "completed['state'] == 'succeeded'",
+          "ast_sha256": "0cd84586b5a5f5323178229abf807d5769e6990514b110bc699cd7abcc3efc7d"
+        },
+        {
+          "line": 175,
+          "expression": "completed['stop_reason'] == 'query_budget_exhausted'",
+          "ast_sha256": "cd744c4b0996a2eff07f4ba70208984d2bfb9c4cbdf4c6a4013d44ed9b961aa6"
+        },
+        {
+          "line": 176,
+          "expression": "completed['caller_completed'] is True",
+          "ast_sha256": "2c06b7ec0f5ac6ddef3acbeb4d337218d604db79da3a053837c70f8fb26dce44"
+        },
+        {
+          "line": 179,
+          "expression": "_job_to_payload(after)[field] == before_payload[field]",
+          "ast_sha256": "7efd60440ec1afd53e5a489ae436eb1a95243c30cb0b2c46b0cdb898bf919089"
+        },
+        {
+          "line": 180,
+          "expression": "state.ctx.active_engines['wikipedia'].calls == 1",
+          "ast_sha256": "a95baf4f9cfb3ecd61ba8ec6c2868f1b454f3f1910ad8f90454417fffcad30ed"
+        },
+        {
+          "line": 184,
+          "expression": "replay == completed",
+          "ast_sha256": "6507a2092f02896cb540a92ecf46f74a4fd3d150d83e140dac7e565a7c444ebc"
+        },
+        {
+          "line": 185,
+          "expression": "await state.job_store.load(first['job_id']) == after",
+          "ast_sha256": "50b0dd84f25f54ac9d821cbeb085853691e10648688605a9d879bb48e8281b52"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/exact_query_and_result_cap_completion_survives_reload_and_deadline"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_adaptive_research.py",
+      "function": "test_result_exhaustion_takes_precedence_over_exact_query_cap",
+      "start": 188,
+      "end": 193,
+      "function_ast_sha256": "c4a3135daa5d05c7ce7c2b4bc1286cefb7116b995a0ba0aa7de05a61559ede2f",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 190,
+          "expression": "first['state'] == 'succeeded'",
+          "ast_sha256": "05a2d0d38c2d2f8257a2761bf7eac66740349648e277ceaf1cb16a175adae2fa"
+        },
+        {
+          "line": 191,
+          "expression": "first['stop_reason'] == 'result_budget_exhausted'",
+          "ast_sha256": "c7c46de22fd11af9b2b1d338bb409d9daabd942ebb9330954a21dc26d8678bb8"
+        },
+        {
+          "line": 192,
+          "expression": "first['caller_completed'] is False",
+          "ast_sha256": "8f31596f6a37d0ae8c444febaef95fb95e1b5b5ddf17cb03e26770f67cdc969f"
+        },
+        {
+          "line": 193,
+          "expression": "state.ctx.active_engines['wikipedia'].calls == 1",
+          "ast_sha256": "a95baf4f9cfb3ecd61ba8ec6c2868f1b454f3f1910ad8f90454417fffcad30ed"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/exact_query_and_result_cap_completion_survives_reload_and_deadline"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_adaptive_research.py",
+      "function": "test_budget_exhausted_completion_is_metadata_only_after_deadline",
+      "start": 196,
+      "end": 227,
+      "function_ast_sha256": "ea5e2a16526841e438a1e2956ffae9881a0ddb64b8fcb048609f433840de5554",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 206,
+          "expression": "completed['state'] == before.state == 'succeeded'",
+          "ast_sha256": "752c33b9b8652e5dd52d5a7585f0add040c3e82a9f4aa08ab6a6c28a40f79f10"
+        },
+        {
+          "line": 207,
+          "expression": "completed['stop_reason'] == 'result_budget_exhausted'",
+          "ast_sha256": "8fc7c1b6d1d52ce2c87cb6ebf8c96ffaf1f99d6f8cff8a0fee93f41b53584e21"
+        },
+        {
+          "line": 208,
+          "expression": "completed['caller_completed'] is True",
+          "ast_sha256": "2c06b7ec0f5ac6ddef3acbeb4d337218d604db79da3a053837c70f8fb26dce44"
+        },
+        {
+          "line": 209,
+          "expression": "completed['completion_rationale'] == 'enough evidence'",
+          "ast_sha256": "af569c3e9c128d0eb60f5cef337a7d41debe88a91afcef830011f0f6075c1279"
+        },
+        {
+          "line": 212,
+          "expression": "after_payload['caller_completed'] is True",
+          "ast_sha256": "1cc8d3f1a2bb12abcf7a128a29eccd9caba07f78472020057ec570c02a7e8936"
+        },
+        {
+          "line": 213,
+          "expression": "after_payload['completion_rationale'] == 'enough evidence'",
+          "ast_sha256": "57a412317e4c43eed347eed4f6ab167f30f8e1fa5d7237af4a01e434f8a94c9a"
+        },
+        {
+          "line": 214,
+          "expression": "after_payload['completion_subquestion_states'] == {'a': 'resolved'}",
+          "ast_sha256": "8ead3ad63f226e4d5a6f0e6f5ca996c23485ccf33869e8475ffc92a1d58255a3"
+        },
+        {
+          "line": 216,
+          "expression": "after_payload[field] == before_payload[field]",
+          "ast_sha256": "bde6a24b876f8bdcb2b4775e4a8d3924fe7c35164762dfdf747f2511755d033a"
+        },
+        {
+          "line": 217,
+          "expression": "state.ctx.active_engines['wikipedia'].calls == 1",
+          "ast_sha256": "a95baf4f9cfb3ecd61ba8ec6c2868f1b454f3f1910ad8f90454417fffcad30ed"
+        },
+        {
+          "line": 222,
+          "expression": "replay == completed",
+          "ast_sha256": "6507a2092f02896cb540a92ecf46f74a4fd3d150d83e140dac7e565a7c444ebc"
+        },
+        {
+          "line": 226,
+          "expression": "conflict['error']['code'] == 'idempotency_conflict'",
+          "ast_sha256": "751206cd89481cad5ecc2fd2e7f467aa36bb1ef6efcdb59824def9c12f4523a6"
+        },
+        {
+          "line": 227,
+          "expression": "await state.job_store.load(first['job_id']) == after",
+          "ast_sha256": "50b0dd84f25f54ac9d821cbeb085853691e10648688605a9d879bb48e8281b52"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/exact_query_and_result_cap_completion_survives_reload_and_deadline"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_adaptive_research.py",
+      "function": "test_completion_replay_requires_original_subquestion_request",
+      "start": 230,
+      "end": 240,
+      "function_ast_sha256": "31b46ea91133e72e2ad611322fe0749078122ffe41082bb8dcbb35c1e6c86269",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 235,
+          "expression": "empty['error']['code'] == 'idempotency_conflict'",
+          "ast_sha256": "1b339ed26c6c112541041a74cb06a6daf93ab797074861fb501b3e57fdee001c"
+        },
+        {
+          "line": 236,
+          "expression": "await t.slopsearx_update_research(first['job_id'], original, complete=True, rationale='enough evidence') == accepted",
+          "ast_sha256": "8f3bd99fa874450fa01fe56a2e50c303180f2b7a53edf83f34859889c3c0cbad"
+        },
+        {
+          "line": 240,
+          "expression": "(await state.job_store.load(first['job_id'])).completion_subquestion_states == original",
+          "ast_sha256": "7a6db316b072a78ab8d308e18ea1519d3894e6ff5280faee6455561d231f93a0"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/exact_query_and_result_cap_completion_survives_reload_and_deadline"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_adaptive_research.py",
+      "function": "test_legacy_completed_record_replay_requires_matching_nonempty_assertion",
+      "start": 243,
+      "end": 262,
+      "function_ast_sha256": "5c344239ee95352ce8138faca57af7e04ad76b45cfd97f8b12c89c67d50491c0",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 248,
+          "expression": "completed['caller_completed'] is True",
+          "ast_sha256": "2c06b7ec0f5ac6ddef3acbeb4d337218d604db79da3a053837c70f8fb26dce44"
+        },
+        {
+          "line": 253,
+          "expression": "legacy.completion_subquestion_states is None",
+          "ast_sha256": "65a36aa8e44a36806045351670bcf1a3347e6b1ea11f667338a022c455fafc49"
+        },
+        {
+          "line": 256,
+          "expression": "replay['error']['code'] == 'idempotency_conflict'",
+          "ast_sha256": "5ca5fa10ca3dcd1ddd55a51ff104833b83982e8789d2164127cc80788b68ca42"
+        },
+        {
+          "line": 260,
+          "expression": "compatible['caller_completed'] is True",
+          "ast_sha256": "cc8aae5ccfa2a2b13f55f57d70d44bb9e134d284e73e63ad8649dff9ffad8c44"
+        },
+        {
+          "line": 261,
+          "expression": "compatible['stop_reason'] == 'result_budget_exhausted'",
+          "ast_sha256": "2c8e69d47d37fbf944a3fd5363ba5098a8c210aaa78c66b8d71ff3d335c1c860"
+        },
+        {
+          "line": 262,
+          "expression": "(await state.job_store.load(first['job_id'])).completion_subquestion_states is None",
+          "ast_sha256": "fe1cc2e07634c879d69591f897421bb6d5d9a6f3cf3540c8f618d1e77329c421"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/nonbudget_late_completion_and_legacy_completion_replay_keep_metadata_contract"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_adaptive_research.py",
+      "function": "test_deadline_crossing_between_preflight_and_fenced_claim",
+      "start": 265,
+      "end": 283,
+      "function_ast_sha256": "d4f01b94125f9c002ca48dad38a4d6dde3fbaa7c9728b084309017f179b98d44",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 280,
+          "expression": "completed['caller_completed'] is True",
+          "ast_sha256": "2c06b7ec0f5ac6ddef3acbeb4d337218d604db79da3a053837c70f8fb26dce44"
+        },
+        {
+          "line": 281,
+          "expression": "completed['stop_reason'] == 'result_budget_exhausted'",
+          "ast_sha256": "8fc7c1b6d1d52ce2c87cb6ebf8c96ffaf1f99d6f8cff8a0fee93f41b53584e21"
+        },
+        {
+          "line": 282,
+          "expression": "completed['state'] == 'succeeded'",
+          "ast_sha256": "0cd84586b5a5f5323178229abf807d5769e6990514b110bc699cd7abcc3efc7d"
+        },
+        {
+          "line": 283,
+          "expression": "state.ctx.active_engines['wikipedia'].calls == 1",
+          "ast_sha256": "a95baf4f9cfb3ecd61ba8ec6c2868f1b454f3f1910ad8f90454417fffcad30ed"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/deadline_cancellation_and_completion_during_evidence_read_never_append_or_spend",
+        "ssx-infra/w01/prepared_mutation_reloads_terminal_evidence_and_preserves_guards",
+        "ssx-infra/w03/exact_query_and_result_cap_completion_survives_reload_and_deadline"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_adaptive_research.py",
+      "function": "test_completion_conflict_is_fenced_against_stale_preflight_copy",
+      "start": 286,
+      "end": 310,
+      "function_ast_sha256": "c14dd431b9b3423d8e40405fa364a3e63ff64cbd79306545779b7786918e0405",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 292,
+          "expression": "accepted['caller_completed'] is True",
+          "ast_sha256": "cffc45ae0586512e140cb51e7957c0297d4de063a9502fd77d5f1038a358897c"
+        },
+        {
+          "line": 307,
+          "expression": "conflict['error']['code'] == 'idempotency_conflict'",
+          "ast_sha256": "751206cd89481cad5ecc2fd2e7f467aa36bb1ef6efcdb59824def9c12f4523a6"
+        },
+        {
+          "line": 309,
+          "expression": "current.caller_completed is True",
+          "ast_sha256": "42ff353e7a703f48059346d53be0c26fcb6a8e264754c6504f5f300d444ef0e8"
+        },
+        {
+          "line": 310,
+          "expression": "current.completion_rationale == 'first decision'",
+          "ast_sha256": "0b733fc74ea747db087061840068243b0a8e5dd1f4d3f265c8d6e35630905650"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/deadline_cancellation_and_completion_during_evidence_read_never_append_or_spend",
+        "ssx-infra/w01/prepared_mutation_reloads_terminal_evidence_and_preserves_guards",
+        "ssx-infra/w01/same_token_concurrent_writers_cannot_lose_history"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_adaptive_research.py",
+      "function": "test_metadata_only_completion_does_not_expire_non_budget_terminal_job",
+      "start": 313,
+      "end": 325,
+      "function_ast_sha256": "7503d362f29e3a36bd10a0cec5aa0cbfdfd731c1c32e1fc7f0ed56b21c27a70c",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 321,
+          "expression": "response['error']['code'] == 'deadline_exceeded'",
+          "ast_sha256": "ee0190228402516e0a60ddc818658fc2b7ad7d535ff855971f5d5347781a8cbb"
+        },
+        {
+          "line": 323,
+          "expression": "unchanged.state == 'succeeded'",
+          "ast_sha256": "e4b68604b1dac4f91e2d4afa44fd4ef831214a9d9cc01aad9e075edcd80b4237"
+        },
+        {
+          "line": 324,
+          "expression": "unchanged.stop_reason == 'plan_executed'",
+          "ast_sha256": "23c44fd828b5808be622b3560883e8cfb3e0139ef3624046f04f19ff4a1e3f5c"
+        },
+        {
+          "line": 325,
+          "expression": "unchanged.caller_completed is False",
+          "ast_sha256": "2c3c935caa75b6deb870e167941f979b5110dc6e7c3f36743509c478d30e455b"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/nonbudget_late_completion_and_legacy_completion_replay_keep_metadata_contract"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_adaptive_research.py",
+      "function": "test_lower_attempt_budget_survives_retry",
+      "start": 328,
+      "end": 337,
+      "function_ast_sha256": "310f3cd015e5ff2f3b905a799de5b3cfe0c6280180346fd38172ee2ae61386fd",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 333,
+          "expression": "retried['stop_reason'] == 'attempt_budget_exhausted'",
+          "ast_sha256": "1eb76aff9297e9ebc19f2931b41f1656642991c922ad7e641c82dcec0ea8c328"
+        },
+        {
+          "line": 334,
+          "expression": "retried['queries'][0]['attempts'] == prior",
+          "ast_sha256": "4ae8ec0afacaf48e85a64199187bab0bcbcfd55b7fc79ddec8c62118244cdc98"
+        },
+        {
+          "line": 335,
+          "expression": "state.ctx.active_engines['wikipedia'].calls == 1",
+          "ast_sha256": "a95baf4f9cfb3ecd61ba8ec6c2868f1b454f3f1910ad8f90454417fffcad30ed"
+        },
+        {
+          "line": 337,
+          "expression": "_job_from_payload(_job_to_payload(loaded)) == loaded",
+          "ast_sha256": "18c160be8ab4b7319e20b110c10fefa22f2da8137017bf97dfaf86e5553b281d"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/lower_retry_attempt_cap_and_current_policy_matrix_preserve_original_attempts"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_adaptive_research.py",
+      "function": "test_completed_job_continuation_race_holds_lease",
+      "start": 340,
+      "end": 364,
+      "function_ast_sha256": "12ae62e0e7935dc89040e727c8c42a38332e4b61f1c7e816df7364a56c1e0ea3",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 356,
+          "expression": "pytest.raises(JobStillRunningError)",
+          "ast_sha256": "a15c12a4eff7a97baf0eaef6cb3bb471a552c1dbb75a7938431797cb2530e361"
+        },
+        {
+          "line": 359,
+          "expression": "second['state'] == 'running'",
+          "ast_sha256": "c6c8498dcf31f7e823117947e5858e285945fe647d6d2eb6a8c18409c063fa2d"
+        },
+        {
+          "line": 362,
+          "expression": "len(response['queries']) == 2",
+          "ast_sha256": "b22de6e84208b21905826a90f18cd253c425a0d4815d73fedb261121878c018c"
+        },
+        {
+          "line": 363,
+          "expression": "[q['index'] for q in response['queries']] == [0, 1]",
+          "ast_sha256": "9f1b5102f7bd578142ba3e40a6f9957e0928b485592b9d304ecb8bcd46f6b1d4"
+        },
+        {
+          "line": 364,
+          "expression": "response['budgets']['used']['attempts'] == 2",
+          "ast_sha256": "0fe08da78d9f843a887138341be8b540871196ed52367a3a322c81745d748c80"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/concurrent_extension_serializes_last_slot_and_keeps_history"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_adaptive_research.py",
+      "function": "test_revoked_policy_and_tenant_links",
+      "start": 367,
+      "end": 377,
+      "function_ast_sha256": "4422ef731733500da35fe4819ffe4a009460dc65c46c05c81edee89dd60240fd",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 370,
+          "expression": "(await t.slopsearx_update_research(first['job_id'], {}))['error']['code'] == 'invalid_job_id'",
+          "ast_sha256": "57526a5e2a5ccf2af870c1360842de5a3276522935a5424ce8b707282b69df83"
+        },
+        {
+          "line": 374,
+          "expression": "dangling['error']['code'] == 'invalid_input'",
+          "ast_sha256": "5000079126cb3966afb580f6d9f8ccc6830a513d46f079bbf8a9dc2824d32fbb"
+        },
+        {
+          "line": 377,
+          "expression": "rejected['error']['code'] == 'tool_disabled'",
+          "ast_sha256": "d04f426be940c9ed1b7bde7989c2fec113705030bdd32b212d3b5b91c6b0230d"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/cross_tenant_and_unadmitted_snapshot_records_never_authorize",
+        "ssx-infra/w03/denied_grants_and_evidence_intent_replay_reject_before_spend"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_adaptive_research.py",
+      "function": "test_legacy_running_attempt_is_charged_once_before_recovery",
+      "start": 381,
+      "end": 403,
+      "function_ast_sha256": "b3cb117613273515fd79858500c8e1b13510c3709432c1d7425a50203e34f3c5",
+      "parameterizations": [
+        {
+          "names": "prior_history",
+          "cases": [
+            false,
+            true
+          ]
+        }
+      ],
+      "assertion_families": [
+        {
+          "line": 396,
+          "expression": "recovered.budget_used['attempts'] == 1 + int(prior_history)",
+          "ast_sha256": "4374e6d583bae2365d8dd8334b4dc6927a098fab518a63e61a6a3bc126996790"
+        },
+        {
+          "line": 397,
+          "expression": "recovered.queries[0].attempts[-1].state == 'interrupted'",
+          "ast_sha256": "788f5646c9183686096be4ac13bc201726593016729b8bf0b86b91ceffddc2f1"
+        },
+        {
+          "line": 398,
+          "expression": "recovered.queries[0].state == 'failed'",
+          "ast_sha256": "9c531683ff8ef9664ae24b8fd4259a40a01a35b3384b372f0d0960dd8d8bdcf3"
+        },
+        {
+          "line": 399,
+          "expression": "recovered.queries[0].error == 'attempt_budget_exhausted'",
+          "ast_sha256": "316a0c501f945bb609208657d640bd67a58f64db65e5e65779b5263cddd0420c"
+        },
+        {
+          "line": 400,
+          "expression": "recovered.stop_reason == 'attempt_budget_exhausted'",
+          "ast_sha256": "54f73f2f9621eb1a2bbddbb312229aacf92ad1d021fc73f6206401ed982c2690"
+        },
+        {
+          "line": 401,
+          "expression": "state.ctx.active_engines['wikipedia'].calls == calls",
+          "ast_sha256": "4e1384f5fd9235db8b69bcc7830c20d476bedfa4b24c7b7cd1c75338c5f7f7cf"
+        },
+        {
+          "line": 403,
+          "expression": "replay.budget_used == recovered.budget_used",
+          "ast_sha256": "4be50c3db442ca5f1f31a0b524a8441d404f3f88457a4f88c049d01ec34ac11c"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/native_recovery_retains_uncertain_attempt_and_prior_admitted_evidence",
+        "ssx-infra/w01/initialization_and_work_cannot_evade_scope_or_legacy_charges"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_adaptive_research.py",
+      "function": "test_orphan_terminalization_preserves_history_and_closes_attempt",
+      "start": 407,
+      "end": 442,
+      "function_ast_sha256": "0f659120f4d0a7bfe3d29ac8a09fdf0ac088c7e90260d201774452a49857b86e",
+      "parameterizations": [
+        {
+          "names": "action",
+          "cases": [
+            "cancel",
+            "expire",
+            "complete"
+          ]
+        }
+      ],
+      "assertion_families": [
+        {
+          "line": 428,
+          "expression": "await state.job_store.expire_stale_running() == 1",
+          "ast_sha256": "17be2012248a0d60f89d9a04954be0d87a03f277a618c506ad95cf66499cae77"
+        },
+        {
+          "line": 431,
+          "expression": "'error' not in result",
+          "ast_sha256": "180cb9839d749dc2b11b4c7df555711c5c1655c9172792433676b1533f1c9511"
+        },
+        {
+          "line": 433,
+          "expression": "final.queries[0].attempts[:-1] == original",
+          "ast_sha256": "d46b3d9723398962249d31955e5f400e870231baf4e08eabee6efd10bbafac13"
+        },
+        {
+          "line": 434,
+          "expression": "final.queries[0].attempts[-1].state == 'interrupted'",
+          "ast_sha256": "29151ee99ac3b2aad58b364539d0ac743cc00020a7f82691eed7913b6ad696ab"
+        },
+        {
+          "line": 435,
+          "expression": "final.queries[0].attempts[-1].finished_at is not None",
+          "ast_sha256": "7459a4e72ca5a155dcf6863bf8b9cb368aea7d8ec7197242b302ec04cab10d43"
+        },
+        {
+          "line": 436,
+          "expression": "final.queries[0].state == 'cancelled'",
+          "ast_sha256": "c12ac71488d12c08b32d660ec3988a18c06b9c8d7f5dde152108290f2778f971"
+        },
+        {
+          "line": 437,
+          "expression": "final.stop_reason == {'cancel': 'cancelled', 'expire': 'deadline_expired', 'complete': 'caller_completed'}[action]",
+          "ast_sha256": "153a3dd547c7e187f236e9d7acb40419ac6c3600c3ec7508a34b6d6d43a43e48"
+        },
+        {
+          "line": 441,
+          "expression": "final.budget_used == job.budget_used",
+          "ast_sha256": "038be7c81696fdd6306be49624bbbb414cd885d4376f2ca3f3a54ebd6b84876c"
+        },
+        {
+          "line": 442,
+          "expression": "state.ctx.active_engines['wikipedia'].calls == calls",
+          "ast_sha256": "4e1384f5fd9235db8b69bcc7830c20d476bedfa4b24c7b7cd1c75338c5f7f7cf"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/orphan_cancellation_expiry_and_caller_completion_preserve_attempt_history_and_charges"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_adaptive_research.py",
+      "function": "test_current_policy_rechecked_before_retry_dispatch",
+      "start": 446,
+      "end": 470,
+      "function_ast_sha256": "ca3d9af36541a9521059a10d99ddab8509d3bb4edb86e4286f94a0d273b456ac",
+      "parameterizations": [
+        {
+          "names": "revocation",
+          "cases": [
+            "research",
+            "sensitive",
+            "science",
+            "legacy_science"
+          ]
+        }
+      ],
+      "assertion_families": [
+        {
+          "line": 466,
+          "expression": "state.ctx.active_engines['wikipedia'].calls == 1",
+          "ast_sha256": "a95baf4f9cfb3ecd61ba8ec6c2868f1b454f3f1910ad8f90454417fffcad30ed"
+        },
+        {
+          "line": 467,
+          "expression": "latest.queries[0].attempts[:1] == original",
+          "ast_sha256": "46ce3bb943835c28e60f2a06ce337608788ca9e0ec9a21fb1a4d3ca6acfbe0e2"
+        },
+        {
+          "line": 469,
+          "expression": "latest.queries[0].attempts[-1].state == 'failed'",
+          "ast_sha256": "77747a8c2c7da799b93999eeca8ff4ad967a3a1ff015aa9466c5487fdfe01214"
+        },
+        {
+          "line": 470,
+          "expression": "latest.queries[0].attempts[-1].cursor is None",
+          "ast_sha256": "5fcf840105fecbedad2bc69b4e9188e42e59c1561fe8a31c981f25d17abaa3ce"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/lower_retry_attempt_cap_and_current_policy_matrix_preserve_original_attempts",
+        "ssx-infra/w02/denied_workflow_audit_survives_restored_authority_retry_without_actual_call_charge"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_adaptive_research.py",
+      "function": "test_unexpected_dispatch_failure_has_fresh_durable_attempt",
+      "start": 473,
+      "end": 490,
+      "function_ast_sha256": "28bdb2764274a625acf402fa3dcf54472015ea7867e54172bec5176ca857c936",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 484,
+          "expression": "attempts[:-1] == prior",
+          "ast_sha256": "dc23c7465c0ca7a263f688be8cd00e9a44fd70e379841ac057124e6db156d117"
+        },
+        {
+          "line": 485,
+          "expression": "attempts[-1]['state'] == 'failed'",
+          "ast_sha256": "ceebcee8cb71277a71b693a8bb23bf75421123862bf81d83cdc045f191c928b7"
+        },
+        {
+          "line": 486,
+          "expression": "attempts[-1]['error'] == 'deterministic dispatch failure'",
+          "ast_sha256": "bdf3af99f8ea1a8097b628d1cbc0f670ca46bbe30895013aa2f31ebf6fd1d135"
+        },
+        {
+          "line": 487,
+          "expression": "attempts[-1]['cursor'] is None",
+          "ast_sha256": "d8f4ae4c4336e976eef36ed8902adc0817044fce315ce6c5a4f43c8349e3760f"
+        },
+        {
+          "line": 488,
+          "expression": "attempts[-1]['finished_at'] is not None",
+          "ast_sha256": "c357707fb372724892c715f01a49a21b00db3312d093c37bfd70d991b436fb73"
+        },
+        {
+          "line": 489,
+          "expression": "attempts[-1]['engine_coverage'] == []",
+          "ast_sha256": "e7022cbbad7e5117d0841c7fe74aceb327567452d3ce52cb0c8e392197c21562"
+        },
+        {
+          "line": 490,
+          "expression": "response['stop_reason'] == 'execution_failed'",
+          "ast_sha256": "2be04e5f0d1f720908013bdab329e9a70fa805931f219f54a95faefd4c652578"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w02/partial_retry_preserves_success_and_failed_snapshot_bytes"
+      ],
+      "intentional_differences": [
+        "W03-D05"
+      ]
+    },
+    {
+      "path": "tests/test_adaptive_research.py",
+      "function": "test_worker_death_after_engine_return_is_conservatively_recovered",
+      "start": 497,
+      "end": 532,
+      "function_ast_sha256": "f8ffc9a6682e91edb34c361a5c4dddf7c5c6826be3a5589d658121a87e2f5d9e",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 513,
+          "expression": "pytest.raises(_SimulatedWorkerDeath)",
+          "ast_sha256": "93507fa2e79e8c49ef2d39d357095402382b057c0d1129e240aa46240653ef48"
+        },
+        {
+          "line": 517,
+          "expression": "interrupted.queries[0].state == 'running'",
+          "ast_sha256": "49d6dfda93a4aa0751cd9df8980f68b353f88f789535b80b28d469c121f65a9a"
+        },
+        {
+          "line": 518,
+          "expression": "interrupted.queries[0].attempts[0].state == 'running'",
+          "ast_sha256": "a620f719158bbd245933ae880b34c9932dbfc97230c6a7fa10143564d5a59fbe"
+        },
+        {
+          "line": 519,
+          "expression": "interrupted.budget_used['attempts'] == 1",
+          "ast_sha256": "542a6a3b57c8ba315f3e6ef1e320fcb3509569ac51dd87f6ccf28821e4d8829e"
+        },
+        {
+          "line": 520,
+          "expression": "state.ctx.active_engines['wikipedia'].calls == 1",
+          "ast_sha256": "a95baf4f9cfb3ecd61ba8ec6c2868f1b454f3f1910ad8f90454417fffcad30ed"
+        },
+        {
+          "line": 525,
+          "expression": "[attempt.state for attempt in attempts] == ['interrupted', 'done']",
+          "ast_sha256": "c049556de8ecf2cab5fbca48b1967b1b090397979b4d573cd44081f6d7670f70"
+        },
+        {
+          "line": 526,
+          "expression": "attempts[0].cursor is None",
+          "ast_sha256": "63262cdfeb31421eb8a95326081fd32f80ad9d096bc3a7809ce6ffa854ca2adc"
+        },
+        {
+          "line": 527,
+          "expression": "attempts[1].cursor is not None",
+          "ast_sha256": "a7e03e680d258059cba32b168228aefbc3c67fbcc617743a9f4f2f22336b174e"
+        },
+        {
+          "line": 528,
+          "expression": "recovered.budget_used['attempts'] == 2",
+          "ast_sha256": "87c9efd07398a9142d193b7bc6c478df84fff03524ed190fe7e9e5faf37194ef"
+        },
+        {
+          "line": 531,
+          "expression": "state.ctx.active_engines['wikipedia'].calls == 1",
+          "ast_sha256": "a95baf4f9cfb3ecd61ba8ec6c2868f1b454f3f1910ad8f90454417fffcad30ed"
+        },
+        {
+          "line": 532,
+          "expression": "(await state.snapshots.read(attempts[1].cursor)).snapshot is not None",
+          "ast_sha256": "c3f3c92156f5eb02cb9f7fd2b1967db4f7295037747bc98245f3b66c6886ef19"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w02/process_kill_restart_discovers_orphan_and_conserves_unknown_spend",
+        "ssx-infra/w03/native_recovery_retains_uncertain_attempt_and_prior_admitted_evidence"
+      ],
+      "intentional_differences": [
+        "W03-D02"
+      ]
+    },
+    {
+      "path": "tests/test_adaptive_research.py",
+      "function": "test_worker_death_after_snapshot_write_preserves_orphan_and_recovers",
+      "start": 535,
+      "end": 572,
+      "function_ast_sha256": "56c9b0630fc1e0cb4f421e73d1d2d0aa9c5df365db5c54ae13762feae0d78f68",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 549,
+          "expression": "cursor is not None",
+          "ast_sha256": "5a5036f3ff512c746d219f0edd771333c7510aadfd5625f637bbe5ca96ce4fa2"
+        },
+        {
+          "line": 554,
+          "expression": "pytest.raises(_SimulatedWorkerDeath)",
+          "ast_sha256": "93507fa2e79e8c49ef2d39d357095402382b057c0d1129e240aa46240653ef48"
+        },
+        {
+          "line": 557,
+          "expression": "len(written) == 1",
+          "ast_sha256": "cb31962113ababe5eaadf7d6f9ba4a720987e8adea5efe4cb26d70d72dcbf21a"
+        },
+        {
+          "line": 559,
+          "expression": "orphan.snapshot is not None",
+          "ast_sha256": "3d0f9cab422d28d8953f17a4e6c81bc7dc19271b99de9a8868fed678d4c9180c"
+        },
+        {
+          "line": 560,
+          "expression": "orphan.snapshot.total == 1",
+          "ast_sha256": "6086fba7c700d451d586ee10ab234514f48cc8449ba6fd4d2795bb2069cc6a50"
+        },
+        {
+          "line": 562,
+          "expression": "interrupted.queries[0].cursor is None",
+          "ast_sha256": "bc5172c53aa15b1741a1944256253302c61321de1db92bc0653dad52c43a26f6"
+        },
+        {
+          "line": 563,
+          "expression": "interrupted.budget_used['attempts'] == 1",
+          "ast_sha256": "542a6a3b57c8ba315f3e6ef1e320fcb3509569ac51dd87f6ccf28821e4d8829e"
+        },
+        {
+          "line": 568,
+          "expression": "[attempt.state for attempt in attempts] == ['interrupted', 'done']",
+          "ast_sha256": "c049556de8ecf2cab5fbca48b1967b1b090397979b4d573cd44081f6d7670f70"
+        },
+        {
+          "line": 569,
+          "expression": "attempts[1].cursor is not None and attempts[1].cursor != written[0]",
+          "ast_sha256": "3bc865b46af373d93ac5f5516daf55ff0505ead0aff740d8cdcea1638115921d"
+        },
+        {
+          "line": 570,
+          "expression": "recovered.budget_used['attempts'] == 2",
+          "ast_sha256": "87c9efd07398a9142d193b7bc6c478df84fff03524ed190fe7e9e5faf37194ef"
+        },
+        {
+          "line": 571,
+          "expression": "state.ctx.active_engines['wikipedia'].calls == 1",
+          "ast_sha256": "a95baf4f9cfb3ecd61ba8ec6c2868f1b454f3f1910ad8f90454417fffcad30ed"
+        },
+        {
+          "line": 572,
+          "expression": "(await state.snapshots.read(written[0])).snapshot == orphan.snapshot",
+          "ast_sha256": "bfa4c01b3af536fd610f15a28e6b046b15600b96f7fc71ab5232189cadcbf694"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w02/snapshot_write_cancel_can_leave_tenant_orphan_but_never_stale_job_link",
+        "ssx-infra/w02/snapshot_write_cancellation_reports_completion_unknown"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_adaptive_research.py",
+      "function": "test_lifecycle_during_dispatch_retains_evidence_and_stops_next_query",
+      "start": 576,
+      "end": 602,
+      "function_ast_sha256": "f222089cbe758ad8c1daf74f458cc3aecffe22ff659e808fa66775156a5c8e19",
+      "parameterizations": [
+        {
+          "names": "stop",
+          "cases": [
+            "deadline",
+            "cancel"
+          ]
+        }
+      ],
+      "assertion_families": [
+        {
+          "line": 598,
+          "expression": "response.stop_reason == ('cancelled' if stop == 'cancel' else 'deadline_expired')",
+          "ast_sha256": "99cbe8d227a5cfc5809b164d4527beb7df7c3a67f5af2caf0da7aec5be6cab05"
+        },
+        {
+          "line": 599,
+          "expression": "response.queries[0].attempts[0].cursor is not None",
+          "ast_sha256": "fbe781ae4035159788c812463b2c71dea4abe8e5123ffd6be8ca641e36da4b84"
+        },
+        {
+          "line": 600,
+          "expression": "response.queries[0].attempts[0].state == 'done'",
+          "ast_sha256": "5c79d90860e431c98e04588f1e27bf380b640c45789d0fb12ad0bdb8e9ac05d9"
+        },
+        {
+          "line": 601,
+          "expression": "response.queries[1].attempts == []",
+          "ast_sha256": "f150819902732c1f723097d82f175a604dceb669c0184c25436dd6de8c03f8e6"
+        },
+        {
+          "line": 602,
+          "expression": "state.ctx.active_engines['wikipedia'].calls == 1",
+          "ast_sha256": "a95baf4f9cfb3ecd61ba8ec6c2868f1b454f3f1910ad8f90454417fffcad30ed"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w02/durable_cancel_interrupts_owned_capture_and_settles_truthfully",
+        "ssx-infra/w02/deadline_during_held_query_is_failed_with_conserved_attempt"
+      ],
+      "intentional_differences": [
+        "W03-D02"
+      ]
+    },
+    {
+      "path": "tests/test_adaptive_valkey.py",
+      "function": "test_completed_job_race_reserves_last_slot_once",
+      "start": 30,
+      "end": 57,
+      "function_ast_sha256": "696060a241c4be093f7853484a6deaf6f3d9c74ea44b85290d5b3ec14d7dad32",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 47,
+          "expression": "competing['state'] == 'running'",
+          "ast_sha256": "9267f52cf8cd51c9d194b51f76c5103049c37bc1859afef31e186b8796516ff0"
+        },
+        {
+          "line": 52,
+          "expression": "len(finished['queries']) == 2",
+          "ast_sha256": "512e84bc6dfc5e6471a23f14995ac5b0e3b27bb5e9acb5aa8df4fb5f9e6f5f6b"
+        },
+        {
+          "line": 53,
+          "expression": "finished['budgets']['used']['attempts'] == 2",
+          "ast_sha256": "39276f6648b3524b823fc7ed1cf93407d7d701481edfbd6e54dd4baa9214a002"
+        },
+        {
+          "line": 54,
+          "expression": "finished['queries'][0]['attempts'] == first['queries'][0]['attempts']",
+          "ast_sha256": "8819877d54672598b35dc7dfc6737c39589e7fc4fa649c7502c9ef6bc6285c9a"
+        },
+        {
+          "line": 55,
+          "expression": "(await t.slopsearx_extend_research(first['job_id'], 'third', engines=['wikipedia']))['error']['code'] == 'job_budget_exceeded'",
+          "ast_sha256": "b5cefed8e4734ee34af46048465654eaff642c248c6ce164670a6d2af3a0e467"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/concurrent_extension_serializes_last_slot_and_keeps_history"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_adaptive_valkey.py",
+      "function": "test_budget_completion_survives_valkey_reconnect_and_preserves_execution",
+      "start": 60,
+      "end": 81,
+      "function_ast_sha256": "f3cf3f70e1aee7edc59f1947364d01374bcb61ff3d44959840c44df1588fc66e",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 68,
+          "expression": "completed['stop_reason'] == 'result_budget_exhausted'",
+          "ast_sha256": "8fc7c1b6d1d52ce2c87cb6ebf8c96ffaf1f99d6f8cff8a0fee93f41b53584e21"
+        },
+        {
+          "line": 69,
+          "expression": "completed['caller_completed'] is True",
+          "ast_sha256": "2c06b7ec0f5ac6ddef3acbeb4d337218d604db79da3a053837c70f8fb26dce44"
+        },
+        {
+          "line": 74,
+          "expression": "reloaded is not None",
+          "ast_sha256": "d5848d83a10e2f48c8c7d3b76b4777a8247c4ac4b833a79f9e976d8c3988cdef"
+        },
+        {
+          "line": 75,
+          "expression": "reloaded.stop_reason == 'result_budget_exhausted'",
+          "ast_sha256": "3d78c970afd8a4936fed766bba75114996f732cdd777db7a1a3ad3d3e8ed4c9b"
+        },
+        {
+          "line": 76,
+          "expression": "reloaded.caller_completed is True",
+          "ast_sha256": "0b9ad5f81ef33d94c6ba4703d5511257b291e9bd75506793071312c848468d91"
+        },
+        {
+          "line": 77,
+          "expression": "reloaded.completion_rationale == 'evidence is sufficient'",
+          "ast_sha256": "8801fe5418cd6d721b457a73bca3f897014f2c52213d1821ab079372c6ec6197"
+        },
+        {
+          "line": 78,
+          "expression": "reloaded.completion_subquestion_states == {'a': 'resolved'}",
+          "ast_sha256": "bc5dd4ac11a05c3c3167e09ede8176dfb291fb461d02a378e246dad52b50c4ca"
+        },
+        {
+          "line": 79,
+          "expression": "reloaded.budget_used == before.budget_used",
+          "ast_sha256": "6f9675ece923276e0a869287b024e950875ea3f42e4c02eee639ce41fac199c6"
+        },
+        {
+          "line": 80,
+          "expression": "reloaded.queries == before.queries",
+          "ast_sha256": "26b02ddf57533519bff7458bda9110e46becaf8b0c50a1a937c5fe0b41d0e9df"
+        },
+        {
+          "line": 81,
+          "expression": "await reloaded_snapshots.read(before.queries[0].cursor)",
+          "ast_sha256": "719ca54295e437723d5b20004a710d933f09e920a804454621a90081094dea55"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/exact_query_and_result_cap_completion_survives_reload_and_deadline"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_adaptive_valkey.py",
+      "function": "test_exact_query_cap_completion_survives_valkey_reload",
+      "start": 84,
+      "end": 105,
+      "function_ast_sha256": "9c656880107b631d8bcc476aace4fce99050957a85afd845f47ad28e3c777979",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 87,
+          "expression": "before.stop_reason == 'query_budget_exhausted'",
+          "ast_sha256": "13e5fe3562d8061eb685f07af91821f77b8f0dce4dd084ced297b81a2ec7cd8e"
+        },
+        {
+          "line": 93,
+          "expression": "completed['caller_completed'] is True",
+          "ast_sha256": "2c06b7ec0f5ac6ddef3acbeb4d337218d604db79da3a053837c70f8fb26dce44"
+        },
+        {
+          "line": 94,
+          "expression": "completed['stop_reason'] == 'query_budget_exhausted'",
+          "ast_sha256": "cd744c4b0996a2eff07f4ba70208984d2bfb9c4cbdf4c6a4013d44ed9b961aa6"
+        },
+        {
+          "line": 97,
+          "expression": "reloaded is not None",
+          "ast_sha256": "d5848d83a10e2f48c8c7d3b76b4777a8247c4ac4b833a79f9e976d8c3988cdef"
+        },
+        {
+          "line": 98,
+          "expression": "reloaded.state == before.state == 'succeeded'",
+          "ast_sha256": "02fcf94d5a1543fd1388c305e8d2629cadb583bfc686108123655f9c1ccf8789"
+        },
+        {
+          "line": 99,
+          "expression": "reloaded.stop_reason == 'query_budget_exhausted'",
+          "ast_sha256": "d7896102ebc57227008ed5958eaec38205c368638f7b14d1ee7db1a79c23a195"
+        },
+        {
+          "line": 100,
+          "expression": "reloaded.caller_completed is True",
+          "ast_sha256": "0b9ad5f81ef33d94c6ba4703d5511257b291e9bd75506793071312c848468d91"
+        },
+        {
+          "line": 101,
+          "expression": "reloaded.completion_rationale == 'query cap was enough'",
+          "ast_sha256": "31f1e2756a8a551478142cf158748c55fdc7412cded887a4062c08b3a713ef0f"
+        },
+        {
+          "line": 102,
+          "expression": "reloaded.completion_subquestion_states == {'a': 'resolved'}",
+          "ast_sha256": "bc5dd4ac11a05c3c3167e09ede8176dfb291fb461d02a378e246dad52b50c4ca"
+        },
+        {
+          "line": 103,
+          "expression": "reloaded.budget_used == before.budget_used",
+          "ast_sha256": "6f9675ece923276e0a869287b024e950875ea3f42e4c02eee639ce41fac199c6"
+        },
+        {
+          "line": 104,
+          "expression": "reloaded.queries == before.queries",
+          "ast_sha256": "26b02ddf57533519bff7458bda9110e46becaf8b0c50a1a937c5fe0b41d0e9df"
+        },
+        {
+          "line": 105,
+          "expression": "await SnapshotStore(backend).read(before.queries[0].cursor)",
+          "ast_sha256": "56815c4ed9106cdd459d2f9a3da9f3111df67a430e12751e367b9f753cc709f7"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/exact_query_and_result_cap_completion_survives_reload_and_deadline"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_adaptive_valkey.py",
+      "function": "test_recovery_charges_uncertain_attempt_and_fences_same_owner_token",
+      "start": 109,
+      "end": 162,
+      "function_ast_sha256": "00659a15a17aaa044b0d166aba3ec598e3c59a9e89f620a7e9962fbcff707280",
+      "parameterizations": [
+        {
+          "names": "max_attempts",
+          "cases": [
+            1,
+            2
+          ]
+        }
+      ],
+      "assertion_families": [
+        {
+          "line": 138,
+          "expression": "reserved.budget_used['attempts'] == 1",
+          "ast_sha256": "618a81d7603c48823a6591e42f54beadab0b8f8131be3b26c1b7b78b5a009586"
+        },
+        {
+          "line": 151,
+          "expression": "evidence[0] == old_attempt",
+          "ast_sha256": "4f79c18a149ec3b0ee521239cb30369eb1cc07f212264acb468a87c40905df8d"
+        },
+        {
+          "line": 152,
+          "expression": "recovered.queries[0].attempts[0].state == 'interrupted'",
+          "ast_sha256": "66013cab39b401bd4a5c936be689a16947d82f2a5d410ff3f15b5a9f9b9e3d4e"
+        },
+        {
+          "line": 153,
+          "expression": "len(evidence) == max_attempts",
+          "ast_sha256": "678318c4188ac141e69f40bfaf9a90ec81d5c9c5e983d2fe130cddcd4fa29baf"
+        },
+        {
+          "line": 154,
+          "expression": "recovered.budget_used['attempts'] == max_attempts",
+          "ast_sha256": "4a6170bd87af9e824aa93e094ba5abfd88c613fb3490b8ab7b5e3d163e53530f"
+        },
+        {
+          "line": 155,
+          "expression": "calls == max_attempts",
+          "ast_sha256": "d6d11a7b707f372d99fc4b5eed1409b72c4b1a18e88d0cb50d972cfd839cee61"
+        },
+        {
+          "line": 157,
+          "expression": "pytest.raises(LeaseLostError)",
+          "ast_sha256": "81986bf471fbf22b489c3cb63d25001e9734c7dd5f4cba16e815e59e81a17bb2"
+        },
+        {
+          "line": 160,
+          "expression": "final.queries[0].attempts == recovered.queries[0].attempts",
+          "ast_sha256": "70482b9c03f63c5a0706e6d7c155a79ca5761733962574bb35a926bfe191d3f6"
+        },
+        {
+          "line": 162,
+          "expression": "final.stop_reason == 'attempt_budget_exhausted'",
+          "ast_sha256": "5b744d5bb26f1895848dd279b0e4bd59e26ec1d6bc7ca76997c2d53a03cf51db"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w01/recovered_attempt_rejects_stale_application_completion_with_current_lease",
+        "ssx-infra/w02/lease_loss_joins_held_loopback_socket_and_preserves_reclaimer"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_adaptive_valkey.py",
+      "function": "test_extension_serializes_with_lifecycle_requests",
+      "start": 166,
+      "end": 211,
+      "function_ast_sha256": "a315de01a604ec82e4ce9ef9ff99addb306fc8af238e7d05f33b43bf191512f9",
+      "parameterizations": [
+        {
+          "names": "competitor",
+          "cases": [
+            "same_key",
+            "retry",
+            "complete",
+            "cancel"
+          ]
+        }
+      ],
+      "assertion_families": [
+        {
+          "line": 193,
+          "expression": "competing['error']['code'] == 'job_busy'",
+          "ast_sha256": "2332be8040b8f26fdf301af77863440b98f439bbbb7085c4c441f8950474de0e"
+        },
+        {
+          "line": 195,
+          "expression": "competing['state'] == 'running'",
+          "ast_sha256": "9267f52cf8cd51c9d194b51f76c5103049c37bc1859afef31e186b8796516ff0"
+        },
+        {
+          "line": 201,
+          "expression": "len(final.queries) == 2",
+          "ast_sha256": "4c192bce51849ae5dde379f76e59be126e9701c7ead26eb7e6478f99d434c286"
+        },
+        {
+          "line": 202,
+          "expression": "final.budget_used['attempts'] == 2",
+          "ast_sha256": "c48defba9ca0e245405f363e0f0c3f61b717840a7604f736b97922ef133782c0"
+        },
+        {
+          "line": 203,
+          "expression": "len(final.queries[1].attempts) == 1",
+          "ast_sha256": "a1e378c4418e7001f3b266c4682834a028e5f5c7b83986b5db1825e98ab00c50"
+        },
+        {
+          "line": 204,
+          "expression": "final.queries[1].attempts[0].state == 'done'",
+          "ast_sha256": "43fce049c8d322729d2355339430df0667281a0672b2e608cb9e5319e818ba9b"
+        },
+        {
+          "line": 205,
+          "expression": "final.queries[0].attempts[0].attempt_id == first['queries'][0]['attempts'][0]['attempt_id']",
+          "ast_sha256": "f1d6e3768892e8392ed801ce83caf8aee70bcfc7a52721847b40ca4083293c37"
+        },
+        {
+          "line": 206,
+          "expression": "final.caller_completed is False",
+          "ast_sha256": "1375c61a468e67ca634d492c16a18ce1196bbaa331d1720e28406e30310c73c7"
+        },
+        {
+          "line": 207,
+          "expression": "final.state == ('cancelled' if competitor == 'cancel' else 'succeeded')",
+          "ast_sha256": "9c2a5a8f05f231b2786639eda54e3dba5bff952ebeeac1dcaf97df365e24c104"
+        },
+        {
+          "line": 210,
+          "expression": "len(replay['queries']) == 2",
+          "ast_sha256": "95fe0d9e60868da7fc049830838255aec74dd10c07387c7a422cbd8b5407e31d"
+        },
+        {
+          "line": 211,
+          "expression": "replay['budgets']['used']['attempts'] == 2",
+          "ast_sha256": "02684e6c33bec5057ce3dbb80343b242a2ae25ea3d4fecb2912cadeb7499bdbf"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/concurrent_extension_serializes_last_slot_and_keeps_history",
+        "ssx-infra/w02/concurrent_retry_holds_authority_and_preserves_empty_attempt_snapshot",
+        "ssx-infra/w01/observed_side_key_cancellation_cannot_be_erased_by_callback"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_adaptive_valkey.py",
+      "function": "test_planning_evidence_survives_real_valkey_reload",
+      "start": 214,
+      "end": 239,
+      "function_ast_sha256": "bf8959cd537c3340e9a6957c8a7c5e1e760c8c612cab986b985e85a56e5f6f95",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 228,
+          "expression": "'error' not in preview",
+          "ast_sha256": "cc86155ab7268d1fc9236686bc1c0c69c0c9d616b86c430f7d303d5c85964ed2"
+        },
+        {
+          "line": 231,
+          "expression": "'error' not in result",
+          "ast_sha256": "6e4b001e333de28c03b2ebc881ef768d871c1a9f11b272520499719de7d60f11"
+        },
+        {
+          "line": 233,
+          "expression": "loaded.queries[-1].planning_method == 'evidence_followup'",
+          "ast_sha256": "570eb0f04aa6fa32a3a0c420c224d186a1df5b255709d78da6b1f38539639240"
+        },
+        {
+          "line": 234,
+          "expression": "loaded.queries[-1].evidence_result_ids == attempt['admitted_result_ids'][:1]",
+          "ast_sha256": "31073cc82d21f95168f0d6f5c1555c4d2f37cf91f263a941361e164a12527bc0"
+        },
+        {
+          "line": 235,
+          "expression": "loaded.queries[-1].evidence_engines == ['wikipedia']",
+          "ast_sha256": "5361ec4043789fd986aeb18003431ab6fa6864e39874ef662940411a6d24cee2"
+        },
+        {
+          "line": 238,
+          "expression": "replay['budgets']['used']['attempts'] == before['attempts']",
+          "ast_sha256": "18fe65fdb2acc5c5b2367f6e526df52378ad5bc7e3442a4e97710ae21b040cbc"
+        },
+        {
+          "line": 239,
+          "expression": "len((await ResearchJobStore(backend).load(first['job_id'])).queries) == 2",
+          "ast_sha256": "e6c1a29eeca557a336aac43045df79d6ae001acaede626935cfd71fb5a2c83b4"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/evidence_preview_extend_replay_and_history_roundtrip"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_adaptive_transport.py",
+      "function": "test_adaptive_research_journey",
+      "start": 9,
+      "end": 85,
+      "function_ast_sha256": "48fc0d390e5c5deb5bb8b48dc1ad35af1a65b33173cdb83c24f7e5576bfc8c1b",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 17,
+          "expression": "not result.model_dump(by_alias=True)['isError']",
+          "ast_sha256": "eadfa20ba54888c0281ff289fc60022130267ea0c3698ed8b52b72697c776404"
+        },
+        {
+          "line": 19,
+          "expression": "'error' not in value",
+          "ast_sha256": "8defa478afcdc9d10dac187f4e00fd9409441aeec5e55296ecee83cd52f4cf46"
+        },
+        {
+          "line": 24,
+          "expression": "invalid.model_dump(by_alias=True)['isError']",
+          "ast_sha256": "157a05c2267c03559f3a81f73968678cdfa89d61491c9a88dc2eca7736ef1bb4"
+        },
+        {
+          "line": 48,
+          "expression": "job['stop_reason'] == 'plan_executed'",
+          "ast_sha256": "1151309b9db2d8cfbf123da278bfb291e255d5ab3a45c4543b726af026ab2c2c"
+        },
+        {
+          "line": 61,
+          "expression": "extended['queries'][0]['attempts'][0] == original",
+          "ast_sha256": "073dd63799dc2f24c257680ef1870ed6c26d9eda6bee61f0be2d1cc300bfa5ba"
+        },
+        {
+          "line": 62,
+          "expression": "extended['queries'][1]['parent_attempt_id'] == original['attempt_id']",
+          "ast_sha256": "6336ea8b20628eeb9a3d31f7ef40630c33ad6b9e0e9e459a0b593a4d75b065cf"
+        },
+        {
+          "line": 64,
+          "expression": "replay['queries'] == extended['queries']",
+          "ast_sha256": "e4ea43a893c7262927fa875f359643cd13059e71d4a424e7d616a85a943d6cbb"
+        },
+        {
+          "line": 66,
+          "expression": "conflict['error']['code'] == 'idempotency_conflict'",
+          "ast_sha256": "751206cd89481cad5ecc2fd2e7f467aa36bb1ef6efcdb59824def9c12f4523a6"
+        },
+        {
+          "line": 73,
+          "expression": "completed['stop_reason'] == 'caller_completed'",
+          "ast_sha256": "9d96fa90f28aa8d96db099b2ded4f8f65edbb33b006a654aaec28370c09a48d1"
+        },
+        {
+          "line": 74,
+          "expression": "completed['unresolved_subquestions'] == ['alternatives']",
+          "ast_sha256": "79a869cc3132286f32af809793a066182538c522ab9643bfa36ac31672a70766"
+        },
+        {
+          "line": 75,
+          "expression": "completed['queries'] == extended['queries']",
+          "ast_sha256": "5fb917276beee2d2e1779f6c13fa2980822fae5d57d17291e99644df52435e84"
+        },
+        {
+          "line": 76,
+          "expression": "(await call('slopsearx_read_results', cursor=original['cursor']))['results'] == original_results['results']",
+          "ast_sha256": "6308e119e584e9e24d8d3a6cd77d019452516b094ecbf1598bc23f293d499782"
+        },
+        {
+          "line": 80,
+          "expression": "retry['state'] == 'succeeded'",
+          "ast_sha256": "57ad2d6b84b9e6f9cffdc33d13870d2e70406152e79bb462be2bb8860261594f"
+        },
+        {
+          "line": 81,
+          "expression": "(await call('slopsearx_get_job', job_id=job['job_id']))['queries'] == completed['queries']",
+          "ast_sha256": "5035452d82012cf1bf0d973a2d0e3dec5a9578048bcfaa64ea3689d6c288f337"
+        },
+        {
+          "line": 85,
+          "expression": "rejected['error']['code'] == 'invalid_job_state'",
+          "ast_sha256": "c9074baad6c9c1b2a8bb1438b9bd56a183f25df28dde29755012175591fac924"
+        }
+      ],
+      "native_cases": [
+        "ssx-mcp/w03/actual_authenticated_http_preview_execute_followup_replay_and_completion"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_adaptive_transport.py",
+      "function": "test_budget_exhaustion_completion_replays_over_mcp_transport",
+      "start": 88,
+      "end": 140,
+      "function_ast_sha256": "f72dca4831429b4b5195e8c6246b700e878a2e011fe69ead6d5dc4d877e36a21",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 96,
+          "expression": "not result.model_dump(by_alias=True)['isError']",
+          "ast_sha256": "eadfa20ba54888c0281ff289fc60022130267ea0c3698ed8b52b72697c776404"
+        },
+        {
+          "line": 98,
+          "expression": "'error' not in value",
+          "ast_sha256": "8defa478afcdc9d10dac187f4e00fd9409441aeec5e55296ecee83cd52f4cf46"
+        },
+        {
+          "line": 111,
+          "expression": "job['stop_reason'] == 'result_budget_exhausted'",
+          "ast_sha256": "45716d670760655d444c3f9761f2799badcebe037d765950f8e88f4eaba99fe9"
+        },
+        {
+          "line": 119,
+          "expression": "completed['stop_reason'] == 'result_budget_exhausted'",
+          "ast_sha256": "8fc7c1b6d1d52ce2c87cb6ebf8c96ffaf1f99d6f8cff8a0fee93f41b53584e21"
+        },
+        {
+          "line": 120,
+          "expression": "completed['caller_completed'] is True",
+          "ast_sha256": "2c06b7ec0f5ac6ddef3acbeb4d337218d604db79da3a053837c70f8fb26dce44"
+        },
+        {
+          "line": 128,
+          "expression": "replay == completed",
+          "ast_sha256": "6507a2092f02896cb540a92ecf46f74a4fd3d150d83e140dac7e565a7c444ebc"
+        },
+        {
+          "line": 140,
+          "expression": "conflict['error']['code'] == 'idempotency_conflict'",
+          "ast_sha256": "751206cd89481cad5ecc2fd2e7f467aa36bb1ef6efcdb59824def9c12f4523a6"
+        }
+      ],
+      "native_cases": [
+        "ssx-mcp/w03/budget_exhaustion_completion_and_exact_cap_replay_over_actual_http"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_adaptive_transport.py",
+      "function": "test_exact_query_cap_completion_over_mcp_transport",
+      "start": 143,
+      "end": 191,
+      "function_ast_sha256": "de9a985efd32e4509426dc3afab0cde56a9a5d5c611a295f1ffc552ae8b2a9c2",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 151,
+          "expression": "not result.model_dump(by_alias=True)['isError']",
+          "ast_sha256": "eadfa20ba54888c0281ff289fc60022130267ea0c3698ed8b52b72697c776404"
+        },
+        {
+          "line": 153,
+          "expression": "'error' not in value",
+          "ast_sha256": "8defa478afcdc9d10dac187f4e00fd9409441aeec5e55296ecee83cd52f4cf46"
+        },
+        {
+          "line": 166,
+          "expression": "job['stop_reason'] == 'query_budget_exhausted'",
+          "ast_sha256": "3a2ce54c4c5261aa4b7c57d5ce959545ce26cf44ceb23cc192500180a53a9c10"
+        },
+        {
+          "line": 167,
+          "expression": "job['caller_completed'] is False",
+          "ast_sha256": "4742f555a8ffc82c05492645de1c05569333306fdabc830da95279bc88441aed"
+        },
+        {
+          "line": 174,
+          "expression": "blocked['error']['code'] == 'job_budget_exceeded'",
+          "ast_sha256": "f21c20cf0029073ff0de7c4f6d293d19c9053b62c560ea9f4654bf6e87ab7f0b"
+        },
+        {
+          "line": 182,
+          "expression": "completed['caller_completed'] is True",
+          "ast_sha256": "2c06b7ec0f5ac6ddef3acbeb4d337218d604db79da3a053837c70f8fb26dce44"
+        },
+        {
+          "line": 183,
+          "expression": "completed['stop_reason'] == 'query_budget_exhausted'",
+          "ast_sha256": "cd744c4b0996a2eff07f4ba70208984d2bfb9c4cbdf4c6a4013d44ed9b961aa6"
+        },
+        {
+          "line": 191,
+          "expression": "replay == completed",
+          "ast_sha256": "6507a2092f02896cb540a92ecf46f74a4fd3d150d83e140dac7e565a7c444ebc"
+        }
+      ],
+      "native_cases": [
+        "ssx-mcp/w03/budget_exhaustion_completion_and_exact_cap_replay_over_actual_http"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_query_planning.py",
+      "function": "test_decomposition_preview_to_durable_execution",
+      "start": 57,
+      "end": 80,
+      "function_ast_sha256": "d357d8b0584899fb03529bc36a8440cd9713b1ac47eba87a54cc0f1105449fa9",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 67,
+          "expression": "'error' not in preview",
+          "ast_sha256": "cc86155ab7268d1fc9236686bc1c0c69c0c9d616b86c430f7d303d5c85964ed2"
+        },
+        {
+          "line": 68,
+          "expression": "preview['dispatched'] is False",
+          "ast_sha256": "10c36b22931888a63ab962e99767167ad89047c38bb52c82033b5d71df08f108"
+        },
+        {
+          "line": 69,
+          "expression": "state.job_store._store._data == before",
+          "ast_sha256": "6652ac0f0780bb9324dd24800fd048086014dad13268faba7008fa1bb54d4a87"
+        },
+        {
+          "line": 70,
+          "expression": "state.ctx.active_engines['wikipedia'].calls == 0",
+          "ast_sha256": "7af152c52234ee4c06c5544fad4ccd345ac2b95c744abfc137789b64012acf8b"
+        },
+        {
+          "line": 72,
+          "expression": "args['initial_plan'][0]['query'] == args['question']",
+          "ast_sha256": "c97109ed6eb962931fb521a549769e2f0fd53574aa4e9d82c8ff26dd2cb8552d"
+        },
+        {
+          "line": 74,
+          "expression": "'error' not in started",
+          "ast_sha256": "211848d99a84de76b8a34b70d8ed8e055e260ffd3305d0cf20f29215390f1a9d"
+        },
+        {
+          "line": 77,
+          "expression": "state.ctx.active_engines['wikipedia'].calls == 3",
+          "ast_sha256": "ded0689aba99caf2468731f431ba53d77ca169a37afee065c268c4d47f6a143c"
+        },
+        {
+          "line": 78,
+          "expression": "[q.planning_method for q in job.queries] == ['original', 'decomposition', 'decomposition']",
+          "ast_sha256": "8493b315d1a3fbc53634671930557e08cf44a0d6c3409d3cdcc9a7b0e092ea23"
+        },
+        {
+          "line": 79,
+          "expression": "_job_from_payload(_job_to_payload(job)) == job",
+          "ast_sha256": "30008f2e34b0409b3ba394b5dcbb9244746ee7d22213eec9dfcd15709cccbd60"
+        },
+        {
+          "line": 80,
+          "expression": "all((item['state'] == 'unresolved' for item in job.subquestions.values()))",
+          "ast_sha256": "0874f57a9a466d269f175a17266c9167119fe3479a022c53c14bc29dd39b7b17"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/decomposition_preview_execution_parity_and_no_preview_writes"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_query_planning.py",
+      "function": "test_invalid_plan_is_atomic",
+      "start": 97,
+      "end": 103,
+      "function_ast_sha256": "23cf5e5e1a71c1a9a1b6db4b07b59b5de48a0db02aab312701a62fc60e6dbc31",
+      "parameterizations": [
+        {
+          "names": "changes",
+          "cases": [
+            {
+              "max_queries": true
+            },
+            {
+              "max_attempts": 1
+            },
+            {
+              "max_engine_attempts": 1
+            },
+            {
+              "subquestions": []
+            },
+            {
+              "subquestions": [
+                {
+                  "id": "a",
+                  "question": "x"
+                },
+                {
+                  "id": "a",
+                  "question": "x"
+                }
+              ]
+            },
+            {
+              "subquestions": [
+                {
+                  "id": "a",
+                  "question": "x",
+                  "extra": "no"
+                }
+              ]
+            },
+            {
+              "subquestions": [
+                {
+                  "id": "a",
+                  "question": "x",
+                  "query": true
+                }
+              ]
+            },
+            {
+              "subquestions": [
+                {
+                  "id": "a",
+                  "question": "x",
+                  "intent": "science"
+                }
+              ]
+            },
+            {
+              "subquestions": [
+                {
+                  "id": "a",
+                  "question": "x",
+                  "engines": [
+                    "wikipedia",
+                    "hibp"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "assertion_families": [
+        {
+          "line": 101,
+          "expression": "'error' in await p.slopsearx_plan_research(**args)",
+          "ast_sha256": "249b16b93ab0ea0b1f6ff2298df4c411a93905c46b09c9337faaf5b93d61bdc3"
+        },
+        {
+          "line": 102,
+          "expression": "state.job_store._store._data == before",
+          "ast_sha256": "6652ac0f0780bb9324dd24800fd048086014dad13268faba7008fa1bb54d4a87"
+        },
+        {
+          "line": 103,
+          "expression": "state.ctx.active_engines['wikipedia'].calls == 0",
+          "ast_sha256": "7af152c52234ee4c06c5544fad4ccd345ac2b95c744abfc137789b64012acf8b"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/invalid_initial_admission_matrix_is_atomic_and_snapshots_stay_complete",
+        "ssx-infra/w03/malformed_decomposition_matrix_is_atomic"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_query_planning.py",
+      "function": "test_variant_identifier_preservation_rechecked_at_execution",
+      "start": 107,
+      "end": 118,
+      "function_ast_sha256": "6476e547d0d3f4abd1731ed0feccc3f4a72c845d5c952304bd7585678d697692",
+      "parameterizations": [
+        {
+          "names": "identifier",
+          "cases": [
+            "CVE-2026-12345",
+            "10.1000/example",
+            "2303.07678v2",
+            "@scope/package"
+          ]
+        }
+      ],
+      "assertion_families": [
+        {
+          "line": 111,
+          "expression": "'error' not in preview",
+          "ast_sha256": "cc86155ab7268d1fc9236686bc1c0c69c0c9d616b86c430f7d303d5c85964ed2"
+        },
+        {
+          "line": 115,
+          "expression": "rejected['error']['code'] == 'invalid_input'",
+          "ast_sha256": "33c3dc09c7a246f8bea6aab9a35628843da6e3c2d0cd1b4807803e35fb496734"
+        },
+        {
+          "line": 116,
+          "expression": "state.ctx.active_engines['wikipedia'].calls == 0",
+          "ast_sha256": "7af152c52234ee4c06c5544fad4ccd345ac2b95c744abfc137789b64012acf8b"
+        },
+        {
+          "line": 118,
+          "expression": "invalid['error']['code'] == 'invalid_input'",
+          "ast_sha256": "fbff81e1acb9d98704b064623921870786c8e46808b3bcd52294681390e581e8"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/variant_identifiers_revalidated_after_edited_preview"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_query_planning.py",
+      "function": "test_identifier_matching_rejects_prefix_collision",
+      "start": 121,
+      "end": 124,
+      "function_ast_sha256": "ccb89c21bf8f885a736ee8e1c86a451c9229ddf46425c45c18849a47bd4bdecb",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 122,
+          "expression": "pytest.raises(ValueError)",
+          "ast_sha256": "8a87438186a8c89d04b39f5c7a6038b3a985c08aec2bf9db6969d727bf4692d4"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/identifiers_exact_prefix_unicode_and_punctuation"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_query_planning.py",
+      "function": "test_variants_reject_duplicate_without_dispatch",
+      "start": 127,
+      "end": 130,
+      "function_ast_sha256": "6c013cc383d534df16135107d1bb2feff59bc481f0754aaf6232b98cf34c1592",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 129,
+          "expression": "result['error']['code'] == 'duplicate_query'",
+          "ast_sha256": "7daa523f73c3a09d0dcc6bd161bbee74a317c2e9db6a6ea6bb0b248b2cfd9592"
+        },
+        {
+          "line": 130,
+          "expression": "state.ctx.active_engines['wikipedia'].calls == 0",
+          "ast_sha256": "7af152c52234ee4c06c5544fad4ccd345ac2b95c744abfc137789b64012acf8b"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/duplicate_variants_and_edited_initial_plans_never_persist"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_query_planning.py",
+      "function": "test_evidence_preview_execution_and_replay_preserve_history",
+      "start": 133,
+      "end": 157,
+      "function_ast_sha256": "1bc70c9fa5a81f721c9605ecc5371c1c3ea7d7740f919a8ba685bcee0bd6d7ce",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 137,
+          "expression": "'error' not in preview",
+          "ast_sha256": "cc86155ab7268d1fc9236686bc1c0c69c0c9d616b86c430f7d303d5c85964ed2"
+        },
+        {
+          "line": 138,
+          "expression": "preview['dispatched'] is False",
+          "ast_sha256": "10c36b22931888a63ab962e99767167ad89047c38bb52c82033b5d71df08f108"
+        },
+        {
+          "line": 139,
+          "expression": "preview['evidence'][0]['title'] == 'wikipedia 0'",
+          "ast_sha256": "568246d3fd1afd11f235e0182169fcb455195f5434604b939954a71bdf592c8b"
+        },
+        {
+          "line": 140,
+          "expression": "state.job_store._store._data == before",
+          "ast_sha256": "6652ac0f0780bb9324dd24800fd048086014dad13268faba7008fa1bb54d4a87"
+        },
+        {
+          "line": 141,
+          "expression": "state.ctx.active_engines['wikipedia'].calls == 1",
+          "ast_sha256": "a95baf4f9cfb3ecd61ba8ec6c2868f1b454f3f1910ad8f90454417fffcad30ed"
+        },
+        {
+          "line": 145,
+          "expression": "'error' not in result",
+          "ast_sha256": "6e4b001e333de28c03b2ebc881ef768d871c1a9f11b272520499719de7d60f11"
+        },
+        {
+          "line": 146,
+          "expression": "result['queries'][0]['attempts'] == job['queries'][0]['attempts']",
+          "ast_sha256": "542e14977c0d6ac9e81d6274117b5d685a1744af8db9663e99c94fae65909fac"
+        },
+        {
+          "line": 147,
+          "expression": "result['queries'][1]['planning_method'] == 'evidence_followup'",
+          "ast_sha256": "4f8ad6009cfce4941e61e8930f1186d8f685eb675289a0548fb56679a59ff557"
+        },
+        {
+          "line": 148,
+          "expression": "result['queries'][1]['evidence_result_ids'] == args['evidence_result_ids']",
+          "ast_sha256": "e0f9007a45f27d5cd5da354aff9b0089eae388365ffea3e438113dc76043a4ce"
+        },
+        {
+          "line": 150,
+          "expression": "loaded.queries[1].evidence_engines == ['wikipedia']",
+          "ast_sha256": "b119ad900d16964947f1962e3e8f7e9a4134bf162f2cb5232468227a5b8585d0"
+        },
+        {
+          "line": 151,
+          "expression": "_job_from_payload(_job_to_payload(loaded)) == loaded",
+          "ast_sha256": "18c160be8ab4b7319e20b110c10fefa22f2da8137017bf97dfaf86e5553b281d"
+        },
+        {
+          "line": 154,
+          "expression": "'error' not in replay",
+          "ast_sha256": "59ca0f2df0e92529aae63996fa28941f05cd203cd6a67226e4781c6e32c867d4"
+        },
+        {
+          "line": 155,
+          "expression": "state.ctx.active_engines['wikipedia'].calls == 2",
+          "ast_sha256": "079f616fbcdd2e018f11d3ff8e2f27e86757f0f10d9142c70460f77890daabd8"
+        },
+        {
+          "line": 157,
+          "expression": "(await t.slopsearx_extend_research(**args))['error']['code'] == 'idempotency_conflict'",
+          "ast_sha256": "eab3b571c4de4d3ce83d4e4047c5736e169f0277d6496b49495488dfba3b2f00"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/evidence_preview_extend_replay_and_history_roundtrip"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_query_planning.py",
+      "function": "test_followup_rejection_is_read_only",
+      "start": 174,
+      "end": 181,
+      "function_ast_sha256": "a621b06b28e3a418da51f92cf171a024573903186c01620139a575ae77cac0eb",
+      "parameterizations": [
+        {
+          "names": "changes",
+          "cases": [
+            {
+              "parent_attempt_id": "foreign"
+            },
+            {
+              "evidence_result_ids": [
+                "foreign:0"
+              ]
+            },
+            {
+              "evidence_result_ids": []
+            },
+            {
+              "evidence_result_ids": [
+                true
+              ]
+            },
+            {
+              "evidence_result_ids": [
+                "a:0",
+                "a:0"
+              ]
+            },
+            {
+              "evidence_result_ids": [
+                "a:0",
+                "a:1",
+                "a:2",
+                "a:3",
+                "a:4",
+                "a:5",
+                "a:6",
+                "a:7",
+                "a:8",
+                "a:9",
+                "a:10"
+              ]
+            },
+            {
+              "subquestion_id": "foreign"
+            },
+            {
+              "rationale": ""
+            },
+            {
+              "query": " MAINTENANCE "
+            }
+          ]
+        }
+      ],
+      "assertion_families": [
+        {
+          "line": 179,
+          "expression": "'error' in await p.slopsearx_plan_research_followup(**args)",
+          "ast_sha256": "f3944b4294f5b403574eff6dc6cc22cfd473f161938d1c024605b2311ee8b856"
+        },
+        {
+          "line": 180,
+          "expression": "state.job_store._store._data == before",
+          "ast_sha256": "6652ac0f0780bb9324dd24800fd048086014dad13268faba7008fa1bb54d4a87"
+        },
+        {
+          "line": 181,
+          "expression": "state.ctx.active_engines['wikipedia'].calls == 1",
+          "ast_sha256": "a95baf4f9cfb3ecd61ba8ec6c2868f1b454f3f1910ad8f90454417fffcad30ed"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/malformed_followups_reject_without_budget_or_dispatch"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_query_planning.py",
+      "function": "test_cross_tenant_unadmitted_expired_and_resolved_evidence",
+      "start": 184,
+      "end": 201,
+      "function_ast_sha256": "5c2ef3243bacf6a8042b8fa8ac36855f182b8ac3955e7b21274802bf0521d9d8",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 188,
+          "expression": "(await p.slopsearx_plan_research_followup(**args))['error']['code'] == 'invalid_job_id'",
+          "ast_sha256": "206bc13fe87faaccdaa4477c1e62dd8506cbda0bc28431f3a1e0b14976567d77"
+        },
+        {
+          "line": 191,
+          "expression": "(await p.slopsearx_plan_research_followup(**args))['error']['code'] == 'invalid_result_id'",
+          "ast_sha256": "e5a9c8fc984751e02230c000b248ff223b14657bd4517d3b6c5bdea350c459ce"
+        },
+        {
+          "line": 195,
+          "expression": "(await p.slopsearx_plan_research_followup(**args))['error']['code'] == 'invalid_job_state'",
+          "ast_sha256": "ef27e7a6943fc8f5d913a10ece2f5c578ded8bdb08febfb2225d3b427d3bd1e8"
+        },
+        {
+          "line": 201,
+          "expression": "(await p.slopsearx_plan_research_followup(**args))['error']['code'] == 'expired_handle'",
+          "ast_sha256": "473a75be1b5a672c4e9898abfd43b1dd57011e93b047e573de86ebee04370657"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/cross_tenant_and_unadmitted_snapshot_records_never_authorize",
+        "ssx-infra/w03/stale_snapshot_and_actual_provenance_denied_without_evidence_disclosure_or_spend",
+        "ssx-infra/w03/resolved_progress_and_completed_plans_revalidate_before_admission"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_query_planning.py",
+      "function": "test_preview_cannot_authorize_changed_progress_or_policy",
+      "start": 204,
+      "end": 215,
+      "function_ast_sha256": "fd94cfc9b69f7a534e796325ff8ae1be5c3cd6d66382698e16a39a2e75687f90",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 209,
+          "expression": "(await t.slopsearx_extend_research(**args))['error']['code'] == 'invalid_job_state'",
+          "ast_sha256": "93e01f0549d576353052f7564305c7647d514eaf70cc8d4ce0b1a3b94dbd2bd9"
+        },
+        {
+          "line": 210,
+          "expression": "state.ctx.active_engines['wikipedia'].calls == 1",
+          "ast_sha256": "a95baf4f9cfb3ecd61ba8ec6c2868f1b454f3f1910ad8f90454417fffcad30ed"
+        },
+        {
+          "line": 213,
+          "expression": "'error' in await t.slopsearx_extend_research(**args)",
+          "ast_sha256": "dbf05798d69dd9d6f308690c2b308906256bf1f1649d991dc4381cf3dc2d3962"
+        },
+        {
+          "line": 214,
+          "expression": "'error' in await p.slopsearx_plan_research_followup(**followup_args(job))",
+          "ast_sha256": "ac3da7e60bc2a7dd341640cf3af10d46a554fbb5215cde012ff2488d7f6cb3da"
+        },
+        {
+          "line": 215,
+          "expression": "state.ctx.active_engines['wikipedia'].calls == 1",
+          "ast_sha256": "a95baf4f9cfb3ecd61ba8ec6c2868f1b454f3f1910ad8f90454417fffcad30ed"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/resolved_progress_and_completed_plans_revalidate_before_admission",
+        "ssx-infra/w03/denied_grants_and_evidence_intent_replay_reject_before_spend"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_query_planning.py",
+      "function": "test_recovered_query_rechecks_captured_evidence_scope",
+      "start": 218,
+      "end": 228,
+      "function_ast_sha256": "17d9b964fff7b79f640ecfd2e397c4cb3115290f852205d761242c8c2ef90fd8",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 225,
+          "expression": "t._research_dispatch_error(state, query, check_evidence=True) is not None",
+          "ast_sha256": "837f25cdd4bcbd4cf6db3244ed71b7d1946ed3f323ac595f8a6650689f68c760"
+        },
+        {
+          "line": 228,
+          "expression": "t._research_dispatch_error(state, query, check_evidence=True) is not None",
+          "ast_sha256": "837f25cdd4bcbd4cf6db3244ed71b7d1946ed3f323ac595f8a6650689f68c760"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/denied_grants_and_evidence_intent_replay_reject_before_spend",
+        "ssx-infra/w02/workflow_mixed_sensitive_plan_denies_before_first_dispatch"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_query_planning.py",
+      "function": "test_legacy_digest_and_payload_remain_compatible",
+      "start": 231,
+      "end": 245,
+      "function_ast_sha256": "57f0193f2fab12b0b42d8f80fea7d9137a30b7b045979772eaf5ccb9f9082240",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 236,
+          "expression": "'error' not in result",
+          "ast_sha256": "6e4b001e333de28c03b2ebc881ef768d871c1a9f11b272520499719de7d60f11"
+        },
+        {
+          "line": 239,
+          "expression": "loaded.queries[-1].continuation_digest == expected",
+          "ast_sha256": "3ba33ca01bb40a6bff8c0b0ff3d007bcc52e9232cf4d03d7dd31faa36b77575b"
+        },
+        {
+          "line": 245,
+          "expression": "all((q.planning_method is None and q.evidence_result_ids == [] for q in legacy.queries))",
+          "ast_sha256": "e4aa5d7baa8f9f561a94ea37c612e61c7c3d4156e354fcc4c3fc35507b03006e"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/legacy_untagged_repeat_and_digest_remain_compatible",
+        "ssx-infra/w03/legacy_nullable_planning_collections_and_digest_preserve_source_contract"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_query_planning.py",
+      "function": "test_grants_and_exhaustion",
+      "start": 248,
+      "end": 254,
+      "function_ast_sha256": "9f3508d54ff50d8cd2b20802602084c5008df2f322ee3b2b5b9d440153a5920e",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 250,
+          "expression": "(await p.slopsearx_plan_research_followup(**followup_args(job)))['error']['code'] == 'job_budget_exceeded'",
+          "ast_sha256": "ef2c2cd53b63ada66f40d6c05a4f3ce8756625b9fc1bf5b5aee36d1437ad8d67"
+        },
+        {
+          "line": 252,
+          "expression": "(await p.slopsearx_plan_query_variants('q', ['v']))['error']['code'] == 'tool_disabled'",
+          "ast_sha256": "b1d0f311ba489ce1af5018cd405117841278a578e4bb7c34eb6a24c0072eb87f"
+        },
+        {
+          "line": 253,
+          "expression": "(await p.slopsearx_plan_research('q', [{'id': 'a', 'question': 'x'}]))['error']['code'] == 'tool_disabled'",
+          "ast_sha256": "50c8f4c93fda1fe25c2aaaea9daa512b3b5637c92cd358ec70e1eeaa1e942811"
+        },
+        {
+          "line": 254,
+          "expression": "(await p.slopsearx_plan_research_followup(**followup_args(job)))['error']['code'] == 'tool_disabled'",
+          "ast_sha256": "c886ae458deb2fed3c98c03e178ac5da63d21f265963716a44e33421b1c6d6f5"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/denied_grants_and_evidence_intent_replay_reject_before_spend",
+        "ssx-infra/w03/all_execution_budget_caps_stop_dispatch_without_implicit_caller_completion"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_query_planning.py",
+      "function": "test_evidence_replay_rechecks_revoked_parent_intent",
+      "start": 257,
+      "end": 272,
+      "function_ast_sha256": "0d286b9040dbcd4bfefdf33190e060940978a2c78526cf3b3dc020ef2acfb9dd",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 265,
+          "expression": "'error' not in preview",
+          "ast_sha256": "cc86155ab7268d1fc9236686bc1c0c69c0c9d616b86c430f7d303d5c85964ed2"
+        },
+        {
+          "line": 268,
+          "expression": "'error' not in result",
+          "ast_sha256": "6e4b001e333de28c03b2ebc881ef768d871c1a9f11b272520499719de7d60f11"
+        },
+        {
+          "line": 271,
+          "expression": "replay['error']['code'] == 'policy_rejected'",
+          "ast_sha256": "bfd3406ef6bff0acb1e098d239f423817304adea0b0ec86dd7b5113da1297f5b"
+        },
+        {
+          "line": 272,
+          "expression": "state.ctx.active_engines['wikipedia'].calls == 2",
+          "ast_sha256": "079f616fbcdd2e018f11d3ff8e2f27e86757f0f10d9142c70460f77890daabd8"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/denied_grants_and_evidence_intent_replay_reject_before_spend"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_query_planning.py",
+      "function": "test_followup_running_missing_store_and_expired_job",
+      "start": 275,
+      "end": 287,
+      "function_ast_sha256": "f694f9aaaf1357957715676535d7cd61ffd73e830679d24caec7007e9dd3dac7",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 281,
+          "expression": "(await p.slopsearx_plan_research_followup(**args))['error']['code'] == 'invalid_job_state'",
+          "ast_sha256": "ef27e7a6943fc8f5d913a10ece2f5c578ded8bdb08febfb2225d3b427d3bd1e8"
+        },
+        {
+          "line": 285,
+          "expression": "(await p.slopsearx_plan_research_followup(**args))['error']['code'] == 'deadline_exceeded'",
+          "ast_sha256": "ce09a053fe69637442cc64662cc2014fb8075532361c0c5fd33f4dd6a77229b9"
+        },
+        {
+          "line": 287,
+          "expression": "(await p.slopsearx_plan_research_followup(**args))['error']['code'] == 'store_unavailable'",
+          "ast_sha256": "59f0056c49b02c5def5b74fc538bab8455a4868ae11af7c0e57ea9e8cd55e770"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/followup_state_deadline_workflow_store_and_terminal_parent_matrix"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_query_planning.py",
+      "function": "test_resolved_state_race_invalidates_leased_execution",
+      "start": 290,
+      "end": 306,
+      "function_ast_sha256": "34587f79ee3daca29d38e86aed71f70a00890297ef2ea757df09226a018ba111",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 303,
+          "expression": "rejected['error']['code'] == 'invalid_job_state'",
+          "ast_sha256": "c9074baad6c9c1b2a8bb1438b9bd56a183f25df28dde29755012175591fac924"
+        },
+        {
+          "line": 305,
+          "expression": "len(current.queries) == 1",
+          "ast_sha256": "b42d288eedbbbbae43d8edcc897db324de5d896b8baf8f1324b8ee16a80e2359"
+        },
+        {
+          "line": 306,
+          "expression": "state.ctx.active_engines['wikipedia'].calls == 1",
+          "ast_sha256": "a95baf4f9cfb3ecd61ba8ec6c2868f1b454f3f1910ad8f90454417fffcad30ed"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/progress_changes_during_snapshot_read_fail_at_authoritative_claim_before_budget"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_query_planning.py",
+      "function": "test_actual_snapshot_provenance_checked_before_disclosure",
+      "start": 309,
+      "end": 319,
+      "function_ast_sha256": "7af8cb94e96ebcf5d4d7f38480be366ef56a6ff037a4a7f24a4822e9dbd57c0f",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 317,
+          "expression": "'error' in denied",
+          "ast_sha256": "5441d0c0a95e7d1699fcf08ab80bf6dd8f8703feadab10a75a350e596a7a961d"
+        },
+        {
+          "line": 318,
+          "expression": "'evidence' not in denied",
+          "ast_sha256": "629ba75fa398ddaa2d0556e3918dc99d15017dc2d62f2363d147bccb6a6d11dd"
+        },
+        {
+          "line": 319,
+          "expression": "state.ctx.active_engines['wikipedia'].calls == 1",
+          "ast_sha256": "a95baf4f9cfb3ecd61ba8ec6c2868f1b454f3f1910ad8f90454417fffcad30ed"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/stale_snapshot_and_actual_provenance_denied_without_evidence_disclosure_or_spend"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_query_planning.py",
+      "function": "test_nullable_legacy_planning_lists_load_as_empty",
+      "start": 322,
+      "end": 331,
+      "function_ast_sha256": "f41cd0b8a4f2d762fa49a2317a336f32d7c787b880e6a5f72cdbde82edbd3ff0",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 329,
+          "expression": "restored.queries[0].evidence_result_ids == []",
+          "ast_sha256": "3c09f40b3462ec67db8a329f12da27f86b7e58a2525b5e4a092e09ad689bc822"
+        },
+        {
+          "line": 330,
+          "expression": "restored.queries[0].evidence_engines == []",
+          "ast_sha256": "d42bf76504d7b80e0ed2a233ceef1e4a82a2219990c12625671eb4f19a5bdc2b"
+        },
+        {
+          "line": 331,
+          "expression": "t._research_dispatch_error(state, restored.queries[0], check_evidence=True) is None",
+          "ast_sha256": "18bf05e87a19746a6d686fb6dfaa66b85cdb7ce5fbf6647ca3df5e0ca0c17566"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/legacy_nullable_planning_collections_and_digest_preserve_source_contract"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_query_planning.py",
+      "function": "test_edited_initial_plan_duplicates_rejected_before_persistence",
+      "start": 335,
+      "end": 346,
+      "function_ast_sha256": "1ae35f7bbcfcf6be77a8df81e7bcaa8b1f672b3577c7c5d5f9fd4356ec69c76a",
+      "parameterizations": [
+        {
+          "names": "mode",
+          "cases": [
+            "decomposition",
+            "variants"
+          ]
+        }
+      ],
+      "assertion_families": [
+        {
+          "line": 344,
+          "expression": "rejected['error']['code'] == 'duplicate_query'",
+          "ast_sha256": "ca586f95eab992f2171f6cfc4e67e4a9eb409d13738520f5ad097410c24d48d0"
+        },
+        {
+          "line": 345,
+          "expression": "state.job_store._store._data == before",
+          "ast_sha256": "6652ac0f0780bb9324dd24800fd048086014dad13268faba7008fa1bb54d4a87"
+        },
+        {
+          "line": 346,
+          "expression": "state.ctx.active_engines['wikipedia'].calls == 0",
+          "ast_sha256": "7af152c52234ee4c06c5544fad4ccd345ac2b95c744abfc137789b64012acf8b"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/duplicate_variants_and_edited_initial_plans_never_persist"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_query_planning.py",
+      "function": "test_tagged_duplicate_continuation_rejected_but_legacy_retained",
+      "start": 349,
+      "end": 358,
+      "function_ast_sha256": "19179ec08a232240f7981455a9a8b8b8714310167d21317e1e1656259372d653",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 354,
+          "expression": "rejected['error']['code'] == 'duplicate_query'",
+          "ast_sha256": "ca586f95eab992f2171f6cfc4e67e4a9eb409d13738520f5ad097410c24d48d0"
+        },
+        {
+          "line": 355,
+          "expression": "state.ctx.active_engines['wikipedia'].calls == 1",
+          "ast_sha256": "a95baf4f9cfb3ecd61ba8ec6c2868f1b454f3f1910ad8f90454417fffcad30ed"
+        },
+        {
+          "line": 357,
+          "expression": "'error' not in legacy",
+          "ast_sha256": "324b730353a29bfe6d9eee27c811ae45ac40dd58a06343134c19e3577a9dd621"
+        },
+        {
+          "line": 358,
+          "expression": "len(legacy['queries']) == 2",
+          "ast_sha256": "23e4125d79cd389e6b4416e2858aa0d1dd033fe947154a1d608161c8e53c28c5"
+        }
+      ],
+      "native_cases": [
+        "ssx-infra/w03/legacy_untagged_repeat_and_digest_remain_compatible"
+      ],
+      "intentional_differences": []
+    },
+    {
+      "path": "tests/test_query_planning_transport.py",
+      "function": "test_query_planning_mcp_journey",
+      "start": 9,
+      "end": 70,
+      "function_ast_sha256": "f769b665e9291c1a7274e04e1fc845bc0f31659ce5cd3a45004935c2c180ca85",
+      "parameterizations": [],
+      "assertion_families": [
+        {
+          "line": 17,
+          "expression": "not response.isError",
+          "ast_sha256": "2fcffa1ed070224d7e3bee14c21f13815fdddf5029d1b6166171579987ebd4f4"
+        },
+        {
+          "line": 19,
+          "expression": "'error' not in value",
+          "ast_sha256": "8defa478afcdc9d10dac187f4e00fd9409441aeec5e55296ecee83cd52f4cf46"
+        },
+        {
+          "line": 23,
+          "expression": "{'slopsearx_plan_research', 'slopsearx_plan_query_variants', 'slopsearx_plan_research_followup'} <= discovered",
+          "ast_sha256": "9f14e0fbad1e793922c1ecbb4aabd21771aeb90f4666ea0b5d6651fcccfd34e4"
+        },
+        {
+          "line": 37,
+          "expression": "preview['dispatched'] is False",
+          "ast_sha256": "10c36b22931888a63ab962e99767167ad89047c38bb52c82033b5d71df08f108"
+        },
+        {
+          "line": 43,
+          "expression": "[q['planning_method'] for q in job['queries']] == ['original', 'decomposition', 'decomposition']",
+          "ast_sha256": "3e23d6e7a32f91aef52af10959e583d9ab02798302a0d5595f631fa7565439ec"
+        },
+        {
+          "line": 57,
+          "expression": "result['queries'][-1]['evidence_result_ids'] == args['evidence_result_ids']",
+          "ast_sha256": "19a23e407ffb1938b36f6d27821461c61404c2d42c85b4a559f73d5153cc1df0"
+        },
+        {
+          "line": 59,
+          "expression": "replay['budgets']['used'] == result['budgets']['used']",
+          "ast_sha256": "29ad2729a89c36b264d40c982bcfae4ed0452029ee7b32dd2aa0d25e74e694aa"
+        },
+        {
+          "line": 68,
+          "expression": "variant_job['queries'][1]['planning_method'] == 'terminology_expansion'",
+          "ast_sha256": "8538af3a46f76c87464fe6352795018bee0a32ed134541361a928c4ac9e68eff"
+        },
+        {
+          "line": 70,
+          "expression": "'plan_research_with_evidence' in prompts",
+          "ast_sha256": "eade782787a9c07e1cf221a34052c1856abacb14f97ee22d98810452657da545"
+        }
+      ],
+      "native_cases": [
+        "ssx-mcp/w03/actual_authenticated_http_preview_execute_followup_replay_and_completion",
+        "ssx-mcp/w03/real_native_stdio_process_preserves_complete_descriptors_preview_and_evidence_replay",
+        "ssx-mcp/w03/actual_authenticated_legacy_sse_preview_has_exact_output_and_zero_dispatch"
+      ],
+      "intentional_differences": []
+    }
+  ],
+  "claim": "Every original test function, literal parameterization and assertion family is bound individually; bindings require semantic review and actual native execution, not count equality.",
+  "candidate003_review_controls": [
+    {
+      "source": "slopsearx/mcp/tools.py::_validate_research_associations",
+      "native_cases": [
+        "ssx-infra/w03/bare_parent_without_evidence_does_not_inherit_revoked_parent_intent_authority",
+        "ssx-infra/w03/bare_parent_replay_after_revocation_completion_and_deadline_preserves_all_store_bytes",
+        "ssx-infra/w03/evidence_parent_policy_precedes_resolved_duplicate_variant_and_preview_budget_errors"
+      ],
+      "assertion_scope": "Supplemental combined/error/replay controls over the literal source branch; original 52 test functions/314 assertion families remain unchanged."
+    },
+    {
+      "source": "slopsearx/mcp/tools.py::slopsearx_start_research + slopsearx/mcp/planning_tools.py::_limits",
+      "native_cases": [
+        "ssx-infra/w03/start_and_preview_preserve_distinct_source_limit_validation_order"
+      ],
+      "assertion_scope": "Supplemental mixed-invalid-limit precedence; no new original observations."
+    }
+  ]
+}

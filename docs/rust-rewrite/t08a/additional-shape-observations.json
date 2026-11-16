@@ -1,0 +1,328 @@
+{
+  "schema": 1,
+  "source_sha256": "4c45e876fc79dffc0f7da8ccccc9c6ba67d4f4cc9e0bd9e8194f74184b96c65b",
+  "captures": [
+    {
+      "native_case": {
+        "id": "category-nan-order",
+        "argv": [
+          "config"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b2263617465676f72696573223a7b226f6464223a5b332c322c4e614e2c315d7d7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/config",
+            "accept": "application/json"
+          }
+        ],
+        "status": 0,
+        "stdout": "---\ncategory_count: 1\ncategories:\n  odd:\n    - 2\n    - nan\n    - 1\n    - 3\n\n## Engine Category Reference\n\nEach engine can be queried with `?engines=<name>` or reached\nvia any of its assigned categories with `?categories=<cat>`.\n",
+        "stderr": "",
+        "reference": "additional-source-observations.json#category-nan-order"
+      },
+      "python_stdout_hex": "2d2d2d0a63617465676f72795f636f756e743a20310a63617465676f726965733a0a20206f64643a0a202020202d20320a202020202d206e616e0a202020202d20310a202020202d20330a0a232320456e67696e652043617465676f7279205265666572656e63650a0a4561636820656e67696e652063616e2062652071756572696564207769746820603f656e67696e65733d3c6e616d653e60206f7220726561636865640a76696120616e79206f66206974732061737369676e65642063617465676f72696573207769746820603f63617465676f726965733d3c6361743e602e0a",
+      "python_stderr_hex": "",
+      "python_status": 0
+    },
+    {
+      "native_case": {
+        "id": "category-nested-nan-order",
+        "argv": [
+          "config"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b2263617465676f72696573223a7b226f6464223a5b5b335d2c5b325d2c5b4e614e5d2c5b315d5d7d7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/config",
+            "accept": "application/json"
+          }
+        ],
+        "status": 0,
+        "stdout": "---\ncategory_count: 1\ncategories:\n  odd:\n    - [2]\n    - [nan]\n    - [1]\n    - [3]\n\n## Engine Category Reference\n\nEach engine can be queried with `?engines=<name>` or reached\nvia any of its assigned categories with `?categories=<cat>`.\n",
+        "stderr": "",
+        "reference": "additional-source-observations.json#category-nested-nan-order"
+      },
+      "python_stdout_hex": "2d2d2d0a63617465676f72795f636f756e743a20310a63617465676f726965733a0a20206f64643a0a202020202d205b325d0a202020202d205b6e616e5d0a202020202d205b315d0a202020202d205b335d0a0a232320456e67696e652043617465676f7279205265666572656e63650a0a4561636820656e67696e652063616e2062652071756572696564207769746820603f656e67696e65733d3c6e616d653e60206f7220726561636865640a76696120616e79206f66206974732061737369676e65642063617465676f72696573207769746820603f63617465676f726965733d3c6361743e602e0a",
+      "python_stderr_hex": "",
+      "python_status": 0
+    },
+    {
+      "native_case": {
+        "id": "category-single-nan",
+        "argv": [
+          "config"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b2263617465676f72696573223a7b226f6464223a5b4e614e5d7d7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/config",
+            "accept": "application/json"
+          }
+        ],
+        "status": 0,
+        "stdout": "---\ncategory_count: 1\ncategories:\n  odd:\n    - nan\n\n## Engine Category Reference\n\nEach engine can be queried with `?engines=<name>` or reached\nvia any of its assigned categories with `?categories=<cat>`.\n",
+        "stderr": "",
+        "reference": "additional-source-observations.json#category-single-nan"
+      },
+      "python_stdout_hex": "2d2d2d0a63617465676f72795f636f756e743a20310a63617465676f726965733a0a20206f64643a0a202020202d206e616e0a0a232320456e67696e652043617465676f7279205265666572656e63650a0a4561636820656e67696e652063616e2062652071756572696564207769746820603f656e67696e65733d3c6e616d653e60206f7220726561636865640a76696120616e79206f66206974732061737369676e65642063617465676f72696573207769746820603f63617465676f726965733d3c6361743e602e0a",
+      "python_stderr_hex": "",
+      "python_status": 0
+    },
+    {
+      "native_case": {
+        "id": "category-infinity-integer-bool",
+        "argv": [
+          "config"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b2263617465676f72696573223a7b226f6464223a5b496e66696e6974792c393030373139393235343734303939332c393030373139393235343734303939322e302c393030373139393235343734303939322c66616c73652c747275652c2d496e66696e6974792c2d322c2d322e355d7d7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/config",
+            "accept": "application/json"
+          }
+        ],
+        "status": 0,
+        "stdout": "---\ncategory_count: 1\ncategories:\n  odd:\n    - -inf\n    - -2.5\n    - -2\n    - False\n    - True\n    - 9007199254740992.0\n    - 9007199254740992\n    - 9007199254740993\n    - inf\n\n## Engine Category Reference\n\nEach engine can be queried with `?engines=<name>` or reached\nvia any of its assigned categories with `?categories=<cat>`.\n",
+        "stderr": "",
+        "reference": "additional-source-observations.json#category-infinity-integer-bool"
+      },
+      "python_stdout_hex": "2d2d2d0a63617465676f72795f636f756e743a20310a63617465676f726965733a0a20206f64643a0a202020202d202d696e660a202020202d202d322e350a202020202d202d320a202020202d2046616c73650a202020202d20547275650a202020202d20393030373139393235343734303939322e300a202020202d20393030373139393235343734303939320a202020202d20393030373139393235343734303939330a202020202d20696e660a0a232320456e67696e652043617465676f7279205265666572656e63650a0a4561636820656e67696e652063616e2062652071756572696564207769746820603f656e67696e65733d3c6e616d653e60206f7220726561636865640a76696120616e79206f66206974732061737369676e65642063617465676f72696573207769746820603f63617465676f726965733d3c6361743e602e0a",
+      "python_stderr_hex": "",
+      "python_status": 0
+    },
+    {
+      "native_case": {
+        "id": "category-nested-order",
+        "argv": [
+          "config"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b2263617465676f72696573223a7b226f6464223a5b5b227a225d2c5b2261225d5d7d7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/config",
+            "accept": "application/json"
+          }
+        ],
+        "status": 0,
+        "stdout": "---\ncategory_count: 1\ncategories:\n  odd:\n    - ['a']\n    - ['z']\n\n## Engine Category Reference\n\nEach engine can be queried with `?engines=<name>` or reached\nvia any of its assigned categories with `?categories=<cat>`.\n",
+        "stderr": "",
+        "reference": "additional-source-observations.json#category-nested-order"
+      },
+      "python_stdout_hex": "2d2d2d0a63617465676f72795f636f756e743a20310a63617465676f726965733a0a20206f64643a0a202020202d205b2761275d0a202020202d205b277a275d0a0a232320456e67696e652043617465676f7279205265666572656e63650a0a4561636820656e67696e652063616e2062652071756572696564207769746820603f656e67696e65733d3c6e616d653e60206f7220726561636865640a76696120616e79206f66206974732061737369676e65642063617465676f72696573207769746820603f63617465676f726965733d3c6361743e602e0a",
+      "python_stderr_hex": "",
+      "python_status": 0
+    },
+    {
+      "native_case": {
+        "id": "category-single-null",
+        "argv": [
+          "config"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b2263617465676f72696573223a7b226f6464223a5b6e756c6c5d7d7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/config",
+            "accept": "application/json"
+          }
+        ],
+        "status": 0,
+        "stdout": "---\ncategory_count: 1\ncategories:\n  odd:\n    - None\n\n## Engine Category Reference\n\nEach engine can be queried with `?engines=<name>` or reached\nvia any of its assigned categories with `?categories=<cat>`.\n",
+        "stderr": "",
+        "reference": "additional-source-observations.json#category-single-null"
+      },
+      "python_stdout_hex": "2d2d2d0a63617465676f72795f636f756e743a20310a63617465676f726965733a0a20206f64643a0a202020202d204e6f6e650a0a232320456e67696e652043617465676f7279205265666572656e63650a0a4561636820656e67696e652063616e2062652071756572696564207769746820603f656e67696e65733d3c6e616d653e60206f7220726561636865640a76696120616e79206f66206974732061737369676e65642063617465676f72696573207769746820603f63617465676f726965733d3c6361743e602e0a",
+      "python_stderr_hex": "",
+      "python_status": 0
+    },
+    {
+      "native_case": {
+        "id": "category-null-comparison",
+        "argv": [
+          "config"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b2263617465676f72696573223a7b226f6464223a5b6e756c6c2c6e756c6c5d7d7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/config",
+            "accept": "application/json"
+          }
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "error: ssx: unexpected JSON shape\n",
+        "reference": "additional-source-observations.json#category-null-comparison"
+      },
+      "python_stdout_hex": "",
+      "python_stderr_hex": "54726163656261636b20286d6f737420726563656e742063616c6c206c617374293a0a202046696c6520222f566f6c756d65732f74616e6b30312f6d61676e75732f727573742d6275696c64732f736c6f7073656172782f776f726b74726565732f313036322d6e61746976652d636c692d617574686f72696e672d32303236313032392f737378222c206c696e65203235392c20696e203c6d6f64756c653e0a202020206d61696e28290a202020207e7e7e7e5e5e0a202046696c6520222f566f6c756d65732f74616e6b30312f6d61676e75732f727573742d6275696c64732f736c6f7073656172782f776f726b74726565732f313036322d6e61746976652d636c692d617574686f72696e672d32303236313032392f737378222c206c696e65203235352c20696e206d61696e0a20202020636f6d6d616e64735b617267732e636f6d6d616e645d2861726773290a202020207e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e5e5e5e5e5e5e0a202046696c6520222f566f6c756d65732f74616e6b30312f6d61676e75732f727573742d6275696c64732f736c6f7073656172782f776f726b74726565732f313036322d6e61746976652d636c692d617574686f72696e672d32303236313032392f737378222c206c696e65203139382c20696e20636d645f636f6e6669670a20202020656e6773203d20736f727465642863617465676f726965735b6361745f6e616d655d290a547970654572726f723a20273c27206e6f7420737570706f72746564206265747765656e20696e7374616e636573206f6620274e6f6e65547970652720616e6420274e6f6e6554797065270a",
+      "python_status": 1
+    },
+    {
+      "native_case": {
+        "id": "category-string-iteration",
+        "argv": [
+          "config"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b2263617465676f72696573223a7b226f6464223a22c3a9e6bca2e5ad97227d7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/config",
+            "accept": "application/json"
+          }
+        ],
+        "status": 0,
+        "stdout": "---\ncategory_count: 1\ncategories:\n  odd:\n    - \u00e9\n    - \u5b57\n    - \u6f22\n\n## Engine Category Reference\n\nEach engine can be queried with `?engines=<name>` or reached\nvia any of its assigned categories with `?categories=<cat>`.\n",
+        "stderr": "",
+        "reference": "additional-source-observations.json#category-string-iteration"
+      },
+      "python_stdout_hex": "2d2d2d0a63617465676f72795f636f756e743a20310a63617465676f726965733a0a20206f64643a0a202020202d20c3a90a202020202d20e5ad970a202020202d20e6bca20a0a232320456e67696e652043617465676f7279205265666572656e63650a0a4561636820656e67696e652063616e2062652071756572696564207769746820603f656e67696e65733d3c6e616d653e60206f7220726561636865640a76696120616e79206f66206974732061737369676e65642063617465676f72696573207769746820603f63617465676f726965733d3c6361743e602e0a",
+      "python_stderr_hex": "",
+      "python_status": 0
+    },
+    {
+      "native_case": {
+        "id": "status-nested-repr",
+        "argv": [
+          "health"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b22737461747573223a7b2261223a5b225c7564383030222c225c7532303062222c225c6e222c225c5c222c4e614e2c496e66696e6974795d7d2c22656e67696e6573223a7b7d7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/health",
+            "accept": "application/json"
+          }
+        ],
+        "status": 0,
+        "stdout": "---\nserver_status: {'a': ['\\ud800', '\\u200b', '\\n', '\\\\', nan, inf]}\nengines_ok: 0/0\nengine_status:\n",
+        "stderr": "",
+        "reference": "additional-source-observations.json#status-nested-repr"
+      },
+      "python_stdout_hex": "2d2d2d0a7365727665725f7374617475733a207b2761273a205b275c7564383030272c20275c7532303062272c20275c6e272c20275c5c272c206e616e2c20696e665d7d0a656e67696e65735f6f6b3a20302f300a656e67696e655f7374617475733a0a",
+      "python_stderr_hex": "",
+      "python_status": 0
+    },
+    {
+      "native_case": {
+        "id": "engines-json-ignores-yaml-status",
+        "argv": [
+          "engines",
+          "--json"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b22737461747573223a225c7564383030222c22656e67696e6573223a7b2261223a7b7d7d7d",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b2263617465676f72696573223a7b226f6e65223a5b312c6e756c6c2c66616c73652c2261225d7d7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/health",
+            "accept": "application/json"
+          },
+          {
+            "target": "/config",
+            "accept": "application/json"
+          }
+        ],
+        "status": 0,
+        "stdout": "{\n  \"a\": {\n    \"status\": \"unknown\",\n    \"categories\": [\n      \"one\"\n    ]\n  }\n}\n",
+        "stderr": "",
+        "reference": "additional-source-observations.json#engines-json-ignores-yaml-status"
+      },
+      "python_stdout_hex": "7b0a20202261223a207b0a2020202022737461747573223a2022756e6b6e6f776e222c0a202020202263617465676f72696573223a205b0a202020202020226f6e65220a202020205d0a20207d0a7d0a",
+      "python_stderr_hex": "",
+      "python_status": 0
+    }
+  ]
+}

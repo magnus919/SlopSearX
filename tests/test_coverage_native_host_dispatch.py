@@ -29,19 +29,45 @@ def packet(packet_id: str, *, task_id: str = "D1E0001") -> bytes:
             "assessor_id": "A",
             "role": "card",
             "model_input": {"rubric": "synthetic fixture"},
+            "output_schema": {
+                "type": "object",
+                "properties": {
+                    "assessments": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                            "type": "object",
+                            "properties": {"source_id": {"enum": ["SRC-1"]}},
+                            "required": ["source_id"],
+                            "additionalProperties": False,
+                        },
+                    }
+                },
+                "required": ["assessments"],
+                "additionalProperties": False,
+            },
         }
     )
 
 
 def write_phase_deadline(scope: Path, stage_uuid: str, phase: str, deadline: float) -> None:
     path = scope / "phase-deadline.json"
+    now_mono = time.monotonic()
+    now_utc = time.time()
+    if deadline > now_mono:
+        created_at_utc = now_utc
+        deadline_at_utc = now_utc + deadline - now_mono
+    else:
+        created_at_utc = now_utc - 2
+        deadline_at_utc = now_utc - 1
     path.write_bytes(
         canonical(
             {
-                "schema": "coverage-native-phase-deadline/1",
+                "schema": "coverage-native-phase-deadline/2",
                 "stage_uuid": stage_uuid,
                 "phase": phase,
-                "deadline_monotonic": deadline,
+                "created_at_utc": created_at_utc,
+                "deadline_at_utc": deadline_at_utc,
             }
         )
     )
@@ -158,6 +184,30 @@ def write_prepared_answer_scope(root: Path) -> tuple[Path, str, list[str]]:
     return scope, stage_uuid, packet_ids
 
 
+def replace_request_schema(scope: Path, packet_id: str, schema: dict[str, object]) -> None:
+    import base64
+
+    manifest_path = scope / "handoff-manifest.json"
+    manifest = json.loads(manifest_path.read_bytes())
+    row = next(row for row in manifest["packets"] if row["packet_id"] == packet_id)
+    request_path = scope / "requests" / f"{packet_id}.request.json"
+    request = json.loads(request_path.read_bytes())
+    packet_bytes = base64.b64decode(request["packet_bytes_base64"], validate=True)
+    payload = json.loads(packet_bytes)
+    payload["output_schema"] = schema
+    packet_bytes = canonical(payload)
+    digest = hashlib.sha256(packet_bytes).hexdigest()
+    row["packet_sha256"] = digest
+    row["byte_count"] = len(packet_bytes)
+    request["packet_sha256"] = digest
+    request["byte_count"] = len(packet_bytes)
+    request["packet_bytes_base64"] = base64.b64encode(packet_bytes).decode("ascii")
+    request_path.write_bytes(canonical(request))
+    request_path.chmod(0o600)
+    manifest_path.write_bytes(canonical(manifest))
+    manifest_path.chmod(0o600)
+
+
 def fake_codex(tmp_path: Path) -> tuple[Path, str]:
     script = tmp_path / "fake-codex"
     script.write_text(
@@ -174,12 +224,19 @@ def fake_codex(tmp_path: Path) -> tuple[Path, str]:
                 print("codex-cli synthetic-test")
                 raise SystemExit(0)
             if sys.argv[1:3] == ["mcp", "list"]:
-                inventory = os.environ.get("FAKE_MCP_LIST", "No MCP servers configured yet.")
+                if "--json" not in sys.argv:
+                    raise SystemExit(3)
+                inventory = os.environ.get("FAKE_MCP_LIST", "[]")
+                try:
+                    rows = json.loads(inventory)
+                except json.JSONDecodeError:
+                    print(inventory)
+                    raise SystemExit(0)
                 if any(arg.endswith(".enabled=false") for arg in sys.argv) and not os.environ.get(
                     "FAKE_MCP_IGNORE_DISABLE"
                 ):
-                    inventory = inventory.replace(" enabled  ", " disabled  ")
-                print(inventory)
+                    rows = [{**row, "enabled": False} for row in rows]
+                print(json.dumps(rows, separators=(",", ":")))
                 raise SystemExit(0)
             if sys.argv[1:3] != ["app-server", "--listen"]:
                 raise SystemExit(2)
@@ -227,9 +284,23 @@ def fake_codex(tmp_path: Path) -> tuple[Path, str]:
                     text = request["params"]["input"][0]["text"]
                     items = [
                         {"type": "userMessage", "id": "user-1", "content": [{"type": "text", "text": text}]},
-                        {"type": "agentMessage", "id": "assistant-1", "text": json.dumps({"synthetic": True})},
+                        {
+                            "type": "agentMessage",
+                            "id": "assistant-1",
+                            "text": os.environ.get(
+                                "FAKE_CODEX_FINAL_TEXT",
+                                json.dumps({"assessments": [{"source_id": "SRC-1"}]}),
+                            ),
+                        },
                     ]
                     completion_status = "failed" if os.environ.get("FAKE_CODEX_FAIL_TURN") else "completed"
+                    for item in items:
+                        item_params = {"threadId": thread_id, "turnId": turn_id, "item": item}
+                        emit({"method": "item/started", "params": {**item_params, "startedAtMs": 1}})
+                        emit({"method": "item/completed", "params": {**item_params, "completedAtMs": 2}})
+                        if os.environ.get("FAKE_CODEX_DUPLICATE_ITEM_COMPLETION") and item["id"] == "user-1":
+                            emit({"method": "item/completed", "params": {**item_params, "completedAtMs": 3}})
+                    assistant_summary = items[1]
                     emit({
                         "method": "turn/completed",
                         "params": {
@@ -237,8 +308,8 @@ def fake_codex(tmp_path: Path) -> tuple[Path, str]:
                             "turn": {
                                 "id": turn_id,
                                 "status": completion_status,
-                                "items": items,
-                                "itemsView": "full",
+                                "items": [assistant_summary],
+                                "itemsView": "summary",
                             },
                         },
                     })
@@ -286,7 +357,12 @@ def make_transcript(packet_id: str, packet_bytes: bytes, *, tamper: str | None =
             "jsonrpc": "2.0",
             "id": 3,
             "method": "turn/start",
-            "params": {"threadId": thread_id, "model": native.MODEL, "input": [{"type": "text", "text": text}]},
+            "params": {
+                "threadId": thread_id,
+                "model": native.MODEL,
+                "input": [{"type": "text", "text": text}],
+                "outputSchema": native._provider_output_schema(native._packet_output_schema(packet_bytes)),
+            },
         },
     ]
     if tamper == "input":
@@ -295,6 +371,10 @@ def make_transcript(packet_id: str, packet_bytes: bytes, *, tamper: str | None =
         requests[0]["params"]["capabilities"]["experimentalApi"] = False
     if tamper == "extra-tool-policy":
         requests[2]["params"]["tools"] = ["shell"]
+    if tamper == "missing-output-schema":
+        del requests[3]["params"]["outputSchema"]
+    if tamper == "tampered-output-schema":
+        requests[3]["params"]["outputSchema"] = {"type": "object"}
     events = [
         {"direction": "client", "message": requests[0]},
         {"direction": "server", "message": {"id": 1, "result": {}}},
@@ -327,14 +407,75 @@ def make_transcript(packet_id: str, packet_bytes: bytes, *, tamper: str | None =
             "id": "u",
             "content": [{"type": "text", "text": text if tamper != "input" else "changed"}],
         },
-        {"type": "agentMessage", "id": "a", "text": '{"result":"synthetic"}'},
+        {
+            "type": "agentMessage",
+            "id": "a",
+            "text": '{ "assessments" : [ { "source_id" : "SRC-1" } ] }'
+            if tamper == "response-whitespace"
+            else '{"assessments":[{"source_id":"SRC-1"}]}',
+        },
     ]
+    if tamper == "invalid-json":
+        items[1]["text"] = "not json"
+    if tamper == "unknown-source-id":
+        items[1]["text"] = '{"assessments":[{"source_id":"UNKNOWN"}]}'
+    if tamper == "missing-assessments":
+        items[1]["text"] = "{}"
     if tamper == "tool":
         items.append({"type": "mcpToolCall", "id": "mcp-1"})
     if tamper == "incomplete":
         status = "failed"
     else:
         status = "completed"
+    for index, item in enumerate(items):
+        if tamper != "item-start-omitted" or index != 0:
+            started_item = item
+            if tamper == "started-input-mismatch" and item.get("type") == "userMessage":
+                started_item = {**item, "content": [{"type": "text", "text": "different started input"}]}
+            events.append(
+                {
+                    "direction": "server",
+                    "message": {
+                        "method": "item/started",
+                        "params": {
+                            "threadId": thread_id if tamper != "item-orphan" else str(uuid.uuid4()),
+                            "turnId": turn_id,
+                            "item": started_item,
+                            "startedAtMs": 300 if tamper == "timestamp-order" and index == 0 else 100 + index,
+                        },
+                    },
+                }
+            )
+        if tamper != "item-completion-omitted" or index != 0:
+            events.append(
+                {
+                    "direction": "server",
+                    "message": {
+                        "method": "item/completed",
+                        "params": {
+                            "threadId": thread_id,
+                            "turnId": turn_id,
+                            "item": item,
+                            "completedAtMs": 200 + index,
+                        },
+                    },
+                }
+            )
+            if tamper == "item-duplicate" and index == 0:
+                events.append(
+                    {
+                        "direction": "server",
+                        "message": {
+                            "method": "item/completed",
+                            "params": {
+                                "threadId": thread_id,
+                                "turnId": turn_id,
+                                "item": item,
+                                "completedAtMs": 201 + index,
+                            },
+                        },
+                    }
+                )
     events.append(
         {
             "direction": "server",
@@ -345,8 +486,24 @@ def make_transcript(packet_id: str, packet_bytes: bytes, *, tamper: str | None =
                     "turn": {
                         "id": turn_id,
                         "status": status,
-                        "items": items,
-                        "itemsView": tamper if tamper in {"summary", "notLoaded"} else "full",
+                        "items": (
+                            [{"type": "agentMessage", "id": "unknown", "text": '{"result":"synthetic"}'}]
+                            if tamper == "summary-unknown-id"
+                            else (
+                                [{"type": "agentMessage", "id": "a", "text": items[1]["text"]}] * 2
+                                if tamper == "summary-duplicate"
+                                else [{"type": "agentMessage", "id": "a", "text": items[1]["text"]}]
+                            )
+                        ),
+                        "itemsView": (
+                            "unknown"
+                            if tamper == "unknown-items-view"
+                            else "notLoaded"
+                            if tamper == "notLoaded-nonempty"
+                            else "full"
+                            if tamper == "inconsistent-full-view"
+                            else "summary"
+                        ),
                     },
                 },
             },
@@ -408,6 +565,169 @@ def test_model_catalog_absence_is_metadata_not_dispatch_gate() -> None:
         native.inspect_model_catalog({"jsonrpc": "1.0", **response})
 
 
+def test_output_schema_rejects_remote_references_before_validation() -> None:
+    payload = {
+        "packet_id": "a" * 64,
+        "output_schema": {"$ref": "https://example.invalid/schema.json"},
+    }
+    with pytest.raises(native.NativeHostError, match="output-schema-invalid"):
+        native._packet_output_schema(canonical(payload))
+
+
+def _bounded_map_schema() -> dict[str, object]:
+    return {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["records"],
+        "properties": {
+            "records": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": ["facets", "facet_anchors"],
+                    "properties": {
+                        "facets": {"type": "array", "items": {"enum": ["F1", "F2"]}},
+                        "facet_anchors": {
+                            "type": "object",
+                            "propertyNames": {"enum": ["F1", "F2"]},
+                            "additionalProperties": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "uniqueItems": True,
+                            },
+                        },
+                    },
+                },
+            }
+        },
+    }
+
+
+def test_bounded_map_projection_is_exact_and_keeps_unique_items_local() -> None:
+    schema = _bounded_map_schema()
+    projected = native._provider_output_schema(schema)
+    map_schema = projected["properties"]["records"]["items"]["properties"]["facet_anchors"]
+    assert len(map_schema["anyOf"]) == 4
+    assert all(branch["additionalProperties"] is False for branch in map_schema["anyOf"])
+    assert [set(branch["required"]) for branch in map_schema["anyOf"]] == [set(), {"F1"}, {"F2"}, {"F1", "F2"}]
+    assert "uniqueItems" not in map_schema["anyOf"][1]["properties"]["F1"]
+
+    original_validator = native.Draft202012Validator(schema)
+    provider_validator = native.Draft202012Validator(projected)
+    for facet_ids in ([], ["F1"], ["F2"], ["F1", "F2"]):
+        value = {"records": [{"facets": facet_ids, "facet_anchors": {facet_id: ["quote"] for facet_id in facet_ids}}]}
+        assert original_validator.is_valid(value)
+        assert provider_validator.is_valid(value)
+
+    # Schema projection preserves the original schema language. The separate
+    # frozen semantic verifier still decides whether these sets agree.
+    mismatch = {"records": [{"facets": ["F1"], "facet_anchors": {"F2": ["quote"]}}]}
+    assert original_validator.is_valid(mismatch)
+    assert provider_validator.is_valid(mismatch)
+    unknown = {"records": [{"facets": ["F3"], "facet_anchors": {"F3": ["quote"]}}]}
+    assert not original_validator.is_valid(unknown)
+    assert not provider_validator.is_valid(unknown)
+
+    duplicate_anchors = {"records": [{"facets": [], "facet_anchors": {"F1": ["x", "x"]}}]}
+    assert not original_validator.is_valid(duplicate_anchors)
+    assert provider_validator.is_valid(duplicate_anchors)
+
+
+def test_projection_fails_closed_for_optional_and_unbounded_schema_shapes() -> None:
+    optional = {
+        "type": "object",
+        "properties": {"required": {"type": "string"}, "optional": {"type": "string"}},
+        "required": ["required"],
+        "additionalProperties": False,
+    }
+    with pytest.raises(native.NativeHostError, match="open-object"):
+        native._provider_output_schema(optional)
+
+    open_object = {"type": "object", "properties": {"value": {"type": "string"}}, "required": ["value"]}
+    with pytest.raises(native.NativeHostError, match="open-object"):
+        native._provider_output_schema(open_object)
+
+    unreachable_open_definition = {
+        **_bounded_map_schema(),
+        "$defs": {
+            "unused": {
+                "type": "object",
+                "properties": {"free_form": {"type": "string"}},
+                "required": ["free_form"],
+            }
+        },
+    }
+    assert "$defs" not in native._provider_output_schema(unreachable_open_definition)
+
+    too_many_map_keys = _bounded_map_schema()
+    too_many_map_keys["properties"]["records"]["items"]["properties"]["facet_anchors"]["propertyNames"]["enum"] = [
+        f"F{index}" for index in range(native._MAX_BOUNDED_MAP_KEYS + 1)
+    ]
+    with pytest.raises(native.NativeHostError, match="unrepresentable-map"):
+        native._provider_output_schema(too_many_map_keys)
+
+
+def test_const_only_string_schema_projects_to_typed_enum() -> None:
+    schema = {
+        "type": "object",
+        "properties": {"id": {"const": "R1"}},
+        "required": ["id"],
+        "additionalProperties": False,
+    }
+    projected = native._provider_output_schema(schema)
+    assert projected["properties"]["id"] == {"enum": ["R1"], "type": "string"}
+
+
+def test_response_bytes_retain_the_exact_assistant_text() -> None:
+    packet_id = "a" * 64
+    raw_packet = packet(packet_id)
+    transcript = json.loads(make_transcript(packet_id, raw_packet, tamper="response-whitespace"))
+    identity = transcript.pop("_test_identity")
+    verified = native.verify_transcript(
+        canonical(transcript),
+        stage_uuid=identity["stage_uuid"],
+        phase="references",
+        packet_id=packet_id,
+        packet_sha256=hashlib.sha256(raw_packet).hexdigest(),
+        expected_catalog_row_sha256=transcript["model_catalog_row_sha256"],
+        expected_catalog_response_sha256=transcript["model_catalog_response_sha256"],
+        expected_mcp_server_ids=[],
+    )
+    assert verified.response_bytes == b'{ "assessments" : [ { "source_id" : "SRC-1" } ] }'
+
+
+@pytest.mark.asyncio
+async def test_incompatible_later_packet_fails_before_any_native_dispatch(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    scope, stage_uuid, packet_ids = write_scope(tmp_path, count=2)
+    bad_schema = {
+        "type": "object",
+        "properties": {"assessments": {"type": "array", "items": {"type": "string"}}},
+        "required": ["assessments"],
+        "additionalProperties": False,
+        "patternProperties": {},
+    }
+    replace_request_schema(scope, packet_ids[-1], bad_schema)
+    codex, digest = fake_codex(tmp_path)
+    args_log = tmp_path / "app-server-argv.json"
+    monkeypatch.setenv("FAKE_CODEX_ARGS_LOG", str(args_log))
+
+    with pytest.raises(native.NativeHostError, match="unsupported-keyword"):
+        await native.dispatch_handoff_scope(
+            scope_path=scope,
+            stage_uuid=stage_uuid,
+            phase="references",
+            codex_executable=str(codex),
+            expected_cli_sha256=digest,
+            deadline_monotonic=time.monotonic() + 30,
+        )
+
+    assert not args_log.exists()
+    assert not (scope / "native-host").exists()
+
+
 @pytest.mark.asyncio
 async def test_request_drain_stall_is_bounded_by_stage_deadline() -> None:
     class StalledWriter:
@@ -435,15 +755,29 @@ async def test_request_drain_stall_is_bounded_by_stage_deadline() -> None:
     "tamper",
     [
         "input",
+        "started-input-mismatch",
         "wrong-model",
         "rerouted",
         "tool",
         "incomplete",
         "extra-tool-policy",
+        "missing-output-schema",
+        "tampered-output-schema",
         "tool-policy",
         "experimental-api-optin",
-        "summary",
-        "notLoaded",
+        "item-start-omitted",
+        "item-completion-omitted",
+        "item-duplicate",
+        "item-orphan",
+        "timestamp-order",
+        "unknown-items-view",
+        "notLoaded-nonempty",
+        "summary-unknown-id",
+        "summary-duplicate",
+        "inconsistent-full-view",
+        "invalid-json",
+        "unknown-source-id",
+        "missing-assessments",
     ],
 )
 def test_transcript_rejects_mismatched_or_nonterminal_invocation(tamper: str) -> None:
@@ -479,27 +813,27 @@ def test_transcript_roundtrip_binds_packet_and_returns_exact_final_text() -> Non
         expected_catalog_response_sha256=transcript["model_catalog_response_sha256"],
         expected_mcp_server_ids=[],
     )
-    assert verified.response_bytes == b'{"result":"synthetic"}'
+    assert verified.response_bytes == b'{"assessments":[{"source_id":"SRC-1"}]}'
     assert verified.thread_id == identity["thread_id"]
 
-    # The installed generated schema defaults Turn.itemsView to "full".
+    # Missing view metadata defaults to a full snapshot and must then match item events.
     completed = next(
         event["message"]
         for event in transcript["events"]
         if event["direction"] == "server" and event["message"].get("method") == "turn/completed"
     )
     del completed["params"]["turn"]["itemsView"]
-    defaulted = native.verify_transcript(
-        canonical(transcript),
-        stage_uuid=identity["stage_uuid"],
-        phase="references",
-        packet_id=packet_id,
-        packet_sha256=hashlib.sha256(raw_packet).hexdigest(),
-        expected_catalog_row_sha256=transcript["model_catalog_row_sha256"],
-        expected_catalog_response_sha256=transcript["model_catalog_response_sha256"],
-        expected_mcp_server_ids=[],
-    )
-    assert defaulted.response_bytes == verified.response_bytes
+    with pytest.raises(native.NativeHostError, match="native-completed-items-mismatch"):
+        native.verify_transcript(
+            canonical(transcript),
+            stage_uuid=identity["stage_uuid"],
+            phase="references",
+            packet_id=packet_id,
+            packet_sha256=hashlib.sha256(raw_packet).hexdigest(),
+            expected_catalog_row_sha256=transcript["model_catalog_row_sha256"],
+            expected_catalog_response_sha256=transcript["model_catalog_response_sha256"],
+            expected_mcp_server_ids=[],
+        )
 
 
 def test_actual_prepared_answer_packet_shape_loads_without_inner_role(tmp_path: Path) -> None:
@@ -507,6 +841,8 @@ def test_actual_prepared_answer_packet_shape_loads_without_inner_role(tmp_path: 
     _, manifest, requests = native._load_scope(scope, stage_uuid=stage_uuid, phase="answers")
     assert manifest["packet_count"] == 32
     assert [request["row"]["packet_id"] for request in requests] == [row["packet_id"] for row in manifest["packets"]]
+    for request in requests:
+        native._provider_output_schema(native._packet_output_schema(request["bytes"]))
     first_payload = json.loads(requests[0]["bytes"])
     assert first_payload["packet_kind"] == "answer"
     assert "role" not in first_payload
@@ -546,15 +882,59 @@ async def test_fake_app_server_dispatch_is_two_wide_and_one_shot(
 
 
 @pytest.mark.asyncio
+async def test_partial_completion_uses_actual_item_events_for_grade_evidence(tmp_path: Path) -> None:
+    scope, stage_uuid, packet_ids = write_scope(tmp_path)
+    codex, digest = fake_codex(tmp_path)
+
+    summary = await native.dispatch_handoff_scope(
+        scope_path=scope,
+        stage_uuid=stage_uuid,
+        phase="references",
+        codex_executable=str(codex),
+        expected_cli_sha256=digest,
+        deadline_monotonic=time.monotonic() + 30,
+    )
+
+    assert summary["status"] == "complete"
+    transcript = json.loads((scope / "native-host" / "transcripts" / f"{packet_ids[0]}.transcript.json").read_bytes())
+    events = transcript["events"]
+    completion = next(
+        event["message"]
+        for event in events
+        if event["direction"] == "server" and event["message"].get("method") == "turn/completed"
+    )
+    starts = [
+        event["message"]["params"]
+        for event in events
+        if event["direction"] == "server" and event["message"].get("method") == "item/started"
+    ]
+    completions = [
+        event["message"]["params"]
+        for event in events
+        if event["direction"] == "server" and event["message"].get("method") == "item/completed"
+    ]
+    assert completion["params"]["turn"]["itemsView"] == "summary"
+    assert len(starts) == len(completions) == 2
+    assert {row["item"]["id"] for row in starts} == {row["item"]["id"] for row in completions}
+    assert all(row["threadId"] == completion["params"]["threadId"] for row in starts + completions)
+    assert all(row["turnId"] == completion["params"]["turn"]["id"] for row in starts + completions)
+    assert len(list((scope / "results").glob("*.result.json"))) == 1
+
+
+@pytest.mark.asyncio
 async def test_dispatch_disables_builtin_tools_and_each_configured_mcp_before_turn(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     scope, stage_uuid, packet_ids = write_scope(tmp_path)
     codex, digest = fake_codex(tmp_path)
     args_log = tmp_path / "app-server-argv.json"
+    inventory = [
+        {"name": "fixture_stdio", "enabled": True, "transport": {"type": "stdio"}},
+        {"name": "fixture_http", "enabled": True, "transport": {"type": "http"}},
+    ]
     monkeypatch.setenv(
         "FAKE_MCP_LIST",
-        "Name  Command  Args  Env  Cwd  Status  Auth\nfixture_mcp  /bin/echo  -  -  -  enabled  Unsupported",
+        json.dumps(inventory),
     )
     monkeypatch.setenv("FAKE_CODEX_ARGS_LOG", str(args_log))
     await native.dispatch_handoff_scope(
@@ -569,14 +949,19 @@ async def test_dispatch_disables_builtin_tools_and_each_configured_mcp_before_tu
     assert command[:4] == ["app-server", "--listen", "stdio://", "--disable"]
     disabled = [command[index + 1] for index, value in enumerate(command[:-1]) if value == "--disable"]
     assert disabled == list(native.DISABLED_FEATURES)
-    assert "stable_environment_tools" in disabled
-    assert "stable_environment_tools" in native._tool_policy(["fixture_mcp"])["disabled_features"]
+    assert "stable_environment_tools" not in disabled
+    assert "stable_environment_tools" not in native._tool_policy(["fixture_stdio", "fixture_http"])["disabled_features"]
     assert command[command.index("-c") + 1] == 'web_search="disabled"'
     assert command[command.index("tools.view_image=false") - 1] == "-c"
-    assert command[-2:] == ["-c", "mcp_servers.fixture_mcp.enabled=false"]
+    assert command[-4:] == [
+        "-c",
+        "mcp_servers.fixture_http.enabled=false",
+        "-c",
+        "mcp_servers.fixture_stdio.enabled=false",
+    ]
     transcript = json.loads(next((scope / "native-host" / "transcripts").glob("*.json")).read_bytes())
     assert transcript["packet_id"] in packet_ids
-    assert transcript["tool_policy"] == native._tool_policy(["fixture_mcp"])
+    assert transcript["tool_policy"] == native._tool_policy(["fixture_http", "fixture_stdio"])
 
 
 @pytest.mark.asyncio
@@ -602,6 +987,12 @@ async def test_cumulative_progress_events_fail_before_transcript_buffer_exceeds_
     packet_id = summary["claimed_packet_ids"][0]
     assert summary["failure_reasons"][packet_id] == "native-transcript-size-cap"
     assert not (scope / "native-host" / "transcripts" / f"{packet_id}.transcript.json").exists()
+    evidence_path = scope / "native-host" / "failures" / f"{packet_id}.events.json"
+    assert evidence_path.is_file()
+    assert evidence_path.stat().st_size <= native.MAX_TRANSCRIPT_BYTES
+    evidence = json.loads(evidence_path.read_bytes())
+    assert evidence["classification"] == "event-evidence-size-cap"
+    assert evidence["event_count"] == len(evidence["events"])
 
 
 @pytest.mark.asyncio
@@ -633,6 +1024,28 @@ async def test_unrecognized_mcp_inventory_fails_before_catalog_or_turn(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "inventory",
+    [
+        '{"name":"fixture_mcp","enabled":true}',
+        '[{"name":"fixture_mcp","enabled":"true"}]',
+        '[{"name":"fixture_mcp","enabled":true},{"name":"fixture_mcp","enabled":false}]',
+        '[{"name":"fixture mcp","enabled":true}]',
+        '[{"name":"fixture_mcp","enabled":NaN}]',
+    ],
+)
+async def test_mcp_json_inventory_requires_unique_names_and_boolean_status(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, inventory: str
+) -> None:
+    codex, _digest = fake_codex(tmp_path)
+    monkeypatch.setenv("FAKE_MCP_LIST", inventory)
+    monkeypatch.setenv("FAKE_MCP_IGNORE_DISABLE", "1")
+
+    with pytest.raises(native.NativeHostError, match="mcp-inventory-(format-invalid|duplicate)"):
+        await native._run_mcp_list(str(codex), deadline=time.monotonic() + 30)
+
+
+@pytest.mark.asyncio
 async def test_mcp_server_still_enabled_after_override_fails_before_catalog(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -640,7 +1053,7 @@ async def test_mcp_server_still_enabled_after_override_fails_before_catalog(
     codex, digest = fake_codex(tmp_path)
     monkeypatch.setenv(
         "FAKE_MCP_LIST",
-        "Name  Command  Args  Env  Cwd  Status  Auth\nfixture_mcp  /bin/echo  -  -  -  enabled  Unsupported",
+        json.dumps([{"name": "fixture_mcp", "enabled": True, "transport": {"type": "stdio"}}]),
     )
     monkeypatch.setenv("FAKE_MCP_IGNORE_DISABLE", "1")
     catalog_called = False
@@ -710,6 +1123,116 @@ async def test_expired_registered_phase_deadline_blocks_even_with_fresh_cli_budg
     assert not list((scope / "results").glob("*.result.json"))
 
 
+def test_phase_deadline_translates_between_host_monotonic_origins(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    scope, stage_uuid, _ = write_scope(tmp_path)
+    now_utc = time.time()
+    created_at_utc = now_utc - 120
+    deadline_at_utc = now_utc + 600
+    path = scope / "phase-deadline.json"
+    path.write_bytes(
+        canonical(
+            {
+                "schema": "coverage-native-phase-deadline/2",
+                "stage_uuid": stage_uuid,
+                "phase": "references",
+                "created_at_utc": created_at_utc,
+                "deadline_at_utc": deadline_at_utc,
+            }
+        )
+    )
+    path.chmod(0o600)
+    local_monotonic_origin = 9_000_000.0
+    monkeypatch.setattr(native.time, "monotonic", lambda: local_monotonic_origin)
+    translated = native._read_phase_deadline(scope, stage_uuid=stage_uuid, phase="references")
+    assert translated == pytest.approx(local_monotonic_origin + deadline_at_utc - now_utc)
+
+
+def test_phase_deadline_rejects_future_creation_and_overlong_deadline(tmp_path: Path) -> None:
+    scope, stage_uuid, _ = write_scope(tmp_path)
+    receipt = {
+        "schema": "coverage-native-phase-deadline/2",
+        "stage_uuid": stage_uuid,
+        "phase": "references",
+        "created_at_utc": time.time() + 60,
+        "deadline_at_utc": time.time() + 120,
+    }
+    path = scope / "phase-deadline.json"
+    path.write_bytes(canonical(receipt))
+    path.chmod(0o600)
+    with pytest.raises(native.NativeHostError, match="native-phase-deadline-clock-invalid"):
+        native._read_phase_deadline(scope, stage_uuid=stage_uuid, phase="references")
+    receipt["created_at_utc"] = time.time() - 1
+    receipt["deadline_at_utc"] = receipt["created_at_utc"] + 28_801
+    path.write_bytes(canonical(receipt))
+    with pytest.raises(native.NativeHostError, match="native-phase-deadline-binding-invalid"):
+        native._read_phase_deadline(scope, stage_uuid=stage_uuid, phase="references")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("final_text", "expected_reason"),
+    [
+        ("not-json", "native-transcript-json-invalid"),
+        ('{"assessments":[{"source_id":"UNKNOWN"}]}', "native-assistant-response-schema-invalid"),
+        ("{}", "native-assistant-response-schema-invalid"),
+    ],
+)
+async def test_invalid_final_json_is_audited_terminal_and_never_published(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    final_text: str,
+    expected_reason: str,
+) -> None:
+    scope, stage_uuid, packet_ids = write_scope(tmp_path)
+    codex, digest = fake_codex(tmp_path)
+    monkeypatch.setenv("FAKE_CODEX_FINAL_TEXT", final_text)
+
+    def forbidden_grade(**_kwargs: object) -> None:
+        pytest.fail("an invalid native response must never be submitted as a grade")
+
+    monkeypatch.setattr(native, "publish_native_tool_result", forbidden_grade)
+    with pytest.raises(native.NativeHostError, match="dispatch-incomplete-terminal"):
+        await native.dispatch_handoff_scope(
+            scope_path=scope,
+            stage_uuid=stage_uuid,
+            phase="references",
+            codex_executable=str(codex),
+            expected_cli_sha256=digest,
+            deadline_monotonic=time.monotonic() + 30,
+        )
+
+    audit = scope / "native-host"
+    summary = json.loads((audit / "dispatch-summary.json").read_bytes())
+    assert summary["status"] == "failed-terminal"
+    assert summary["claimed_packet_ids"] == packet_ids
+    assert summary["completed_packet_ids"] == []
+    assert summary["failure_reasons"][packet_ids[0]] == expected_reason
+    events_path = audit / "failures" / f"{packet_ids[0]}.events.json"
+    evidence = json.loads(events_path.read_bytes())
+    assert evidence["reason_code"] == expected_reason
+    assistant = [
+        event["message"]["params"]["item"]["text"]
+        for event in evidence["events"]
+        if event["direction"] == "server"
+        and event["message"].get("method") == "item/completed"
+        and event["message"]["params"]["item"].get("type") == "agentMessage"
+    ]
+    assert assistant == [final_text]
+    assert not list((audit / "transcripts").glob("*.transcript.json"))
+    assert not list((scope / "results").glob("*.result.json"))
+    with pytest.raises(native.NativeHostError, match="already-consumed"):
+        await native.dispatch_handoff_scope(
+            scope_path=scope,
+            stage_uuid=stage_uuid,
+            phase="references",
+            codex_executable=str(codex),
+            expected_cli_sha256=digest,
+            deadline_monotonic=time.monotonic() + 30,
+        )
+
+
 @pytest.mark.asyncio
 async def test_failed_native_turn_is_terminal_without_result_or_retry(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -717,6 +1240,11 @@ async def test_failed_native_turn_is_terminal_without_result_or_retry(
     scope, stage_uuid, packet_ids = write_scope(tmp_path)
     codex, digest = fake_codex(tmp_path)
     monkeypatch.setenv("FAKE_CODEX_FAIL_TURN", "1")
+
+    def forbidden_grade(**_kwargs: object) -> None:
+        pytest.fail("a failed native turn must never be submitted as a grade")
+
+    monkeypatch.setattr(native, "publish_native_tool_result", forbidden_grade)
     with pytest.raises(native.NativeHostError, match="incomplete-terminal"):
         await native.dispatch_handoff_scope(
             scope_path=scope,
@@ -732,6 +1260,22 @@ async def test_failed_native_turn_is_terminal_without_result_or_retry(
     assert summary["claimed_packet_ids"] == packet_ids
     assert summary["completed_packet_ids"] == []
     assert list((audit / "failures").glob("*.failure.json"))
+    events_path = audit / "failures" / f"{packet_ids[0]}.events.json"
+    assert events_path.is_file()
+    assert stat.S_IMODE(events_path.stat().st_mode) == 0o600
+    failure_events = json.loads(events_path.read_bytes())
+    assert failure_events["schema"] == "coverage-native-host-failure-events/1"
+    assert failure_events["reason_code"] == "native-turn-not-complete"
+    assert failure_events["classification"] == "turn-reported-non-success"
+    assert failure_events["event_count"] == len(failure_events["events"])
+    completed = [
+        event["message"]
+        for event in failure_events["events"]
+        if event["direction"] == "server" and event["message"].get("method") == "turn/completed"
+    ]
+    assert len(completed) == 1
+    assert completed[0]["params"]["turn"]["status"] == "failed"
+    assert not list((audit / "transcripts").glob("*.transcript.json"))
     assert not list((scope / "results").glob("*.result.json"))
     with pytest.raises(native.NativeHostError, match="already-consumed"):
         await native.dispatch_handoff_scope(
@@ -742,3 +1286,39 @@ async def test_failed_native_turn_is_terminal_without_result_or_retry(
             expected_cli_sha256=digest,
             deadline_monotonic=time.monotonic() + 30,
         )
+
+
+@pytest.mark.asyncio
+async def test_duplicate_item_lifecycle_is_retained_as_terminal_failure_without_grade(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    scope, stage_uuid, packet_ids = write_scope(tmp_path)
+    codex, digest = fake_codex(tmp_path)
+    monkeypatch.setenv("FAKE_CODEX_DUPLICATE_ITEM_COMPLETION", "1")
+    monkeypatch.setattr(
+        native,
+        "publish_native_tool_result",
+        lambda **_kwargs: pytest.fail("ambiguous item lifecycle must not be graded"),
+    )
+
+    with pytest.raises(native.NativeHostError, match="incomplete-terminal"):
+        await native.dispatch_handoff_scope(
+            scope_path=scope,
+            stage_uuid=stage_uuid,
+            phase="references",
+            codex_executable=str(codex),
+            expected_cli_sha256=digest,
+            deadline_monotonic=time.monotonic() + 30,
+        )
+
+    audit = scope / "native-host"
+    summary = json.loads((audit / "dispatch-summary.json").read_bytes())
+    assert summary["failure_reasons"][packet_ids[0]] == "native-item-lifecycle-duplicate"
+    failure_evidence = json.loads((audit / "failures" / f"{packet_ids[0]}.events.json").read_bytes())
+    duplicate_items = [
+        event["message"]
+        for event in failure_evidence["events"]
+        if event["direction"] == "server" and event["message"].get("method") == "item/completed"
+    ]
+    assert len(duplicate_items) == 3
+    assert not list((scope / "results").glob("*.result.json"))

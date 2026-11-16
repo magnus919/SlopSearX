@@ -1,0 +1,39 @@
+{
+  "source_sha256": "4c45e876fc79dffc0f7da8ccccc9c6ba67d4f4cc9e0bd9e8194f74184b96c65b",
+  "source_common_fetch_timeout_seconds": 15,
+  "elapsed_seconds": 16.072989124979358,
+  "captures": [
+    {
+      "native_case": {
+        "id": "timeout-health",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 200,
+            "headers": {},
+            "body_hex": "7b7d",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/health",
+            "accept": "application/json"
+          }
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "error: ssx: unexpected JSON shape\n",
+        "reference": "additional-source-observations.json#timeout-health"
+      },
+      "python_stdout_hex": "",
+      "python_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e280942074696d6564206f75740a",
+      "python_status": 1
+    }
+  ]
+}

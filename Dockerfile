@@ -1,3 +1,12 @@
+# Native status-only container health probe. Runtime remains Python until O04/G08.
+FROM rust:1.99.1-bookworm@sha256:e6f2cff35d0f309acf8433b4f05878ed77092602c5065cc81801177da0bb3a9c AS healthcheck-builder
+WORKDIR /build
+COPY Cargo.toml Cargo.lock rust-toolchain.toml ./
+COPY crates/ crates/
+COPY vendor/ vendor/
+RUN rustc --version && cargo test --locked -p ssx-healthcheck \
+    && cargo build --locked --release -p ssx-healthcheck
+
 # SlopSearX production image
 # Target: ~200MB, cold start <2s, Python 3.14
 # Dependabot maintains this versioned Docker Official Image tag and digest.
@@ -16,7 +25,7 @@ RUN apt-get update \
 
 # Python deps
 COPY pyproject.toml .
-RUN pip install --no-cache-dir -e .
+RUN pip install --no-cache-dir -e . "certifi>=2026.10.19"
 
 # Apply base-image security updates after dependency installation so the
 # per-build refresh does not invalidate the expensive pip layer.
@@ -47,7 +56,7 @@ USER slopsearx
 EXPOSE 8080
 
 # Health check script
-COPY docker/healthcheck.py /app/healthcheck.py
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 CMD python /app/healthcheck.py
+COPY --from=healthcheck-builder /build/target/release/ssx-healthcheck /usr/local/bin/ssx-healthcheck
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 CMD ["/usr/local/bin/ssx-healthcheck"]
 
 CMD ["uvicorn", "slopsearx.server:app", "--host", "0.0.0.0", "--port", "8080"]

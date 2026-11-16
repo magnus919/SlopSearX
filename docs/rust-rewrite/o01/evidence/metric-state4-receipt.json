@@ -1,0 +1,49 @@
+{
+  "scope": "Four actual original helper states + native duplicate-label guard; no production change",
+  "sources": [
+    {
+      "path": "crates/ssx-infra/src/observability/metrics.rs",
+      "sha256": "e04b16164eee2300cd8a7c5ed67501fb76fb8384dfdc4aa63bcd8f08d846d36a"
+    },
+    {
+      "path": "crates/xtask/fixtures/o01/metric-state-source.json",
+      "sha256": "be49a3afc880f5ec6d6761d075327864937b08bd444f1538b77e13cec133bc95"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "/private/tmp/o01-metric-state-source/capture.py",
+      "sha256": "fa76e079e933341dc2f241a220750521e8c3d4cb01d1dc303c95364081f69c6d"
+    },
+    {
+      "path": "/private/tmp/o01-metric-state-source/source.json",
+      "sha256": "be49a3afc880f5ec6d6761d075327864937b08bd444f1538b77e13cec133bc95"
+    },
+    {
+      "path": "/private/tmp/o01-metric-state-source/source.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/private/tmp/o01-metric-state-source/native-qualification.log",
+      "sha256": "a1ae6e1814dcdf0872cb058730ff0b5c5aba76efabd9ce1d8a4aa2451d1cb728"
+    },
+    {
+      "path": "/private/tmp/o01-metric-state-source/native-corrected-test.log",
+      "sha256": "c1582c085acea7da2130e8edad657b1a6b4559f07631b6414a2eaed1a31372e0"
+    },
+    {
+      "path": "/private/tmp/o01-metric-state-source/failed-test-metrics.rs",
+      "sha256": "d5193e314b0497255771ba276eaa7696b4b3b05479d19daddec9e7f9c9449864"
+    },
+    {
+      "path": "/private/tmp/o01-metric-state-source/after-metrics.rs",
+      "sha256": "e04b16164eee2300cd8a7c5ed67501fb76fb8384dfdc4aa63bcd8f08d846d36a"
+    }
+  ],
+  "preserved_failure": "New test assumed unlabeled wire series without braces; actual source/native both use {}, changed only test line prefix",
+  "actual_corrected_ids": [
+    "observability::metrics::explicit_state_controls::same_length_duplicate_or_missing_labels_refuse_without_retaining_series",
+    "observability::metrics::explicit_state_controls::original_gap_some_age_and_zero_queued_positive_age_are_preserved"
+  ],
+  "retirement": "Temporary offline Python producer retires G08; native test consumes capturedJSONonly; inventory addition pending"
+}

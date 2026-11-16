@@ -1,0 +1,9 @@
+# Source contract and finite proposed acceptance
+
+HIBP preserves first ASCII-email match with Unicode16 Python word boundaries and original match case; otherwise strip/full Unicode16 lowercase with Final_Sigma. One GET, exact versioned Accept/UA/key, 429/403/404 precedence, no max-result slice, complete date, count grouping, five selected classes and 300-codepoint description. Source field/slice/join/count/date errors precede typed result refusal; late failure is atomic.
+
+IntelX preserves 15s default, POST compact JSON insertion order, raw configuration scalar semantics, falsey-id early return, exactly one two-second async sleep, one GET with HTTPX scalar/list query semantics and same-session cookies. Only start429/403 get special status. Result normalization precedes source max slice; wrapped/skipped records retain original positions; type-key hashability, title fallback, preview/bucket join and date prefix ordering are explicit. There is no retry or repeated polling.
+
+All original eight named tests map to proposed native selectors. Additional malformed/late rows, source operation precedence, Unicode boundaries, typed rejection, both deadlines, cancellation/shutdown, complete outbound fields and literal TCP controls are proposed in the closed native plan. Private stored-row/drop and tiny-quota units cover actual ProducedBatch ownership. IntelX has a separate actual Sleep.poll(Pending) witness before cancellation; elapsed time after POST alone is not claimed to prove that stage. Expectations are static derivations, not historical observations.
+
+The F05 Unicode inputs are pinned CPython3.14.7/Unicode16 source data; no interpreter/generated-oracle execution occurred. The five proposed reusable Rust conformance tests compare frozen tables and explicit contexts. Existing casefold/whitespace and other F05 codecs remain unchanged.

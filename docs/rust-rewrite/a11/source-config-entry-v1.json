@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "purpose": "Original YAML entry reachability only; not request/slicing/native parity",
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "unicode": "16.0.0",
+  "producer_sha256": "668244f72859a2c2c29e689c3e24cbc15708cf3607e2322e687ea22877feb0a2",
+  "source_sha256": {
+    "engines/abuseipdb.py": "2b48ec5b688a9cc6fb1aa50e5e82a655681b0a760f19e1310952ccaa04828eff",
+    "tests/test_abuseipdb.py": "3fad36a9b2e5089e61c82c0a66ffd7c6bf84e08dd43493e42b3e754890467435",
+    "engines/greynoise.py": "53c810ca4b9ea38567ca19e1494f1997381bf16120be2fce62f3a1aa977cea6a",
+    "tests/test_greynoise.py": "58b934915ac86f05eecd36b57b541a3667285bf6964aa8053b28be9585c2025a",
+    "engines/otx.py": "4d2e242594689530b1e615cee83181505834e13d289cb83746ca7b7fe4129b79",
+    "tests/test_otx.py": "0d5860db9048a3c26013c310f78aa7397dd97a6de1ae627b0711c48bac6b27cd",
+    "engines/urlhaus.py": "71fae6869a6487c3aeb0c7f9f7cc68ca9a2883ec4bce2e647499028f913f36ac",
+    "tests/test_urlhaus.py": "71ebdfaf63bcb672bf7d15ef9ca9c523d5312c4e785e1fd50ee111cb2b683a24",
+    "slopsearx/adapter.py": "5883a35c48d0dad1077306fbda21997ee1d32116a8c03633a6b762de0c26d6f3",
+    "tests/test_adapters.py": "0f5fdc19df84214e5a6422437686d41def5f9e9827ad8dfc8ca8ee8b2ad10454",
+    "slopsearx/config.py": "1cf76b8732439782342a9d217fb2f7c423f688533f287dbf78729a1defc5236e",
+    "slopsearx/service.py": "45903193ef89987f7be83c1e593e44b7752251a54eb8719eae15a241840102ac"
+  },
+  "source_inputs_unchanged": true,
+  "input_sha256": "b5776302740cb88b97cfbd61aeab3389221caf68e2dfaf946c5a2c256fb2a7b2",
+  "operator_environment_isolated": true,
+  "real_network_allowed": false,
+  "network_attempts": [],
+  "records": [
+    {
+      "id": "a11-config/otx/max-none",
+      "yaml": "engines:\n  otx:\n    enabled: true\n    api_key: fixture-only-key\n    max_results: null\n",
+      "loaded_type": "NoneType",
+      "loaded_max_results": null,
+      "asdict_max_results": null,
+      "normalized_max_results": null,
+      "otx_object_config": {
+        "enabled": true,
+        "base_url": "https://otx.alienvault.com/api/v1",
+        "type": "api",
+        "timeout_ms": 10000,
+        "max_results": null,
+        "rate_limit": 5,
+        "weight": 0.7,
+        "api_key": "fixture-only-key",
+        "api_secret": null,
+        "user_agent": null,
+        "categories": null,
+        "proxy_pool": null,
+        "scrape_proxy_url": null
+      },
+      "search_performed": false,
+      "adapter_shutdown_joined": true
+    },
+    {
+      "id": "a11-config/otx/max-list",
+      "yaml": "engines:\n  otx:\n    enabled: true\n    api_key: fixture-only-key\n    max_results: [1, 2]\n",
+      "loaded_type": "list",
+      "loaded_max_results": [
+        1,
+        2
+      ],
+      "asdict_max_results": [
+        1,
+        2
+      ],
+      "normalized_max_results": [
+        1,
+        2
+      ],
+      "otx_object_config": {
+        "enabled": true,
+        "base_url": "https://otx.alienvault.com/api/v1",
+        "type": "api",
+        "timeout_ms": 10000,
+        "max_results": [
+          1,
+          2
+        ],
+        "rate_limit": 5,
+        "weight": 0.7,
+        "api_key": "fixture-only-key",
+        "api_secret": null,
+        "user_agent": null,
+        "categories": null,
+        "proxy_pool": null,
+        "scrape_proxy_url": null
+      },
+      "search_performed": false,
+      "adapter_shutdown_joined": true
+    },
+    {
+      "id": "a11-config/otx/max-dict",
+      "yaml": "engines:\n  otx:\n    enabled: true\n    api_key: fixture-only-key\n    max_results: {limit: 3}\n",
+      "loaded_type": "dict",
+      "loaded_max_results": {
+        "limit": 3
+      },
+      "asdict_max_results": {
+        "limit": 3
+      },
+      "normalized_max_results": {
+        "limit": 3
+      },
+      "otx_object_config": {
+        "enabled": true,
+        "base_url": "https://otx.alienvault.com/api/v1",
+        "type": "api",
+        "timeout_ms": 10000,
+        "max_results": {
+          "limit": 3
+        },
+        "rate_limit": 5,
+        "weight": 0.7,
+        "api_key": "fixture-only-key",
+        "api_secret": null,
+        "user_agent": null,
+        "categories": null,
+        "proxy_pool": null,
+        "scrape_proxy_url": null
+      },
+      "search_performed": false,
+      "adapter_shutdown_joined": true
+    },
+    {
+      "id": "a11-config/otx/max-huge-int",
+      "yaml": "engines:\n  otx:\n    enabled: true\n    api_key: fixture-only-key\n    max_results: 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890\n",
+      "loaded_type": "int",
+      "loaded_max_results": 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890,
+      "asdict_max_results": 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890,
+      "normalized_max_results": 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890,
+      "otx_object_config": {
+        "enabled": true,
+        "base_url": "https://otx.alienvault.com/api/v1",
+        "type": "api",
+        "timeout_ms": 10000,
+        "max_results": 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890,
+        "rate_limit": 5,
+        "weight": 0.7,
+        "api_key": "fixture-only-key",
+        "api_secret": null,
+        "user_agent": null,
+        "categories": null,
+        "proxy_pool": null,
+        "scrape_proxy_url": null
+      },
+      "search_performed": false,
+      "adapter_shutdown_joined": true
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+   Compiling libxml v0.3.22 (/Volumes/tank01/magnus/rust-builds/slopsearx/w03-legacy-attempt-pair-v4/old/vendor/libxml)
+   Compiling ssx-infra v0.1.0 (/Volumes/tank01/magnus/rust-builds/slopsearx/w03-legacy-attempt-pair-v4/old/crates/ssx-infra)
+   Compiling ssx-mcp v0.1.0 (/Volumes/tank01/magnus/rust-builds/slopsearx/w03-legacy-attempt-pair-v4/old/crates/ssx-mcp)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 18.35s
+     Running tests/w03.rs (/Volumes/tank01/magnus/rust-builds/slopsearx/w03-legacy-attempt-pair-v2/old-target/debug/deps/w03-c9d2f59667e4b365)
+
+thread 'legacy_retry_public_preserves_unknown_attempt_and_known_artifact' (60742920) panicked at crates/ssx-infra/src/research_planning.rs:2130:135:
+valid attempt identity: DomainError("composite parts must be nonempty strings")
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+error: test failed, to rerun pass `-p ssx-infra --test w03`

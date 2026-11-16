@@ -1,0 +1,18 @@
+from pathlib import Path
+import ast,json,sys,hashlib,subprocess,difflib,time
+r=Path('/Volumes/tank01/magnus/git/slopsearx-a11');docs=r/'docs/rust-rewrite/a11';out=Path('/private/tmp/a11-producer-style-amendment-v1');sha=lambda b:hashlib.sha256(b).hexdigest();config=docs/'capture_config_reachability.py';rejected=config.read_bytes();(out/'config-rejected-backend-order.py.txt').write_bytes(rejected);s=rejected.decode();old='''# isort: off -- retain audited backend import order after all guards
+from engines.otx import OTXAdapter
+from slopsearx.config import load_config
+from slopsearx.service import _normalize_engine_configs''';new='''# Retain audited backend import order after all guards.
+# isort: off
+from slopsearx.config import load_config
+from slopsearx.service import _normalize_engine_configs
+from engines.otx import OTXAdapter''';assert s.count(old)==1;config.write_text(s.replace(old,new));ruff='/Volumes/tank01/magnus/rust-builds/slopsearx/pre-commit-cache/repo7dgyo0vq/py_env-python3.12/bin/ruff';names=['capture_boundaries.py','capture_supplement.py','capture_representation.py','capture_config_reachability.py'];commands=[]
+for args in[['format'],['check','--no-cache']]:
+ cmd=[ruff,*args,*[str(docs/n)for n in names]];v=subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT);log=out/('final-'+str(len(commands))+'.log');log.write_bytes(v.stdout);commands.append(dict(command=cmd,actual_exit_code=v.returncode,log=str(log),sha256=sha(v.stdout)));assert v.returncode==0
+verifier=Path('/private/tmp/a11-producer-style-amendment-v1.py');node=next(n for n in ast.parse(verifier.read_text()).body if isinstance(n,ast.FunctionDef)and n.name=='normalized');exec(compile(ast.Module(body=[node],type_ignores=[]),'static-normalizer','exec'))
+assert normalized((out/'capture_config_reachability.py.before').read_bytes())!=normalized(rejected)
+rows=[]
+for n in names:
+ b=(out/(n+'.before')).read_bytes();a=(docs/n).read_bytes();norm=normalized(b);assert norm==normalized(a),n;patch=out/(n+'.final.patch');patch.write_text(''.join(difflib.unified_diff(b.decode().splitlines(True),a.decode().splitlines(True),fromfile='before/'+n,tofile='after/'+n)));rows.append(dict(path=str((docs/n).relative_to(r)),before_sha256=sha(b),current_producer_sha256=sha(a),patch_path=str(patch),patch_sha256=sha(patch.read_bytes()),literal_ast_equal=ast.dump(ast.parse(b),include_attributes=False)==ast.dump(ast.parse(a),include_attributes=False),normalized_protocol_ast_equal=True,normalized_protocol_ast_sha256=sha(json.dumps(norm,separators=(',',':')).encode()),executed_after_amendment=False))
+d=dict(purpose='Current manual oracle style only, no new execution. Historical executed archives and all original captures unchanged.',created=time.time(),analysis_python=sys.version,scope='Split/sort contiguous stdlib imports, exact sha lambda→def return expression, E402 guard-position comment. Backend imports and all other AST statement/order exact. No native runtime/hook exclusions.',prior_static_check=dict(actual_exit_code=1,tool_observed_error='unexpected producer AST/protocol change: capture_config_reachability.py',cause='Ruff did not recognize isort-off with inline explanatory suffix and reordered backend imports; static comparison rejected it before any execution.',rejected_source_archive=str(out/'config-rejected-backend-order.py.txt'),rejected_source_sha256=sha(rejected),final_backend_order_repaired=True,rejected_candidate_never_executed=True),normalizer_source=str(verifier),normalizer_sha256=sha(verifier.read_bytes()),commands=commands,rows=rows);(out/'receipt.json').write_text(json.dumps(d,indent=2)+'\n');(docs/'evidence/producer-style-amendment-v1.json').write_bytes((out/'receipt.json').read_bytes());print(json.dumps(d,indent=2))

@@ -1,0 +1,56 @@
+{
+  "schema": "O02_UPSTREAM_CONTRACTS_GATES_SUCCESSOR_V1",
+  "baseline": "661af83a1b95a3e7873cfda99c05d0fb6a02fe0a",
+  "scope": "Only the upstream-contracts.yml:live-contracts catalog entry changes to the bounded native O02 successor; reconstruct exact accepted gates bytes before unchanged DNSpython source custody. Historical qualification remains unchanged.",
+  "row": {
+    "path": "docs/rust-rewrite/ci/gates.json",
+    "current": {
+      "bytes": 177321,
+      "sha256": "4fe646332b6291b68f9423dffd4cfb5939c07cbf5988895c0577c20170fe6708",
+      "mode": "0644"
+    },
+    "prior": {
+      "bytes": 176465,
+      "sha256": "45c7f9f39791ee75c3e6d91f6da1ecca2e213ed29080dea13f853511dd0c655e",
+      "mode": "0644"
+    },
+    "prior_git_blob": "a436239ec26a7af5de3c255e0824802dfc6f3787",
+    "edits": [
+      {
+        "at": 76048,
+        "remove_utf8": "          \"if\": \"github.event_name == 'workflow_dispatch' || vars.LIVE_UPSTREAM_CONTRACTS == 'true'\",\n",
+        "insert_utf8": "          \"if\": \"(github.event_name == 'workflow_dispatch' && inputs.run_live == true) || (github.event_name == 'schedule' && vars.LIVE_UPSTREAM_CONTRACTS == 'true')\",\n"
+      },
+      {
+        "at": 76296,
+        "remove_utf8": "              \"uses\": \"actions/setup-python@v7\",\n              \"with\": {\n                \"python-version\": \"3.12\"\n              }\n",
+        "insert_utf8": "              \"name\": \"Install repository-pinned Rust toolchain\",\n              \"run\": \"set -euo pipefail\\ntoolchain=\\\"$(sed -n 's/^channel = \\\"\\\\([^\\\"\\\\]*\\\\)\\\"/\\\\1/p' rust-toolchain.toml)\\\"\\ntest \\\"$toolchain\\\" = \\\"1.99.0\\\"\\nrustup toolchain install \\\"$toolchain\\\" --profile minimal\\n\"\n"
+      },
+      {
+        "at": 76455,
+        "remove_utf8": "              \"run\": \"pip install -e .\"\n",
+        "insert_utf8": "              \"name\": \"Confirm pinned Rust toolchain\",\n              \"run\": \"rustup run 1.99.0 rustc --version --verbose\"\n"
+      },
+      {
+        "at": 76578,
+        "remove_utf8": "              \"run\": \"python -m scripts.upstream_contracts --output upstream-report.json\"\n",
+        "insert_utf8": "              \"run\": \"cargo xtask upstream-contracts --live --output upstream-report.json\"\n"
+      },
+      {
+        "at": 76947,
+        "remove_utf8": "          \"timeout-minutes\": 5\n",
+        "insert_utf8": "          \"timeout-minutes\": 15\n"
+      },
+      {
+        "at": 77188,
+        "remove_utf8": "            \"workflow_dispatch\": null\n",
+        "insert_utf8": "            \"workflow_dispatch\": {\n              \"inputs\": {\n                \"run_live\": {\n                  \"default\": false,\n                  \"description\": \"Run the bounded probes against public upstreams\",\n                  \"required\": false,\n                  \"type\": \"boolean\"\n                }\n              }\n            }\n"
+      },
+      {
+        "at": 77328,
+        "remove_utf8": "      \"owner\": \"O07\",\n      \"state\": \"pending-owner\",\n      \"successor\": \"cargo xtask check O07; native bounded opt-in probe runner retaining fixture/report classifications and live-call authorization; schedule remains existing until accepted successor\"\n",
+        "insert_utf8": "      \"owner\": \"O02\",\n      \"state\": \"additive\",\n      \"successor\": \"Native Rust upstream-contract runner; local default uses frozen offline adapter fixtures; live provider checks require manual run_live=true or the existing explicitly enabled weekly repository variable; retain exact-host/path/query, one-request, timeout, body, no-proxy/no-retry/no-redirect, sanitization, report, and exit contracts. This is only the upstream-probe slice; full O02 acceptance and F01/G08 source retirement remain pending.\"\n"
+      }
+    ]
+  }
+}

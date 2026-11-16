@@ -11,6 +11,8 @@ from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 from scripts import coverage_assessment_packets as packet_prep
 from scripts import coverage_gate_calculation as gates
 from scripts import coverage_grade_closure as closure
@@ -610,3 +612,186 @@ def test_missing_navigation_rank_observation_remains_inconclusive():
     report = gates.calculate_coverage_gate_report(**inputs)
     assert report.evaluation.gates["exact_navigation_top1"] is None
     assert report.evaluation.status == "inconclusive"
+
+
+def _task_use_v4_inputs(materials_name="research-task-use-method-materials"):
+    materials = Path(gates.__file__).parents[1] / "docs/experiments/evidence/coverage-first-study" / materials_name
+    protocol_bytes = (materials / "protocol.json").read_bytes()
+    cohorts_bytes = (materials / "cohorts.json").read_bytes()
+    inputs = _fixture()
+    inputs["protocol"] = json.loads(protocol_bytes)
+    inputs["protocol_sha256"] = _sha(protocol_bytes)
+    inputs["cohorts_sha256"] = _sha(cohorts_bytes)
+    protocol = inputs["protocol"]
+    inputs["resource_evidence"].update(
+        {
+            "w0_control_source_sha256": protocol["primary_control"]["rerank_source_sha256"],
+            "w0_source_revision": protocol["primary_control"]["source_revision"],
+            "w0_model": protocol["primary_control"]["model"],
+            "w0_provider_configured": protocol["primary_control"]["provider_configured"],
+            "w0_ranking_strategy": protocol["primary_control"]["ranking_strategy"],
+            "candidate_source_sha256": protocol["candidate_source_sha256"],
+            "selector_concurrency": protocol["provider_schedule"]["concurrency"],
+            "selector_retries": protocol["provider_schedule"]["retries"],
+            "acquisition_timeout_seconds": protocol["acquisition"]["timeout_seconds"],
+            "acquisition_retries": protocol["acquisition"]["retries"],
+            "acquisition_pacing_seconds": protocol["acquisition"]["pacing_seconds"],
+            "arxiv_pacing_seconds": protocol["acquisition"]["arxiv_physical_pacing_seconds"],
+            "capture_timeout_seconds": protocol["capture"]["timeout_seconds"],
+            "capture_retries": protocol["capture"]["retries"],
+            "capture_max_response_bytes": protocol["capture"]["response_bytes"],
+            "capture_max_context_characters": protocol["capture"]["context_unicode_characters"],
+        }
+    )
+    return inputs
+
+
+def test_old_protocol_keeps_useful_count_noninferiority_and_v4_reports_it_as_diagnostic():
+    card_ids = [f"c{index}" for index in range(12)]
+    task = {"task_id": "synthetic", "card_ids": card_ids, "facet_ids": ["F1", "F2"]}
+    records = [
+        {"card_id": item, "lead": 2 if index < 3 else 0, "facets": [["F1"], ["F2"], ["F1"]][index] if index < 3 else []}
+        for index, item in enumerate(card_ids)
+    ]
+    orders = {"w0": card_ids, "candidate": [card_ids[0], card_ids[1], *card_ids[3:11], card_ids[2], card_ids[11]]}
+    old = gates._ranking_case(task, orders, records, useful_min=2, case_min=-1.0)
+    new = gates._ranking_case(task, orders, records, useful_min=2, case_min=-1.0, useful_count_role="diagnostic_only")
+    assert old.passed is False
+    assert "useful_count_role" not in old.metrics
+    assert new.passed is True
+    assert new.metrics["useful_count_role"] == "diagnostic_only"
+    assert new.metrics["useful_count_delta"] == -1
+    assert new.metrics["useful_count_loss"] is True
+    assert new.metrics["lost_facets"] == []
+
+
+def test_v4_count_loss_does_not_replace_ndcg_facet_or_other_hard_gates():
+    inputs = _task_use_v4_inputs()
+    task_id = "D-R01"
+    task = inputs["task_inputs"][0]
+    card_ids = task["card_ids"]
+    useful_ids = card_ids[10:20]
+    reference_outputs = inputs["reference_closure"].outputs()
+    records = reference_outputs["cards"][task_id]
+    for assessor in ("A", "B"):
+        by_id = {row["card_id"]: row for row in records[assessor]}
+        for card_id in card_ids:
+            row = by_id[card_id]
+            row["lead"] = 0
+            row["facets"] = []
+        for card_id in useful_ids[:9]:
+            by_id[card_id]["lead"] = 3
+            by_id[card_id]["facets"] = list(task["facet_ids"])
+        by_id[useful_ids[9]]["lead"] = 2
+        by_id[useful_ids[9]]["facets"] = list(task["facet_ids"])
+        by_id[card_ids[0]]["lead"] = 1
+    # Update the closed reference and its answer-closure chain consistently.
+    reference = _closure("preassessment", inputs["reference_closure"].stage_uuid, reference_outputs)
+    answer_outputs = inputs["answer_closure"].outputs()
+    answer_outputs["preassessment_receipt_sha256"] = reference.receipt_sha256
+    answer = _closure("answer", inputs["answer_closure"].stage_uuid, answer_outputs)
+    inputs["reference_closure"] = reference
+    inputs["answer_closure"] = answer
+    inputs["selector_evidence"] = replace(
+        inputs["selector_evidence"], reference_grade_receipt_sha256=reference.receipt_sha256
+    )
+    orders = inputs["selector_evidence"].research_orders[task_id]
+    orders["w0"][:] = useful_ids + card_ids[:10] + card_ids[20:]
+    orders["candidate"][:] = useful_ids[:9] + [card_ids[0], useful_ids[9]] + card_ids[1:10] + card_ids[20:]
+
+    report = gates.calculate_coverage_gate_report(**inputs)
+    case = report.metrics["ranking"]["A"]["cases"][0]
+    assert case["w0"]["useful_count"] == 10
+    assert case["candidate"]["useful_count"] == 9
+    assert case["useful_count_loss"] is True
+    assert case["lost_facets"] == []
+    assert case["per_case_pass"] is True
+    assert report.evaluation.status == "pass"
+
+    bad_policy = _task_use_v4_inputs()
+    bad_policy["protocol"]["quality"].pop("useful_count_role")
+    with pytest.raises(gates.GateCalculationError, match="useful-count-policy-invalid"):
+        gates.calculate_coverage_gate_report(**bad_policy)
+    bad_role = _task_use_v4_inputs()
+    bad_role["protocol"]["quality"]["useful_count_role"] = "gate_with_relaxation"
+    with pytest.raises(gates.GateCalculationError, match="useful-count-policy-invalid"):
+        gates.calculate_coverage_gate_report(**bad_role)
+    for pin in ("protocol_sha256", "cohorts_sha256"):
+        altered = _task_use_v4_inputs()
+        altered[pin] = "c" * 64
+        with pytest.raises(gates.GateCalculationError, match="execution-contract-mismatch"):
+            gates.calculate_coverage_gate_report(**altered)
+
+    hard_failure = _task_use_v4_inputs()
+    hard_failure["navigation_observations"]["N01"]["candidate_top1_url"] = "https://example.org/other"
+    hard_report = gates.calculate_coverage_gate_report(**hard_failure)
+    assert hard_report.evaluation.gates["exact_navigation_top1"] is False
+    assert hard_report.evaluation.status == "fail"
+
+
+def test_v4_registration_check_does_not_use_legacy_execution_hash_fast_path(monkeypatch):
+    inputs = _task_use_v4_inputs()
+    # Simulate a hash collision with the legacy execution contract. Schema 4
+    # must still enforce its exact protocol and cohort registrations.
+    monkeypatch.setattr(gates, "FROZEN_EXECUTION_CONTRACT_SHA256", gates.TASK_USE_V4_EXECUTION_CONTRACT_SHA256)
+    inputs["protocol_sha256"] = "0" * 64
+    with pytest.raises(gates.GateCalculationError, match="frozen-execution-contract-mismatch"):
+        gates.calculate_coverage_gate_report(**inputs)
+
+
+def test_input_corrected_v4_allows_only_exact_protocol_cohort_pair_with_unchanged_gates():
+    old = _task_use_v4_inputs()
+    corrected = _task_use_v4_inputs("input-corrected-method-materials")
+
+    assert corrected["protocol_sha256"] == gates.TASK_USE_V4_INPUT_CORRECTED_PROTOCOL_SHA256
+    assert corrected["cohorts_sha256"] == gates.TASK_USE_V4_INPUT_CORRECTED_COHORTS_SHA256
+    assert corrected["protocol"]["quality"] == old["protocol"]["quality"]
+    assert corrected["protocol"]["task_use"] == old["protocol"]["task_use"]
+    assert gates.quality_task_use_sha256(corrected["protocol"]) == gates.TASK_USE_V4_QUALITY_TASK_USE_SHA256
+    execution_keys = (
+        "quality",
+        "task_use",
+        "provider_schedule",
+        "acquisition",
+        "capture",
+        "consumer",
+        "phase_limits",
+        "variants",
+        "primary_control",
+        "candidate_source_sha256",
+    )
+    old_execution = gates._sha(gates._canonical({key: old["protocol"][key] for key in execution_keys}))
+    corrected_execution = gates._sha(gates._canonical({key: corrected["protocol"][key] for key in execution_keys}))
+    assert old_execution == corrected_execution == gates.TASK_USE_V4_EXECUTION_CONTRACT_SHA256
+
+    report = gates.calculate_coverage_gate_report(**corrected)
+    assert report.evaluation.status == "pass"
+    corrected_confirmation = _task_use_v4_inputs("input-corrected-method-materials")
+    confirmation_report = gates.calculate_coverage_gate_report(stage_kind="confirmation", **corrected_confirmation)
+    assert confirmation_report.evaluation.status == "pass"
+
+    cross_mixed = _task_use_v4_inputs("input-corrected-method-materials")
+    cross_mixed["cohorts_sha256"] = old["cohorts_sha256"]
+    with pytest.raises(gates.GateCalculationError, match="frozen-execution-contract-mismatch"):
+        gates.calculate_coverage_gate_report(**cross_mixed)
+
+    reverse_mixed = _task_use_v4_inputs()
+    reverse_mixed["cohorts_sha256"] = corrected["cohorts_sha256"]
+    with pytest.raises(gates.GateCalculationError, match="frozen-execution-contract-mismatch"):
+        gates.calculate_coverage_gate_report(**reverse_mixed)
+
+    unknown = _task_use_v4_inputs("input-corrected-method-materials")
+    unknown["protocol_sha256"] = "f" * 64
+    with pytest.raises(gates.GateCalculationError, match="frozen-execution-contract-mismatch"):
+        gates.calculate_coverage_gate_report(**unknown)
+
+    changed_gate = _task_use_v4_inputs("input-corrected-method-materials")
+    changed_gate["protocol"]["quality"]["mean_ndcg10_gain_minimum"] = 0.0
+    with pytest.raises(gates.GateCalculationError, match="frozen-quality-task-use-contract-mismatch"):
+        gates.calculate_coverage_gate_report(**changed_gate)
+
+    hard_failure = _task_use_v4_inputs("input-corrected-method-materials")
+    hard_failure["navigation_observations"]["N01"]["candidate_top1_url"] = "https://example.org/other"
+    failed_report = gates.calculate_coverage_gate_report(**hard_failure)
+    assert failed_report.evaluation.gates["exact_navigation_top1"] is False
+    assert failed_report.evaluation.status == "fail"

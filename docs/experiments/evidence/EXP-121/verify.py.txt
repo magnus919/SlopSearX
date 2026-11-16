@@ -1,0 +1,16 @@
+import json,sys
+from pathlib import Path
+def require(ok,message):
+ if not ok: raise ValueError(message)
+b,c=[json.loads(Path(x).read_text()) for x in sys.argv[1:3]]
+require(b['catalog_total']==c['catalog_total']==38,'catalog count')
+require(c['primary_passed']==3 and c['catalog_equal']==38,'schema fidelity')
+require(set(b['gateway_metadata'])==set(c['gateway_metadata']),'names')
+for name,metadata in b['gateway_metadata'].items():
+ before={k:v for k,v in metadata.items() if k!='inputSchema'}
+ after={k:v for k,v in c['gateway_metadata'][name].items() if k!='inputSchema'}
+ require(before==after,'unchanged metadata '+name)
+require(b['direct_metadata']==c['direct_metadata'],'upstream unchanged')
+require(b['controls']==c['controls'],'complete control responses')
+require(b['provider_calls']==c['provider_calls']==0,'provider calls')
+print('PASS: 38 exact schemas; every non-input-schema metadata field and full control responses unchanged')

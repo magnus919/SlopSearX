@@ -1,0 +1,2009 @@
+{
+  "baseline": "1e9dd82d62456fe6f511cc5ade88bae619fac027",
+  "provenance": "actual offline Python adapters with HTTPX MockTransport; synthetic regression/control cases; no network/provider calls",
+  "toolchain": {
+    "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+    "httpx": "0.28.1",
+    "platform": "macOS-27.0-arm64-arm-64bit-Mach-O"
+  },
+  "source_inventory": [
+    {
+      "path": "engines/clinicaltrials.py",
+      "sha256": "28d1981607b05988a264c0950bd3b151608c7992d7fa0d543421a8577a2295c7",
+      "git_blob": "23c8ab6ba1e1510cc7b9a5ec5e3a7365bf13fb03"
+    },
+    {
+      "path": "engines/europepmc.py",
+      "sha256": "c8811e83b2117eb53011e96a8e9462a30462da43bebb6a8cea6cb7a8dc702dbf",
+      "git_blob": "f1c026cca5fab094e77e7658ef69edebbe3ea7e3"
+    },
+    {
+      "path": "engines/pubchem.py",
+      "sha256": "aa57ea70db504d260ef3d295fafc344e8d911341bbb1bbe3bee5f1880aa2b0c1",
+      "git_blob": "e027508d33240f1fb6eb63d41c7ccceb252eafd7"
+    },
+    {
+      "path": "engines/pubmed.py",
+      "sha256": "ac7b78c12f890ac5bcb9360cfc0c7059377b680b77902e016181ba70ae0f688c",
+      "git_blob": "8425948f5a115d0d46afce3a625bce49ee0b0fcd"
+    },
+    {
+      "path": "engines/uniprot.py",
+      "sha256": "03887fe7af9da041cb2185e7c21d85d57adc8acd343629af613191b36e55944c",
+      "git_blob": "2a1564c948e4f2220dd970e564da0ba865348bea"
+    },
+    {
+      "path": "slopsearx/adapter.py",
+      "sha256": "5883a35c48d0dad1077306fbda21997ee1d32116a8c03633a6b762de0c26d6f3",
+      "git_blob": "664e853d9ab1330596d01899ebe015701de09e88"
+    },
+    {
+      "path": "slopsearx/payload.py",
+      "sha256": "a44a95655566f9fadaf62da1bab8c975f71f3ead6c3cc57f48c411a9c093c40d",
+      "git_blob": "efa149d48bae401f7a0a9df6e50c8c614adecbb5"
+    },
+    {
+      "path": "slopsearx/config.py",
+      "sha256": "1cf76b8732439782342a9d217fb2f7c423f688533f287dbf78729a1defc5236e",
+      "git_blob": "761db0521d74ec6d955aa8a84fd92a4a62533c43"
+    }
+  ],
+  "records": [
+    {
+      "id": "empty-iterable-clinicaltrials-studies-string",
+      "engine": "clinicaltrials",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "studies": ""
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://clinicaltrials.gov/api/v2/studies?query.term=test&pageSize=10&format=json&sort=%40relevance",
+          "headers": {
+            "host": "clinicaltrials.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "empty-iterable-clinicaltrials-phases-string",
+      "engine": "clinicaltrials",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "studies": [
+              {
+                "protocolSection": {
+                  "identificationModule": {
+                    "nctId": "NCT00000001",
+                    "briefTitle": "Study of heart disease prevention"
+                  },
+                  "statusModule": {
+                    "overallStatus": "RECRUITING"
+                  },
+                  "designModule": {
+                    "phases": ""
+                  },
+                  "conditionsModule": {
+                    "conditions": [
+                      "Heart Disease",
+                      "Cardiovascular"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://clinicaltrials.gov/api/v2/studies?query.term=test&pageSize=10&format=json&sort=%40relevance",
+          "headers": {
+            "host": "clinicaltrials.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://clinicaltrials.gov/study/NCT00000001",
+            "title": "Study of heart disease prevention",
+            "content": "RECRUITING \u2014 Heart Disease; Cardiovascular",
+            "engine": "clinicaltrials",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null,
+            "tier": 1,
+            "work_group": null,
+            "engines": []
+          }
+        ],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "empty-iterable-clinicaltrials-conditions-string",
+      "engine": "clinicaltrials",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "studies": [
+              {
+                "protocolSection": {
+                  "identificationModule": {
+                    "nctId": "NCT00000001",
+                    "briefTitle": "Study of heart disease prevention"
+                  },
+                  "statusModule": {
+                    "overallStatus": "RECRUITING"
+                  },
+                  "designModule": {
+                    "phases": [
+                      "PHASE3"
+                    ]
+                  },
+                  "conditionsModule": {
+                    "conditions": ""
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://clinicaltrials.gov/api/v2/studies?query.term=test&pageSize=10&format=json&sort=%40relevance",
+          "headers": {
+            "host": "clinicaltrials.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://clinicaltrials.gov/study/NCT00000001",
+            "title": "Study of heart disease prevention",
+            "content": "RECRUITING \u2014 PHASE3",
+            "engine": "clinicaltrials",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null,
+            "tier": 1,
+            "work_group": null,
+            "engines": []
+          }
+        ],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "empty-iterable-pubchem-CID-string",
+      "engine": "pubchem",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "IdentifierList": {
+              "CID": ""
+            }
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "PC_Compounds": [
+              {
+                "id": {
+                  "id": {
+                    "cid": 2244
+                  }
+                },
+                "props": [
+                  {
+                    "urn": {
+                      "label": "IUPAC Name",
+                      "name": "Preferred"
+                    },
+                    "value": {
+                      "sval": "aspirin"
+                    }
+                  },
+                  {
+                    "urn": {
+                      "label": "Molecular Formula"
+                    },
+                    "value": {
+                      "sval": "C9H8O4"
+                    }
+                  },
+                  {
+                    "urn": {
+                      "label": "Molecular Weight"
+                    },
+                    "value": {
+                      "fval": 180.16
+                    }
+                  }
+                ]
+              },
+              {
+                "id": {
+                  "id": {
+                    "cid": 962
+                  }
+                },
+                "props": [
+                  {
+                    "urn": {
+                      "label": "Molecular Formula"
+                    },
+                    "value": {
+                      "sval": "C17H21NO4"
+                    }
+                  },
+                  {
+                    "urn": {
+                      "label": "Molecular Weight"
+                    },
+                    "value": {
+                      "fval": 303.35
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/test/cids/JSON",
+          "headers": {
+            "host": "pubchem.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "empty-iterable-pubchem-PC_Compounds-string",
+      "engine": "pubchem",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "IdentifierList": {
+              "CID": [
+                2244,
+                962
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "PC_Compounds": ""
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/test/cids/JSON",
+          "headers": {
+            "host": "pubchem.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/2244,962/JSON",
+          "headers": {
+            "host": "pubchem.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "empty-iterable-pubchem-props-string",
+      "engine": "pubchem",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "IdentifierList": {
+              "CID": [
+                2244,
+                962
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "PC_Compounds": [
+              {
+                "id": {
+                  "id": {
+                    "cid": 2244
+                  }
+                },
+                "props": ""
+              },
+              {
+                "id": {
+                  "id": {
+                    "cid": 962
+                  }
+                },
+                "props": [
+                  {
+                    "urn": {
+                      "label": "Molecular Formula"
+                    },
+                    "value": {
+                      "sval": "C17H21NO4"
+                    }
+                  },
+                  {
+                    "urn": {
+                      "label": "Molecular Weight"
+                    },
+                    "value": {
+                      "fval": 303.35
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/test/cids/JSON",
+          "headers": {
+            "host": "pubchem.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/2244,962/JSON",
+          "headers": {
+            "host": "pubchem.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://pubchem.ncbi.nlm.nih.gov/compound/2244",
+            "title": "Compound CID 2244",
+            "content": "Chemical compound",
+            "engine": "pubchem",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null,
+            "tier": 1,
+            "work_group": null,
+            "engines": []
+          },
+          {
+            "url": "https://pubchem.ncbi.nlm.nih.gov/compound/962",
+            "title": "Compound CID 962",
+            "content": "Formula: C17H21NO4 | MW: 303.35",
+            "engine": "pubchem",
+            "position": 2,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null,
+            "tier": 1,
+            "work_group": null,
+            "engines": []
+          }
+        ],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "empty-iterable-pubmed-idlist-string",
+      "engine": "pubmed",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "esearchresult": {
+              "idlist": ""
+            }
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "result": {
+              "1": {
+                "title": "One"
+              }
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=test&retmax=10&retmode=json&sort=relevance",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "ESearch payload is missing idlist",
+        "results": [],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "empty-iterable-pubmed-authors-string",
+      "engine": "pubmed",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "esearchresult": {
+              "idlist": [
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "result": {
+              "1": {
+                "title": "One",
+                "authors": ""
+              }
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=test&retmax=10&retmode=json&sort=relevance",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=1&retmode=json",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "ESummary authors for PMID 1 must be a list",
+        "results": [],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "empty-iterable-pubmed-articleids-string",
+      "engine": "pubmed",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "esearchresult": {
+              "idlist": [
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "result": {
+              "1": {
+                "title": "One",
+                "articleids": ""
+              }
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=test&retmax=10&retmode=json&sort=relevance",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=1&retmode=json",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://pubmed.ncbi.nlm.nih.gov/1/",
+            "title": "One",
+            "content": "",
+            "engine": "pubmed",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "1",
+                "pmid": "1",
+                "publication_types": []
+              },
+              "provenance": {
+                "engine": "pubmed",
+                "adapter_fields": [
+                  "publication_id",
+                  "pmid",
+                  "publication_types"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "tier": 1,
+            "work_group": null,
+            "engines": []
+          }
+        ],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "empty-iterable-pubmed-pubtype-string",
+      "engine": "pubmed",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "esearchresult": {
+              "idlist": [
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "result": {
+              "1": {
+                "title": "One",
+                "pubtype": ""
+              }
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=test&retmax=10&retmode=json&sort=relevance",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=1&retmode=json",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://pubmed.ncbi.nlm.nih.gov/1/",
+            "title": "One",
+            "content": "",
+            "engine": "pubmed",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "1",
+                "pmid": "1"
+              },
+              "provenance": {
+                "engine": "pubmed",
+                "adapter_fields": [
+                  "publication_id",
+                  "pmid"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "tier": 1,
+            "work_group": null,
+            "engines": []
+          }
+        ],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "empty-iterable-europepmc-result-string",
+      "engine": "europepmc",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "resultList": {
+              "result": ""
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=test&format=json&resultType=lite&pageSize=10",
+          "headers": {
+            "host": "www.ebi.ac.uk",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "Europe PMC results must be a list",
+        "results": [],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "empty-iterable-uniprot-results-string",
+      "engine": "uniprot",
+      "query": "VIM",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": ""
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=%28VIM%29+OR+%28gene%3AVIM%29&size=30&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "empty-iterable-uniprot-genes-string",
+      "engine": "uniprot",
+      "query": "VIM",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": [
+              {
+                "primaryAccession": "P08670",
+                "uniProtkbId": "VIM_HUMAN",
+                "genes": ""
+              }
+            ]
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=%28VIM%29+OR+%28gene%3AVIM%29&size=30&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.uniprot.org/uniprotkb/P08670/entry",
+            "title": "VIM_HUMAN",
+            "content": "Protein",
+            "engine": "uniprot",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null,
+            "tier": 1,
+            "work_group": null,
+            "engines": []
+          }
+        ],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "empty-iterable-uniprot-synonyms-string",
+      "engine": "uniprot",
+      "query": "VIM",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": [
+              {
+                "primaryAccession": "P08670",
+                "uniProtkbId": "VIM_HUMAN",
+                "genes": [
+                  {
+                    "synonyms": ""
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=%28VIM%29+OR+%28gene%3AVIM%29&size=30&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.uniprot.org/uniprotkb/P08670/entry",
+            "title": "VIM_HUMAN",
+            "content": "Protein",
+            "engine": "uniprot",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null,
+            "tier": 1,
+            "work_group": null,
+            "engines": []
+          }
+        ],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "empty-iterable-clinicaltrials-studies-map",
+      "engine": "clinicaltrials",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "studies": {}
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://clinicaltrials.gov/api/v2/studies?query.term=test&pageSize=10&format=json&sort=%40relevance",
+          "headers": {
+            "host": "clinicaltrials.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "slice(None, 10, None)",
+        "results": [],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "empty-iterable-clinicaltrials-phases-map",
+      "engine": "clinicaltrials",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "studies": [
+              {
+                "protocolSection": {
+                  "identificationModule": {
+                    "nctId": "NCT00000001",
+                    "briefTitle": "Study of heart disease prevention"
+                  },
+                  "statusModule": {
+                    "overallStatus": "RECRUITING"
+                  },
+                  "designModule": {
+                    "phases": {}
+                  },
+                  "conditionsModule": {
+                    "conditions": [
+                      "Heart Disease",
+                      "Cardiovascular"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://clinicaltrials.gov/api/v2/studies?query.term=test&pageSize=10&format=json&sort=%40relevance",
+          "headers": {
+            "host": "clinicaltrials.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://clinicaltrials.gov/study/NCT00000001",
+            "title": "Study of heart disease prevention",
+            "content": "RECRUITING \u2014 Heart Disease; Cardiovascular",
+            "engine": "clinicaltrials",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null,
+            "tier": 1,
+            "work_group": null,
+            "engines": []
+          }
+        ],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "empty-iterable-clinicaltrials-conditions-map",
+      "engine": "clinicaltrials",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "studies": [
+              {
+                "protocolSection": {
+                  "identificationModule": {
+                    "nctId": "NCT00000001",
+                    "briefTitle": "Study of heart disease prevention"
+                  },
+                  "statusModule": {
+                    "overallStatus": "RECRUITING"
+                  },
+                  "designModule": {
+                    "phases": [
+                      "PHASE3"
+                    ]
+                  },
+                  "conditionsModule": {
+                    "conditions": {}
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://clinicaltrials.gov/api/v2/studies?query.term=test&pageSize=10&format=json&sort=%40relevance",
+          "headers": {
+            "host": "clinicaltrials.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://clinicaltrials.gov/study/NCT00000001",
+            "title": "Study of heart disease prevention",
+            "content": "RECRUITING \u2014 PHASE3",
+            "engine": "clinicaltrials",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null,
+            "tier": 1,
+            "work_group": null,
+            "engines": []
+          }
+        ],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "empty-iterable-pubchem-CID-map",
+      "engine": "pubchem",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "IdentifierList": {
+              "CID": {}
+            }
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "PC_Compounds": [
+              {
+                "id": {
+                  "id": {
+                    "cid": 2244
+                  }
+                },
+                "props": [
+                  {
+                    "urn": {
+                      "label": "IUPAC Name",
+                      "name": "Preferred"
+                    },
+                    "value": {
+                      "sval": "aspirin"
+                    }
+                  },
+                  {
+                    "urn": {
+                      "label": "Molecular Formula"
+                    },
+                    "value": {
+                      "sval": "C9H8O4"
+                    }
+                  },
+                  {
+                    "urn": {
+                      "label": "Molecular Weight"
+                    },
+                    "value": {
+                      "fval": 180.16
+                    }
+                  }
+                ]
+              },
+              {
+                "id": {
+                  "id": {
+                    "cid": 962
+                  }
+                },
+                "props": [
+                  {
+                    "urn": {
+                      "label": "Molecular Formula"
+                    },
+                    "value": {
+                      "sval": "C17H21NO4"
+                    }
+                  },
+                  {
+                    "urn": {
+                      "label": "Molecular Weight"
+                    },
+                    "value": {
+                      "fval": 303.35
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/test/cids/JSON",
+          "headers": {
+            "host": "pubchem.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "empty-iterable-pubchem-PC_Compounds-map",
+      "engine": "pubchem",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "IdentifierList": {
+              "CID": [
+                2244,
+                962
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "PC_Compounds": {}
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/test/cids/JSON",
+          "headers": {
+            "host": "pubchem.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/2244,962/JSON",
+          "headers": {
+            "host": "pubchem.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "slice(None, 10, None)",
+        "results": [],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "empty-iterable-pubchem-props-map",
+      "engine": "pubchem",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "IdentifierList": {
+              "CID": [
+                2244,
+                962
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "PC_Compounds": [
+              {
+                "id": {
+                  "id": {
+                    "cid": 2244
+                  }
+                },
+                "props": {}
+              },
+              {
+                "id": {
+                  "id": {
+                    "cid": 962
+                  }
+                },
+                "props": [
+                  {
+                    "urn": {
+                      "label": "Molecular Formula"
+                    },
+                    "value": {
+                      "sval": "C17H21NO4"
+                    }
+                  },
+                  {
+                    "urn": {
+                      "label": "Molecular Weight"
+                    },
+                    "value": {
+                      "fval": 303.35
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/test/cids/JSON",
+          "headers": {
+            "host": "pubchem.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/2244,962/JSON",
+          "headers": {
+            "host": "pubchem.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://pubchem.ncbi.nlm.nih.gov/compound/2244",
+            "title": "Compound CID 2244",
+            "content": "Chemical compound",
+            "engine": "pubchem",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null,
+            "tier": 1,
+            "work_group": null,
+            "engines": []
+          },
+          {
+            "url": "https://pubchem.ncbi.nlm.nih.gov/compound/962",
+            "title": "Compound CID 962",
+            "content": "Formula: C17H21NO4 | MW: 303.35",
+            "engine": "pubchem",
+            "position": 2,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null,
+            "tier": 1,
+            "work_group": null,
+            "engines": []
+          }
+        ],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "empty-iterable-pubmed-idlist-map",
+      "engine": "pubmed",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "esearchresult": {
+              "idlist": {}
+            }
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "result": {
+              "1": {
+                "title": "One"
+              }
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=test&retmax=10&retmode=json&sort=relevance",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "ESearch payload is missing idlist",
+        "results": [],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "empty-iterable-pubmed-authors-map",
+      "engine": "pubmed",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "esearchresult": {
+              "idlist": [
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "result": {
+              "1": {
+                "title": "One",
+                "authors": {}
+              }
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=test&retmax=10&retmode=json&sort=relevance",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=1&retmode=json",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "ESummary authors for PMID 1 must be a list",
+        "results": [],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "empty-iterable-pubmed-articleids-map",
+      "engine": "pubmed",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "esearchresult": {
+              "idlist": [
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "result": {
+              "1": {
+                "title": "One",
+                "articleids": {}
+              }
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=test&retmax=10&retmode=json&sort=relevance",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=1&retmode=json",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://pubmed.ncbi.nlm.nih.gov/1/",
+            "title": "One",
+            "content": "",
+            "engine": "pubmed",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "1",
+                "pmid": "1",
+                "publication_types": []
+              },
+              "provenance": {
+                "engine": "pubmed",
+                "adapter_fields": [
+                  "publication_id",
+                  "pmid",
+                  "publication_types"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "tier": 1,
+            "work_group": null,
+            "engines": []
+          }
+        ],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "empty-iterable-pubmed-pubtype-map",
+      "engine": "pubmed",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "esearchresult": {
+              "idlist": [
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "result": {
+              "1": {
+                "title": "One",
+                "pubtype": {}
+              }
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=test&retmax=10&retmode=json&sort=relevance",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=1&retmode=json",
+          "headers": {
+            "host": "eutils.ncbi.nlm.nih.gov",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://pubmed.ncbi.nlm.nih.gov/1/",
+            "title": "One",
+            "content": "",
+            "engine": "pubmed",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "1",
+                "pmid": "1"
+              },
+              "provenance": {
+                "engine": "pubmed",
+                "adapter_fields": [
+                  "publication_id",
+                  "pmid"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "tier": 1,
+            "work_group": null,
+            "engines": []
+          }
+        ],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "empty-iterable-europepmc-result-map",
+      "engine": "europepmc",
+      "query": "test",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "resultList": {
+              "result": {}
+            }
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=test&format=json&resultType=lite&pageSize=10",
+          "headers": {
+            "host": "www.ebi.ac.uk",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "Europe PMC results must be a list",
+        "results": [],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "empty-iterable-uniprot-results-map",
+      "engine": "uniprot",
+      "query": "VIM",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": {}
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=%28VIM%29+OR+%28gene%3AVIM%29&size=30&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "slice(None, 30, None)",
+        "results": [],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "empty-iterable-uniprot-genes-map",
+      "engine": "uniprot",
+      "query": "VIM",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": [
+              {
+                "primaryAccession": "P08670",
+                "uniProtkbId": "VIM_HUMAN",
+                "genes": {}
+              }
+            ]
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=%28VIM%29+OR+%28gene%3AVIM%29&size=30&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.uniprot.org/uniprotkb/P08670/entry",
+            "title": "VIM_HUMAN",
+            "content": "Protein",
+            "engine": "uniprot",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null,
+            "tier": 1,
+            "work_group": null,
+            "engines": []
+          }
+        ],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "empty-iterable-uniprot-synonyms-map",
+      "engine": "uniprot",
+      "query": "VIM",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": [
+              {
+                "primaryAccession": "P08670",
+                "uniProtkbId": "VIM_HUMAN",
+                "genes": [
+                  {
+                    "synonyms": {}
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=%28VIM%29+OR+%28gene%3AVIM%29&size=30&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.uniprot.org/uniprotkb/P08670/entry",
+            "title": "VIM_HUMAN",
+            "content": "Protein",
+            "engine": "uniprot",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null,
+            "tier": 1,
+            "work_group": null,
+            "engines": []
+          }
+        ],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    }
+  ]
+}

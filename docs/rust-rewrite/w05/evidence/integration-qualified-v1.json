@@ -1,0 +1,67 @@
+{
+  "status": "reviewed normal W06 union and source-binding-only correction qualified; later metrics bridge proof separately bound",
+  "W05_checkpoint": "d82c01916d07820ce73d9a8071e2f2fbd48f58b7",
+  "normal_merge": "93896d2c6286c304c2e480aae3043c370e4184a5",
+  "accepted_main_parent": "0a0743904264b0054e14cb19cdd78af7d31eb60c",
+  "integration_pin_checkpoint": "d83a2dffa17e4739598aec771ff561296c9491ed",
+  "actual_Cargo_graph": {
+    "path": "/private/tmp/w05-w06-composed-qualification-v1/actual-cargo-graph.json",
+    "sha256": "80d3ac334f1f3862595f9de030f0bc2fef32135d2aab67c25856e783f531d1f3"
+  },
+  "composed_build_clippy_W05_and_initial_W06_failure": {
+    "path": "/private/tmp/w05-w06-composed-qualification-v1/commands.partial.json",
+    "sha256": "fcabc640978febfadd326bf9b5f754a567931c1dfefd0b364012cc2c1e977994"
+  },
+  "independent_runtime_gates": {
+    "path": "/private/tmp/w05-w06-composed-independent-v1/receipt.json",
+    "sha256": "71234fc2700f15a5345b285a6fcdd77b35d8724e3d97ebdc50b0c923e48bd9a2"
+  },
+  "corrected_W06_F01_O06": {
+    "path": "/private/tmp/w05-w06-corrected-head-v1/receipt.json",
+    "sha256": "b8c11689a65f44bce7ce7a9a5a47f713edca8b2aa438f6115f5c420be9b511d7"
+  },
+  "corrected_reports": {
+    "W06": {
+      "path": "/private/tmp/w05-w06-corrected-head-v1/W06.json",
+      "sha256": "0c63c650a2224b8b220f967623f86869f11d92197be0bd8a9d1b186d469dc33e"
+    },
+    "F01": {
+      "path": "/private/tmp/w05-w06-corrected-head-v1/F01.json",
+      "sha256": "8befcd126b403da19a58cfab7c517dba635967f15b9f07206f3467cdacffd7c1"
+    },
+    "O06": {
+      "path": "/private/tmp/w05-w06-corrected-head-v1/O06.json",
+      "sha256": "7a264a45e11b378272a958915032e2b0e74ec71fce632210809ed4d4bbc2f4fd"
+    }
+  },
+  "W06_completed_case_test_tuples": 303,
+  "W06_source_derived": 248,
+  "W06_additional_native": 55,
+  "W06_reference_controls_source_only": 4,
+  "failures_preserved": {
+    "original_oracle_import": "../oracle-runs.json",
+    "legacy_ack_collision": "legacy-collision-characterization-v1.log.json",
+    "numeric_wire_rounding": "numeric-wire-defect-v1.json",
+    "maximum_batch_parser_panic": "max-batch-initial-panic-v1.json",
+    "semantic_negative_controls": "negative-controls-v2.json",
+    "wire_negative_controls": "wire-negatives-v1.json",
+    "A09_stale_integration_pin": {
+      "path": "/private/tmp/w05-a09-union-A09-qualified-v1.json",
+      "sha256": "1f540dc0c797acc559886d30fc0a55efb5a24e3bb701bbfa152bc6cac670d2ea"
+    },
+    "O06_formatting": {
+      "path": "/private/tmp/w05-shared-qualification-v1/O06.json",
+      "sha256": "58ca8e010e9c59dee06ee76c73900b988e7ddae537c63d2d42989ac3e65638c4"
+    },
+    "W06_stale_integration_pin": {
+      "path": "/private/tmp/w05-w06-composed-qualification-v1/W06.json",
+      "sha256": "20804a0fbf16b2681eec03603c3f4249f98a69b5888fcaa2d255b1062a3ed28b"
+    }
+  },
+  "limitations": [
+    "actual W05 HTTP mount only; fixed trusted principal",
+    "O01 concrete exporter/gauge/rendering; W09 full production/auth/workflow composition",
+    "G04 legacy-writer drain and release G01/G02/G04/G08",
+    "no provider calls/deployment/exactly-once remote execution claim"
+  ]
+}

@@ -1,0 +1,355 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.11, pytest-9.0.3, pluggy-1.6.0 -- /Volumes/tank01/magnus/git/SlopSearX/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /private/tmp/slopsearx-daily-20261014
+configfile: pyproject.toml
+plugins: cov-7.1.0, asyncio-1.4.0, anyio-4.13.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 3 items
+
+tests/test_adaptive_transport.py::test_adaptive_research_journey PASSED  [ 33%]
+tests/test_adaptive_transport.py::test_budget_exhaustion_completion_replays_over_mcp_transport PASSED [ 66%]
+tests/test_adaptive_transport.py::test_exact_query_cap_completion_over_mcp_transport PASSED [100%]
+
+=============================== warnings summary ===============================
+tests/test_adaptive_transport.py::test_adaptive_research_journey
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pydantic_settings/sources/utils.py:47: IncompleteFieldDefinitionWarning: Field 'lifespan' has an incomplete definition: its annotation contains an unresolved forward reference, so settings sources may fail to correctly resolve its value. Call `model_rebuild()` on the model where the field is defined, once all the referenced types are defined.
+    warnings.warn(
+
+tests/test_adaptive_transport.py::test_adaptive_research_journey
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/websockets/legacy/__init__.py:6: DeprecationWarning: websockets.legacy is deprecated; see https://websockets.readthedocs.io/en/stable/howto/upgrade.html for upgrade instructions
+    warnings.warn(  # deprecated in 14.0 - 2024-11-09
+
+tests/test_adaptive_transport.py::test_adaptive_research_journey
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/uvicorn/protocols/websockets/websockets_impl.py:17: DeprecationWarning: websockets.server.WebSocketServerProtocol is deprecated
+    from websockets.server import WebSocketServerProtocol
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 3 passed, 3 warnings in 5.77s =========================
+============================= test session starts ==============================
+platform darwin -- Python 3.12.11, pytest-9.0.3, pluggy-1.6.0 -- /Volumes/tank01/magnus/git/SlopSearX/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /private/tmp/slopsearx-daily-20261014
+configfile: pyproject.toml
+plugins: cov-7.1.0, asyncio-1.4.0, anyio-4.13.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+tests/test_entity_transport.py::test_entity_view_preserves_cached_flat_results PASSED [100%]
+
+=============================== warnings summary ===============================
+tests/test_entity_transport.py::test_entity_view_preserves_cached_flat_results
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pydantic_settings/sources/utils.py:47: IncompleteFieldDefinitionWarning: Field 'lifespan' has an incomplete definition: its annotation contains an unresolved forward reference, so settings sources may fail to correctly resolve its value. Call `model_rebuild()` on the model where the field is defined, once all the referenced types are defined.
+    warnings.warn(
+
+tests/test_entity_transport.py::test_entity_view_preserves_cached_flat_results
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/websockets/legacy/__init__.py:6: DeprecationWarning: websockets.legacy is deprecated; see https://websockets.readthedocs.io/en/stable/howto/upgrade.html for upgrade instructions
+    warnings.warn(  # deprecated in 14.0 - 2024-11-09
+
+tests/test_entity_transport.py::test_entity_view_preserves_cached_flat_results
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/uvicorn/protocols/websockets/websockets_impl.py:17: DeprecationWarning: websockets.server.WebSocketServerProtocol is deprecated
+    from websockets.server import WebSocketServerProtocol
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 1 passed, 3 warnings in 1.55s =========================
+============================= test session starts ==============================
+platform darwin -- Python 3.12.11, pytest-9.0.3, pluggy-1.6.0 -- /Volumes/tank01/magnus/git/SlopSearX/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /private/tmp/slopsearx-daily-20261014
+configfile: pyproject.toml
+plugins: cov-7.1.0, asyncio-1.4.0, anyio-4.13.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 8 items
+
+tests/test_http_pooling.py::test_connection_reuse_probe 
+TCP accepts={'ephemeral': 20, 'pooled': 1}; local milliseconds (p50,p95)={'ephemeral': (9.782833498320542, 12.02079199720174), 'pooled': (0.7767505012452602, 2.542750007705763)}
+PASSED           [ 12%]
+tests/test_http_pooling.py::test_sessions_isolate_cookies_and_injected_transport_ownership PASSED [ 25%]
+tests/test_http_pooling.py::test_proxy_pools_separate_bounded_and_closed PASSED [ 37%]
+tests/test_http_pooling.py::test_environment_proxy_fallback_preserves_httpx_resolution PASSED [ 50%]
+tests/test_http_pooling.py::test_no_proxy_alone_does_not_disable_pooling PASSED [ 62%]
+tests/test_http_pooling.py::test_explicit_tls_options_are_not_silently_ignored[options0] PASSED [ 75%]
+tests/test_http_pooling.py::test_explicit_tls_options_are_not_silently_ignored[options1] PASSED [ 87%]
+tests/test_http_pooling.py::test_explicit_pool_limits_are_forwarded PASSED [100%]
+
+============================== 8 passed in 0.49s ===============================
+============================= test session starts ==============================
+platform darwin -- Python 3.12.11, pytest-9.0.3, pluggy-1.6.0 -- /Volumes/tank01/magnus/git/SlopSearX/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /private/tmp/slopsearx-daily-20261014
+configfile: pyproject.toml
+plugins: cov-7.1.0, asyncio-1.4.0, anyio-4.13.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 30 items
+
+tests/test_mcp_gateway.py::TestGateway::test_dynamic_proxy_registration_preserves_remote_schema PASSED [  3%]
+tests/test_mcp_gateway.py::TestGateway::test_gateway_proxies_tools_and_resources PASSED [  6%]
+tests/test_mcp_gateway.py::TestGateway::test_gateway_rejects_wrong_token PASSED [ 10%]
+tests/test_mcp_gateway.py::test_gateway_structured_results_and_legacy_precedence[structured0-One reading lead.-False-expected0] PASSED [ 13%]
+tests/test_mcp_gateway.py::test_gateway_structured_results_and_legacy_precedence[structured1-{"display": "summary"}-False-expected1] PASSED [ 16%]
+tests/test_mcp_gateway.py::test_gateway_structured_results_and_legacy_precedence[structured2-None-False-expected2] PASSED [ 20%]
+tests/test_mcp_gateway.py::test_gateway_structured_results_and_legacy_precedence[structured3-No reading leads.-False-expected3] PASSED [ 23%]
+tests/test_mcp_gateway.py::test_gateway_structured_results_and_legacy_precedence[None-{"count": 1}-False-expected4] PASSED [ 26%]
+tests/test_mcp_gateway.py::test_gateway_structured_results_and_legacy_precedence[None-Unstructured note.-False-expected5] PASSED [ 30%]
+tests/test_mcp_gateway.py::test_gateway_structured_results_and_legacy_precedence[None-None-False-expected6] PASSED [ 33%]
+tests/test_mcp_gateway.py::test_gateway_structured_results_and_legacy_precedence[structured7-Remote rejected request.-True-expected7] PASSED [ 36%]
+tests/test_mcp_gateway.py::TestCatalogPagination::test_follows_pages_including_empty_cursor[nextCursor] PASSED [ 40%]
+tests/test_mcp_gateway.py::TestCatalogPagination::test_follows_pages_including_empty_cursor[next_cursor] PASSED [ 43%]
+tests/test_mcp_gateway.py::TestCatalogPagination::test_broken_catalog_rejected[cursor] PASSED [ 46%]
+tests/test_mcp_gateway.py::TestCatalogPagination::test_broken_catalog_rejected[duplicate] PASSED [ 50%]
+tests/test_mcp_gateway.py::TestCatalogPagination::test_broken_catalog_rejected[pages] PASSED [ 53%]
+tests/test_mcp_gateway.py::TestCatalogPagination::test_broken_catalog_rejected[tools] PASSED [ 56%]
+tests/test_mcp_gateway.py::TestCatalogPagination::test_broken_catalog_rejected[error] PASSED [ 60%]
+tests/test_mcp_gateway.py::TestCatalogPagination::test_empty_catalog PASSED [ 63%]
+tests/test_mcp_gateway.py::TestCatalogPagination::test_discovery_timeout_leaves_no_session_or_proxies PASSED [ 66%]
+tests/test_mcp_gateway.py::TestCatalogPagination::test_native_sdk_sends_followup_cursor PASSED [ 70%]
+tests/test_mcp_gateway.py::TestInputSchemaFidelity::test_complete_schema_and_nested_copy PASSED [ 73%]
+tests/test_mcp_gateway.py::TestInputSchemaFidelity::test_optional_schema_keeps_direct_registration_compatible PASSED [ 76%]
+tests/test_mcp_gateway.py::TestInputSchemaFidelity::test_nested_values_forwarded_unchanged PASSED [ 80%]
+tests/test_mcp_gateway.py::TestGatewaySessionOwner::test_http_shutdown_is_clean FAILED [ 83%]
+tests/test_mcp_gateway.py::TestGatewaySessionOwner::test_connection_scopes_stay_in_owner_task[normal] PASSED [ 86%]
+tests/test_mcp_gateway.py::TestGatewaySessionOwner::test_connection_scopes_stay_in_owner_task[body_error] PASSED [ 90%]
+tests/test_mcp_gateway.py::TestGatewaySessionOwner::test_connection_scopes_stay_in_owner_task[cancel] PASSED [ 93%]
+tests/test_mcp_gateway.py::TestGatewaySessionOwner::test_startup_failure_propagates_and_owner_finishes PASSED [ 96%]
+tests/test_mcp_gateway.py::TestGatewaySessionOwner::test_cancelled_startup_closes_owner PASSED [100%]
+
+=================================== FAILURES ===================================
+_____________ TestGatewaySessionOwner.test_http_shutdown_is_clean ______________
+
+fut = <Task cancelled name='Task-680' coro=<Server.serve() done, defined at /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/uvicorn/server.py:77>>
+timeout = 10
+
+    async def wait_for(fut, timeout):
+        """Wait for the single Future or coroutine to complete, with timeout.
+    
+        Coroutine will be wrapped in Task.
+    
+        Returns result of the Future or coroutine.  When a timeout occurs,
+        it cancels the task and raises TimeoutError.  To avoid the task
+        cancellation, wrap it in shield().
+    
+        If the wait is cancelled, the task is also cancelled.
+    
+        If the task suppresses the cancellation and returns a value instead,
+        that value is returned.
+    
+        This function is a coroutine.
+        """
+        # The special case for timeout <= 0 is for the following case:
+        #
+        # async def test_waitfor():
+        #     func_started = False
+        #
+        #     async def func():
+        #         nonlocal func_started
+        #         func_started = True
+        #
+        #     try:
+        #         await asyncio.wait_for(func(), 0)
+        #     except asyncio.TimeoutError:
+        #         assert not func_started
+        #     else:
+        #         assert False
+        #
+        # asyncio.run(test_waitfor())
+    
+    
+        if timeout is not None and timeout <= 0:
+            fut = ensure_future(fut)
+    
+            if fut.done():
+                return fut.result()
+    
+            await _cancel_and_wait(fut)
+            try:
+                return fut.result()
+            except exceptions.CancelledError as exc:
+                raise TimeoutError from exc
+    
+        async with timeouts.timeout(timeout):
+>           return await fut
+                   ^^^^^^^^^
+
+/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/tasks.py:520: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/uvicorn/server.py:79: in serve
+    await self._serve(sockets)
+/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/uvicorn/server.py:94: in _serve
+    await self.startup(sockets=sockets)
+/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/uvicorn/server.py:105: in startup
+    await self.lifespan.startup()
+/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/uvicorn/lifespan/on.py:56: in startup
+    await self.startup_event.wait()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <asyncio.locks.Event object at 0x10e1f51f0 [unset]>
+
+    async def wait(self):
+        """Block until the internal flag is true.
+    
+        If the internal flag is true on entry, return True
+        immediately.  Otherwise, block until another coroutine calls
+        set() to set the flag to true, then return True.
+        """
+        if self._value:
+            return True
+    
+        fut = self._get_loop().create_future()
+        self._waiters.append(fut)
+        try:
+>           await fut
+E           asyncio.exceptions.CancelledError
+
+/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/locks.py:212: CancelledError
+
+The above exception was the direct cause of the following exception:
+
+self = <tests.test_mcp_gateway.TestGatewaySessionOwner object at 0x10debacf0>
+remote_server = 53059
+caplog = <_pytest.logging.LogCaptureFixture object at 0x10e1f63f0>
+
+    async def test_http_shutdown_is_clean(self, remote_server: Any, caplog: Any) -> None:
+        from slopsearx.mcp import gateway
+    
+>       async with _gateway_client(create_gateway(f"http://127.0.0.1:{remote_server}/mcp", token=TOKEN)) as client:
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_mcp_gateway.py:423: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+tests/test_mcp_gateway.py:79: in _gateway_client
+    await asyncio.wait_for(task, timeout=10)
+/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/tasks.py:519: in wait_for
+    async with timeouts.timeout(timeout):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Timeout [expired]>
+exc_type = <class 'asyncio.exceptions.CancelledError'>
+exc_val = CancelledError(), exc_tb = <traceback object at 0x10e9791c0>
+
+    async def __aexit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> Optional[bool]:
+        assert self._state in (_State.ENTERED, _State.EXPIRING)
+    
+        if self._timeout_handler is not None:
+            self._timeout_handler.cancel()
+            self._timeout_handler = None
+    
+        if self._state is _State.EXPIRING:
+            self._state = _State.EXPIRED
+    
+            if self._task.uncancel() <= self._cancelling and exc_type is exceptions.CancelledError:
+                # Since there are no new cancel requests, we're
+                # handling this.
+>               raise TimeoutError from exc_val
+E               TimeoutError
+
+/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/timeouts.py:115: TimeoutError
+----------------------------- Captured stderr call -----------------------------
+ERROR:    ASGI callable returned without completing response.
+--------------------------- Captured stderr teardown ---------------------------
+ERROR:    Traceback (most recent call last):
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/starlette/routing.py", line 638, in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/fastmcp/server/http.py", line 666, in lifespan
+    server._lifespan_manager(),
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/fastmcp/server/mixins/lifespan.py", line 214, in _lifespan_manager
+    user_lifespan_result = await stack.enter_async_context(self._lifespan(self))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/contextlib.py", line 659, in enter_async_context
+    result = await _enter(cm)
+             ^^^^^^^^^^^^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/slopsearx-daily-20261014/slopsearx/mcp/gateway.py", line 437, in _gateway_lifespan
+    await owner
+  File "/private/tmp/slopsearx-daily-20261014/slopsearx/mcp/gateway.py", line 420, in own_connection
+    async with _gateway_connection(server, remote_url, token, connect_timeout, **options):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/contextlib.py", line 212, in __aenter__
+    raise RuntimeError("generator didn't yield") from None
+RuntimeError: generator didn't yield
+
+---------------------------- Captured log teardown -----------------------------
+ERROR    asyncio:base_events.py:1833 unhandled exception during asyncio.run() shutdown
+task: <Task finished name='slopsearx-gateway-upstream' coro=<_gateway_lifespan.<locals>.own_connection() done, defined at /private/tmp/slopsearx-daily-20261014/slopsearx/mcp/gateway.py:418> exception=RuntimeError("generator didn't yield")>
+Traceback (most recent call last):
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/uvicorn/lifespan/on.py", line 86, in main
+    await app(scope, self.receive, self.send)
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 29, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/starlette/applications.py", line 90, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 151, in __call__
+    await self.app(scope, receive, send)
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/fastmcp/server/http.py", line 383, in __call__
+    await self.app(scope, receive, send)
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 49, in __call__
+    await self.app(scope, receive, send)
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/starlette/routing.py", line 660, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/starlette/routing.py", line 669, in app
+    await self.lifespan(scope, receive, send)
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/starlette/routing.py", line 638, in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/fastmcp/server/http.py", line 666, in lifespan
+    server._lifespan_manager(),
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/fastmcp/server/mixins/lifespan.py", line 214, in _lifespan_manager
+    user_lifespan_result = await stack.enter_async_context(self._lifespan(self))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/contextlib.py", line 659, in enter_async_context
+    result = await _enter(cm)
+             ^^^^^^^^^^^^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/slopsearx-daily-20261014/slopsearx/mcp/gateway.py", line 437, in _gateway_lifespan
+    await owner
+  File "/private/tmp/slopsearx-daily-20261014/slopsearx/mcp/gateway.py", line 420, in own_connection
+    async with _gateway_connection(server, remote_url, token, connect_timeout, **options):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/contextlib.py", line 212, in __aenter__
+    raise RuntimeError("generator didn't yield") from None
+RuntimeError: generator didn't yield
+=============================== warnings summary ===============================
+tests/test_mcp_gateway.py::TestGateway::test_gateway_proxies_tools_and_resources
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pydantic_settings/sources/utils.py:47: IncompleteFieldDefinitionWarning: Field 'lifespan' has an incomplete definition: its annotation contains an unresolved forward reference, so settings sources may fail to correctly resolve its value. Call `model_rebuild()` on the model where the field is defined, once all the referenced types are defined.
+    warnings.warn(
+
+tests/test_mcp_gateway.py::TestGateway::test_gateway_proxies_tools_and_resources
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/websockets/legacy/__init__.py:6: DeprecationWarning: websockets.legacy is deprecated; see https://websockets.readthedocs.io/en/stable/howto/upgrade.html for upgrade instructions
+    warnings.warn(  # deprecated in 14.0 - 2024-11-09
+
+tests/test_mcp_gateway.py::TestGateway::test_gateway_proxies_tools_and_resources
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/uvicorn/protocols/websockets/websockets_impl.py:17: DeprecationWarning: websockets.server.WebSocketServerProtocol is deprecated
+    from websockets.server import WebSocketServerProtocol
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_mcp_gateway.py::TestGatewaySessionOwner::test_http_shutdown_is_clean
+================== 1 failed, 29 passed, 3 warnings in 23.25s ===================

@@ -1,0 +1,1331 @@
+{
+  "schema_version": 1,
+  "plan_id": "A02",
+  "capture": "source-bound Python3.14 offline MockTransport; synthetic regressions, no providers",
+  "source_commit": "025ab2f2d50febcb573ba62579eecf7e2d07ef3a",
+  "source_files": [
+    {
+      "path": "engines/pypi.py",
+      "git_blob": "e10a1da680178cb333dbcd53ef9dbb0dd5be81b4",
+      "sha256": "16b09518585f440ddb20ecdd7bcf398d93004813a4d1e916afc83e18081b9590"
+    },
+    {
+      "path": "engines/rubygems.py",
+      "git_blob": "127ff07eec863a450b3c89e1e876201ecea89880",
+      "sha256": "29c00458aaf2804872565acaa19df9f447463509b3cc0f4869959c33d82e7849"
+    },
+    {
+      "path": "engines/dockerhub.py",
+      "git_blob": "cf1792ec3d34a9e8c535235791c1aeb7a29ea439",
+      "sha256": "4915cf45ba079dc47f776f03884c678ee8cc824f94a551ee80057d8c9a5bcbb9"
+    },
+    {
+      "path": "slopsearx/adapter.py",
+      "git_blob": "664e853d9ab1330596d01899ebe015701de09e88",
+      "sha256": "5883a35c48d0dad1077306fbda21997ee1d32116a8c03633a6b762de0c26d6f3"
+    },
+    {
+      "path": "slopsearx/payload.py",
+      "git_blob": "efa149d48bae401f7a0a9df6e50c8c614adecbb5",
+      "sha256": "a44a95655566f9fadaf62da1bab8c975f71f3ead6c3cc57f48c411a9c093c40d"
+    },
+    {
+      "path": "tests/test_new_engines.py",
+      "git_blob": "4e5293d694bb40332584a9541b6ad41326a01cc0",
+      "sha256": "a6df3df9b68fdc8a4b617d4059a5bd26a8cd82c5d8de1574ac9c48d2d14ad8a4"
+    },
+    {
+      "path": "tests/test_payload.py",
+      "git_blob": "4b5bc1a0940ad6c1214eb55764fb4aea57188de9",
+      "sha256": "a7bc52b2747f0ebc440a4d7ce69671635530c7142d43eb128cb3132e297fb11a"
+    },
+    {
+      "path": "tests/test_dockerhub.py",
+      "git_blob": "ab8e9686fc37305ceb629eb3a6f56651ef49a88b",
+      "sha256": "61fbc8b4c4c876e474330d711b2fd35b993cf52252cbb7919e8d90e086e56994"
+    }
+  ],
+  "cases": [
+    {
+      "id": "pypi_review_utf8_without_meta",
+      "engine": "pypi",
+      "query": "",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body_hex": "3c6120687265663d272f73696d706c652f636166c3a92f273e783c2f613e"
+        },
+        {
+          "status": 200,
+          "body": "{\"info\":{}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi//json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/caf%C3%83%C2%A9/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/cafÃ©/",
+            "title": "cafÃ© ",
+            "content": "",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "cafÃ©"
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "pypi_review_latin1_default",
+      "engine": "pypi",
+      "query": "",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body_hex": "3c6120687265663d272f73696d706c652f636166e92f273e783c2f613e"
+        },
+        {
+          "status": 200,
+          "body": "{\"info\":{}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi//json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/caf%C3%A9/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/café/",
+            "title": "café ",
+            "content": "",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "café"
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "pypi_review_c1_default",
+      "engine": "pypi",
+      "query": "",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body_hex": "3c6120687265663d272f73696d706c652f6180919f2f273e783c2f613e"
+        },
+        {
+          "status": 200,
+          "body": "{\"info\":{}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi//json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/a%C2%80%C2%91%C2%9F/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/a/",
+            "title": "a ",
+            "content": "",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "a"
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "pypi_review_utf8_bom",
+      "engine": "pypi",
+      "query": "",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body_hex": "efbbbf3c6120687265663d272f73696d706c652f636166c3a92f273e783c2f613e"
+        },
+        {
+          "status": 200,
+          "body": "{\"info\":{}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi//json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/caf%C3%A9/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/café/",
+            "title": "café ",
+            "content": "",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "café"
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "pypi_review_meta_utf8",
+      "engine": "pypi",
+      "query": "",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body_hex": "3c6d65746120636861727365743d277574662d38273e3c6120687265663d272f73696d706c652f636166c3a92f273e783c2f613e"
+        },
+        {
+          "status": 200,
+          "body": "{\"info\":{}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi//json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/caf%C3%A9/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/café/",
+            "title": "café ",
+            "content": "",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "café"
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "pypi_review_meta_latin1",
+      "engine": "pypi",
+      "query": "",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body_hex": "3c6d65746120636861727365743d2769736f2d383835392d31273e3c6120687265663d272f73696d706c652f6180e92f273e783c2f613e"
+        },
+        {
+          "status": 200,
+          "body": "{\"info\":{}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi//json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/a%C2%80%C3%A9/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/aé/",
+            "title": "aé ",
+            "content": "",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "aé"
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "pypi_review_meta_cp1252",
+      "engine": "pypi",
+      "query": "",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body_hex": "3c6d65746120636861727365743d2777696e646f77732d31323532273e3c6120687265663d272f73696d706c652f6180e92f273e783c2f613e"
+        },
+        {
+          "status": 200,
+          "body": "{\"info\":{}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi//json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/a%E2%82%AC%C3%A9/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/a€é/",
+            "title": "a€é ",
+            "content": "",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "a€é"
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "pypi_review_bom_over_meta",
+      "engine": "pypi",
+      "query": "",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body_hex": "efbbbf3c6d65746120636861727365743d2769736f2d383835392d31273e3c6120687265663d272f73696d706c652f636166c3a92f273e783c2f613e"
+        },
+        {
+          "status": 200,
+          "body": "{\"info\":{}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi//json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/caf%C3%A9/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/café/",
+            "title": "café ",
+            "content": "",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "café"
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "pypi_review_http_equiv_utf8",
+      "engine": "pypi",
+      "query": "",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body_hex": "3c6d65746120687474702d65717569763d27436f6e74656e742d547970652720636f6e74656e743d27746578742f68746d6c3b20636861727365743d7574662d38273e3c6120687265663d272f73696d706c652f636166c3a92f273e783c2f613e"
+        },
+        {
+          "status": 200,
+          "body": "{\"info\":{}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi//json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/caf%C3%A9/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/café/",
+            "title": "café ",
+            "content": "",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "café"
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "pypi_review_utf16le_bom",
+      "engine": "pypi",
+      "query": "",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body_hex": "fffe3c006100200068007200650066003d0027002f00730069006d0070006c0065002f00630061006600e9002f0027003e0078003c002f0061003e00"
+        },
+        {
+          "status": 200,
+          "body": "{\"info\":{}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi//json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/caf%C3%A9/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/café/",
+            "title": "café ",
+            "content": "",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "café"
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "pypi_review_utf16be_bom",
+      "engine": "pypi",
+      "query": "",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body_hex": "feff003c006100200068007200650066003d0027002f00730069006d0070006c0065002f00630061006600e9002f0027003e0078003c002f0061003e"
+        },
+        {
+          "status": 200,
+          "body": "{\"info\":{}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi//json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/caf%C3%A9/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/café/",
+            "title": "café ",
+            "content": "",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "café"
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "pypi_review_whitespace_only",
+      "engine": "pypi",
+      "query": "",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body_hex": "20200a09"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi//json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "pypi_review_comment_only",
+      "engine": "pypi",
+      "query": "",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body_hex": "3c212d2d206f6e6c79202d2d3e"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi//json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "pypi_review_doctype_only",
+      "engine": "pypi",
+      "query": "",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body_hex": "3c21444f43545950452068746d6c3e"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi//json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "pypi_review_xml_only",
+      "engine": "pypi",
+      "query": "",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body_hex": "3c3f786d6c2076657273696f6e3d27312e30273f3e"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi//json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "error",
+        "results": []
+      }
+    },
+    {
+      "id": "pypi_review_contextual_lower",
+      "engine": "pypi",
+      "query": "ΟΣ",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": ""
+        },
+        {
+          "status": 200,
+          "body_hex": "3c6d65746120636861727365743d277574662d38273e3c6120687265663d272f73696d706c652fcebfcf822f273e783c2f613e"
+        },
+        {
+          "status": 200,
+          "body": "{\"info\":{}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/%CE%9F%CE%A3/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/%CE%BF%CF%82/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/ος/",
+            "title": "ος ",
+            "content": "",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "ος"
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_review_query_python_strip",
+      "engine": "dockerhub",
+      "query": "\u001cpython\u001f",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": []}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": []
+      }
+    },
+    {
+      "id": "dockerhub_review_namespace_python_strip",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"python\", \"namespace\": \"\\u001clibrary\\u001f\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/python",
+            "title": "python",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "dockerhub_review_name_sort_python_strip",
+      "engine": "dockerhub",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body": "{\"results\": [{\"name\": \"other\"}, {\"name\": \"\\u001cpython\\u001f\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345?name=python&page_size=30",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://hub.docker.com/_/\u001cpython\u001f",
+            "title": "\u001cpython\u001f",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 1,
+            "score": 0.0,
+            "payload": null
+          },
+          {
+            "url": "https://hub.docker.com/_/other",
+            "title": "other",
+            "content": "",
+            "engine": "dockerhub",
+            "position": 2,
+            "score": 0.0,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "pypi_review_cookie_session",
+      "engine": "pypi",
+      "query": "python",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 404,
+          "body": "",
+          "headers": {
+            "set-cookie": "direct=secret; Path=/"
+          }
+        },
+        {
+          "status": 200,
+          "body": "<a href='/simple/python-one/'>A</a><a href='/simple/python-two/'>B</a>",
+          "headers": {
+            "set-cookie": "index=one; Path=/"
+          }
+        },
+        {
+          "status": 200,
+          "body": "{\"info\":{}}",
+          "headers": {
+            "set-cookie": "index=two; Path=/"
+          }
+        },
+        {
+          "status": 200,
+          "body": "{\"info\":{}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/simple/",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python-one/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "cookie": "index=one"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:12345/pypi/python-two/json",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "cookie": "index=two"
+          }
+        }
+      ],
+      "expected": {
+        "status": "ok",
+        "results": [
+          {
+            "url": "https://pypi.org/project/python-one/",
+            "title": "python-one ",
+            "content": "",
+            "engine": "pypi",
+            "position": 1,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "python-one"
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          },
+          {
+            "url": "https://pypi.org/project/python-two/",
+            "title": "python-two ",
+            "content": "",
+            "engine": "pypi",
+            "position": 2,
+            "score": 1.0,
+            "payload": {
+              "domain": "packages",
+              "type": "package",
+              "schema_version": 1,
+              "data": {
+                "name": "python-two"
+              },
+              "provenance": {
+                "engine": "pypi",
+                "adapter_fields": [
+                  "name"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

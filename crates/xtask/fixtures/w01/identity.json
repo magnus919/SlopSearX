@@ -1,0 +1,3479 @@
+{
+  "schema_version": 1,
+  "baseline": "cfd7a0af61a22cfd040a7fcd41ad950f82005959",
+  "python": "3.14.7",
+  "sources": [
+    {
+      "path": "slopsearx/research_budget.py",
+      "sha256": "574f0d4098917adf9ce5265453d21b384a536687602a27d42a3b27cb32e32721",
+      "git_blob": "39b1be8c8dfde7a8f4b2a15d3ab7472e4d8a905b"
+    },
+    {
+      "path": "slopsearx/research_models.py",
+      "sha256": "48fe3f399746d584b98fa688285ca0c4f5807c9d63dfa8676a17bbe056e6820b",
+      "git_blob": "7eaf08e310083f19da5324d6f50760d8672a1913"
+    },
+    {
+      "path": "slopsearx/merger.py",
+      "sha256": "5bb1a599ed8330aad02bd6567984d12c02f4ed735059c4f50cd6dfefd21e5eda",
+      "git_blob": "75585f5a7b285c9db5e7aee2c67b7ce177b636ee"
+    }
+  ],
+  "f11_fixtures": [
+    {
+      "path": "goldens-000.jsonl",
+      "sha256": "195020c253fcc166233fdcb421422e70d24e20fd79449af8979a1edc71454c59"
+    },
+    {
+      "path": "goldens-001.jsonl",
+      "sha256": "d87fe56afdeb32cf07f8ea5db6b4ccea4c38e559d40f15c0abd25fa6798d217b"
+    },
+    {
+      "path": "goldens-002.jsonl",
+      "sha256": "83685a408e97a0d34dc3da10a548290c08ad3497d9b83b448f07c67c3edfd9d0"
+    },
+    {
+      "path": "goldens-003.jsonl",
+      "sha256": "c378124a4ca5d962d443e15cacf0ebc03d2ea736a146e4ad1e8e64d93f71e9c2"
+    },
+    {
+      "path": "goldens-004.jsonl",
+      "sha256": "384cc57972d8baf66a28bb92d77289daf0327abd4ca2db421c0b85342a447bf4"
+    },
+    {
+      "path": "goldens-005.jsonl",
+      "sha256": "746e9f74973e7c88318c93d61137935a78ffa6c32f00a49e2c18edccffeacde5"
+    },
+    {
+      "path": "goldens-006.jsonl",
+      "sha256": "3f5eab73297a107e0e0503118df84e610c81577a720c76921678d08d36b33b16"
+    },
+    {
+      "path": "goldens-007.jsonl",
+      "sha256": "5f3eaeea61c0a1d5ef336877560a786f0eb36df257732390e2581522ca10e675"
+    },
+    {
+      "path": "goldens-008.jsonl",
+      "sha256": "8f62361e7d4c855874faed10922fea98e500f7ee30890c2ded70fe2a8c8891cf"
+    },
+    {
+      "path": "goldens-009.jsonl",
+      "sha256": "86c923b1bef05897f88c8a9193f191f3ffc0019fecaae5b0939ca99ee9fa11a2"
+    },
+    {
+      "path": "goldens-010.jsonl",
+      "sha256": "8d2ecade33f449d8f87424bacffd2cf777a8c0fa279bd965c2610e8b7a1f8868"
+    }
+  ],
+  "exporter_sha256": "f1ebbce92de233479f3417966554dd82b6601ab36d870e85b2c2db1ad64a18ba",
+  "identities": [
+    {
+      "url": "",
+      "normalized": "",
+      "expected": "lead-v1-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "url": "\thttps://example.com\n/",
+      "normalized": "https://example.com/",
+      "expected": "lead-v1-0f115db062b7c0dd030b16878c99dea5c354b49dc37b38eb8846179c7783e9d7"
+    },
+    {
+      "url": "   ",
+      "normalized": "",
+      "expected": "lead-v1-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "url": "data:text/plain;base64,SGVsbG8=",
+      "normalized": "data:text/plain;base64,SGVsbG8=",
+      "expected": "lead-v1-34f0bbf396ddbb09b0506725de99d9c8250e020c8b16a811d35cd9a1d535ebd7"
+    },
+    {
+      "url": "file:///etc/passwd",
+      "normalized": "file:///etc/passwd",
+      "expected": "lead-v1-0e7a5a5c10cbe88ac2d4e8f32981f0b9271944b9db74bc7cd502b9f72c04f880"
+    },
+    {
+      "url": "gopher://example.com/1",
+      "normalized": "gopher://example.com/1",
+      "expected": "lead-v1-f70a36c12996cace4c9b285dcff81ef6372cdc7b4f4de64f908fecbe1c16e224"
+    },
+    {
+      "url": "http",
+      "normalized": "http",
+      "expected": "lead-v1-e0603c499aae47eb89343ad0ef3178e044c62e70ae2309b35591d1d49a3211ec"
+    },
+    {
+      "url": "http:// example.com/",
+      "normalized": "http:// example.com/",
+      "expected": "lead-v1-77d7f3bc9864f0715fecd5cc4892eb59a279fabcc1cec2befbec916cc3110895"
+    },
+    {
+      "url": "http://%31%32%37.0.0.1/",
+      "normalized": "http://%31%32%37.0.0.1/",
+      "expected": "lead-v1-1617ebde703c350387c21406fb69b89a0efa2f92fa894899a589100b050e6414"
+    },
+    {
+      "url": "http://%31%36%39.%32%35%34.%31%36%39.%32%35%34/",
+      "normalized": "http://%31%36%39.%32%35%34.%31%36%39.%32%35%34/",
+      "expected": "lead-v1-ca13294ac5ecf880c159349981920af5e9ba48e58d6c1e6ebf3d1a4d47e8eb88"
+    },
+    {
+      "url": "http://0177.0.0.1/",
+      "normalized": "http://0177.0.0.1/",
+      "expected": "lead-v1-c23edade1b59cad4c618b717859c38609aa3ff78d3808bc4590447e256f4c0d9"
+    },
+    {
+      "url": "http://0377.0377.0377.0377/",
+      "normalized": "http://0377.0377.0377.0377/",
+      "expected": "lead-v1-00c5365a495ee1a41df7dc1a1cebd5ffdc100133926cf28052f75349481f8ea1"
+    },
+    {
+      "url": "http://0x/",
+      "normalized": "http://0x/",
+      "expected": "lead-v1-7ae688638b874fd6dc5166c4595d89ee3d78deff29ec01f8434a5b616135b18f"
+    },
+    {
+      "url": "http://0x08080808/",
+      "normalized": "http://0x08080808/",
+      "expected": "lead-v1-24f8a70069305fb9fc4194363d709a3b082201788965733e3432740069f91410"
+    },
+    {
+      "url": "http://0x7f.1/",
+      "normalized": "http://0x7f.1/",
+      "expected": "lead-v1-c65314f8c0ef151be445e26c497b76aeded35acc4fadae99d727e7091f0ae89a"
+    },
+    {
+      "url": "http://0x7f000001/",
+      "normalized": "http://0x7f000001/",
+      "expected": "lead-v1-016b3d589e8c8a925434a13db9bdb3aa84f041c41f631710cd26d8ded93f6f5c"
+    },
+    {
+      "url": "http://0xa9fea9fe/",
+      "normalized": "http://0xa9fea9fe/",
+      "expected": "lead-v1-c8ad5aeee70db860474c8a1202c6a3e48607c785f45cf9810eb2435cbb60d373"
+    },
+    {
+      "url": "http://1.2.3.300/",
+      "normalized": "http://1.2.3.300/",
+      "expected": "lead-v1-a2b4b1b1fb65382f6b1c5e1f0f9b5ddfe562d6d43fc193b61f9e3242f05f8608"
+    },
+    {
+      "url": "http://1.300.3/",
+      "normalized": "http://1.300.3/",
+      "expected": "lead-v1-dc2626ac65ed0df2b0f11db189a62537f10fc2444e5260cfbe37c47531122b88"
+    },
+    {
+      "url": "http://10.0.0.1/",
+      "normalized": "http://10.0.0.1/",
+      "expected": "lead-v1-c1148ff194c9749822879aae8fb81070961048a6b70ee7e63e44a661cef16112"
+    },
+    {
+      "url": "http://100.100.100.100/",
+      "normalized": "http://100.100.100.100/",
+      "expected": "lead-v1-ff996fd127dccdbe3fc8fb0139031cb1e02506cccc3dcfafdb0a6befa3db4b5a"
+    },
+    {
+      "url": "http://100.64.0.1/",
+      "normalized": "http://100.64.0.1/",
+      "expected": "lead-v1-ef8ed8d941891de0e5c71c60d8802cf17723d012ee09e6a692619ff3d529b046"
+    },
+    {
+      "url": "http://127.0.0.1./",
+      "normalized": "http://127.0.0.1./",
+      "expected": "lead-v1-760896edd0462a00c2f7dcc85d424af4c91e1b9055029ef7865806963e2b56b1"
+    },
+    {
+      "url": "http://127.0.0.1/",
+      "normalized": "http://127.0.0.1/",
+      "expected": "lead-v1-d5541dbe8037a6433e94e9804ab331995630fa2a1794ba3b374d5e2429693891"
+    },
+    {
+      "url": "http://127.1/",
+      "normalized": "http://127.1/",
+      "expected": "lead-v1-6c0d4d61b32b4717edd194e57423b9fbde0da964e6a0a97faef82b55646a5e9f"
+    },
+    {
+      "url": "http://127.300.255.127/",
+      "normalized": "http://127.300.255.127/",
+      "expected": "lead-v1-be830197ff21157d4e760cbf392d99af4e8ba5ce5c7840672fbacabd7e65c132"
+    },
+    {
+      "url": "http://134744072/",
+      "normalized": "http://134744072/",
+      "expected": "lead-v1-9093dba21cd9faa01e848bc2e4a3305739088494cc74b8f706f2482f708901ee"
+    },
+    {
+      "url": "http://169..127.1/",
+      "normalized": "http://169..127.1/",
+      "expected": "lead-v1-589eab58f8a51fc3ca8f0298040de266ccfa7a9596649087734c078b1701c968"
+    },
+    {
+      "url": "http://169.254.169.254/latest/meta-data/",
+      "normalized": "http://169.254.169.254/latest/meta-data/",
+      "expected": "lead-v1-195fe4b8c8c0b182afd0495ea735d65b5abbd8cac0df6b2eb2123fd62031287e"
+    },
+    {
+      "url": "http://2130706433/",
+      "normalized": "http://2130706433/",
+      "expected": "lead-v1-6fdc9e99a22a223712c6c8d6aa118011d0cb8ea417faf3a42c4582e72d1d61da"
+    },
+    {
+      "url": "http://255.300.1/",
+      "normalized": "http://255.300.1/",
+      "expected": "lead-v1-88d021bc8cf22ab1fd72018400b7dbc43e54fc57b007943923f8505a38fc7f59"
+    },
+    {
+      "url": "http://2852039166/",
+      "normalized": "http://2852039166/",
+      "expected": "lead-v1-e24176db4b92952aa61068fa02dd5edecb54e0d4c5eeb8f36db245feb33b71a0"
+    },
+    {
+      "url": "http://8.8.8.8/",
+      "normalized": "http://8.8.8.8/",
+      "expected": "lead-v1-a5a5123a102ed178028b19d76064088c7f3f1929db86a1b74576cfee7835600d"
+    },
+    {
+      "url": "http://[2002:7f00:1::1]/",
+      "normalized": "http://[2002:7f00:1::1]/",
+      "expected": "lead-v1-8fbc2d96e8d256896161abfc6825196da3fb85cf9abe6436da97b0f58acd4877"
+    },
+    {
+      "url": "http://[2002:a9fe:a9fe::]/",
+      "normalized": "http://[2002:a9fe:a9fe::]/",
+      "expected": "lead-v1-c2c0040ce27dfef827a4b970ec5e27f3dde54772ff7bc8d49920e3089e2df08b"
+    },
+    {
+      "url": "http://[64:ff9b::169.254.169.254]/",
+      "normalized": "http://[64:ff9b::169.254.169.254]/",
+      "expected": "lead-v1-abb6316cb65eeea803580d0295710ebd733ff64c49be2d7b06f9d655f2ec21f6"
+    },
+    {
+      "url": "http://[64:ff9b::7f00:1]/",
+      "normalized": "http://[64:ff9b::7f00:1]/",
+      "expected": "lead-v1-4ca82f3d54e0736adc53fd3e387949529c07523f44a61e39d7fbce87d7e0eb7d"
+    },
+    {
+      "url": "http://[64:ff9b::a9fe:a9fe]/",
+      "normalized": "http://[64:ff9b::a9fe:a9fe]/",
+      "expected": "lead-v1-83acd0a766567aeda33754a2345be97093fb9a8b9767797ec98b02eccd62696e"
+    },
+    {
+      "url": "http://[64:ff9b::c0a8:0001]/",
+      "normalized": "http://[64:ff9b::c0a8:0001]/",
+      "expected": "lead-v1-1b9fd4801989b4b0d239766699be4bd8b085c55a944cf99a4b743ac37f5e9970"
+    },
+    {
+      "url": "http://[::1",
+      "normalized": "http://[::1",
+      "expected": "lead-v1-3cbaea5b5bab4dd65bd3d757aa86c55029f7737adedfb3760f65f5263c5dceca"
+    },
+    {
+      "url": "http://[::1]/",
+      "normalized": "http://[::1]/",
+      "expected": "lead-v1-dd58bbdf741702d028c275c7776cd6498b151e741882361572ff5dfe73dd6938"
+    },
+    {
+      "url": "http://[::]/",
+      "normalized": "http://[::]/",
+      "expected": "lead-v1-38a1c8132e02b57f94e233ba9cd1eaa8f92f9f00bbd90013caa17692e5bd0f94"
+    },
+    {
+      "url": "http://[::ffff:0:7f00:1]/",
+      "normalized": "http://[::ffff:0:7f00:1]/",
+      "expected": "lead-v1-17b53790dd257540762a19d007b3e390d21e6731b29ea7503aaa8a397f6771ee"
+    },
+    {
+      "url": "http://[::ffff:127.0.0.1]/",
+      "normalized": "http://[::ffff:127.0.0.1]/",
+      "expected": "lead-v1-670af6eaba47db7d0b36cec8170022386128df39c113b235451298e3c85d0dd7"
+    },
+    {
+      "url": "http://[::ffff:8.8.8.8]/",
+      "normalized": "http://[::ffff:8.8.8.8]/",
+      "expected": "lead-v1-db32290acd366eb433b49991f22b4deb76d86bfd6abe7b2867788fa62eb59b0d"
+    },
+    {
+      "url": "http://[fec0::1]/",
+      "normalized": "http://[fec0::1]/",
+      "expected": "lead-v1-47c953fd1ac4859a1e0a592e9fcadc0654a31025f79365b352461806f5338d55"
+    },
+    {
+      "url": "http://[v1.example]/",
+      "normalized": "http://[v1.example]/",
+      "expected": "lead-v1-9b8bf3b8153cac7b886fdf7a6400896762f874ec92596fe39c18f79188418605"
+    },
+    {
+      "url": "http://exa mple.com/",
+      "normalized": "http://exa mple.com/",
+      "expected": "lead-v1-e7262ff98f4c9d17d50cbe7c3ba8648a2bb9ee65d299f9ad959d5bfb12a32b19"
+    },
+    {
+      "url": "http://example.com /path",
+      "normalized": "http://example.com /path",
+      "expected": "lead-v1-fabffa15793a2e6aa6e7068b8a82945f56fa7c375c20a8fe45c0a25c3f280cd7"
+    },
+    {
+      "url": "http://example.com/page",
+      "normalized": "http://example.com/page",
+      "expected": "lead-v1-b2b930c1becd9bf779aec623d0a72653867d2146f97b942e5aa36f0a66197335"
+    },
+    {
+      "url": "http://example.com:",
+      "normalized": "http://example.com:",
+      "expected": "lead-v1-79c56239195762a5921c37f4a50792109bbdaaf1b0a650e46101818e83b27145"
+    },
+    {
+      "url": "http://example.com:0",
+      "normalized": "http://example.com:0",
+      "expected": "lead-v1-90388898721b22e9aacaf3e5ec28c8f0caf69310680d7dee2ee6be047bea8f15"
+    },
+    {
+      "url": "http://example.com:65536",
+      "normalized": "http://example.com:65536",
+      "expected": "lead-v1-fb9b7ce4932257a0a3081cd8535ba81ee37ad94d197498d5742f6e956905b583"
+    },
+    {
+      "url": "http://example.com:٠/",
+      "normalized": "http://example.com:٠/",
+      "expected": "lead-v1-47851ca95989123cfcec9f23e74448ac84d0b0cb3d0634c0b959b23a902d1752"
+    },
+    {
+      "url": "http://host:0/",
+      "normalized": "http://host:0/",
+      "expected": "lead-v1-3cfd59ae27cc57ada0510024010fc991a4c5b6b463b046d7dc46be953ed1b50b"
+    },
+    {
+      "url": "http://host:99999/",
+      "normalized": "http://host:99999/",
+      "expected": "lead-v1-184e7a1bdf6d89e6590d9dbd6e686032b9c5ab4e3df4fd96ab229aa3e638c377"
+    },
+    {
+      "url": "http://host:abc/",
+      "normalized": "http://host:abc/",
+      "expected": "lead-v1-20bb2bcd6536f7b017a6190345b9ea44b3e4c430b037da535c0bae25e843b1a2"
+    },
+    {
+      "url": "http://user:pass@example.com/",
+      "normalized": "http://user:pass@example.com/",
+      "expected": "lead-v1-6bbc76451e85f3b441886848e50933978bc7ed0ec4b1ca5f690435af1f753d9f"
+    },
+    {
+      "url": "http://ｅｘａｍｐｌｅ.example/",
+      "normalized": "http://ｅｘａｍｐｌｅ.example/",
+      "expected": "lead-v1-ed507ea3b1e513a89e3b7fc15ac31ffa5c328d0447a08d4aac6328736dac1725"
+    },
+    {
+      "url": "http:foo",
+      "normalized": "http:foo",
+      "expected": "lead-v1-f368594de7f156bb4064e77d99824dc71b0fa0a27a28fbd8f278b911c5a05992"
+    },
+    {
+      "url": "https",
+      "normalized": "https",
+      "expected": "lead-v1-3e1943522517e81328e3f3f7ea1f0d7fc2ca886dfe1639a7fa6508760d1cee3a"
+    },
+    {
+      "url": "https://",
+      "normalized": "https://",
+      "expected": "lead-v1-66dfeeedabf1f022d223bd6b9f464d1ca241d6da54ab7ade5b2c7758b4e08fa8"
+    },
+    {
+      "url": "https://%65xample.com",
+      "normalized": "https://%65xample.com",
+      "expected": "lead-v1-edf85a124e58e0fe94ce7e87a97804129769de7466c8f59fa7ba6708f336f4b5"
+    },
+    {
+      "url": "https:///foo",
+      "normalized": "https:///foo",
+      "expected": "lead-v1-c02106448b11b78cf0b33bc9fc8b5e9fc5f507da59ac1f36b5bd26a281c3b54f"
+    },
+    {
+      "url": "https://127.0.0.1.nip.io/",
+      "normalized": "https://127.0.0.1.nip.io/",
+      "expected": "lead-v1-e1f797bc26c5051e310a783e2ba66f90d7314ecf71635fc284fa3fdbb9843fd0"
+    },
+    {
+      "url": "https://169.254.169.254.nip.io/",
+      "normalized": "https://169.254.169.254.nip.io/",
+      "expected": "lead-v1-89e5d4cc36d536bf2e2b7c36e32c08be50f6ccd8edbbf40052c592a1db092963"
+    },
+    {
+      "url": "https://[::1",
+      "normalized": "https://[::1",
+      "expected": "lead-v1-56387fee351b6df2c69f400011f762cd111813e0b7742ad7db3b81d86da732a5"
+    },
+    {
+      "url": "https://[bad]/",
+      "normalized": "https://[bad]/",
+      "expected": "lead-v1-ca9a0f7354f8f123168b9a38b3fbdb78bee00550e4fbce68fb2e7dd9cee24fdc"
+    },
+    {
+      "url": "https://a.test/",
+      "normalized": "https://a.test/",
+      "expected": "lead-v1-72745e75dfc5db5e0ba5b2c2e00a1aab8e6bae2dd8142303c2ae005769b41664"
+    },
+    {
+      "url": "https://a.test/1",
+      "normalized": "https://a.test/1",
+      "expected": "lead-v1-f80e8e583dd2735f7587769d15117b91e52844a11abfa2b347a6889a73f4315d"
+    },
+    {
+      "url": "https://a.test/2",
+      "normalized": "https://a.test/2",
+      "expected": "lead-v1-eba4a8f8a12ef0c9053274ca90a49ffa45b6f89b6eff228666fb4f1bd8be78a9"
+    },
+    {
+      "url": "https://a.test/3",
+      "normalized": "https://a.test/3",
+      "expected": "lead-v1-aaca7bd6ede7ddbe1e604d463ce4b500912726ac7720a11ad6b511cf55940739"
+    },
+    {
+      "url": "https://a.test/copy",
+      "normalized": "https://a.test/copy",
+      "expected": "lead-v1-34ead7ec6a8f0a2127f187dd0c8c0b32f4ee8376b139136e34c17f6a63302432"
+    },
+    {
+      "url": "https://a.test/distinct",
+      "normalized": "https://a.test/distinct",
+      "expected": "lead-v1-d2e150424ff5a28f1ff4b77071ed0b1ae5f0b511a6eed1530003e268bfd8c549"
+    },
+    {
+      "url": "https://a.test/first",
+      "normalized": "https://a.test/first",
+      "expected": "lead-v1-897cefb6a232f36772bf5006904af86092da5a511a979a18814b43df8a64df62"
+    },
+    {
+      "url": "https://a.test/work",
+      "normalized": "https://a.test/work",
+      "expected": "lead-v1-59cae7fdef2f50e12fffd9911113826f93914b603ec6cc193bd058951cd2c23d"
+    },
+    {
+      "url": "https://arxiv.org.evil.test/html/2501.09136",
+      "normalized": "https://arxiv.org.evil.test/html/2501.09136",
+      "expected": "lead-v1-53c26af099d427fb1433a2c19cedd78c8331b5dd43b7eb8683617524a44863d9"
+    },
+    {
+      "url": "https://arxiv.org/abs/2401.00001",
+      "normalized": "https://arxiv.org/abs/2401.00001",
+      "expected": "lead-v1-d031c5b41e91949a725dc2bef9a8c0c39e65b9467e341052d327da59dd4a0bc7"
+    },
+    {
+      "url": "https://arxiv.org/abs/2401.00001v",
+      "normalized": "https://arxiv.org/abs/2401.00001v",
+      "expected": "lead-v1-c7277afb5174302ec25ff2ab3c82f63839775fc5f7bcb3dea2a0ee1bb233512b"
+    },
+    {
+      "url": "https://arxiv.org/abs/2401.00001v1",
+      "normalized": "https://arxiv.org/abs/2401.00001v1",
+      "expected": "lead-v1-2db2dac1654bdd43a27674ce500f3f23f556a7e75c3aa828da8da0280bc25b10"
+    },
+    {
+      "url": "https://arxiv.org/abs/2401.00001v2",
+      "normalized": "https://arxiv.org/abs/2401.00001v2",
+      "expected": "lead-v1-3308b97fe553f2bb3384dd649404d5c57f3f6d910610db162aca6b498373f7f8"
+    },
+    {
+      "url": "https://arxiv.org/abs/2401.00001v3",
+      "normalized": "https://arxiv.org/abs/2401.00001v3",
+      "expected": "lead-v1-b0fb1dcb9a7e28135e89185a4d66235f8578385400127192e9e1c62dbf8824ab"
+    },
+    {
+      "url": "https://arxiv.org/abs/2402.00001v1",
+      "normalized": "https://arxiv.org/abs/2402.00001v1",
+      "expected": "lead-v1-b8015ee552e35c90b2b9d452a672cde0452fa63ffb2bf18ac58849c521abbfb4"
+    },
+    {
+      "url": "https://arxiv.org/abs/2501.09136",
+      "normalized": "https://arxiv.org/abs/2501.09136",
+      "expected": "lead-v1-01eaf5c7d02d87b0ffbb49d159ea33fabbc7def4a249554b0100653a799903bd"
+    },
+    {
+      "url": "https://arxiv.org/abs/2501.09136v2",
+      "normalized": "https://arxiv.org/abs/2501.09136v2",
+      "expected": "lead-v1-3117043e2e8fb17ff7eaa3b75e80e2a26541ffe9192371b76cbee92600f952f4"
+    },
+    {
+      "url": "https://arxiv.org/abs/2501.09136v3",
+      "normalized": "https://arxiv.org/abs/2501.09136v3",
+      "expected": "lead-v1-f9a06881b65c95d479b28c7ff70a5008e64b7dc1e807a83b944c0316d6d18a18"
+    },
+    {
+      "url": "https://arxiv.org/abs/hep-th/9901001v3",
+      "normalized": "https://arxiv.org/abs/hep-th/9901001v3",
+      "expected": "lead-v1-eb63e6a94a43b4ebad20324a9cd55da5a05eba46b7363d62b83b7242713bf085"
+    },
+    {
+      "url": "https://arxiv.org/html/2501.09136",
+      "normalized": "https://arxiv.org/html/2501.09136",
+      "expected": "lead-v1-e52db863c9ca21ae166bb7819da90ac62c703f6ccd5d5423826f30e263dc800f"
+    },
+    {
+      "url": "https://arxiv.org/html/2501.09136.pdf",
+      "normalized": "https://arxiv.org/html/2501.09136.pdf",
+      "expected": "lead-v1-2b8ffcaa2d63a359407c9aa1dbdb5c513a8ab3d83bb251fbdaaa74998d8c8b4d"
+    },
+    {
+      "url": "https://arxiv.org/html/2501.09136/extra",
+      "normalized": "https://arxiv.org/html/2501.09136/extra",
+      "expected": "lead-v1-fdbe985bade4a64b21a91320b8877488ab849a1d8f93cc0276edd99fdd023dab"
+    },
+    {
+      "url": "https://arxiv.org/html/2501.09136v0",
+      "normalized": "https://arxiv.org/html/2501.09136v0",
+      "expected": "lead-v1-5bf50584a0c54fdf763495b4ff717fac12dc2f74dec047771c7557b1baa1cf1c"
+    },
+    {
+      "url": "https://arxiv.org/html/2501.09136v1",
+      "normalized": "https://arxiv.org/html/2501.09136v1",
+      "expected": "lead-v1-b82866e1b51c7b2635eab42dab6a04b912840a7fdf9ed94a00efd18d9488d4f1"
+    },
+    {
+      "url": "https://arxiv.org/html/2501.09136v2",
+      "normalized": "https://arxiv.org/html/2501.09136v2",
+      "expected": "lead-v1-337c4198455027deaf0bba247510ad291fec382f429632430db5cc29a098b60d"
+    },
+    {
+      "url": "https://arxiv.org/html/2501.09136v3",
+      "normalized": "https://arxiv.org/html/2501.09136v3",
+      "expected": "lead-v1-f9cac23080b065ce28449238ead77cec3ea6f131e34392ce780b68128e11cf11"
+    },
+    {
+      "url": "https://arxiv.org/html/2501.09136v4",
+      "normalized": "https://arxiv.org/html/2501.09136v4",
+      "expected": "lead-v1-ab5c31f85048f27796508357cc23cdcfe2d427ca3f13f05222af6ac29e965441"
+    },
+    {
+      "url": "https://arxiv.org/html/2501.09136v9999999",
+      "normalized": "https://arxiv.org/html/2501.09136v9999999",
+      "expected": "lead-v1-ec2d865ca7598bbb3b2a2c9c6b963009ef8b42d32c6fb91835c3ca73321bbe6e"
+    },
+    {
+      "url": "https://arxiv.org/html/2501.09137",
+      "normalized": "https://arxiv.org/html/2501.09137",
+      "expected": "lead-v1-489db7a52e0913120a0ea1d266d00f675616928924d75a7fc052f80f5ef39f88"
+    },
+    {
+      "url": "https://arxiv.org/html/2501.09137v2",
+      "normalized": "https://arxiv.org/html/2501.09137v2",
+      "expected": "lead-v1-526c3192f4c7af34c6b1a53e7ceb2f622ffb4ed400fe13eaf71df2e8326b37e5"
+    },
+    {
+      "url": "https://arxiv.org/pdf/2401.00001v2.pdf",
+      "normalized": "https://arxiv.org/pdf/2401.00001v2.pdf",
+      "expected": "lead-v1-be14774911d03bff154804f2e7b4e3424251e625ddd377cb7ed7ae2404894e0d"
+    },
+    {
+      "url": "https://arxiv.org/pdf/2501.09136v2.pdf",
+      "normalized": "https://arxiv.org/pdf/2501.09136v2.pdf",
+      "expected": "lead-v1-d3940906d096f03ff05185f986182a025182e69c827bc1f36046e52c5dde5016"
+    },
+    {
+      "url": "https://b.test/1",
+      "normalized": "https://b.test/1",
+      "expected": "lead-v1-077adb2567fa770d5cb911b4299d2100a5ecd568eff30d99b6d8804ca0a24af2"
+    },
+    {
+      "url": "https://doi.org/10.1038/",
+      "normalized": "https://doi.org/10.1038/",
+      "expected": "lead-v1-724998ef8657b1fa34e1daa1fdfa7c7739abe8ddd4b52c4335963f96d16406d3"
+    },
+    {
+      "url": "https://doi.org/10.1234/WORK",
+      "normalized": "https://doi.org/10.1234/WORK",
+      "expected": "lead-v1-26d85cf3adc1d2d852c6fa84df5a9376a31333ee3d91d11b8f70b144daf65141"
+    },
+    {
+      "url": "https://doi.org/10.1234/work",
+      "normalized": "https://doi.org/10.1234/work",
+      "expected": "lead-v1-a66d5a5f4468196310f8aa8bdf583b797ef7dee2271479b8f9262b7fd0449000"
+    },
+    {
+      "url": "https://evil.test/arxiv.org/html/2501.09136",
+      "normalized": "https://evil.test/arxiv.org/html/2501.09136",
+      "expected": "lead-v1-0f6cc0dcd738cecec9bca493d63412238d45f9a256c08f72ba6c9ffc247be02d"
+    },
+    {
+      "url": "https://example.com/0",
+      "normalized": "https://example.com/0",
+      "expected": "lead-v1-5312667f8f8f354fcb40536cb629d3cb3b6a1ea8946a43fad8916797ff3f157c"
+    },
+    {
+      "url": "https://example.com/1",
+      "normalized": "https://example.com/1",
+      "expected": "lead-v1-f2f9784142e4d11e32b550593e53fa187718c7c3435936d7845bf0300d28391c"
+    },
+    {
+      "url": "https://example.com/page",
+      "normalized": "https://example.com/page",
+      "expected": "lead-v1-3641c5f2274c5471278ab5bf1df6d1858d8aa392d85c51301abed2122a3c634f"
+    },
+    {
+      "url": "https://example.com/x",
+      "normalized": "https://example.com/x",
+      "expected": "lead-v1-54cef8f42f3f31ad349075022cd36ce1a378d039c1df7af45d61d693d9a35c6a"
+    },
+    {
+      "url": "https://export.arxiv.org/abs/2501.09136v2",
+      "normalized": "https://export.arxiv.org/abs/2501.09136v2",
+      "expected": "lead-v1-56a511ecc0adcb1bc8a997a8cb2f5821132c3f4c7a23d98933367c781e4aac84"
+    },
+    {
+      "url": "https://export.arxiv.org/html/hep-th/9901001v3",
+      "normalized": "https://export.arxiv.org/html/hep-th/9901001v3",
+      "expected": "lead-v1-5b7178c52e0a1a1e27a9786634aadb569149ee1d9640505d3b92cc80e9084ee7"
+    },
+    {
+      "url": "https://internal.example\\@public.com/",
+      "normalized": "https://internal.example\\@public.com/",
+      "expected": "lead-v1-8092ac2b8e09131228281e79c56af30cd504df3d3d6502f3edbfe2ee9fc70f72"
+    },
+    {
+      "url": "https://localtest.me/",
+      "normalized": "https://localtest.me/",
+      "expected": "lead-v1-3a03ad4980c7874fa66587ff69632785b8e8e93c9e4b8de50884ff4bca591345"
+    },
+    {
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-1234",
+      "normalized": "https://nvd.nist.gov/vuln/detail/CVE-2024-1234",
+      "expected": "lead-v1-6de1308826468bb6e3a8cf43d5d5f7b4a08922960be44a925683b6e37488709a"
+    },
+    {
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC1/",
+      "normalized": "https://pmc.ncbi.nlm.nih.gov/articles/PMC1/",
+      "expected": "lead-v1-8bbab7a7e961319da2e4bb457b5c922e9ae5f5ad916664b921feab55359fe0c4"
+    },
+    {
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2/",
+      "normalized": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2/",
+      "expected": "lead-v1-d371f115436acfc43d11b0fbee685c91965d1902706d7645e2b52ec85510acf2"
+    },
+    {
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8371605/",
+      "normalized": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8371605/",
+      "expected": "lead-v1-9f44281a9177344866bb8a8e9638dd9ee739e5d9e629fb144d8bd5d1a4276023"
+    },
+    {
+      "url": "https://pubmed.ncbi.nlm.nih.gov/1/",
+      "normalized": "https://pubmed.ncbi.nlm.nih.gov/1/",
+      "expected": "lead-v1-49df305f0636a7f66ca513dbc09e0901e55c58af23fc0509feec039e61dfbc14"
+    },
+    {
+      "url": "https://pubmed.ncbi.nlm.nih.gov/2/",
+      "normalized": "https://pubmed.ncbi.nlm.nih.gov/2/",
+      "expected": "lead-v1-0076282cfed0f814f6a7ac8bd1b94be89ae55218ed955201cbe3fa610e3d3ce3"
+    },
+    {
+      "url": "https://www.arxiv.org/html/2501.09136v2",
+      "normalized": "https://www.arxiv.org/html/2501.09136v2",
+      "expected": "lead-v1-5146104399e846baa2337f1053509014019ecac572fe48d9f90405809fee1728"
+    },
+    {
+      "url": "https://www.nature.com/articles/",
+      "normalized": "https://www.nature.com/articles/",
+      "expected": "lead-v1-9fe51616c012d3a92fbdf16e3abbba6dfc9b7700db960e6627b08a05c8bb734f"
+    },
+    {
+      "url": "https://www.nature.com/articles/s41586-021-03819-2",
+      "normalized": "https://www.nature.com/articles/s41586-021-03819-2",
+      "expected": "lead-v1-c38a8009142b3b2ff60384b7bd90ee6859446b362c455c4f23e905373d26d85c"
+    },
+    {
+      "url": "https://www.semanticscholar.org/paper/public-id",
+      "normalized": "https://www.semanticscholar.org/paper/public-id",
+      "expected": "lead-v1-b6dfbda421684de184a7c713d17cd3f93dbf21d4eee8d3686c8395f787ac82c1"
+    },
+    {
+      "url": "https://zenodo.org/records/100001",
+      "normalized": "https://zenodo.org/records/100001",
+      "expected": "lead-v1-41634fd0b1c85b6cfda85885852f314db79c7ff07ea639cd7db874d626402ae2"
+    },
+    {
+      "url": "https://zenodo.org/records/100002",
+      "normalized": "https://zenodo.org/records/100002",
+      "expected": "lead-v1-93d7fb0c370ce97c0ee234ed76dadbd5e930e640161fd220d335cda0b5fb5942"
+    },
+    {
+      "url": "javascript:alert(1)",
+      "normalized": "javascript:alert(1)",
+      "expected": "lead-v1-d0ee0421cce9521da249939cc55632a0cee6ec36d5f5a1940e0c47800007a0ea"
+    },
+    {
+      "url": "mailto:someone@example.com",
+      "normalized": "mailto:someone@example.com",
+      "expected": "lead-v1-2b922b81122b7094be42800b57a93d6619306267a9c0f61de1969082489bb172"
+    },
+    {
+      "url": "HTTPS://E/p?z=1&a=x&z=2&utm_source=x#frag",
+      "normalized": "https://E/p?z=1&z=2&a=x#frag",
+      "expected": "lead-v1-481143a04a9a116c9c075bc874b4ca714524532152d222b684bdde1a1b524eb7"
+    },
+    {
+      "url": "http://e/?UTM_source=x&blank=&q=%FF&q=a+b",
+      "normalized": "http://e/?UTM_source=x&blank=&q=%EF%BF%BD&q=a+b",
+      "expected": "lead-v1-971dc679b9d91002b35be5596ac1650b1c2d913120dff86ca1f92f1f35d292a8"
+    },
+    {
+      "url": "http://e/?a=~+%2F&b",
+      "normalized": "http://e/?a=~+%2F&b=",
+      "expected": "lead-v1-89f5c54877d348c7c69e426f8c0d1105be706940b3aba38d81c2f91bfb1ddaee"
+    },
+    {
+      "url": "https://[broken",
+      "normalized": "https://[broken",
+      "expected": "lead-v1-e68d75fe2d39f83a5b47ada15e3b70614c1a2d99af6c01ff4cc3de558d437209"
+    },
+    {
+      "url": "relative?utm_source=x&a=1",
+      "normalized": "relative?a=1",
+      "expected": "lead-v1-8fcfdadab7bcf176d597d41feade8259860f14e9dc8a39afdd1c81b4f18bd93a"
+    },
+    {
+      "url": "http://[v]/",
+      "normalized": "http://[v]/",
+      "expected": "lead-v1-91a2ae04d3bca61e955e8eb3d169dd3b145d2538520020fe4dbfaf40be3975d0"
+    },
+    {
+      "url": "http://[v1]/",
+      "normalized": "http://[v1]/",
+      "expected": "lead-v1-958e809a6395326868b087f4b45b61a4e156c88f2cedc3475c85b4796e062b0a"
+    },
+    {
+      "url": "http://[v1.]/",
+      "normalized": "http://[v1.]/",
+      "expected": "lead-v1-a8001fcf49663d82901a60fc4c67769f9b676fd2e49552d9f2d0ba5006e43680"
+    },
+    {
+      "url": "http://[v1.x]/",
+      "normalized": "http://[v1.x]/",
+      "expected": "lead-v1-244219201bff353d050f1c63609db84c7e2fbd05d323436ce67b1ed928868da2"
+    },
+    {
+      "url": "http://[vG.x]/",
+      "normalized": "http://[vG.x]/",
+      "expected": "lead-v1-f6e789b4ea5df3683abdc271a99595f374eadc986b77697220aaeb57b2aa6c93"
+    },
+    {
+      "url": "http://[V1.x]/",
+      "normalized": "http://[V1.x]/",
+      "expected": "lead-v1-9958118218efccf9ddcb1f63f8d250137ae715dbb9150e3433009f251358c32f"
+    },
+    {
+      "url": "http://[1.2.3.4]/",
+      "normalized": "http://[1.2.3.4]/",
+      "expected": "lead-v1-3631713aa6ce5c5dad054bb3004f874d69d571162b8f221753fe7ba518268c57"
+    },
+    {
+      "url": "http://[2001:20::1]/",
+      "normalized": "http://[2001:20::1]/",
+      "expected": "lead-v1-8ac960f87ea44458d53645a7d029fd43f8de82b29fb32e1089348e3091b0099b"
+    },
+    {
+      "url": "http://[2001:30::1]/",
+      "normalized": "http://[2001:30::1]/",
+      "expected": "lead-v1-88e5f754c0436d54c1a62cff38a91f387ae01977eb7ca153e067ab9c55d1f59d"
+    },
+    {
+      "url": "http://[2001:3::1]/",
+      "normalized": "http://[2001:3::1]/",
+      "expected": "lead-v1-c2d70ac02c9bb996bb707917ff3d1eabda14870e618f68a8123644d238ac8b58"
+    },
+    {
+      "url": "http://[2001:db8::1]/",
+      "normalized": "http://[2001:db8::1]/",
+      "expected": "lead-v1-4a784787d9a3b0ca592eb10c719cedc7cb5fe9ee7307819fe85cf9bf19b8ef92"
+    },
+    {
+      "url": "http://[64:ff9b:1::1]/",
+      "normalized": "http://[64:ff9b:1::1]/",
+      "expected": "lead-v1-d941c59fcf750515c3d101ef7c12bf4603b1caaccc288a5530ad192b4d0207c7"
+    },
+    {
+      "url": "http://[64:ff9b::808:808]/",
+      "normalized": "http://[64:ff9b::808:808]/",
+      "expected": "lead-v1-21c082b9feacea2fedf6590707883cd306779042dc272e4bbcd3981e8771352e"
+    },
+    {
+      "url": "http://[::ffff:8.8.8.8]/",
+      "normalized": "http://[::ffff:8.8.8.8]/",
+      "expected": "lead-v1-db32290acd366eb433b49991f22b4deb76d86bfd6abe7b2867788fa62eb59b0d"
+    },
+    {
+      "url": "http://[::ffff:0:8.8.8.8]/",
+      "normalized": "http://[::ffff:0:8.8.8.8]/",
+      "expected": "lead-v1-0637fd7ba65f313f1ca7737d5cac7dcbe35c07f989de4028011b377a8706963e"
+    },
+    {
+      "url": "http://[3fff::1]/",
+      "normalized": "http://[3fff::1]/",
+      "expected": "lead-v1-5b0f5c33e98d04ac01abf342ca3e2153b22cb0253fa992fdb719a7601d815e1d"
+    },
+    {
+      "url": "http://[4000::1]/",
+      "normalized": "http://[4000::1]/",
+      "expected": "lead-v1-e735cf45ac7d76a9b9dfd0edc21b077c239032cf31feeaab2ba063b1f14d27bc"
+    },
+    {
+      "url": "http://[ff00::1]/",
+      "normalized": "http://[ff00::1]/",
+      "expected": "lead-v1-0ce339f4f5e0e7a428bf2a5beeee54cb793f79f40505374328e83c938f2357f0"
+    },
+    {
+      "url": "http://8.8.8.8/",
+      "normalized": "http://8.8.8.8/",
+      "expected": "lead-v1-a5a5123a102ed178028b19d76064088c7f3f1929db86a1b74576cfee7835600d"
+    },
+    {
+      "url": "http://08.8.8.8/",
+      "normalized": "http://08.8.8.8/",
+      "expected": "lead-v1-4d52224fd555349881fcf8f40260a3e17ea6a2f5eb288ef6c2555c8d3e76d51b"
+    },
+    {
+      "url": "http://192.0.0.9/",
+      "normalized": "http://192.0.0.9/",
+      "expected": "lead-v1-533b13330f6bde19eb702a3d2def0ec18cdb64a54320c0bc538c6d5ad97211cc"
+    },
+    {
+      "url": "http://192.0.0.10/",
+      "normalized": "http://192.0.0.10/",
+      "expected": "lead-v1-a1f5471543a22b50e231a13e486def25b9db5d9541750955a1718f32431cce91"
+    },
+    {
+      "url": "http://192.0.0.8/",
+      "normalized": "http://192.0.0.8/",
+      "expected": "lead-v1-c7ba58fec544f1deb6f70274a8adebad15f10c56749a65ca74c9eb69d1a7e43b"
+    },
+    {
+      "url": "http://192.0.0.11/",
+      "normalized": "http://192.0.0.11/",
+      "expected": "lead-v1-202ea56ecb8d52755357f0fffcf5cea58dd7bb07d079d0373792cdc8262e9877"
+    },
+    {
+      "url": "http://224.0.0.1/",
+      "normalized": "http://224.0.0.1/",
+      "expected": "lead-v1-002b2ee05b77ece5fca592e3429aad0806fdd840e2e3cdafb734ea89e51b7f68"
+    },
+    {
+      "url": "http://240.0.0.1/",
+      "normalized": "http://240.0.0.1/",
+      "expected": "lead-v1-d5418cd8168c8fa78425b4310c48b1e9dcb961779accf0331a0e74ef81aa4dc6"
+    },
+    {
+      "url": "http://100.64.0.1/",
+      "normalized": "http://100.64.0.1/",
+      "expected": "lead-v1-ef8ed8d941891de0e5c71c60d8802cf17723d012ee09e6a692619ff3d529b046"
+    },
+    {
+      "url": "http://100.128.0.1/",
+      "normalized": "http://100.128.0.1/",
+      "expected": "lead-v1-0bf090aee3ed7bf655261756086b5097a807a6a6151d00cd54aa298efc01eac3"
+    },
+    {
+      "url": "http://0xffffffff/",
+      "normalized": "http://0xffffffff/",
+      "expected": "lead-v1-f95a2b726c01ab4c556262e6f5335718737bbb1fc5ecdcfb330fef5178251bd5"
+    },
+    {
+      "url": "http://0x08080808/",
+      "normalized": "http://0x08080808/",
+      "expected": "lead-v1-24f8a70069305fb9fc4194363d709a3b082201788965733e3432740069f91410"
+    },
+    {
+      "url": "http://010.010.010.010/",
+      "normalized": "http://010.010.010.010/",
+      "expected": "lead-v1-0763c0209e60d7a9013389b9d73df17ab8e646995f2bc1594ae1ca9bf30a8d48"
+    },
+    {
+      "url": "http://1.2.65535/",
+      "normalized": "http://1.2.65535/",
+      "expected": "lead-v1-cf54caef21994e62b4f7213cce32a57b45106a5f058d2bebd8757b96d7ad697e"
+    },
+    {
+      "url": "http://1.2.65536/",
+      "normalized": "http://1.2.65536/",
+      "expected": "lead-v1-e85152484ae3a2613138e11fe8254cb35676f3c10ccc1ad95b58aa79ca136abe"
+    },
+    {
+      "url": "http://1.2.3.4./",
+      "normalized": "http://1.2.3.4./",
+      "expected": "lead-v1-f3a126dd2786d38141d72c23bb6c0f3ae684c2d80e45151a4a639699fbe7c4a0"
+    },
+    {
+      "url": "http://1..2/",
+      "normalized": "http://1..2/",
+      "expected": "lead-v1-3e1d6f862b1478107c2e434b8070a335c95ae324a5a0c145ae458cdd06eb3eb6"
+    },
+    {
+      "url": "http://0xg/",
+      "normalized": "http://0xg/",
+      "expected": "lead-v1-8349b87edd8d846975e4ae2e346a025529df1b88afe1f2c1977753c74ec0cad8"
+    },
+    {
+      "url": "http://0x1.0x2.0x3.0x4/",
+      "normalized": "http://0x1.0x2.0x3.0x4/",
+      "expected": "lead-v1-0c52a0108288b7ab5ffaa2254316bf4c8a8dc0de14c9b360089a9a667e9b3018"
+    },
+    {
+      "url": "http://4294967295/",
+      "normalized": "http://4294967295/",
+      "expected": "lead-v1-9ad8d7fa31ea7fc4ab731979bd7ac95a7b5e019ffdc38e7e0da52385ee28cffd"
+    },
+    {
+      "url": "http://4294967296/",
+      "normalized": "http://4294967296/",
+      "expected": "lead-v1-26a279297d0caa5b0235f22375e5ff5ac8e93220564f76352ec4ed79f164e9ea"
+    },
+    {
+      "url": "http://1.2.3.4.5/",
+      "normalized": "http://1.2.3.4.5/",
+      "expected": "lead-v1-e43322494701397658629149502e65c585d1b13b7f6f0cc14b0572f7ffee6e7f"
+    },
+    {
+      "url": "http://nip.io/",
+      "normalized": "http://nip.io/",
+      "expected": "lead-v1-d4f6b28e835caf79c5f99f0e61605cd61e3742ddb5cd1012a25024305c85cae4"
+    },
+    {
+      "url": "http://localhost/",
+      "normalized": "http://localhost/",
+      "expected": "lead-v1-e35da960b323d1fc5825fcc4a5332a3e94fb68dbe72f44832c270f2b02d7f871"
+    },
+    {
+      "url": "http://example.com../",
+      "normalized": "http://example.com../",
+      "expected": "lead-v1-171ace3950429f3cebd81e5feb9b711170b75081459d28e34e718ff85079ea18"
+    },
+    {
+      "url": "http://127.0.0.1.nip.io/",
+      "normalized": "http://127.0.0.1.nip.io/",
+      "expected": "lead-v1-c0287a45a5f7f1b670eb758f06e10ded4345b3cc48fb9e3d5c51b60355926e07"
+    },
+    {
+      "url": "http://x⁇y/",
+      "normalized": "http://x⁇y/",
+      "expected": "lead-v1-bbb00d703a008aaf98d65068792b50d3188f6eb0e1f8c925ac8fc380b41ff0ff"
+    },
+    {
+      "url": "http://x⁈y/",
+      "normalized": "http://x⁈y/",
+      "expected": "lead-v1-dad5b0060ad232425bba57282bbcd272250b6b9f85f1a806ab67bcb8451476ad"
+    },
+    {
+      "url": "http://x⁉y/",
+      "normalized": "http://x⁉y/",
+      "expected": "lead-v1-605438ffcd1bd73c01af61331473cb26e6d67baeb38413859c446a1a9fd175b9"
+    },
+    {
+      "url": "http://x℀y/",
+      "normalized": "http://x℀y/",
+      "expected": "lead-v1-7cbef66438bc5ca9d82e0c16eb811cd37ed7ab14d9bd0ac60e861ad00ec0168b"
+    },
+    {
+      "url": "http://x℁y/",
+      "normalized": "http://x℁y/",
+      "expected": "lead-v1-d6d861d3034440f1a432eba0857f01a61ba12bbeea3aea22b71870c6c9c6279f"
+    },
+    {
+      "url": "http://x℅y/",
+      "normalized": "http://x℅y/",
+      "expected": "lead-v1-0254a551fd941f2e4b0def144b924fe83f33dc7f30fc5c041fc055373ab98f16"
+    },
+    {
+      "url": "http://x℆y/",
+      "normalized": "http://x℆y/",
+      "expected": "lead-v1-d662f4f15c99688f2f1169bafa3b2d878f7480319a2df25bd5723ad8d23873ae"
+    },
+    {
+      "url": "http://x⩴y/",
+      "normalized": "http://x⩴y/",
+      "expected": "lead-v1-778208114dd6e2ad871bb06d9e6272745b2f1ba962782bfee1cacee728e01635"
+    },
+    {
+      "url": "http://x︓y/",
+      "normalized": "http://x︓y/",
+      "expected": "lead-v1-ee4b1abe3aee0c24637b7c586419c5f60ec3b42d08f09c1d30e73d904012aab0"
+    },
+    {
+      "url": "http://x︖y/",
+      "normalized": "http://x︖y/",
+      "expected": "lead-v1-15ff5d7745d07e3ebeff18474639c5261546c3808909ff10981b50c1404f03d4"
+    },
+    {
+      "url": "http://x﹕y/",
+      "normalized": "http://x﹕y/",
+      "expected": "lead-v1-b84b299138db254c0e8014b5437f9f18106ea36ac26dea27bb4aec89d0ca1bc0"
+    },
+    {
+      "url": "http://x﹖y/",
+      "normalized": "http://x﹖y/",
+      "expected": "lead-v1-ab7f4263db09d6bbbbb0511bec441899ce42da9aacb857e958521b825e583c24"
+    },
+    {
+      "url": "http://x﹟y/",
+      "normalized": "http://x﹟y/",
+      "expected": "lead-v1-e554dbbc46d6fcb78f67e9509aa9e1bac30a7196c5faf31f17d38cd6039434f6"
+    },
+    {
+      "url": "http://x﹫y/",
+      "normalized": "http://x﹫y/",
+      "expected": "lead-v1-32ee5e7c09e125b314d2b02a8d679400c6de397c94050ad645cba60db46dfd7f"
+    },
+    {
+      "url": "http://x＃y/",
+      "normalized": "http://x＃y/",
+      "expected": "lead-v1-e3361450afa09ee57deca61057fa093a06d786f4b82a24f6c19f71b84312c1fa"
+    },
+    {
+      "url": "http://x／y/",
+      "normalized": "http://x／y/",
+      "expected": "lead-v1-f33342c6d4a50494c0f05a118b678e820b5d7b79d8cceda8433983a6d258fbe3"
+    },
+    {
+      "url": "http://x：y/",
+      "normalized": "http://x：y/",
+      "expected": "lead-v1-3896b107745bedb16f5ced32145382460d90338360902410a152234dda39d4fe"
+    },
+    {
+      "url": "http://x？y/",
+      "normalized": "http://x？y/",
+      "expected": "lead-v1-879409fa0d86202e5e11efd05d35b65f436a7c570e67637ce78bac1ea1415e81"
+    },
+    {
+      "url": "http://x＠y/",
+      "normalized": "http://x＠y/",
+      "expected": "lead-v1-ad14af1cec8768300c08c737f83c59fa94bab98b213d2070105732ad8b93e431"
+    },
+    {
+      "url": "http://e/?x=*&q=~",
+      "normalized": "http://e/?x=%2A&q=~",
+      "expected": "lead-v1-5907c2e3c490001682d6b2fa59961bff56166fb935306eab7252f1655c3f19a3"
+    },
+    {
+      "url": "http://user@e:bad/",
+      "normalized": "http://user@e:bad/",
+      "expected": "lead-v1-c3632a98593f813a43a122ac69498fbbf58ac12f8c9228d439e06485c721b718"
+    },
+    {
+      "url": "http://127.1:bad/",
+      "normalized": "http://127.1:bad/",
+      "expected": "lead-v1-874e2bf20689de3fca3833cc664e9a5219c1f1de9e790ee373eea230745b0d51"
+    },
+    {
+      "url": "http://e:999999999999999999999/",
+      "normalized": "http://e:999999999999999999999/",
+      "expected": "lead-v1-253de3a782a4932b7020c68928e9bf76be1abab2e8047ffd556cbd123aac2e10"
+    },
+    {
+      "url": "http://e:00080/",
+      "normalized": "http://e:00080/",
+      "expected": "lead-v1-2cea296484a0a75c933c3d34699cce23265926dc8307729aedfb741fe963c490"
+    },
+    {
+      "url": "http://e:00/",
+      "normalized": "http://e:00/",
+      "expected": "lead-v1-0d0d66ccfb35da32ca2aecb6366630594c07857e2806c8858ec8032e31d6b5bc"
+    },
+    {
+      "url": "http://e\\@x/",
+      "normalized": "http://e\\@x/",
+      "expected": "lead-v1-e6922861df7971da729e79632e9539d6d51b5bbd03716f7ef70247ef30be8815"
+    },
+    {
+      "url": "http://[::1]x/",
+      "normalized": "http://[::1]x/",
+      "expected": "lead-v1-1a6a0f81dfff5ce7c68bd18728f4bfc841b12a502fa9cbb82345219da5828bc9"
+    },
+    {
+      "url": "http://[::1]:80:90/",
+      "normalized": "http://[::1]:80:90/",
+      "expected": "lead-v1-e36f87820d16b71dd991034836d5229e99f0c0eed283922fee369ac53dc9ee3d"
+    },
+    {
+      "url": "http://[fe80::1%eth0]/",
+      "normalized": "http://[fe80::1%eth0]/",
+      "expected": "lead-v1-1983712f1cb8ecd3aba865512a1730a8b46199e480476ebc5104a7f982994f66"
+    },
+    {
+      "url": "http://[fe80::1%25en0]/",
+      "normalized": "http://[fe80::1%25en0]/",
+      "expected": "lead-v1-83c294b43728fa49b89de6f8745404fe1f9b6ce2e9181eb24e05dbdbfe7bdf8e"
+    },
+    {
+      "url": "http://[fe80::1%]/",
+      "normalized": "http://[fe80::1%]/",
+      "expected": "lead-v1-2e64b06cb322948d57dda33661d3f08e55973b1a654517946813cae1bfa585ad"
+    },
+    {
+      "url": "/p;?utm_source=x&keep=1#frag",
+      "normalized": "/p?keep=1#frag",
+      "expected": "lead-v1-26c82767de64298950e33c5c451e6d84ad17670c7b448a2ca90801d70ac69411"
+    },
+    {
+      "url": "/p;v?utm_source=x&keep=1#frag",
+      "normalized": "/p;v?keep=1#frag",
+      "expected": "lead-v1-7b7267325ec995e70e48ad347314a587a0ba5d2ccf6d417cb784d217031e52a5"
+    },
+    {
+      "url": "/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "/a;earlier/p?keep=1#frag",
+      "expected": "lead-v1-d211d055d8275091fd80b508df4c66347014ce84d9b3deb635bb756268f5ae82"
+    },
+    {
+      "url": "/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "/a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-05dafc95d4357de98d807cf1b41f6a869e0e905513ee079339c973071ab1650f"
+    },
+    {
+      "url": ";foo?utm_source=x&keep=1#frag",
+      "normalized": ";foo?keep=1#frag",
+      "expected": "lead-v1-2986d49e4c086469ad8202956ef4bc4e86501080c5c8f647cf0d5be79c99bd02"
+    },
+    {
+      "url": "custom:/p;?utm_source=x&keep=1#frag",
+      "normalized": "custom:/p;?keep=1#frag",
+      "expected": "lead-v1-13f54abbd596a9a126551f5db57858757a86315245a68a0c976a1d9c268daf06"
+    },
+    {
+      "url": "custom:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "custom:/p;v?keep=1#frag",
+      "expected": "lead-v1-508782c75ba9eedd9568c92b6db229fd489223fdc00f608ac04d51f61c3ab6ca"
+    },
+    {
+      "url": "custom:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "custom:/a;earlier/p;?keep=1#frag",
+      "expected": "lead-v1-d3140ad1209ac8ab190e7fb69562646e70887b1767097482e3b63de69501aaf2"
+    },
+    {
+      "url": "custom:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "custom:/a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-292ae2f40fd093b10b89bed3adf5508841995172cb533cbd289483619d35374d"
+    },
+    {
+      "url": "custom:;foo?utm_source=x&keep=1#frag",
+      "normalized": "custom:;foo?keep=1#frag",
+      "expected": "lead-v1-588f4926a6c29da10dee82a040fcc50e7e3a4f9de4594c89533320185fdd30bc"
+    },
+    {
+      "url": "data:/p;?utm_source=x&keep=1#frag",
+      "normalized": "data:/p;?keep=1#frag",
+      "expected": "lead-v1-6e0fbb8a6bfe670e425b99fab4a86f78bddf9a479a8259f5461dfb77f9dcd842"
+    },
+    {
+      "url": "data:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "data:/p;v?keep=1#frag",
+      "expected": "lead-v1-9596d64f4a1620df92d89348468bbca9a7ab1802ca81963e1921ed580ae416c2"
+    },
+    {
+      "url": "data:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "data:/a;earlier/p;?keep=1#frag",
+      "expected": "lead-v1-5929bf7a167b689d06ea159afe7cd89c536344c9764b6184e31f3ce6395e5d59"
+    },
+    {
+      "url": "data:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "data:/a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-7128af609cbae4d3a2e4c6c71f93ff127f8cdc1314f0f2e18db4eab5f31b9637"
+    },
+    {
+      "url": "data:;foo?utm_source=x&keep=1#frag",
+      "normalized": "data:;foo?keep=1#frag",
+      "expected": "lead-v1-0ffc7699c0e044ade592f58d9ebec48dc02c8b342f7b2f390bb8a6c5c6d62ea9"
+    },
+    {
+      "url": "file:/p;?utm_source=x&keep=1#frag",
+      "normalized": "file:///p;?keep=1#frag",
+      "expected": "lead-v1-ecb6d2354f12beae35170b0fc727d6e64fc2b6c66a72d110b58fd7b755f34248"
+    },
+    {
+      "url": "file:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "file:///p;v?keep=1#frag",
+      "expected": "lead-v1-3911336e2f34a27d5fdeafb7fee6c230e972fa20c929418e273606a36e349eed"
+    },
+    {
+      "url": "file:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "file:///a;earlier/p;?keep=1#frag",
+      "expected": "lead-v1-fed6206b6b8666a13f47a3c5e7ceebcbb506a9b03ff17d4494c43e5a459d6db8"
+    },
+    {
+      "url": "file:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "file:///a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-ee99ff206d2a9dc9a6e53fd283bc98e08e56634c4ad3a4031e52fee1d67a8440"
+    },
+    {
+      "url": "file:;foo?utm_source=x&keep=1#frag",
+      "normalized": "file:;foo?keep=1#frag",
+      "expected": "lead-v1-f25d1021de46815c758eac1e3f49beece29030b20d51859d0f5150fe25ab6804"
+    },
+    {
+      "url": "ftp:/p;?utm_source=x&keep=1#frag",
+      "normalized": "ftp:///p?keep=1#frag",
+      "expected": "lead-v1-87aa5311df60d143bcd52506eeab48f46fe9981fc0cc6b892d20c85f6bd31e6d"
+    },
+    {
+      "url": "ftp:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "ftp:///p;v?keep=1#frag",
+      "expected": "lead-v1-03130ef020c8c285e6f01f234823039b9def9ae095f049f6cae34de7eabb1865"
+    },
+    {
+      "url": "ftp:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "ftp:///a;earlier/p?keep=1#frag",
+      "expected": "lead-v1-296704919135e31b254392f53df0d0b15f533be3f9870361525f03a99541b1da"
+    },
+    {
+      "url": "ftp:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "ftp:///a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-fbcdb42dd56da7a60cd5e70b0d2a7489a601b1f4d882b8196ef4581088404333"
+    },
+    {
+      "url": "ftp:;foo?utm_source=x&keep=1#frag",
+      "normalized": "ftp:///;foo?keep=1#frag",
+      "expected": "lead-v1-bf0c7428f8f79925e6063bf6c46c4eb8ea79ae5a2b12dea7b7ab53f508ac4673"
+    },
+    {
+      "url": "git:/p;?utm_source=x&keep=1#frag",
+      "normalized": "git:///p;?keep=1#frag",
+      "expected": "lead-v1-afe43100818947ada4d04fc224a85a5126aa8bf23ca0407adb4f607908e061ab"
+    },
+    {
+      "url": "git:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "git:///p;v?keep=1#frag",
+      "expected": "lead-v1-573c17fef97e3a9b47214abf2649c6edfa348f702b1c7d15e586546fb545d4ea"
+    },
+    {
+      "url": "git:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "git:///a;earlier/p;?keep=1#frag",
+      "expected": "lead-v1-c055aa6e7836b7e32fa7cded5f1c30b6ffa9b532636c31659ac58385598b7d98"
+    },
+    {
+      "url": "git:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "git:///a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-5e8513b3ff5983d9ca6e57e874ef4536fde9e3c3a8a7b05f44437301a3786021"
+    },
+    {
+      "url": "git:;foo?utm_source=x&keep=1#frag",
+      "normalized": "git:;foo?keep=1#frag",
+      "expected": "lead-v1-7fd3e42022abbe2e9c068dcf06f38a2ff699da46f1114b2a66acc60651eb89ff"
+    },
+    {
+      "url": "git+ssh:/p;?utm_source=x&keep=1#frag",
+      "normalized": "git+ssh:///p;?keep=1#frag",
+      "expected": "lead-v1-669a9044a202892cbc345ad2ca79e667947be0c9721c4f7194c8ae8f9d5435c7"
+    },
+    {
+      "url": "git+ssh:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "git+ssh:///p;v?keep=1#frag",
+      "expected": "lead-v1-daf884c2670a1c71b45ab54583312a7abd44a810ce298f87bad3d07dfec089ca"
+    },
+    {
+      "url": "git+ssh:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "git+ssh:///a;earlier/p;?keep=1#frag",
+      "expected": "lead-v1-715c7d2019038e87019984e1650d5cf01b3065d9e17c34f522f9c6315655c54f"
+    },
+    {
+      "url": "git+ssh:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "git+ssh:///a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-fc293b544eeb7fa93cd8e923152dfd429ff6b601f14336cd1bc91910481364c7"
+    },
+    {
+      "url": "git+ssh:;foo?utm_source=x&keep=1#frag",
+      "normalized": "git+ssh:;foo?keep=1#frag",
+      "expected": "lead-v1-89e7828a807380d5c955c1b13268e137156874c2ec4fecc961b05c55867b0fcf"
+    },
+    {
+      "url": "gopher:/p;?utm_source=x&keep=1#frag",
+      "normalized": "gopher:///p;?keep=1#frag",
+      "expected": "lead-v1-62695835f770437fbaae5ffbad84625b4f34c6ca8632274cbc9648b66d0444ea"
+    },
+    {
+      "url": "gopher:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "gopher:///p;v?keep=1#frag",
+      "expected": "lead-v1-fb693119874c12a55be3a6fbc69aec798b538d3d6f1324d84f1948c46763b579"
+    },
+    {
+      "url": "gopher:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "gopher:///a;earlier/p;?keep=1#frag",
+      "expected": "lead-v1-ff3fe01a0eda9070b1fd749d70bf4db8015b02cb7123b6af12828320c5e3de33"
+    },
+    {
+      "url": "gopher:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "gopher:///a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-ac97c7a40905081db8895d08876f713644c255bb4103b100b75420fe6a1f56eb"
+    },
+    {
+      "url": "gopher:;foo?utm_source=x&keep=1#frag",
+      "normalized": "gopher:;foo?keep=1#frag",
+      "expected": "lead-v1-d1ff328c0fb079f3366952a2ac5b92e2215179dcc55643ceabb84d65bbdf30f4"
+    },
+    {
+      "url": "hdl:/p;?utm_source=x&keep=1#frag",
+      "normalized": "hdl:/p?keep=1#frag",
+      "expected": "lead-v1-59041efb6157184a8d454cde4d5b733a934c48db4f893d0d9f54fe64237ba675"
+    },
+    {
+      "url": "hdl:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "hdl:/p;v?keep=1#frag",
+      "expected": "lead-v1-b5071f8a24ba8061ac9034fd8ea9b0410e02708bce3e71920212fab8f030fe5d"
+    },
+    {
+      "url": "hdl:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "hdl:/a;earlier/p?keep=1#frag",
+      "expected": "lead-v1-544e42a239e09fbf31060949c87f59442f52401d233ed85655768bfa6309ab25"
+    },
+    {
+      "url": "hdl:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "hdl:/a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-79a48d8e7a31a941e7412cacec9f822a2612d08e85b4f3d7eecfff302b2ca336"
+    },
+    {
+      "url": "hdl:;foo?utm_source=x&keep=1#frag",
+      "normalized": "hdl:;foo?keep=1#frag",
+      "expected": "lead-v1-0eee17ab3c4247913590e628cf3f0786d86d354b2fdd6d65acf142c0971f81b1"
+    },
+    {
+      "url": "http:/p;?utm_source=x&keep=1#frag",
+      "normalized": "http:///p?keep=1#frag",
+      "expected": "lead-v1-4109944b1e69fcbd98664d7e9919af53ebd38e71dd1733a826d08137a4a43548"
+    },
+    {
+      "url": "http:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "http:///p;v?keep=1#frag",
+      "expected": "lead-v1-563180ac624578a627d6c05421d2dd17a72c8dfbba45204b8aaf166f0467660b"
+    },
+    {
+      "url": "http:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "http:///a;earlier/p?keep=1#frag",
+      "expected": "lead-v1-f6e829a49c72334be307db69b15a5fd2707d02067b6ae9b7e94f876e2b4ae4d1"
+    },
+    {
+      "url": "http:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "http:///a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-060e4e693e85305e94be33f3afc79e8ff67beed09808da5a1719c2f6b84ed37c"
+    },
+    {
+      "url": "http:;foo?utm_source=x&keep=1#frag",
+      "normalized": "http:///;foo?keep=1#frag",
+      "expected": "lead-v1-1d8649ca8a7ce37cb322e2784db78ef49552bef083df948970e14fa571e52800"
+    },
+    {
+      "url": "https:/p;?utm_source=x&keep=1#frag",
+      "normalized": "https:///p?keep=1#frag",
+      "expected": "lead-v1-8cd1827e9d73b7da521376e10e4330f0e82eab28c17b800a63d17d862683a60f"
+    },
+    {
+      "url": "https:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "https:///p;v?keep=1#frag",
+      "expected": "lead-v1-1c3cfdc96bbe253c0e2b3f218303b9463c684db3610ae487e31a63b16c64c221"
+    },
+    {
+      "url": "https:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "https:///a;earlier/p?keep=1#frag",
+      "expected": "lead-v1-907fe066505731aa4b9552efe6e38ed476f6dc35979e031c79845874357a883d"
+    },
+    {
+      "url": "https:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "https:///a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-7839fbedbe495c3c51d5d3a2b07a56f5cc8bc7cc0eba3148710c8e90db29cc6a"
+    },
+    {
+      "url": "https:;foo?utm_source=x&keep=1#frag",
+      "normalized": "https:///;foo?keep=1#frag",
+      "expected": "lead-v1-7efda34a3c4b7a792b4294793105d2de8615a921e48da28959ad95b16c454097"
+    },
+    {
+      "url": "imap:/p;?utm_source=x&keep=1#frag",
+      "normalized": "imap:///p?keep=1#frag",
+      "expected": "lead-v1-05286ec63ff50ec2a8e5fbcae3d1059fc1dc8ec623d2642bf36c342a90d741ca"
+    },
+    {
+      "url": "imap:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "imap:///p;v?keep=1#frag",
+      "expected": "lead-v1-40569b0c3b6b937dfd13492c66847574a1d133814666868715e46f69d8890d3c"
+    },
+    {
+      "url": "imap:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "imap:///a;earlier/p?keep=1#frag",
+      "expected": "lead-v1-c8acf2a4c6b820f1efa5754987432f8c8ffdb30350d3cd57a16d47a302d53169"
+    },
+    {
+      "url": "imap:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "imap:///a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-e5bb2e4dc8045c72fa9fc7d53575819c6b8d3352410b238a57b406b4827497c4"
+    },
+    {
+      "url": "imap:;foo?utm_source=x&keep=1#frag",
+      "normalized": "imap:///;foo?keep=1#frag",
+      "expected": "lead-v1-0695503168492a6ff88648f7e0344c08e3bc83f28f46a3bf0f2aa4dae66d7283"
+    },
+    {
+      "url": "itms-services:/p;?utm_source=x&keep=1#frag",
+      "normalized": "itms-services:///p;?keep=1#frag",
+      "expected": "lead-v1-7af2c7a5c3907bc7f27f4db5135dda8869b302ca8a6d07eadb554296b9811d45"
+    },
+    {
+      "url": "itms-services:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "itms-services:///p;v?keep=1#frag",
+      "expected": "lead-v1-59c1b3afdf5e11cb60fff01b1e5c3b754a7c55e3fe58c36bb501d9272700e889"
+    },
+    {
+      "url": "itms-services:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "itms-services:///a;earlier/p;?keep=1#frag",
+      "expected": "lead-v1-4a22edfb8f4afae0081219f7d77d3c9ff39fcf314bac4a4c0beeea36ad578724"
+    },
+    {
+      "url": "itms-services:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "itms-services:///a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-02cb9584cabf54f67918269018091e57ba2befd60cc0e5f7ee2ff08a807bbb8a"
+    },
+    {
+      "url": "itms-services:;foo?utm_source=x&keep=1#frag",
+      "normalized": "itms-services:;foo?keep=1#frag",
+      "expected": "lead-v1-561fa0bf125db07d7613f671cc13795d8f50b7aea4c655d8c37356ad2ebc2f97"
+    },
+    {
+      "url": "mailto:/p;?utm_source=x&keep=1#frag",
+      "normalized": "mailto:/p;?keep=1#frag",
+      "expected": "lead-v1-b3819fb1d339b75203c56c43a0246f0c6b07c3419edcabec87405edab4d1342e"
+    },
+    {
+      "url": "mailto:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "mailto:/p;v?keep=1#frag",
+      "expected": "lead-v1-e8d1b50e73e2f182b0e8a3dc900b656b180a021b1f28f2f012bb3482a706e1d3"
+    },
+    {
+      "url": "mailto:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "mailto:/a;earlier/p;?keep=1#frag",
+      "expected": "lead-v1-66a7de560f0363104ecf85d3825f1b5db29d0f985c01000ff1145b2fc3c18b88"
+    },
+    {
+      "url": "mailto:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "mailto:/a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-e7337829b3569fcc0c932f075e90997ff246a32b1f68d4876d03c9805eb0972d"
+    },
+    {
+      "url": "mailto:;foo?utm_source=x&keep=1#frag",
+      "normalized": "mailto:;foo?keep=1#frag",
+      "expected": "lead-v1-1315b6ed9982b2cf911174b6067abe0d6ff7ffb44c84876e89b58bbb72f5abc7"
+    },
+    {
+      "url": "mms:/p;?utm_source=x&keep=1#frag",
+      "normalized": "mms:///p?keep=1#frag",
+      "expected": "lead-v1-06b51756bad4efe27622f96d7370efa02f2686e9df63dc09a75cd95c5d01cee7"
+    },
+    {
+      "url": "mms:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "mms:///p;v?keep=1#frag",
+      "expected": "lead-v1-90205420f9d4421e9339013ee1d4326b25e1151a2d54f49c25d5a0c37c72cf2b"
+    },
+    {
+      "url": "mms:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "mms:///a;earlier/p?keep=1#frag",
+      "expected": "lead-v1-be39a7ca577d8c8d460134c446ea6e893dcb61b6573b7d206af03fdf8d21fe76"
+    },
+    {
+      "url": "mms:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "mms:///a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-9f4102fd334355bcbb57e6203f6dce138c9fdbb0d2cc8a28837b5e6174a85279"
+    },
+    {
+      "url": "mms:;foo?utm_source=x&keep=1#frag",
+      "normalized": "mms:///;foo?keep=1#frag",
+      "expected": "lead-v1-e90c4fab8a81a4198308776ebb2d0577308630e8210279153462bee376eda004"
+    },
+    {
+      "url": "nfs:/p;?utm_source=x&keep=1#frag",
+      "normalized": "nfs:///p;?keep=1#frag",
+      "expected": "lead-v1-0b48d9f45dfc9b96e0f841cc9576aaea40c2c8f54aa27e75810ddd82c02d8b66"
+    },
+    {
+      "url": "nfs:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "nfs:///p;v?keep=1#frag",
+      "expected": "lead-v1-71c7a17755d9ced283b3ca7ce5f661bcfa9e1cfee11411406f2ee0bf631fbacf"
+    },
+    {
+      "url": "nfs:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "nfs:///a;earlier/p;?keep=1#frag",
+      "expected": "lead-v1-17ea717a3e43b48105d0acc291d38a07e8571ab4032bfff69dd83881c3439668"
+    },
+    {
+      "url": "nfs:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "nfs:///a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-c46e4095a0a7ea93fbcb796363c48692d5d2b0806d99b2dd27ff7815f86a5695"
+    },
+    {
+      "url": "nfs:;foo?utm_source=x&keep=1#frag",
+      "normalized": "nfs:;foo?keep=1#frag",
+      "expected": "lead-v1-05285a18c00a4daf568f435598da7df27a6a340c2bad1a163389c3916ec6387d"
+    },
+    {
+      "url": "nntp:/p;?utm_source=x&keep=1#frag",
+      "normalized": "nntp:///p;?keep=1#frag",
+      "expected": "lead-v1-c762c6a229fe08f682f9e4d52b18e0a378fed8ca4917f34b43d3f5a7d6e2b166"
+    },
+    {
+      "url": "nntp:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "nntp:///p;v?keep=1#frag",
+      "expected": "lead-v1-266d08c5cfbf3bf21218f32bccb8c1576d657be4e371f21d3450605a3ee37030"
+    },
+    {
+      "url": "nntp:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "nntp:///a;earlier/p;?keep=1#frag",
+      "expected": "lead-v1-75e38fb4f51c69e155104bc1757ff57cb19de78e7b8c3f98f746132e8ec99cad"
+    },
+    {
+      "url": "nntp:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "nntp:///a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-f30f5ff5b2845ca373f076248e5d62a9e7cc55ea225161c3e1a745d924076d35"
+    },
+    {
+      "url": "nntp:;foo?utm_source=x&keep=1#frag",
+      "normalized": "nntp:;foo?keep=1#frag",
+      "expected": "lead-v1-51b7c5ed63d482d863e5dbd29495f3c09e2d57dcc698bbdbf35be55ac4503c14"
+    },
+    {
+      "url": "prospero:/p;?utm_source=x&keep=1#frag",
+      "normalized": "prospero:///p?keep=1#frag",
+      "expected": "lead-v1-ea08aa2b98511de96c6d21eb3ddc6d8f9e9ba8ccecdfeee6bec7493725ef2cad"
+    },
+    {
+      "url": "prospero:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "prospero:///p;v?keep=1#frag",
+      "expected": "lead-v1-f40dcfd7bba7d696eec1ba509611fe755bffcad39dbb3f9c0abbd94bac2eca46"
+    },
+    {
+      "url": "prospero:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "prospero:///a;earlier/p?keep=1#frag",
+      "expected": "lead-v1-a682a3c4549ccd4465c6a1a480d90556bdb47897ea5be47f78134ef7ae1c18a8"
+    },
+    {
+      "url": "prospero:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "prospero:///a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-73dbdfda1c958162353da68417621d235d914dd1a909cd83ea2c7abaf0662fdb"
+    },
+    {
+      "url": "prospero:;foo?utm_source=x&keep=1#frag",
+      "normalized": "prospero:///;foo?keep=1#frag",
+      "expected": "lead-v1-0d4074e4b99dc50f930e4f2305d4fb157829bfee1392fa4d0b45f37d6d3ad752"
+    },
+    {
+      "url": "rsync:/p;?utm_source=x&keep=1#frag",
+      "normalized": "rsync:///p;?keep=1#frag",
+      "expected": "lead-v1-8e9d23f5c1f40cd8f78d3e55dc02ecb66f1d56ee8fff822ffb3be38ce1f9713e"
+    },
+    {
+      "url": "rsync:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "rsync:///p;v?keep=1#frag",
+      "expected": "lead-v1-56e8125a76ab5f4ffffc0ea3de76762190e45cb64e4fdf8155554228103dbb3c"
+    },
+    {
+      "url": "rsync:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "rsync:///a;earlier/p;?keep=1#frag",
+      "expected": "lead-v1-fb1ffa99da2b841dd792695ef0d3ec33cfe9a5d50cdcc5e2489362b1f36193d7"
+    },
+    {
+      "url": "rsync:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "rsync:///a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-7b72317358b4e4ab21e3cb544c5a3d081fdff6355b928ee222ebfbd306342d89"
+    },
+    {
+      "url": "rsync:;foo?utm_source=x&keep=1#frag",
+      "normalized": "rsync:;foo?keep=1#frag",
+      "expected": "lead-v1-47bbbedf31a156c787b314b0f1c0297497f428f0131370f33a73b6b8207f32d9"
+    },
+    {
+      "url": "rtsp:/p;?utm_source=x&keep=1#frag",
+      "normalized": "rtsp:///p?keep=1#frag",
+      "expected": "lead-v1-8f791725838335f508038937f8a049c39560552650e446723f7d9141b8091511"
+    },
+    {
+      "url": "rtsp:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "rtsp:///p;v?keep=1#frag",
+      "expected": "lead-v1-03b0b6b3bbe264f498d16164fcd4b2c474af6eb7e7b16318eda927990d7b93ae"
+    },
+    {
+      "url": "rtsp:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "rtsp:///a;earlier/p?keep=1#frag",
+      "expected": "lead-v1-9c8963b2535c7c508cc50ce605b2132f8d0891649fbc5ebfcacc776af432972c"
+    },
+    {
+      "url": "rtsp:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "rtsp:///a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-556b4d94075edb3799b4a0936ae569465707ce6baf5353dc0c34525161870273"
+    },
+    {
+      "url": "rtsp:;foo?utm_source=x&keep=1#frag",
+      "normalized": "rtsp:///;foo?keep=1#frag",
+      "expected": "lead-v1-2505a23d237a96739f1c39e9b53fb913d2079a951d7a64af8cc2ba0a9c5af53e"
+    },
+    {
+      "url": "rtsps:/p;?utm_source=x&keep=1#frag",
+      "normalized": "rtsps:///p?keep=1#frag",
+      "expected": "lead-v1-496388770b2acd750a98d17e389394768d40dddb0481b2ef0d2b497323fa70df"
+    },
+    {
+      "url": "rtsps:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "rtsps:///p;v?keep=1#frag",
+      "expected": "lead-v1-f6b89358f746d0c3daf620fc8cb9a71d70677bcc040e61835935997a7ba48718"
+    },
+    {
+      "url": "rtsps:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "rtsps:///a;earlier/p?keep=1#frag",
+      "expected": "lead-v1-d54fdb87ab026d397068be3a16a72c90ab672e97b5e1f3145555002938565c34"
+    },
+    {
+      "url": "rtsps:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "rtsps:///a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-975f939f8c3b795486d50559d467967915493d8176d2fee5b32a5fd5daea5ae7"
+    },
+    {
+      "url": "rtsps:;foo?utm_source=x&keep=1#frag",
+      "normalized": "rtsps:///;foo?keep=1#frag",
+      "expected": "lead-v1-df34cc2cf63863f84466db4302c18d6433e3d254c01e0552ed37dc9b0a5ac4ef"
+    },
+    {
+      "url": "rtspu:/p;?utm_source=x&keep=1#frag",
+      "normalized": "rtspu:///p?keep=1#frag",
+      "expected": "lead-v1-eee3c7e37d43449f89edece6f121aeea3976c5af5d83ad00e5342c03b3aa973e"
+    },
+    {
+      "url": "rtspu:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "rtspu:///p;v?keep=1#frag",
+      "expected": "lead-v1-d476231ce7034efdbfc4d28ec80ff7b12672d02ea36254bd0470b3b6b6ad7349"
+    },
+    {
+      "url": "rtspu:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "rtspu:///a;earlier/p?keep=1#frag",
+      "expected": "lead-v1-9c3320c163822e85c1181b853e849845392ff7c1c718444457f9b9c0a0a17eef"
+    },
+    {
+      "url": "rtspu:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "rtspu:///a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-e9f781f2353ac486ccc584e5a046a8e612a0fe46902b8eeb8d4dcd183b401bbb"
+    },
+    {
+      "url": "rtspu:;foo?utm_source=x&keep=1#frag",
+      "normalized": "rtspu:///;foo?keep=1#frag",
+      "expected": "lead-v1-3103aef654846ea1a946dceffa8e89a4dc3a089fc780c39169af7e26c9ff69d4"
+    },
+    {
+      "url": "sftp:/p;?utm_source=x&keep=1#frag",
+      "normalized": "sftp:///p?keep=1#frag",
+      "expected": "lead-v1-5bd4f995d19c018a4b381f68c14214cf88b7819229ca6ae3af83a4d99a241430"
+    },
+    {
+      "url": "sftp:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "sftp:///p;v?keep=1#frag",
+      "expected": "lead-v1-2d1b15d8180e70def53ab49623dc1e9822a971eb895ec8d3141378d01adbf60b"
+    },
+    {
+      "url": "sftp:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "sftp:///a;earlier/p?keep=1#frag",
+      "expected": "lead-v1-b3702a752da3c19c7624635c90cba07a214c71ac84cbe0b06cbd63603dc96c81"
+    },
+    {
+      "url": "sftp:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "sftp:///a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-eed49900a1ccbdbbe7b839bf11f80ba05f2408158d2e231b0f3b794362eef1bd"
+    },
+    {
+      "url": "sftp:;foo?utm_source=x&keep=1#frag",
+      "normalized": "sftp:///;foo?keep=1#frag",
+      "expected": "lead-v1-9093658d75361a8c5c8f919e0b277ecb451917e8e6e2ed12ca17e2df5f7527c6"
+    },
+    {
+      "url": "shttp:/p;?utm_source=x&keep=1#frag",
+      "normalized": "shttp:///p?keep=1#frag",
+      "expected": "lead-v1-a5363246edcc77c32ba66a7adfb87e0968d26b0a4ffcf42b1b32796ba616ffb7"
+    },
+    {
+      "url": "shttp:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "shttp:///p;v?keep=1#frag",
+      "expected": "lead-v1-fe117c7976ff32cda6367c0522d9a40de2f15cb9e33185f32c92a47ce6332a67"
+    },
+    {
+      "url": "shttp:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "shttp:///a;earlier/p?keep=1#frag",
+      "expected": "lead-v1-5d4dddf963375fc66ade5e128a9e11590fd062c7b9bebbf57a82bed9315b6d37"
+    },
+    {
+      "url": "shttp:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "shttp:///a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-b40fe4a8f95d3fc1a941ad089088b536c6007ff0e6c133f04164d5f31bdb5c16"
+    },
+    {
+      "url": "shttp:;foo?utm_source=x&keep=1#frag",
+      "normalized": "shttp:///;foo?keep=1#frag",
+      "expected": "lead-v1-b644e9d0cc1cbebbfe5004baf6182bfd711cfb9f6eb5e0c0fc6241b58dc8e0f8"
+    },
+    {
+      "url": "sip:/p;?utm_source=x&keep=1#frag",
+      "normalized": "sip:/p?keep=1#frag",
+      "expected": "lead-v1-6d677559656f417fdb1f7981ccef642bfd4a4d0b7ccdf3be11ed5cce7c998370"
+    },
+    {
+      "url": "sip:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "sip:/p;v?keep=1#frag",
+      "expected": "lead-v1-630c9e50b210d4df202566b10fd3222335f3912ead199b8c3a67a593a7124027"
+    },
+    {
+      "url": "sip:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "sip:/a;earlier/p?keep=1#frag",
+      "expected": "lead-v1-31a73935bd29ccae0fcf055c8e1c1e025f79c7b3bdeee6435fdfb1ef7a35b146"
+    },
+    {
+      "url": "sip:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "sip:/a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-2f5356d849db8c3bce11bf7e07699ec900489e7ab5b5e9597fc81d34b4526d3a"
+    },
+    {
+      "url": "sip:;foo?utm_source=x&keep=1#frag",
+      "normalized": "sip:;foo?keep=1#frag",
+      "expected": "lead-v1-5fbd59e8a4279ac5600fc4ad08204f80bfa1af902f42d75476285c8ac16ec690"
+    },
+    {
+      "url": "sips:/p;?utm_source=x&keep=1#frag",
+      "normalized": "sips:/p?keep=1#frag",
+      "expected": "lead-v1-c45d8943d92b1266555b84aed93db4789b34a2b33560c607882b15336764048a"
+    },
+    {
+      "url": "sips:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "sips:/p;v?keep=1#frag",
+      "expected": "lead-v1-7577a0eb08ecf81c4414a35b903f70396376508a571cc3da78c1afc6569cfe00"
+    },
+    {
+      "url": "sips:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "sips:/a;earlier/p?keep=1#frag",
+      "expected": "lead-v1-a0adfefb9fd98f497446eaaf90204a744e12425547bb8ecbab794cff1ecfdcb1"
+    },
+    {
+      "url": "sips:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "sips:/a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-e749e154e511a6537aa659a40be2409ea46c25c0b225116d55ecc65868257919"
+    },
+    {
+      "url": "sips:;foo?utm_source=x&keep=1#frag",
+      "normalized": "sips:;foo?keep=1#frag",
+      "expected": "lead-v1-ee3e4f90dcd8ea9047a9048a744cec70df04cc638eb6fd1e4f03ee426434cd38"
+    },
+    {
+      "url": "snews:/p;?utm_source=x&keep=1#frag",
+      "normalized": "snews:///p;?keep=1#frag",
+      "expected": "lead-v1-ee0583c413f0d93ca7471b90b924bdf01b0142f5ede0f2e8a60d408f6f55ed85"
+    },
+    {
+      "url": "snews:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "snews:///p;v?keep=1#frag",
+      "expected": "lead-v1-f095105e48f18b8944a3ae6790454f1c138b0685bb4aa4738d64977c60d25d70"
+    },
+    {
+      "url": "snews:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "snews:///a;earlier/p;?keep=1#frag",
+      "expected": "lead-v1-d21790777a4ab05d08e2f122576b8c095866e7c78fde7c46d42060d6344aee9e"
+    },
+    {
+      "url": "snews:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "snews:///a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-2e86ee9d379ebe92090f917c754bc2999ccc4e67648aeb3957ed6967de99ac50"
+    },
+    {
+      "url": "snews:;foo?utm_source=x&keep=1#frag",
+      "normalized": "snews:;foo?keep=1#frag",
+      "expected": "lead-v1-b4643dbe4b7241d57283d54238ba5b6e441820096381fe872dc756e52bb230d6"
+    },
+    {
+      "url": "svn:/p;?utm_source=x&keep=1#frag",
+      "normalized": "svn:///p;?keep=1#frag",
+      "expected": "lead-v1-2e943829b1f530a07c7b079625a6b2ac681145f61b450c6b33a1eefb956738eb"
+    },
+    {
+      "url": "svn:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "svn:///p;v?keep=1#frag",
+      "expected": "lead-v1-a3aff8dc1074850368b9fc0256d46e717085b7012dbd33cc47cca027ccae0e45"
+    },
+    {
+      "url": "svn:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "svn:///a;earlier/p;?keep=1#frag",
+      "expected": "lead-v1-938912469e6ebe334f3a768c13cfe45381d5d503a66323c68110973d36aa751b"
+    },
+    {
+      "url": "svn:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "svn:///a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-98608376154b9cdc01a7cb6f18e8c5d6d7ece0cf67390408185a9ba925925595"
+    },
+    {
+      "url": "svn:;foo?utm_source=x&keep=1#frag",
+      "normalized": "svn:;foo?keep=1#frag",
+      "expected": "lead-v1-9a63d43c331227ab3cca630a579884b32bf74239eee614b1f729931f6ae66862"
+    },
+    {
+      "url": "svn+ssh:/p;?utm_source=x&keep=1#frag",
+      "normalized": "svn+ssh:///p;?keep=1#frag",
+      "expected": "lead-v1-8e2bf7e96a199021b95357da943e2473672f84aaf718f9af0845326e7c882936"
+    },
+    {
+      "url": "svn+ssh:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "svn+ssh:///p;v?keep=1#frag",
+      "expected": "lead-v1-af04a11932d3fd5b2f219506e2ea75c98a210996e9c3273ec2ebc91c1e804fe5"
+    },
+    {
+      "url": "svn+ssh:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "svn+ssh:///a;earlier/p;?keep=1#frag",
+      "expected": "lead-v1-5d45ca3fe4f9d25245cd8ddf867292a1a3fe1481442e123c69368bd3fd98d61c"
+    },
+    {
+      "url": "svn+ssh:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "svn+ssh:///a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-64c7175c448ebf71eda8e783cbf4a44403c550b5ed462ebcf17a24187c9d6ae2"
+    },
+    {
+      "url": "svn+ssh:;foo?utm_source=x&keep=1#frag",
+      "normalized": "svn+ssh:;foo?keep=1#frag",
+      "expected": "lead-v1-03175d2bf2c02315e516c7fcf98d9733b2c9593218816e4c340ad084812a00aa"
+    },
+    {
+      "url": "tel:/p;?utm_source=x&keep=1#frag",
+      "normalized": "tel:/p?keep=1#frag",
+      "expected": "lead-v1-1083b253428ba8a77e21ca4e90dcb6ad3205d0b9247a35c5df799d66423998a0"
+    },
+    {
+      "url": "tel:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "tel:/p;v?keep=1#frag",
+      "expected": "lead-v1-24e80d14235322dd301a2266fa987edbb6af79c1551f2e63c7fcb431c17123f6"
+    },
+    {
+      "url": "tel:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "tel:/a;earlier/p?keep=1#frag",
+      "expected": "lead-v1-3d8b5fc8b1316bec3352aeafd87e0d23e681cf4ba3463c73351dfa42237fc561"
+    },
+    {
+      "url": "tel:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "tel:/a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-e820c7a524d320418e5a6d1528df8327bd05545aa3dd5f9bddedffc7e2f5b766"
+    },
+    {
+      "url": "tel:;foo?utm_source=x&keep=1#frag",
+      "normalized": "tel:;foo?keep=1#frag",
+      "expected": "lead-v1-bf4d0f0823508c274114b8905c2b906cc039f334bcc2a27ff2db375a4378407a"
+    },
+    {
+      "url": "telnet:/p;?utm_source=x&keep=1#frag",
+      "normalized": "telnet:///p;?keep=1#frag",
+      "expected": "lead-v1-b8fb15d1cf35f42b018a0f34f9142446f101d3746935e09ff2ab862f9868dfc9"
+    },
+    {
+      "url": "telnet:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "telnet:///p;v?keep=1#frag",
+      "expected": "lead-v1-a45030207a00bec562b50c658cf8a6b5f9641c05c96e6dbb17461616cabdbf8d"
+    },
+    {
+      "url": "telnet:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "telnet:///a;earlier/p;?keep=1#frag",
+      "expected": "lead-v1-21802412a9c78564b828917cae9c56123906081457737e747105e10aac7b2988"
+    },
+    {
+      "url": "telnet:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "telnet:///a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-5326d6986eb4954d3ac1c76509f082c16063947399a3570f70cd1a775836a957"
+    },
+    {
+      "url": "telnet:;foo?utm_source=x&keep=1#frag",
+      "normalized": "telnet:;foo?keep=1#frag",
+      "expected": "lead-v1-f83d1ca78b4b2f86ec885d6c65d5f0e68127503bdd48ce86f0d99a4adece742d"
+    },
+    {
+      "url": "wais:/p;?utm_source=x&keep=1#frag",
+      "normalized": "wais:///p;?keep=1#frag",
+      "expected": "lead-v1-ec92d08f98bf7598d4a6c60d2699d0a10f8d0038597ee6f10c00b194c3cbb0ae"
+    },
+    {
+      "url": "wais:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "wais:///p;v?keep=1#frag",
+      "expected": "lead-v1-3136b184f24e3e2f4397ad5143cc0aa1bc6193cc2aefb521e42c756665418b24"
+    },
+    {
+      "url": "wais:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "wais:///a;earlier/p;?keep=1#frag",
+      "expected": "lead-v1-9f48677c221a36fe29ff65af479473b648412e1939c4cfd06edc8c483ad3dad0"
+    },
+    {
+      "url": "wais:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "wais:///a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-9a039ada688afc26f115366fcbdec9c8e16cb69f3b95d3d833a7a8b1ddefefd4"
+    },
+    {
+      "url": "wais:;foo?utm_source=x&keep=1#frag",
+      "normalized": "wais:;foo?keep=1#frag",
+      "expected": "lead-v1-e045e253b8366b232a7c2651dd7394f2bd95b6e3a772842055ab1160bf8cde6a"
+    },
+    {
+      "url": "ws:/p;?utm_source=x&keep=1#frag",
+      "normalized": "ws:///p;?keep=1#frag",
+      "expected": "lead-v1-5d985d3276e18d750b1ef22fc3d36fc3996db18f6277a2800a5b8b64aedcf6f3"
+    },
+    {
+      "url": "ws:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "ws:///p;v?keep=1#frag",
+      "expected": "lead-v1-661e6e64d96c62a06c035a61db51ee78beaa36389c6bf293547cc21de4fcd151"
+    },
+    {
+      "url": "ws:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "ws:///a;earlier/p;?keep=1#frag",
+      "expected": "lead-v1-ed5d12b12151d0db66ba1ddd19820d12f56e13c83b5669835b0b5752533874f8"
+    },
+    {
+      "url": "ws:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "ws:///a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-d2178f606114bedf202d1ec625a60febdd6fe5971775693a68702848205ab62b"
+    },
+    {
+      "url": "ws:;foo?utm_source=x&keep=1#frag",
+      "normalized": "ws:;foo?keep=1#frag",
+      "expected": "lead-v1-a6a58aea8b8d18b08ec7f8308be9f78f37ef707312f4ae5a322fa12e0fd43541"
+    },
+    {
+      "url": "wss:/p;?utm_source=x&keep=1#frag",
+      "normalized": "wss:///p;?keep=1#frag",
+      "expected": "lead-v1-ff0914e53622f3ea707989dec9160ef8735d45af541f94d3cdd25d5bc4f5bc03"
+    },
+    {
+      "url": "wss:/p;v?utm_source=x&keep=1#frag",
+      "normalized": "wss:///p;v?keep=1#frag",
+      "expected": "lead-v1-20c8a9a5ce2c2848bc1b9ff6a02f06c5b236e221dc60b9e54976456dd1223033"
+    },
+    {
+      "url": "wss:/a;earlier/p;?utm_source=x&keep=1#frag",
+      "normalized": "wss:///a;earlier/p;?keep=1#frag",
+      "expected": "lead-v1-76f0faf8973834a0fe2ade14f22f7007dc1cf09b2c4fe66cda406e1baac85a96"
+    },
+    {
+      "url": "wss:/a;earlier/p;later?utm_source=x&keep=1#frag",
+      "normalized": "wss:///a;earlier/p;later?keep=1#frag",
+      "expected": "lead-v1-a9cf970fd719bea33508884bb8a63edb328bd3bacda370b6dd93cd2acd3dace0"
+    },
+    {
+      "url": "wss:;foo?utm_source=x&keep=1#frag",
+      "normalized": "wss:;foo?keep=1#frag",
+      "expected": "lead-v1-d40c7e8409d93aeb9074f244c169ebb465bddca76fc363df482d77ad0b823f25"
+    },
+    {
+      "url": "https://example.com/p;",
+      "normalized": "https://example.com/p",
+      "expected": "lead-v1-9678caa8b05c2fadb331b103bcd348c79b5e85bd2bef1aa827c72670174b8890"
+    },
+    {
+      "url": "https://example.com/a;v/p;",
+      "normalized": "https://example.com/a;v/p",
+      "expected": "lead-v1-8a1a1f774af3a981fddf30f64398e4f3064bb0898b38a08835ad985e4c4f2539"
+    },
+    {
+      "url": "https://example.com/a;v/p/;",
+      "normalized": "https://example.com/a;v/p/",
+      "expected": "lead-v1-628952ee36e34cc823ac15337d4ad4c5b2d7892c9397334a519c2a29afe345e9"
+    },
+    {
+      "url": "https://example.com/p;;",
+      "normalized": "https://example.com/p;;",
+      "expected": "lead-v1-17780708f20aba1dff6284238e33e8e2b50d32e80183b080b42010aa847d8bac"
+    },
+    {
+      "url": "https://pubmed.ncbi.nlm.nih.gov/123;foo",
+      "normalized": "https://pubmed.ncbi.nlm.nih.gov/123;foo",
+      "expected": "lead-v1-818a5e9620b734ed3aaff1e10a6928282248bc1b3b014daac25c211c7bd5ba0b"
+    }
+  ],
+  "settlements": [
+    {
+      "name": "duplicates",
+      "input": {
+        "job_id": "job-identity",
+        "question": "identity",
+        "strategy": "",
+        "state": "running",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "",
+            "engines": [
+              "fixture"
+            ],
+            "time_range": null,
+            "state": "done",
+            "query_id": null,
+            "result_count": 3,
+            "cursor": "snap",
+            "error": null,
+            "engine_coverage": [],
+            "attempts": [
+              {
+                "cursor": null,
+                "query_id": null,
+                "result_count": 0,
+                "error": null,
+                "state": "running",
+                "attempted_at": 1.0,
+                "engine_coverage": [],
+                "attempt_id": "attempt-identity",
+                "finished_at": null,
+                "enforcement": {},
+                "admitted_result_ids": [],
+                "new_lead_ids": []
+              }
+            ],
+            "enforcement": {},
+            "subquestion_id": null,
+            "rationale": null,
+            "parent_attempt_id": null,
+            "continuation_key": null,
+            "continuation_digest": null,
+            "requires_intent_grant": true,
+            "planning_method": null,
+            "evidence_result_ids": [],
+            "evidence_engines": [],
+            "evidence_intent": null
+          }
+        ],
+        "warnings": [],
+        "created_at": 1.0,
+        "deadline": 1000.0,
+        "tenant": "org:team",
+        "idempotency_key": null,
+        "workflow": {},
+        "cancel_requested": false,
+        "owner_id": null,
+        "lease_token": null,
+        "lease_expires_at": 0.0,
+        "subquestions": {},
+        "budget_limits": {
+          "queries": 1,
+          "engines_per_query": 1,
+          "attempts": 2,
+          "engine_attempts": 2,
+          "results": 8
+        },
+        "budget_used": {
+          "attempts": 1,
+          "engine_attempts": 1,
+          "results": 0
+        },
+        "seen_lead_ids": [],
+        "caller_completed": false,
+        "completion_rationale": null,
+        "completion_subquestion_states": null,
+        "stop_reason": null
+      },
+      "urls": [
+        "https://example.com/p?utm_source=x",
+        "https://example.com/p",
+        "https://other.test/雪"
+      ],
+      "expected": {
+        "job_id": "job-identity",
+        "question": "identity",
+        "strategy": "",
+        "state": "running",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "",
+            "engines": [
+              "fixture"
+            ],
+            "time_range": null,
+            "state": "done",
+            "query_id": null,
+            "result_count": 3,
+            "cursor": "snap",
+            "error": null,
+            "engine_coverage": [],
+            "attempts": [
+              {
+                "cursor": "snap",
+                "query_id": null,
+                "result_count": 3,
+                "error": null,
+                "state": "done",
+                "attempted_at": 1.0,
+                "engine_coverage": [],
+                "attempt_id": "attempt-identity",
+                "finished_at": 100.0,
+                "enforcement": {},
+                "admitted_result_ids": [
+                  "snap:0",
+                  "snap:1",
+                  "snap:2"
+                ],
+                "new_lead_ids": [
+                  "lead-v1-9678caa8b05c2fadb331b103bcd348c79b5e85bd2bef1aa827c72670174b8890",
+                  "lead-v1-35cd4a65ae22de4b9e3edfd36b15d0fb4da3732ab1b807b6964f62514d5a0c18"
+                ]
+              }
+            ],
+            "enforcement": {},
+            "subquestion_id": null,
+            "rationale": null,
+            "parent_attempt_id": null,
+            "continuation_key": null,
+            "continuation_digest": null,
+            "requires_intent_grant": true,
+            "planning_method": null,
+            "evidence_result_ids": [],
+            "evidence_engines": [],
+            "evidence_intent": null
+          }
+        ],
+        "warnings": [],
+        "created_at": 1.0,
+        "deadline": 1000.0,
+        "tenant": "org:team",
+        "idempotency_key": null,
+        "workflow": {},
+        "cancel_requested": false,
+        "owner_id": null,
+        "lease_token": null,
+        "lease_expires_at": 0.0,
+        "subquestions": {},
+        "budget_limits": {
+          "queries": 1,
+          "engines_per_query": 1,
+          "attempts": 2,
+          "engine_attempts": 2,
+          "results": 8
+        },
+        "budget_used": {
+          "attempts": 1,
+          "engine_attempts": 1,
+          "results": 3
+        },
+        "seen_lead_ids": [
+          "lead-v1-9678caa8b05c2fadb331b103bcd348c79b5e85bd2bef1aa827c72670174b8890",
+          "lead-v1-35cd4a65ae22de4b9e3edfd36b15d0fb4da3732ab1b807b6964f62514d5a0c18"
+        ],
+        "caller_completed": false,
+        "completion_rationale": null,
+        "completion_subquestion_states": null,
+        "stop_reason": null
+      }
+    },
+    {
+      "name": "ceiling",
+      "input": {
+        "job_id": "job-identity",
+        "question": "identity",
+        "strategy": "",
+        "state": "running",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "",
+            "engines": [
+              "fixture"
+            ],
+            "time_range": null,
+            "state": "done",
+            "query_id": null,
+            "result_count": 3,
+            "cursor": "snap",
+            "error": null,
+            "engine_coverage": [],
+            "attempts": [
+              {
+                "cursor": null,
+                "query_id": null,
+                "result_count": 0,
+                "error": null,
+                "state": "running",
+                "attempted_at": 1.0,
+                "engine_coverage": [],
+                "attempt_id": "attempt-identity",
+                "finished_at": null,
+                "enforcement": {},
+                "admitted_result_ids": [],
+                "new_lead_ids": []
+              }
+            ],
+            "enforcement": {},
+            "subquestion_id": null,
+            "rationale": null,
+            "parent_attempt_id": null,
+            "continuation_key": null,
+            "continuation_digest": null,
+            "requires_intent_grant": true,
+            "planning_method": null,
+            "evidence_result_ids": [],
+            "evidence_engines": [],
+            "evidence_intent": null
+          }
+        ],
+        "warnings": [],
+        "created_at": 1.0,
+        "deadline": 1000.0,
+        "tenant": "org:team",
+        "idempotency_key": null,
+        "workflow": {},
+        "cancel_requested": false,
+        "owner_id": null,
+        "lease_token": null,
+        "lease_expires_at": 0.0,
+        "subquestions": {},
+        "budget_limits": {
+          "queries": 1,
+          "engines_per_query": 1,
+          "attempts": 2,
+          "engine_attempts": 2,
+          "results": 2
+        },
+        "budget_used": {
+          "attempts": 1,
+          "engine_attempts": 1,
+          "results": 0
+        },
+        "seen_lead_ids": [],
+        "caller_completed": false,
+        "completion_rationale": null,
+        "completion_subquestion_states": null,
+        "stop_reason": null
+      },
+      "urls": [
+        "https://example.com/p?utm_source=x",
+        "https://example.com/p",
+        "https://other.test/雪"
+      ],
+      "expected": {
+        "job_id": "job-identity",
+        "question": "identity",
+        "strategy": "",
+        "state": "running",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "",
+            "engines": [
+              "fixture"
+            ],
+            "time_range": null,
+            "state": "done",
+            "query_id": null,
+            "result_count": 3,
+            "cursor": "snap",
+            "error": null,
+            "engine_coverage": [],
+            "attempts": [
+              {
+                "cursor": "snap",
+                "query_id": null,
+                "result_count": 3,
+                "error": null,
+                "state": "done",
+                "attempted_at": 1.0,
+                "engine_coverage": [],
+                "attempt_id": "attempt-identity",
+                "finished_at": 100.0,
+                "enforcement": {},
+                "admitted_result_ids": [
+                  "snap:0",
+                  "snap:1"
+                ],
+                "new_lead_ids": [
+                  "lead-v1-9678caa8b05c2fadb331b103bcd348c79b5e85bd2bef1aa827c72670174b8890"
+                ]
+              }
+            ],
+            "enforcement": {},
+            "subquestion_id": null,
+            "rationale": null,
+            "parent_attempt_id": null,
+            "continuation_key": null,
+            "continuation_digest": null,
+            "requires_intent_grant": true,
+            "planning_method": null,
+            "evidence_result_ids": [],
+            "evidence_engines": [],
+            "evidence_intent": null
+          }
+        ],
+        "warnings": [],
+        "created_at": 1.0,
+        "deadline": 1000.0,
+        "tenant": "org:team",
+        "idempotency_key": null,
+        "workflow": {},
+        "cancel_requested": false,
+        "owner_id": null,
+        "lease_token": null,
+        "lease_expires_at": 0.0,
+        "subquestions": {},
+        "budget_limits": {
+          "queries": 1,
+          "engines_per_query": 1,
+          "attempts": 2,
+          "engine_attempts": 2,
+          "results": 2
+        },
+        "budget_used": {
+          "attempts": 1,
+          "engine_attempts": 1,
+          "results": 2
+        },
+        "seen_lead_ids": [
+          "lead-v1-9678caa8b05c2fadb331b103bcd348c79b5e85bd2bef1aa827c72670174b8890"
+        ],
+        "caller_completed": false,
+        "completion_rationale": null,
+        "completion_subquestion_states": null,
+        "stop_reason": "result_budget_exhausted"
+      }
+    },
+    {
+      "name": "prior-seen",
+      "input": {
+        "job_id": "job-identity",
+        "question": "identity",
+        "strategy": "",
+        "state": "running",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "",
+            "engines": [
+              "fixture"
+            ],
+            "time_range": null,
+            "state": "done",
+            "query_id": null,
+            "result_count": 3,
+            "cursor": "snap",
+            "error": null,
+            "engine_coverage": [],
+            "attempts": [
+              {
+                "cursor": null,
+                "query_id": null,
+                "result_count": 0,
+                "error": null,
+                "state": "running",
+                "attempted_at": 1.0,
+                "engine_coverage": [],
+                "attempt_id": "attempt-identity",
+                "finished_at": null,
+                "enforcement": {},
+                "admitted_result_ids": [],
+                "new_lead_ids": []
+              }
+            ],
+            "enforcement": {},
+            "subquestion_id": null,
+            "rationale": null,
+            "parent_attempt_id": null,
+            "continuation_key": null,
+            "continuation_digest": null,
+            "requires_intent_grant": true,
+            "planning_method": null,
+            "evidence_result_ids": [],
+            "evidence_engines": [],
+            "evidence_intent": null
+          }
+        ],
+        "warnings": [],
+        "created_at": 1.0,
+        "deadline": 1000.0,
+        "tenant": "org:team",
+        "idempotency_key": null,
+        "workflow": {},
+        "cancel_requested": false,
+        "owner_id": null,
+        "lease_token": null,
+        "lease_expires_at": 0.0,
+        "subquestions": {},
+        "budget_limits": {
+          "queries": 1,
+          "engines_per_query": 1,
+          "attempts": 2,
+          "engine_attempts": 2,
+          "results": 8
+        },
+        "budget_used": {
+          "attempts": 1,
+          "engine_attempts": 1,
+          "results": 0
+        },
+        "seen_lead_ids": [
+          "lead-v1-9678caa8b05c2fadb331b103bcd348c79b5e85bd2bef1aa827c72670174b8890"
+        ],
+        "caller_completed": false,
+        "completion_rationale": null,
+        "completion_subquestion_states": null,
+        "stop_reason": null
+      },
+      "urls": [
+        "https://example.com/p?utm_source=x",
+        "https://example.com/p",
+        "https://other.test/雪"
+      ],
+      "expected": {
+        "job_id": "job-identity",
+        "question": "identity",
+        "strategy": "",
+        "state": "running",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "",
+            "engines": [
+              "fixture"
+            ],
+            "time_range": null,
+            "state": "done",
+            "query_id": null,
+            "result_count": 3,
+            "cursor": "snap",
+            "error": null,
+            "engine_coverage": [],
+            "attempts": [
+              {
+                "cursor": "snap",
+                "query_id": null,
+                "result_count": 3,
+                "error": null,
+                "state": "done",
+                "attempted_at": 1.0,
+                "engine_coverage": [],
+                "attempt_id": "attempt-identity",
+                "finished_at": 100.0,
+                "enforcement": {},
+                "admitted_result_ids": [
+                  "snap:0",
+                  "snap:1",
+                  "snap:2"
+                ],
+                "new_lead_ids": [
+                  "lead-v1-35cd4a65ae22de4b9e3edfd36b15d0fb4da3732ab1b807b6964f62514d5a0c18"
+                ]
+              }
+            ],
+            "enforcement": {},
+            "subquestion_id": null,
+            "rationale": null,
+            "parent_attempt_id": null,
+            "continuation_key": null,
+            "continuation_digest": null,
+            "requires_intent_grant": true,
+            "planning_method": null,
+            "evidence_result_ids": [],
+            "evidence_engines": [],
+            "evidence_intent": null
+          }
+        ],
+        "warnings": [],
+        "created_at": 1.0,
+        "deadline": 1000.0,
+        "tenant": "org:team",
+        "idempotency_key": null,
+        "workflow": {},
+        "cancel_requested": false,
+        "owner_id": null,
+        "lease_token": null,
+        "lease_expires_at": 0.0,
+        "subquestions": {},
+        "budget_limits": {
+          "queries": 1,
+          "engines_per_query": 1,
+          "attempts": 2,
+          "engine_attempts": 2,
+          "results": 8
+        },
+        "budget_used": {
+          "attempts": 1,
+          "engine_attempts": 1,
+          "results": 3
+        },
+        "seen_lead_ids": [
+          "lead-v1-9678caa8b05c2fadb331b103bcd348c79b5e85bd2bef1aa827c72670174b8890",
+          "lead-v1-35cd4a65ae22de4b9e3edfd36b15d0fb4da3732ab1b807b6964f62514d5a0c18"
+        ],
+        "caller_completed": false,
+        "completion_rationale": null,
+        "completion_subquestion_states": null,
+        "stop_reason": null
+      }
+    },
+    {
+      "name": "no-response",
+      "input": {
+        "job_id": "job-identity",
+        "question": "identity",
+        "strategy": "",
+        "state": "running",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "",
+            "engines": [
+              "fixture"
+            ],
+            "time_range": null,
+            "state": "done",
+            "query_id": null,
+            "result_count": 0,
+            "cursor": "snap",
+            "error": null,
+            "engine_coverage": [],
+            "attempts": [
+              {
+                "cursor": null,
+                "query_id": null,
+                "result_count": 0,
+                "error": null,
+                "state": "running",
+                "attempted_at": 1.0,
+                "engine_coverage": [],
+                "attempt_id": "attempt-identity",
+                "finished_at": null,
+                "enforcement": {},
+                "admitted_result_ids": [],
+                "new_lead_ids": []
+              }
+            ],
+            "enforcement": {},
+            "subquestion_id": null,
+            "rationale": null,
+            "parent_attempt_id": null,
+            "continuation_key": null,
+            "continuation_digest": null,
+            "requires_intent_grant": true,
+            "planning_method": null,
+            "evidence_result_ids": [],
+            "evidence_engines": [],
+            "evidence_intent": null
+          }
+        ],
+        "warnings": [],
+        "created_at": 1.0,
+        "deadline": 1000.0,
+        "tenant": "org:team",
+        "idempotency_key": null,
+        "workflow": {},
+        "cancel_requested": false,
+        "owner_id": null,
+        "lease_token": null,
+        "lease_expires_at": 0.0,
+        "subquestions": {},
+        "budget_limits": {
+          "queries": 1,
+          "engines_per_query": 1,
+          "attempts": 2,
+          "engine_attempts": 2,
+          "results": 8
+        },
+        "budget_used": {
+          "attempts": 1,
+          "engine_attempts": 1,
+          "results": 0
+        },
+        "seen_lead_ids": [],
+        "caller_completed": false,
+        "completion_rationale": null,
+        "completion_subquestion_states": null,
+        "stop_reason": null
+      },
+      "urls": null,
+      "expected": {
+        "job_id": "job-identity",
+        "question": "identity",
+        "strategy": "",
+        "state": "running",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "",
+            "engines": [
+              "fixture"
+            ],
+            "time_range": null,
+            "state": "done",
+            "query_id": null,
+            "result_count": 0,
+            "cursor": "snap",
+            "error": null,
+            "engine_coverage": [],
+            "attempts": [
+              {
+                "cursor": "snap",
+                "query_id": null,
+                "result_count": 0,
+                "error": null,
+                "state": "done",
+                "attempted_at": 1.0,
+                "engine_coverage": [],
+                "attempt_id": "attempt-identity",
+                "finished_at": 100.0,
+                "enforcement": {},
+                "admitted_result_ids": [],
+                "new_lead_ids": []
+              }
+            ],
+            "enforcement": {},
+            "subquestion_id": null,
+            "rationale": null,
+            "parent_attempt_id": null,
+            "continuation_key": null,
+            "continuation_digest": null,
+            "requires_intent_grant": true,
+            "planning_method": null,
+            "evidence_result_ids": [],
+            "evidence_engines": [],
+            "evidence_intent": null
+          }
+        ],
+        "warnings": [],
+        "created_at": 1.0,
+        "deadline": 1000.0,
+        "tenant": "org:team",
+        "idempotency_key": null,
+        "workflow": {},
+        "cancel_requested": false,
+        "owner_id": null,
+        "lease_token": null,
+        "lease_expires_at": 0.0,
+        "subquestions": {},
+        "budget_limits": {
+          "queries": 1,
+          "engines_per_query": 1,
+          "attempts": 2,
+          "engine_attempts": 2,
+          "results": 8
+        },
+        "budget_used": {
+          "attempts": 1,
+          "engine_attempts": 1,
+          "results": 0
+        },
+        "seen_lead_ids": [],
+        "caller_completed": false,
+        "completion_rationale": null,
+        "completion_subquestion_states": null,
+        "stop_reason": null
+      }
+    },
+    {
+      "name": "no-cursor",
+      "input": {
+        "job_id": "job-identity",
+        "question": "identity",
+        "strategy": "",
+        "state": "running",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "",
+            "engines": [
+              "fixture"
+            ],
+            "time_range": null,
+            "state": "done",
+            "query_id": null,
+            "result_count": 3,
+            "cursor": null,
+            "error": null,
+            "engine_coverage": [],
+            "attempts": [
+              {
+                "cursor": null,
+                "query_id": null,
+                "result_count": 0,
+                "error": null,
+                "state": "running",
+                "attempted_at": 1.0,
+                "engine_coverage": [],
+                "attempt_id": "attempt-identity",
+                "finished_at": null,
+                "enforcement": {},
+                "admitted_result_ids": [],
+                "new_lead_ids": []
+              }
+            ],
+            "enforcement": {},
+            "subquestion_id": null,
+            "rationale": null,
+            "parent_attempt_id": null,
+            "continuation_key": null,
+            "continuation_digest": null,
+            "requires_intent_grant": true,
+            "planning_method": null,
+            "evidence_result_ids": [],
+            "evidence_engines": [],
+            "evidence_intent": null
+          }
+        ],
+        "warnings": [],
+        "created_at": 1.0,
+        "deadline": 1000.0,
+        "tenant": "org:team",
+        "idempotency_key": null,
+        "workflow": {},
+        "cancel_requested": false,
+        "owner_id": null,
+        "lease_token": null,
+        "lease_expires_at": 0.0,
+        "subquestions": {},
+        "budget_limits": {
+          "queries": 1,
+          "engines_per_query": 1,
+          "attempts": 2,
+          "engine_attempts": 2,
+          "results": 8
+        },
+        "budget_used": {
+          "attempts": 1,
+          "engine_attempts": 1,
+          "results": 0
+        },
+        "seen_lead_ids": [],
+        "caller_completed": false,
+        "completion_rationale": null,
+        "completion_subquestion_states": null,
+        "stop_reason": null
+      },
+      "urls": [
+        "https://example.com/p?utm_source=x",
+        "https://example.com/p",
+        "https://other.test/雪"
+      ],
+      "expected": {
+        "job_id": "job-identity",
+        "question": "identity",
+        "strategy": "",
+        "state": "running",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "",
+            "engines": [
+              "fixture"
+            ],
+            "time_range": null,
+            "state": "done",
+            "query_id": null,
+            "result_count": 3,
+            "cursor": null,
+            "error": null,
+            "engine_coverage": [],
+            "attempts": [
+              {
+                "cursor": null,
+                "query_id": null,
+                "result_count": 3,
+                "error": null,
+                "state": "done",
+                "attempted_at": 1.0,
+                "engine_coverage": [],
+                "attempt_id": "attempt-identity",
+                "finished_at": 100.0,
+                "enforcement": {},
+                "admitted_result_ids": [],
+                "new_lead_ids": []
+              }
+            ],
+            "enforcement": {},
+            "subquestion_id": null,
+            "rationale": null,
+            "parent_attempt_id": null,
+            "continuation_key": null,
+            "continuation_digest": null,
+            "requires_intent_grant": true,
+            "planning_method": null,
+            "evidence_result_ids": [],
+            "evidence_engines": [],
+            "evidence_intent": null
+          }
+        ],
+        "warnings": [],
+        "created_at": 1.0,
+        "deadline": 1000.0,
+        "tenant": "org:team",
+        "idempotency_key": null,
+        "workflow": {},
+        "cancel_requested": false,
+        "owner_id": null,
+        "lease_token": null,
+        "lease_expires_at": 0.0,
+        "subquestions": {},
+        "budget_limits": {
+          "queries": 1,
+          "engines_per_query": 1,
+          "attempts": 2,
+          "engine_attempts": 2,
+          "results": 8
+        },
+        "budget_used": {
+          "attempts": 1,
+          "engine_attempts": 1,
+          "results": 0
+        },
+        "seen_lead_ids": [],
+        "caller_completed": false,
+        "completion_rationale": null,
+        "completion_subquestion_states": null,
+        "stop_reason": null
+      }
+    },
+    {
+      "name": "empty-cursor",
+      "input": {
+        "job_id": "job-identity",
+        "question": "identity",
+        "strategy": "",
+        "state": "running",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "",
+            "engines": [
+              "fixture"
+            ],
+            "time_range": null,
+            "state": "done",
+            "query_id": null,
+            "result_count": 3,
+            "cursor": "",
+            "error": null,
+            "engine_coverage": [],
+            "attempts": [
+              {
+                "cursor": null,
+                "query_id": null,
+                "result_count": 0,
+                "error": null,
+                "state": "running",
+                "attempted_at": 1.0,
+                "engine_coverage": [],
+                "attempt_id": "attempt-identity",
+                "finished_at": null,
+                "enforcement": {},
+                "admitted_result_ids": [],
+                "new_lead_ids": []
+              }
+            ],
+            "enforcement": {},
+            "subquestion_id": null,
+            "rationale": null,
+            "parent_attempt_id": null,
+            "continuation_key": null,
+            "continuation_digest": null,
+            "requires_intent_grant": true,
+            "planning_method": null,
+            "evidence_result_ids": [],
+            "evidence_engines": [],
+            "evidence_intent": null
+          }
+        ],
+        "warnings": [],
+        "created_at": 1.0,
+        "deadline": 1000.0,
+        "tenant": "org:team",
+        "idempotency_key": null,
+        "workflow": {},
+        "cancel_requested": false,
+        "owner_id": null,
+        "lease_token": null,
+        "lease_expires_at": 0.0,
+        "subquestions": {},
+        "budget_limits": {
+          "queries": 1,
+          "engines_per_query": 1,
+          "attempts": 2,
+          "engine_attempts": 2,
+          "results": 8
+        },
+        "budget_used": {
+          "attempts": 1,
+          "engine_attempts": 1,
+          "results": 0
+        },
+        "seen_lead_ids": [],
+        "caller_completed": false,
+        "completion_rationale": null,
+        "completion_subquestion_states": null,
+        "stop_reason": null
+      },
+      "urls": [
+        "https://example.com/p?utm_source=x",
+        "https://example.com/p",
+        "https://other.test/雪"
+      ],
+      "expected": {
+        "job_id": "job-identity",
+        "question": "identity",
+        "strategy": "",
+        "state": "running",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "",
+            "engines": [
+              "fixture"
+            ],
+            "time_range": null,
+            "state": "done",
+            "query_id": null,
+            "result_count": 3,
+            "cursor": "",
+            "error": null,
+            "engine_coverage": [],
+            "attempts": [
+              {
+                "cursor": "",
+                "query_id": null,
+                "result_count": 3,
+                "error": null,
+                "state": "done",
+                "attempted_at": 1.0,
+                "engine_coverage": [],
+                "attempt_id": "attempt-identity",
+                "finished_at": 100.0,
+                "enforcement": {},
+                "admitted_result_ids": [],
+                "new_lead_ids": []
+              }
+            ],
+            "enforcement": {},
+            "subquestion_id": null,
+            "rationale": null,
+            "parent_attempt_id": null,
+            "continuation_key": null,
+            "continuation_digest": null,
+            "requires_intent_grant": true,
+            "planning_method": null,
+            "evidence_result_ids": [],
+            "evidence_engines": [],
+            "evidence_intent": null
+          }
+        ],
+        "warnings": [],
+        "created_at": 1.0,
+        "deadline": 1000.0,
+        "tenant": "org:team",
+        "idempotency_key": null,
+        "workflow": {},
+        "cancel_requested": false,
+        "owner_id": null,
+        "lease_token": null,
+        "lease_expires_at": 0.0,
+        "subquestions": {},
+        "budget_limits": {
+          "queries": 1,
+          "engines_per_query": 1,
+          "attempts": 2,
+          "engine_attempts": 2,
+          "results": 8
+        },
+        "budget_used": {
+          "attempts": 1,
+          "engine_attempts": 1,
+          "results": 0
+        },
+        "seen_lead_ids": [],
+        "caller_completed": false,
+        "completion_rationale": null,
+        "completion_subquestion_states": null,
+        "stop_reason": null
+      }
+    },
+    {
+      "name": "no-results",
+      "input": {
+        "job_id": "job-identity",
+        "question": "identity",
+        "strategy": "",
+        "state": "running",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "",
+            "engines": [
+              "fixture"
+            ],
+            "time_range": null,
+            "state": "done",
+            "query_id": null,
+            "result_count": 0,
+            "cursor": "snap",
+            "error": null,
+            "engine_coverage": [],
+            "attempts": [
+              {
+                "cursor": null,
+                "query_id": null,
+                "result_count": 0,
+                "error": null,
+                "state": "running",
+                "attempted_at": 1.0,
+                "engine_coverage": [],
+                "attempt_id": "attempt-identity",
+                "finished_at": null,
+                "enforcement": {},
+                "admitted_result_ids": [],
+                "new_lead_ids": []
+              }
+            ],
+            "enforcement": {},
+            "subquestion_id": null,
+            "rationale": null,
+            "parent_attempt_id": null,
+            "continuation_key": null,
+            "continuation_digest": null,
+            "requires_intent_grant": true,
+            "planning_method": null,
+            "evidence_result_ids": [],
+            "evidence_engines": [],
+            "evidence_intent": null
+          }
+        ],
+        "warnings": [],
+        "created_at": 1.0,
+        "deadline": 1000.0,
+        "tenant": "org:team",
+        "idempotency_key": null,
+        "workflow": {},
+        "cancel_requested": false,
+        "owner_id": null,
+        "lease_token": null,
+        "lease_expires_at": 0.0,
+        "subquestions": {},
+        "budget_limits": {
+          "queries": 1,
+          "engines_per_query": 1,
+          "attempts": 2,
+          "engine_attempts": 2,
+          "results": 8
+        },
+        "budget_used": {
+          "attempts": 1,
+          "engine_attempts": 1,
+          "results": 0
+        },
+        "seen_lead_ids": [],
+        "caller_completed": false,
+        "completion_rationale": null,
+        "completion_subquestion_states": null,
+        "stop_reason": null
+      },
+      "urls": [],
+      "expected": {
+        "job_id": "job-identity",
+        "question": "identity",
+        "strategy": "",
+        "state": "running",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "",
+            "engines": [
+              "fixture"
+            ],
+            "time_range": null,
+            "state": "done",
+            "query_id": null,
+            "result_count": 0,
+            "cursor": "snap",
+            "error": null,
+            "engine_coverage": [],
+            "attempts": [
+              {
+                "cursor": "snap",
+                "query_id": null,
+                "result_count": 0,
+                "error": null,
+                "state": "done",
+                "attempted_at": 1.0,
+                "engine_coverage": [],
+                "attempt_id": "attempt-identity",
+                "finished_at": 100.0,
+                "enforcement": {},
+                "admitted_result_ids": [],
+                "new_lead_ids": []
+              }
+            ],
+            "enforcement": {},
+            "subquestion_id": null,
+            "rationale": null,
+            "parent_attempt_id": null,
+            "continuation_key": null,
+            "continuation_digest": null,
+            "requires_intent_grant": true,
+            "planning_method": null,
+            "evidence_result_ids": [],
+            "evidence_engines": [],
+            "evidence_intent": null
+          }
+        ],
+        "warnings": [],
+        "created_at": 1.0,
+        "deadline": 1000.0,
+        "tenant": "org:team",
+        "idempotency_key": null,
+        "workflow": {},
+        "cancel_requested": false,
+        "owner_id": null,
+        "lease_token": null,
+        "lease_expires_at": 0.0,
+        "subquestions": {},
+        "budget_limits": {
+          "queries": 1,
+          "engines_per_query": 1,
+          "attempts": 2,
+          "engine_attempts": 2,
+          "results": 8
+        },
+        "budget_used": {
+          "attempts": 1,
+          "engine_attempts": 1,
+          "results": 0
+        },
+        "seen_lead_ids": [],
+        "caller_completed": false,
+        "completion_rationale": null,
+        "completion_subquestion_states": null,
+        "stop_reason": null
+      }
+    },
+    {
+      "name": "already-exhausted",
+      "input": {
+        "job_id": "job-identity",
+        "question": "identity",
+        "strategy": "",
+        "state": "running",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "",
+            "engines": [
+              "fixture"
+            ],
+            "time_range": null,
+            "state": "done",
+            "query_id": null,
+            "result_count": 3,
+            "cursor": "snap",
+            "error": null,
+            "engine_coverage": [],
+            "attempts": [
+              {
+                "cursor": null,
+                "query_id": null,
+                "result_count": 0,
+                "error": null,
+                "state": "running",
+                "attempted_at": 1.0,
+                "engine_coverage": [],
+                "attempt_id": "attempt-identity",
+                "finished_at": null,
+                "enforcement": {},
+                "admitted_result_ids": [],
+                "new_lead_ids": []
+              }
+            ],
+            "enforcement": {},
+            "subquestion_id": null,
+            "rationale": null,
+            "parent_attempt_id": null,
+            "continuation_key": null,
+            "continuation_digest": null,
+            "requires_intent_grant": true,
+            "planning_method": null,
+            "evidence_result_ids": [],
+            "evidence_engines": [],
+            "evidence_intent": null
+          }
+        ],
+        "warnings": [],
+        "created_at": 1.0,
+        "deadline": 1000.0,
+        "tenant": "org:team",
+        "idempotency_key": null,
+        "workflow": {},
+        "cancel_requested": false,
+        "owner_id": null,
+        "lease_token": null,
+        "lease_expires_at": 0.0,
+        "subquestions": {},
+        "budget_limits": {
+          "queries": 1,
+          "engines_per_query": 1,
+          "attempts": 2,
+          "engine_attempts": 2,
+          "results": 1
+        },
+        "budget_used": {
+          "attempts": 1,
+          "engine_attempts": 1,
+          "results": 1
+        },
+        "seen_lead_ids": [],
+        "caller_completed": false,
+        "completion_rationale": null,
+        "completion_subquestion_states": null,
+        "stop_reason": null
+      },
+      "urls": [
+        "https://example.com/p?utm_source=x",
+        "https://example.com/p",
+        "https://other.test/雪"
+      ],
+      "expected": {
+        "job_id": "job-identity",
+        "question": "identity",
+        "strategy": "",
+        "state": "running",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "",
+            "engines": [
+              "fixture"
+            ],
+            "time_range": null,
+            "state": "done",
+            "query_id": null,
+            "result_count": 3,
+            "cursor": "snap",
+            "error": null,
+            "engine_coverage": [],
+            "attempts": [
+              {
+                "cursor": "snap",
+                "query_id": null,
+                "result_count": 3,
+                "error": null,
+                "state": "done",
+                "attempted_at": 1.0,
+                "engine_coverage": [],
+                "attempt_id": "attempt-identity",
+                "finished_at": 100.0,
+                "enforcement": {},
+                "admitted_result_ids": [],
+                "new_lead_ids": []
+              }
+            ],
+            "enforcement": {},
+            "subquestion_id": null,
+            "rationale": null,
+            "parent_attempt_id": null,
+            "continuation_key": null,
+            "continuation_digest": null,
+            "requires_intent_grant": true,
+            "planning_method": null,
+            "evidence_result_ids": [],
+            "evidence_engines": [],
+            "evidence_intent": null
+          }
+        ],
+        "warnings": [],
+        "created_at": 1.0,
+        "deadline": 1000.0,
+        "tenant": "org:team",
+        "idempotency_key": null,
+        "workflow": {},
+        "cancel_requested": false,
+        "owner_id": null,
+        "lease_token": null,
+        "lease_expires_at": 0.0,
+        "subquestions": {},
+        "budget_limits": {
+          "queries": 1,
+          "engines_per_query": 1,
+          "attempts": 2,
+          "engine_attempts": 2,
+          "results": 1
+        },
+        "budget_used": {
+          "attempts": 1,
+          "engine_attempts": 1,
+          "results": 1
+        },
+        "seen_lead_ids": [],
+        "caller_completed": false,
+        "completion_rationale": null,
+        "completion_subquestion_states": null,
+        "stop_reason": "result_budget_exhausted"
+      }
+    },
+    {
+      "name": "lowered-cap",
+      "input": {
+        "job_id": "job-identity",
+        "question": "identity",
+        "strategy": "",
+        "state": "running",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "",
+            "engines": [
+              "fixture"
+            ],
+            "time_range": null,
+            "state": "done",
+            "query_id": null,
+            "result_count": 3,
+            "cursor": "snap",
+            "error": null,
+            "engine_coverage": [],
+            "attempts": [
+              {
+                "cursor": null,
+                "query_id": null,
+                "result_count": 0,
+                "error": null,
+                "state": "running",
+                "attempted_at": 1.0,
+                "engine_coverage": [],
+                "attempt_id": "attempt-identity",
+                "finished_at": null,
+                "enforcement": {},
+                "admitted_result_ids": [],
+                "new_lead_ids": []
+              }
+            ],
+            "enforcement": {},
+            "subquestion_id": null,
+            "rationale": null,
+            "parent_attempt_id": null,
+            "continuation_key": null,
+            "continuation_digest": null,
+            "requires_intent_grant": true,
+            "planning_method": null,
+            "evidence_result_ids": [],
+            "evidence_engines": [],
+            "evidence_intent": null
+          }
+        ],
+        "warnings": [],
+        "created_at": 1.0,
+        "deadline": 1000.0,
+        "tenant": "org:team",
+        "idempotency_key": null,
+        "workflow": {},
+        "cancel_requested": false,
+        "owner_id": null,
+        "lease_token": null,
+        "lease_expires_at": 0.0,
+        "subquestions": {},
+        "budget_limits": {
+          "queries": 1,
+          "engines_per_query": 1,
+          "attempts": 2,
+          "engine_attempts": 2,
+          "results": 0
+        },
+        "budget_used": {
+          "attempts": 1,
+          "engine_attempts": 1,
+          "results": 2
+        },
+        "seen_lead_ids": [],
+        "caller_completed": false,
+        "completion_rationale": null,
+        "completion_subquestion_states": null,
+        "stop_reason": null
+      },
+      "urls": [
+        "https://example.com/p?utm_source=x",
+        "https://example.com/p",
+        "https://other.test/雪"
+      ],
+      "expected": {
+        "job_id": "job-identity",
+        "question": "identity",
+        "strategy": "",
+        "state": "running",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "",
+            "engines": [
+              "fixture"
+            ],
+            "time_range": null,
+            "state": "done",
+            "query_id": null,
+            "result_count": 3,
+            "cursor": "snap",
+            "error": null,
+            "engine_coverage": [],
+            "attempts": [
+              {
+                "cursor": "snap",
+                "query_id": null,
+                "result_count": 3,
+                "error": null,
+                "state": "done",
+                "attempted_at": 1.0,
+                "engine_coverage": [],
+                "attempt_id": "attempt-identity",
+                "finished_at": 100.0,
+                "enforcement": {},
+                "admitted_result_ids": [],
+                "new_lead_ids": []
+              }
+            ],
+            "enforcement": {},
+            "subquestion_id": null,
+            "rationale": null,
+            "parent_attempt_id": null,
+            "continuation_key": null,
+            "continuation_digest": null,
+            "requires_intent_grant": true,
+            "planning_method": null,
+            "evidence_result_ids": [],
+            "evidence_engines": [],
+            "evidence_intent": null
+          }
+        ],
+        "warnings": [],
+        "created_at": 1.0,
+        "deadline": 1000.0,
+        "tenant": "org:team",
+        "idempotency_key": null,
+        "workflow": {},
+        "cancel_requested": false,
+        "owner_id": null,
+        "lease_token": null,
+        "lease_expires_at": 0.0,
+        "subquestions": {},
+        "budget_limits": {
+          "queries": 1,
+          "engines_per_query": 1,
+          "attempts": 2,
+          "engine_attempts": 2,
+          "results": 0
+        },
+        "budget_used": {
+          "attempts": 1,
+          "engine_attempts": 1,
+          "results": 2
+        },
+        "seen_lead_ids": [],
+        "caller_completed": false,
+        "completion_rationale": null,
+        "completion_subquestion_states": null,
+        "stop_reason": "result_budget_exhausted"
+      }
+    }
+  ]
+}

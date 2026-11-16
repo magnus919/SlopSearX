@@ -1,0 +1,47 @@
+{
+  "archive": {
+    "bytes": 48654,
+    "mode": "0644",
+    "path": "docs/rust-rewrite/a06/source-amendments/a13.rs.666.frozen",
+    "sha256": "0be46c9a3d01294238c9ecf665e480800896619a1ccbb61bb0afea61f79e2991",
+    "source_path": "crates/xtask/src/a13.rs"
+  },
+  "current": {
+    "bytes": 50563,
+    "git_blob": "6329f367feac5befb3e9a45b84e844fbd2fc0949",
+    "mode": "0644",
+    "path": "crates/xtask/src/a13.rs",
+    "sha256": "fde085dcc7d153cf8304e69baa3c4a193e07501175e8f982ad10351f55da7fdc"
+  },
+  "current_edits": [
+    {
+      "at": 10426,
+      "insert_utf8": "];\nconst A06_JSON_TESTS: &[&str] = &[\n    \"float::buffer_tests::provided_scratch_never_reallocates_across_grammar_and_numeric_paths\",\n    \"float::buffer_tests::storage_refusal_and_constructor_errors_are_distinct\",\n",
+      "remove_utf8": ""
+    },
+    {
+      "at": 33435,
+      "insert_utf8": "    if suite.package == \"ssx-json\" && suite.kind == \"lib\" && suite.target == \"ssx_json\" {\n        names.extend(A06_JSON_TESTS.iter().map(|name| (*name).to_owned()));\n    }\n",
+      "remove_utf8": ""
+    },
+    {
+      "at": 46392,
+      "insert_utf8": "        let json = compiled_suite_names(&suite_for(\"ssx-json\", \"lib\", \"ssx_json\"));\n        assert_eq!(json.len(), 1 + A06_JSON_TESTS.len());\n        assert_eq!(A06_JSON_TESTS.len(), 2);\n        assert_eq!(\n            A06_JSON_TESTS\n                .iter()\n                .copied()\n                .collect::<BTreeSet<_>>()\n                .len(),\n            2\n        );\n        for name in A06_JSON_TESTS {\n            assert_eq!(\n                json.iter()\n                    .filter(|actual| actual.as_str() == *name)\n                    .count(),\n                1\n            );\n            let mut omitted = json.clone();\n            omitted.retain(|actual| actual.as_str() != *name);\n            assert!(same(&omitted, &json, \"A06 omitted JSON compiled identity\").is_err());\n            let mut repeated = json.clone();\n            repeated.push((*name).into());\n            assert!(same(&repeated, &json, \"A06 duplicated JSON compiled identity\").is_err());\n        }\n        let mut extra_json = json.clone();\n        extra_json.push(\"unrelated::unexpected_json_test\".into());\n        assert!(same(&extra_json, &json, \"A06 extra JSON compiled identity\").is_err());\n        for (package, kind, target) in [\n            (\"other\", \"lib\", \"ssx_json\"),\n            (\"ssx-json\", \"test\", \"ssx_json\"),\n            (\"ssx-json\", \"lib\", \"other\"),\n        ] {\n            assert_eq!(\n                compiled_suite_names(&suite_for(package, kind, target)),\n                strings(&[\"sentinel\"])\n            );\n        }\n",
+      "remove_utf8": ""
+    }
+  ],
+  "prior": {
+    "bytes": 48654,
+    "git_blob": "21d84c41f4280bff60f333355fb2300e2a2e16dd",
+    "mode": "0644",
+    "path": "crates/xtask/src/a13.rs",
+    "sha256": "0be46c9a3d01294238c9ecf665e480800896619a1ccbb61bb0afea61f79e2991"
+  },
+  "required_json_additions": [
+    "float::buffer_tests::provided_scratch_never_reallocates_across_grammar_and_numeric_paths",
+    "float::buffer_tests::storage_refusal_and_constructor_errors_are_distinct"
+  ],
+  "schema": "A13_EXACT_JSON_COMPILED_INVENTORY_SUCCESSOR_V1",
+  "scope": "Only exact two A06 JSON buffer test identities and existing compiled_inventory_is_closed regression; frozen qualification16/strictCounter/sourcecase75 untouched",
+  "source_parent": "666dfbfbdf7a94ca6532a629724ec718e557dabd"
+}

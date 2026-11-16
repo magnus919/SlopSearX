@@ -1,0 +1,40 @@
+"""Temporary offline original O01 render oracle; native JSON only, retire at G08."""
+import hashlib
+import importlib.util
+import json
+from pathlib import Path
+import socket
+import sys
+ROOT=Path('/Volumes/tank01/magnus/worktrees/slopsearx-o01')
+OUT=Path('/private/tmp/o01-original-render-source/source.json')
+if OUT.exists(): raise RuntimeError('refuse source-output overwrite')
+pins=[{'path':'slopsearx/metrics.py','sha256':'2df238e07c692be05f73bdc3b1e7896dbae576df1d5128a445e6a9fe196c0edc'},
+      {'path':'tests/test_metrics.py','sha256':'ca0a9862b2551dc9d1e9705f2bbd616548caca7de8438ae0f7670d91d8308306'}]
+for row in pins:
+    if hashlib.sha256((ROOT/row['path']).read_bytes()).hexdigest()!=row['sha256']:
+        raise RuntimeError('source preimage drift')
+def forbidden(*args,**kwargs): raise RuntimeError('offline source oracle forbids network')
+socket.socket.connect=forbidden
+socket.socket.connect_ex=forbidden
+socket.create_connection=forbidden
+spec=importlib.util.spec_from_file_location('o01_original_render',ROOT/'slopsearx/metrics.py')
+m=importlib.util.module_from_spec(spec)
+sys.modules[spec.name]=m
+spec.loader.exec_module(m)
+from prometheus_client import parser
+m.engine_queries.inc({'engine':'brave'})
+m.engine_latency.observe({'engine':'brave'},0.34)
+m.engine_status.set({'engine':'brave'},0)
+m.cache_hits.inc({'type':'hit'})
+m.server_requests.inc({})
+rendered=m.render_metrics()
+families=list(parser.text_string_to_metric_families(rendered))
+if not families: raise RuntimeError('source OpenMetrics parse empty')
+parser_path=Path(parser.__file__)
+result={'id':'original.metrics.full-render','source_node':'tests/test_metrics.py::TestRenderMetrics::test_render_produces_valid_openmetrics',
+        'pins':pins,'render':rendered,'parsed_family_count':len(families),
+        'parsed_families':[{'name':f.name,'type':f.type,'sample_count':len(f.samples)} for f in families],
+        'parser_provenance':{'path':str(parser_path),'sha256':hashlib.sha256(parser_path.read_bytes()).hexdigest()},
+        'retirement':'temporary manual source oracle; no mandatory Python; native compares exact captured render; G08 retire runnable producer'}
+with OUT.open('x') as stream: json.dump(result,stream,ensure_ascii=True,indent=2);stream.write('\n')
+print('source valid OpenMetrics families:',len(families))

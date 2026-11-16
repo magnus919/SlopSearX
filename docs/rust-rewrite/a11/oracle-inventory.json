@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "plan_id": "A11",
+  "classification": "G08 optional manual original reference oracle only",
+  "producer_path": "docs/rust-rewrite/a11/capture_regressions.py",
+  "native_runtime_or_gate_invokes_producer": false,
+  "backend_imports": "Only after explicit opt-in, exact interpreter/Unicode and realnetwork denial guards",
+  "execution_state": "not executed; proposed original41case capture",
+  "inputs_must_remain_immutable": true,
+  "output_creation": "exclusive create; no overwrite",
+  "runtime_boundary": "No Python helper/interpreter/sidecar/remote fallback in native implementation",
+  "provenance_pattern": "Reuses the previously reviewed A10 original-only capture guard/wrapper design; no A10 runtime copied"
+}

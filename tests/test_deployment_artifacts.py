@@ -16,7 +16,8 @@ def test_dockerfile_uses_a_digest_pinned_python_base() -> None:
     assert re.search(r"^FROM python:[^@\s]+@sha256:[0-9a-f]{64}$", dockerfile, re.MULTILINE)
 
     workflow = (ROOT / ".github/workflows/docker.yml").read_text()
-    assert "python3 scripts/verify_docker_base_digest.py" in workflow
+    assert "cargo xtask ci-helper image-pin-verify-base" in workflow
+    assert "python3 scripts/verify_docker_base_digest.py" not in workflow
 
 
 def test_pinned_base_parser_accepts_generic_python_tag() -> None:
@@ -31,7 +32,7 @@ def test_pinned_base_parser_rejects_multiple_from_lines() -> None:
     digest = "a" * 64
     dockerfile = f"FROM python:3.12-slim@sha256:{digest}\nFROM scratch\n"
 
-    with pytest.raises(SystemExit, match="exactly one FROM"):
+    with pytest.raises(SystemExit, match="recognized"):
         verify._pinned_python_base(dockerfile)
 
 
@@ -46,7 +47,7 @@ def test_pinned_base_parser_rejects_unrecognized_from_lines(second_from: str) ->
     digest = "a" * 64
     dockerfile = f"FROM python:3.12-slim@sha256:{digest}\n{second_from}\n"
 
-    with pytest.raises(SystemExit, match="exactly one FROM"):
+    with pytest.raises(SystemExit, match="recognized"):
         verify._pinned_python_base(dockerfile)
 
 
@@ -274,3 +275,57 @@ def test_architecture_tags_follow_commit_retention_instead_of_each_run() -> None
     assert "${GITHUB_SHA::7}-${{ matrix.arch }}" in tag_command
     assert "GITHUB_RUN_ID" not in tag_command
     assert "GITHUB_RUN_ATTEMPT" not in tag_command
+
+
+def test_health_builder_and_runtime_bases_are_both_verified(monkeypatch: pytest.MonkeyPatch) -> None:
+    dockerfile = (ROOT / "Dockerfile").read_text()
+    bases = verify.pinned_bases(dockerfile)
+    builder = dockerfile.split("# SlopSearX production image", 1)[0]
+    assert "COPY . ." not in builder
+    assert [line for line in builder.splitlines() if line.startswith("COPY ")] == [
+        "COPY Cargo.toml Cargo.lock rust-toolchain.toml ./",
+        "COPY crates/ crates/",
+        "COPY vendor/ vendor/",
+    ]
+    assert [repository for repository, _, _ in bases] == ["library/rust", "library/python"]
+    assert bases[0][1] == "1.99.1-bookworm"
+    assert 'CMD ["/usr/local/bin/ssx-healthcheck"]' in dockerfile
+    assert "healthcheck.py" not in dockerfile
+    assert "uvicorn" in dockerfile  # This increment does not claim server retirement.
+    for malformed in [
+        dockerfile + "\nFROM scratch\n",
+        dockerfile.replace(" AS healthcheck-builder", " AS arbitrary-builder"),
+        dockerfile.replace("@sha256:", "@bad:", 1),
+    ]:
+        with pytest.raises(SystemExit):
+            verify.pinned_bases(malformed)
+    calls: list[str] = []
+
+    def actual(repository: str, tag: str) -> str:
+        calls.append(repository)
+        return next(digest for repo, _, digest in bases if repo == repository)
+
+    monkeypatch.setattr(verify, "registry_digest", actual)
+    monkeypatch.setattr("sys.argv", ["verify_docker_base_digest.py", "--dockerfile", str(ROOT / "Dockerfile")])
+    assert verify.main() == 0
+    assert calls == ["library/rust", "library/python"]
+    monkeypatch.setattr(verify, "registry_digest", lambda repository, tag: "sha256:" + "0" * 64)
+    assert verify.main() == 1
+
+
+@pytest.mark.parametrize("tag", ["1.99.0-bookworm", "1.99.1-bookworm"])
+def test_health_builder_accepts_reviewed_patch_tags(tag: str) -> None:
+    digest = "sha256:" + "a" * 64
+    dockerfile = f"FROM rust:{tag}@{digest} AS healthcheck-builder\nFROM python:3.14-slim@{digest}\n"
+    assert verify.pinned_bases(dockerfile) == [
+        ("library/rust", tag, digest),
+        ("library/python", "3.14-slim", digest),
+    ]
+
+
+@pytest.mark.parametrize("tag", ["1.99.2-bookworm", "1.100.0-bookworm", "1.99.1-alpine", "latest"])
+def test_health_builder_rejects_unreviewed_tags(tag: str) -> None:
+    digest = "sha256:" + "a" * 64
+    dockerfile = f"FROM rust:{tag}@{digest} AS healthcheck-builder\nFROM python:3.14-slim@{digest}\n"
+    with pytest.raises(SystemExit, match="recognized"):
+        verify.pinned_bases(dockerfile)

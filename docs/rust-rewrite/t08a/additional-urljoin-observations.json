@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "runtime": "CPython3.13.6 stdlib urllib.parse.urljoin",
+  "classification": "immutable source primitive observations; real native external-child controls remain separate",
+  "cases": [
+    {
+      "base": "http://Host:00080/a/b?old=1",
+      "location": "///path",
+      "urljoin": "http://Host:00080/path"
+    },
+    {
+      "base": "http://Host:00080/a/b?old=1",
+      "location": "http:c",
+      "urljoin": "http://Host:00080/a/c"
+    },
+    {
+      "base": "http://Host:00080/a/b;par?old=1",
+      "location": "",
+      "urljoin": "http://Host:00080/a/b;par?old=1"
+    },
+    {
+      "base": "http://Host:00080/a/b;par?old=1",
+      "location": "?new=2",
+      "urljoin": "http://Host:00080/a/b;par?new=2"
+    },
+    {
+      "base": "http://Host:00080/a/b;par?old=1",
+      "location": "#frag",
+      "urljoin": "http://Host:00080/a/b;par?old=1#frag"
+    },
+    {
+      "base": "http://Host:00080/a/b;par?old=1",
+      "location": ";next",
+      "urljoin": "http://Host:00080/a/;next"
+    },
+    {
+      "base": "http://Host:00080/a/b",
+      "location": "../c//d",
+      "urljoin": "http://Host:00080/c/d"
+    },
+    {
+      "base": "http://Host:00080/a/b",
+      "location": "/c//d",
+      "urljoin": "http://Host:00080/c//d"
+    },
+    {
+      "base": "http://Host:00080/a/b",
+      "location": "//Other:00080",
+      "urljoin": "http://Other:00080"
+    },
+    {
+      "base": "http://Host:00080/a/b",
+      "location": "https://Other:00443/c",
+      "urljoin": "https://Other:00443/c"
+    },
+    {
+      "base": "http://Host:00080/a/b",
+      "location": "../../..",
+      "urljoin": "http://Host:00080/"
+    },
+    {
+      "base": "http://Host:00080/a/b",
+      "location": ".",
+      "urljoin": "http://Host:00080/a/"
+    },
+    {
+      "base": "http://Host:00080/a/b",
+      "location": "..",
+      "urljoin": "http://Host:00080/"
+    },
+    {
+      "base": "http://Host:00080/a/b",
+      "location": "/a%2fb?x=%2E",
+      "urljoin": "http://Host:00080/a%2fb?x=%2E"
+    },
+    {
+      "base": "http://Host:00080/a/b",
+      "location": "/a/%2e%2e/b",
+      "urljoin": "http://Host:00080/a/%2e%2e/b"
+    }
+  ]
+}
