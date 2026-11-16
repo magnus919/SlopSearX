@@ -1,0 +1,648 @@
+{
+  "baseline": "0a0743904264b0054e14cb19cdd78af7d31eb60c",
+  "source_files": [
+    {
+      "path": "engines/cve.py",
+      "sha256": "b2e4f7177a3b09758305ef3c89c80e205e2d5551ca07c786ef3c8234988a8851",
+      "git_blob": "898fed3a561b938c5391459fe0395dc4fc8a5ad2"
+    },
+    {
+      "path": "tests/test_cve.py",
+      "sha256": "c2e93dcbcc94fc960ef6e7ca2e92f2e0510444ae60a1394396b0e4166141cb7f",
+      "git_blob": "9e30d52a891d763e171bf3b52ea046b9467dcc92"
+    },
+    {
+      "path": "engines/nvd.py",
+      "sha256": "ef465e8decab33aa61e8e7ec1ea5c9b6352a33a803d6c43694600b39a37bc64d",
+      "git_blob": "2188849adf2bfd22c986a5b05cc34f2e9efed332"
+    },
+    {
+      "path": "tests/test_nvd.py",
+      "sha256": "b9c168244cb384741b59ce068f6f8b177bf8944e9eda690fe6b152a609dc4b55",
+      "git_blob": "f83542252bd534752ceffa541db9369eba36b486"
+    },
+    {
+      "path": "engines/epss.py",
+      "sha256": "e6df882daf4f6324dac834289c7c12358d38ab1e729cd695aca6b6676a364f04",
+      "git_blob": "c07ece25022adac62a0b0717e6eeb2cfe52e85ca"
+    },
+    {
+      "path": "tests/test_epss.py",
+      "sha256": "5a3f0d06a01c2115dcea270a46ea808449bc0e6ce0c29b5793d18228b41d8830",
+      "git_blob": "896c9267987609e0c00708e33ca76a685f287a68"
+    },
+    {
+      "path": "engines/exploitdb.py",
+      "sha256": "69f1502ba59882e962230a052a87a15f24034eb0d678ae6f9755acb0b53aa26b",
+      "git_blob": "13b1b9444485ce0e0de7cc52d597b3c02fe50f53"
+    },
+    {
+      "path": "tests/test_exploitdb.py",
+      "sha256": "ac988665920d7747d5584af866953780149758b577e061642626bd8a8b422006",
+      "git_blob": "8fd9a9f26693624f5a0e286af780c542bbbaff51"
+    },
+    {
+      "path": "engines/mitreattack.py",
+      "sha256": "f0c2dd0735b5392aa84e4a6e252542b441d6b6954442860e42d86bfdb55d96c4",
+      "git_blob": "4e9a4dc966c3888e872abc2362f42e26a118fdff"
+    },
+    {
+      "path": "tests/test_mitreattack.py",
+      "sha256": "f7155da58c8eb1cb5bab046434ac5952e29a229eedcc404addf0fc20dc65cbff",
+      "git_blob": "99b0098a978f15b47a1305e92d45ab0f76dcf49c"
+    }
+  ],
+  "test_functions": [
+    {
+      "identity": "tests/test_cve.py::TestCVEAdapter::test_search_with_cve_id",
+      "line": 80,
+      "end_line": 88,
+      "source_sha256": "09697efd936ae86f6bd60c7210113dee5927655fd2652472608898d72e96ebbc",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_cve.py::TestCVEAdapter::test_search_cve_in_lowercase",
+      "line": 90,
+      "end_line": 95,
+      "source_sha256": "3c608c246a9ece1273fc518384c34f7420e0b410e85944c418f7386184f954c0",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_cve.py::TestCVEAdapter::test_search_cve_in_context",
+      "line": 97,
+      "end_line": 102,
+      "source_sha256": "71fba9b0e7b0a92600345e537c63473af928f81865d4c42c69b379dd987c9676",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_cve.py::TestCVEAdapter::test_search_no_cve_id_returns_empty",
+      "line": 104,
+      "end_line": 108,
+      "source_sha256": "2e7abd8d02941d628e3c44a8b572a8c61ccd760ae5f4e4f45e35f3cc6b9bd5d9",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_cve.py::TestCVEAdapter::test_search_404_returns_empty",
+      "line": 110,
+      "end_line": 115,
+      "source_sha256": "401028714ad4d775f3200d89b694d02f24e3a98ec18b3ed2323295218841c16c",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_cve.py::TestCVEAdapter::test_search_rate_limited",
+      "line": 117,
+      "end_line": 121,
+      "source_sha256": "8f550fb19d90e3ac93168e4dfd1735933aa9f17f67ec0514bc1b9a02f1abb64f",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_cve.py::TestCVEAdapter::test_search_blocked",
+      "line": 123,
+      "end_line": 127,
+      "source_sha256": "b3d998ff030441d2b1a8fa747d1da4a412b5300441b65fdf70524c5e02828773",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_cve.py::TestCVEAdapter::test_search_timeout",
+      "line": 129,
+      "end_line": 134,
+      "source_sha256": "6ba97ae162b839a13462d9445e81f60b42b89184121c6d6a0e502f6bf9021019",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_cve.py::TestCVEAdapter::test_search_no_api_key_config",
+      "line": 136,
+      "end_line": 158,
+      "source_sha256": "ec026d8c52430c3cd9a7c68fe0c0e11f93d1e9f07509607f508df9a8e1f50382",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_cve.py::TestCVEAdapter::test_adapter_registered",
+      "line": 160,
+      "end_line": 163,
+      "source_sha256": "06e2c59ef570b08294a306413daeab79f35a5557846ecf688d5e3d8d6c40f755",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_cve.py::TestCVEAdapter::test_adapter_categories",
+      "line": 165,
+      "end_line": 172,
+      "source_sha256": "0a0dba65b13fc1fcd945e6b2969590320289c15e05c3acaeb3eb7591055cf6bd",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_cve.py::TestCVEAdapter::test_cve_id_pattern",
+      "line": 174,
+      "end_line": 182,
+      "source_sha256": "32e37bd372b8fb79fd1cd562a705acbb943040aa359e126fc0fbfee004bf5596",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_cve.py::TestCVEAdapter::test_cve_works_without_api_key",
+      "line": 184,
+      "end_line": 188,
+      "source_sha256": "fc4a97d2c02d68ca0cd09eb08dc68ce8b244b41a01677fd1d9436355340a5d3f",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_cve.py::TestCVEAdapter::test_extract_description_english",
+      "line": 190,
+      "end_line": 198,
+      "source_sha256": "a35cb560d476a557337fd8c7e734d06338326a2441d6fd3d5b84481fd4affb64",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_cve.py::TestCVEAdapter::test_extract_description_fallback",
+      "line": 200,
+      "end_line": 208,
+      "source_sha256": "63af9133d410f8e677edaccd3d385d495c2b69556f6f563de2a5937e68eb5736",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_cve.py::TestCVEAdapter::test_extract_description_empty",
+      "line": 210,
+      "end_line": 211,
+      "source_sha256": "9e7eb81753580646b1c2f9f64cf3bf7fb2d231103f959724aaac4d69730c6efa",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_cve.py::TestCVEAdapter::test_extract_metrics_v31",
+      "line": 213,
+      "end_line": 226,
+      "source_sha256": "fd3896ec4221f03beec3370174a8ebb00250b936da4ddf2948b9402d17b51f13",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_cve.py::TestCVEAdapter::test_extract_metrics_v40",
+      "line": 228,
+      "end_line": 241,
+      "source_sha256": "806d8133860dae2e5619f5f2a18f0059719268dde0c950ba998e70d5bf667a13",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_cve.py::TestCVEAdapter::test_extract_metrics_empty",
+      "line": 243,
+      "end_line": 244,
+      "source_sha256": "5e00605c7e9cbbf0d807123e419fb5ceb10a39611239804690f8db062abb550e",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_cve.py::TestCVEAdapter::test_extract_metrics_no_metrics",
+      "line": 246,
+      "end_line": 247,
+      "source_sha256": "7c42541d3258935a229c9d4ed694a39a1e331ea5582ea84baed4f0d17c72e5aa",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_cve.py::TestCVEAdapter::test_cvss_payload_v40",
+      "line": 249,
+      "end_line": 266,
+      "source_sha256": "e5d0b63d1ad3d704dc6a778be972786ace8e142cb31b7c4e0f73a7e2ef67bb6d",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_cve.py::TestCVEAdapter::test_cvss_payload_prefers_higher_version_across_entries",
+      "line": 268,
+      "end_line": 292,
+      "source_sha256": "608bf84fe9a87fc755fc65e2c85bdb4025576100d3a9556db5466289a1a8106e",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_cve.py::TestCVEAdapter::test_extract_metrics_matches_payload_for_lower_version_first",
+      "line": 294,
+      "end_line": 323,
+      "source_sha256": "658c44bc26e7560cfa62d7e87d011091d740f2a0f8d81c1dd4d2cb9844067eea",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_cve.py::TestCVEAdapter::test_parse_cve_record_sets_title",
+      "line": 325,
+      "end_line": 328,
+      "source_sha256": "008486595f2ed008b211bf291cee5e7b0d4d3218d984d0424fe43abafa858648",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_cve.py::TestCVEAdapter::test_parse_cve_record_includes_references",
+      "line": 330,
+      "end_line": 335,
+      "source_sha256": "4e650e855e3ca1de1aa383f0d4c77487d0c5176f2489f25b4fc51301cd9e846c",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_cve.py::TestCVEAdapterNoAuthRequired::test_instantiate_without_key",
+      "line": 341,
+      "end_line": 343,
+      "source_sha256": "5d1b8fbe4f69672427bfd556be2d7bd639ac1dc205d8431adc39fd33533e7786",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_nvd.py::TestNVDAdapter::test_search_returns_results",
+      "line": 143,
+      "end_line": 156,
+      "source_sha256": "e50f56a05369e6aa9b7127cecd5e2ab8e0be2aac1d3aef0799ff18220b61eee7",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_nvd.py::TestNVDAdapter::test_search_cve_id_direct",
+      "line": 158,
+      "end_line": 168,
+      "source_sha256": "1b42de74b40379f840e9c05ebcc40f118bf3b997bc845fbe3e984154f61c9c51",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_nvd.py::TestNVDAdapter::test_search_cve_id_case_insensitive",
+      "line": 170,
+      "end_line": 180,
+      "source_sha256": "5ffe5eb42e7ac8fac760dc6d611b201567f3d15e72f1a4f214b9171f28608f4e",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_nvd.py::TestNVDAdapter::test_search_empty_results",
+      "line": 182,
+      "end_line": 199,
+      "source_sha256": "90d2bd2f690a87529639c0be2808905877c8e1cd5137efa29f4d5e87bfb8bc8c",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_nvd.py::TestNVDAdapter::test_search_rate_limited",
+      "line": 201,
+      "end_line": 205,
+      "source_sha256": "c754a6e639ad4f7d14fbb0a86a2478884d6c5bb29a0aef3e446a76909792114c",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_nvd.py::TestNVDAdapter::test_search_blocked",
+      "line": 207,
+      "end_line": 211,
+      "source_sha256": "98fd59dd18ff417c9e4b3fdf4ddd3a07e2eb609d85abc1162e7cfc42aa325336",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_nvd.py::TestNVDAdapter::test_search_timeout",
+      "line": 213,
+      "end_line": 218,
+      "source_sha256": "e969c54bc6470b37fd5e8308de497614a7b75872dc21ef3383d7e31e0cd961e5",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_nvd.py::TestNVDAdapter::test_search_http_status_error_sanitized",
+      "line": 220,
+      "end_line": 229,
+      "source_sha256": "cad78cb160276d467ec04b835fbe15b6b5b8504870d35dd56688bd7e8da8ab26",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_nvd.py::TestNVDAdapter::test_search_broad_exception_sanitized",
+      "line": 231,
+      "end_line": 242,
+      "source_sha256": "7663a45e08105585592ca542668e904ba19208d5ee226222bda2c914de339a92",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_nvd.py::TestNVDAdapter::test_search_sends_api_key_as_header_when_configured",
+      "line": 244,
+      "end_line": 266,
+      "source_sha256": "b0713ede28a830630f4f6c6872d55003d32cd55b211d02cb86638f4c5bffd8f7",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_nvd.py::TestNVDAdapter::test_search_no_api_key_by_default",
+      "line": 268,
+      "end_line": 289,
+      "source_sha256": "469fcd2050dd8f9a9a4a81ed7309240d1b58d1088d5370615150268c04329bbc",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_nvd.py::TestNVDAdapter::test_whitespace_key_treated_as_no_key",
+      "line": 291,
+      "end_line": 314,
+      "source_sha256": "d2d5a1cd5560e12f5bf58c13e6a5eceba9fac881784e415ee6d14906bdb98b10",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_nvd.py::TestNVDAdapter::test_adapter_registered",
+      "line": 316,
+      "end_line": 319,
+      "source_sha256": "3a764b0e717c583ec85723bbefe22e6311a9301782d26e15713c36f5130c1902",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_nvd.py::TestNVDAdapter::test_adapter_categories",
+      "line": 321,
+      "end_line": 328,
+      "source_sha256": "e5fd880fe32c6bb5dfaae59151990a3cac5f3a045b6dafe87022a07f0ac1c1f1",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_nvd.py::TestNVDAdapter::test_has_api_key_flag",
+      "line": 330,
+      "end_line": 333,
+      "source_sha256": "829bcc0af7ddbd32f95d6047ece7ff93f6dbf33d98814da6e8875f05283d6989",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_nvd.py::TestNVDAdapter::test_format_cvss_v31",
+      "line": 335,
+      "end_line": 350,
+      "source_sha256": "a216d9ed5b2f37fa21a01189fbf9934b65127bc55844812c8306b7c497ce618a",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_nvd.py::TestNVDAdapter::test_format_cvss_v40_preferred",
+      "line": 352,
+      "end_line": 377,
+      "source_sha256": "56080f5c1195cbde863fd2d1f6884273334452d10a38deff4ba676b64dea644a",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_nvd.py::TestNVDAdapter::test_format_cvss_empty",
+      "line": 379,
+      "end_line": 380,
+      "source_sha256": "6354bcc434f9a37f24b44f118670b248a0469d1fbdaf6215c91b506c753d4616",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_nvd.py::TestNVDAdapter::test_format_cvss_only_v2",
+      "line": 382,
+      "end_line": 395,
+      "source_sha256": "2bcbd5193e16fa3e532abfab79cc8fcf2babd05815e0f5cf52ed0d2c893f58bd",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_nvd.py::TestNVDAdapter::test_cvss_payload_v2_reads_severity_from_entry",
+      "line": 397,
+      "end_line": 415,
+      "source_sha256": "dd10eb1dc456cc01c572edcfdd30a368651281b85adbde286264e41460c52e84",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_nvd.py::TestNVDAdapterNoKeyNeeded::test_can_instantiate_without_key",
+      "line": 421,
+      "end_line": 425,
+      "source_sha256": "02ad068960b9f71559fc9b629a81268d49ba53bb283428b0cbab3e086f293c89",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_epss.py::TestEPSSAdapter::test_search_with_cve_id",
+      "line": 22,
+      "end_line": 28,
+      "source_sha256": "e5264822e7277c41d3a9e4c5963e4d37a80d6d53007f4dfd4f751fab2b916921",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_epss.py::TestEPSSAdapter::test_search_without_cve_returns_empty",
+      "line": 30,
+      "end_line": 33,
+      "source_sha256": "ed81a3dfa1cf7b25bffa039fe7b2f2b72e382d7be01ea7ba078b524af83dcf39",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_epss.py::TestEPSSAdapter::test_search_rate_limited",
+      "line": 35,
+      "end_line": 38,
+      "source_sha256": "9daafde579fad26f96875ac066b3d85c31a0e74d3b099d4bd5a452ee1438ee66",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_epss.py::TestEPSSAdapter::test_search_lower_percentile",
+      "line": 40,
+      "end_line": 44,
+      "source_sha256": "ff3099df1a30f8e277799da40dc4c0f9351c78d44c30fe2c2c3528d9596e655c",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_epss.py::TestEPSSAdapter::test_adapter_registered",
+      "line": 46,
+      "end_line": 49,
+      "source_sha256": "d34c38aa32bfd51dc2217792b1dbad971b4c857a42e1ebe4d49452222d96555f",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_epss.py::TestEPSSAdapter::test_adapter_categories",
+      "line": 51,
+      "end_line": 54,
+      "source_sha256": "b23ee16d37577eb08fbe7e061d59662d3ba8dbaa9be40b2c5c7cd3e5c9e4acf5",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_exploitdb.py::TestExploitDBAdapter::test_search_returns_results",
+      "line": 45,
+      "end_line": 52,
+      "source_sha256": "bf4456aeabddbbfaf232a000190af65d1e49e2bfc209a8c1a40f26ba17c0a5ce",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_exploitdb.py::TestExploitDBAdapter::test_search_parses_current_datatables_cve_response",
+      "line": 54,
+      "end_line": 80,
+      "source_sha256": "4fa8071291901af62d9f386b70e69e15b2d79ae95570824ab56099f7d9319d12",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_exploitdb.py::TestExploitDBAdapter::test_search_accepts_current_datatables_empty_response",
+      "line": 82,
+      "end_line": 87,
+      "source_sha256": "0d15d393af5a8e659c9d76a9c70491446e62069b8b722f787822a8d92d80d36c",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_exploitdb.py::TestExploitDBAdapter::test_json_result_text_cannot_trigger_challenge_detection",
+      "line": 89,
+      "end_line": 109,
+      "source_sha256": "d750cbac83507098af52454e29822b5eb637d2b898b9b19fe69d8ccc153aec6c",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_exploitdb.py::TestExploitDBAdapter::test_json_missing_data_is_error",
+      "line": 112,
+      "end_line": 116,
+      "source_sha256": "b04dedc898e196e1320e39c1135d7788b4742e7137e10eddc3d9c14938d9f59c",
+      "parameter_declarations": [
+        {
+          "arguments": "Call(func=Attribute(value=Attribute(value=Name(id='pytest', ctx=Load()), attr='mark', ctx=Load()), attr='parametrize', ctx=Load()), args=[Constant(value='payload'), List(elts=[Dict(), Dict(keys=[Constant(value='error')], values=[Constant(value='provider failure')])], ctx=Load())])",
+          "source": "pytest.mark.parametrize(\"payload\", [{}, {\"error\": \"provider failure\"}])"
+        }
+      ],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_exploitdb.py::TestExploitDBAdapter::test_search_keeps_results_mentioning_challenge_infrastructure",
+      "line": 118,
+      "end_line": 132,
+      "source_sha256": "e404ecf7d35da1e5f51da23191d71fecf645aa910cf3217fd50b36c6cf4a7f42",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_exploitdb.py::TestExploitDBAdapter::test_search_empty_html",
+      "line": 134,
+      "end_line": 138,
+      "source_sha256": "fe1e9c34f3161b2ac06bc59c0ed850816f825969fb7573f8877e5764b8fbaa42",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_exploitdb.py::TestExploitDBAdapter::test_search_challenge_page_is_blocked",
+      "line": 140,
+      "end_line": 145,
+      "source_sha256": "551df7237751b59749aca0058ba593b52423c7bb9939b503892cce2fd591f833",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_exploitdb.py::TestExploitDBAdapter::test_search_unrecognized_empty_page_is_error",
+      "line": 147,
+      "end_line": 151,
+      "source_sha256": "023872de71e8a2170d2fca2dfe8113ae1a023a2bce4f8797770e788e21511be7",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_exploitdb.py::TestExploitDBAdapter::test_search_rate_limited",
+      "line": 153,
+      "end_line": 156,
+      "source_sha256": "c68e53903c8a7741c2b938b97f0b807273c0b4238a9445640a106b80ec12d6c9",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_exploitdb.py::TestExploitDBAdapter::test_parse_html_captcha",
+      "line": 158,
+      "end_line": 161,
+      "source_sha256": "5ff6b6fa96b8ca0e96e307a6436145ca1e31e81ebd73f0f32d3fad0341a3c3ff",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_exploitdb.py::TestExploitDBAdapter::test_adapter_registered",
+      "line": 163,
+      "end_line": 166,
+      "source_sha256": "cd3db577a79f3c5ca2ad6a1b7da7493854555274d115eeb8e2c0b5f0b65c3888",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_exploitdb.py::TestExploitDBAdapter::test_adapter_categories",
+      "line": 168,
+      "end_line": 171,
+      "source_sha256": "1a954d28c1b9748e2f811ac5614d192ce3c8b33e95f2140b13e1fd7bca0f0ea6",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_mitreattack.py::TestMitreAttackAdapter::test_technique_id_lookup",
+      "line": 30,
+      "end_line": 37,
+      "source_sha256": "8168397a975048c276b7ef1334471f2df808ab1851f1f0d6977076439df039f7",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_mitreattack.py::TestMitreAttackAdapter::test_group_id_lookup",
+      "line": 39,
+      "end_line": 49,
+      "source_sha256": "fc4b8fe8c78a9b485dc04d09cd6750e420827ff0c465c5762ec1e3007863aabe",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_mitreattack.py::TestMitreAttackAdapter::test_software_id_lookup",
+      "line": 51,
+      "end_line": 61,
+      "source_sha256": "6c812f5366b56af2e371dc840b244d0f160fbf5bc95666d1a83c1a9b31eae29b",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_mitreattack.py::TestMitreAttackAdapter::test_keyword_search_returns_empty",
+      "line": 63,
+      "end_line": 72,
+      "source_sha256": "d53f3e91aba9dc7474a18451f0ae36ac9312e24f9bd9ba98c4b53b388ff0a119",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_mitreattack.py::TestMitreAttackAdapter::test_search_rate_limited",
+      "line": 74,
+      "end_line": 77,
+      "source_sha256": "379746183c311b9a17709a27bd0017b93b1cbe682b782794d49f65ab219181ce",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_mitreattack.py::TestMitreAttackAdapter::test_adapter_registered",
+      "line": 79,
+      "end_line": 82,
+      "source_sha256": "874f426752b1aa7df4be1591e61ca0644463c1a52436f77e4ffb209937f3b55d",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    },
+    {
+      "identity": "tests/test_mitreattack.py::TestMitreAttackAdapter::test_adapter_categories",
+      "line": 84,
+      "end_line": 87,
+      "source_sha256": "ae5b87ca490bee549ec7fc3adfd466592f7b0a7a7d91ad583caa76f6c695864b",
+      "parameter_declarations": [],
+      "classification": "original regression; native binding pending; inventory is not execution"
+    }
+  ],
+  "test_function_count": 73,
+  "state": "AST preparation identities, not executed outcome"
+}

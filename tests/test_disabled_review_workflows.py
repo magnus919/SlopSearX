@@ -8,7 +8,7 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
-HARNESS_SHA = "04c7fc0b42221872e6c6b611be91c68e462fc679"
+HARNESS_SHA = "1c76d40290cdaf9b6603721f899da6c7e8a382b4"
 
 
 def _workflow(filename: str) -> dict:
@@ -160,10 +160,21 @@ def test_policy_allows_review_dispositions_and_binds_publisher_hash() -> None:
         38102353998,
     ]
     expected_exception_fields = {
-        "run_id", "attempt", "publisher_workflow_id", "publisher_run_head_sha",
-        "runtime_pin", "publisher_workflow_blob_sha", "analysis_workflow_blob_sha",
-        "publisher_job_id", "publisher_job_name", "runtime_step", "log_sha256",
-        "log_bytes", "outcome", "reason_code", "proof_kind",
+        "run_id",
+        "attempt",
+        "publisher_workflow_id",
+        "publisher_run_head_sha",
+        "runtime_pin",
+        "publisher_workflow_blob_sha",
+        "analysis_workflow_blob_sha",
+        "publisher_job_id",
+        "publisher_job_name",
+        "runtime_step",
+        "log_sha256",
+        "log_bytes",
+        "outcome",
+        "reason_code",
+        "proof_kind",
     }
     expected_historical_bindings = {
         38100234484: (
@@ -186,9 +197,9 @@ def test_policy_allows_review_dispositions_and_binds_publisher_hash() -> None:
     for exception in history["historical_exceptions"]:
         assert set(exception) == expected_exception_fields
         assert exception["publisher_workflow_id"] == policy["publisher_workflow"]["id"]
-        assert (
-            exception["publisher_run_head_sha"], exception["runtime_pin"]
-        ) == expected_historical_bindings[exception["run_id"]]
+        assert (exception["publisher_run_head_sha"], exception["runtime_pin"]) == expected_historical_bindings[
+            exception["run_id"]
+        ]
         assert exception["publisher_job_name"] == "publisher"
         assert exception["runtime_step"] == 8
         assert exception["outcome"] == "UNKNOWN"
@@ -201,9 +212,7 @@ def test_policy_allows_review_dispositions_and_binds_publisher_hash() -> None:
         assert len(exception["analysis_workflow_blob_sha"]) == 40
         assert len(exception["log_sha256"]) == 64
         assert exception["log_bytes"] > 0
-        assert exception["reason_code"] in {
-            "source_artifact_redirect_untrusted", "publication_admission_unavailable"
-        }
+        assert exception["reason_code"] in {"source_artifact_redirect_untrusted", "publication_admission_unavailable"}
         assert exception["proof_kind"] == "TRUSTED_PRE_POST_RECONCILIATION"
     assert "artifact_redirect_hosts" not in policy
     assert "app" not in policy

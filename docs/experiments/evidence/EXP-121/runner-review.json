@@ -1,0 +1,33 @@
+{
+  "candidate": "0320270dcc3ddcbd8bccccf3793f431e8abf92cb",
+  "reviewer": "Codex runner fallback",
+  "scope": [
+    "gateway registration and lifetime",
+    "JSON schema copy and invocation",
+    "all catalog metadata and raw response controls",
+    "tests and evidence verifier",
+    "portal/security/cache isolation"
+  ],
+  "result": "positive",
+  "findings": [],
+  "reason": "Droid Auto Review and Droid Tag checks skipped; standing fallback applies. PR Review Analysis is separately pending and findings must also be resolved.",
+  "analysis": [
+    "The only runtime mutation replaces standalone registration of the same generated callable with FunctionTool.from_function, then assigns a deep-copied discovery schema. Existing callable signature, TypeAdapter creation, defaults and remote call path remain unchanged.",
+    "Deepcopy prevents nested parameter metadata mutation from altering upstream schemas; regression explicitly mutates nested enum. All actual 38 schemas match, not merely selected shallow fields.",
+    "Fresh baseline/candidate full Tool model equality excludes only inputSchema. Names, descriptions, annotations, output schemas and every serialized non-input field are unchanged. Direct catalog unchanged. Entire capability/error CallToolResult controls match, including text and isError.",
+    "Explicit verifier rejects metadata/name/output/response/primary corruptions under normal and optimized Python; historical EXP-120 partial proof is not reused as delivery gate.",
+    "No token/config/policy/cache/engine path changes. Portal contract and real browser checks passed; this is protocol defect correction only. No operator adoption or agent task-quality claim.",
+    "Bundled compatibility branch is unchanged and standalone dependency is the configured runtime. HTTP full-catalog regression and nested forwarding protect actual registration/invocation. CI fresh dependency versions remain required."
+  ],
+  "validation": "Local full suite retained; two failures reproduced unchanged baseline. Exact-head hosted CI pending.",
+  "automated_analysis": {
+    "head": "0320270dcc3ddcbd8bccccf3793f431e8abf92cb",
+    "disposition": "INCOMPLETE",
+    "coverage_state": "PARTIAL",
+    "resolved_findings": [
+      "finding-4a22e7169121dcee2b0c",
+      "finding-da919f3143ee8b5e57c0"
+    ],
+    "resolution": "Automated analysis disposition is incomplete, not an approval. Runner review resolves its two evidence requests against exact head `0320270dcc3ddcbd8bccccf3793f431e8abf92cb`:\n\n- `finding-4a22e7169121dcee2b0c`: the retained failed trial precedes correction. Current tests/test_mcp_gateway.py imports `_field` at line24; fixed-gateway.log.txt records24 passed, and the HTTP regression asserts full-catalog equality. Original failed logs are intentionally retained, not current test results.\n- `finding-da919f3143ee8b5e57c0`: both baseline.log.txt and candidate.log.txt have the identical cancel-scope RuntimeError at line160 and shutdown failure at202. This pre-existing local fixture/dependency teardown diagnostic is retained in both successful collectors. Schema/metadata/control measurements completed before teardown, with exit0; no clean-shutdown or lifecycle improvement is claimed. Gateway/auth/lifespan regression checks pass. This candidate changes tool registration only.\n\nLocal full suite: all11 isolated transport modules pass; remainder2832 passed/58 skipped/46 subtests with two environment qualification failures. Both reproduced on unchanged baseline0337b969 using the same localvenv. Hosted exact-head full CI remains required. Separate automated review usage:32 provider requests,612965 reported tokens; billed cost unknown. Experiment itself used zero provider calls.\n"
+  }
+}

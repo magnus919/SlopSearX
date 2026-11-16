@@ -1,0 +1,5106 @@
+{
+  "schema_version": 1,
+  "plan_id": "W01",
+  "baseline": "cfd7a0af61a22cfd040a7fcd41ad950f82005959",
+  "python": "3.14.7",
+  "sources": [
+    {
+      "path": "slopsearx/research_models.py",
+      "git_blob": "7eaf08e310083f19da5324d6f50760d8672a1913",
+      "sha256": "48fe3f399746d584b98fa688285ca0c4f5807c9d63dfa8676a17bbe056e6820b"
+    },
+    {
+      "path": "slopsearx/research_budget.py",
+      "git_blob": "39b1be8c8dfde7a8f4b2a15d3ab7472e4d8a905b",
+      "sha256": "574f0d4098917adf9ce5265453d21b384a536687602a27d42a3b27cb32e32721"
+    },
+    {
+      "path": "slopsearx/research_store.py",
+      "git_blob": "2059939629cbd1da911dc11448b062c995d92238",
+      "sha256": "8b6528f76463bdbec2677ac5aa9673cc4b5e5ed9747fdd8c472d3394f21622c9"
+    },
+    {
+      "path": "slopsearx/merger.py",
+      "git_blob": "75585f5a7b285c9db5e7aee2c67b7ce177b636ee",
+      "sha256": "5bb1a599ed8330aad02bd6567984d12c02f4ed735059c4f50cd6dfefd21e5eda"
+    },
+    {
+      "path": "tests/test_research_durability.py",
+      "git_blob": "b39a762ef2bc5e991a00e243b34e37719d13f585",
+      "sha256": "e83447b1e3f2e0477f739d9f7e6fbadb0fe9f823e947a1b04f59374bc69bf02a"
+    }
+  ],
+  "exporter_sha256": "373ff210c0c8512323a52be86d5dc036583f9e2a458563c78e02115068800a0d",
+  "cases": [
+    {
+      "name": "legacy-defaults",
+      "input": {
+        "job_id": "job-fixture",
+        "question": "Evidence 雪",
+        "strategy": "triangulate",
+        "created_at": 1,
+        "deadline": 1000,
+        "tenant": "org:team",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "science",
+            "engines": [
+              "a",
+              "b"
+            ]
+          }
+        ]
+      },
+      "initial": {
+        "job_id": "job-fixture",
+        "question": "Evidence 雪",
+        "strategy": "triangulate",
+        "state": "queued",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "science",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "time_range": null,
+            "state": "pending",
+            "query_id": null,
+            "result_count": 0,
+            "cursor": null,
+            "error": null,
+            "engine_coverage": [],
+            "attempts": [],
+            "enforcement": {},
+            "subquestion_id": null,
+            "rationale": null,
+            "parent_attempt_id": null,
+            "continuation_key": null,
+            "continuation_digest": null,
+            "requires_intent_grant": true,
+            "planning_method": null,
+            "evidence_result_ids": [],
+            "evidence_engines": [],
+            "evidence_intent": null
+          }
+        ],
+        "warnings": [],
+        "created_at": 1.0,
+        "deadline": 1000.0,
+        "tenant": "org:team",
+        "idempotency_key": null,
+        "workflow": {},
+        "cancel_requested": false,
+        "owner_id": null,
+        "lease_token": null,
+        "lease_expires_at": 0.0,
+        "subquestions": {},
+        "budget_limits": {},
+        "budget_used": {},
+        "seen_lead_ids": [],
+        "caller_completed": false,
+        "completion_rationale": null,
+        "completion_subquestion_states": null,
+        "stop_reason": null
+      },
+      "operations": [
+        {
+          "kind": "initialize",
+          "policy": [
+            4,
+            2,
+            3
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "job": {
+            "job_id": "job-fixture",
+            "question": "Evidence 雪",
+            "strategy": "triangulate",
+            "state": "queued",
+            "queries": [
+              {
+                "index": 0,
+                "query": "q",
+                "intent": "science",
+                "engines": [
+                  "a",
+                  "b"
+                ],
+                "time_range": null,
+                "state": "pending",
+                "query_id": null,
+                "result_count": 0,
+                "cursor": null,
+                "error": null,
+                "engine_coverage": [],
+                "attempts": [],
+                "enforcement": {},
+                "subquestion_id": null,
+                "rationale": null,
+                "parent_attempt_id": null,
+                "continuation_key": null,
+                "continuation_digest": null,
+                "requires_intent_grant": true,
+                "planning_method": null,
+                "evidence_result_ids": [],
+                "evidence_engines": [],
+                "evidence_intent": null
+              }
+            ],
+            "warnings": [],
+            "created_at": 1.0,
+            "deadline": 1000.0,
+            "tenant": "org:team",
+            "idempotency_key": null,
+            "workflow": {},
+            "cancel_requested": false,
+            "owner_id": null,
+            "lease_token": null,
+            "lease_expires_at": 0.0,
+            "subquestions": {},
+            "budget_limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "budget_used": {
+              "attempts": 0,
+              "engine_attempts": 0,
+              "results": 0
+            },
+            "seen_lead_ids": [],
+            "caller_completed": false,
+            "completion_rationale": null,
+            "completion_subquestion_states": null,
+            "stop_reason": null
+          },
+          "summary": {
+            "limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "used": {
+              "attempts": 0,
+              "engine_attempts": 0,
+              "results": 0,
+              "queries": 1
+            },
+            "remaining": {
+              "queries": 3,
+              "attempts": 4,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "accounting": "Attempts and engine slots are reserved before dispatch; admitted leads each use one slot."
+          }
+        }
+      ]
+    },
+    {
+      "name": "charged-duplicates-and-capacity",
+      "input": {
+        "job_id": "job-fixture",
+        "question": "Evidence 雪",
+        "strategy": "triangulate",
+        "created_at": 1,
+        "deadline": 1000,
+        "tenant": "org:team",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "science",
+            "engines": [
+              "a",
+              "b"
+            ]
+          }
+        ]
+      },
+      "initial": {
+        "job_id": "job-fixture",
+        "question": "Evidence 雪",
+        "strategy": "triangulate",
+        "state": "queued",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "science",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "time_range": null,
+            "state": "pending",
+            "query_id": null,
+            "result_count": 0,
+            "cursor": null,
+            "error": null,
+            "engine_coverage": [],
+            "attempts": [],
+            "enforcement": {},
+            "subquestion_id": null,
+            "rationale": null,
+            "parent_attempt_id": null,
+            "continuation_key": null,
+            "continuation_digest": null,
+            "requires_intent_grant": true,
+            "planning_method": null,
+            "evidence_result_ids": [],
+            "evidence_engines": [],
+            "evidence_intent": null
+          }
+        ],
+        "warnings": [],
+        "created_at": 1.0,
+        "deadline": 1000.0,
+        "tenant": "org:team",
+        "idempotency_key": null,
+        "workflow": {},
+        "cancel_requested": false,
+        "owner_id": null,
+        "lease_token": null,
+        "lease_expires_at": 0.0,
+        "subquestions": {},
+        "budget_limits": {},
+        "budget_used": {},
+        "seen_lead_ids": [],
+        "caller_completed": false,
+        "completion_rationale": null,
+        "completion_subquestion_states": null,
+        "stop_reason": null
+      },
+      "operations": [
+        {
+          "kind": "initialize",
+          "policy": [
+            4,
+            2,
+            3
+          ]
+        },
+        {
+          "kind": "reserve",
+          "now": 100.0,
+          "attempt_id": "attempt-00000000000000000000000000000001"
+        },
+        {
+          "kind": "finish",
+          "now": 101.0,
+          "outcome": {
+            "state": "done",
+            "cursor": "snap:雪",
+            "query_id": "query-id",
+            "result_count": 9,
+            "enforcement": {
+              "language": {
+                "status": "unsupported"
+              }
+            }
+          },
+          "urls": [
+            "https://e.test/a?utm_source=x",
+            "https://e.test/a",
+            "HTTPS://e.test/a?x=1&x=2",
+            "https://e.test/b"
+          ],
+          "lead_ids": [
+            "lead-v1-20c48e33c0fe534e457d3a5608e237dea146e4c20b69be1604bc7ae5a8cd06cf",
+            "lead-v1-20c48e33c0fe534e457d3a5608e237dea146e4c20b69be1604bc7ae5a8cd06cf",
+            "lead-v1-3d332fc8a8ad64ab017b10c9fcfea1de090263cab267d0be0721b2e75e86572e",
+            "lead-v1-54595b8ceccd70a7963742b74fe1ae134fa3af632a51c380dbae696c0ac3957f"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "job": {
+            "job_id": "job-fixture",
+            "question": "Evidence 雪",
+            "strategy": "triangulate",
+            "state": "queued",
+            "queries": [
+              {
+                "index": 0,
+                "query": "q",
+                "intent": "science",
+                "engines": [
+                  "a",
+                  "b"
+                ],
+                "time_range": null,
+                "state": "pending",
+                "query_id": null,
+                "result_count": 0,
+                "cursor": null,
+                "error": null,
+                "engine_coverage": [],
+                "attempts": [],
+                "enforcement": {},
+                "subquestion_id": null,
+                "rationale": null,
+                "parent_attempt_id": null,
+                "continuation_key": null,
+                "continuation_digest": null,
+                "requires_intent_grant": true,
+                "planning_method": null,
+                "evidence_result_ids": [],
+                "evidence_engines": [],
+                "evidence_intent": null
+              }
+            ],
+            "warnings": [],
+            "created_at": 1.0,
+            "deadline": 1000.0,
+            "tenant": "org:team",
+            "idempotency_key": null,
+            "workflow": {},
+            "cancel_requested": false,
+            "owner_id": null,
+            "lease_token": null,
+            "lease_expires_at": 0.0,
+            "subquestions": {},
+            "budget_limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "budget_used": {
+              "attempts": 0,
+              "engine_attempts": 0,
+              "results": 0
+            },
+            "seen_lead_ids": [],
+            "caller_completed": false,
+            "completion_rationale": null,
+            "completion_subquestion_states": null,
+            "stop_reason": null
+          },
+          "summary": {
+            "limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "used": {
+              "attempts": 0,
+              "engine_attempts": 0,
+              "results": 0,
+              "queries": 1
+            },
+            "remaining": {
+              "queries": 3,
+              "attempts": 4,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "accounting": "Attempts and engine slots are reserved before dispatch; admitted leads each use one slot."
+          }
+        },
+        {
+          "job": {
+            "job_id": "job-fixture",
+            "question": "Evidence 雪",
+            "strategy": "triangulate",
+            "state": "queued",
+            "queries": [
+              {
+                "index": 0,
+                "query": "q",
+                "intent": "science",
+                "engines": [
+                  "a",
+                  "b"
+                ],
+                "time_range": null,
+                "state": "running",
+                "query_id": null,
+                "result_count": 0,
+                "cursor": null,
+                "error": null,
+                "engine_coverage": [],
+                "attempts": [
+                  {
+                    "cursor": null,
+                    "query_id": null,
+                    "result_count": 0,
+                    "error": null,
+                    "state": "running",
+                    "attempted_at": 100.0,
+                    "engine_coverage": [],
+                    "attempt_id": "attempt-00000000000000000000000000000001",
+                    "finished_at": null,
+                    "enforcement": {},
+                    "admitted_result_ids": [],
+                    "new_lead_ids": []
+                  }
+                ],
+                "enforcement": {},
+                "subquestion_id": null,
+                "rationale": null,
+                "parent_attempt_id": null,
+                "continuation_key": null,
+                "continuation_digest": null,
+                "requires_intent_grant": true,
+                "planning_method": null,
+                "evidence_result_ids": [],
+                "evidence_engines": [],
+                "evidence_intent": null
+              }
+            ],
+            "warnings": [],
+            "created_at": 1.0,
+            "deadline": 1000.0,
+            "tenant": "org:team",
+            "idempotency_key": null,
+            "workflow": {},
+            "cancel_requested": false,
+            "owner_id": null,
+            "lease_token": null,
+            "lease_expires_at": 0.0,
+            "subquestions": {},
+            "budget_limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "budget_used": {
+              "attempts": 1,
+              "engine_attempts": 2,
+              "results": 0
+            },
+            "seen_lead_ids": [],
+            "caller_completed": false,
+            "completion_rationale": null,
+            "completion_subquestion_states": null,
+            "stop_reason": null
+          },
+          "summary": {
+            "limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "used": {
+              "attempts": 1,
+              "engine_attempts": 2,
+              "results": 0,
+              "queries": 1
+            },
+            "remaining": {
+              "queries": 3,
+              "attempts": 3,
+              "engine_attempts": 6,
+              "results": 3
+            },
+            "accounting": "Attempts and engine slots are reserved before dispatch; admitted leads each use one slot."
+          }
+        },
+        {
+          "job": {
+            "job_id": "job-fixture",
+            "question": "Evidence 雪",
+            "strategy": "triangulate",
+            "state": "queued",
+            "queries": [
+              {
+                "index": 0,
+                "query": "q",
+                "intent": "science",
+                "engines": [
+                  "a",
+                  "b"
+                ],
+                "time_range": null,
+                "state": "done",
+                "query_id": "query-id",
+                "result_count": 9,
+                "cursor": "snap:雪",
+                "error": null,
+                "engine_coverage": [],
+                "attempts": [
+                  {
+                    "cursor": "snap:雪",
+                    "query_id": "query-id",
+                    "result_count": 9,
+                    "error": null,
+                    "state": "done",
+                    "attempted_at": 100.0,
+                    "engine_coverage": [],
+                    "attempt_id": "attempt-00000000000000000000000000000001",
+                    "finished_at": 101.0,
+                    "enforcement": {
+                      "language": {
+                        "status": "unsupported"
+                      }
+                    },
+                    "admitted_result_ids": [
+                      "snap:雪:0",
+                      "snap:雪:1",
+                      "snap:雪:2"
+                    ],
+                    "new_lead_ids": [
+                      "lead-v1-20c48e33c0fe534e457d3a5608e237dea146e4c20b69be1604bc7ae5a8cd06cf",
+                      "lead-v1-3d332fc8a8ad64ab017b10c9fcfea1de090263cab267d0be0721b2e75e86572e"
+                    ]
+                  }
+                ],
+                "enforcement": {
+                  "language": {
+                    "status": "unsupported"
+                  }
+                },
+                "subquestion_id": null,
+                "rationale": null,
+                "parent_attempt_id": null,
+                "continuation_key": null,
+                "continuation_digest": null,
+                "requires_intent_grant": true,
+                "planning_method": null,
+                "evidence_result_ids": [],
+                "evidence_engines": [],
+                "evidence_intent": null
+              }
+            ],
+            "warnings": [],
+            "created_at": 1.0,
+            "deadline": 1000.0,
+            "tenant": "org:team",
+            "idempotency_key": null,
+            "workflow": {},
+            "cancel_requested": false,
+            "owner_id": null,
+            "lease_token": null,
+            "lease_expires_at": 0.0,
+            "subquestions": {},
+            "budget_limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "budget_used": {
+              "attempts": 1,
+              "engine_attempts": 2,
+              "results": 3
+            },
+            "seen_lead_ids": [
+              "lead-v1-20c48e33c0fe534e457d3a5608e237dea146e4c20b69be1604bc7ae5a8cd06cf",
+              "lead-v1-3d332fc8a8ad64ab017b10c9fcfea1de090263cab267d0be0721b2e75e86572e"
+            ],
+            "caller_completed": false,
+            "completion_rationale": null,
+            "completion_subquestion_states": null,
+            "stop_reason": "result_budget_exhausted"
+          },
+          "summary": {
+            "limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "used": {
+              "attempts": 1,
+              "engine_attempts": 2,
+              "results": 3,
+              "queries": 1
+            },
+            "remaining": {
+              "queries": 3,
+              "attempts": 3,
+              "engine_attempts": 6,
+              "results": 0
+            },
+            "accounting": "Attempts and engine slots are reserved before dispatch; admitted leads each use one slot."
+          }
+        }
+      ]
+    },
+    {
+      "name": "unknown-crash-retry-conservation",
+      "input": {
+        "job_id": "job-fixture",
+        "question": "Evidence 雪",
+        "strategy": "triangulate",
+        "created_at": 1,
+        "deadline": 1000,
+        "tenant": "org:team",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "science",
+            "engines": [
+              "a",
+              "b"
+            ]
+          }
+        ]
+      },
+      "initial": {
+        "job_id": "job-fixture",
+        "question": "Evidence 雪",
+        "strategy": "triangulate",
+        "state": "queued",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "science",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "time_range": null,
+            "state": "pending",
+            "query_id": null,
+            "result_count": 0,
+            "cursor": null,
+            "error": null,
+            "engine_coverage": [],
+            "attempts": [],
+            "enforcement": {},
+            "subquestion_id": null,
+            "rationale": null,
+            "parent_attempt_id": null,
+            "continuation_key": null,
+            "continuation_digest": null,
+            "requires_intent_grant": true,
+            "planning_method": null,
+            "evidence_result_ids": [],
+            "evidence_engines": [],
+            "evidence_intent": null
+          }
+        ],
+        "warnings": [],
+        "created_at": 1.0,
+        "deadline": 1000.0,
+        "tenant": "org:team",
+        "idempotency_key": null,
+        "workflow": {},
+        "cancel_requested": false,
+        "owner_id": null,
+        "lease_token": null,
+        "lease_expires_at": 0.0,
+        "subquestions": {},
+        "budget_limits": {},
+        "budget_used": {},
+        "seen_lead_ids": [],
+        "caller_completed": false,
+        "completion_rationale": null,
+        "completion_subquestion_states": null,
+        "stop_reason": null
+      },
+      "operations": [
+        {
+          "kind": "initialize",
+          "policy": [
+            4,
+            2,
+            3
+          ]
+        },
+        {
+          "kind": "reserve",
+          "now": 100.0,
+          "attempt_id": "attempt-00000000000000000000000000000001"
+        },
+        {
+          "kind": "recover",
+          "now": 105.0,
+          "generated_ids": [
+            "attempt-00000000000000000000000000000001"
+          ]
+        },
+        {
+          "kind": "reserve",
+          "now": 100.0,
+          "attempt_id": "attempt-00000000000000000000000000000002"
+        },
+        {
+          "kind": "finish",
+          "outcome": {
+            "state": "failed",
+            "error": "timeout",
+            "result_count": 0
+          },
+          "urls": null
+        },
+        {
+          "kind": "retry"
+        },
+        {
+          "kind": "initialize",
+          "policy": [
+            2,
+            1,
+            1
+          ]
+        },
+        {
+          "kind": "reserve",
+          "now": 100.0,
+          "attempt_id": null
+        }
+      ],
+      "outputs": [
+        {
+          "job": {
+            "job_id": "job-fixture",
+            "question": "Evidence 雪",
+            "strategy": "triangulate",
+            "state": "queued",
+            "queries": [
+              {
+                "index": 0,
+                "query": "q",
+                "intent": "science",
+                "engines": [
+                  "a",
+                  "b"
+                ],
+                "time_range": null,
+                "state": "pending",
+                "query_id": null,
+                "result_count": 0,
+                "cursor": null,
+                "error": null,
+                "engine_coverage": [],
+                "attempts": [],
+                "enforcement": {},
+                "subquestion_id": null,
+                "rationale": null,
+                "parent_attempt_id": null,
+                "continuation_key": null,
+                "continuation_digest": null,
+                "requires_intent_grant": true,
+                "planning_method": null,
+                "evidence_result_ids": [],
+                "evidence_engines": [],
+                "evidence_intent": null
+              }
+            ],
+            "warnings": [],
+            "created_at": 1.0,
+            "deadline": 1000.0,
+            "tenant": "org:team",
+            "idempotency_key": null,
+            "workflow": {},
+            "cancel_requested": false,
+            "owner_id": null,
+            "lease_token": null,
+            "lease_expires_at": 0.0,
+            "subquestions": {},
+            "budget_limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "budget_used": {
+              "attempts": 0,
+              "engine_attempts": 0,
+              "results": 0
+            },
+            "seen_lead_ids": [],
+            "caller_completed": false,
+            "completion_rationale": null,
+            "completion_subquestion_states": null,
+            "stop_reason": null
+          },
+          "summary": {
+            "limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "used": {
+              "attempts": 0,
+              "engine_attempts": 0,
+              "results": 0,
+              "queries": 1
+            },
+            "remaining": {
+              "queries": 3,
+              "attempts": 4,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "accounting": "Attempts and engine slots are reserved before dispatch; admitted leads each use one slot."
+          }
+        },
+        {
+          "job": {
+            "job_id": "job-fixture",
+            "question": "Evidence 雪",
+            "strategy": "triangulate",
+            "state": "queued",
+            "queries": [
+              {
+                "index": 0,
+                "query": "q",
+                "intent": "science",
+                "engines": [
+                  "a",
+                  "b"
+                ],
+                "time_range": null,
+                "state": "running",
+                "query_id": null,
+                "result_count": 0,
+                "cursor": null,
+                "error": null,
+                "engine_coverage": [],
+                "attempts": [
+                  {
+                    "cursor": null,
+                    "query_id": null,
+                    "result_count": 0,
+                    "error": null,
+                    "state": "running",
+                    "attempted_at": 100.0,
+                    "engine_coverage": [],
+                    "attempt_id": "attempt-00000000000000000000000000000001",
+                    "finished_at": null,
+                    "enforcement": {},
+                    "admitted_result_ids": [],
+                    "new_lead_ids": []
+                  }
+                ],
+                "enforcement": {},
+                "subquestion_id": null,
+                "rationale": null,
+                "parent_attempt_id": null,
+                "continuation_key": null,
+                "continuation_digest": null,
+                "requires_intent_grant": true,
+                "planning_method": null,
+                "evidence_result_ids": [],
+                "evidence_engines": [],
+                "evidence_intent": null
+              }
+            ],
+            "warnings": [],
+            "created_at": 1.0,
+            "deadline": 1000.0,
+            "tenant": "org:team",
+            "idempotency_key": null,
+            "workflow": {},
+            "cancel_requested": false,
+            "owner_id": null,
+            "lease_token": null,
+            "lease_expires_at": 0.0,
+            "subquestions": {},
+            "budget_limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "budget_used": {
+              "attempts": 1,
+              "engine_attempts": 2,
+              "results": 0
+            },
+            "seen_lead_ids": [],
+            "caller_completed": false,
+            "completion_rationale": null,
+            "completion_subquestion_states": null,
+            "stop_reason": null
+          },
+          "summary": {
+            "limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "used": {
+              "attempts": 1,
+              "engine_attempts": 2,
+              "results": 0,
+              "queries": 1
+            },
+            "remaining": {
+              "queries": 3,
+              "attempts": 3,
+              "engine_attempts": 6,
+              "results": 3
+            },
+            "accounting": "Attempts and engine slots are reserved before dispatch; admitted leads each use one slot."
+          }
+        },
+        {
+          "job": {
+            "job_id": "job-fixture",
+            "question": "Evidence 雪",
+            "strategy": "triangulate",
+            "state": "queued",
+            "queries": [
+              {
+                "index": 0,
+                "query": "q",
+                "intent": "science",
+                "engines": [
+                  "a",
+                  "b"
+                ],
+                "time_range": null,
+                "state": "running",
+                "query_id": null,
+                "result_count": 0,
+                "cursor": null,
+                "error": null,
+                "engine_coverage": [],
+                "attempts": [
+                  {
+                    "cursor": null,
+                    "query_id": null,
+                    "result_count": 0,
+                    "error": "Previous dispatch outcome is unknown after worker recovery; reservation retained",
+                    "state": "interrupted",
+                    "attempted_at": 100.0,
+                    "engine_coverage": [],
+                    "attempt_id": "attempt-00000000000000000000000000000001",
+                    "finished_at": 105.0,
+                    "enforcement": {},
+                    "admitted_result_ids": [],
+                    "new_lead_ids": []
+                  }
+                ],
+                "enforcement": {},
+                "subquestion_id": null,
+                "rationale": null,
+                "parent_attempt_id": null,
+                "continuation_key": null,
+                "continuation_digest": null,
+                "requires_intent_grant": true,
+                "planning_method": null,
+                "evidence_result_ids": [],
+                "evidence_engines": [],
+                "evidence_intent": null
+              }
+            ],
+            "warnings": [],
+            "created_at": 1.0,
+            "deadline": 1000.0,
+            "tenant": "org:team",
+            "idempotency_key": null,
+            "workflow": {},
+            "cancel_requested": false,
+            "owner_id": null,
+            "lease_token": null,
+            "lease_expires_at": 0.0,
+            "subquestions": {},
+            "budget_limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "budget_used": {
+              "attempts": 1,
+              "engine_attempts": 2,
+              "results": 0
+            },
+            "seen_lead_ids": [],
+            "caller_completed": false,
+            "completion_rationale": null,
+            "completion_subquestion_states": null,
+            "stop_reason": null
+          },
+          "summary": {
+            "limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "used": {
+              "attempts": 1,
+              "engine_attempts": 2,
+              "results": 0,
+              "queries": 1
+            },
+            "remaining": {
+              "queries": 3,
+              "attempts": 3,
+              "engine_attempts": 6,
+              "results": 3
+            },
+            "accounting": "Attempts and engine slots are reserved before dispatch; admitted leads each use one slot."
+          }
+        },
+        {
+          "job": {
+            "job_id": "job-fixture",
+            "question": "Evidence 雪",
+            "strategy": "triangulate",
+            "state": "queued",
+            "queries": [
+              {
+                "index": 0,
+                "query": "q",
+                "intent": "science",
+                "engines": [
+                  "a",
+                  "b"
+                ],
+                "time_range": null,
+                "state": "running",
+                "query_id": null,
+                "result_count": 0,
+                "cursor": null,
+                "error": null,
+                "engine_coverage": [],
+                "attempts": [
+                  {
+                    "cursor": null,
+                    "query_id": null,
+                    "result_count": 0,
+                    "error": "Previous dispatch outcome is unknown after worker recovery; reservation retained",
+                    "state": "interrupted",
+                    "attempted_at": 100.0,
+                    "engine_coverage": [],
+                    "attempt_id": "attempt-00000000000000000000000000000001",
+                    "finished_at": 105.0,
+                    "enforcement": {},
+                    "admitted_result_ids": [],
+                    "new_lead_ids": []
+                  },
+                  {
+                    "cursor": null,
+                    "query_id": null,
+                    "result_count": 0,
+                    "error": null,
+                    "state": "running",
+                    "attempted_at": 100.0,
+                    "engine_coverage": [],
+                    "attempt_id": "attempt-00000000000000000000000000000002",
+                    "finished_at": null,
+                    "enforcement": {},
+                    "admitted_result_ids": [],
+                    "new_lead_ids": []
+                  }
+                ],
+                "enforcement": {},
+                "subquestion_id": null,
+                "rationale": null,
+                "parent_attempt_id": null,
+                "continuation_key": null,
+                "continuation_digest": null,
+                "requires_intent_grant": true,
+                "planning_method": null,
+                "evidence_result_ids": [],
+                "evidence_engines": [],
+                "evidence_intent": null
+              }
+            ],
+            "warnings": [],
+            "created_at": 1.0,
+            "deadline": 1000.0,
+            "tenant": "org:team",
+            "idempotency_key": null,
+            "workflow": {},
+            "cancel_requested": false,
+            "owner_id": null,
+            "lease_token": null,
+            "lease_expires_at": 0.0,
+            "subquestions": {},
+            "budget_limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "budget_used": {
+              "attempts": 2,
+              "engine_attempts": 4,
+              "results": 0
+            },
+            "seen_lead_ids": [],
+            "caller_completed": false,
+            "completion_rationale": null,
+            "completion_subquestion_states": null,
+            "stop_reason": null
+          },
+          "summary": {
+            "limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "used": {
+              "attempts": 2,
+              "engine_attempts": 4,
+              "results": 0,
+              "queries": 1
+            },
+            "remaining": {
+              "queries": 3,
+              "attempts": 2,
+              "engine_attempts": 4,
+              "results": 3
+            },
+            "accounting": "Attempts and engine slots are reserved before dispatch; admitted leads each use one slot."
+          }
+        },
+        {
+          "job": {
+            "job_id": "job-fixture",
+            "question": "Evidence 雪",
+            "strategy": "triangulate",
+            "state": "queued",
+            "queries": [
+              {
+                "index": 0,
+                "query": "q",
+                "intent": "science",
+                "engines": [
+                  "a",
+                  "b"
+                ],
+                "time_range": null,
+                "state": "failed",
+                "query_id": null,
+                "result_count": 0,
+                "cursor": null,
+                "error": "timeout",
+                "engine_coverage": [],
+                "attempts": [
+                  {
+                    "cursor": null,
+                    "query_id": null,
+                    "result_count": 0,
+                    "error": "Previous dispatch outcome is unknown after worker recovery; reservation retained",
+                    "state": "interrupted",
+                    "attempted_at": 100.0,
+                    "engine_coverage": [],
+                    "attempt_id": "attempt-00000000000000000000000000000001",
+                    "finished_at": 105.0,
+                    "enforcement": {},
+                    "admitted_result_ids": [],
+                    "new_lead_ids": []
+                  },
+                  {
+                    "cursor": null,
+                    "query_id": null,
+                    "result_count": 0,
+                    "error": "timeout",
+                    "state": "failed",
+                    "attempted_at": 100.0,
+                    "engine_coverage": [],
+                    "attempt_id": "attempt-00000000000000000000000000000002",
+                    "finished_at": 100.0,
+                    "enforcement": {},
+                    "admitted_result_ids": [],
+                    "new_lead_ids": []
+                  }
+                ],
+                "enforcement": {},
+                "subquestion_id": null,
+                "rationale": null,
+                "parent_attempt_id": null,
+                "continuation_key": null,
+                "continuation_digest": null,
+                "requires_intent_grant": true,
+                "planning_method": null,
+                "evidence_result_ids": [],
+                "evidence_engines": [],
+                "evidence_intent": null
+              }
+            ],
+            "warnings": [],
+            "created_at": 1.0,
+            "deadline": 1000.0,
+            "tenant": "org:team",
+            "idempotency_key": null,
+            "workflow": {},
+            "cancel_requested": false,
+            "owner_id": null,
+            "lease_token": null,
+            "lease_expires_at": 0.0,
+            "subquestions": {},
+            "budget_limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "budget_used": {
+              "attempts": 2,
+              "engine_attempts": 4,
+              "results": 0
+            },
+            "seen_lead_ids": [],
+            "caller_completed": false,
+            "completion_rationale": null,
+            "completion_subquestion_states": null,
+            "stop_reason": null
+          },
+          "summary": {
+            "limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "used": {
+              "attempts": 2,
+              "engine_attempts": 4,
+              "results": 0,
+              "queries": 1
+            },
+            "remaining": {
+              "queries": 3,
+              "attempts": 2,
+              "engine_attempts": 4,
+              "results": 3
+            },
+            "accounting": "Attempts and engine slots are reserved before dispatch; admitted leads each use one slot."
+          }
+        },
+        {
+          "job": {
+            "job_id": "job-fixture",
+            "question": "Evidence 雪",
+            "strategy": "triangulate",
+            "state": "running",
+            "queries": [
+              {
+                "index": 0,
+                "query": "q",
+                "intent": "science",
+                "engines": [
+                  "a",
+                  "b"
+                ],
+                "time_range": null,
+                "state": "pending",
+                "query_id": null,
+                "result_count": 0,
+                "cursor": null,
+                "error": "timeout",
+                "engine_coverage": [],
+                "attempts": [
+                  {
+                    "cursor": null,
+                    "query_id": null,
+                    "result_count": 0,
+                    "error": "Previous dispatch outcome is unknown after worker recovery; reservation retained",
+                    "state": "interrupted",
+                    "attempted_at": 100.0,
+                    "engine_coverage": [],
+                    "attempt_id": "attempt-00000000000000000000000000000001",
+                    "finished_at": 105.0,
+                    "enforcement": {},
+                    "admitted_result_ids": [],
+                    "new_lead_ids": []
+                  },
+                  {
+                    "cursor": null,
+                    "query_id": null,
+                    "result_count": 0,
+                    "error": "timeout",
+                    "state": "failed",
+                    "attempted_at": 100.0,
+                    "engine_coverage": [],
+                    "attempt_id": "attempt-00000000000000000000000000000002",
+                    "finished_at": 100.0,
+                    "enforcement": {},
+                    "admitted_result_ids": [],
+                    "new_lead_ids": []
+                  }
+                ],
+                "enforcement": {},
+                "subquestion_id": null,
+                "rationale": null,
+                "parent_attempt_id": null,
+                "continuation_key": null,
+                "continuation_digest": null,
+                "requires_intent_grant": true,
+                "planning_method": null,
+                "evidence_result_ids": [],
+                "evidence_engines": [],
+                "evidence_intent": null
+              }
+            ],
+            "warnings": [],
+            "created_at": 1.0,
+            "deadline": 1000.0,
+            "tenant": "org:team",
+            "idempotency_key": null,
+            "workflow": {},
+            "cancel_requested": false,
+            "owner_id": null,
+            "lease_token": null,
+            "lease_expires_at": 0.0,
+            "subquestions": {},
+            "budget_limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "budget_used": {
+              "attempts": 2,
+              "engine_attempts": 4,
+              "results": 0
+            },
+            "seen_lead_ids": [],
+            "caller_completed": false,
+            "completion_rationale": null,
+            "completion_subquestion_states": null,
+            "stop_reason": null
+          },
+          "summary": {
+            "limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "used": {
+              "attempts": 2,
+              "engine_attempts": 4,
+              "results": 0,
+              "queries": 1
+            },
+            "remaining": {
+              "queries": 3,
+              "attempts": 2,
+              "engine_attempts": 4,
+              "results": 3
+            },
+            "accounting": "Attempts and engine slots are reserved before dispatch; admitted leads each use one slot."
+          }
+        },
+        {
+          "job": {
+            "job_id": "job-fixture",
+            "question": "Evidence 雪",
+            "strategy": "triangulate",
+            "state": "running",
+            "queries": [
+              {
+                "index": 0,
+                "query": "q",
+                "intent": "science",
+                "engines": [
+                  "a",
+                  "b"
+                ],
+                "time_range": null,
+                "state": "pending",
+                "query_id": null,
+                "result_count": 0,
+                "cursor": null,
+                "error": "timeout",
+                "engine_coverage": [],
+                "attempts": [
+                  {
+                    "cursor": null,
+                    "query_id": null,
+                    "result_count": 0,
+                    "error": "Previous dispatch outcome is unknown after worker recovery; reservation retained",
+                    "state": "interrupted",
+                    "attempted_at": 100.0,
+                    "engine_coverage": [],
+                    "attempt_id": "attempt-00000000000000000000000000000001",
+                    "finished_at": 105.0,
+                    "enforcement": {},
+                    "admitted_result_ids": [],
+                    "new_lead_ids": []
+                  },
+                  {
+                    "cursor": null,
+                    "query_id": null,
+                    "result_count": 0,
+                    "error": "timeout",
+                    "state": "failed",
+                    "attempted_at": 100.0,
+                    "engine_coverage": [],
+                    "attempt_id": "attempt-00000000000000000000000000000002",
+                    "finished_at": 100.0,
+                    "enforcement": {},
+                    "admitted_result_ids": [],
+                    "new_lead_ids": []
+                  }
+                ],
+                "enforcement": {},
+                "subquestion_id": null,
+                "rationale": null,
+                "parent_attempt_id": null,
+                "continuation_key": null,
+                "continuation_digest": null,
+                "requires_intent_grant": true,
+                "planning_method": null,
+                "evidence_result_ids": [],
+                "evidence_engines": [],
+                "evidence_intent": null
+              }
+            ],
+            "warnings": [],
+            "created_at": 1.0,
+            "deadline": 1000.0,
+            "tenant": "org:team",
+            "idempotency_key": null,
+            "workflow": {},
+            "cancel_requested": false,
+            "owner_id": null,
+            "lease_token": null,
+            "lease_expires_at": 0.0,
+            "subquestions": {},
+            "budget_limits": {
+              "queries": 2,
+              "attempts": 2,
+              "engines_per_query": 1,
+              "engine_attempts": 2,
+              "results": 1
+            },
+            "budget_used": {
+              "attempts": 2,
+              "engine_attempts": 4,
+              "results": 0
+            },
+            "seen_lead_ids": [],
+            "caller_completed": false,
+            "completion_rationale": null,
+            "completion_subquestion_states": null,
+            "stop_reason": null
+          },
+          "summary": {
+            "limits": {
+              "queries": 2,
+              "attempts": 2,
+              "engines_per_query": 1,
+              "engine_attempts": 2,
+              "results": 1
+            },
+            "used": {
+              "attempts": 2,
+              "engine_attempts": 4,
+              "results": 0,
+              "queries": 1
+            },
+            "remaining": {
+              "queries": 1,
+              "attempts": 0,
+              "engine_attempts": 0,
+              "results": 1
+            },
+            "accounting": "Attempts and engine slots are reserved before dispatch; admitted leads each use one slot."
+          }
+        },
+        {
+          "job": {
+            "job_id": "job-fixture",
+            "question": "Evidence 雪",
+            "strategy": "triangulate",
+            "state": "running",
+            "queries": [
+              {
+                "index": 0,
+                "query": "q",
+                "intent": "science",
+                "engines": [
+                  "a",
+                  "b"
+                ],
+                "time_range": null,
+                "state": "failed",
+                "query_id": null,
+                "result_count": 0,
+                "cursor": null,
+                "error": "attempt_budget_exhausted",
+                "engine_coverage": [],
+                "attempts": [
+                  {
+                    "cursor": null,
+                    "query_id": null,
+                    "result_count": 0,
+                    "error": "Previous dispatch outcome is unknown after worker recovery; reservation retained",
+                    "state": "interrupted",
+                    "attempted_at": 100.0,
+                    "engine_coverage": [],
+                    "attempt_id": "attempt-00000000000000000000000000000001",
+                    "finished_at": 105.0,
+                    "enforcement": {},
+                    "admitted_result_ids": [],
+                    "new_lead_ids": []
+                  },
+                  {
+                    "cursor": null,
+                    "query_id": null,
+                    "result_count": 0,
+                    "error": "timeout",
+                    "state": "failed",
+                    "attempted_at": 100.0,
+                    "engine_coverage": [],
+                    "attempt_id": "attempt-00000000000000000000000000000002",
+                    "finished_at": 100.0,
+                    "enforcement": {},
+                    "admitted_result_ids": [],
+                    "new_lead_ids": []
+                  }
+                ],
+                "enforcement": {},
+                "subquestion_id": null,
+                "rationale": null,
+                "parent_attempt_id": null,
+                "continuation_key": null,
+                "continuation_digest": null,
+                "requires_intent_grant": true,
+                "planning_method": null,
+                "evidence_result_ids": [],
+                "evidence_engines": [],
+                "evidence_intent": null
+              }
+            ],
+            "warnings": [],
+            "created_at": 1.0,
+            "deadline": 1000.0,
+            "tenant": "org:team",
+            "idempotency_key": null,
+            "workflow": {},
+            "cancel_requested": false,
+            "owner_id": null,
+            "lease_token": null,
+            "lease_expires_at": 0.0,
+            "subquestions": {},
+            "budget_limits": {
+              "queries": 2,
+              "attempts": 2,
+              "engines_per_query": 1,
+              "engine_attempts": 2,
+              "results": 1
+            },
+            "budget_used": {
+              "attempts": 2,
+              "engine_attempts": 4,
+              "results": 0
+            },
+            "seen_lead_ids": [],
+            "caller_completed": false,
+            "completion_rationale": null,
+            "completion_subquestion_states": null,
+            "stop_reason": "attempt_budget_exhausted"
+          },
+          "summary": {
+            "limits": {
+              "queries": 2,
+              "attempts": 2,
+              "engines_per_query": 1,
+              "engine_attempts": 2,
+              "results": 1
+            },
+            "used": {
+              "attempts": 2,
+              "engine_attempts": 4,
+              "results": 0,
+              "queries": 1
+            },
+            "remaining": {
+              "queries": 1,
+              "attempts": 0,
+              "engine_attempts": 0,
+              "results": 1
+            },
+            "accounting": "Attempts and engine slots are reserved before dispatch; admitted leads each use one slot."
+          }
+        }
+      ]
+    },
+    {
+      "name": "reserve-interrupts-before-budget-rejection",
+      "input": {
+        "job_id": "job-fixture",
+        "question": "Evidence 雪",
+        "strategy": "triangulate",
+        "created_at": 1,
+        "deadline": 1000,
+        "tenant": "org:team",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "science",
+            "engines": [
+              "a",
+              "b"
+            ]
+          }
+        ]
+      },
+      "initial": {
+        "job_id": "job-fixture",
+        "question": "Evidence 雪",
+        "strategy": "triangulate",
+        "state": "queued",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "science",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "time_range": null,
+            "state": "pending",
+            "query_id": null,
+            "result_count": 0,
+            "cursor": null,
+            "error": null,
+            "engine_coverage": [],
+            "attempts": [],
+            "enforcement": {},
+            "subquestion_id": null,
+            "rationale": null,
+            "parent_attempt_id": null,
+            "continuation_key": null,
+            "continuation_digest": null,
+            "requires_intent_grant": true,
+            "planning_method": null,
+            "evidence_result_ids": [],
+            "evidence_engines": [],
+            "evidence_intent": null
+          }
+        ],
+        "warnings": [],
+        "created_at": 1.0,
+        "deadline": 1000.0,
+        "tenant": "org:team",
+        "idempotency_key": null,
+        "workflow": {},
+        "cancel_requested": false,
+        "owner_id": null,
+        "lease_token": null,
+        "lease_expires_at": 0.0,
+        "subquestions": {},
+        "budget_limits": {},
+        "budget_used": {},
+        "seen_lead_ids": [],
+        "caller_completed": false,
+        "completion_rationale": null,
+        "completion_subquestion_states": null,
+        "stop_reason": null
+      },
+      "operations": [
+        {
+          "kind": "initialize",
+          "policy": [
+            1,
+            2,
+            1
+          ]
+        },
+        {
+          "kind": "reserve",
+          "now": 100.0,
+          "attempt_id": "attempt-00000000000000000000000000000001"
+        },
+        {
+          "kind": "reserve",
+          "now": 100.0,
+          "attempt_id": null
+        }
+      ],
+      "outputs": [
+        {
+          "job": {
+            "job_id": "job-fixture",
+            "question": "Evidence 雪",
+            "strategy": "triangulate",
+            "state": "queued",
+            "queries": [
+              {
+                "index": 0,
+                "query": "q",
+                "intent": "science",
+                "engines": [
+                  "a",
+                  "b"
+                ],
+                "time_range": null,
+                "state": "pending",
+                "query_id": null,
+                "result_count": 0,
+                "cursor": null,
+                "error": null,
+                "engine_coverage": [],
+                "attempts": [],
+                "enforcement": {},
+                "subquestion_id": null,
+                "rationale": null,
+                "parent_attempt_id": null,
+                "continuation_key": null,
+                "continuation_digest": null,
+                "requires_intent_grant": true,
+                "planning_method": null,
+                "evidence_result_ids": [],
+                "evidence_engines": [],
+                "evidence_intent": null
+              }
+            ],
+            "warnings": [],
+            "created_at": 1.0,
+            "deadline": 1000.0,
+            "tenant": "org:team",
+            "idempotency_key": null,
+            "workflow": {},
+            "cancel_requested": false,
+            "owner_id": null,
+            "lease_token": null,
+            "lease_expires_at": 0.0,
+            "subquestions": {},
+            "budget_limits": {
+              "queries": 1,
+              "attempts": 1,
+              "engines_per_query": 2,
+              "engine_attempts": 2,
+              "results": 1
+            },
+            "budget_used": {
+              "attempts": 0,
+              "engine_attempts": 0,
+              "results": 0
+            },
+            "seen_lead_ids": [],
+            "caller_completed": false,
+            "completion_rationale": null,
+            "completion_subquestion_states": null,
+            "stop_reason": null
+          },
+          "summary": {
+            "limits": {
+              "queries": 1,
+              "attempts": 1,
+              "engines_per_query": 2,
+              "engine_attempts": 2,
+              "results": 1
+            },
+            "used": {
+              "attempts": 0,
+              "engine_attempts": 0,
+              "results": 0,
+              "queries": 1
+            },
+            "remaining": {
+              "queries": 0,
+              "attempts": 1,
+              "engine_attempts": 2,
+              "results": 1
+            },
+            "accounting": "Attempts and engine slots are reserved before dispatch; admitted leads each use one slot."
+          }
+        },
+        {
+          "job": {
+            "job_id": "job-fixture",
+            "question": "Evidence 雪",
+            "strategy": "triangulate",
+            "state": "queued",
+            "queries": [
+              {
+                "index": 0,
+                "query": "q",
+                "intent": "science",
+                "engines": [
+                  "a",
+                  "b"
+                ],
+                "time_range": null,
+                "state": "running",
+                "query_id": null,
+                "result_count": 0,
+                "cursor": null,
+                "error": null,
+                "engine_coverage": [],
+                "attempts": [
+                  {
+                    "cursor": null,
+                    "query_id": null,
+                    "result_count": 0,
+                    "error": null,
+                    "state": "running",
+                    "attempted_at": 100.0,
+                    "engine_coverage": [],
+                    "attempt_id": "attempt-00000000000000000000000000000001",
+                    "finished_at": null,
+                    "enforcement": {},
+                    "admitted_result_ids": [],
+                    "new_lead_ids": []
+                  }
+                ],
+                "enforcement": {},
+                "subquestion_id": null,
+                "rationale": null,
+                "parent_attempt_id": null,
+                "continuation_key": null,
+                "continuation_digest": null,
+                "requires_intent_grant": true,
+                "planning_method": null,
+                "evidence_result_ids": [],
+                "evidence_engines": [],
+                "evidence_intent": null
+              }
+            ],
+            "warnings": [],
+            "created_at": 1.0,
+            "deadline": 1000.0,
+            "tenant": "org:team",
+            "idempotency_key": null,
+            "workflow": {},
+            "cancel_requested": false,
+            "owner_id": null,
+            "lease_token": null,
+            "lease_expires_at": 0.0,
+            "subquestions": {},
+            "budget_limits": {
+              "queries": 1,
+              "attempts": 1,
+              "engines_per_query": 2,
+              "engine_attempts": 2,
+              "results": 1
+            },
+            "budget_used": {
+              "attempts": 1,
+              "engine_attempts": 2,
+              "results": 0
+            },
+            "seen_lead_ids": [],
+            "caller_completed": false,
+            "completion_rationale": null,
+            "completion_subquestion_states": null,
+            "stop_reason": null
+          },
+          "summary": {
+            "limits": {
+              "queries": 1,
+              "attempts": 1,
+              "engines_per_query": 2,
+              "engine_attempts": 2,
+              "results": 1
+            },
+            "used": {
+              "attempts": 1,
+              "engine_attempts": 2,
+              "results": 0,
+              "queries": 1
+            },
+            "remaining": {
+              "queries": 0,
+              "attempts": 0,
+              "engine_attempts": 0,
+              "results": 1
+            },
+            "accounting": "Attempts and engine slots are reserved before dispatch; admitted leads each use one slot."
+          }
+        },
+        {
+          "job": {
+            "job_id": "job-fixture",
+            "question": "Evidence 雪",
+            "strategy": "triangulate",
+            "state": "queued",
+            "queries": [
+              {
+                "index": 0,
+                "query": "q",
+                "intent": "science",
+                "engines": [
+                  "a",
+                  "b"
+                ],
+                "time_range": null,
+                "state": "failed",
+                "query_id": null,
+                "result_count": 0,
+                "cursor": null,
+                "error": "attempt_budget_exhausted",
+                "engine_coverage": [],
+                "attempts": [
+                  {
+                    "cursor": null,
+                    "query_id": null,
+                    "result_count": 0,
+                    "error": "Previous dispatch outcome is unknown after worker recovery; reservation retained",
+                    "state": "interrupted",
+                    "attempted_at": 100.0,
+                    "engine_coverage": [],
+                    "attempt_id": "attempt-00000000000000000000000000000001",
+                    "finished_at": 100.0,
+                    "enforcement": {},
+                    "admitted_result_ids": [],
+                    "new_lead_ids": []
+                  }
+                ],
+                "enforcement": {},
+                "subquestion_id": null,
+                "rationale": null,
+                "parent_attempt_id": null,
+                "continuation_key": null,
+                "continuation_digest": null,
+                "requires_intent_grant": true,
+                "planning_method": null,
+                "evidence_result_ids": [],
+                "evidence_engines": [],
+                "evidence_intent": null
+              }
+            ],
+            "warnings": [],
+            "created_at": 1.0,
+            "deadline": 1000.0,
+            "tenant": "org:team",
+            "idempotency_key": null,
+            "workflow": {},
+            "cancel_requested": false,
+            "owner_id": null,
+            "lease_token": null,
+            "lease_expires_at": 0.0,
+            "subquestions": {},
+            "budget_limits": {
+              "queries": 1,
+              "attempts": 1,
+              "engines_per_query": 2,
+              "engine_attempts": 2,
+              "results": 1
+            },
+            "budget_used": {
+              "attempts": 1,
+              "engine_attempts": 2,
+              "results": 0
+            },
+            "seen_lead_ids": [],
+            "caller_completed": false,
+            "completion_rationale": null,
+            "completion_subquestion_states": null,
+            "stop_reason": "attempt_budget_exhausted"
+          },
+          "summary": {
+            "limits": {
+              "queries": 1,
+              "attempts": 1,
+              "engines_per_query": 2,
+              "engine_attempts": 2,
+              "results": 1
+            },
+            "used": {
+              "attempts": 1,
+              "engine_attempts": 2,
+              "results": 0,
+              "queries": 1
+            },
+            "remaining": {
+              "queries": 0,
+              "attempts": 0,
+              "engine_attempts": 0,
+              "results": 1
+            },
+            "accounting": "Attempts and engine slots are reserved before dispatch; admitted leads each use one slot."
+          }
+        }
+      ]
+    },
+    {
+      "name": "result-exhaustion",
+      "input": {
+        "job_id": "job-fixture",
+        "question": "Evidence 雪",
+        "strategy": "triangulate",
+        "created_at": 1,
+        "deadline": 1000,
+        "tenant": "org:team",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "science",
+            "engines": [
+              "a",
+              "b"
+            ]
+          }
+        ]
+      },
+      "initial": {
+        "job_id": "job-fixture",
+        "question": "Evidence 雪",
+        "strategy": "triangulate",
+        "state": "queued",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "science",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "time_range": null,
+            "state": "pending",
+            "query_id": null,
+            "result_count": 0,
+            "cursor": null,
+            "error": null,
+            "engine_coverage": [],
+            "attempts": [],
+            "enforcement": {},
+            "subquestion_id": null,
+            "rationale": null,
+            "parent_attempt_id": null,
+            "continuation_key": null,
+            "continuation_digest": null,
+            "requires_intent_grant": true,
+            "planning_method": null,
+            "evidence_result_ids": [],
+            "evidence_engines": [],
+            "evidence_intent": null
+          }
+        ],
+        "warnings": [],
+        "created_at": 1.0,
+        "deadline": 1000.0,
+        "tenant": "org:team",
+        "idempotency_key": null,
+        "workflow": {},
+        "cancel_requested": false,
+        "owner_id": null,
+        "lease_token": null,
+        "lease_expires_at": 0.0,
+        "subquestions": {},
+        "budget_limits": {},
+        "budget_used": {},
+        "seen_lead_ids": [],
+        "caller_completed": false,
+        "completion_rationale": null,
+        "completion_subquestion_states": null,
+        "stop_reason": null
+      },
+      "operations": [
+        {
+          "kind": "initialize",
+          "policy": [
+            4,
+            2,
+            3
+          ]
+        },
+        {
+          "kind": "reserve",
+          "now": 100.0,
+          "attempt_id": "attempt-00000000000000000000000000000001"
+        },
+        {
+          "kind": "finish",
+          "outcome": {
+            "state": "done",
+            "cursor": "snap",
+            "result_count": 3
+          },
+          "urls": [
+            "a",
+            "b",
+            "c"
+          ],
+          "lead_ids": [
+            "lead-v1-ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
+            "lead-v1-3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d",
+            "lead-v1-2e7d2c03a9507ae265ecf5b5356885a53393a2029d241394997265a1a25aefc6"
+          ]
+        },
+        {
+          "kind": "reserve",
+          "now": 100.0,
+          "attempt_id": null
+        }
+      ],
+      "outputs": [
+        {
+          "job": {
+            "job_id": "job-fixture",
+            "question": "Evidence 雪",
+            "strategy": "triangulate",
+            "state": "queued",
+            "queries": [
+              {
+                "index": 0,
+                "query": "q",
+                "intent": "science",
+                "engines": [
+                  "a",
+                  "b"
+                ],
+                "time_range": null,
+                "state": "pending",
+                "query_id": null,
+                "result_count": 0,
+                "cursor": null,
+                "error": null,
+                "engine_coverage": [],
+                "attempts": [],
+                "enforcement": {},
+                "subquestion_id": null,
+                "rationale": null,
+                "parent_attempt_id": null,
+                "continuation_key": null,
+                "continuation_digest": null,
+                "requires_intent_grant": true,
+                "planning_method": null,
+                "evidence_result_ids": [],
+                "evidence_engines": [],
+                "evidence_intent": null
+              }
+            ],
+            "warnings": [],
+            "created_at": 1.0,
+            "deadline": 1000.0,
+            "tenant": "org:team",
+            "idempotency_key": null,
+            "workflow": {},
+            "cancel_requested": false,
+            "owner_id": null,
+            "lease_token": null,
+            "lease_expires_at": 0.0,
+            "subquestions": {},
+            "budget_limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "budget_used": {
+              "attempts": 0,
+              "engine_attempts": 0,
+              "results": 0
+            },
+            "seen_lead_ids": [],
+            "caller_completed": false,
+            "completion_rationale": null,
+            "completion_subquestion_states": null,
+            "stop_reason": null
+          },
+          "summary": {
+            "limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "used": {
+              "attempts": 0,
+              "engine_attempts": 0,
+              "results": 0,
+              "queries": 1
+            },
+            "remaining": {
+              "queries": 3,
+              "attempts": 4,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "accounting": "Attempts and engine slots are reserved before dispatch; admitted leads each use one slot."
+          }
+        },
+        {
+          "job": {
+            "job_id": "job-fixture",
+            "question": "Evidence 雪",
+            "strategy": "triangulate",
+            "state": "queued",
+            "queries": [
+              {
+                "index": 0,
+                "query": "q",
+                "intent": "science",
+                "engines": [
+                  "a",
+                  "b"
+                ],
+                "time_range": null,
+                "state": "running",
+                "query_id": null,
+                "result_count": 0,
+                "cursor": null,
+                "error": null,
+                "engine_coverage": [],
+                "attempts": [
+                  {
+                    "cursor": null,
+                    "query_id": null,
+                    "result_count": 0,
+                    "error": null,
+                    "state": "running",
+                    "attempted_at": 100.0,
+                    "engine_coverage": [],
+                    "attempt_id": "attempt-00000000000000000000000000000001",
+                    "finished_at": null,
+                    "enforcement": {},
+                    "admitted_result_ids": [],
+                    "new_lead_ids": []
+                  }
+                ],
+                "enforcement": {},
+                "subquestion_id": null,
+                "rationale": null,
+                "parent_attempt_id": null,
+                "continuation_key": null,
+                "continuation_digest": null,
+                "requires_intent_grant": true,
+                "planning_method": null,
+                "evidence_result_ids": [],
+                "evidence_engines": [],
+                "evidence_intent": null
+              }
+            ],
+            "warnings": [],
+            "created_at": 1.0,
+            "deadline": 1000.0,
+            "tenant": "org:team",
+            "idempotency_key": null,
+            "workflow": {},
+            "cancel_requested": false,
+            "owner_id": null,
+            "lease_token": null,
+            "lease_expires_at": 0.0,
+            "subquestions": {},
+            "budget_limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "budget_used": {
+              "attempts": 1,
+              "engine_attempts": 2,
+              "results": 0
+            },
+            "seen_lead_ids": [],
+            "caller_completed": false,
+            "completion_rationale": null,
+            "completion_subquestion_states": null,
+            "stop_reason": null
+          },
+          "summary": {
+            "limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "used": {
+              "attempts": 1,
+              "engine_attempts": 2,
+              "results": 0,
+              "queries": 1
+            },
+            "remaining": {
+              "queries": 3,
+              "attempts": 3,
+              "engine_attempts": 6,
+              "results": 3
+            },
+            "accounting": "Attempts and engine slots are reserved before dispatch; admitted leads each use one slot."
+          }
+        },
+        {
+          "job": {
+            "job_id": "job-fixture",
+            "question": "Evidence 雪",
+            "strategy": "triangulate",
+            "state": "queued",
+            "queries": [
+              {
+                "index": 0,
+                "query": "q",
+                "intent": "science",
+                "engines": [
+                  "a",
+                  "b"
+                ],
+                "time_range": null,
+                "state": "done",
+                "query_id": null,
+                "result_count": 3,
+                "cursor": "snap",
+                "error": null,
+                "engine_coverage": [],
+                "attempts": [
+                  {
+                    "cursor": "snap",
+                    "query_id": null,
+                    "result_count": 3,
+                    "error": null,
+                    "state": "done",
+                    "attempted_at": 100.0,
+                    "engine_coverage": [],
+                    "attempt_id": "attempt-00000000000000000000000000000001",
+                    "finished_at": 100.0,
+                    "enforcement": {},
+                    "admitted_result_ids": [
+                      "snap:0",
+                      "snap:1",
+                      "snap:2"
+                    ],
+                    "new_lead_ids": [
+                      "lead-v1-ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
+                      "lead-v1-3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d",
+                      "lead-v1-2e7d2c03a9507ae265ecf5b5356885a53393a2029d241394997265a1a25aefc6"
+                    ]
+                  }
+                ],
+                "enforcement": {},
+                "subquestion_id": null,
+                "rationale": null,
+                "parent_attempt_id": null,
+                "continuation_key": null,
+                "continuation_digest": null,
+                "requires_intent_grant": true,
+                "planning_method": null,
+                "evidence_result_ids": [],
+                "evidence_engines": [],
+                "evidence_intent": null
+              }
+            ],
+            "warnings": [],
+            "created_at": 1.0,
+            "deadline": 1000.0,
+            "tenant": "org:team",
+            "idempotency_key": null,
+            "workflow": {},
+            "cancel_requested": false,
+            "owner_id": null,
+            "lease_token": null,
+            "lease_expires_at": 0.0,
+            "subquestions": {},
+            "budget_limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "budget_used": {
+              "attempts": 1,
+              "engine_attempts": 2,
+              "results": 3
+            },
+            "seen_lead_ids": [
+              "lead-v1-ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
+              "lead-v1-3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d",
+              "lead-v1-2e7d2c03a9507ae265ecf5b5356885a53393a2029d241394997265a1a25aefc6"
+            ],
+            "caller_completed": false,
+            "completion_rationale": null,
+            "completion_subquestion_states": null,
+            "stop_reason": null
+          },
+          "summary": {
+            "limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "used": {
+              "attempts": 1,
+              "engine_attempts": 2,
+              "results": 3,
+              "queries": 1
+            },
+            "remaining": {
+              "queries": 3,
+              "attempts": 3,
+              "engine_attempts": 6,
+              "results": 0
+            },
+            "accounting": "Attempts and engine slots are reserved before dispatch; admitted leads each use one slot."
+          }
+        },
+        {
+          "job": {
+            "job_id": "job-fixture",
+            "question": "Evidence 雪",
+            "strategy": "triangulate",
+            "state": "queued",
+            "queries": [
+              {
+                "index": 0,
+                "query": "q",
+                "intent": "science",
+                "engines": [
+                  "a",
+                  "b"
+                ],
+                "time_range": null,
+                "state": "failed",
+                "query_id": null,
+                "result_count": 3,
+                "cursor": "snap",
+                "error": "result_budget_exhausted",
+                "engine_coverage": [],
+                "attempts": [
+                  {
+                    "cursor": "snap",
+                    "query_id": null,
+                    "result_count": 3,
+                    "error": null,
+                    "state": "done",
+                    "attempted_at": 100.0,
+                    "engine_coverage": [],
+                    "attempt_id": "attempt-00000000000000000000000000000001",
+                    "finished_at": 100.0,
+                    "enforcement": {},
+                    "admitted_result_ids": [
+                      "snap:0",
+                      "snap:1",
+                      "snap:2"
+                    ],
+                    "new_lead_ids": [
+                      "lead-v1-ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
+                      "lead-v1-3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d",
+                      "lead-v1-2e7d2c03a9507ae265ecf5b5356885a53393a2029d241394997265a1a25aefc6"
+                    ]
+                  }
+                ],
+                "enforcement": {},
+                "subquestion_id": null,
+                "rationale": null,
+                "parent_attempt_id": null,
+                "continuation_key": null,
+                "continuation_digest": null,
+                "requires_intent_grant": true,
+                "planning_method": null,
+                "evidence_result_ids": [],
+                "evidence_engines": [],
+                "evidence_intent": null
+              }
+            ],
+            "warnings": [],
+            "created_at": 1.0,
+            "deadline": 1000.0,
+            "tenant": "org:team",
+            "idempotency_key": null,
+            "workflow": {},
+            "cancel_requested": false,
+            "owner_id": null,
+            "lease_token": null,
+            "lease_expires_at": 0.0,
+            "subquestions": {},
+            "budget_limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "budget_used": {
+              "attempts": 1,
+              "engine_attempts": 2,
+              "results": 3
+            },
+            "seen_lead_ids": [
+              "lead-v1-ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
+              "lead-v1-3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d",
+              "lead-v1-2e7d2c03a9507ae265ecf5b5356885a53393a2029d241394997265a1a25aefc6"
+            ],
+            "caller_completed": false,
+            "completion_rationale": null,
+            "completion_subquestion_states": null,
+            "stop_reason": "result_budget_exhausted"
+          },
+          "summary": {
+            "limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "used": {
+              "attempts": 1,
+              "engine_attempts": 2,
+              "results": 3,
+              "queries": 1
+            },
+            "remaining": {
+              "queries": 3,
+              "attempts": 3,
+              "engine_attempts": 6,
+              "results": 0
+            },
+            "accounting": "Attempts and engine slots are reserved before dispatch; admitted leads each use one slot."
+          }
+        }
+      ]
+    },
+    {
+      "name": "engine-limit",
+      "input": {
+        "job_id": "job-fixture",
+        "question": "Evidence 雪",
+        "strategy": "triangulate",
+        "created_at": 1,
+        "deadline": 1000,
+        "tenant": "org:team",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "science",
+            "engines": [
+              "a",
+              "b"
+            ]
+          }
+        ]
+      },
+      "initial": {
+        "job_id": "job-fixture",
+        "question": "Evidence 雪",
+        "strategy": "triangulate",
+        "state": "queued",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "science",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "time_range": null,
+            "state": "pending",
+            "query_id": null,
+            "result_count": 0,
+            "cursor": null,
+            "error": null,
+            "engine_coverage": [],
+            "attempts": [],
+            "enforcement": {},
+            "subquestion_id": null,
+            "rationale": null,
+            "parent_attempt_id": null,
+            "continuation_key": null,
+            "continuation_digest": null,
+            "requires_intent_grant": true,
+            "planning_method": null,
+            "evidence_result_ids": [],
+            "evidence_engines": [],
+            "evidence_intent": null
+          }
+        ],
+        "warnings": [],
+        "created_at": 1.0,
+        "deadline": 1000.0,
+        "tenant": "org:team",
+        "idempotency_key": null,
+        "workflow": {},
+        "cancel_requested": false,
+        "owner_id": null,
+        "lease_token": null,
+        "lease_expires_at": 0.0,
+        "subquestions": {},
+        "budget_limits": {},
+        "budget_used": {},
+        "seen_lead_ids": [],
+        "caller_completed": false,
+        "completion_rationale": null,
+        "completion_subquestion_states": null,
+        "stop_reason": null
+      },
+      "operations": [
+        {
+          "kind": "initialize",
+          "policy": [
+            4,
+            1,
+            4
+          ]
+        },
+        {
+          "kind": "reserve",
+          "now": 100.0,
+          "attempt_id": null
+        }
+      ],
+      "outputs": [
+        {
+          "job": {
+            "job_id": "job-fixture",
+            "question": "Evidence 雪",
+            "strategy": "triangulate",
+            "state": "queued",
+            "queries": [
+              {
+                "index": 0,
+                "query": "q",
+                "intent": "science",
+                "engines": [
+                  "a",
+                  "b"
+                ],
+                "time_range": null,
+                "state": "pending",
+                "query_id": null,
+                "result_count": 0,
+                "cursor": null,
+                "error": null,
+                "engine_coverage": [],
+                "attempts": [],
+                "enforcement": {},
+                "subquestion_id": null,
+                "rationale": null,
+                "parent_attempt_id": null,
+                "continuation_key": null,
+                "continuation_digest": null,
+                "requires_intent_grant": true,
+                "planning_method": null,
+                "evidence_result_ids": [],
+                "evidence_engines": [],
+                "evidence_intent": null
+              }
+            ],
+            "warnings": [],
+            "created_at": 1.0,
+            "deadline": 1000.0,
+            "tenant": "org:team",
+            "idempotency_key": null,
+            "workflow": {},
+            "cancel_requested": false,
+            "owner_id": null,
+            "lease_token": null,
+            "lease_expires_at": 0.0,
+            "subquestions": {},
+            "budget_limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 1,
+              "engine_attempts": 4,
+              "results": 4
+            },
+            "budget_used": {
+              "attempts": 0,
+              "engine_attempts": 0,
+              "results": 0
+            },
+            "seen_lead_ids": [],
+            "caller_completed": false,
+            "completion_rationale": null,
+            "completion_subquestion_states": null,
+            "stop_reason": null
+          },
+          "summary": {
+            "limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 1,
+              "engine_attempts": 4,
+              "results": 4
+            },
+            "used": {
+              "attempts": 0,
+              "engine_attempts": 0,
+              "results": 0,
+              "queries": 1
+            },
+            "remaining": {
+              "queries": 3,
+              "attempts": 4,
+              "engine_attempts": 4,
+              "results": 4
+            },
+            "accounting": "Attempts and engine slots are reserved before dispatch; admitted leads each use one slot."
+          }
+        },
+        {
+          "job": {
+            "job_id": "job-fixture",
+            "question": "Evidence 雪",
+            "strategy": "triangulate",
+            "state": "queued",
+            "queries": [
+              {
+                "index": 0,
+                "query": "q",
+                "intent": "science",
+                "engines": [
+                  "a",
+                  "b"
+                ],
+                "time_range": null,
+                "state": "failed",
+                "query_id": null,
+                "result_count": 0,
+                "cursor": null,
+                "error": "engine_budget_exhausted",
+                "engine_coverage": [],
+                "attempts": [],
+                "enforcement": {},
+                "subquestion_id": null,
+                "rationale": null,
+                "parent_attempt_id": null,
+                "continuation_key": null,
+                "continuation_digest": null,
+                "requires_intent_grant": true,
+                "planning_method": null,
+                "evidence_result_ids": [],
+                "evidence_engines": [],
+                "evidence_intent": null
+              }
+            ],
+            "warnings": [],
+            "created_at": 1.0,
+            "deadline": 1000.0,
+            "tenant": "org:team",
+            "idempotency_key": null,
+            "workflow": {},
+            "cancel_requested": false,
+            "owner_id": null,
+            "lease_token": null,
+            "lease_expires_at": 0.0,
+            "subquestions": {},
+            "budget_limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 1,
+              "engine_attempts": 4,
+              "results": 4
+            },
+            "budget_used": {
+              "attempts": 0,
+              "engine_attempts": 0,
+              "results": 0
+            },
+            "seen_lead_ids": [],
+            "caller_completed": false,
+            "completion_rationale": null,
+            "completion_subquestion_states": null,
+            "stop_reason": "engine_budget_exhausted"
+          },
+          "summary": {
+            "limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 1,
+              "engine_attempts": 4,
+              "results": 4
+            },
+            "used": {
+              "attempts": 0,
+              "engine_attempts": 0,
+              "results": 0,
+              "queries": 1
+            },
+            "remaining": {
+              "queries": 3,
+              "attempts": 4,
+              "engine_attempts": 4,
+              "results": 4
+            },
+            "accounting": "Attempts and engine slots are reserved before dispatch; admitted leads each use one slot."
+          }
+        }
+      ]
+    },
+    {
+      "name": "legacy-orphan-before-accounting",
+      "input": {
+        "job_id": "job-fixture",
+        "question": "Evidence 雪",
+        "strategy": "triangulate",
+        "created_at": 1,
+        "deadline": 1000,
+        "tenant": "org:team",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "science",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "state": "running",
+            "result_count": 2
+          }
+        ]
+      },
+      "initial": {
+        "job_id": "job-fixture",
+        "question": "Evidence 雪",
+        "strategy": "triangulate",
+        "state": "queued",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "science",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "time_range": null,
+            "state": "running",
+            "query_id": null,
+            "result_count": 2,
+            "cursor": null,
+            "error": null,
+            "engine_coverage": [],
+            "attempts": [],
+            "enforcement": {},
+            "subquestion_id": null,
+            "rationale": null,
+            "parent_attempt_id": null,
+            "continuation_key": null,
+            "continuation_digest": null,
+            "requires_intent_grant": true,
+            "planning_method": null,
+            "evidence_result_ids": [],
+            "evidence_engines": [],
+            "evidence_intent": null
+          }
+        ],
+        "warnings": [],
+        "created_at": 1.0,
+        "deadline": 1000.0,
+        "tenant": "org:team",
+        "idempotency_key": null,
+        "workflow": {},
+        "cancel_requested": false,
+        "owner_id": null,
+        "lease_token": null,
+        "lease_expires_at": 0.0,
+        "subquestions": {},
+        "budget_limits": {},
+        "budget_used": {},
+        "seen_lead_ids": [],
+        "caller_completed": false,
+        "completion_rationale": null,
+        "completion_subquestion_states": null,
+        "stop_reason": null
+      },
+      "operations": [
+        {
+          "kind": "recover",
+          "now": 77.0,
+          "generated_ids": [
+            "attempt-00000000000000000000000000000001"
+          ]
+        },
+        {
+          "kind": "initialize",
+          "policy": [
+            4,
+            2,
+            3
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "job": {
+            "job_id": "job-fixture",
+            "question": "Evidence 雪",
+            "strategy": "triangulate",
+            "state": "queued",
+            "queries": [
+              {
+                "index": 0,
+                "query": "q",
+                "intent": "science",
+                "engines": [
+                  "a",
+                  "b"
+                ],
+                "time_range": null,
+                "state": "running",
+                "query_id": null,
+                "result_count": 2,
+                "cursor": null,
+                "error": null,
+                "engine_coverage": [],
+                "attempts": [
+                  {
+                    "cursor": null,
+                    "query_id": null,
+                    "result_count": 0,
+                    "error": "Previous dispatch outcome is unknown after worker recovery; reservation retained",
+                    "state": "interrupted",
+                    "attempted_at": 77.0,
+                    "engine_coverage": [],
+                    "attempt_id": "attempt-00000000000000000000000000000001",
+                    "finished_at": 77.0,
+                    "enforcement": {},
+                    "admitted_result_ids": [],
+                    "new_lead_ids": []
+                  }
+                ],
+                "enforcement": {},
+                "subquestion_id": null,
+                "rationale": null,
+                "parent_attempt_id": null,
+                "continuation_key": null,
+                "continuation_digest": null,
+                "requires_intent_grant": true,
+                "planning_method": null,
+                "evidence_result_ids": [],
+                "evidence_engines": [],
+                "evidence_intent": null
+              }
+            ],
+            "warnings": [],
+            "created_at": 1.0,
+            "deadline": 1000.0,
+            "tenant": "org:team",
+            "idempotency_key": null,
+            "workflow": {},
+            "cancel_requested": false,
+            "owner_id": null,
+            "lease_token": null,
+            "lease_expires_at": 0.0,
+            "subquestions": {},
+            "budget_limits": {},
+            "budget_used": {},
+            "seen_lead_ids": [],
+            "caller_completed": false,
+            "completion_rationale": null,
+            "completion_subquestion_states": null,
+            "stop_reason": null
+          },
+          "summary": {
+            "limits": {},
+            "used": {
+              "queries": 1
+            },
+            "remaining": {},
+            "accounting": "Attempts and engine slots are reserved before dispatch; admitted leads each use one slot."
+          }
+        },
+        {
+          "job": {
+            "job_id": "job-fixture",
+            "question": "Evidence 雪",
+            "strategy": "triangulate",
+            "state": "queued",
+            "queries": [
+              {
+                "index": 0,
+                "query": "q",
+                "intent": "science",
+                "engines": [
+                  "a",
+                  "b"
+                ],
+                "time_range": null,
+                "state": "running",
+                "query_id": null,
+                "result_count": 2,
+                "cursor": null,
+                "error": null,
+                "engine_coverage": [],
+                "attempts": [
+                  {
+                    "cursor": null,
+                    "query_id": null,
+                    "result_count": 0,
+                    "error": "Previous dispatch outcome is unknown after worker recovery; reservation retained",
+                    "state": "interrupted",
+                    "attempted_at": 77.0,
+                    "engine_coverage": [],
+                    "attempt_id": "attempt-00000000000000000000000000000001",
+                    "finished_at": 77.0,
+                    "enforcement": {},
+                    "admitted_result_ids": [],
+                    "new_lead_ids": []
+                  }
+                ],
+                "enforcement": {},
+                "subquestion_id": null,
+                "rationale": null,
+                "parent_attempt_id": null,
+                "continuation_key": null,
+                "continuation_digest": null,
+                "requires_intent_grant": true,
+                "planning_method": null,
+                "evidence_result_ids": [],
+                "evidence_engines": [],
+                "evidence_intent": null
+              }
+            ],
+            "warnings": [],
+            "created_at": 1.0,
+            "deadline": 1000.0,
+            "tenant": "org:team",
+            "idempotency_key": null,
+            "workflow": {},
+            "cancel_requested": false,
+            "owner_id": null,
+            "lease_token": null,
+            "lease_expires_at": 0.0,
+            "subquestions": {},
+            "budget_limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "budget_used": {
+              "attempts": 1,
+              "engine_attempts": 2,
+              "results": 0
+            },
+            "seen_lead_ids": [],
+            "caller_completed": false,
+            "completion_rationale": null,
+            "completion_subquestion_states": null,
+            "stop_reason": null
+          },
+          "summary": {
+            "limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "used": {
+              "attempts": 1,
+              "engine_attempts": 2,
+              "results": 0,
+              "queries": 1
+            },
+            "remaining": {
+              "queries": 3,
+              "attempts": 3,
+              "engine_attempts": 6,
+              "results": 3
+            },
+            "accounting": "Attempts and engine slots are reserved before dispatch; admitted leads each use one slot."
+          }
+        }
+      ]
+    },
+    {
+      "name": "legacy-attempts-provenance-coercion",
+      "input": {
+        "job_id": "job-fixture",
+        "question": "Evidence 雪",
+        "strategy": "triangulate",
+        "created_at": 1,
+        "deadline": 1000,
+        "tenant": "org:team",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "science",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "state": "running",
+            "result_count": 2
+          },
+          {
+            "index": "1",
+            "query": "failed",
+            "intent": "general",
+            "engines": [
+              "a"
+            ],
+            "state": "failed",
+            "result_count": "3",
+            "attempts": [
+              {
+                "result_count": "2",
+                "cursor": "old-snapshot",
+                "state": "done",
+                "attempted_at": "5.25"
+              }
+            ]
+          }
+        ]
+      },
+      "initial": {
+        "job_id": "job-fixture",
+        "question": "Evidence 雪",
+        "strategy": "triangulate",
+        "state": "queued",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "science",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "time_range": null,
+            "state": "running",
+            "query_id": null,
+            "result_count": 2,
+            "cursor": null,
+            "error": null,
+            "engine_coverage": [],
+            "attempts": [],
+            "enforcement": {},
+            "subquestion_id": null,
+            "rationale": null,
+            "parent_attempt_id": null,
+            "continuation_key": null,
+            "continuation_digest": null,
+            "requires_intent_grant": true,
+            "planning_method": null,
+            "evidence_result_ids": [],
+            "evidence_engines": [],
+            "evidence_intent": null
+          },
+          {
+            "index": 1,
+            "query": "failed",
+            "intent": "general",
+            "engines": [
+              "a"
+            ],
+            "time_range": null,
+            "state": "failed",
+            "query_id": null,
+            "result_count": 3,
+            "cursor": null,
+            "error": null,
+            "engine_coverage": [],
+            "attempts": [
+              {
+                "cursor": "old-snapshot",
+                "query_id": null,
+                "result_count": 2,
+                "error": null,
+                "state": "done",
+                "attempted_at": 5.25,
+                "engine_coverage": [],
+                "attempt_id": "",
+                "finished_at": null,
+                "enforcement": {},
+                "admitted_result_ids": [],
+                "new_lead_ids": []
+              }
+            ],
+            "enforcement": {},
+            "subquestion_id": null,
+            "rationale": null,
+            "parent_attempt_id": null,
+            "continuation_key": null,
+            "continuation_digest": null,
+            "requires_intent_grant": true,
+            "planning_method": null,
+            "evidence_result_ids": [],
+            "evidence_engines": [],
+            "evidence_intent": null
+          }
+        ],
+        "warnings": [],
+        "created_at": 1.0,
+        "deadline": 1000.0,
+        "tenant": "org:team",
+        "idempotency_key": null,
+        "workflow": {},
+        "cancel_requested": false,
+        "owner_id": null,
+        "lease_token": null,
+        "lease_expires_at": 0.0,
+        "subquestions": {},
+        "budget_limits": {},
+        "budget_used": {},
+        "seen_lead_ids": [],
+        "caller_completed": false,
+        "completion_rationale": null,
+        "completion_subquestion_states": null,
+        "stop_reason": null
+      },
+      "operations": [
+        {
+          "kind": "initialize",
+          "policy": [
+            4,
+            2,
+            3
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "job": {
+            "job_id": "job-fixture",
+            "question": "Evidence 雪",
+            "strategy": "triangulate",
+            "state": "queued",
+            "queries": [
+              {
+                "index": 0,
+                "query": "q",
+                "intent": "science",
+                "engines": [
+                  "a",
+                  "b"
+                ],
+                "time_range": null,
+                "state": "running",
+                "query_id": null,
+                "result_count": 2,
+                "cursor": null,
+                "error": null,
+                "engine_coverage": [],
+                "attempts": [],
+                "enforcement": {},
+                "subquestion_id": null,
+                "rationale": null,
+                "parent_attempt_id": null,
+                "continuation_key": null,
+                "continuation_digest": null,
+                "requires_intent_grant": true,
+                "planning_method": null,
+                "evidence_result_ids": [],
+                "evidence_engines": [],
+                "evidence_intent": null
+              },
+              {
+                "index": 1,
+                "query": "failed",
+                "intent": "general",
+                "engines": [
+                  "a"
+                ],
+                "time_range": null,
+                "state": "failed",
+                "query_id": null,
+                "result_count": 3,
+                "cursor": null,
+                "error": null,
+                "engine_coverage": [],
+                "attempts": [
+                  {
+                    "cursor": "old-snapshot",
+                    "query_id": null,
+                    "result_count": 2,
+                    "error": null,
+                    "state": "done",
+                    "attempted_at": 5.25,
+                    "engine_coverage": [],
+                    "attempt_id": "",
+                    "finished_at": null,
+                    "enforcement": {},
+                    "admitted_result_ids": [],
+                    "new_lead_ids": []
+                  }
+                ],
+                "enforcement": {},
+                "subquestion_id": null,
+                "rationale": null,
+                "parent_attempt_id": null,
+                "continuation_key": null,
+                "continuation_digest": null,
+                "requires_intent_grant": true,
+                "planning_method": null,
+                "evidence_result_ids": [],
+                "evidence_engines": [],
+                "evidence_intent": null
+              }
+            ],
+            "warnings": [],
+            "created_at": 1.0,
+            "deadline": 1000.0,
+            "tenant": "org:team",
+            "idempotency_key": null,
+            "workflow": {},
+            "cancel_requested": false,
+            "owner_id": null,
+            "lease_token": null,
+            "lease_expires_at": 0.0,
+            "subquestions": {},
+            "budget_limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "budget_used": {
+              "attempts": 2,
+              "engine_attempts": 3,
+              "results": 4
+            },
+            "seen_lead_ids": [],
+            "caller_completed": false,
+            "completion_rationale": null,
+            "completion_subquestion_states": null,
+            "stop_reason": null
+          },
+          "summary": {
+            "limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "used": {
+              "attempts": 2,
+              "engine_attempts": 3,
+              "results": 4,
+              "queries": 2
+            },
+            "remaining": {
+              "queries": 2,
+              "attempts": 2,
+              "engine_attempts": 5,
+              "results": 0
+            },
+            "accounting": "Attempts and engine slots are reserved before dispatch; admitted leads each use one slot."
+          }
+        }
+      ]
+    },
+    {
+      "name": "nullable-empty-and-lossless-provenance",
+      "input": {
+        "job_id": "job-fixture",
+        "question": "Evidence 雪",
+        "strategy": "triangulate",
+        "created_at": 1,
+        "deadline": 1000,
+        "tenant": "org:team",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "science",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "attempts": null,
+            "engine_coverage": null,
+            "enforcement": null
+          }
+        ],
+        "workflow": {
+          "kind": "dependency_dossier",
+          "provenance": {
+            "n": 9007199254740993,
+            "null": null
+          }
+        },
+        "completion_subquestion_states": null,
+        "warnings": null
+      },
+      "initial": {
+        "job_id": "job-fixture",
+        "question": "Evidence 雪",
+        "strategy": "triangulate",
+        "state": "queued",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "science",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "time_range": null,
+            "state": "pending",
+            "query_id": null,
+            "result_count": 0,
+            "cursor": null,
+            "error": null,
+            "engine_coverage": [],
+            "attempts": [],
+            "enforcement": {},
+            "subquestion_id": null,
+            "rationale": null,
+            "parent_attempt_id": null,
+            "continuation_key": null,
+            "continuation_digest": null,
+            "requires_intent_grant": true,
+            "planning_method": null,
+            "evidence_result_ids": [],
+            "evidence_engines": [],
+            "evidence_intent": null
+          }
+        ],
+        "warnings": [],
+        "created_at": 1.0,
+        "deadline": 1000.0,
+        "tenant": "org:team",
+        "idempotency_key": null,
+        "workflow": {
+          "kind": "dependency_dossier",
+          "provenance": {
+            "n": 9007199254740993,
+            "null": null
+          }
+        },
+        "cancel_requested": false,
+        "owner_id": null,
+        "lease_token": null,
+        "lease_expires_at": 0.0,
+        "subquestions": {},
+        "budget_limits": {},
+        "budget_used": {},
+        "seen_lead_ids": [],
+        "caller_completed": false,
+        "completion_rationale": null,
+        "completion_subquestion_states": null,
+        "stop_reason": null
+      },
+      "operations": [
+        {
+          "kind": "initialize",
+          "policy": [
+            4,
+            2,
+            3
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "job": {
+            "job_id": "job-fixture",
+            "question": "Evidence 雪",
+            "strategy": "triangulate",
+            "state": "queued",
+            "queries": [
+              {
+                "index": 0,
+                "query": "q",
+                "intent": "science",
+                "engines": [
+                  "a",
+                  "b"
+                ],
+                "time_range": null,
+                "state": "pending",
+                "query_id": null,
+                "result_count": 0,
+                "cursor": null,
+                "error": null,
+                "engine_coverage": [],
+                "attempts": [],
+                "enforcement": {},
+                "subquestion_id": null,
+                "rationale": null,
+                "parent_attempt_id": null,
+                "continuation_key": null,
+                "continuation_digest": null,
+                "requires_intent_grant": true,
+                "planning_method": null,
+                "evidence_result_ids": [],
+                "evidence_engines": [],
+                "evidence_intent": null
+              }
+            ],
+            "warnings": [],
+            "created_at": 1.0,
+            "deadline": 1000.0,
+            "tenant": "org:team",
+            "idempotency_key": null,
+            "workflow": {
+              "kind": "dependency_dossier",
+              "provenance": {
+                "n": 9007199254740993,
+                "null": null
+              }
+            },
+            "cancel_requested": false,
+            "owner_id": null,
+            "lease_token": null,
+            "lease_expires_at": 0.0,
+            "subquestions": {},
+            "budget_limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "budget_used": {
+              "attempts": 0,
+              "engine_attempts": 0,
+              "results": 0
+            },
+            "seen_lead_ids": [],
+            "caller_completed": false,
+            "completion_rationale": null,
+            "completion_subquestion_states": null,
+            "stop_reason": null
+          },
+          "summary": {
+            "limits": {
+              "queries": 4,
+              "attempts": 4,
+              "engines_per_query": 2,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "used": {
+              "attempts": 0,
+              "engine_attempts": 0,
+              "results": 0,
+              "queries": 1
+            },
+            "remaining": {
+              "queries": 3,
+              "attempts": 4,
+              "engine_attempts": 8,
+              "results": 3
+            },
+            "accounting": "Attempts and engine slots are reserved before dispatch; admitted leads each use one slot."
+          }
+        }
+      ]
+    },
+    {
+      "name": "retry-does-not-resurrect-cancelled",
+      "input": {
+        "job_id": "job-fixture",
+        "question": "Evidence 雪",
+        "strategy": "triangulate",
+        "created_at": 1,
+        "deadline": 1000,
+        "tenant": "org:team",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "science",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "state": "failed",
+            "error": "old"
+          }
+        ],
+        "state": "cancelled"
+      },
+      "initial": {
+        "job_id": "job-fixture",
+        "question": "Evidence 雪",
+        "strategy": "triangulate",
+        "state": "cancelled",
+        "queries": [
+          {
+            "index": 0,
+            "query": "q",
+            "intent": "science",
+            "engines": [
+              "a",
+              "b"
+            ],
+            "time_range": null,
+            "state": "failed",
+            "query_id": null,
+            "result_count": 0,
+            "cursor": null,
+            "error": "old",
+            "engine_coverage": [],
+            "attempts": [],
+            "enforcement": {},
+            "subquestion_id": null,
+            "rationale": null,
+            "parent_attempt_id": null,
+            "continuation_key": null,
+            "continuation_digest": null,
+            "requires_intent_grant": true,
+            "planning_method": null,
+            "evidence_result_ids": [],
+            "evidence_engines": [],
+            "evidence_intent": null
+          }
+        ],
+        "warnings": [],
+        "created_at": 1.0,
+        "deadline": 1000.0,
+        "tenant": "org:team",
+        "idempotency_key": null,
+        "workflow": {},
+        "cancel_requested": false,
+        "owner_id": null,
+        "lease_token": null,
+        "lease_expires_at": 0.0,
+        "subquestions": {},
+        "budget_limits": {},
+        "budget_used": {},
+        "seen_lead_ids": [],
+        "caller_completed": false,
+        "completion_rationale": null,
+        "completion_subquestion_states": null,
+        "stop_reason": null
+      },
+      "operations": [
+        {
+          "kind": "retry"
+        }
+      ],
+      "outputs": [
+        {
+          "job": {
+            "job_id": "job-fixture",
+            "question": "Evidence 雪",
+            "strategy": "triangulate",
+            "state": "cancelled",
+            "queries": [
+              {
+                "index": 0,
+                "query": "q",
+                "intent": "science",
+                "engines": [
+                  "a",
+                  "b"
+                ],
+                "time_range": null,
+                "state": "failed",
+                "query_id": null,
+                "result_count": 0,
+                "cursor": null,
+                "error": "old",
+                "engine_coverage": [],
+                "attempts": [],
+                "enforcement": {},
+                "subquestion_id": null,
+                "rationale": null,
+                "parent_attempt_id": null,
+                "continuation_key": null,
+                "continuation_digest": null,
+                "requires_intent_grant": true,
+                "planning_method": null,
+                "evidence_result_ids": [],
+                "evidence_engines": [],
+                "evidence_intent": null
+              }
+            ],
+            "warnings": [],
+            "created_at": 1.0,
+            "deadline": 1000.0,
+            "tenant": "org:team",
+            "idempotency_key": null,
+            "workflow": {},
+            "cancel_requested": false,
+            "owner_id": null,
+            "lease_token": null,
+            "lease_expires_at": 0.0,
+            "subquestions": {},
+            "budget_limits": {},
+            "budget_used": {},
+            "seen_lead_ids": [],
+            "caller_completed": false,
+            "completion_rationale": null,
+            "completion_subquestion_states": null,
+            "stop_reason": null
+          },
+          "summary": {
+            "limits": {},
+            "used": {
+              "queries": 1
+            },
+            "remaining": {},
+            "accounting": "Attempts and engine slots are reserved before dispatch; admitted leads each use one slot."
+          }
+        }
+      ]
+    }
+  ],
+  "coverage_cases": [
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": false,
+        "status": null,
+        "result_count": 0,
+        "credential_missing": false
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "not-selected",
+        "status": null,
+        "result_count": 0,
+        "failure_class": null
+      },
+      "summary": {
+        "attempted": 0,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 0,
+        "not_selected": 1
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": false,
+        "status": null,
+        "result_count": 2,
+        "credential_missing": false
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "not-selected",
+        "status": null,
+        "result_count": 0,
+        "failure_class": null
+      },
+      "summary": {
+        "attempted": 0,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 0,
+        "not_selected": 1
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": false,
+        "status": "ok",
+        "result_count": 0,
+        "credential_missing": false
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "not-selected",
+        "status": null,
+        "result_count": 0,
+        "failure_class": null
+      },
+      "summary": {
+        "attempted": 0,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 0,
+        "not_selected": 1
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": false,
+        "status": "ok",
+        "result_count": 2,
+        "credential_missing": false
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "not-selected",
+        "status": null,
+        "result_count": 0,
+        "failure_class": null
+      },
+      "summary": {
+        "attempted": 0,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 0,
+        "not_selected": 1
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": false,
+        "status": "rate_limited",
+        "result_count": 0,
+        "credential_missing": false
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "not-selected",
+        "status": null,
+        "result_count": 0,
+        "failure_class": null
+      },
+      "summary": {
+        "attempted": 0,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 0,
+        "not_selected": 1
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": false,
+        "status": "rate_limited",
+        "result_count": 2,
+        "credential_missing": false
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "not-selected",
+        "status": null,
+        "result_count": 0,
+        "failure_class": null
+      },
+      "summary": {
+        "attempted": 0,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 0,
+        "not_selected": 1
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": false,
+        "status": "blocked",
+        "result_count": 0,
+        "credential_missing": false
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "not-selected",
+        "status": null,
+        "result_count": 0,
+        "failure_class": null
+      },
+      "summary": {
+        "attempted": 0,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 0,
+        "not_selected": 1
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": false,
+        "status": "blocked",
+        "result_count": 2,
+        "credential_missing": false
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "not-selected",
+        "status": null,
+        "result_count": 0,
+        "failure_class": null
+      },
+      "summary": {
+        "attempted": 0,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 0,
+        "not_selected": 1
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": false,
+        "status": "error",
+        "result_count": 0,
+        "credential_missing": false
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "not-selected",
+        "status": null,
+        "result_count": 0,
+        "failure_class": null
+      },
+      "summary": {
+        "attempted": 0,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 0,
+        "not_selected": 1
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": false,
+        "status": "error",
+        "result_count": 2,
+        "credential_missing": false
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "not-selected",
+        "status": null,
+        "result_count": 0,
+        "failure_class": null
+      },
+      "summary": {
+        "attempted": 0,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 0,
+        "not_selected": 1
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": false,
+        "status": "timeout",
+        "result_count": 0,
+        "credential_missing": false
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "not-selected",
+        "status": null,
+        "result_count": 0,
+        "failure_class": null
+      },
+      "summary": {
+        "attempted": 0,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 0,
+        "not_selected": 1
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": false,
+        "status": "timeout",
+        "result_count": 2,
+        "credential_missing": false
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "not-selected",
+        "status": null,
+        "result_count": 0,
+        "failure_class": null
+      },
+      "summary": {
+        "attempted": 0,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 0,
+        "not_selected": 1
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": false,
+        "status": "unavailable",
+        "result_count": 0,
+        "credential_missing": false
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "not-selected",
+        "status": null,
+        "result_count": 0,
+        "failure_class": null
+      },
+      "summary": {
+        "attempted": 0,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 0,
+        "not_selected": 1
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": false,
+        "status": "unavailable",
+        "result_count": 2,
+        "credential_missing": false
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "not-selected",
+        "status": null,
+        "result_count": 0,
+        "failure_class": null
+      },
+      "summary": {
+        "attempted": 0,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 0,
+        "not_selected": 1
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": false,
+        "status": null,
+        "result_count": 0,
+        "credential_missing": true
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "not-selected",
+        "status": null,
+        "result_count": 0,
+        "failure_class": null
+      },
+      "summary": {
+        "attempted": 0,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 0,
+        "not_selected": 1
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": false,
+        "status": null,
+        "result_count": 2,
+        "credential_missing": true
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "not-selected",
+        "status": null,
+        "result_count": 0,
+        "failure_class": null
+      },
+      "summary": {
+        "attempted": 0,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 0,
+        "not_selected": 1
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": false,
+        "status": "ok",
+        "result_count": 0,
+        "credential_missing": true
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "not-selected",
+        "status": null,
+        "result_count": 0,
+        "failure_class": null
+      },
+      "summary": {
+        "attempted": 0,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 0,
+        "not_selected": 1
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": false,
+        "status": "ok",
+        "result_count": 2,
+        "credential_missing": true
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "not-selected",
+        "status": null,
+        "result_count": 0,
+        "failure_class": null
+      },
+      "summary": {
+        "attempted": 0,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 0,
+        "not_selected": 1
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": false,
+        "status": "rate_limited",
+        "result_count": 0,
+        "credential_missing": true
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "not-selected",
+        "status": null,
+        "result_count": 0,
+        "failure_class": null
+      },
+      "summary": {
+        "attempted": 0,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 0,
+        "not_selected": 1
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": false,
+        "status": "rate_limited",
+        "result_count": 2,
+        "credential_missing": true
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "not-selected",
+        "status": null,
+        "result_count": 0,
+        "failure_class": null
+      },
+      "summary": {
+        "attempted": 0,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 0,
+        "not_selected": 1
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": false,
+        "status": "blocked",
+        "result_count": 0,
+        "credential_missing": true
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "not-selected",
+        "status": null,
+        "result_count": 0,
+        "failure_class": null
+      },
+      "summary": {
+        "attempted": 0,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 0,
+        "not_selected": 1
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": false,
+        "status": "blocked",
+        "result_count": 2,
+        "credential_missing": true
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "not-selected",
+        "status": null,
+        "result_count": 0,
+        "failure_class": null
+      },
+      "summary": {
+        "attempted": 0,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 0,
+        "not_selected": 1
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": false,
+        "status": "error",
+        "result_count": 0,
+        "credential_missing": true
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "not-selected",
+        "status": null,
+        "result_count": 0,
+        "failure_class": null
+      },
+      "summary": {
+        "attempted": 0,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 0,
+        "not_selected": 1
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": false,
+        "status": "error",
+        "result_count": 2,
+        "credential_missing": true
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "not-selected",
+        "status": null,
+        "result_count": 0,
+        "failure_class": null
+      },
+      "summary": {
+        "attempted": 0,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 0,
+        "not_selected": 1
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": false,
+        "status": "timeout",
+        "result_count": 0,
+        "credential_missing": true
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "not-selected",
+        "status": null,
+        "result_count": 0,
+        "failure_class": null
+      },
+      "summary": {
+        "attempted": 0,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 0,
+        "not_selected": 1
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": false,
+        "status": "timeout",
+        "result_count": 2,
+        "credential_missing": true
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "not-selected",
+        "status": null,
+        "result_count": 0,
+        "failure_class": null
+      },
+      "summary": {
+        "attempted": 0,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 0,
+        "not_selected": 1
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": false,
+        "status": "unavailable",
+        "result_count": 0,
+        "credential_missing": true
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "not-selected",
+        "status": null,
+        "result_count": 0,
+        "failure_class": null
+      },
+      "summary": {
+        "attempted": 0,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 0,
+        "not_selected": 1
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": false,
+        "status": "unavailable",
+        "result_count": 2,
+        "credential_missing": true
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "not-selected",
+        "status": null,
+        "result_count": 0,
+        "failure_class": null
+      },
+      "summary": {
+        "attempted": 0,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 0,
+        "not_selected": 1
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": true,
+        "status": null,
+        "result_count": 0,
+        "credential_missing": false
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "failed",
+        "status": "error",
+        "result_count": 0,
+        "failure_class": "error"
+      },
+      "summary": {
+        "attempted": 1,
+        "successful": 0,
+        "empty": 0,
+        "failed": 1,
+        "unavailable": 0,
+        "not_selected": 0
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": true,
+        "status": null,
+        "result_count": 2,
+        "credential_missing": false
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "failed",
+        "status": "error",
+        "result_count": 2,
+        "failure_class": "error"
+      },
+      "summary": {
+        "attempted": 1,
+        "successful": 0,
+        "empty": 0,
+        "failed": 1,
+        "unavailable": 0,
+        "not_selected": 0
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": true,
+        "status": "ok",
+        "result_count": 0,
+        "credential_missing": false
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "empty",
+        "status": "ok",
+        "result_count": 0,
+        "failure_class": "ok"
+      },
+      "summary": {
+        "attempted": 1,
+        "successful": 0,
+        "empty": 1,
+        "failed": 0,
+        "unavailable": 0,
+        "not_selected": 0
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": true,
+        "status": "ok",
+        "result_count": 2,
+        "credential_missing": false
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "successful",
+        "status": "ok",
+        "result_count": 2,
+        "failure_class": "ok"
+      },
+      "summary": {
+        "attempted": 1,
+        "successful": 1,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 0,
+        "not_selected": 0
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": true,
+        "status": "rate_limited",
+        "result_count": 0,
+        "credential_missing": false
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "failed",
+        "status": "rate_limited",
+        "result_count": 0,
+        "failure_class": "rate_limited"
+      },
+      "summary": {
+        "attempted": 1,
+        "successful": 0,
+        "empty": 0,
+        "failed": 1,
+        "unavailable": 0,
+        "not_selected": 0
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": true,
+        "status": "rate_limited",
+        "result_count": 2,
+        "credential_missing": false
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "failed",
+        "status": "rate_limited",
+        "result_count": 2,
+        "failure_class": "rate_limited"
+      },
+      "summary": {
+        "attempted": 1,
+        "successful": 0,
+        "empty": 0,
+        "failed": 1,
+        "unavailable": 0,
+        "not_selected": 0
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": true,
+        "status": "blocked",
+        "result_count": 0,
+        "credential_missing": false
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "failed",
+        "status": "blocked",
+        "result_count": 0,
+        "failure_class": "blocked"
+      },
+      "summary": {
+        "attempted": 1,
+        "successful": 0,
+        "empty": 0,
+        "failed": 1,
+        "unavailable": 0,
+        "not_selected": 0
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": true,
+        "status": "blocked",
+        "result_count": 2,
+        "credential_missing": false
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "failed",
+        "status": "blocked",
+        "result_count": 2,
+        "failure_class": "blocked"
+      },
+      "summary": {
+        "attempted": 1,
+        "successful": 0,
+        "empty": 0,
+        "failed": 1,
+        "unavailable": 0,
+        "not_selected": 0
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": true,
+        "status": "error",
+        "result_count": 0,
+        "credential_missing": false
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "failed",
+        "status": "error",
+        "result_count": 0,
+        "failure_class": "error"
+      },
+      "summary": {
+        "attempted": 1,
+        "successful": 0,
+        "empty": 0,
+        "failed": 1,
+        "unavailable": 0,
+        "not_selected": 0
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": true,
+        "status": "error",
+        "result_count": 2,
+        "credential_missing": false
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "failed",
+        "status": "error",
+        "result_count": 2,
+        "failure_class": "error"
+      },
+      "summary": {
+        "attempted": 1,
+        "successful": 0,
+        "empty": 0,
+        "failed": 1,
+        "unavailable": 0,
+        "not_selected": 0
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": true,
+        "status": "timeout",
+        "result_count": 0,
+        "credential_missing": false
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "failed",
+        "status": "timeout",
+        "result_count": 0,
+        "failure_class": "timeout"
+      },
+      "summary": {
+        "attempted": 1,
+        "successful": 0,
+        "empty": 0,
+        "failed": 1,
+        "unavailable": 0,
+        "not_selected": 0
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": true,
+        "status": "timeout",
+        "result_count": 2,
+        "credential_missing": false
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "failed",
+        "status": "timeout",
+        "result_count": 2,
+        "failure_class": "timeout"
+      },
+      "summary": {
+        "attempted": 1,
+        "successful": 0,
+        "empty": 0,
+        "failed": 1,
+        "unavailable": 0,
+        "not_selected": 0
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": true,
+        "status": "unavailable",
+        "result_count": 0,
+        "credential_missing": false
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "unavailable",
+        "status": "unavailable",
+        "result_count": 0,
+        "failure_class": "unavailable"
+      },
+      "summary": {
+        "attempted": 1,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 1,
+        "not_selected": 0
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": true,
+        "status": "unavailable",
+        "result_count": 2,
+        "credential_missing": false
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "unavailable",
+        "status": "unavailable",
+        "result_count": 2,
+        "failure_class": "unavailable"
+      },
+      "summary": {
+        "attempted": 1,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 1,
+        "not_selected": 0
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": true,
+        "status": null,
+        "result_count": 0,
+        "credential_missing": true
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "unavailable",
+        "status": null,
+        "result_count": 0,
+        "failure_class": "auth_required"
+      },
+      "summary": {
+        "attempted": 1,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 1,
+        "not_selected": 0
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": true,
+        "status": null,
+        "result_count": 2,
+        "credential_missing": true
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "unavailable",
+        "status": null,
+        "result_count": 2,
+        "failure_class": "auth_required"
+      },
+      "summary": {
+        "attempted": 1,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 1,
+        "not_selected": 0
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": true,
+        "status": "ok",
+        "result_count": 0,
+        "credential_missing": true
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "unavailable",
+        "status": "ok",
+        "result_count": 0,
+        "failure_class": "auth_required"
+      },
+      "summary": {
+        "attempted": 1,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 1,
+        "not_selected": 0
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": true,
+        "status": "ok",
+        "result_count": 2,
+        "credential_missing": true
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "unavailable",
+        "status": "ok",
+        "result_count": 2,
+        "failure_class": "auth_required"
+      },
+      "summary": {
+        "attempted": 1,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 1,
+        "not_selected": 0
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": true,
+        "status": "rate_limited",
+        "result_count": 0,
+        "credential_missing": true
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "unavailable",
+        "status": "rate_limited",
+        "result_count": 0,
+        "failure_class": "auth_required"
+      },
+      "summary": {
+        "attempted": 1,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 1,
+        "not_selected": 0
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": true,
+        "status": "rate_limited",
+        "result_count": 2,
+        "credential_missing": true
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "unavailable",
+        "status": "rate_limited",
+        "result_count": 2,
+        "failure_class": "auth_required"
+      },
+      "summary": {
+        "attempted": 1,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 1,
+        "not_selected": 0
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": true,
+        "status": "blocked",
+        "result_count": 0,
+        "credential_missing": true
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "unavailable",
+        "status": "blocked",
+        "result_count": 0,
+        "failure_class": "auth_required"
+      },
+      "summary": {
+        "attempted": 1,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 1,
+        "not_selected": 0
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": true,
+        "status": "blocked",
+        "result_count": 2,
+        "credential_missing": true
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "unavailable",
+        "status": "blocked",
+        "result_count": 2,
+        "failure_class": "auth_required"
+      },
+      "summary": {
+        "attempted": 1,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 1,
+        "not_selected": 0
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": true,
+        "status": "error",
+        "result_count": 0,
+        "credential_missing": true
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "unavailable",
+        "status": "error",
+        "result_count": 0,
+        "failure_class": "auth_required"
+      },
+      "summary": {
+        "attempted": 1,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 1,
+        "not_selected": 0
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": true,
+        "status": "error",
+        "result_count": 2,
+        "credential_missing": true
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "unavailable",
+        "status": "error",
+        "result_count": 2,
+        "failure_class": "auth_required"
+      },
+      "summary": {
+        "attempted": 1,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 1,
+        "not_selected": 0
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": true,
+        "status": "timeout",
+        "result_count": 0,
+        "credential_missing": true
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "unavailable",
+        "status": "timeout",
+        "result_count": 0,
+        "failure_class": "auth_required"
+      },
+      "summary": {
+        "attempted": 1,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 1,
+        "not_selected": 0
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": true,
+        "status": "timeout",
+        "result_count": 2,
+        "credential_missing": true
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "unavailable",
+        "status": "timeout",
+        "result_count": 2,
+        "failure_class": "auth_required"
+      },
+      "summary": {
+        "attempted": 1,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 1,
+        "not_selected": 0
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": true,
+        "status": "unavailable",
+        "result_count": 0,
+        "credential_missing": true
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "unavailable",
+        "status": "unavailable",
+        "result_count": 0,
+        "failure_class": "auth_required"
+      },
+      "summary": {
+        "attempted": 1,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 1,
+        "not_selected": 0
+      }
+    },
+    {
+      "input": {
+        "engine": "synthetic",
+        "dispatched": true,
+        "status": "unavailable",
+        "result_count": 2,
+        "credential_missing": true
+      },
+      "coverage": {
+        "engine": "synthetic",
+        "bucket": "unavailable",
+        "status": "unavailable",
+        "result_count": 2,
+        "failure_class": "auth_required"
+      },
+      "summary": {
+        "attempted": 1,
+        "successful": 0,
+        "empty": 0,
+        "failed": 0,
+        "unavailable": 1,
+        "not_selected": 0
+      }
+    }
+  ]
+}

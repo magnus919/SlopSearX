@@ -1,0 +1,10 @@
+{
+  "command": [
+    "/usr/bin/python3",
+    "-O",
+    "docs/rust-rewrite/a09/oracle/export_word.py"
+  ],
+  "exit_code": 1,
+  "stderr": "Traceback (most recent call last):\n  File \"/Users/magnus/.codex/worktrees/rust-a09-media-adapters/SlopSearX/docs/rust-rewrite/a09/oracle/export_word.py\", line 11, in <module>\n    raise RuntimeError(\"A09 oracle requires Python 3.14.7 and Unicode 16.0.0, including optimized mode\")\nRuntimeError: A09 oracle requires Python 3.14.7 and Unicode 16.0.0, including optimized mode\n",
+  "scope": "explicit guard remains active under optimized mode; table producer rejects before generating data"
+}

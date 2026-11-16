@@ -1,0 +1,1147 @@
+{
+  "schema_version": 1,
+  "scope": "temporary manual offline source oracle invocation of already inventoried export_source.capture; G08 retirement; no provider calls",
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "httpx": "0.28.1",
+  "source_sha256": {
+    "/Users/magnus/.codex/worktrees/rust-a03-community-adapters/SlopSearX/engines/arxiv.py": "4e174dc8af03bafc662b4ccadd724d4727ec63a1ea02579de27af5fe9fa2f408",
+    "/Users/magnus/.codex/worktrees/rust-a03-community-adapters/SlopSearX/docs/rust-rewrite/a06/oracle/export_source.py": "fac50ade3842d15169ea76ecb626f2f5a55d0aa8c7454f910c0c262f3175a65c",
+    "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/parse.py": "484b633b81d024da52649c7ff775c81b338de9f60585c94e5adfe335a27d9509",
+    "/private/tmp/slopsearx-rust-oracle-py314/lib/python3.14/site-packages/httpx/__init__.py": "0ac6997bac998f4ac783adf6d8058a587193315afdb718047c3e4fdff46bcfad"
+  },
+  "manual_command_sha256": "5b2c88d561ce6210b573a42ccf38ddc3470f0f8f6e5b32ab759064a56e9e6fa4",
+  "records": [
+    {
+      "id": "arxiv.redirect_boundary.explicit_default_target",
+      "engine": "arxiv",
+      "query": "test",
+      "config": {
+        "base_url": "https://export.arxiv.org/api/query"
+      },
+      "responses": [
+        {
+          "status": 302,
+          "body_b64": "",
+          "headers_b64": [
+            [
+              "bG9jYXRpb24=",
+              "aHR0cHM6Ly9leHBvcnQuYXJ4aXYub3JnOjQ0My9uZXh0"
+            ]
+          ]
+        },
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "redirect rejected: expected HTTPS on the configured arXiv host, got https://export.arxiv.org:443/next",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.redirect_boundary.explicit_default_base",
+      "engine": "arxiv",
+      "query": "test",
+      "config": {
+        "base_url": "https://export.arxiv.org:443/api/query"
+      },
+      "responses": [
+        {
+          "status": 302,
+          "body_b64": "",
+          "headers_b64": [
+            [
+              "bG9jYXRpb24=",
+              "aHR0cHM6Ly9leHBvcnQuYXJ4aXYub3JnL25leHQ="
+            ]
+          ]
+        },
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "redirect rejected: expected HTTPS on the configured arXiv host, got https://export.arxiv.org/next",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.redirect_boundary.explicit_default_both",
+      "engine": "arxiv",
+      "query": "test",
+      "config": {
+        "base_url": "https://export.arxiv.org:443/api/query"
+      },
+      "responses": [
+        {
+          "status": 302,
+          "body_b64": "",
+          "headers_b64": [
+            [
+              "bG9jYXRpb24=",
+              "aHR0cHM6Ly9leHBvcnQuYXJ4aXYub3JnOjQ0My9uZXh0"
+            ]
+          ]
+        },
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/next",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.redirect_boundary.explicit_default_inherit",
+      "engine": "arxiv",
+      "query": "test",
+      "config": {
+        "base_url": "https://export.arxiv.org:443/api/query"
+      },
+      "responses": [
+        {
+          "status": 302,
+          "body_b64": "",
+          "headers_b64": [
+            [
+              "bG9jYXRpb24=",
+              "L25leHQ="
+            ]
+          ]
+        },
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/next",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.redirect_boundary.base_http_explicit_upgrade",
+      "engine": "arxiv",
+      "query": "test",
+      "config": {
+        "base_url": "http://export.arxiv.org:80/api/query"
+      },
+      "responses": [
+        {
+          "status": 302,
+          "body_b64": "",
+          "headers_b64": [
+            [
+              "bG9jYXRpb24=",
+              "aHR0cHM6Ly9leHBvcnQuYXJ4aXYub3JnL25leHQ="
+            ]
+          ]
+        },
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "redirect rejected: expected HTTPS on the configured arXiv host, got https://export.arxiv.org/next",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.redirect_boundary.same_explicit_port_upgrade",
+      "engine": "arxiv",
+      "query": "test",
+      "config": {
+        "base_url": "http://export.arxiv.org:80/api/query"
+      },
+      "responses": [
+        {
+          "status": 302,
+          "body_b64": "",
+          "headers_b64": [
+            [
+              "bG9jYXRpb24=",
+              "aHR0cHM6Ly9leHBvcnQuYXJ4aXYub3JnOjgwL25leHQ="
+            ]
+          ]
+        },
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org:80/next",
+          "headers": {
+            "host": "export.arxiv.org:80",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.redirect_boundary.nondefault_port",
+      "engine": "arxiv",
+      "query": "test",
+      "config": {
+        "base_url": "https://export.arxiv.org/api/query"
+      },
+      "responses": [
+        {
+          "status": 302,
+          "body_b64": "",
+          "headers_b64": [
+            [
+              "bG9jYXRpb24=",
+              "aHR0cHM6Ly9leHBvcnQuYXJ4aXYub3JnOjQ0NC9uZXh0"
+            ]
+          ]
+        },
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "redirect rejected: expected HTTPS on the configured arXiv host, got https://export.arxiv.org:444/next",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.redirect_boundary.ascii_case",
+      "engine": "arxiv",
+      "query": "test",
+      "config": {
+        "base_url": "https://EXPORT.ARXIV.ORG/api/query"
+      },
+      "responses": [
+        {
+          "status": 302,
+          "body_b64": "",
+          "headers_b64": [
+            [
+              "bG9jYXRpb24=",
+              "aHR0cHM6Ly9leHBvcnQuYXJ4aXYub3JnL25leHQ="
+            ]
+          ]
+        },
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/next",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.redirect_boundary.userinfo",
+      "engine": "arxiv",
+      "query": "test",
+      "config": {
+        "base_url": "https://export.arxiv.org/api/query"
+      },
+      "responses": [
+        {
+          "status": 302,
+          "body_b64": "",
+          "headers_b64": [
+            [
+              "bG9jYXRpb24=",
+              "aHR0cHM6Ly9uYW1lOnBhc3NAZXhwb3J0LmFyeGl2Lm9yZy9uZXh0"
+            ]
+          ]
+        },
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://name:pass@export.arxiv.org/next",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml",
+            "authorization": "Basic bmFtZTpwYXNz"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.redirect_boundary.unicode_to_punycode",
+      "engine": "arxiv",
+      "query": "test",
+      "config": {
+        "base_url": "https://\u00e9.test/api/query"
+      },
+      "responses": [
+        {
+          "status": 302,
+          "body_b64": "",
+          "headers_b64": [
+            [
+              "bG9jYXRpb24=",
+              "aHR0cHM6Ly94bi0tOWNhLnRlc3QvbmV4dA=="
+            ]
+          ]
+        },
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://xn--9ca.test/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "xn--9ca.test",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "redirect rejected: expected HTTPS on the configured arXiv host, got https://xn--9ca.test/next",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.redirect_boundary.punycode_to_unicode",
+      "engine": "arxiv",
+      "query": "test",
+      "config": {
+        "base_url": "https://xn--9ca.test/api/query"
+      },
+      "responses": [
+        {
+          "status": 302,
+          "body_b64": "",
+          "headers_b64": [
+            [
+              "bG9jYXRpb24=",
+              "aHR0cHM6Ly/DqS50ZXN0L25leHQ="
+            ]
+          ]
+        },
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://xn--9ca.test/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "xn--9ca.test",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "redirect rejected: expected HTTPS on the configured arXiv host, got https://\u00e9.test/next",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.redirect_boundary.unicode_case",
+      "engine": "arxiv",
+      "query": "test",
+      "config": {
+        "base_url": "https://\u00c9.test/api/query"
+      },
+      "responses": [
+        {
+          "status": 302,
+          "body_b64": "",
+          "headers_b64": [
+            [
+              "bG9jYXRpb24=",
+              "aHR0cHM6Ly/DqS50ZXN0L25leHQ="
+            ]
+          ]
+        },
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://xn--9ca.test/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "xn--9ca.test",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://xn--9ca.test/next",
+          "headers": {
+            "host": "xn--9ca.test",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://arxiv.org/abs/2401.01234v2",
+            "title": "Paper title",
+            "content": "First second",
+            "engine": "arxiv",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2024-01-03",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": {
+              "domain": "science",
+              "type": "publication",
+              "schema_version": 1,
+              "data": {
+                "publication_id": "2401.01234v2",
+                "arxiv_id": "2401.01234v2",
+                "doi": "10.1/example",
+                "authors": [
+                  "Ada"
+                ],
+                "revision_date": "2024-01-04",
+                "abstract": "First second"
+              },
+              "provenance": {
+                "engine": "arxiv",
+                "adapter_fields": [
+                  "publication_id",
+                  "arxiv_id",
+                  "doi",
+                  "authors",
+                  "revision_date",
+                  "abstract"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            },
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.redirect_boundary.ipv6_spelling",
+      "engine": "arxiv",
+      "query": "test",
+      "config": {
+        "base_url": "https://[0:0:0:0:0:0:0:1]/api/query"
+      },
+      "responses": [
+        {
+          "status": 302,
+          "body_b64": "",
+          "headers_b64": [
+            [
+              "bG9jYXRpb24=",
+              "aHR0cHM6Ly9bOjoxXS9uZXh0"
+            ]
+          ]
+        },
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://[0:0:0:0:0:0:0:1]/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "[0:0:0:0:0:0:0:1]",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "redirect rejected: expected HTTPS on the configured arXiv host, got https://[::1]/next",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.redirect_boundary.invalid_port_same_host",
+      "engine": "arxiv",
+      "query": "test",
+      "config": {
+        "base_url": "https://export.arxiv.org/api/query"
+      },
+      "responses": [
+        {
+          "status": 302,
+          "body_b64": "",
+          "headers_b64": [
+            [
+              "bG9jYXRpb24=",
+              "aHR0cHM6Ly9leHBvcnQuYXJ4aXYub3JnOmJhZC9uZXh0"
+            ]
+          ]
+        },
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Invalid URL in location header: Invalid port: 'bad'.",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "arxiv.redirect_boundary.invalid_port_other_host",
+      "engine": "arxiv",
+      "query": "test",
+      "config": {
+        "base_url": "https://export.arxiv.org/api/query"
+      },
+      "responses": [
+        {
+          "status": 302,
+          "body_b64": "",
+          "headers_b64": [
+            [
+              "bG9jYXRpb24=",
+              "aHR0cHM6Ly9vdGhlci50ZXN0OmJhZC9uZXh0"
+            ]
+          ]
+        },
+        {
+          "status": 200,
+          "body_b64": "PGZlZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDUvQXRvbSIgeG1sbnM6YXJ4aXY9Imh0dHA6Ly9hcnhpdi5vcmcvc2NoZW1hcy9hdG9tIj48ZW50cnk+PGlkPmh0dHBzOi8vYXJ4aXYub3JnL2Ficy8yNDAxLjAxMjM0djI8L2lkPjx0aXRsZT4gIFBhcGVyIHRpdGxlICA8L3RpdGxlPjxzdW1tYXJ5PiBGaXJzdAogc2Vjb25kIDwvc3VtbWFyeT48cHVibGlzaGVkPjIwMjQtMDEtMDM8L3B1Ymxpc2hlZD48dXBkYXRlZD4yMDI0LTAxLTA0PC91cGRhdGVkPjxhdXRob3I+PG5hbWU+QWRhPC9uYW1lPjwvYXV0aG9yPjxhcnhpdjpkb2k+MTAuMS9leGFtcGxlPC9hcnhpdjpkb2k+PC9lbnRyeT48L2ZlZWQ+",
+          "headers": {}
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://export.arxiv.org/api/query?search_query=all%3Atest&start=0&max_results=5&sortBy=relevance&sortOrder=descending",
+          "headers": {
+            "host": "export.arxiv.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/atom+xml"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Invalid URL in location header: Invalid port: 'bad'.",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    }
+  ]
+}

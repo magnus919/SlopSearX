@@ -1,0 +1,82 @@
+{
+  "plan": "W07",
+  "scope": "storage-only ReceiptRepository increment; related #913; no closure",
+  "baseline": "2c7de9c3628c5e5bb61255dff45e019e94019e68",
+  "status": "focused storage acceptance: 42 scoped tests, formatting, strict infra/application all-target Clippy passed; broader publication gates pending",
+  "preserved_source_cases": [
+    {
+      "source": "tests/test_retrieval_receipts_valkey.py::test_atomic_replay_conflict_capacity_fixed_horizon_and_tenant_isolation",
+      "native": "w07_receipts::atomic_replay_conflict_capacity_fixed_horizon_and_tenant_isolation",
+      "contract": "competing same-content replay/conflict, fixed horizon, cap20, tenant isolation, logical expiry"
+    },
+    {
+      "source": "tests/test_retrieval_receipts_valkey.py::test_oversize_rejection_is_atomic",
+      "native": "w07_receipts::oversize_is_rejected_without_fresh_writes_and_store_close_is_terminal",
+      "contract": "complete encoded size; no fresh writes"
+    }
+  ],
+  "intentional_differences": [
+    {
+      "id": "W07-RECEIPT-CORRUPT-PREFLIGHT",
+      "behavior": "known malformed or unsafe preconditions and size/capacity refusal preserve retained bytes and TTLs; unexpected script errors can still be indeterminate",
+      "acceptance": "pending review and fresh qualification"
+    },
+    {
+      "id": "W07-RECEIPT-ID-COLLISION",
+      "behavior": "existing receipt object/index member refuses overwrite; valid replay precedes unrelated index validation",
+      "acceptance": "pending review and fresh qualification"
+    },
+    {
+      "id": "W07-RECEIPT-REPLAY-BOUNDARY",
+      "behavior": "direct replay bounds key/digest before reading and rejects malformed digest as Malformed, consistently with submit/Lua",
+      "acceptance": "pending review and fresh qualification"
+    }
+  ],
+  "added_controls": [
+    "competing_different_digests_commit_one_receipt_without_orphan_keys",
+    "missing_receipts_preserve_index_count_and_malformed_references_fail_without_mutation",
+    "bounded_inputs_fail_before_ids_or_writes_and_unavailable_is_not_missing"
+  ],
+  "remaining_full_issue": [
+    "MCP tools/resources/auth/catalog adoption",
+    "concrete manifest and lineage composition",
+    "complete supported output/cancellation/ownership qualification",
+    "W07 scoped gate and original-source inventory closure",
+    "reviewed publication and downstream handoff"
+  ],
+  "qualification": {
+    "current_source_native_executed": true,
+    "historical_predecessor_evidence_is_current_acceptance": false,
+    "required": "full-workspace build/tests, inherited gates, and final published-head CI/review remain pending; no A06 integration dependency is asserted",
+    "platforms": "macOS focused qualification passed; Linux AMD64/ARM64 published-head CI pending; no Windows claim",
+    "source_seal_sha256": "64ed3c1e7743c5bf4e16d3ea3f6afcbff1ae93d9f67b462ca4051cc02bc8f335",
+    "evidence_seal_sha256": "2478d9ce0a735db5bb4c4c9c2836868b075079f7905970caee4d7900a88e8b4c",
+    "actual_passed_tests": {
+      "real_valkey_receipts": 11,
+      "application_receipts": 18,
+      "application_lineage": 13,
+      "total": 42
+    },
+    "passed_checks": [
+      "cargo fmt --all --check",
+      "cargo clippy --offline --locked -p ssx-infra -p ssx-application --all-targets -- -D warnings"
+    ],
+    "original_tool_handles": {
+      "initial": 20613,
+      "corrected": 86315
+    },
+    "actual_controller_exits": {
+      "initial": 1,
+      "corrected": 0
+    },
+    "retained_failure": "first Clippy101: missing installed cmake because PATH omitted Homebrew; corrected only to prior successful A12 PATH"
+  },
+  "portal_impact": "no runtime factory activation or browser-visible contract change",
+  "source_review": {
+    "accepted_previous_seal": "1f38bbd20fb9ddbf575d54340715c732b65b0bc37afb2e47109c760522d366b2",
+    "accepted_findings": "no P1/P2",
+    "narrow_delta": "new distinct-digest test now uses two independent warmed Valkey connections/owners, barrier-released writers, disjoint deterministic IDs and independent close check",
+    "delta_review": "accepted by root before native qualification",
+    "native_executed": true
+  }
+}

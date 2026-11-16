@@ -1,0 +1,61 @@
+{
+  "prerequisite_path": "/Volumes/tank01/magnus/rust-builds/slopsearx/process-pool-shell-fixture-darwin-v2/debug/ssx-html-parser",
+  "exists_before_build": false,
+  "shared_resolver": "html_helper_tests.rs native_helper():current_exe parent deps -> parent debug -> ssx-html-parser; html_rows_worker resolves same debug path",
+  "required_source": "crates/ssx-infra/src/bin/ssx-html-parser.rs",
+  "build_command": [
+    "cargo",
+    "build",
+    "--offline",
+    "--locked",
+    "--workspace",
+    "--all-targets"
+  ],
+  "cases": [
+    {
+      "test": "adapters::html_helper_tests::actual_bounded_child_quota_and_non_emitting_codec_deadline_cancel_reap",
+      "source_lines": "html_helper_tests.rs:520-539,566-590",
+      "dependency": "Mode::Native fixture executes native_helper",
+      "actual_failure": "wrong native outcome quota"
+    },
+    {
+      "test": "adapters::html_helper_tests::actual_raw_header_selector_cancellation_retains_lease_until_reap",
+      "source_lines": "html_helper_tests.rs:957-970,1003-1032",
+      "dependency": "Mode::Native fixture records PID then execs native_helper",
+      "actual_failure": "ready=true active=false charged=false cancelled=false drained=true"
+    },
+    {
+      "test": "adapters::html_helper_tests::actual_rows_worker_quota_deadline_cancel_and_reap",
+      "source_lines": "html_helper_tests.rs:733-748,850-854",
+      "dependency": "Mode::Native fixture executes native_helper",
+      "actual_failure": "expected Deadline outcome absent"
+    },
+    {
+      "test": "adapters::html_helper_tests::loopback_cookie_isolation_bootstrap_fallback_and_exact_order",
+      "source_lines": "html_helper_tests.rs:110-113,133",
+      "dependency": "ParserPool directly uses native_helper",
+      "actual_failure": "EngineStatus Error versus Ok"
+    },
+    {
+      "test": "adapters::html_helper_tests::registered_factories_share_owned_pool_and_await_teardown_after_caller_drop",
+      "source_lines": "html_helper_tests.rs:1053-1067,1154-1162",
+      "dependency": "independent ParserPool directly uses native_helper after owned held fixture checks",
+      "actual_failure": "explicit Spawn NoSuchFile os error2"
+    },
+    {
+      "test": "adapters::html_helper_tests::typed_helper_terminal_outcomes_preserve_request_counts_feedback_and_reap",
+      "source_lines": "html_helper_tests.rs:209-211,286-300,405-412",
+      "dependency": "Mode::Deadline decoder frame invokes native_helper before consumed PID record",
+      "actual_failure": "false/Deadline PID record absent"
+    },
+    {
+      "test": "html::rows_worker::tests::actual_affine_tree_resource_refusal_and_next_worker_success",
+      "source_lines": "html_rows_worker.rs:264-279,300",
+      "dependency": "ProcessPool directly uses same debug ssx-html-parser path",
+      "actual_failure": "explicit Spawn NoSuchFile os error2"
+    }
+  ],
+  "causal_limit": "all seven depend on missing executable; direct NoSuchFile is observed in two; remaining symptoms are consistent prerequisite failures, final causal confirmation requires unchanged suite after building it",
+  "prior_attempt_retained": true,
+  "source_changes": false
+}

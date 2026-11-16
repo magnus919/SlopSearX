@@ -1,0 +1,1073 @@
+{
+  "schema": 1,
+  "source_sha256": "4c45e876fc79dffc0f7da8ccccc9c6ba67d4f4cc9e0bd9e8194f74184b96c65b",
+  "captures": [
+    {
+      "native_case": {
+        "id": "redirect-loop-search",
+        "argv": [
+          "search",
+          "q",
+          "--json"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/search?q=q&language=en&pageno=1&format=json",
+            "accept": "application/json"
+          },
+          {
+            "target": "/cycle",
+            "accept": "application/json"
+          },
+          {
+            "target": "/cycle",
+            "accept": "application/json"
+          },
+          {
+            "target": "/cycle",
+            "accept": "application/json"
+          },
+          {
+            "target": "/cycle",
+            "accept": "application/json"
+          }
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "error: ssx: request failed\n",
+        "reference": "additional-source-observations.json#redirect-loop-search"
+      },
+      "python_stdout_hex": "",
+      "python_stderr_hex": "54726163656261636b20286d6f737420726563656e742063616c6c206c617374293a0a202046696c6520222f566f6c756d65732f74616e6b30312f6d61676e75732f727573742d6275696c64732f736c6f7073656172782f776f726b74726565732f313036322d6e61746976652d636c692d617574686f72696e672d32303236313032392f737378222c206c696e65203235392c20696e203c6d6f64756c653e0a202020206d61696e28290a202020207e7e7e7e5e5e0a202046696c6520222f566f6c756d65732f74616e6b30312f6d61676e75732f727573742d6275696c64732f736c6f7073656172782f776f726b74726565732f313036322d6e61746976652d636c692d617574686f72696e672d32303236313032392f737378222c206c696e65203235352c20696e206d61696e0a20202020636f6d6d616e64735b617267732e636f6d6d616e645d2861726773290a202020207e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e5e5e5e5e5e5e0a202046696c6520222f566f6c756d65732f74616e6b30312f6d61676e75732f727573742d6275696c64732f736c6f7073656172782f776f726b74726565732f313036322d6e61746976652d636c692d617574686f72696e672d32303236313032392f737378222c206c696e652039312c20696e20636d645f7365617263680a2020202064617461203d205f66657463685f6a736f6e2875726c290a202046696c6520222f566f6c756d65732f74616e6b30312f6d61676e75732f727573742d6275696c64732f736c6f7073656172782f776f726b74726565732f313036322d6e61746976652d636c692d617574686f72696e672d32303236313032392f737378222c206c696e652035332c20696e205f66657463685f6a736f6e0a20202020726177203d205f66657463682875726c2c20226170706c69636174696f6e2f6a736f6e22290a202046696c6520222f566f6c756d65732f74616e6b30312f6d61676e75732f727573742d6275696c64732f736c6f7073656172782f776f726b74726565732f313036322d6e61746976652d636c692d617574686f72696e672d32303236313032392f737378222c206c696e652034382c20696e205f66657463680a20202020776974682075726c6f70656e287265712c2074696d656f75743d31352920617320726573703a0a2020202020202020207e7e7e7e7e7e7e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e0a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203138392c20696e2075726c6f70656e0a2020202072657475726e206f70656e65722e6f70656e2875726c2c20646174612c2074696d656f7574290a20202020202020202020207e7e7e7e7e7e7e7e7e7e7e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e0a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203439352c20696e206f70656e0a20202020726573706f6e7365203d206d657468287265712c20726573706f6e7365290a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203630342c20696e20687474705f726573706f6e73650a20202020726573706f6e7365203d2073656c662e706172656e742e6572726f72280a20202020202020202768747470272c20726571756573742c20726573706f6e73652c20636f64652c206d73672c2068647273290a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203532372c20696e206572726f720a20202020726573756c74203d2073656c662e5f63616c6c5f636861696e282a61726773290a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203436362c20696e205f63616c6c5f636861696e0a20202020726573756c74203d2066756e63282a61726773290a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203732302c20696e20687474705f6572726f725f3330320a2020202072657475726e2073656c662e706172656e742e6f70656e286e65772c2074696d656f75743d7265712e74696d656f7574290a20202020202020202020207e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e0a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203439352c20696e206f70656e0a20202020726573706f6e7365203d206d657468287265712c20726573706f6e7365290a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203630342c20696e20687474705f726573706f6e73650a20202020726573706f6e7365203d2073656c662e706172656e742e6572726f72280a20202020202020202768747470272c20726571756573742c20726573706f6e73652c20636f64652c206d73672c2068647273290a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203532372c20696e206572726f720a20202020726573756c74203d2073656c662e5f63616c6c5f636861696e282a61726773290a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203436362c20696e205f63616c6c5f636861696e0a20202020726573756c74203d2066756e63282a61726773290a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203732302c20696e20687474705f6572726f725f3330320a2020202072657475726e2073656c662e706172656e742e6f70656e286e65772c2074696d656f75743d7265712e74696d656f7574290a20202020202020202020207e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e0a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203439352c20696e206f70656e0a20202020726573706f6e7365203d206d657468287265712c20726573706f6e7365290a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203630342c20696e20687474705f726573706f6e73650a20202020726573706f6e7365203d2073656c662e706172656e742e6572726f72280a20202020202020202768747470272c20726571756573742c20726573706f6e73652c20636f64652c206d73672c2068647273290a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203532372c20696e206572726f720a20202020726573756c74203d2073656c662e5f63616c6c5f636861696e282a61726773290a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203436362c20696e205f63616c6c5f636861696e0a20202020726573756c74203d2066756e63282a61726773290a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203732302c20696e20687474705f6572726f725f3330320a2020202072657475726e2073656c662e706172656e742e6f70656e286e65772c2074696d656f75743d7265712e74696d656f7574290a20202020202020202020207e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e0a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203439352c20696e206f70656e0a20202020726573706f6e7365203d206d657468287265712c20726573706f6e7365290a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203630342c20696e20687474705f726573706f6e73650a20202020726573706f6e7365203d2073656c662e706172656e742e6572726f72280a20202020202020202768747470272c20726571756573742c20726573706f6e73652c20636f64652c206d73672c2068647273290a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203532372c20696e206572726f720a20202020726573756c74203d2073656c662e5f63616c6c5f636861696e282a61726773290a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203436362c20696e205f63616c6c5f636861696e0a20202020726573756c74203d2066756e63282a61726773290a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203732302c20696e20687474705f6572726f725f3330320a2020202072657475726e2073656c662e706172656e742e6f70656e286e65772c2074696d656f75743d7265712e74696d656f7574290a20202020202020202020207e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e0a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203439352c20696e206f70656e0a20202020726573706f6e7365203d206d657468287265712c20726573706f6e7365290a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203630342c20696e20687474705f726573706f6e73650a20202020726573706f6e7365203d2073656c662e706172656e742e6572726f72280a20202020202020202768747470272c20726571756573742c20726573706f6e73652c20636f64652c206d73672c2068647273290a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203532372c20696e206572726f720a20202020726573756c74203d2073656c662e5f63616c6c5f636861696e282a61726773290a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203436362c20696e205f63616c6c5f636861696e0a20202020726573756c74203d2066756e63282a61726773290a202046696c6520222f4c6962726172792f4672616d65776f726b732f507974686f6e2e6672616d65776f726b2f56657273696f6e732f332e31332f6c69622f707974686f6e332e31332f75726c6c69622f726571756573742e7079222c206c696e65203730392c20696e20687474705f6572726f725f3330320a20202020726169736520485454504572726f72287265712e66756c6c5f75726c2c20636f64652c0a202020202020202020202020202020202020202073656c662e696e665f6d7367202b206d73672c20686561646572732c206670290a75726c6c69622e6572726f722e485454504572726f723a2048545450204572726f72203330323a205468652048545450207365727665722072657475726e65642061207265646972656374206572726f72207468617420776f756c64206c65616420746f20616e20696e66696e697465206c6f6f702e0a546865206c61737420333078206572726f72206d657373616765207761733a0a466f756e640a",
+      "python_status": 1
+    },
+    {
+      "native_case": {
+        "id": "redirect-loop-health",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/health",
+            "accept": "application/json"
+          },
+          {
+            "target": "/cycle",
+            "accept": "application/json"
+          },
+          {
+            "target": "/cycle",
+            "accept": "application/json"
+          },
+          {
+            "target": "/cycle",
+            "accept": "application/json"
+          },
+          {
+            "target": "/cycle",
+            "accept": "application/json"
+          }
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "error: ssx: request failed\n",
+        "reference": "additional-source-observations.json#redirect-loop-health"
+      },
+      "python_stdout_hex": "",
+      "python_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e280942048545450204572726f72203330323a205468652048545450207365727665722072657475726e65642061207265646972656374206572726f72207468617420776f756c64206c65616420746f20616e20696e66696e697465206c6f6f702e0a546865206c61737420333078206572726f72206d657373616765207761733a0a466f756e640a",
+      "python_status": 1
+    },
+    {
+      "native_case": {
+        "id": "redirect-loop-config",
+        "argv": [
+          "config",
+          "--json"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/config",
+            "accept": "application/json"
+          },
+          {
+            "target": "/cycle",
+            "accept": "application/json"
+          },
+          {
+            "target": "/cycle",
+            "accept": "application/json"
+          },
+          {
+            "target": "/cycle",
+            "accept": "application/json"
+          },
+          {
+            "target": "/cycle",
+            "accept": "application/json"
+          }
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "error: ssx: request failed\n",
+        "reference": "additional-source-observations.json#redirect-loop-config"
+      },
+      "python_stdout_hex": "",
+      "python_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e280942048545450204572726f72203330323a205468652048545450207365727665722072657475726e65642061207265646972656374206572726f72207468617420776f756c64206c65616420746f20616e20696e66696e697465206c6f6f702e0a546865206c61737420333078206572726f72206d657373616765207761733a0a466f756e640a",
+      "python_status": 1
+    },
+    {
+      "native_case": {
+        "id": "redirect-loop-engines",
+        "argv": [
+          "engines",
+          "--json"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/health",
+            "accept": "application/json"
+          },
+          {
+            "target": "/cycle",
+            "accept": "application/json"
+          },
+          {
+            "target": "/cycle",
+            "accept": "application/json"
+          },
+          {
+            "target": "/cycle",
+            "accept": "application/json"
+          },
+          {
+            "target": "/cycle",
+            "accept": "application/json"
+          }
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "error: ssx: request failed\n",
+        "reference": "additional-source-observations.json#redirect-loop-engines"
+      },
+      "python_stdout_hex": "",
+      "python_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e280942048545450204572726f72203330323a205468652048545450207365727665722072657475726e65642061207265646972656374206572726f72207468617420776f756c64206c65616420746f20616e20696e66696e697465206c6f6f702e0a546865206c61737420333078206572726f72206d657373616765207761733a0a466f756e640a",
+      "python_status": 1
+    },
+    {
+      "native_case": {
+        "id": "redirect-three-cycle",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle-1"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle-2"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle-0"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle-1"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle-2"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle-0"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle-1"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle-2"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle-0"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle-1"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle-2"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle-0"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle-1"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle-2"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle-0"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle-1"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle-2"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle-0"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle-1"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/cycle-2"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/health",
+            "accept": "application/json"
+          },
+          {
+            "target": "/cycle-1",
+            "accept": "application/json"
+          },
+          {
+            "target": "/cycle-2",
+            "accept": "application/json"
+          },
+          {
+            "target": "/cycle-0",
+            "accept": "application/json"
+          },
+          {
+            "target": "/cycle-1",
+            "accept": "application/json"
+          },
+          {
+            "target": "/cycle-2",
+            "accept": "application/json"
+          },
+          {
+            "target": "/cycle-0",
+            "accept": "application/json"
+          },
+          {
+            "target": "/cycle-1",
+            "accept": "application/json"
+          },
+          {
+            "target": "/cycle-2",
+            "accept": "application/json"
+          },
+          {
+            "target": "/cycle-0",
+            "accept": "application/json"
+          },
+          {
+            "target": "/cycle-1",
+            "accept": "application/json"
+          },
+          {
+            "target": "/cycle-2",
+            "accept": "application/json"
+          },
+          {
+            "target": "/cycle-0",
+            "accept": "application/json"
+          }
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "error: ssx: request failed\n",
+        "reference": "additional-source-observations.json#redirect-three-cycle"
+      },
+      "python_stdout_hex": "",
+      "python_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e280942048545450204572726f72203330323a205468652048545450207365727665722072657475726e65642061207265646972656374206572726f72207468617420776f756c64206c65616420746f20616e20696e66696e697465206c6f6f702e0a546865206c61737420333078206572726f72206d657373616765207761733a0a466f756e640a",
+      "python_status": 1
+    },
+    {
+      "native_case": {
+        "id": "redirect-distinct-limit",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/hop-0"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/hop-1"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/hop-2"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/hop-3"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/hop-4"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/hop-5"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/hop-6"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/hop-7"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/hop-8"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/hop-9"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/hop-10"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/hop-11"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/hop-12"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/hop-13"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          },
+          {
+            "status": 302,
+            "headers": {
+              "Location": "/hop-14"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/health",
+            "accept": "application/json"
+          },
+          {
+            "target": "/hop-0",
+            "accept": "application/json"
+          },
+          {
+            "target": "/hop-1",
+            "accept": "application/json"
+          },
+          {
+            "target": "/hop-2",
+            "accept": "application/json"
+          },
+          {
+            "target": "/hop-3",
+            "accept": "application/json"
+          },
+          {
+            "target": "/hop-4",
+            "accept": "application/json"
+          },
+          {
+            "target": "/hop-5",
+            "accept": "application/json"
+          },
+          {
+            "target": "/hop-6",
+            "accept": "application/json"
+          },
+          {
+            "target": "/hop-7",
+            "accept": "application/json"
+          },
+          {
+            "target": "/hop-8",
+            "accept": "application/json"
+          },
+          {
+            "target": "/hop-9",
+            "accept": "application/json"
+          }
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "error: ssx: request failed\n",
+        "reference": "additional-source-observations.json#redirect-distinct-limit"
+      },
+      "python_stdout_hex": "",
+      "python_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e280942048545450204572726f72203330323a205468652048545450207365727665722072657475726e65642061207265646972656374206572726f72207468617420776f756c64206c65616420746f20616e20696e66696e697465206c6f6f702e0a546865206c61737420333078206572726f72206d657373616765207761733a0a466f756e640a",
+      "python_status": 1
+    },
+    {
+      "native_case": {
+        "id": "redirect-userinfo",
+        "argv": [
+          "health",
+          "--json"
+        ],
+        "env": {},
+        "replies": [
+          {
+            "status": 302,
+            "headers": {
+              "Location": "http://fixture-user:fixture-password@$ADDRESS/secret"
+            },
+            "body_hex": "",
+            "close": false,
+            "delay_ms": 0
+          }
+        ],
+        "requests": [
+          {
+            "target": "/health",
+            "accept": "application/json"
+          }
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "error: ssx: request failed\n",
+        "reference": "additional-source-observations.json#redirect-userinfo"
+      },
+      "python_stdout_hex": "",
+      "python_stderr_hex": "6572726f723a2063616e6e6f7420726561636820536c6f70536561725820e28094203c75726c6f70656e206572726f72205b4572726e6f20385d206e6f64656e616d65206e6f7220736572766e616d652070726f76696465642c206f72206e6f74206b6e6f776e3e0a",
+      "python_status": 1
+    },
+    {
+      "native_case": {
+        "id": "help-top",
+        "argv": [
+          "--help"
+        ],
+        "env": {},
+        "replies": [],
+        "requests": [],
+        "status": 0,
+        "stdout": "",
+        "stderr": "",
+        "reference": "additional-source-observations.json#help-top",
+        "stdout_contains": [
+          "search",
+          "engines",
+          "health",
+          "config",
+          "SSX_URL",
+          "SSX_FORMAT"
+        ],
+        "intentional_difference": "sanitized-diagnostics-help"
+      },
+      "python_stdout_hex": "75736167653a20737378205b2d685d207b7365617263682c656e67696e65732c6865616c74682c636f6e6669677d202e2e2e0a0a536c6f70536561725820434c4920e280942041492d6167656e742d6e6174697665206d6574612073656172636820636c69656e740a0a706f736974696f6e616c20617267756d656e74733a0a20207b7365617263682c656e67696e65732c6865616c74682c636f6e6669677d0a202020207365617263682020202020202020202020202020457865637574652061207365617263682071756572790a20202020656e67696e6573202020202020202020202020204c69737420656e67696e65732077697468207374617475730a202020206865616c74682020202020202020202020202020436865636b2073657276657220616e6420656e67696e65206865616c74680a20202020636f6e666967202020202020202020202020202053686f7720656e67696e652d746f2d63617465676f72696573206d617070696e670a0a6f7074696f6e733a0a20202d682c202d2d68656c7020202020202020202020202073686f7720746869732068656c70206d65737361676520616e6420657869740a0a456e7669726f6e6d656e743a205353585f55524c2c205353585f464f524d4154202879616d6c7c6a736f6e292e2053656520534b494c4c2e6d6420666f722066756c6c207265666572656e63652e0a",
+      "python_stderr_hex": "",
+      "python_status": 0
+    },
+    {
+      "native_case": {
+        "id": "help-search",
+        "argv": [
+          "search",
+          "--help"
+        ],
+        "env": {},
+        "replies": [],
+        "requests": [],
+        "status": 0,
+        "stdout": "",
+        "stderr": "",
+        "reference": "additional-source-observations.json#help-search",
+        "stdout_contains": [
+          "--categories",
+          "--engines",
+          "--language",
+          "--time-range",
+          "--pageno",
+          "--json"
+        ],
+        "intentional_difference": "sanitized-diagnostics-help"
+      },
+      "python_stdout_hex": "75736167653a2073737820736561726368205b2d685d205b2d2d63617465676f726965732043415445474f524945535d205b2d2d656e67696e657320454e47494e45535d0a2020202020202020202020202020202020205b2d2d6c616e6775616765204c414e47554147455d205b2d2d74696d652d72616e67652054494d455f52414e47455d0a2020202020202020202020202020202020205b2d2d706167656e6f20504147454e4f5d205b2d2d6a736f6e5d0a2020202020202020202020202020202020207175657279205b7175657279202e2e2e5d0a0a706f736974696f6e616c20617267756d656e74733a0a20207175657279202020202020202020202020202020202053656172636820717565727920737472696e670a0a6f7074696f6e733a0a20202d682c202d2d68656c7020202020202020202020202073686f7720746869732068656c70206d65737361676520616e6420657869740a20202d2d63617465676f726965732c202d632043415445474f524945530a202020202020202020202020202020202020202020202020436f6d6d612d7365706172617465642063617465676f72792066696c7465720a20202d2d656e67696e65732c202d6520454e47494e45530a202020202020202020202020202020202020202020202020436f6d6d612d73657061726174656420656e67696e652066696c7465720a20202d2d6c616e67756167652c202d6c204c414e47554147450a2020202020202020202020202020202020202020202020204c616e677561676520636f6465202864656661756c743a20656e290a20202d2d74696d652d72616e67652054494d455f52414e47450a20202020202020202020202020202020202020202020202054696d652072616e67653a206461792c206d6f6e74682c20796561720a20202d2d706167656e6f20504147454e4f2020202020202050616765206e756d626572202864656661756c743a2031290a20202d2d6a736f6e202020202020202020202020202020204f7574707574204a534f4e20696e7374656164206f662059414d4c0a",
+      "python_stderr_hex": "",
+      "python_status": 0
+    },
+    {
+      "native_case": {
+        "id": "help-health",
+        "argv": [
+          "health",
+          "--help"
+        ],
+        "env": {},
+        "replies": [],
+        "requests": [],
+        "status": 0,
+        "stdout": "",
+        "stderr": "",
+        "reference": "additional-source-observations.json#help-health",
+        "stdout_contains": [
+          "--json",
+          "--help"
+        ],
+        "intentional_difference": "sanitized-diagnostics-help"
+      },
+      "python_stdout_hex": "75736167653a20737378206865616c7468205b2d685d205b2d2d6a736f6e5d0a0a6f7074696f6e733a0a20202d682c202d2d68656c70202073686f7720746869732068656c70206d65737361676520616e6420657869740a20202d2d6a736f6e2020202020204f7574707574204a534f4e0a",
+      "python_stderr_hex": "",
+      "python_status": 0
+    },
+    {
+      "native_case": {
+        "id": "help-config",
+        "argv": [
+          "config",
+          "--help"
+        ],
+        "env": {},
+        "replies": [],
+        "requests": [],
+        "status": 0,
+        "stdout": "",
+        "stderr": "",
+        "reference": "additional-source-observations.json#help-config",
+        "stdout_contains": [
+          "--json",
+          "--help"
+        ],
+        "intentional_difference": "sanitized-diagnostics-help"
+      },
+      "python_stdout_hex": "75736167653a2073737820636f6e666967205b2d685d205b2d2d6a736f6e5d0a0a6f7074696f6e733a0a20202d682c202d2d68656c70202073686f7720746869732068656c70206d65737361676520616e6420657869740a20202d2d6a736f6e2020202020204f7574707574204a534f4e0a",
+      "python_stderr_hex": "",
+      "python_status": 0
+    },
+    {
+      "native_case": {
+        "id": "help-engines",
+        "argv": [
+          "engines",
+          "--help"
+        ],
+        "env": {},
+        "replies": [],
+        "requests": [],
+        "status": 0,
+        "stdout": "",
+        "stderr": "",
+        "reference": "additional-source-observations.json#help-engines",
+        "stdout_contains": [
+          "--json",
+          "--help"
+        ],
+        "intentional_difference": "sanitized-diagnostics-help"
+      },
+      "python_stdout_hex": "75736167653a2073737820656e67696e6573205b2d685d205b2d2d6a736f6e5d0a0a6f7074696f6e733a0a20202d682c202d2d68656c70202073686f7720746869732068656c70206d65737361676520616e6420657869740a20202d2d6a736f6e2020202020204f7574707574204a534f4e0a",
+      "python_stderr_hex": "",
+      "python_status": 0
+    }
+  ]
+}

@@ -1,0 +1,1023 @@
+{
+  "contract": "slopsearx.rust.w03.oracle",
+  "baseline": "87af8096d46359241421ac747ed6aa1ad07f38ec",
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "observations": [
+    {
+      "kind": "decomposition",
+      "arguments": {
+        "question": "Compare maintenance and alternatives",
+        "engines": [
+          "wikipedia"
+        ],
+        "max_queries": 3,
+        "max_attempts": 3,
+        "max_engine_attempts": 3,
+        "subquestions": [
+          {
+            "id": "a",
+            "question": "maintenance"
+          },
+          {
+            "id": "b",
+            "question": "alternatives"
+          }
+        ]
+      },
+      "output": {
+        "contract": "slopsearx.research.plan",
+        "version": 1,
+        "execution": {
+          "tool": "slopsearx_start_research",
+          "arguments": {
+            "question": "Compare maintenance and alternatives",
+            "initial_plan": [
+              {
+                "query": "Compare maintenance and alternatives",
+                "intent": "web",
+                "engines": [
+                  "wikipedia"
+                ],
+                "planning_method": "original"
+              },
+              {
+                "query": "maintenance",
+                "intent": "web",
+                "engines": [
+                  "wikipedia"
+                ],
+                "planning_method": "decomposition",
+                "subquestion_id": "a",
+                "rationale": "Caller-decomposed evidence need"
+              },
+              {
+                "query": "alternatives",
+                "intent": "web",
+                "engines": [
+                  "wikipedia"
+                ],
+                "planning_method": "decomposition",
+                "subquestion_id": "b",
+                "rationale": "Caller-decomposed evidence need"
+              }
+            ],
+            "subquestions": [
+              {
+                "id": "a",
+                "question": "maintenance"
+              },
+              {
+                "id": "b",
+                "question": "alternatives"
+              }
+            ],
+            "max_queries": 3,
+            "max_attempts": 3,
+            "max_engines_per_query": 10,
+            "max_engine_attempts": 3,
+            "max_results": 500
+          }
+        },
+        "plan_digest": "bcc237bda4e05fb7581dcbee87a674dff37b69e4d1db3d077f1f7437bbfcd3c6",
+        "budget": {
+          "limits": {
+            "queries": 3,
+            "engines_per_query": 10,
+            "attempts": 3,
+            "engine_attempts": 3,
+            "results": 500
+          },
+          "planned_queries": 3,
+          "planned_engine_attempts": 3
+        },
+        "dispatched": false,
+        "note": "Caller-proposed reading-lead searches; execution revalidates policy and budgets. No evidence sufficiency is certified."
+      },
+      "provider_calls": 0,
+      "writes": 0
+    },
+    {
+      "kind": "variants",
+      "arguments": {
+        "question": "Find CVE-2026-12345 10.1000/example 2303.07678v2 @scope/package \u96ea",
+        "variants": [
+          "Evidence CVE-2026-12345 10.1000/example 2303.07678v2 @scope/package \u96ea"
+        ],
+        "engines": [
+          "wikipedia"
+        ],
+        "max_queries": 2
+      },
+      "output": {
+        "contract": "slopsearx.research.plan",
+        "version": 1,
+        "execution": {
+          "tool": "slopsearx_start_research",
+          "arguments": {
+            "question": "Find CVE-2026-12345 10.1000/example 2303.07678v2 @scope/package \u96ea",
+            "initial_plan": [
+              {
+                "query": "Find CVE-2026-12345 10.1000/example 2303.07678v2 @scope/package \u96ea",
+                "intent": "web",
+                "engines": [
+                  "wikipedia"
+                ],
+                "planning_method": "original"
+              },
+              {
+                "query": "Evidence CVE-2026-12345 10.1000/example 2303.07678v2 @scope/package \u96ea",
+                "intent": "web",
+                "engines": [
+                  "wikipedia"
+                ],
+                "planning_method": "terminology_expansion",
+                "rationale": "Caller terminology proposal; generated wording is not evidence"
+              }
+            ],
+            "subquestions": [],
+            "max_queries": 2,
+            "max_attempts": 20,
+            "max_engines_per_query": 10,
+            "max_engine_attempts": 200,
+            "max_results": 500
+          }
+        },
+        "plan_digest": "79d51c783479f94250314cea65262035e013c1463ca1c2cfe0e3073d488a2b43",
+        "budget": {
+          "limits": {
+            "queries": 2,
+            "engines_per_query": 10,
+            "attempts": 20,
+            "engine_attempts": 200,
+            "results": 500
+          },
+          "planned_queries": 2,
+          "planned_engine_attempts": 2
+        },
+        "dispatched": false,
+        "note": "Caller-proposed reading-lead searches; execution revalidates policy and budgets. No evidence sufficiency is certified."
+      },
+      "provider_calls": 0,
+      "writes": 0
+    },
+    {
+      "kind": "variants",
+      "arguments": {
+        "question": "Stra\u00dfe\u001cA",
+        "variants": [
+          "STRASSE A"
+        ],
+        "engines": [
+          "wikipedia"
+        ]
+      },
+      "output": {
+        "error": {
+          "code": "duplicate_query",
+          "message": "plan repeats the same query and source scope"
+        }
+      },
+      "provider_calls": 0,
+      "writes": 0
+    },
+    {
+      "kind": "variants",
+      "arguments": {
+        "question": "CVE-2026-1234",
+        "variants": [
+          "CVE-2026-12345"
+        ],
+        "engines": [
+          "wikipedia"
+        ]
+      },
+      "output": {
+        "error": {
+          "code": "invalid_input",
+          "message": "terminology variants must preserve every CVE, DOI, arXiv or scoped-package identifier"
+        }
+      },
+      "provider_calls": 0,
+      "writes": 0
+    },
+    {
+      "kind": "identifier",
+      "question": "CVE-2026-1234",
+      "variant": "CVE-2026-12345",
+      "error": "terminology variants must preserve every CVE, DOI, arXiv or scoped-package identifier"
+    },
+    {
+      "kind": "identifier",
+      "question": "10.1000/example.",
+      "variant": "10.1000/example",
+      "error": null
+    },
+    {
+      "kind": "identifier",
+      "question": "2303.07678v2",
+      "variant": "2303.07678v3",
+      "error": "terminology variants must preserve every CVE, DOI, arXiv or scoped-package identifier"
+    },
+    {
+      "kind": "identifier",
+      "question": "@\u017fcope/\u212ait",
+      "variant": "@scope/kit",
+      "error": null
+    },
+    {
+      "kind": "identifier",
+      "question": "CVE-\u0662\u0660\u0662\u0666-\u0661\u0662\u0663\u0664",
+      "variant": "cve-\u0662\u0660\u0662\u0666-\u0661\u0662\u0663\u0664",
+      "error": null
+    },
+    {
+      "kind": "identifier",
+      "question": "aCVE-2026-1234",
+      "variant": "changed",
+      "error": null
+    },
+    {
+      "kind": "identifier",
+      "question": "10.1000/a,b",
+      "variant": "10.1000/a,b",
+      "error": null
+    },
+    {
+      "kind": "identifier",
+      "question": "2303.0767v2x",
+      "variant": "2303.0767",
+      "error": null
+    },
+    {
+      "kind": "identifier",
+      "question": "CVE-2026-1234 2303.07678",
+      "variant": "CVE-2026-1234",
+      "error": "terminology variants must preserve every CVE, DOI, arXiv or scoped-package identifier"
+    },
+    {
+      "kind": "identifier",
+      "question": "@scope/pkg)",
+      "variant": "@scope/pkg",
+      "error": null
+    },
+    {
+      "kind": "metadata",
+      "method": null,
+      "ids": [],
+      "parent": null,
+      "rationale": null,
+      "output": [],
+      "error": null
+    },
+    {
+      "kind": "metadata",
+      "method": "evidence_followup",
+      "ids": [],
+      "parent": "p",
+      "rationale": "why",
+      "output": null,
+      "error": "evidence_followup requires admitted result references"
+    },
+    {
+      "kind": "metadata",
+      "method": "bad",
+      "ids": [],
+      "parent": null,
+      "rationale": null,
+      "output": null,
+      "error": "unknown planning_method"
+    },
+    {
+      "kind": "metadata",
+      "method": "evidence_followup",
+      "ids": [
+        "a:0"
+      ],
+      "parent": "p",
+      "rationale": "why",
+      "output": [
+        "a:0"
+      ],
+      "error": null
+    },
+    {
+      "kind": "metadata",
+      "method": null,
+      "ids": [
+        "a:0",
+        "a:0"
+      ],
+      "parent": "p",
+      "rationale": "why",
+      "output": null,
+      "error": "duplicate evidence_result_ids"
+    },
+    {
+      "kind": "metadata",
+      "method": null,
+      "ids": [
+        true
+      ],
+      "parent": "p",
+      "rationale": "why",
+      "output": null,
+      "error": "evidence_result_ids must contain nonempty bounded strings"
+    },
+    {
+      "kind": "metadata",
+      "method": null,
+      "ids": [
+        "a:0"
+      ],
+      "parent": null,
+      "rationale": "why",
+      "output": null,
+      "error": "evidence references require a parent_attempt_id and rationale"
+    }
+  ],
+  "tools": [
+    {
+      "name": "slopsearx_plan_research",
+      "title": "Slopsearx Plan Research",
+      "description": "Preview an original-plus-facets research plan without searching or storing it.\n\nSupply distinct evidence needs as id/question pairs, optionally query/intent/engines.\nReturns start_research arguments; the caller owns decomposition and sufficiency.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "question": {
+            "type": "string"
+          },
+          "subquestions": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "intent": {
+            "default": "web",
+            "type": "string"
+          },
+          "engines": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "max_queries": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "max_engines_per_query": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "max_attempts": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "max_engine_attempts": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "max_results": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "question",
+          "subquestions"
+        ],
+        "type": "object"
+      },
+      "outputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "_meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      }
+    },
+    {
+      "name": "slopsearx_plan_query_variants",
+      "title": "Slopsearx Plan Query Variants",
+      "description": "Preview bounded caller-authored terminology variants, retaining the original.\n\nVariants must preserve exact recognizable identifiers. No model runs, factual\nclaims, automatic default expansion or search-quality guarantees are added.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "question": {
+            "type": "string"
+          },
+          "variants": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "intent": {
+            "default": "web",
+            "type": "string"
+          },
+          "engines": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "max_queries": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "max_engines_per_query": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "max_attempts": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "max_engine_attempts": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "max_results": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "question",
+          "variants"
+        ],
+        "type": "object"
+      },
+      "outputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "_meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      }
+    },
+    {
+      "name": "slopsearx_plan_research_followup",
+      "title": "Slopsearx Plan Research Followup",
+      "description": "Preview an evidence-linked follow-up using admitted results from this job.\n\nReads permitted unexpired snapshots; never appends, executes, reserves a budget\nor marks a subquestion resolved. Returned arguments are revalidated by extend.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "job_id": {
+            "type": "string"
+          },
+          "query": {
+            "type": "string"
+          },
+          "parent_attempt_id": {
+            "type": "string"
+          },
+          "evidence_result_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "rationale": {
+            "type": "string"
+          },
+          "subquestion_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "intent": {
+            "default": "web",
+            "type": "string"
+          },
+          "engines": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "job_id",
+          "query",
+          "parent_attempt_id",
+          "evidence_result_ids",
+          "rationale"
+        ],
+        "type": "object"
+      },
+      "outputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "_meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      }
+    },
+    {
+      "name": "slopsearx_start_research",
+      "title": "Slopsearx Start Research",
+      "description": "Start an asynchronous multi-query research job.\n\nAn optional artifact source contributes retained evidence and lineage but\nnever execution policy. Strategies: triangulate (same question across independent sources),\nbroad (several source families), fresh (recent material),\ncounterevidence (limits, criticism, counterexamples). Returns a job\nhandle immediately; poll slopsearx_get_job for progress.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "question": {
+            "type": "string"
+          },
+          "strategy": {
+            "default": "triangulate",
+            "type": "string"
+          },
+          "max_queries": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "max_engines_per_query": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "deadline": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "idempotency_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "initial_plan": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "subquestions": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "max_attempts": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "max_engine_attempts": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "max_results": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "source": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "question"
+        ],
+        "type": "object"
+      },
+      "outputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "_meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      }
+    },
+    {
+      "name": "slopsearx_get_job",
+      "title": "Slopsearx Get Job",
+      "description": "Return research job state, progress, and per-query cursors.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "job_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id"
+        ],
+        "type": "object"
+      },
+      "outputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "_meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      }
+    },
+    {
+      "name": "slopsearx_cancel_job",
+      "title": "Slopsearx Cancel Job",
+      "description": "Best-effort cancellation of a research job.\n\nStops undispatched queries; in-flight upstream calls complete and\ntheir evidence stays readable.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "job_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id"
+        ],
+        "type": "object"
+      },
+      "outputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "_meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      }
+    },
+    {
+      "name": "slopsearx_retry_research",
+      "title": "Slopsearx Retry Research",
+      "description": "Re-run only failed/empty subqueries of a research job.\n\nSuccessful subqueries are never re-executed; their snapshot cursors\nremain byte-for-byte unchanged. Each retried subquery is linked to the\nsame job under a NEW attempt/cursor; the original failed/empty attempt's\nevidence stays readable. Returns a structured ``no_retryable_work``\nerror when the job has no failed/empty work (VAL-RESEARCH-008/016/021).",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "job_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id"
+        ],
+        "type": "object"
+      },
+      "outputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "_meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      }
+    },
+    {
+      "name": "slopsearx_extend_research",
+      "title": "Slopsearx Extend Research",
+      "description": "Append and execute one bounded follow-up query to a research job.\n\nAppends a new subquery only while the job has remaining query budget\n(under ``job_max_queries``) and its deadline has not passed. The\nfollow-up is validated and routed through the same sensitive-engine /\nspecialist-grant gate as a normal subquery (VAL-RESEARCH-009/015/020).",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "job_id": {
+            "type": "string"
+          },
+          "query": {
+            "type": "string"
+          },
+          "intent": {
+            "default": "web",
+            "type": "string"
+          },
+          "engines": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "subquestion_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "rationale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "parent_attempt_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "continuation_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "planning_method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "evidence_result_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "job_id",
+          "query"
+        ],
+        "type": "object"
+      },
+      "outputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "_meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      }
+    },
+    {
+      "name": "slopsearx_update_research",
+      "title": "Slopsearx Update Research",
+      "description": "Record caller-declared progress or completion without judging evidence.\n\nState values are resolved/unresolved. Completion preserves unresolved\nquestions and permanently prevents new execution for this job.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "job_id": {
+            "type": "string"
+          },
+          "subquestion_states": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "complete": {
+            "default": false,
+            "type": "boolean"
+          },
+          "rationale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "job_id",
+          "subquestion_states"
+        ],
+        "type": "object"
+      },
+      "outputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "_meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      }
+    }
+  ],
+  "provider_calls": 0,
+  "writes": 0
+}

@@ -1,0 +1,3648 @@
+{
+  "schema_version": 1,
+  "purpose": "immutable optional original regression observations; never runtime/native implementation",
+  "head": "8b48dc9ea0917230f31dfcc9c44ea2698b612b36",
+  "producer_sha256": "f4b231dd531b705736ba388cf38393de50da16e53a45b70adc65b1cc4aecfc8a",
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "unicode": "16.0.0",
+  "packages": {
+    "httpx": "0.28.1",
+    "pytest": "9.0.3",
+    "pytest-asyncio": "1.4.0",
+    "lxml": "6.1.1"
+  },
+  "source_sha256": {
+    "engines/abuseipdb.py": "2b48ec5b688a9cc6fb1aa50e5e82a655681b0a760f19e1310952ccaa04828eff",
+    "tests/test_abuseipdb.py": "3fad36a9b2e5089e61c82c0a66ffd7c6bf84e08dd43493e42b3e754890467435",
+    "engines/greynoise.py": "53c810ca4b9ea38567ca19e1494f1997381bf16120be2fce62f3a1aa977cea6a",
+    "tests/test_greynoise.py": "58b934915ac86f05eecd36b57b541a3667285bf6964aa8053b28be9585c2025a",
+    "engines/otx.py": "4d2e242594689530b1e615cee83181505834e13d289cb83746ca7b7fe4129b79",
+    "tests/test_otx.py": "0d5860db9048a3c26013c310f78aa7397dd97a6de1ae627b0711c48bac6b27cd",
+    "engines/urlhaus.py": "71fae6869a6487c3aeb0c7f9f7cc68ca9a2883ec4bce2e647499028f913f36ac",
+    "tests/test_urlhaus.py": "71ebdfaf63bcb672bf7d15ef9ca9c523d5312c4e785e1fd50ee111cb2b683a24",
+    "slopsearx/adapter.py": "5883a35c48d0dad1077306fbda21997ee1d32116a8c03633a6b762de0c26d6f3",
+    "tests/test_adapters.py": "0f5fdc19df84214e5a6422437686d41def5f9e9827ad8dfc8ca8ee8b2ad10454"
+  },
+  "source_inputs_unchanged": true,
+  "pytest_exit": 0,
+  "reports": [
+    {
+      "nodeid": "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_search_returns_reputation",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_search_returns_reputation",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_search_returns_reputation",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_missing_api_key",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_missing_api_key",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_missing_api_key",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_rate_limited",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_rate_limited",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_rate_limited",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_adapter_registered",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_adapter_registered",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_adapter_registered",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_ip_lookup",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_ip_lookup",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_ip_lookup",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_no_ip_in_query",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_no_ip_in_query",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_no_ip_in_query",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_404",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_404",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_404",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_mismatched_ip_response_is_error",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_mismatched_ip_response_is_error",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_mismatched_ip_response_is_error",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_malformed_response_shape_is_error",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_malformed_response_shape_is_error",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_malformed_response_shape_is_error",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_invalid_json_response_is_error",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_invalid_json_response_is_error",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_invalid_json_response_is_error",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_rate_limited",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_rate_limited",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_rate_limited",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_with_api_key",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_with_api_key",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_with_api_key",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_adapter_registered",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_adapter_registered",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_adapter_registered",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_adapter_categories",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_adapter_categories",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_adapter_categories",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_otx.py::TestOTXAdapter::test_missing_api_key",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_otx.py::TestOTXAdapter::test_missing_api_key",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_otx.py::TestOTXAdapter::test_missing_api_key",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_otx.py::TestOTXAdapter::test_rate_limited",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_otx.py::TestOTXAdapter::test_rate_limited",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_otx.py::TestOTXAdapter::test_rate_limited",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_otx.py::TestOTXAdapter::test_adapter_registered",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_otx.py::TestOTXAdapter::test_adapter_registered",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_otx.py::TestOTXAdapter::test_adapter_registered",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_url_search",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_url_search",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_url_search",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_host_search",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_host_search",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_host_search",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[invalid-host.example-invalid_host]",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[invalid-host.example-invalid_host]",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[invalid-host.example-invalid_host]",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[https://example.com/not-malware-invalid_url]",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[https://example.com/not-malware-invalid_url]",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[https://example.com/not-malware-invalid_url]",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[0123456789abcdef0123456789abcdef-invalid_md5]",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[0123456789abcdef0123456789abcdef-invalid_md5]",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[0123456789abcdef0123456789abcdef-invalid_md5]",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[example.com-invalid_url]",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[example.com-invalid_url]",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[example.com-invalid_url]",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[https://example.com/not-malware-invalid_host]",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[https://example.com/not-malware-invalid_host]",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[https://example.com/not-malware-invalid_host]",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[0123456789abcdef0123456789abcdef-invalid_host]",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[0123456789abcdef0123456789abcdef-invalid_host]",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[0123456789abcdef0123456789abcdef-invalid_host]",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[https://clean.example.com/not-malware]",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[https://clean.example.com/not-malware]",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[https://clean.example.com/not-malware]",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[clean.example.com]",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[clean.example.com]",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[clean.example.com]",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[0123456789abcdef0123456789abcdef]",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[0123456789abcdef0123456789abcdef]",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[0123456789abcdef0123456789abcdef]",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_missing_auth_is_unavailable_without_http_dispatch",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_missing_auth_is_unavailable_without_http_dispatch",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_missing_auth_is_unavailable_without_http_dispatch",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_rate_limited",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_rate_limited",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_rate_limited",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_request_is_error",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_request_is_error",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_request_is_error",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_or_provider_block_is_classified[401]",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_or_provider_block_is_classified[401]",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_or_provider_block_is_classified[401]",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_or_provider_block_is_classified[403]",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_or_provider_block_is_classified[403]",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_or_provider_block_is_classified[403]",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_malformed_json_is_error",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_malformed_json_is_error",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_malformed_json_is_error",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload0]",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload0]",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload0]",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload1]",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload1]",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload1]",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload2]",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload2]",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload2]",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_unsupported_input_is_error_without_dispatch",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_unsupported_input_is_error_without_dispatch",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_unsupported_input_is_error_without_dispatch",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_key_is_forwarded_as_header",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_key_is_forwarded_as_header",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_key_is_forwarded_as_header",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_adapter_registered",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_adapter_registered",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_adapter_registered",
+      "when": "teardown",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_adapter_categories",
+      "when": "setup",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_adapter_categories",
+      "when": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/test_urlhaus.py::TestURLhausAdapter::test_adapter_categories",
+      "when": "teardown",
+      "outcome": "passed"
+    }
+  ],
+  "records": [
+    {
+      "id": "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_search_returns_reputation::abuseipdb._parse_ip::0",
+      "source_test": "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_search_returns_reputation",
+      "engine": "abuseipdb",
+      "operation": "_parse_ip",
+      "arguments": [
+        {
+          "ipAddress": "8.8.8.8",
+          "abuseConfidenceScore": 0,
+          "totalReports": 0,
+          "countryCode": "US",
+          "isp": "Google LLC",
+          "domain": "google.com",
+          "usageType": "Data Center/Web Hosting"
+        },
+        "8.8.8.8"
+      ],
+      "kwargs": {},
+      "nested_in_search": true,
+      "output": [
+        {
+          "url": "https://www.abuseipdb.com/check/8.8.8.8",
+          "title": "8.8.8.8",
+          "content": "Abuse Confidence: 0% | US | Google LLC | google.com | Data Center/Web Hosting",
+          "engine": "abuseipdb",
+          "engines": [],
+          "score": 0.0,
+          "position": 1,
+          "category": "general",
+          "published_date": null,
+          "thumbnail": null,
+          "img_src": null,
+          "tier": 1,
+          "media": null,
+          "payload": null,
+          "work_group": null
+        }
+      ]
+    },
+    {
+      "id": "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_search_returns_reputation::abuseipdb.search::0",
+      "source_test": "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_search_returns_reputation",
+      "engine": "abuseipdb",
+      "operation": "search",
+      "query": "8.8.8.8",
+      "params": null,
+      "config": {
+        "enabled": true,
+        "api_key": "test-key"
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://api.abuseipdb.com/api/v2/check?ipAddress=8.8.8.8&maxAgeInDays=90&verbose=",
+            "headers": [
+              [
+                "host",
+                "api.abuseipdb.com"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ],
+              [
+                "accept",
+                "application/json"
+              ],
+              [
+                "key",
+                "test-key"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-length",
+                "172"
+              ],
+              [
+                "content-type",
+                "application/json"
+              ]
+            ],
+            "body_base64": "eyJkYXRhIjp7ImlwQWRkcmVzcyI6IjguOC44LjgiLCJhYnVzZUNvbmZpZGVuY2VTY29yZSI6MCwidG90YWxSZXBvcnRzIjowLCJjb3VudHJ5Q29kZSI6IlVTIiwiaXNwIjoiR29vZ2xlIExMQyIsImRvbWFpbiI6Imdvb2dsZS5jb20iLCJ1c2FnZVR5cGUiOiJEYXRhIENlbnRlci9XZWIgSG9zdGluZyJ9fQ=="
+          }
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://www.abuseipdb.com/check/8.8.8.8",
+            "title": "8.8.8.8",
+            "content": "Abuse Confidence: 0% | US | Google LLC | google.com | Data Center/Web Hosting",
+            "engine": "abuseipdb",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_missing_api_key::abuseipdb.search::0",
+      "source_test": "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_missing_api_key",
+      "engine": "abuseipdb",
+      "operation": "search",
+      "query": "8.8.8.8",
+      "params": null,
+      "config": {
+        "enabled": true,
+        "api_key": ""
+      },
+      "exchanges": [],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "AbuseIPDB API key not configured (set ENGINE_ABUSEIPDB_API_KEY)",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_rate_limited::abuseipdb.search::0",
+      "source_test": "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_rate_limited",
+      "engine": "abuseipdb",
+      "operation": "search",
+      "query": "8.8.8.8",
+      "params": null,
+      "config": {
+        "enabled": true,
+        "api_key": "test-key"
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://api.abuseipdb.com/api/v2/check?ipAddress=8.8.8.8&maxAgeInDays=90&verbose=",
+            "headers": [
+              [
+                "host",
+                "api.abuseipdb.com"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ],
+              [
+                "accept",
+                "application/json"
+              ],
+              [
+                "key",
+                "test-key"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 429,
+            "headers": [],
+            "body_base64": ""
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "rate_limited",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_ip_lookup::greynoise._parse_ip::0",
+      "source_test": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_ip_lookup",
+      "engine": "greynoise",
+      "operation": "_parse_ip",
+      "arguments": [
+        {
+          "ip": "8.8.8.8",
+          "noise": true,
+          "riot": true,
+          "classification": "benign",
+          "name": "Google DNS",
+          "link": "https://viz.greynoise.io/ip/8.8.8.8",
+          "last_seen": "2026-06-10",
+          "tags": [
+            "dns",
+            "anycast"
+          ]
+        },
+        "8.8.8.8"
+      ],
+      "kwargs": {},
+      "nested_in_search": true,
+      "output": [
+        {
+          "url": "https://viz.greynoise.io/ip/8.8.8.8",
+          "title": "GreyNoise \u2014 8.8.8.8",
+          "content": "Noise: background scanner | RIOT: benign service | Classification: benign | Tags: dns, anycast | Name: Google DNS | https://viz.greynoise.io/ip/8.8.8.8 | Last seen: 2026-06-10",
+          "engine": "greynoise",
+          "engines": [],
+          "score": 0.0,
+          "position": 1,
+          "category": "general",
+          "published_date": null,
+          "thumbnail": null,
+          "img_src": null,
+          "tier": 1,
+          "media": null,
+          "payload": null,
+          "work_group": null
+        }
+      ]
+    },
+    {
+      "id": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_ip_lookup::greynoise.search::0",
+      "source_test": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_ip_lookup",
+      "engine": "greynoise",
+      "operation": "search",
+      "query": "8.8.8.8",
+      "params": null,
+      "config": {
+        "enabled": true
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://api.greynoise.io/v3/community/8.8.8.8",
+            "headers": [
+              [
+                "host",
+                "api.greynoise.io"
+              ],
+              [
+                "accept",
+                "*/*"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-length",
+                "182"
+              ],
+              [
+                "content-type",
+                "application/json"
+              ]
+            ],
+            "body_base64": "eyJpcCI6IjguOC44LjgiLCJub2lzZSI6dHJ1ZSwicmlvdCI6dHJ1ZSwiY2xhc3NpZmljYXRpb24iOiJiZW5pZ24iLCJuYW1lIjoiR29vZ2xlIEROUyIsImxpbmsiOiJodHRwczovL3Zpei5ncmV5bm9pc2UuaW8vaXAvOC44LjguOCIsImxhc3Rfc2VlbiI6IjIwMjYtMDYtMTAiLCJ0YWdzIjpbImRucyIsImFueWNhc3QiXX0="
+          }
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://viz.greynoise.io/ip/8.8.8.8",
+            "title": "GreyNoise \u2014 8.8.8.8",
+            "content": "Noise: background scanner | RIOT: benign service | Classification: benign | Tags: dns, anycast | Name: Google DNS | https://viz.greynoise.io/ip/8.8.8.8 | Last seen: 2026-06-10",
+            "engine": "greynoise",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_no_ip_in_query::greynoise.search::0",
+      "source_test": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_no_ip_in_query",
+      "engine": "greynoise",
+      "operation": "search",
+      "query": "google.com",
+      "params": null,
+      "config": {
+        "enabled": true
+      },
+      "exchanges": [],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_404::greynoise.search::0",
+      "source_test": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_404",
+      "engine": "greynoise",
+      "operation": "search",
+      "query": "10.0.0.1",
+      "params": null,
+      "config": {
+        "enabled": true
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://api.greynoise.io/v3/community/10.0.0.1",
+            "headers": [
+              [
+                "host",
+                "api.greynoise.io"
+              ],
+              [
+                "accept",
+                "*/*"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 404,
+            "headers": [],
+            "body_base64": ""
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_mismatched_ip_response_is_error::greynoise._parse_ip::0",
+      "source_test": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_mismatched_ip_response_is_error",
+      "engine": "greynoise",
+      "operation": "_parse_ip",
+      "arguments": [
+        {
+          "ip": "1.1.1.1"
+        },
+        "8.8.8.8"
+      ],
+      "kwargs": {},
+      "nested_in_search": true,
+      "exception": {
+        "class": "ValueError",
+        "message": "GreyNoise response IP did not match the requested IP"
+      }
+    },
+    {
+      "id": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_mismatched_ip_response_is_error::greynoise.search::0",
+      "source_test": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_mismatched_ip_response_is_error",
+      "engine": "greynoise",
+      "operation": "search",
+      "query": "8.8.8.8",
+      "params": null,
+      "config": {
+        "enabled": true
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://api.greynoise.io/v3/community/8.8.8.8",
+            "headers": [
+              [
+                "host",
+                "api.greynoise.io"
+              ],
+              [
+                "accept",
+                "*/*"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-length",
+                "16"
+              ],
+              [
+                "content-type",
+                "application/json"
+              ]
+            ],
+            "body_base64": "eyJpcCI6IjEuMS4xLjEifQ=="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "GreyNoise response IP did not match the requested IP",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_malformed_response_shape_is_error::greynoise._parse_ip::0",
+      "source_test": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_malformed_response_shape_is_error",
+      "engine": "greynoise",
+      "operation": "_parse_ip",
+      "arguments": [
+        [
+          "not",
+          "an",
+          "object"
+        ],
+        "8.8.8.8"
+      ],
+      "kwargs": {},
+      "nested_in_search": true,
+      "exception": {
+        "class": "ValueError",
+        "message": "GreyNoise returned malformed JSON; expected an object"
+      }
+    },
+    {
+      "id": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_malformed_response_shape_is_error::greynoise.search::0",
+      "source_test": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_malformed_response_shape_is_error",
+      "engine": "greynoise",
+      "operation": "search",
+      "query": "8.8.8.8",
+      "params": null,
+      "config": {
+        "enabled": true
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://api.greynoise.io/v3/community/8.8.8.8",
+            "headers": [
+              [
+                "host",
+                "api.greynoise.io"
+              ],
+              [
+                "accept",
+                "*/*"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-length",
+                "21"
+              ],
+              [
+                "content-type",
+                "application/json"
+              ]
+            ],
+            "body_base64": "WyJub3QiLCJhbiIsIm9iamVjdCJd"
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "GreyNoise returned malformed JSON; expected an object",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_invalid_json_response_is_error::greynoise.search::0",
+      "source_test": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_invalid_json_response_is_error",
+      "engine": "greynoise",
+      "operation": "search",
+      "query": "8.8.8.8",
+      "params": null,
+      "config": {
+        "enabled": true
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://api.greynoise.io/v3/community/8.8.8.8",
+            "headers": [
+              [
+                "host",
+                "api.greynoise.io"
+              ],
+              [
+                "accept",
+                "*/*"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-length",
+                "8"
+              ],
+              [
+                "content-type",
+                "text/plain; charset=utf-8"
+              ]
+            ],
+            "body_base64": "bm90IGpzb24="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Expecting value: line 1 column 1 (char 0)",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_rate_limited::greynoise.search::0",
+      "source_test": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_rate_limited",
+      "engine": "greynoise",
+      "operation": "search",
+      "query": "8.8.8.8",
+      "params": null,
+      "config": {
+        "enabled": true
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://api.greynoise.io/v3/community/8.8.8.8",
+            "headers": [
+              [
+                "host",
+                "api.greynoise.io"
+              ],
+              [
+                "accept",
+                "*/*"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 429,
+            "headers": [],
+            "body_base64": ""
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "rate_limited",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_with_api_key::greynoise._parse_ip::0",
+      "source_test": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_with_api_key",
+      "engine": "greynoise",
+      "operation": "_parse_ip",
+      "arguments": [
+        {
+          "ip": "8.8.8.8",
+          "noise": false,
+          "riot": false
+        },
+        "8.8.8.8"
+      ],
+      "kwargs": {},
+      "nested_in_search": true,
+      "output": [
+        {
+          "url": "https://viz.greynoise.io/ip/8.8.8.8",
+          "title": "GreyNoise \u2014 8.8.8.8",
+          "content": "Noise: potentially targeted",
+          "engine": "greynoise",
+          "engines": [],
+          "score": 0.0,
+          "position": 1,
+          "category": "general",
+          "published_date": null,
+          "thumbnail": null,
+          "img_src": null,
+          "tier": 1,
+          "media": null,
+          "payload": null,
+          "work_group": null
+        }
+      ]
+    },
+    {
+      "id": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_with_api_key::greynoise.search::0",
+      "source_test": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_with_api_key",
+      "engine": "greynoise",
+      "operation": "search",
+      "query": "8.8.8.8",
+      "params": null,
+      "config": {
+        "enabled": true,
+        "api_key": "test-key"
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://api.greynoise.io/v3/enterprise/8.8.8.8",
+            "headers": [
+              [
+                "host",
+                "api.greynoise.io"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ],
+              [
+                "accept",
+                "application/json"
+              ],
+              [
+                "key",
+                "test-key"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-length",
+                "43"
+              ],
+              [
+                "content-type",
+                "application/json"
+              ]
+            ],
+            "body_base64": "eyJpcCI6IjguOC44LjgiLCJub2lzZSI6ZmFsc2UsInJpb3QiOmZhbHNlfQ=="
+          }
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://viz.greynoise.io/ip/8.8.8.8",
+            "title": "GreyNoise \u2014 8.8.8.8",
+            "content": "Noise: potentially targeted",
+            "engine": "greynoise",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_otx.py::TestOTXAdapter::test_missing_api_key::otx.search::0",
+      "source_test": "tests/test_otx.py::TestOTXAdapter::test_missing_api_key",
+      "engine": "otx",
+      "operation": "search",
+      "query": "test",
+      "params": null,
+      "config": {
+        "enabled": true,
+        "api_key": ""
+      },
+      "exchanges": [],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "OTX API key not configured (set ENGINE_OTX_API_KEY)",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_otx.py::TestOTXAdapter::test_rate_limited::otx.search::0",
+      "source_test": "tests/test_otx.py::TestOTXAdapter::test_rate_limited",
+      "engine": "otx",
+      "operation": "search",
+      "query": "test",
+      "params": null,
+      "config": {
+        "enabled": true,
+        "api_key": "test-key"
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "GET",
+            "url": "https://otx.alienvault.com/api/v1/pulses/subscribed?q=test&limit=10",
+            "headers": [
+              [
+                "host",
+                "otx.alienvault.com"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ],
+              [
+                "accept",
+                "application/json"
+              ],
+              [
+                "x-otx-api-key",
+                "test-key"
+              ]
+            ],
+            "body_base64": ""
+          },
+          "response": {
+            "status": 429,
+            "headers": [],
+            "body_base64": ""
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "rate_limited",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_url_search::urlhaus._parse_single_url::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_url_search",
+      "engine": "urlhaus",
+      "operation": "_parse_single_url",
+      "arguments": [
+        {
+          "query_status": "ok",
+          "url_id": "123456",
+          "url": "https://evil.example.com/malware.exe",
+          "host": "evil.example.com",
+          "threat": "malware_download",
+          "tags": [
+            "elf",
+            "mirai"
+          ],
+          "file_type": "exe",
+          "url_status": "online",
+          "firstseen": "2026-06-01",
+          "lastseen": "2026-06-10"
+        }
+      ],
+      "kwargs": {},
+      "nested_in_search": true,
+      "output": {
+        "url": "https://evil.example.com/malware.exe",
+        "title": "evil.example.com",
+        "content": "Threat: malware_download | Tags: elf, mirai | Type: exe | Status: online | First: 2026-06-01 | Last: 2026-06-10",
+        "engine": "urlhaus",
+        "engines": [],
+        "score": 0.0,
+        "position": 1,
+        "category": "general",
+        "published_date": "2026-06-01",
+        "thumbnail": null,
+        "img_src": null,
+        "tier": 1,
+        "media": null,
+        "payload": null,
+        "work_group": null
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_url_search::urlhaus._parse_response::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_url_search",
+      "engine": "urlhaus",
+      "operation": "_parse_response",
+      "arguments": [
+        {
+          "query_status": "ok",
+          "url_id": "123456",
+          "url": "https://evil.example.com/malware.exe",
+          "host": "evil.example.com",
+          "threat": "malware_download",
+          "tags": [
+            "elf",
+            "mirai"
+          ],
+          "file_type": "exe",
+          "url_status": "online",
+          "firstseen": "2026-06-01",
+          "lastseen": "2026-06-10"
+        },
+        "url"
+      ],
+      "kwargs": {},
+      "nested_in_search": true,
+      "output": [
+        {
+          "url": "https://evil.example.com/malware.exe",
+          "title": "evil.example.com",
+          "content": "Threat: malware_download | Tags: elf, mirai | Type: exe | Status: online | First: 2026-06-01 | Last: 2026-06-10",
+          "engine": "urlhaus",
+          "engines": [],
+          "score": 0.0,
+          "position": 1,
+          "category": "general",
+          "published_date": "2026-06-01",
+          "thumbnail": null,
+          "img_src": null,
+          "tier": 1,
+          "media": null,
+          "payload": null,
+          "work_group": null
+        }
+      ]
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_url_search::urlhaus.search::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_url_search",
+      "engine": "urlhaus",
+      "operation": "search",
+      "query": "https://evil.example.com/malware.exe",
+      "params": null,
+      "config": {
+        "enabled": true,
+        "api_key": "test-auth-key"
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "POST",
+            "url": "https://urlhaus-api.abuse.ch/v1/url/",
+            "headers": [
+              [
+                "host",
+                "urlhaus-api.abuse.ch"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ],
+              [
+                "accept",
+                "application/json"
+              ],
+              [
+                "auth-key",
+                "test-auth-key"
+              ],
+              [
+                "content-length",
+                "48"
+              ],
+              [
+                "content-type",
+                "application/x-www-form-urlencoded"
+              ]
+            ],
+            "body_base64": "dXJsPWh0dHBzJTNBJTJGJTJGZXZpbC5leGFtcGxlLmNvbSUyRm1hbHdhcmUuZXhl"
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-length",
+                "250"
+              ],
+              [
+                "content-type",
+                "application/json"
+              ]
+            ],
+            "body_base64": "eyJxdWVyeV9zdGF0dXMiOiJvayIsInVybF9pZCI6IjEyMzQ1NiIsInVybCI6Imh0dHBzOi8vZXZpbC5leGFtcGxlLmNvbS9tYWx3YXJlLmV4ZSIsImhvc3QiOiJldmlsLmV4YW1wbGUuY29tIiwidGhyZWF0IjoibWFsd2FyZV9kb3dubG9hZCIsInRhZ3MiOlsiZWxmIiwibWlyYWkiXSwiZmlsZV90eXBlIjoiZXhlIiwidXJsX3N0YXR1cyI6Im9ubGluZSIsImZpcnN0c2VlbiI6IjIwMjYtMDYtMDEiLCJsYXN0c2VlbiI6IjIwMjYtMDYtMTAifQ=="
+          }
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://evil.example.com/malware.exe",
+            "title": "evil.example.com",
+            "content": "Threat: malware_download | Tags: elf, mirai | Type: exe | Status: online | First: 2026-06-01 | Last: 2026-06-10",
+            "engine": "urlhaus",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2026-06-01",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_host_search::urlhaus._parse_single_url::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_host_search",
+      "engine": "urlhaus",
+      "operation": "_parse_single_url",
+      "arguments": [
+        {
+          "query_status": "ok",
+          "url_id": "123456",
+          "url": "https://evil.example.com/malware.exe",
+          "host": "evil.example.com",
+          "threat": "malware_download",
+          "tags": [
+            "elf",
+            "mirai"
+          ],
+          "file_type": "exe",
+          "url_status": "online",
+          "firstseen": "2026-06-01",
+          "lastseen": "2026-06-10"
+        }
+      ],
+      "kwargs": {},
+      "nested_in_search": true,
+      "output": {
+        "url": "https://evil.example.com/malware.exe",
+        "title": "evil.example.com",
+        "content": "Threat: malware_download | Tags: elf, mirai | Type: exe | Status: online | First: 2026-06-01 | Last: 2026-06-10",
+        "engine": "urlhaus",
+        "engines": [],
+        "score": 0.0,
+        "position": 1,
+        "category": "general",
+        "published_date": "2026-06-01",
+        "thumbnail": null,
+        "img_src": null,
+        "tier": 1,
+        "media": null,
+        "payload": null,
+        "work_group": null
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_host_search::urlhaus._parse_response::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_host_search",
+      "engine": "urlhaus",
+      "operation": "_parse_response",
+      "arguments": [
+        {
+          "query_status": "ok",
+          "urls": [
+            {
+              "query_status": "ok",
+              "url_id": "123456",
+              "url": "https://evil.example.com/malware.exe",
+              "host": "evil.example.com",
+              "threat": "malware_download",
+              "tags": [
+                "elf",
+                "mirai"
+              ],
+              "file_type": "exe",
+              "url_status": "online",
+              "firstseen": "2026-06-01",
+              "lastseen": "2026-06-10"
+            }
+          ]
+        },
+        "host"
+      ],
+      "kwargs": {},
+      "nested_in_search": true,
+      "output": [
+        {
+          "url": "https://evil.example.com/malware.exe",
+          "title": "evil.example.com",
+          "content": "Threat: malware_download | Tags: elf, mirai | Type: exe | Status: online | First: 2026-06-01 | Last: 2026-06-10",
+          "engine": "urlhaus",
+          "engines": [],
+          "score": 0.0,
+          "position": 1,
+          "category": "general",
+          "published_date": "2026-06-01",
+          "thumbnail": null,
+          "img_src": null,
+          "tier": 1,
+          "media": null,
+          "payload": null,
+          "work_group": null
+        }
+      ]
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_host_search::urlhaus.search::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_host_search",
+      "engine": "urlhaus",
+      "operation": "search",
+      "query": "evil.example.com",
+      "params": null,
+      "config": {
+        "enabled": true,
+        "api_key": "test-auth-key"
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "POST",
+            "url": "https://urlhaus-api.abuse.ch/v1/host/",
+            "headers": [
+              [
+                "host",
+                "urlhaus-api.abuse.ch"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ],
+              [
+                "accept",
+                "application/json"
+              ],
+              [
+                "auth-key",
+                "test-auth-key"
+              ],
+              [
+                "content-length",
+                "21"
+              ],
+              [
+                "content-type",
+                "application/x-www-form-urlencoded"
+              ]
+            ],
+            "body_base64": "aG9zdD1ldmlsLmV4YW1wbGUuY29t"
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-length",
+                "281"
+              ],
+              [
+                "content-type",
+                "application/json"
+              ]
+            ],
+            "body_base64": "eyJxdWVyeV9zdGF0dXMiOiJvayIsInVybHMiOlt7InF1ZXJ5X3N0YXR1cyI6Im9rIiwidXJsX2lkIjoiMTIzNDU2IiwidXJsIjoiaHR0cHM6Ly9ldmlsLmV4YW1wbGUuY29tL21hbHdhcmUuZXhlIiwiaG9zdCI6ImV2aWwuZXhhbXBsZS5jb20iLCJ0aHJlYXQiOiJtYWx3YXJlX2Rvd25sb2FkIiwidGFncyI6WyJlbGYiLCJtaXJhaSJdLCJmaWxlX3R5cGUiOiJleGUiLCJ1cmxfc3RhdHVzIjoib25saW5lIiwiZmlyc3RzZWVuIjoiMjAyNi0wNi0wMSIsImxhc3RzZWVuIjoiMjAyNi0wNi0xMCJ9XX0="
+          }
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://evil.example.com/malware.exe",
+            "title": "evil.example.com",
+            "content": "Threat: malware_download | Tags: elf, mirai | Type: exe | Status: online | First: 2026-06-01 | Last: 2026-06-10",
+            "engine": "urlhaus",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2026-06-01",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[invalid-host.example-invalid_host]::urlhaus._parse_response::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[invalid-host.example-invalid_host]",
+      "engine": "urlhaus",
+      "operation": "_parse_response",
+      "arguments": [
+        {
+          "query_status": "invalid_host"
+        },
+        "host"
+      ],
+      "kwargs": {},
+      "nested_in_search": true,
+      "exception": {
+        "class": "ValueError",
+        "message": "URLhaus rejected invalid input (invalid_host) for host query"
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[invalid-host.example-invalid_host]::urlhaus.search::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[invalid-host.example-invalid_host]",
+      "engine": "urlhaus",
+      "operation": "search",
+      "query": "invalid-host.example",
+      "params": null,
+      "config": {
+        "enabled": true,
+        "api_key": "test-auth-key"
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "POST",
+            "url": "https://urlhaus-api.abuse.ch/v1/host/",
+            "headers": [
+              [
+                "host",
+                "urlhaus-api.abuse.ch"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ],
+              [
+                "accept",
+                "application/json"
+              ],
+              [
+                "auth-key",
+                "test-auth-key"
+              ],
+              [
+                "content-length",
+                "25"
+              ],
+              [
+                "content-type",
+                "application/x-www-form-urlencoded"
+              ]
+            ],
+            "body_base64": "aG9zdD1pbnZhbGlkLWhvc3QuZXhhbXBsZQ=="
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-length",
+                "31"
+              ],
+              [
+                "content-type",
+                "application/json"
+              ]
+            ],
+            "body_base64": "eyJxdWVyeV9zdGF0dXMiOiJpbnZhbGlkX2hvc3QifQ=="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "URLhaus rejected invalid input (invalid_host) for host query",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[https://example.com/not-malware-invalid_url]::urlhaus._parse_response::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[https://example.com/not-malware-invalid_url]",
+      "engine": "urlhaus",
+      "operation": "_parse_response",
+      "arguments": [
+        {
+          "query_status": "invalid_url"
+        },
+        "url"
+      ],
+      "kwargs": {},
+      "nested_in_search": true,
+      "exception": {
+        "class": "ValueError",
+        "message": "URLhaus rejected invalid input (invalid_url) for url query"
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[https://example.com/not-malware-invalid_url]::urlhaus.search::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[https://example.com/not-malware-invalid_url]",
+      "engine": "urlhaus",
+      "operation": "search",
+      "query": "https://example.com/not-malware",
+      "params": null,
+      "config": {
+        "enabled": true,
+        "api_key": "test-auth-key"
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "POST",
+            "url": "https://urlhaus-api.abuse.ch/v1/url/",
+            "headers": [
+              [
+                "host",
+                "urlhaus-api.abuse.ch"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ],
+              [
+                "accept",
+                "application/json"
+              ],
+              [
+                "auth-key",
+                "test-auth-key"
+              ],
+              [
+                "content-length",
+                "43"
+              ],
+              [
+                "content-type",
+                "application/x-www-form-urlencoded"
+              ]
+            ],
+            "body_base64": "dXJsPWh0dHBzJTNBJTJGJTJGZXhhbXBsZS5jb20lMkZub3QtbWFsd2FyZQ=="
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-length",
+                "30"
+              ],
+              [
+                "content-type",
+                "application/json"
+              ]
+            ],
+            "body_base64": "eyJxdWVyeV9zdGF0dXMiOiJpbnZhbGlkX3VybCJ9"
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "URLhaus rejected invalid input (invalid_url) for url query",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[0123456789abcdef0123456789abcdef-invalid_md5]::urlhaus._parse_response::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[0123456789abcdef0123456789abcdef-invalid_md5]",
+      "engine": "urlhaus",
+      "operation": "_parse_response",
+      "arguments": [
+        {
+          "query_status": "invalid_md5"
+        },
+        "payload"
+      ],
+      "kwargs": {},
+      "nested_in_search": true,
+      "exception": {
+        "class": "ValueError",
+        "message": "URLhaus rejected invalid input (invalid_md5) for payload query"
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[0123456789abcdef0123456789abcdef-invalid_md5]::urlhaus.search::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[0123456789abcdef0123456789abcdef-invalid_md5]",
+      "engine": "urlhaus",
+      "operation": "search",
+      "query": "0123456789abcdef0123456789abcdef",
+      "params": null,
+      "config": {
+        "enabled": true,
+        "api_key": "test-auth-key"
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "POST",
+            "url": "https://urlhaus-api.abuse.ch/v1/payload/",
+            "headers": [
+              [
+                "host",
+                "urlhaus-api.abuse.ch"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ],
+              [
+                "accept",
+                "application/json"
+              ],
+              [
+                "auth-key",
+                "test-auth-key"
+              ],
+              [
+                "content-length",
+                "41"
+              ],
+              [
+                "content-type",
+                "application/x-www-form-urlencoded"
+              ]
+            ],
+            "body_base64": "bWQ1X2hhc2g9MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-length",
+                "30"
+              ],
+              [
+                "content-type",
+                "application/json"
+              ]
+            ],
+            "body_base64": "eyJxdWVyeV9zdGF0dXMiOiJpbnZhbGlkX21kNSJ9"
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "URLhaus rejected invalid input (invalid_md5) for payload query",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[example.com-invalid_url]::urlhaus._parse_response::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[example.com-invalid_url]",
+      "engine": "urlhaus",
+      "operation": "_parse_response",
+      "arguments": [
+        {
+          "query_status": "invalid_url"
+        },
+        "host"
+      ],
+      "kwargs": {},
+      "nested_in_search": true,
+      "exception": {
+        "class": "ValueError",
+        "message": "URLhaus rejected invalid input (invalid_url) for host query"
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[example.com-invalid_url]::urlhaus.search::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[example.com-invalid_url]",
+      "engine": "urlhaus",
+      "operation": "search",
+      "query": "example.com",
+      "params": null,
+      "config": {
+        "enabled": true,
+        "api_key": "test-auth-key"
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "POST",
+            "url": "https://urlhaus-api.abuse.ch/v1/host/",
+            "headers": [
+              [
+                "host",
+                "urlhaus-api.abuse.ch"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ],
+              [
+                "accept",
+                "application/json"
+              ],
+              [
+                "auth-key",
+                "test-auth-key"
+              ],
+              [
+                "content-length",
+                "16"
+              ],
+              [
+                "content-type",
+                "application/x-www-form-urlencoded"
+              ]
+            ],
+            "body_base64": "aG9zdD1leGFtcGxlLmNvbQ=="
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-length",
+                "30"
+              ],
+              [
+                "content-type",
+                "application/json"
+              ]
+            ],
+            "body_base64": "eyJxdWVyeV9zdGF0dXMiOiJpbnZhbGlkX3VybCJ9"
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "URLhaus rejected invalid input (invalid_url) for host query",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[https://example.com/not-malware-invalid_host]::urlhaus._parse_response::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[https://example.com/not-malware-invalid_host]",
+      "engine": "urlhaus",
+      "operation": "_parse_response",
+      "arguments": [
+        {
+          "query_status": "invalid_host"
+        },
+        "url"
+      ],
+      "kwargs": {},
+      "nested_in_search": true,
+      "exception": {
+        "class": "ValueError",
+        "message": "URLhaus rejected invalid input (invalid_host) for url query"
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[https://example.com/not-malware-invalid_host]::urlhaus.search::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[https://example.com/not-malware-invalid_host]",
+      "engine": "urlhaus",
+      "operation": "search",
+      "query": "https://example.com/not-malware",
+      "params": null,
+      "config": {
+        "enabled": true,
+        "api_key": "test-auth-key"
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "POST",
+            "url": "https://urlhaus-api.abuse.ch/v1/url/",
+            "headers": [
+              [
+                "host",
+                "urlhaus-api.abuse.ch"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ],
+              [
+                "accept",
+                "application/json"
+              ],
+              [
+                "auth-key",
+                "test-auth-key"
+              ],
+              [
+                "content-length",
+                "43"
+              ],
+              [
+                "content-type",
+                "application/x-www-form-urlencoded"
+              ]
+            ],
+            "body_base64": "dXJsPWh0dHBzJTNBJTJGJTJGZXhhbXBsZS5jb20lMkZub3QtbWFsd2FyZQ=="
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-length",
+                "31"
+              ],
+              [
+                "content-type",
+                "application/json"
+              ]
+            ],
+            "body_base64": "eyJxdWVyeV9zdGF0dXMiOiJpbnZhbGlkX2hvc3QifQ=="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "URLhaus rejected invalid input (invalid_host) for url query",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[0123456789abcdef0123456789abcdef-invalid_host]::urlhaus._parse_response::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[0123456789abcdef0123456789abcdef-invalid_host]",
+      "engine": "urlhaus",
+      "operation": "_parse_response",
+      "arguments": [
+        {
+          "query_status": "invalid_host"
+        },
+        "payload"
+      ],
+      "kwargs": {},
+      "nested_in_search": true,
+      "exception": {
+        "class": "ValueError",
+        "message": "URLhaus rejected invalid input (invalid_host) for payload query"
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[0123456789abcdef0123456789abcdef-invalid_host]::urlhaus.search::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[0123456789abcdef0123456789abcdef-invalid_host]",
+      "engine": "urlhaus",
+      "operation": "search",
+      "query": "0123456789abcdef0123456789abcdef",
+      "params": null,
+      "config": {
+        "enabled": true,
+        "api_key": "test-auth-key"
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "POST",
+            "url": "https://urlhaus-api.abuse.ch/v1/payload/",
+            "headers": [
+              [
+                "host",
+                "urlhaus-api.abuse.ch"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ],
+              [
+                "accept",
+                "application/json"
+              ],
+              [
+                "auth-key",
+                "test-auth-key"
+              ],
+              [
+                "content-length",
+                "41"
+              ],
+              [
+                "content-type",
+                "application/x-www-form-urlencoded"
+              ]
+            ],
+            "body_base64": "bWQ1X2hhc2g9MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-length",
+                "31"
+              ],
+              [
+                "content-type",
+                "application/json"
+              ]
+            ],
+            "body_base64": "eyJxdWVyeV9zdGF0dXMiOiJpbnZhbGlkX2hvc3QifQ=="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "URLhaus rejected invalid input (invalid_host) for payload query",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[https://clean.example.com/not-malware]::urlhaus._parse_response::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[https://clean.example.com/not-malware]",
+      "engine": "urlhaus",
+      "operation": "_parse_response",
+      "arguments": [
+        {
+          "query_status": "no_results"
+        },
+        "url"
+      ],
+      "kwargs": {},
+      "nested_in_search": true,
+      "output": []
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[https://clean.example.com/not-malware]::urlhaus.search::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[https://clean.example.com/not-malware]",
+      "engine": "urlhaus",
+      "operation": "search",
+      "query": "https://clean.example.com/not-malware",
+      "params": null,
+      "config": {
+        "enabled": true,
+        "api_key": "test-auth-key"
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "POST",
+            "url": "https://urlhaus-api.abuse.ch/v1/url/",
+            "headers": [
+              [
+                "host",
+                "urlhaus-api.abuse.ch"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ],
+              [
+                "accept",
+                "application/json"
+              ],
+              [
+                "auth-key",
+                "test-auth-key"
+              ],
+              [
+                "content-length",
+                "49"
+              ],
+              [
+                "content-type",
+                "application/x-www-form-urlencoded"
+              ]
+            ],
+            "body_base64": "dXJsPWh0dHBzJTNBJTJGJTJGY2xlYW4uZXhhbXBsZS5jb20lMkZub3QtbWFsd2FyZQ=="
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-length",
+                "29"
+              ],
+              [
+                "content-type",
+                "application/json"
+              ]
+            ],
+            "body_base64": "eyJxdWVyeV9zdGF0dXMiOiJub19yZXN1bHRzIn0="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[clean.example.com]::urlhaus._parse_response::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[clean.example.com]",
+      "engine": "urlhaus",
+      "operation": "_parse_response",
+      "arguments": [
+        {
+          "query_status": "no_results"
+        },
+        "host"
+      ],
+      "kwargs": {},
+      "nested_in_search": true,
+      "output": []
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[clean.example.com]::urlhaus.search::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[clean.example.com]",
+      "engine": "urlhaus",
+      "operation": "search",
+      "query": "clean.example.com",
+      "params": null,
+      "config": {
+        "enabled": true,
+        "api_key": "test-auth-key"
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "POST",
+            "url": "https://urlhaus-api.abuse.ch/v1/host/",
+            "headers": [
+              [
+                "host",
+                "urlhaus-api.abuse.ch"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ],
+              [
+                "accept",
+                "application/json"
+              ],
+              [
+                "auth-key",
+                "test-auth-key"
+              ],
+              [
+                "content-length",
+                "22"
+              ],
+              [
+                "content-type",
+                "application/x-www-form-urlencoded"
+              ]
+            ],
+            "body_base64": "aG9zdD1jbGVhbi5leGFtcGxlLmNvbQ=="
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-length",
+                "29"
+              ],
+              [
+                "content-type",
+                "application/json"
+              ]
+            ],
+            "body_base64": "eyJxdWVyeV9zdGF0dXMiOiJub19yZXN1bHRzIn0="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[0123456789abcdef0123456789abcdef]::urlhaus._parse_response::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[0123456789abcdef0123456789abcdef]",
+      "engine": "urlhaus",
+      "operation": "_parse_response",
+      "arguments": [
+        {
+          "query_status": "no_results"
+        },
+        "payload"
+      ],
+      "kwargs": {},
+      "nested_in_search": true,
+      "output": []
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[0123456789abcdef0123456789abcdef]::urlhaus.search::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[0123456789abcdef0123456789abcdef]",
+      "engine": "urlhaus",
+      "operation": "search",
+      "query": "0123456789abcdef0123456789abcdef",
+      "params": null,
+      "config": {
+        "enabled": true,
+        "api_key": "test-auth-key"
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "POST",
+            "url": "https://urlhaus-api.abuse.ch/v1/payload/",
+            "headers": [
+              [
+                "host",
+                "urlhaus-api.abuse.ch"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ],
+              [
+                "accept",
+                "application/json"
+              ],
+              [
+                "auth-key",
+                "test-auth-key"
+              ],
+              [
+                "content-length",
+                "41"
+              ],
+              [
+                "content-type",
+                "application/x-www-form-urlencoded"
+              ]
+            ],
+            "body_base64": "bWQ1X2hhc2g9MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-length",
+                "29"
+              ],
+              [
+                "content-type",
+                "application/json"
+              ]
+            ],
+            "body_base64": "eyJxdWVyeV9zdGF0dXMiOiJub19yZXN1bHRzIn0="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_missing_auth_is_unavailable_without_http_dispatch::urlhaus.search::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_missing_auth_is_unavailable_without_http_dispatch",
+      "engine": "urlhaus",
+      "operation": "search",
+      "query": "example.com",
+      "params": null,
+      "config": {
+        "enabled": true
+      },
+      "exchanges": [],
+      "output": {
+        "results": [],
+        "status": "unavailable",
+        "error_message": "URLhaus requires ENGINE_URLHAUS_API_KEY",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_rate_limited::urlhaus.search::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_rate_limited",
+      "engine": "urlhaus",
+      "operation": "search",
+      "query": "test",
+      "params": null,
+      "config": {
+        "enabled": true,
+        "api_key": "test-auth-key"
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "POST",
+            "url": "https://urlhaus-api.abuse.ch/v1/host/",
+            "headers": [
+              [
+                "host",
+                "urlhaus-api.abuse.ch"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ],
+              [
+                "accept",
+                "application/json"
+              ],
+              [
+                "auth-key",
+                "test-auth-key"
+              ],
+              [
+                "content-length",
+                "9"
+              ],
+              [
+                "content-type",
+                "application/x-www-form-urlencoded"
+              ]
+            ],
+            "body_base64": "aG9zdD10ZXN0"
+          },
+          "response": {
+            "status": 429,
+            "headers": [],
+            "body_base64": ""
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "rate_limited",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_request_is_error::urlhaus.search::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_request_is_error",
+      "engine": "urlhaus",
+      "operation": "search",
+      "query": "example.com",
+      "params": null,
+      "config": {
+        "enabled": true,
+        "api_key": "test-auth-key"
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "POST",
+            "url": "https://urlhaus-api.abuse.ch/v1/host/",
+            "headers": [
+              [
+                "host",
+                "urlhaus-api.abuse.ch"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ],
+              [
+                "accept",
+                "application/json"
+              ],
+              [
+                "auth-key",
+                "test-auth-key"
+              ],
+              [
+                "content-length",
+                "16"
+              ],
+              [
+                "content-type",
+                "application/x-www-form-urlencoded"
+              ]
+            ],
+            "body_base64": "aG9zdD1leGFtcGxlLmNvbQ=="
+          },
+          "response": {
+            "status": 400,
+            "headers": [],
+            "body_base64": ""
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "URLhaus rejected request (HTTP 400)",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_or_provider_block_is_classified[401]::urlhaus.search::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_or_provider_block_is_classified[401]",
+      "engine": "urlhaus",
+      "operation": "search",
+      "query": "example.com",
+      "params": null,
+      "config": {
+        "enabled": true,
+        "api_key": "test-auth-key"
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "POST",
+            "url": "https://urlhaus-api.abuse.ch/v1/host/",
+            "headers": [
+              [
+                "host",
+                "urlhaus-api.abuse.ch"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ],
+              [
+                "accept",
+                "application/json"
+              ],
+              [
+                "auth-key",
+                "test-auth-key"
+              ],
+              [
+                "content-length",
+                "16"
+              ],
+              [
+                "content-type",
+                "application/x-www-form-urlencoded"
+              ]
+            ],
+            "body_base64": "aG9zdD1leGFtcGxlLmNvbQ=="
+          },
+          "response": {
+            "status": 401,
+            "headers": [],
+            "body_base64": ""
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "blocked",
+        "error_message": "URLhaus authentication required",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_or_provider_block_is_classified[403]::urlhaus.search::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_or_provider_block_is_classified[403]",
+      "engine": "urlhaus",
+      "operation": "search",
+      "query": "example.com",
+      "params": null,
+      "config": {
+        "enabled": true,
+        "api_key": "test-auth-key"
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "POST",
+            "url": "https://urlhaus-api.abuse.ch/v1/host/",
+            "headers": [
+              [
+                "host",
+                "urlhaus-api.abuse.ch"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ],
+              [
+                "accept",
+                "application/json"
+              ],
+              [
+                "auth-key",
+                "test-auth-key"
+              ],
+              [
+                "content-length",
+                "16"
+              ],
+              [
+                "content-type",
+                "application/x-www-form-urlencoded"
+              ]
+            ],
+            "body_base64": "aG9zdD1leGFtcGxlLmNvbQ=="
+          },
+          "response": {
+            "status": 403,
+            "headers": [],
+            "body_base64": ""
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "blocked",
+        "error_message": "URLhaus request blocked",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_malformed_json_is_error::urlhaus.search::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_malformed_json_is_error",
+      "engine": "urlhaus",
+      "operation": "search",
+      "query": "example.com",
+      "params": null,
+      "config": {
+        "enabled": true,
+        "api_key": "test-auth-key"
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "POST",
+            "url": "https://urlhaus-api.abuse.ch/v1/host/",
+            "headers": [
+              [
+                "host",
+                "urlhaus-api.abuse.ch"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ],
+              [
+                "accept",
+                "application/json"
+              ],
+              [
+                "auth-key",
+                "test-auth-key"
+              ],
+              [
+                "content-length",
+                "16"
+              ],
+              [
+                "content-type",
+                "application/x-www-form-urlencoded"
+              ]
+            ],
+            "body_base64": "aG9zdD1leGFtcGxlLmNvbQ=="
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-length",
+                "8"
+              ]
+            ],
+            "body_base64": "bm90IGpzb24="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Expecting value: line 1 column 1 (char 0)",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload0]::urlhaus._parse_response::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload0]",
+      "engine": "urlhaus",
+      "operation": "_parse_response",
+      "arguments": [
+        {
+          "query_status": "ok"
+        },
+        "host"
+      ],
+      "kwargs": {},
+      "nested_in_search": true,
+      "exception": {
+        "class": "ValueError",
+        "message": "URLhaus response is missing a non-empty urls list"
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload0]::urlhaus.search::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload0]",
+      "engine": "urlhaus",
+      "operation": "search",
+      "query": "example.com",
+      "params": null,
+      "config": {
+        "enabled": true,
+        "api_key": "test-auth-key"
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "POST",
+            "url": "https://urlhaus-api.abuse.ch/v1/host/",
+            "headers": [
+              [
+                "host",
+                "urlhaus-api.abuse.ch"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ],
+              [
+                "accept",
+                "application/json"
+              ],
+              [
+                "auth-key",
+                "test-auth-key"
+              ],
+              [
+                "content-length",
+                "16"
+              ],
+              [
+                "content-type",
+                "application/x-www-form-urlencoded"
+              ]
+            ],
+            "body_base64": "aG9zdD1leGFtcGxlLmNvbQ=="
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-length",
+                "21"
+              ],
+              [
+                "content-type",
+                "application/json"
+              ]
+            ],
+            "body_base64": "eyJxdWVyeV9zdGF0dXMiOiJvayJ9"
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "URLhaus response is missing a non-empty urls list",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload1]::urlhaus._parse_response::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload1]",
+      "engine": "urlhaus",
+      "operation": "_parse_response",
+      "arguments": [
+        {
+          "query_status": "ok",
+          "urls": "not-a-list"
+        },
+        "host"
+      ],
+      "kwargs": {},
+      "nested_in_search": true,
+      "exception": {
+        "class": "ValueError",
+        "message": "URLhaus response is missing a non-empty urls list"
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload1]::urlhaus.search::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload1]",
+      "engine": "urlhaus",
+      "operation": "search",
+      "query": "example.com",
+      "params": null,
+      "config": {
+        "enabled": true,
+        "api_key": "test-auth-key"
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "POST",
+            "url": "https://urlhaus-api.abuse.ch/v1/host/",
+            "headers": [
+              [
+                "host",
+                "urlhaus-api.abuse.ch"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ],
+              [
+                "accept",
+                "application/json"
+              ],
+              [
+                "auth-key",
+                "test-auth-key"
+              ],
+              [
+                "content-length",
+                "16"
+              ],
+              [
+                "content-type",
+                "application/x-www-form-urlencoded"
+              ]
+            ],
+            "body_base64": "aG9zdD1leGFtcGxlLmNvbQ=="
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-length",
+                "41"
+              ],
+              [
+                "content-type",
+                "application/json"
+              ]
+            ],
+            "body_base64": "eyJxdWVyeV9zdGF0dXMiOiJvayIsInVybHMiOiJub3QtYS1saXN0In0="
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "URLhaus response is missing a non-empty urls list",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload2]::urlhaus._parse_response::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload2]",
+      "engine": "urlhaus",
+      "operation": "_parse_response",
+      "arguments": [
+        {
+          "query_status": "provider_error"
+        },
+        "host"
+      ],
+      "kwargs": {},
+      "nested_in_search": true,
+      "exception": {
+        "class": "ValueError",
+        "message": "URLhaus returned unexpected query_status: provider_error"
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload2]::urlhaus.search::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload2]",
+      "engine": "urlhaus",
+      "operation": "search",
+      "query": "example.com",
+      "params": null,
+      "config": {
+        "enabled": true,
+        "api_key": "test-auth-key"
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "POST",
+            "url": "https://urlhaus-api.abuse.ch/v1/host/",
+            "headers": [
+              [
+                "host",
+                "urlhaus-api.abuse.ch"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ],
+              [
+                "accept",
+                "application/json"
+              ],
+              [
+                "auth-key",
+                "test-auth-key"
+              ],
+              [
+                "content-length",
+                "16"
+              ],
+              [
+                "content-type",
+                "application/x-www-form-urlencoded"
+              ]
+            ],
+            "body_base64": "aG9zdD1leGFtcGxlLmNvbQ=="
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-length",
+                "33"
+              ],
+              [
+                "content-type",
+                "application/json"
+              ]
+            ],
+            "body_base64": "eyJxdWVyeV9zdGF0dXMiOiJwcm92aWRlcl9lcnJvciJ9"
+          }
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "URLhaus returned unexpected query_status: provider_error",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_unsupported_input_is_error_without_dispatch::urlhaus.search::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_unsupported_input_is_error_without_dispatch",
+      "engine": "urlhaus",
+      "operation": "search",
+      "query": "!@#$%",
+      "params": null,
+      "config": {
+        "enabled": true,
+        "api_key": "test-auth-key"
+      },
+      "exchanges": [],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "URLhaus query is not a supported URL, host, or MD5 hash",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_key_is_forwarded_as_header::urlhaus._parse_single_url::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_key_is_forwarded_as_header",
+      "engine": "urlhaus",
+      "operation": "_parse_single_url",
+      "arguments": [
+        {
+          "query_status": "ok",
+          "url_id": "123456",
+          "url": "https://evil.example.com/malware.exe",
+          "host": "evil.example.com",
+          "threat": "malware_download",
+          "tags": [
+            "elf",
+            "mirai"
+          ],
+          "file_type": "exe",
+          "url_status": "online",
+          "firstseen": "2026-06-01",
+          "lastseen": "2026-06-10"
+        }
+      ],
+      "kwargs": {},
+      "nested_in_search": true,
+      "output": {
+        "url": "https://evil.example.com/malware.exe",
+        "title": "evil.example.com",
+        "content": "Threat: malware_download | Tags: elf, mirai | Type: exe | Status: online | First: 2026-06-01 | Last: 2026-06-10",
+        "engine": "urlhaus",
+        "engines": [],
+        "score": 0.0,
+        "position": 1,
+        "category": "general",
+        "published_date": "2026-06-01",
+        "thumbnail": null,
+        "img_src": null,
+        "tier": 1,
+        "media": null,
+        "payload": null,
+        "work_group": null
+      }
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_key_is_forwarded_as_header::urlhaus._parse_response::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_key_is_forwarded_as_header",
+      "engine": "urlhaus",
+      "operation": "_parse_response",
+      "arguments": [
+        {
+          "query_status": "ok",
+          "url_id": "123456",
+          "url": "https://evil.example.com/malware.exe",
+          "host": "evil.example.com",
+          "threat": "malware_download",
+          "tags": [
+            "elf",
+            "mirai"
+          ],
+          "file_type": "exe",
+          "url_status": "online",
+          "firstseen": "2026-06-01",
+          "lastseen": "2026-06-10"
+        },
+        "url"
+      ],
+      "kwargs": {},
+      "nested_in_search": true,
+      "output": [
+        {
+          "url": "https://evil.example.com/malware.exe",
+          "title": "evil.example.com",
+          "content": "Threat: malware_download | Tags: elf, mirai | Type: exe | Status: online | First: 2026-06-01 | Last: 2026-06-10",
+          "engine": "urlhaus",
+          "engines": [],
+          "score": 0.0,
+          "position": 1,
+          "category": "general",
+          "published_date": "2026-06-01",
+          "thumbnail": null,
+          "img_src": null,
+          "tier": 1,
+          "media": null,
+          "payload": null,
+          "work_group": null
+        }
+      ]
+    },
+    {
+      "id": "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_key_is_forwarded_as_header::urlhaus.search::0",
+      "source_test": "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_key_is_forwarded_as_header",
+      "engine": "urlhaus",
+      "operation": "search",
+      "query": "https://evil.example.com/malware.exe",
+      "params": null,
+      "config": {
+        "enabled": true,
+        "api_key": "test-auth-key"
+      },
+      "exchanges": [
+        {
+          "request": {
+            "method": "POST",
+            "url": "https://urlhaus-api.abuse.ch/v1/url/",
+            "headers": [
+              [
+                "host",
+                "urlhaus-api.abuse.ch"
+              ],
+              [
+                "accept-encoding",
+                "gzip, deflate"
+              ],
+              [
+                "connection",
+                "keep-alive"
+              ],
+              [
+                "user-agent",
+                "python-httpx/0.28.1"
+              ],
+              [
+                "accept",
+                "application/json"
+              ],
+              [
+                "auth-key",
+                "test-auth-key"
+              ],
+              [
+                "content-length",
+                "48"
+              ],
+              [
+                "content-type",
+                "application/x-www-form-urlencoded"
+              ]
+            ],
+            "body_base64": "dXJsPWh0dHBzJTNBJTJGJTJGZXZpbC5leGFtcGxlLmNvbSUyRm1hbHdhcmUuZXhl"
+          },
+          "response": {
+            "status": 200,
+            "headers": [
+              [
+                "content-length",
+                "250"
+              ],
+              [
+                "content-type",
+                "application/json"
+              ]
+            ],
+            "body_base64": "eyJxdWVyeV9zdGF0dXMiOiJvayIsInVybF9pZCI6IjEyMzQ1NiIsInVybCI6Imh0dHBzOi8vZXZpbC5leGFtcGxlLmNvbS9tYWx3YXJlLmV4ZSIsImhvc3QiOiJldmlsLmV4YW1wbGUuY29tIiwidGhyZWF0IjoibWFsd2FyZV9kb3dubG9hZCIsInRhZ3MiOlsiZWxmIiwibWlyYWkiXSwiZmlsZV90eXBlIjoiZXhlIiwidXJsX3N0YXR1cyI6Im9ubGluZSIsImZpcnN0c2VlbiI6IjIwMjYtMDYtMDEiLCJsYXN0c2VlbiI6IjIwMjYtMDYtMTAifQ=="
+          }
+        }
+      ],
+      "output": {
+        "results": [
+          {
+            "url": "https://evil.example.com/malware.exe",
+            "title": "evil.example.com",
+            "content": "Threat: malware_download | Tags: elf, mirai | Type: exe | Status: online | First: 2026-06-01 | Last: 2026-06-10",
+            "engine": "urlhaus",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": "2026-06-01",
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    }
+  ],
+  "real_network_allowed": false,
+  "latency_normalization": "only search latency_ms removed; no other result normalization"
+}

@@ -1,0 +1,10 @@
+{
+  "plan_id": "W05",
+  "kind": "current_producer_format_only_amendment",
+  "observed_executed_source_sha256": "85ed07e9f915183037d126cda5132dad00acce86f51eb9cc78fbb03359cf5dd3",
+  "current_producer_sha256": "da65590a847b3b12b3571900293d123f0e31491e5202799ea0da88256d08af7c",
+  "semantic_ast_sha256": "6004c114acbb8197cef192a50fb0f87ecffe1045861f17fcc24e92bdfbdb0062",
+  "ast_equivalent": true,
+  "output_preserved_sha256": "bfa6a97cc9912f97054e78b56fd3ead683f417d0da293440d5c173f5d579dccf",
+  "evidence": "Observed producer bytes reconstructed exactly from original tool write and verified against recorded execution SHA; AST comparison ignores only formatting/location attributes. Neither producer was executed for this amendment."
+}

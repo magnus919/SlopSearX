@@ -1,0 +1,104 @@
+{
+  "acquisition_profile": "coverage-acquisition-profile/2",
+  "authority": "Prospective public static materials only. No stage admission, phase permit, execution authority, invocation, or qualification is included or inferred.",
+  "band_companion_contract": {
+    "path": "band-companion-contract.json",
+    "same_bytes_for_both_stages": true,
+    "sha256": "e71660f3dbabe03c7d15e983f3c8b8cc666560d5f900a3323508b407cdef87b6"
+  },
+  "candidate_runtime_identity_sha256": "ce4723f03f1beec9d87a630520a39cddf89fcf20d0f1f98d79dcc396cdb237d1",
+  "cohorts": {
+    "path": "../saved-development-method-materials/cohorts.json",
+    "sha256": "377450c59f2b8498c8a7f923bb7b6d05a0b780300467cc9b9f8ef0bd69522595"
+  },
+  "input_methods": {
+    "confirmation": "frozen-pool/1",
+    "development": "saved-corpus/1"
+  },
+  "late_phase_materials": "stage-bound placeholders only; no acquired task inputs, capture receipts, blind assignments, selector maps, or answer assignments",
+  "lineage": {
+    "all_four_new_and_distinct": true,
+    "all_new_stage_and_packet_ids_excluded_from_retired_inventory": true,
+    "confirmation_is_new_and_uninvoked": true,
+    "confirmation_packet_stage_uuid": "a2272bf2-c676-493d-b964-b3bcfdeec77c",
+    "confirmation_stage_uuid": "7479e4b7-85d9-47cc-822e-7f3e5857ab1d",
+    "development_packet_stage_uuid": "0c730184-5578-454b-9134-96f391648e8e",
+    "development_pass_receipt": null,
+    "development_stage_uuid": "546fed70-71b6-486c-965c-097555a4ceb7"
+  },
+  "protocol": {
+    "path": "protocol.json",
+    "sha256": "647d1a09b9594f04798a9b891e609ed710c37111da62ecbf3e8e34d1b183c2bb"
+  },
+  "qualified_source_closure": {
+    "path": "current-qualified-source-closure.json",
+    "sha256": "59ba2d2298de0aabdea39e3a7e414c9de9a78110055cfdc578496722290dba7f"
+  },
+  "quality_result": "none; full qualification pending",
+  "retired_identity_ledger_sha256": "4c66cb4b42d5fd4849de2fd52e0283d076b1d68ea44f4506bfbd3305272f13cc",
+  "retired_stage_uuid_count": 91,
+  "schema": "coverage-frozen-input-static-registration-status/1",
+  "scientific_provider_dispatches_under_this_registration": 0,
+  "source_revision": "d01c335615906f28e6f28dff5b9cd6eb5534d5ff",
+  "stages": {
+    "confirmation": {
+      "acquisition_manifest_preview_sha256": "3ae108f5075e50571fb3a64b744ff039c5a8f6c24ea7e20366efa0806d78b10d",
+      "acquisition_plan_sha256": "2c10019a3ce9b00d27e1d1e1a38dbc9388edbf6c7dbaf04393781a8a93ae3635",
+      "admission_status": "not_admitted",
+      "capture_plan_sha256": "57a6fd99ba5106c3580e2f355b2f399058face4cdf6a8bebcbeec64ba7509c10",
+      "execution_outcome": "not_invoked",
+      "full_static_preflight": "runner_and_independent_issuer_passed",
+      "initial_registration_sha256": "715c57c26309513828396d04b894e58b1a6b2bb8d811854944d14b8af33aefd9",
+      "navigation_target_count": 5,
+      "packet_stage_uuid": "a2272bf2-c676-493d-b964-b3bcfdeec77c",
+      "research_case_count": 8,
+      "selector_operation_count": 39,
+      "stage_uuid": "7479e4b7-85d9-47cc-822e-7f3e5857ab1d",
+      "static_material_status": "preflight_passed_unqualified",
+      "static_pins": {
+        "acquisition_plan": "2c10019a3ce9b00d27e1d1e1a38dbc9388edbf6c7dbaf04393781a8a93ae3635",
+        "answer_assessment_plan": "c28ddba75fa5c106bf403eb6560fc364ed26ca38cef01a3a05dd31cd21443034",
+        "capture_plan": "57a6fd99ba5106c3580e2f355b2f399058face4cdf6a8bebcbeec64ba7509c10",
+        "coverage_source": "806746b4fa5c497f269933008db76650e2c1113dbd35a08b011d86c4d81f11ca",
+        "dependency_lock": "8ecfcd029d2461631d44a2910ef5cfaa23a436da9cbc9a96ed0302e1d96861d0",
+        "production_rerank_source": "93ea486848ccdc7778a0ce49973773402d84fbb2ca1b9a64eaabf5f37da6e078",
+        "protocol": "647d1a09b9594f04798a9b891e609ed710c37111da62ecbf3e8e34d1b183c2bb",
+        "qualified_source_closure": "59ba2d2298de0aabdea39e3a7e414c9de9a78110055cfdc578496722290dba7f",
+        "reference_manifest": "24b11e3cf56759381f4432c7b7e551efab00c5bcc68dee458b7931a7920d89fd",
+        "source_capture_manifest": "b1fd8dc7e289304d7fe5c1e5285602f2578e3926ee75a42feae511eb0adba195",
+        "task_input_manifest": "4a8abd253c9036498c00e8164af8fc79eda5f652b6b05c20a2a1f2420028db1c"
+      }
+    },
+    "development": {
+      "acquisition_manifest_preview_sha256": "c48822d21e1d77e5cadf3e3c580163411863ba87febac2ab3e0914329741797a",
+      "acquisition_plan_sha256": "6064d3f128a1c062374f444c82d09ebf98344637c15ceb62f18c389d136c81a6",
+      "admission_status": "not_admitted",
+      "capture_plan_sha256": "7b4b7cfc372f37c993cacb8c19c5588f633ee128ea7ee21380884ecb5f56693f",
+      "execution_outcome": "not_invoked",
+      "full_static_preflight": "runner_and_independent_issuer_passed",
+      "initial_registration_sha256": "bffb7c202f8995c4f6e3ca4eb8be4cdcc789c50696ff328448ab92c5dc7cc395",
+      "navigation_target_count": 5,
+      "packet_stage_uuid": "0c730184-5578-454b-9134-96f391648e8e",
+      "research_case_count": 8,
+      "selector_operation_count": 39,
+      "stage_uuid": "546fed70-71b6-486c-965c-097555a4ceb7",
+      "static_material_status": "preflight_passed_unqualified",
+      "static_pins": {
+        "acquisition_plan": "6064d3f128a1c062374f444c82d09ebf98344637c15ceb62f18c389d136c81a6",
+        "answer_assessment_plan": "13fbad4848766e75f287fb050bda0add1d3ea212e17271eaed2f7a322c43e082",
+        "capture_plan": "7b4b7cfc372f37c993cacb8c19c5588f633ee128ea7ee21380884ecb5f56693f",
+        "coverage_source": "806746b4fa5c497f269933008db76650e2c1113dbd35a08b011d86c4d81f11ca",
+        "dependency_lock": "8ecfcd029d2461631d44a2910ef5cfaa23a436da9cbc9a96ed0302e1d96861d0",
+        "production_rerank_source": "93ea486848ccdc7778a0ce49973773402d84fbb2ca1b9a64eaabf5f37da6e078",
+        "protocol": "647d1a09b9594f04798a9b891e609ed710c37111da62ecbf3e8e34d1b183c2bb",
+        "qualified_source_closure": "59ba2d2298de0aabdea39e3a7e414c9de9a78110055cfdc578496722290dba7f",
+        "reference_manifest": "b8b081d90ccb1099d395960ffd8b5f45d3f32803fe0ab65033adc3f04c193ab6",
+        "source_capture_manifest": "8c1dfb9fe7b200a662ea1024ba37fdfd680380fecb6b20cd0ba85ad53e5b1028",
+        "task_input_manifest": "3e3eebdaab15c7ef8de8d8f3cae00bcc4c8f3780ca30cbe185504fdf0b232caf"
+      }
+    }
+  },
+  "static_preflight_receipt": "setup-checks.json",
+  "status": "prospective_static_preflight_passed_not_invoked",
+  "superseded_public_registration_merge_commit": "dd6ca81ea60092536bd6e0ea56b2efd88660cdfe"
+}

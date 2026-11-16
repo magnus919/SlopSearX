@@ -1,0 +1,239 @@
+{
+  "plan_id": "F09",
+  "schema_version": 1,
+  "surface_denials": [
+    {
+      "expected": {
+        "error": {
+          "code": "tool_disabled",
+          "engines": [
+            "hibp"
+          ],
+          "field": "engines",
+          "grant": "MCP_TARGETED_SENSITIVE_ALLOWED",
+          "message": "sensitive engines are unreachable without the sensitive-engine grant (MCP_TARGETED_SENSITIVE_ALLOWED=1): hibp"
+        }
+      },
+      "surface": "generic"
+    },
+    {
+      "expected": {
+        "error": {
+          "code": "tool_disabled",
+          "engines": [
+            "hibp"
+          ],
+          "field": "engines",
+          "grant": "MCP_TARGETED_SENSITIVE_ALLOWED",
+          "message": "sensitive engines are unreachable without the sensitive-engine grant (MCP_TARGETED_SENSITIVE_ALLOWED=1): hibp"
+        }
+      },
+      "surface": "targeted"
+    },
+    {
+      "expected": {
+        "error": {
+          "code": "tool_disabled",
+          "engines": [
+            "hibp"
+          ],
+          "field": "engines",
+          "grant": "MCP_TARGETED_SENSITIVE_ALLOWED",
+          "message": "sensitive engines are unreachable without the sensitive-engine grant (MCP_TARGETED_SENSITIVE_ALLOWED=1): hibp"
+        }
+      },
+      "surface": "preview"
+    },
+    {
+      "expected": {
+        "error": {
+          "code": "tool_disabled",
+          "message": "slopsearx_search_jobs requires the jobs grant (MCP_GRANT_JOBS=1)"
+        }
+      },
+      "surface": "jobs"
+    },
+    {
+      "expected": {
+        "error": {
+          "code": "tool_disabled",
+          "message": "slopsearx_search_security requires the security grant (MCP_GRANT_SECURITY=1)"
+        }
+      },
+      "surface": "security"
+    },
+    {
+      "expected": {
+        "error": {
+          "code": "tool_disabled",
+          "message": "slopsearx_search_science requires the science grant (MCP_GRANT_SCIENCE=1)"
+        }
+      },
+      "surface": "science"
+    },
+    {
+      "expected": {
+        "error": {
+          "code": "tool_disabled",
+          "message": "slopsearx_start_research requires the research grant (MCP_GRANT_RESEARCH=1)"
+        }
+      },
+      "surface": "research"
+    }
+  ],
+  "workers": [
+    {
+      "expected": "research grant is disabled",
+      "grants": [],
+      "name": "research-revoked",
+      "query": {
+        "engines": [
+          "alpha"
+        ],
+        "index": 0,
+        "intent": "science",
+        "query": "query",
+        "requires_intent_grant": true
+      }
+    },
+    {
+      "expected": "science requires the science grant",
+      "grants": [
+        "research"
+      ],
+      "name": "intent-revoked",
+      "query": {
+        "engines": [
+          "alpha"
+        ],
+        "index": 0,
+        "intent": "science",
+        "query": "query",
+        "requires_intent_grant": true
+      }
+    },
+    {
+      "expected": null,
+      "grants": [
+        "research"
+      ],
+      "name": "legacy-no-intent-grant",
+      "query": {
+        "engines": [
+          "alpha"
+        ],
+        "index": 0,
+        "intent": "science",
+        "query": "query",
+        "requires_intent_grant": false
+      }
+    },
+    {
+      "expected": "captured evidence intent grant has been revoked",
+      "grants": [
+        "research"
+      ],
+      "name": "captured-intent-revoked",
+      "query": {
+        "engines": [
+          "alpha"
+        ],
+        "evidence_engines": [
+          "beta"
+        ],
+        "evidence_intent": "science",
+        "evidence_result_ids": [
+          "r"
+        ],
+        "index": 0,
+        "intent": "web",
+        "parent_attempt_id": "a",
+        "query": "query",
+        "rationale": "why",
+        "requires_intent_grant": true
+      }
+    },
+    {
+      "expected": "sensitive engines are unreachable without the sensitive-engine grant (MCP_TARGETED_SENSITIVE_ALLOWED=1): hibp",
+      "grants": [
+        "research",
+        "science"
+      ],
+      "name": "captured-sensitive",
+      "query": {
+        "engines": [
+          "alpha"
+        ],
+        "evidence_engines": [
+          "hibp"
+        ],
+        "evidence_result_ids": [
+          "r"
+        ],
+        "index": 0,
+        "intent": "science",
+        "parent_attempt_id": "a",
+        "query": "query",
+        "rationale": "why",
+        "requires_intent_grant": true
+      }
+    },
+    {
+      "expected": "evidence references have no valid captured source scope",
+      "grants": [
+        "research",
+        "science"
+      ],
+      "name": "captured-empty",
+      "query": {
+        "engines": [
+          "alpha"
+        ],
+        "evidence_result_ids": [
+          "r"
+        ],
+        "index": 0,
+        "intent": "science",
+        "parent_attempt_id": "a",
+        "query": "query",
+        "rationale": "why",
+        "requires_intent_grant": true
+      }
+    },
+    {
+      "expected": "evidence references require a parent_attempt_id and rationale",
+      "grants": [
+        "research",
+        "science"
+      ],
+      "name": "metadata-missing",
+      "query": {
+        "engines": [
+          "alpha"
+        ],
+        "evidence_result_ids": [
+          "r"
+        ],
+        "index": 0,
+        "intent": "science",
+        "query": "query",
+        "requires_intent_grant": true
+      }
+    },
+    {
+      "expected": "research query has no permitted engines",
+      "grants": [
+        "research",
+        "science"
+      ],
+      "name": "no-engines",
+      "query": {
+        "engines": [],
+        "index": 0,
+        "intent": "science",
+        "query": "query",
+        "requires_intent_grant": true
+      }
+    }
+  ]
+}

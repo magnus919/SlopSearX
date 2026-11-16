@@ -1,0 +1,77 @@
+Command:
+env CARGO_INCREMENTAL=0 CARGO_BUILD_JOBS=2 CARGO_NET_OFFLINE=true RUSTUP_HOME=/private/tmp/slopsearx-rust-tools/rustup CARGO_HOME=/private/tmp/slopsearx-rust-tools/cargo RUSTUP_TOOLCHAIN=1.99.0 PATH=/private/tmp/slopsearx-rust-tools/cargo/bin:/Users/magnus/.local/bin:/opt/homebrew/bin:$PATH CARGO_TARGET_DIR=/Volumes/tank01/magnus/rust-builds/slopsearx/a14 cargo test -p ssx-infra jobs::tests --lib -- --nocapture
+
+Raw initial failure output:
+
+```text
+warning: trait `JobProvider` is more private than the item `JobsAdapter<C>`
+warning: unused imports: `ExchangeFuture` and `Transport`
+warning: unused import: `io`
+warning: unused import: `url::Url`
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 21.32s
+     Running unittests src/lib.rs (/Volumes/tank01/magnus/rust-builds/slopsearx/a14/debug/deps/ssx_infra-81e8952c2b38544d)
+
+running 7 tests
+test adapters::jobs::tests::lever_epoch_milliseconds_match_utc_iso ... ok
+test adapters::jobs::tests::source_company_cases_are_preserved ... ok
+test adapters::jobs::tests::company_scope_rejects_before_dispatch_and_404_is_successful_empty ... ok
+
+thread 'adapters::jobs::tests::lever_sends_mode_json_and_normalizes_categories_epoch_and_limit' (45638732) panicked at crates/ssx-infra/src/adapters/jobs.rs:905:9:
+assertion failed: seen.lock().unwrap()[0].starts_with("GET /v0/postings/acme?mode=json HTTP/1.1")
+actual captured request: "GET /acme?mode=json HTTP/1.1\r\nuser-agent: SlopSearX/0.1.0 (meta search engine; agent-native)\r\naccept-encoding: gzip, deflate\r\naccept: */*\r\nhost: 127.0.0.1:52817\r\n\r\n"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'adapters::jobs::tests::greenhouse_builds_content_query_and_job_payload_with_absent_id_preserved' (45638730) panicked at crates/ssx-infra/src/adapters/jobs.rs:878:9:
+assertion failed: request.starts_with("GET /v1/boards/acme-inc/jobs?content=true HTTP/1.1")
+actual captured request:
+GET /acme-inc/jobs?content=true HTTP/1.1
+user-agent: SlopSearX/0.1.0 (meta search engine; agent-native)
+accept-encoding: gzip, deflate
+accept: */*
+host: 127.0.0.1:52813
+test adapters::jobs::tests::ashby_uses_graphql_post_and_normalizes_job_postings ... ok
+test adapters::jobs::tests::lever_sends_mode_json_and_normalizes_categories_epoch_and_limit ... FAILED
+test adapters::jobs::tests::greenhouse_builds_content_query_and_job_payload_with_absent_id_preserved ... FAILED
+
+thread 'adapters::jobs::tests::malformed_payloads_and_http_failures_are_classified' (45638733) panicked at crates/ssx-infra/src/adapters/jobs.rs:981:13:
+assertion `left == right` failed
+  left: 0
+ right: 1
+test adapters::jobs::tests::malformed_payloads_and_http_failures_are_classified ... FAILED
+
+failures:
+
+failures:
+    adapters::jobs::tests::greenhouse_builds_content_query_and_job_payload_with_absent_id_preserved
+    adapters::jobs::tests::lever_sends_mode_json_and_normalizes_categories_epoch_and_limit
+    adapters::jobs::tests::malformed_payloads_and_http_failures_are_classified
+
+test result: FAILED. 4 passed; 3 failed; 0 ignored; 0 measured; 182 filtered out; finished in 0.02s
+
+error: test failed, to rerun pass `-p ssx-infra --lib`
+```
+
+Later source-audit compile failure (before the test binary ran):
+
+```text
+warning: function `as_text` is never used
+   --> crates/ssx-infra/src/adapters/jobs.rs:650:4
+warning: function `text` is never used
+   --> crates/ssx-infra/src/adapters/jobs.rs:696:4
+warning: function `epoch_ms_iso` is never used
+   --> crates/ssx-infra/src/adapters/jobs.rs:777:4
+error[E0425]: cannot find value `as_i64` in this scope
+    --> crates/ssx-infra/src/adapters/jobs.rs:1171:48
+     |
+1171 |         assert_eq!(data.get("job_id").and_then(as_i64), Some(123));
+     |                                                ^^^^^^ not found in this scope
+
+For more information about this error, try `rustc --explain E0425`.
+error: could not compile `ssx-infra` (lib test) due to 1 previous error
+```
+
+The assertion helper had been removed when the provider parser stopped silently
+coercing IDs; the test still needs to verify that the typed Greenhouse payload
+retains numeric `job_id: 123`. Restored that test-only helper and retained the
+integer epoch path in the production date conversion to preserve exact
+millisecond formatting.

@@ -1,0 +1,369 @@
+{
+  "schema": "SNAPSHOT_PAGE_TWO_HELPER_JOIN_V1",
+  "parents": {
+    "page": "ef9c5c93e4a4a57d9b835fb291e8d87410a232a8",
+    "snapshot": "8e71a83f9649d58e9a60e34810275b736e44151a"
+  },
+  "unchanged_capsules": {
+    "page": "dfd7494b0ee42ac6a9ca702020640aaf65454b6a57f99991ae761c571dd96fcf",
+    "snapshot": "e16ba1482b12b55a42a4372f3fd4a7116effaf0fa04c79cf5cb13f01930eea4e",
+    "helpers": "8889f54d073bc27811febf1bbc6bafdbea1c25303a0f1c0dfff8bff04daaa831"
+  },
+  "helpers": [
+    {
+      "current": {
+        "path": "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+        "sha256": "fbcdd42cd71deb58a56aed84a004029aa37344d6e8f448175472f4cf8ce1186b",
+        "bytes": 85916,
+        "mode": "0644",
+        "git_blob": "9314a7ea668fa98c97ce95c55b7e2e2e5420cb19"
+      },
+      "page": {
+        "prior": {
+          "path": "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+          "sha256": "c173b839bab843a0945c8ff1b5b3b8a67193dc92f8a22aa4e5cd980c5e71a213",
+          "bytes": 85220,
+          "mode": "0644",
+          "git_blob": "818e79849ae3f11dca81fccf3976bd69a3089b0c"
+        },
+        "current": {
+          "path": "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+          "sha256": "fbcdd42cd71deb58a56aed84a004029aa37344d6e8f448175472f4cf8ce1186b",
+          "bytes": 85916,
+          "mode": "0644",
+          "git_blob": "9314a7ea668fa98c97ce95c55b7e2e2e5420cb19"
+        },
+        "edits": [
+          {
+            "at": 81163,
+            "remove_utf8": "",
+            "insert_utf8": "/// Keep source-proof controls out of the frozen integration-test inventories.\n#[cfg(test)]\n#[allow(dead_code)]\npub(crate) fn snapshot_fixture_main_controls(root: &Path) -> Result<(), String> {\n    w07_t02_joint::snapshot_fixture_main_controls(root)?;\n    let path = \"crates/xtask/src/main.rs\";\n    let current = fs::read(root.join(path)).map_err(|e| e.to_string())?;\n    let t02 = w07_t02_joint::parent(root, path, &current, w07_t02_joint::Parent::T02)?;\n    let old = json!({\"path\":path,\"sha256\":\"8755129fbac7454a1ae25982dc44ce1cb92b8ead7ecf650a3901aa2f08d4a23c\",\"bytes\":39725,\"mode\":\"0644\"});\n    need(\n        read_exact(root, &old)? == t02,\n        \"literal e127 main caller proof\",\n    )\n}\n"
+          }
+        ]
+      },
+      "snapshot": {
+        "prior": {
+          "path": "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+          "sha256": "0946408fe0f4ae154d3582a6922672dbc26da31fb468e90b5dab0285af909ce4",
+          "bytes": 74718,
+          "mode": "0644",
+          "git_blob": "7047b947cf58e5067ca3421e892f7a6285a166e0"
+        },
+        "current": {
+          "path": "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+          "sha256": "fbcdd42cd71deb58a56aed84a004029aa37344d6e8f448175472f4cf8ce1186b",
+          "bytes": 85916,
+          "mode": "0644",
+          "git_blob": "9314a7ea668fa98c97ce95c55b7e2e2e5420cb19"
+        },
+        "edits": [
+          {
+            "at": 10020,
+            "remove_utf8": "        \"A06 exact source material differs\",\n",
+            "insert_utf8": "        &format!(\n            \"A06 exact source material differs: path={:?} expected_sha={} actual_sha={} expected_bytes={:?} actual_bytes={} expected_mode={} actual_mode={}\",\n            row[\"path\"].as_str().unwrap_or(\"<missing>\"),\n            row[\"sha256\"]\n                .as_str()\n                .filter(|s| s.len() == 64 && s.bytes().all(|b| b.is_ascii_hexdigit()))\n                .unwrap_or(\"<invalid>\"),\n            digest(raw),\n            row[\"bytes\"].as_u64(),\n            raw.len(),\n            row[\"mode\"]\n                .as_str()\n                .filter(|s| s.len() == 4 && s.bytes().all(|b| (b'0'..=b'7').contains(&b)))\n                .unwrap_or(\"<invalid>\"),\n            mode\n        ),\n"
+          },
+          {
+            "at": 15026,
+            "remove_utf8": "            let bytes = fs::read(&file).map_err(|e| e.to_string())?;\n",
+            "insert_utf8": "            let physical = fs::read(&file).map_err(|e| e.to_string())?;\n            let frame = json!({\"path\":physical_row.path,\"sha256\":physical_row.current_sha,\"bytes\":physical_row.current_len,\"mode\":\"0644\"});\n            let bytes =\n                native_search::page_prior(root, &frame, Some(&physical))?.unwrap_or(physical);\n"
+          },
+          {
+            "at": 15971,
+            "remove_utf8": "        let actual = fs::read(root.join(row.path)).map_err(|e| e.to_string())?;\n",
+            "insert_utf8": "        let physical = fs::read(root.join(row.path)).map_err(|e| e.to_string())?;\n        let frame =\n            json!({\"path\":row.path,\"sha256\":row.current_sha,\"bytes\":row.current_len,\"mode\":\"0644\"});\n        let ca_current =\n            native_search::page_prior(root, &frame, Some(&physical))?.unwrap_or(physical);\n"
+          },
+          {
+            "at": 18037,
+            "remove_utf8": "                default_ca_fixture_inverse(row, &actual, mode, row.insertions).is_err(),\n",
+            "insert_utf8": "                default_ca_fixture_inverse(row, &ca_current, mode, row.insertions).is_err(),\n"
+          },
+          {
+            "at": 18212,
+            "remove_utf8": "        let mut altered = actual.clone();\n",
+            "insert_utf8": "        let mut altered = ca_current.clone();\n"
+          },
+          {
+            "at": 18381,
+            "remove_utf8": "            \"default-CA fixture unlisted physical edit accepted\",\n",
+            "insert_utf8": "            \"default-CA fixture unlisted default-CA frame edit accepted\",\n"
+          },
+          {
+            "at": 18459,
+            "remove_utf8": "        // Mutate the relation while holding authenticated physical bytes fixed.\n",
+            "insert_utf8": "        // Mutate the original CA relation with its authenticated e127 frame fixed.\n        // page_controls separately rejects changed physical page afterimages.\n"
+          },
+          {
+            "at": 19043,
+            "remove_utf8": "                    default_ca_fixture_inverse(row, &actual, \"0644\", &edits).is_err(),\n",
+            "insert_utf8": "                    default_ca_fixture_inverse(row, &ca_current, \"0644\", &edits).is_err(),\n"
+          },
+          {
+            "at": 28936,
+            "remove_utf8": "",
+            "insert_utf8": "    let selected_page_catalog = path == \"crates/ssx-infra/tests/a09_catalog_media.rs\";\n"
+          },
+          {
+            "at": 29349,
+            "remove_utf8": "",
+            "insert_utf8": "    } else if selected_page_catalog {\n        let sealed = load(root)?;\n        need(\n            row == source(&sealed, path)?,\n            \"exact sealed A06 catalog transition caller\",\n        )?;\n        let current = &row[\"current\"];\n        let frame = json!({\"path\":current[\"path\"],\"sha256\":current[\"sha256\"],\"bytes\":current[\"bytes\"],\"mode\":current[\"mode\"]});\n        let physical = fs::read(root.join(path)).map_err(|e| e.to_string())?;\n        native_search::page_prior(root, &frame, Some(&physical))?\n            .ok_or(\"catalog Page operand absent\")?\n"
+          },
+          {
+            "at": 32803,
+            "remove_utf8": "    SHA_PAIRS.contains(&(container, path))\n",
+            "insert_utf8": "    SHA_PAIRS.contains(&(container, path)) || page_proof_selected(container, path)\n"
+          },
+          {
+            "at": 33033,
+            "remove_utf8": "",
+            "insert_utf8": "    if let Some(result) =\n        page_proof_try_verify(root, container, container_sha, path, expected, bytes)\n    {\n        return Some(result);\n    }\n"
+          },
+          {
+            "at": 40188,
+            "remove_utf8": "",
+            "insert_utf8": "        *row = native_search::page_scoped(root, row, &historical)?;\n"
+          },
+          {
+            "at": 58457,
+            "remove_utf8": "",
+            "insert_utf8": "// This one full artifact row is authenticated before its four-field projection.\n// The returned bytes are the e127 operand of the unchanged artifact proof;\n// the physical Page successor is authenticated separately by the common inverse.\nfn biomedical_page_operand(root: &Path, row: &Value) -> Result<Vec<u8>, String> {\n    const PATH: &str = \"crates/ssx-infra/tests/a07_biomedical.rs\";\n    let sealed = artifact_load(root)?;\n    need(\n        row == source(&sealed, PATH)?,\n        \"exact sealed A06 biomedical artifact caller\",\n    )?;\n    let current = &row[\"current\"];\n    let frame = json!({\"path\":current[\"path\"],\"sha256\":current[\"sha256\"],\"bytes\":current[\"bytes\"],\"mode\":current[\"mode\"]});\n    let physical = fs::read(root.join(PATH)).map_err(|e| e.to_string())?;\n    native_search::page_prior(root, &frame, Some(&physical))?\n        .ok_or(\"biomedical Page operand absent\".into())\n}\n"
+          },
+          {
+            "at": 58847,
+            "remove_utf8": "",
+            "insert_utf8": "    } else if row[\"current\"][\"path\"] == \"crates/ssx-infra/tests/a07_biomedical.rs\" {\n        biomedical_page_operand(root, row)?\n"
+          },
+          {
+            "at": 61900,
+            "remove_utf8": "",
+            "insert_utf8": "        } else if path == \"crates/ssx-infra/tests/a07_biomedical.rs\" {\n            biomedical_page_operand(root, row)?\n"
+          },
+          {
+            "at": 69064,
+            "remove_utf8": "",
+            "insert_utf8": "    native_search::page_controls(root)?;\n    page_proof_controls(root)?;\n"
+          },
+          {
+            "at": 69962,
+            "remove_utf8": "",
+            "insert_utf8": "}\n\n// Exact Page identity pairs only. Search/DeHashed keep their generation/scoped routes.\ntype PageProofContext = (&'static str, &'static str, &'static [(&'static str, usize)]);\nconst PAGE_PROOF_CONTEXTS: &[PageProofContext] = &[\n    (\n        \"docs/rust-rewrite/a13/dehashed-source-map-v1.json\",\n        \"292c55e50d49bf53a0012d1c7a86ce422b2e58fe26f12bc2606b8f1621cdf18d\",\n        &[(\"crates/ssx-domain/src/records.rs\", 11011)],\n    ),\n    (\n        \"docs/rust-rewrite/a13/remaining/source-map.json\",\n        \"9f75190c18606f2e9416e4db9a99392c7cb9aa0836dc3ff41a56263f05af975f\",\n        &[\n            (\"crates/ssx-domain/src/records.rs\", 11011),\n            (\"docs/rust-rewrite/CASE_STUDY.md\", 21096),\n        ],\n    ),\n    (\n        \"docs/rust-rewrite/a13/qualification-v1.json\",\n        \"77661b6d69dc2926a2d01d277e68e22932d7fb1aae258fb272ab1192dff18c6e\",\n        &[\n            (\"crates/ssx-domain/src/records.rs\", 11011),\n            (\"docs/rust-rewrite/CASE_STUDY.md\", 21096),\n            (\"crates/ssx-infra/tests/a13_hibp.rs\", 20344),\n            (\"crates/ssx-infra/tests/a13_intelx.rs\", 24217),\n            (\n                \"crates/ssx-infra/src/adapters/vulnerability_tests.rs\",\n                36757,\n            ),\n        ],\n    ),\n    (\n        \"docs/rust-rewrite/a06/coverage.json\",\n        \"92686ed70979a698b0dab3414cad813198b720fe586421062db8a4cef5102d9b\",\n        &[(\"crates/ssx-infra/tests/support/a07_source_replay.rs\", 9170)],\n    ),\n    (\n        \"docs/rust-rewrite/a07/coverage.json\",\n        \"3356fa8d6933418a666af2642d1c95705f76d60cf1d8306024a7e7f82d0718d2\",\n        &[(\"docs/rust-rewrite/CASE_STUDY.md\", 21096)],\n    ),\n    (\n        \"docs/rust-rewrite/a08/coverage.json\",\n        \"4bd65113eded80d605b3fede32f9cb5e97d12b47c4b1756314ed28757f653856\",\n        &[(\"docs/rust-rewrite/CASE_STUDY.md\", 21096)],\n    ),\n    (\n        \"docs/rust-rewrite/a09/coverage.json\",\n        \"3dfa3fc89150ba579ee377c730fce66134125c502ab07c624dd6a8768662ef89\",\n        &[(\"docs/rust-rewrite/CASE_STUDY.md\", 21096)],\n    ),\n    (\n        \"docs/rust-rewrite/a10/qualification.json\",\n        \"abd85bf644e311c4f6ed00f1e1315e788a930d937c017ecec7f3befeb378c01a\",\n        &[\n            (\"crates/ssx-domain/src/records.rs\", 11011),\n            (\n                \"crates/ssx-infra/src/adapters/vulnerability_tests.rs\",\n                36757,\n            ),\n            (\"crates/ssx-infra/tests/a10_factories.rs\", 24508),\n        ],\n    ),\n    (\n        \"docs/rust-rewrite/a11/qualification.json\",\n        \"89f816f2bc3333233434dcdbf706eab80387124889923658941682d4668352f3\",\n        &[\n            (\"crates/ssx-domain/src/records.rs\", 11011),\n            (\"crates/ssx-infra/tests/a11_factories.rs\", 37305),\n            (\"crates/ssx-infra/tests/a11_replay.rs\", 23066),\n        ],\n    ),\n    (\n        \"docs/rust-rewrite/a12/qualification-v1.json\",\n        \"f55413a595d927c7450b942bc4b545b8db8401e8a9f730e9321680d63bf5ca39\",\n        &[\n            (\"crates/ssx-domain/src/records.rs\", 11011),\n            (\"docs/rust-rewrite/CASE_STUDY.md\", 21096),\n        ],\n    ),\n];\nfn page_inventory(container: &str) -> (&'static str, bool) {\n    match container {\n        \"docs/rust-rewrite/a06/coverage.json\" => (\"artifacts\", false),\n        \"docs/rust-rewrite/a07/coverage.json\"\n        | \"docs/rust-rewrite/a08/coverage.json\"\n        | \"docs/rust-rewrite/a09/coverage.json\" => (\"source_inventory\", false),\n        \"docs/rust-rewrite/a10/qualification.json\" | \"docs/rust-rewrite/a11/qualification.json\" => {\n            (\"owned_sources\", false)\n        }\n        \"docs/rust-rewrite/a12/qualification-v1.json\" => (\"sources\", false),\n        _ => (\"sources\", true),\n    }\n}\nfn page_proof_selected(container: &str, source: &str) -> bool {\n    PAGE_PROOF_CONTEXTS\n        .iter()\n        .any(|(c, _, paths)| *c == container && paths.iter().any(|(path, _)| *path == source))\n}\nfn page_proof_try_verify(\n    root: &Path,\n    container: &str,\n    container_sha: &str,\n    source: &str,\n    expected: &str,\n    bytes: Option<usize>,\n) -> Option<Result<(), String>> {\n    let (_, sealed_sha, paths) = PAGE_PROOF_CONTEXTS.iter().find(|r| r.0 == container)?;\n    let &(_, len) = paths.iter().find(|(path, _)| *path == source)?;\n    Some((|| {\n        let (field, sized) = page_inventory(container);\n        need(\n            container_sha == *sealed_sha && bytes == sized.then_some(len),\n            \"exact Page proof container/size caller\",\n        )?;\n        let raw = historical_caller(root, container, container_sha)?;\n        need(\n            digest(&raw) == *sealed_sha && permissions(&root.join(container))? == \"0644\",\n            \"authenticated Page proof container\",\n        )?;\n        let doc: Value = serde_json::from_slice(&raw).map_err(|e| e.to_string())?;\n        let rows = doc[field]\n            .as_array()\n            .ok_or(\"Page proof source inventory absent\")?\n            .iter()\n            .filter(|r| r[\"path\"] == source)\n            .collect::<Vec<_>>();\n        need(\n            rows.len() == 1\n                && rows[0][\"sha256\"] == expected\n                && rows[0][\"bytes\"].as_u64() == bytes.map(|n| n as u64),\n            \"exact original Page proof source tuple\",\n        )?;\n        if !sized {\n            let mut exact = json!({\"path\":source,\"sha256\":expected});\n            if container == \"docs/rust-rewrite/a07/coverage.json\"\n                || container == \"docs/rust-rewrite/a08/coverage.json\"\n            {\n                exact[\"git_blob\"] = json!(\"d609376fa8a8dba26de1d941a60351915f2b1687\");\n            }\n            need(*rows[0] == exact, \"exact unsized Page proof row shape\")?;\n        }\n        let caller = json!({\"path\":source,\"sha256\":expected,\"bytes\":len,\"mode\":\"0644\"});\n        let prior = native_search::page_prior(root, &caller, None)?\n            .ok_or(\"Page proof operand not selected\")?;\n        need(\n            digest(&prior) == expected && prior.len() == len,\n            \"Page proof exact original material\",\n        )\n    })())\n}\npub(crate) fn page_proof_controls(root: &Path) -> Result<(), String> {\n    let mut pairs = 0;\n    for &(container, sha, paths) in PAGE_PROOF_CONTEXTS {\n        let raw = historical_caller(root, container, sha)?;\n        let doc: Value = serde_json::from_slice(&raw).map_err(|e| e.to_string())?;\n        let (field, sized) = page_inventory(container);\n        for &(path, len) in paths {\n            pairs += 1;\n            let rows = doc[field]\n                .as_array()\n                .ok_or(\"Page controls source inventory\")?\n                .iter()\n                .filter(|r| r[\"path\"] == path)\n                .collect::<Vec<_>>();\n            need(rows.len() == 1, \"Page controls exact source\")?;\n            let expected = text(rows[0], \"sha256\")?;\n            let size = sized.then_some(len);\n            page_proof_try_verify(root, container, sha, path, expected, size)\n                .ok_or(\"Page positive route absent\")??;\n            // Positive is in the caller's exact frame before each refusal family.\n            for (hash, source_hash, changed_size) in [\n                (\"wrong\", expected, size),\n                (sha, \"wrong\", size),\n                (sha, expected, if sized { None } else { Some(len) }),\n                (sha, expected, Some(0)),\n            ] {\n                need(\n                    page_proof_try_verify(root, container, hash, path, source_hash, changed_size)\n                        .ok_or(\"Page negative route lost\")?\n                        .is_err(),\n                    \"altered Page proof caller accepted\",\n                )?;\n            }\n        }\n        need(\n            page_proof_try_verify(root, container, sha, \"unlisted.rs\", \"wrong\", None).is_none(),\n            \"unlisted Page proof source selected\",\n        )?;\n    }\n    need(pairs == 20, \"closed twenty Page proof pairs\")\n"
+          }
+        ]
+      }
+    },
+    {
+      "current": {
+        "path": "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+        "sha256": "2f1dffa61fde9af0a4a607ca67706bc3396faf0fb88e3896b5cbd5763b679b79",
+        "bytes": 42830,
+        "mode": "0644",
+        "git_blob": "7260ac4f2fc3ee695f8285d1ff8ed2825d176b0e"
+      },
+      "page": {
+        "prior": {
+          "path": "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+          "sha256": "c25170f41dc041b4a1deb83e59e91ae3889c3d8860707157acb0fadc231912d9",
+          "bytes": 41241,
+          "mode": "0644",
+          "git_blob": "9cb4668d1b7a1420e6e5d711ddb65d354e1f66f0"
+        },
+        "current": {
+          "path": "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+          "sha256": "2f1dffa61fde9af0a4a607ca67706bc3396faf0fb88e3896b5cbd5763b679b79",
+          "bytes": 42830,
+          "mode": "0644",
+          "git_blob": "7260ac4f2fc3ee695f8285d1ff8ed2825d176b0e"
+        },
+        "edits": [
+          {
+            "at": 231,
+            "remove_utf8": "",
+            "insert_utf8": "#[path = \"../../snapshot-fixture-amendment/main-custody.rs\"]\nmod snapshot_fixture_main;\n"
+          },
+          {
+            "at": 30692,
+            "remove_utf8": "    let actual = if path == PAGE_SEARCH.path {\n",
+            "insert_utf8": "    let joint = if path == \"crates/xtask/src/main.rs\" {\n        snapshot_fixture_main::joint(root, &actual)?\n    } else if path == PAGE_SEARCH.path {\n"
+          },
+          {
+            "at": 30796,
+            "remove_utf8": "        actual\n",
+            "insert_utf8": "        actual.clone()\n"
+          },
+          {
+            "at": 30818,
+            "remove_utf8": "    let w07 = inverse(r, &actual, mode, &r.w07)?;\n    let t02 = inverse(r, &actual, mode, &r.t02)?;\n",
+            "insert_utf8": "    let w07 = inverse(r, &joint, mode, &r.w07)?;\n    let t02 = inverse(r, &joint, mode, &r.t02)?;\n"
+          },
+          {
+            "at": 31003,
+            "remove_utf8": "",
+            "insert_utf8": "}\n/// Ordinary controls for the shared owner's test wrapper, without discovered tests.\n#[cfg(test)]\n#[allow(dead_code)]\npub(crate) fn snapshot_fixture_main_controls(root: &Path) -> Result<()> {\n    snapshot_fixture_main::controls(root)\n"
+          },
+          {
+            "at": 32518,
+            "remove_utf8": "",
+            "insert_utf8": "        let joint = if r.path == \"crates/xtask/src/main.rs\" {\n            snapshot_fixture_main::joint(root, &actual)?\n        } else if r.path == PAGE_SEARCH.path {\n            search_frame(&actual, mode, false)?\n        } else {\n            actual.clone()\n        };\n"
+          },
+          {
+            "at": 32654,
+            "remove_utf8": "",
+            "insert_utf8": "            need(\n                inverse(r, &joint, mode, p)? == prior,\n                \"pure controls use the same authenticated logical joint frame\",\n            )?;\n"
+          },
+          {
+            "at": 33954,
+            "remove_utf8": "            let actual = if r.path == PAGE_SEARCH.path {\n                search_frame(&actual, mode, false)?\n            } else {\n                actual.clone()\n            };\n",
+            "insert_utf8": ""
+          },
+          {
+            "at": 34205,
+            "remove_utf8": "                    inverse(r, &actual, bad_mode, p).is_err(),\n",
+            "insert_utf8": "                    inverse(r, &joint, bad_mode, p).is_err(),\n"
+          },
+          {
+            "at": 35171,
+            "remove_utf8": "                            inverse_with_edits(r, &actual, mode, p, &edits).is_err(),\n",
+            "insert_utf8": "                            inverse_with_edits(r, &joint, mode, p, &edits).is_err(),\n"
+          },
+          {
+            "at": 35440,
+            "remove_utf8": "                let mut missing = actual.clone();\n",
+            "insert_utf8": "                let mut missing = joint.clone();\n"
+          },
+          {
+            "at": 35544,
+            "remove_utf8": "                let mut duplicate = actual.clone();\n",
+            "insert_utf8": "                let mut duplicate = joint.clone();\n"
+          },
+          {
+            "at": 35865,
+            "remove_utf8": "                        bad != actual && inverse(r, &bad, mode, p).is_err(),\n",
+            "insert_utf8": "                        bad != joint && inverse(r, &bad, mode, p).is_err(),\n"
+          },
+          {
+            "at": 37589,
+            "remove_utf8": "",
+            "insert_utf8": "    let capsule_relative = \"docs/rust-rewrite/snapshot-fixture-amendment/capsule.json\";\n    let capsule_path = owned.0.join(capsule_relative);\n    fs::create_dir_all(capsule_path.parent().ok_or(\"capsule parent\")?)\n        .map_err(|e| e.to_string())?;\n    fs::copy(root.join(capsule_relative), &capsule_path).map_err(|e| e.to_string())?;\n    fs::set_permissions(&capsule_path, fs::Permissions::from_mode(0o644))\n        .map_err(|e| e.to_string())?;\n"
+          },
+          {
+            "at": 38031,
+            "remove_utf8": "",
+            "insert_utf8": "        if r.path == \"crates/xtask/src/main.rs\" {\n            let old_joint = snapshot_fixture_main::joint(root, &actual)?;\n            fs::write(&path, &old_joint).map_err(|e| e.to_string())?;\n            need(\n                parent(&owned.0, r.path, &old_joint, Parent::W07).is_err(),\n                \"old joint physically substituted for new current\",\n            )?;\n            fs::write(&path, &actual).map_err(|e| e.to_string())?;\n        }\n"
+          }
+        ]
+      },
+      "snapshot": {
+        "prior": {
+          "path": "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+          "sha256": "750cdae474caa6cd47a572c26ebc0c245125e649b71dc11679ce3962f05f1db4",
+          "bytes": 33256,
+          "mode": "0644",
+          "git_blob": "ebd4558eee6a8bbb98e0f7edc57f8b85afcc2c6d"
+        },
+        "current": {
+          "path": "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs",
+          "sha256": "2f1dffa61fde9af0a4a607ca67706bc3396faf0fb88e3896b5cbd5763b679b79",
+          "bytes": 42830,
+          "mode": "0644",
+          "git_blob": "7260ac4f2fc3ee695f8285d1ff8ed2825d176b0e"
+        },
+        "edits": [
+          {
+            "at": 19580,
+            "remove_utf8": "",
+            "insert_utf8": "// Exact #1049 normal-merge search afterimage. Neither sealed parent is physical.\nconst PAGE_SEARCH: Row = Row {\n    path: \"crates/ssx-infra/src/search.rs\",\n    sha: \"8aa8ec89a6a45728f5ffd2818d2e9fed9b8d0a881c1e36418c95809d92dcb777\",\n    bytes: 90375,\n    w07: Prior {\n        commit: \"e9c5911a468b892fe2adef9027374cb867a2535d\",\n        sha: \"b74fc961b64cd2faced084c4894e8b4c5cd481642bc20fd9192ce7a37bcf0bbb\",\n        bytes: 90389,\n        blob: \"865a1887a76814c915a1400caff3377d7ce66ee5\",\n        edits: &[\n            (\n                51070,\n                \"            &request.page,\\n\",\n                \"            request.page,\\n\",\n            ),\n            (\n                51524,\n                \"            page: request.page.as_number().clone(),\\n\",\n                \"            page: i64::try_from(request.page).unwrap_or(i64::MAX),\\n\",\n            ),\n        ],\n    },\n    t02: Prior {\n        commit: \"ba70a3e78d947e4c187cfad734f5a40a2508a92e\",\n        sha: \"f67f3952bced1d7f115e0367e844e80a17dc8486ab80ffd2e8dba424f0427733\",\n        bytes: 86596,\n        blob: \"90354194004cd351685c3bed00f508b3dd36d7db\",\n        edits: &[\n            (\n                10435,\n                \"    /// Observe the caller's existing signal without creating an owner or task.\\n    pub async fn cancelled(&self) {\\n        cancelled(&mut self.0.subscribe()).await;\\n    }\\n\",\n                \"\",\n            ),\n            (\n                11122,\n                \"/// Trusted, bounded, in-memory current policy. Never caller input or I/O.\\npub trait CurrentPolicy: Send + Sync {\\n    fn current(&self) -> PolicyService;\\n}\\n\",\n                \"\",\n            ),\n            (\n                11293,\n                \"    policy_source: Option<Arc<dyn CurrentPolicy>>,\\n\",\n                \"\",\n            ),\n            (\n                18025,\n                \"    /// Install only before sharing, with the exact initial dependency policy.\\n    /// Dynamic consumers still use the existing shared policy methods.\\n    pub fn with_policy_source(\\n        mut self,\\n        source: Arc<dyn CurrentPolicy>,\\n    ) -> Result<Self, SearchError> {\\n        let inner = Arc::get_mut(&mut self.0).ok_or(SearchError::InvalidConfiguration)?;\\n        if format!(\\\"{:?}\\\", source.current()) != format!(\\\"{:?}\\\", inner.deps.policy) {\\n            return Err(SearchError::InvalidConfiguration);\\n        }\\n        inner.policy_source = Some(source);\\n        Ok(self)\\n    }\\n\",\n                \"\",\n            ),\n            (20994, \"            policy_source: None,\\n\", \"\"),\n            (\n                21845,\n                \"        let mut policy = self\\n            .0\\n            .policy_source\\n            .as_ref()\\n            .map_or_else(|| self.0.deps.policy.clone(), |source| source.current());\\n\",\n                \"        let mut policy = self.0.deps.policy.clone();\\n\",\n            ),\n            (\n                82180,\n                \"    #[test]\\n    fn current_policy_source_is_construction_only_and_preserves_default_generation() {\\n        struct Current(std::sync::RwLock<PolicyService>);\\n        impl CurrentPolicy for Current {\\n            fn current(&self) -> PolicyService {\\n                self.0.read().unwrap().clone()\\n            }\\n        }\\n        let policy = PolicyService {\\n            policy: SearchPolicy::default(),\\n            catalog: CatalogSnapshot::new(vec![]).unwrap(),\\n            resolver: ScopeResolver::default(),\\n        };\\n        let current = Arc::new(Current(std::sync::RwLock::new(policy.clone())));\\n        let service = SearchService::new(\\n            SearchConfig::default(),\\n            SearchDependencies {\\n                policy: policy.clone(),\\n                engines: BTreeMap::new(),\\n                routing_identity: RoutingIdentity {\\n                    catalog: None,\\n                    sensitive: Default::default(),\\n                    tier1: Default::default(),\\n                    budget: None,\\n                    ranking_strategy: \\\"presence\\\".into(),\\n                    work_group_version: \\\"scholarly-work-v3\\\".into(),\\n                    rerank_identity: None,\\n                    routing_extension: None,\\n                },\\n                cache: None,\\n                client_admission: None,\\n                suggestions: None,\\n                jev: None,\\n                routing_cache: None,\\n                metrics: Arc::new(NoopSink),\\n                supervisor: Arc::new(NoopSink),\\n                audit: Arc::new(NoopSink),\\n                cooldowns: None,\\n                owned_http: vec![],\\n                owned_stores: vec![],\\n                clock: Arc::new(SystemSearchClock),\\n                reranker: None,\\n            },\\n        )\\n        .unwrap();\\n        assert_eq!(\\n            format!(\\n                \\\"{:?}\\\",\\n                service\\n                    .current_policy(WallClockTimestamp::new(1.0).unwrap())\\n                    .unwrap()\\n            ),\\n            format!(\\\"{policy:?}\\\")\\n        );\\n        let service = service.with_policy_source(current.clone()).unwrap();\\n        current.0.write().unwrap().policy.sensitive_allowed = true;\\n        assert!(\\n            service\\n                .current_policy(WallClockTimestamp::new(1.0).unwrap())\\n                .unwrap()\\n                .policy\\n                .sensitive_allowed\\n        );\\n        assert!(!service.0.deps.policy.policy.sensitive_allowed);\\n        let clone = service.clone();\\n        assert!(matches!(\\n            service.with_policy_source(current),\\n            Err(SearchError::InvalidConfiguration)\\n        ));\\n        drop(clone);\\n    }\\n\\n\",\n                \"\",\n            ),\n        ],\n    },\n};\nfn search_frame(actual: &[u8], mode: u32, page: bool) -> Result<Vec<u8>> {\n    inverse(\n        &PAGE_SEARCH,\n        actual,\n        mode,\n        if page {\n            &PAGE_SEARCH.t02\n        } else {\n            &PAGE_SEARCH.w07\n        },\n    )\n}\n/// Authenticate the same physical buffer before recovering the frozen page afterimage.\npub(crate) fn page_current(root: &Path, path: &str, supplied: &[u8]) -> Result<Vec<u8>> {\n    need(path == PAGE_SEARCH.path, \"closed page/search caller\")?;\n    let (actual, mode) = read(root, &PAGE_SEARCH)?;\n    need(supplied == actual, \"page/search supplied physical identity\")?;\n    let prior = search_frame(&actual, mode, true)?;\n    let p = &PAGE_SEARCH.t02;\n    for (args, wanted) in [\n        (\n            vec![\"show\".to_owned(), format!(\"{}:{path}\", p.commit)],\n            prior.clone(),\n        ),\n        (\n            vec![\n                \"ls-tree\".to_owned(),\n                p.commit.to_owned(),\n                \"--\".to_owned(),\n                path.to_owned(),\n            ],\n            format!(\"100644 blob {}\\t{path}\\n\", p.blob).into_bytes(),\n        ),\n    ] {\n        let out = Command::new(\"git\")\n            .args(args)\n            .current_dir(root)\n            .output()\n            .map_err(|e| e.to_string())?;\n        need(\n            out.status.success() && out.stdout == wanted,\n            \"page/search exact parent Git bytes/mode/blob\",\n        )?;\n    }\n    Ok(prior)\n}\nfn page_search_controls(root: &Path) -> Result<()> {\n    let (actual, mode) = read(root, &PAGE_SEARCH)?;\n    let w07 = search_frame(&actual, mode, false)?;\n    for old in [&w07, &search_frame(&actual, mode, true)?] {\n        need(\n            page_current(root, PAGE_SEARCH.path, old).is_err(),\n            \"either sealed parent supplied as physical page current\",\n        )?;\n        for kind in [Parent::W07, Parent::T02] {\n            need(\n                parent(root, PAGE_SEARCH.path, old, kind).is_err(),\n                \"either sealed parent supplied as physical joint current\",\n            )?;\n        }\n    }\n    let prior = page_current(root, PAGE_SEARCH.path, &actual)?;\n    need(\n        page_current(root, PAGE_SEARCH.path, &prior).is_err(),\n        \"page parent supplied as physical\",\n    )?;\n    need(\n        page_current(root, \"Cargo.lock\", &actual).is_err(),\n        \"wrong page/search caller\",\n    )?;\n    for p in [&PAGE_SEARCH.w07, &PAGE_SEARCH.t02] {\n        inverse(&PAGE_SEARCH, &actual, mode, p)?;\n        for bad_mode in [0o600, 0o755, 0o4644] {\n            need(\n                inverse(&PAGE_SEARCH, &actual, bad_mode, p).is_err(),\n                \"page/search wrong mode\",\n            )?;\n        }\n        let mut changed = actual.clone();\n        changed.push(b' ');\n        need(\n            inverse(&PAGE_SEARCH, &changed, mode, p).is_err(),\n            \"unlisted page/search change\",\n        )?;\n        for i in 0..p.edits.len() {\n            let mut omitted = p.edits.to_vec();\n            omitted.remove(i);\n            let mut duplicate = p.edits.to_vec();\n            duplicate.insert(i, p.edits[i]);\n            let mut moved = p.edits.to_vec();\n            moved[i].0 += 1;\n            for bad in [omitted, duplicate, moved] {\n                need(\n                    inverse_with_edits(&PAGE_SEARCH, &actual, mode, p, &bad).is_err(),\n                    \"page/search missing duplicate moved span\",\n                )?;\n            }\n        }\n    }\n    Ok(())\n}\n\n"
+          },
+          {
+            "at": 21697,
+            "remove_utf8": "",
+            "insert_utf8": "    } else if path == PAGE_SEARCH.path {\n        search_frame(&actual, mode, false)?\n"
+          },
+          {
+            "at": 23423,
+            "remove_utf8": "",
+            "insert_utf8": "    page_search_controls(root)?;\n"
+          },
+          {
+            "at": 23760,
+            "remove_utf8": "",
+            "insert_utf8": "        } else if r.path == PAGE_SEARCH.path {\n            search_frame(&actual, mode, false)?\n"
+          },
+          {
+            "at": 23951,
+            "remove_utf8": "",
+            "insert_utf8": "            need(\n                inverse(r, &joint, mode, p)? == prior,\n                \"pure controls use the same authenticated logical joint frame\",\n            )?;\n"
+          }
+        ]
+      }
+    }
+  ],
+  "registry": {
+    "current": {
+      "path": "docs/rust-rewrite/w07/qualification-completion-v1.json",
+      "sha256": "a8b900be65b70bc6a4f382c25d0cabfb667408d81ddf793c80e2f807d268ed80",
+      "bytes": 21848,
+      "mode": "0644",
+      "git_blob": "0148b9e2b47bb6556c06a5a80d41ab6d43a4fd64"
+    },
+    "page": {
+      "prior": {
+        "path": "docs/rust-rewrite/w07/qualification-completion-v1.json",
+        "sha256": "ac8a303da87fc2026fb5cf17c36c8c170ed3805d5f96d3fed5002a81b80b4c8a",
+        "bytes": 21848,
+        "mode": "0644",
+        "git_blob": "682628872233903332d8ea0ae155370a845a901f"
+      },
+      "current": {
+        "path": "docs/rust-rewrite/w07/qualification-completion-v1.json",
+        "sha256": "a8b900be65b70bc6a4f382c25d0cabfb667408d81ddf793c80e2f807d268ed80",
+        "bytes": 21848,
+        "mode": "0644",
+        "git_blob": "0148b9e2b47bb6556c06a5a80d41ab6d43a4fd64"
+      },
+      "edits": [
+        {
+          "at": 18748,
+          "remove_utf8": "    \"docs/rust-rewrite/a06/source-amendments/shared-successor.rs\": \"c173b839bab843a0945c8ff1b5b3b8a67193dc92f8a22aa4e5cd980c5e71a213\",\n",
+          "insert_utf8": "    \"docs/rust-rewrite/a06/source-amendments/shared-successor.rs\": \"fbcdd42cd71deb58a56aed84a004029aa37344d6e8f448175472f4cf8ce1186b\",\n"
+        },
+        {
+          "at": 20567,
+          "remove_utf8": "    \"docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs\": \"c25170f41dc041b4a1deb83e59e91ae3889c3d8860707157acb0fadc231912d9\",\n",
+          "insert_utf8": "    \"docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs\": \"2f1dffa61fde9af0a4a607ca67706bc3396faf0fb88e3896b5cbd5763b679b79\",\n"
+        }
+      ]
+    },
+    "snapshot": {
+      "prior": {
+        "path": "docs/rust-rewrite/w07/qualification-completion-v1.json",
+        "sha256": "5be08978822440ec7bece674b13647c6337eaa4636cc232a1622738a90ac1b64",
+        "bytes": 21848,
+        "mode": "0644",
+        "git_blob": "f8326efbc96af5f884d0321bd5714923ab036b5e"
+      },
+      "current": {
+        "path": "docs/rust-rewrite/w07/qualification-completion-v1.json",
+        "sha256": "a8b900be65b70bc6a4f382c25d0cabfb667408d81ddf793c80e2f807d268ed80",
+        "bytes": 21848,
+        "mode": "0644",
+        "git_blob": "0148b9e2b47bb6556c06a5a80d41ab6d43a4fd64"
+      },
+      "edits": [
+        {
+          "at": 14828,
+          "remove_utf8": "    \"crates/ssx-infra/src/search.rs\": \"b74fc961b64cd2faced084c4894e8b4c5cd481642bc20fd9192ce7a37bcf0bbb\",\n",
+          "insert_utf8": "    \"crates/ssx-infra/src/search.rs\": \"8aa8ec89a6a45728f5ffd2818d2e9fed9b8d0a881c1e36418c95809d92dcb777\",\n"
+        },
+        {
+          "at": 18748,
+          "remove_utf8": "    \"docs/rust-rewrite/a06/source-amendments/shared-successor.rs\": \"7825c39c9d264b11170e3ab749249b266e5a530450d3cdcdf4ef076e4545a3e2\",\n",
+          "insert_utf8": "    \"docs/rust-rewrite/a06/source-amendments/shared-successor.rs\": \"fbcdd42cd71deb58a56aed84a004029aa37344d6e8f448175472f4cf8ce1186b\",\n"
+        },
+        {
+          "at": 20567,
+          "remove_utf8": "    \"docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs\": \"2d89ad90459a297bb48196704c334a12103cfd66cc782aa98e91be32176763a6\",\n    \"docs/rust-rewrite/a06/source-amendments/native-search-reader.rs\": \"ab57dc81c307e44392b1299b6153923e700dbb9cef56ae3d8ec1c516226387c4\",\n    \"docs/rust-rewrite/a06/source-amendments/post-a06-generation.rs\": \"6c0c9128694f6d84daa85bc97f18b0137db2b985859502dca367439d924fe80c\",\n",
+          "insert_utf8": "    \"docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs\": \"2f1dffa61fde9af0a4a607ca67706bc3396faf0fb88e3896b5cbd5763b679b79\",\n    \"docs/rust-rewrite/a06/source-amendments/native-search-reader.rs\": \"bc678e7fc47ec3ec06d6d55e13e3eed87f963f1c0bee8ef47b84f28641d3257c\",\n    \"docs/rust-rewrite/a06/source-amendments/post-a06-generation.rs\": \"8ab186367b6b6e535c296ecf376fa83e9d5325a5a65b8da9fda8ce408d804aa9\",\n"
+        }
+      ]
+    }
+  }
+}

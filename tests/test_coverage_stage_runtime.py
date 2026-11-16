@@ -14,6 +14,7 @@ from scripts import coverage_stage_orchestration as orchestration
 from scripts import coverage_stage_runtime as runtime
 from scripts.coverage_native_grader_handoff import NativeGraderHandoff
 from tests.test_coverage_answer_execution import _tasks
+from tests.test_coverage_assessment_packets import _fixture as prepared_assessment_fixture
 from tests.test_coverage_stage_orchestration import plan_fixture
 
 
@@ -268,11 +269,12 @@ class StageRuntimeWiringTests(unittest.IsolatedAsyncioTestCase):
     async def test_reference_grader_handoff_uses_packet_stage_identity(self):
         with tempfile.TemporaryDirectory() as temporary:
             plan = plan_fixture()
+            prepared_packets, _captures = prepared_assessment_fixture()
+            plan = replace(plan, packet_stage_uuid=prepared_packets.packet_stage_uuid)
             bindings = _bindings(Path(temporary))
             expected = (object(),)
             with mock.patch.object(bindings.native_handoff, "collect", return_value=expected) as collect:
                 executors = runtime.build_stage_executors(plan, bindings)
-                prepared_packets = object()
                 result = await executors.grade_references(prepared_packets)
 
             self.assertIs(result, expected)

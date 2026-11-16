@@ -1,0 +1,82 @@
+{
+  "baseline": "7ae6e634831a12528b983cc5d5dd722c25618a71",
+  "revision": "v3 exact pinned formatting of v2 recovery-success oracle; runtime logic from v1",
+  "publishable_files": [
+    {
+      "path": "crates/ssx-infra/src/research_planning.rs",
+      "sha256": "9029a36140b78fe493f2777cd5b8e712b18568d875b21b7d86431d3ae81bd890",
+      "bytes": 93067
+    },
+    {
+      "path": "crates/ssx-mcp/src/research_planning.rs",
+      "sha256": "7b1350cb9b4073d22cef9020c9ebd029e7ed1de904c4271647ecd360ae1ee2d1",
+      "bytes": 15579
+    },
+    {
+      "path": "crates/ssx-mcp/tests/w03.rs",
+      "sha256": "4885829a3da4be9abc0a287952fa5441a15e192f074608736e1c77a3dc399496",
+      "bytes": 48974
+    },
+    {
+      "path": "crates/ssx-mcp/tests/w03_support/mod.rs",
+      "sha256": "21dd16999331336a5f9520441f3996fee78f955527b41fc935b057cd3b85f2f3",
+      "bytes": 1771
+    },
+    {
+      "path": "crates/xtask/src/w03.rs",
+      "sha256": "e2930e02076a03dc89ec2ef8629afb68d08f15bf7857620db3d1bf9dc106afce",
+      "bytes": 19933
+    },
+    {
+      "path": "docs/rust-rewrite/w03/native-tests.json",
+      "sha256": "6e9c23bcea1aca7d9b68a0b8e1e103d5e85472eeddcaf810e55818ded071f6e3",
+      "bytes": 11006
+    }
+  ],
+  "complete_source_paths_per_side": 7552,
+  "old": {
+    "actual_exit": 101,
+    "actual_peak": 4,
+    "configured_workers": 1,
+    "first_failure": "named worker-bound assertion reached after explicit cleanup",
+    "N2": "not executed after expected N1 red"
+  },
+  "new": {
+    "actual_exit": 0,
+    "configured_workers_tested": [
+      1,
+      2
+    ],
+    "recovery": "succeeded job, done query/attempt, one result/cursor/admitted identity, exact conserved charges, cold +1 provider and restart +retained-queue provider calls",
+    "MCP_inventory": "all six passed; all five historical names retained"
+  },
+  "checks": {
+    "old-selected": 101,
+    "new-selected": 0,
+    "all6-mcp": 0,
+    "W02": 0,
+    "W03": 0,
+    "fmtcheck": 0,
+    "workspace-all-target-build": 0,
+    "workspace-all-target-clippy": 0
+  },
+  "all_source_bytes_after_checks": "full7552 maps matched each side",
+  "live_worktree_status": "## codex/rust-w03-adaptive-planning...origin/codex/rust-w03-adaptive-planning",
+  "prior_failures_preserved": [
+    "v1 quoted-path verifier failure before Rust",
+    "v1 first tank-target sandbox denial before compilation",
+    "v2 fmtcheck1 followed by explicitly approved scoped v3 pinned formatting",
+    "v3 unsuitable token verifier rejected trailing commas/closure braces before native v3 tests; replaced by isolated exact pinned formatter reproduction"
+  ],
+  "scope_limits": [
+    "one registry initial-start pool; independent registries and direct extend/retry are outside global bound",
+    "two sessions submit sequential starts; initialization contention is statically synchronized but not forced by test barrier",
+    "shutdown interrupts owned work and retains durable accounting; untouched queued jobs recover successfully",
+    "no live providers, production, source captures, live branch edits, commits or publication"
+  ],
+  "binary_archives": [
+    "/private/tmp/w03-workerpool-pair-v1/v3/old-binaries",
+    "/private/tmp/w03-workerpool-pair-v1/v3/new-binaries"
+  ],
+  "root_authority": "root owns exact-byte final acceptance, integration, commit and publication"
+}

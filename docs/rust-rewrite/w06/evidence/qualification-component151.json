@@ -1,0 +1,473 @@
+{
+  "schema_version": 1,
+  "plan_id": "W06",
+  "source_cases": [
+    "plan.valid",
+    "plan.valid_single",
+    "plan.valid_filters",
+    "plan.query_blank",
+    "plan.query_too_long",
+    "plan.objectives_extra",
+    "plan.expansion_missing",
+    "plan.expansion_without_scope",
+    "plan.filters_unknown",
+    "plan.filters_safesearch",
+    "plan.filters_freshness",
+    "plan.filters_time_range",
+    "plan.language_nonstring_source_accepts",
+    "plan.scope_empty",
+    "plan.fallback_empty_dict",
+    "plan.scope_both",
+    "plan.scope_duplicate",
+    "plan.scope_unknown",
+    "plan.scope_intent_media",
+    "plan.scope_overlap",
+    "plan.scope_exceeds_calls",
+    "plan.strict_full_scope",
+    "plan.order_query_before_objectives",
+    "plan.order_deadline_before_calls",
+    "plan.order_expansion_before_filters",
+    "plan.order_overlap_before_budget_strict",
+    "plan.deadline_ms_0",
+    "plan.deadline_ms_1",
+    "plan.deadline_ms_2",
+    "plan.deadline_ms_3",
+    "plan.deadline_ms_4",
+    "plan.deadline_ms_5",
+    "plan.max_engine_calls_0",
+    "plan.max_engine_calls_1",
+    "plan.max_engine_calls_2",
+    "plan.max_engine_calls_3",
+    "plan.max_engine_calls_4",
+    "plan.max_engine_calls_5",
+    "plan.operator_cap",
+    "runner.nonempty",
+    "runner.clean_empty",
+    "runner.clean_empty_single",
+    "runner.fallback_nonempty",
+    "runner.fallback_clean_empty",
+    "runner.cached_empty",
+    "runner.partial_empty",
+    "runner.deadline_empty",
+    "runner.error_empty",
+    "runner.missing_outcomes",
+    "runner.wrong_engine_ok",
+    "runner.nonempty_partial",
+    "runner.nonempty_error",
+    "runner.nonempty_deadline",
+    "runner.nonempty_missing_outcomes",
+    "runner.absolute_deadline",
+    "runner.execution_exception",
+    "runner.initial_policy_rejection",
+    "runner.deadline_before_dispatch",
+    "runner.deadline_after_renewal",
+    "runner.renewal_lost",
+    "source.valid_historical_query",
+    "source.missing",
+    "source.truncated",
+    "source.report_size",
+    "source.incomparable",
+    "source.reasons",
+    "source.blank_query",
+    "source.nonstring_query",
+    "source.missing_engines",
+    "source.empty_engines",
+    "source.grant_denied",
+    "source.store_unavailable",
+    "source.report_scope_revoked",
+    "source.malformed_id",
+    "replay.same",
+    "replay.query",
+    "replay.requested_objectives",
+    "replay.scope_order",
+    "replay.fallback",
+    "replay.consent",
+    "replay.filters",
+    "replay.normalized_default_filters",
+    "replay.narrowed_cap_rejects_after_equivalence",
+    "replay.source_resolution_before_lookup",
+    "replay.query_source_conflict_before_resolution",
+    "retained.explicit_active_removed",
+    "retained.explicit_auth_missing",
+    "retained.explicit_circuit_open",
+    "retained.explicit_health_unavailable",
+    "retained.explicit_disabled",
+    "retained.explicit_unknown",
+    "retained.explicit_sensitive_denied",
+    "retained.explicit_sensitive_allowed",
+    "retained.unused_fallback_sensitive_denied",
+    "retained.intent_routing_active_changed",
+    "retained.intent_jobs_grant_revoked",
+    "retained.staged_grant_revoked",
+    "retained.operator_cap_narrowed"
+  ],
+  "native_cases": [
+    "native.nonempty_initial_real_acquisition_snapshot_fence_replay",
+    "native.clean_empty_runs_disjoint_fallback_with_owned_histories",
+    "native.failed_empty.error",
+    "native.failed_empty.timeout",
+    "native.failed_empty.blocked",
+    "native.failed_empty.mixed_partial",
+    "native.cached_empty_never_authorizes_fallback_observed_zero",
+    "native.preview_strict_integer_scope_filters_and_replay_identity",
+    "hardening.language.null",
+    "hardening.language.bool",
+    "hardening.language.integer",
+    "hardening.language.list",
+    "hardening.language.map",
+    "native.acknowledged_deadline_budget_claims_and_recovery_are_not_inferred",
+    "native.duplicate_owners_and_index_loss_conserve_unknown_retry_budgets",
+    "native.owned_shutdown_interrupts_blocked_renewal_and_preserves_shared_flights",
+    "native.policy_revocation_after_acquisition_retains_no_reference",
+    "native.saved_source_membership_lineage_replay_and_error_precedence",
+    "native.killed_native_owner_restart_preserves_identity_and_unknown_spend",
+    "render.runner.nonempty",
+    "render.runner.clean_empty",
+    "render.runner.clean_empty_single",
+    "render.runner.fallback_nonempty",
+    "render.runner.fallback_clean_empty",
+    "render.runner.cached_empty",
+    "render.runner.partial_empty",
+    "render.runner.deadline_empty",
+    "render.runner.error_empty",
+    "render.runner.missing_outcomes",
+    "render.runner.wrong_engine_ok",
+    "render.runner.nonempty_partial",
+    "render.runner.nonempty_error",
+    "render.runner.nonempty_deadline",
+    "render.runner.nonempty_missing_outcomes",
+    "render.runner.absolute_deadline",
+    "render.runner.execution_exception",
+    "render.runner.initial_policy_rejection",
+    "render.runner.deadline_before_dispatch",
+    "render.runner.deadline_after_renewal",
+    "render.runner.renewal_lost",
+    "native.renewal_reply_barrier_shutdown_is_joined_and_keeps_foreign_owner",
+    "native.snapshot_blocked_no_reference",
+    "native.snapshot_orphan_no_reference",
+    "native.save_unknown_reply",
+    "native.save_acknowledged",
+    "native.dropped_caller_owned_http_joined",
+    "native.background_discovery_index_loss",
+    "native.deadline_after_renewal_no_dispatch",
+    "native.initial_policy_rejection_cleanup",
+    "native.recovery_ack_exact_once",
+    "native.recovery_unknown_reply",
+    "native.retained_reads_and_replay_preserve_evidence_without_authorizing_dispatch",
+    "native.claim_acknowledged_vs_unknown"
+  ],
+  "targets": [
+    {
+      "package": "ssx-application",
+      "target": "w06",
+      "tests": [
+        {
+          "name": "source_plans_preserve_full_outcomes_and_identity_bytes",
+          "cases": [
+            "plan.valid",
+            "plan.valid_single",
+            "plan.valid_filters",
+            "plan.query_blank",
+            "plan.query_too_long",
+            "plan.objectives_extra",
+            "plan.expansion_missing",
+            "plan.expansion_without_scope",
+            "plan.filters_unknown",
+            "plan.filters_safesearch",
+            "plan.filters_freshness",
+            "plan.filters_time_range",
+            "plan.language_nonstring_source_accepts",
+            "plan.scope_empty",
+            "plan.fallback_empty_dict",
+            "plan.scope_both",
+            "plan.scope_duplicate",
+            "plan.scope_unknown",
+            "plan.scope_intent_media",
+            "plan.scope_overlap",
+            "plan.scope_exceeds_calls",
+            "plan.strict_full_scope",
+            "plan.order_query_before_objectives",
+            "plan.order_deadline_before_calls",
+            "plan.order_expansion_before_filters",
+            "plan.order_overlap_before_budget_strict",
+            "plan.deadline_ms_0",
+            "plan.deadline_ms_1",
+            "plan.deadline_ms_2",
+            "plan.deadline_ms_3",
+            "plan.deadline_ms_4",
+            "plan.deadline_ms_5",
+            "plan.max_engine_calls_0",
+            "plan.max_engine_calls_1",
+            "plan.max_engine_calls_2",
+            "plan.max_engine_calls_3",
+            "plan.max_engine_calls_4",
+            "plan.max_engine_calls_5",
+            "plan.operator_cap"
+          ]
+        },
+        {
+          "name": "source_completion_preserves_full_records_and_dispatch_requests",
+          "cases": [
+            "runner.nonempty",
+            "runner.clean_empty",
+            "runner.clean_empty_single",
+            "runner.fallback_nonempty",
+            "runner.fallback_clean_empty",
+            "runner.cached_empty",
+            "runner.partial_empty",
+            "runner.deadline_empty",
+            "runner.error_empty",
+            "runner.missing_outcomes",
+            "runner.wrong_engine_ok",
+            "runner.nonempty_partial",
+            "runner.nonempty_error",
+            "runner.nonempty_deadline",
+            "runner.nonempty_missing_outcomes",
+            "runner.absolute_deadline",
+            "runner.execution_exception",
+            "runner.initial_policy_rejection",
+            "runner.deadline_before_dispatch",
+            "runner.deadline_after_renewal"
+          ]
+        },
+        {
+          "name": "source_replay_equivalence_preserves_original_requested_objectives",
+          "cases": [
+            "replay.same",
+            "replay.query",
+            "replay.requested_objectives",
+            "replay.scope_order",
+            "replay.fallback",
+            "replay.consent",
+            "replay.filters",
+            "replay.normalized_default_filters"
+          ]
+        },
+        {
+          "name": "source_retained_authority_preserves_full_policy_envelopes",
+          "cases": [
+            "retained.explicit_active_removed",
+            "retained.explicit_auth_missing",
+            "retained.explicit_circuit_open",
+            "retained.explicit_health_unavailable",
+            "retained.explicit_disabled",
+            "retained.explicit_unknown",
+            "retained.explicit_sensitive_denied",
+            "retained.explicit_sensitive_allowed",
+            "retained.unused_fallback_sensitive_denied",
+            "retained.intent_routing_active_changed",
+            "retained.intent_jobs_grant_revoked",
+            "retained.staged_grant_revoked",
+            "retained.operator_cap_narrowed"
+          ]
+        }
+      ],
+      "worker_probes": []
+    },
+    {
+      "package": "ssx-infra",
+      "target": "w06",
+      "tests": [
+        {
+          "name": "nonempty_initial_real_acquisition_snapshot_fence_replay",
+          "cases": [
+            "native.nonempty_initial_real_acquisition_snapshot_fence_replay"
+          ]
+        },
+        {
+          "name": "clean_empty_runs_disjoint_fallback_with_owned_histories",
+          "cases": [
+            "native.clean_empty_runs_disjoint_fallback_with_owned_histories"
+          ]
+        },
+        {
+          "name": "failed_empty_initial_never_authorizes_fallback",
+          "cases": [
+            "native.failed_empty.error",
+            "native.failed_empty.timeout",
+            "native.failed_empty.blocked",
+            "native.failed_empty.mixed_partial"
+          ]
+        },
+        {
+          "name": "cached_empty_never_authorizes_fallback_observed_zero",
+          "cases": [
+            "native.cached_empty_never_authorizes_fallback_observed_zero"
+          ]
+        },
+        {
+          "name": "preview_strict_integer_scope_filters_and_replay_identity",
+          "cases": [
+            "native.preview_strict_integer_scope_filters_and_replay_identity",
+            "hardening.language.null",
+            "hardening.language.bool",
+            "hardening.language.integer",
+            "hardening.language.list",
+            "hardening.language.map"
+          ]
+        },
+        {
+          "name": "acknowledged_deadline_budget_claims_and_recovery_are_not_inferred",
+          "cases": [
+            "native.acknowledged_deadline_budget_claims_and_recovery_are_not_inferred"
+          ]
+        },
+        {
+          "name": "duplicate_owners_and_index_loss_conserve_unknown_retry_budgets",
+          "cases": [
+            "native.duplicate_owners_and_index_loss_conserve_unknown_retry_budgets"
+          ]
+        },
+        {
+          "name": "owned_shutdown_interrupts_blocked_renewal_and_preserves_shared_flights",
+          "cases": [
+            "native.owned_shutdown_interrupts_blocked_renewal_and_preserves_shared_flights"
+          ]
+        },
+        {
+          "name": "policy_revocation_after_acquisition_retains_no_reference",
+          "cases": [
+            "native.policy_revocation_after_acquisition_retains_no_reference"
+          ]
+        },
+        {
+          "name": "saved_source_membership_lineage_replay_and_error_precedence",
+          "cases": [
+            "native.saved_source_membership_lineage_replay_and_error_precedence"
+          ]
+        },
+        {
+          "name": "killed_native_owner_restart_preserves_identity_and_unknown_spend",
+          "cases": [
+            "native.killed_native_owner_restart_preserves_identity_and_unknown_spend"
+          ]
+        },
+        {
+          "name": "source_rendered_responses_use_full_native_snapshots_and_shared_mcp_projection",
+          "cases": [
+            "render.runner.nonempty",
+            "render.runner.clean_empty",
+            "render.runner.clean_empty_single",
+            "render.runner.fallback_nonempty",
+            "render.runner.fallback_clean_empty",
+            "render.runner.cached_empty",
+            "render.runner.partial_empty",
+            "render.runner.deadline_empty",
+            "render.runner.error_empty",
+            "render.runner.missing_outcomes",
+            "render.runner.wrong_engine_ok",
+            "render.runner.nonempty_partial",
+            "render.runner.nonempty_error",
+            "render.runner.nonempty_deadline",
+            "render.runner.nonempty_missing_outcomes",
+            "render.runner.absolute_deadline",
+            "render.runner.execution_exception",
+            "render.runner.initial_policy_rejection",
+            "render.runner.deadline_before_dispatch",
+            "render.runner.deadline_after_renewal",
+            "render.runner.renewal_lost"
+          ]
+        },
+        {
+          "name": "source_saved_report_resolution_preserves_full_original_error_envelopes",
+          "cases": [
+            "source.valid_historical_query",
+            "source.missing",
+            "source.truncated",
+            "source.report_size",
+            "source.incomparable",
+            "source.reasons",
+            "source.blank_query",
+            "source.nonstring_query",
+            "source.missing_engines",
+            "source.empty_engines",
+            "source.grant_denied",
+            "source.store_unavailable",
+            "source.report_scope_revoked",
+            "source.malformed_id"
+          ]
+        },
+        {
+          "name": "source_replay_checks_requested_identity_and_resolves_sources_before_lookup",
+          "cases": [
+            "replay.narrowed_cap_rejects_after_equivalence",
+            "replay.source_resolution_before_lookup",
+            "replay.query_source_conflict_before_resolution"
+          ]
+        },
+        {
+          "name": "renewal_reply_barrier_shutdown_is_joined_and_keeps_foreign_owner",
+          "cases": [
+            "native.renewal_reply_barrier_shutdown_is_joined_and_keeps_foreign_owner"
+          ]
+        },
+        {
+          "name": "snapshot_reply_lease_loss_or_caller_drop_never_publishes_stale_reference",
+          "cases": [
+            "native.snapshot_blocked_no_reference",
+            "native.snapshot_orphan_no_reference"
+          ]
+        },
+        {
+          "name": "acknowledged_save_and_unknown_save_are_distinct_commit_races",
+          "cases": [
+            "native.save_unknown_reply",
+            "native.save_acknowledged"
+          ]
+        },
+        {
+          "name": "dropped_caller_cancels_and_joins_owned_http_without_closing_shared_search",
+          "cases": [
+            "native.dropped_caller_owned_http_joined"
+          ]
+        },
+        {
+          "name": "background_discovery_rebuilds_ready_index_and_joins_shutdown",
+          "cases": [
+            "native.background_discovery_index_loss"
+          ]
+        },
+        {
+          "name": "deadline_after_acknowledged_renewal_is_rechecked_without_dispatch",
+          "cases": [
+            "native.deadline_after_renewal_no_dispatch"
+          ]
+        },
+        {
+          "name": "initial_policy_rejection_closes_owned_claim_without_acquisition",
+          "cases": [
+            "native.initial_policy_rejection_cleanup"
+          ]
+        },
+        {
+          "name": "recovery_acknowledgments_are_exact_single_owner_and_unknown_reply_is_not_an_event",
+          "cases": [
+            "native.recovery_ack_exact_once",
+            "native.recovery_unknown_reply"
+          ]
+        },
+        {
+          "name": "retained_reads_and_replay_preserve_evidence_without_authorizing_dispatch",
+          "cases": [
+            "native.retained_reads_and_replay_preserve_evidence_without_authorizing_dispatch"
+          ]
+        },
+        {
+          "name": "source_initial_renewal_loss_preserves_full_claim_without_dispatch",
+          "cases": [
+            "runner.renewal_lost"
+          ]
+        },
+        {
+          "name": "claim_events_require_exact_acknowledgment_and_never_infer_lost_reply",
+          "cases": [
+            "native.claim_acknowledged_vs_unknown"
+          ]
+        }
+      ],
+      "worker_probes": [
+        "native_staged_owner_process_probe"
+      ]
+    }
+  ]
+}

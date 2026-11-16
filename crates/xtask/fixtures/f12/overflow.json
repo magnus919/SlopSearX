@@ -1,0 +1,110 @@
+{
+  "baseline": "6ae5e34fed19e8e9da7c19b95eeea894512f0e6d",
+  "cache_source": {
+    "git_blob": "354dbc179c4ca6ebc4ac9f85dd66a40d07ba3c09",
+    "path": "slopsearx/cache.py"
+  },
+  "cases": [
+    {
+      "error": null,
+      "field": "timeout",
+      "identity": "d68b003054bab754",
+      "input": "100000000000000000000",
+      "threshold": 0.0,
+      "timeout_repr": "1e+17"
+    },
+    {
+      "error": "OverflowError",
+      "field": "timeout",
+      "input": "9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
+    },
+    {
+      "error": null,
+      "field": "timeout",
+      "identity": "d68b003054bab754",
+      "input": "-100000000000000000000",
+      "threshold": 0.0,
+      "timeout_repr": "0.05"
+    },
+    {
+      "error": null,
+      "field": "timeout",
+      "identity": "d68b003054bab754",
+      "input": "-0",
+      "threshold": 0.0,
+      "timeout_repr": "0.05"
+    },
+    {
+      "error": null,
+      "field": "timeout",
+      "identity": "d68b003054bab754",
+      "input": "１２３",
+      "threshold": 0.0,
+      "timeout_repr": "0.123"
+    },
+    {
+      "cached": null,
+      "decision": {
+        "engines": [
+          "pubmed"
+        ],
+        "scores": {
+          "pubmed": 0.9
+        }
+      },
+      "field": "ttl",
+      "input": "100000000000000000000",
+      "provider_calls": 1
+    },
+    {
+      "cached": null,
+      "decision": {
+        "engines": [
+          "pubmed"
+        ],
+        "scores": {
+          "pubmed": 0.9
+        }
+      },
+      "field": "ttl",
+      "input": "9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999",
+      "provider_calls": 1
+    },
+    {
+      "cached": null,
+      "decision": {
+        "engines": [
+          "pubmed"
+        ],
+        "scores": {
+          "pubmed": 0.9
+        }
+      },
+      "field": "ttl",
+      "input": "bad",
+      "provider_calls": 1
+    },
+    {
+      "cached": {
+        "engines": [
+          "pubmed"
+        ],
+        "scores": {
+          "pubmed": 0.9
+        }
+      },
+      "decision": {
+        "engines": [
+          "pubmed"
+        ],
+        "scores": {
+          "pubmed": 0.9
+        }
+      },
+      "field": "ttl",
+      "input": "-100000000000000000000",
+      "provider_calls": 1
+    }
+  ],
+  "python": "3.14.7"
+}

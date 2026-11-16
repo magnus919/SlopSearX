@@ -1,0 +1,151 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____________ TestGatewaySessionOwner.test_http_shutdown_is_clean ______________
+
+self = <tests.test_mcp_gateway.TestGatewaySessionOwner object at 0x10b82b890>
+offline_remote_server = 54172
+caplog = <_pytest.logging.LogCaptureFixture object at 0x10ba43d40>
+
+    async def test_http_shutdown_is_clean(self, offline_remote_server: Any, caplog: Any) -> None:
+        from slopsearx.mcp import gateway
+    
+        url = f"http://127.0.0.1:{offline_remote_server}/mcp"
+        controls = [
+            ("slopsearx_list_capabilities", {"include_auth_requirements": False}),
+            ("slopsearx_search", {"query": "offline", "intent": "not-real"}),
+        ]
+        async with Client(url, auth=TOKEN) as direct:
+            assert len(await direct.list_tools()) == 38
+            expected = [await direct.call_tool_mcp(name, args) for name, args in controls]
+>       async with _gateway_client(create_gateway(url, token=TOKEN), check_shutdown=True) as client:
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_mcp_gateway.py:454: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/contextlib.py:217: in __aexit__
+    await anext(self.gen)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+gateway = FastMCP('slopsearx-remote')
+
+    @asynccontextmanager
+    async def _gateway_client(gateway: FastMCP, *, check_shutdown: bool = False):
+        """Exercise the gateway across its HTTP boundary, with its real lifespan."""
+        port = _free_port()
+        server = uvicorn.Server(
+            uvicorn.Config(make_http_app(gateway, ""), host="127.0.0.1", port=port, log_level="warning")
+        )
+        task = asyncio.create_task(server.serve())
+        try:
+            deadline = time.monotonic() + 10
+            while time.monotonic() < deadline:
+                if task.done():
+                    raise RuntimeError("gateway startup failed")
+                try:
+                    async with httpx.AsyncClient(timeout=1) as probe:
+                        await probe.get(f"http://127.0.0.1:{port}/mcp")
+                    break
+                except httpx.ConnectError:
+                    await asyncio.sleep(0.1)
+            else:
+                raise RuntimeError("gateway did not start")
+            async with Client(f"http://127.0.0.1:{port}/mcp") as client:
+                yield client
+        finally:
+            server.should_exit = True
+            # Uvicorn exits with SystemExit when the gateway's startup lifespan
+            # rejects bad credentials; the test asserts that startup failure.
+            with suppress(SystemExit):
+                await asyncio.wait_for(task, timeout=10)
+            if check_shutdown:
+>               assert not server.lifespan.shutdown_failed
+E               assert not True
+E                +  where True = <uvicorn.lifespan.on.LifespanOn object at 0x10ba84320>.shutdown_failed
+E                +    where <uvicorn.lifespan.on.LifespanOn object at 0x10ba84320> = <uvicorn.server.Server object at 0x10ad84c80>.lifespan
+
+tests/test_mcp_gateway.py:81: AssertionError
+----------------------------- Captured stderr call -----------------------------
+ERROR:      + Exception Group Traceback (most recent call last):
+  |   File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 799, in __aexit__
+  |     raise BaseExceptionGroup(
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Traceback (most recent call last):
+    |   File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/mcp/client/streamable_http.py", line 670, in streamable_http_client
+    |     yield (
+    |   File "/private/tmp/slopsearx-exp122-baseline/slopsearx/mcp/gateway.py", line 440, in _gateway_lifespan
+    |     async with ClientSession(read, write) as session:
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/mcp/shared/session.py", line 238, in __aexit__
+    |     return await self._task_group.__aexit__(exc_type, exc_val, exc_tb)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 810, in __aexit__
+    |     return self.cancel_scope.__exit__(exc_type, exc_val, exc_tb)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 463, in __exit__
+    |     raise RuntimeError(
+    | RuntimeError: Attempted to exit a cancel scope that isn't the current tasks's current cancel scope
+    +------------------------------------
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/starlette/routing.py", line 638, in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/contextlib.py", line 217, in __aexit__
+    await anext(self.gen)
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/fastmcp/server/http.py", line 666, in lifespan
+    server._lifespan_manager(),
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/contextlib.py", line 217, in __aexit__
+    await anext(self.gen)
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/fastmcp/server/mixins/lifespan.py", line 232, in _lifespan_manager
+    await stack.aclose()
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/contextlib.py", line 696, in aclose
+    await self.__aexit__(None, None, None)
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/contextlib.py", line 754, in __aexit__
+    raise exc_details[1]
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/contextlib.py", line 737, in __aexit__
+    cb_suppress = await cb(*exc_details)
+                  ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/contextlib.py", line 217, in __aexit__
+    await anext(self.gen)
+  File "/private/tmp/slopsearx-exp122-baseline/slopsearx/mcp/gateway.py", line 436, in _gateway_lifespan
+    async with streamable_http_client(remote_url, http_client=http_client) as streams:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/contextlib.py", line 231, in __aexit__
+    await self.gen.athrow(value)
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/mcp/client/streamable_http.py", line 647, in streamable_http_client
+    async with anyio.create_task_group() as tg:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 805, in __aexit__
+    if self.cancel_scope.__exit__(type(exc), exc, exc.__traceback__):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 463, in __exit__
+    raise RuntimeError(
+RuntimeError: Attempted to exit a cancel scope that isn't the current tasks's current cancel scope
+
+ERROR:    Application shutdown failed. Exiting.
+------------------------------ Captured log call -------------------------------
+WARNING  slopsearx.mcp.server:server.py:144 MCP startup problem: intent 'images' has media types matching no enabled engines: ['image']
+WARNING  slopsearx.mcp.server:server.py:144 MCP startup problem: intent 'videos' has media types matching no enabled engines: ['video']
+WARNING  slopsearx.mcp.server:server.py:144 MCP startup problem: intent 'images' has media types matching no enabled engines: ['image']
+WARNING  slopsearx.mcp.server:server.py:144 MCP startup problem: intent 'videos' has media types matching no enabled engines: ['video']
+=============================== warnings summary ===============================
+tests/test_mcp_gateway.py::TestGatewaySessionOwner::test_http_shutdown_is_clean
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pydantic_settings/sources/utils.py:47: IncompleteFieldDefinitionWarning: Field 'lifespan' has an incomplete definition: its annotation contains an unresolved forward reference, so settings sources may fail to correctly resolve its value. Call `model_rebuild()` on the model where the field is defined, once all the referenced types are defined.
+    warnings.warn(
+
+tests/test_mcp_gateway.py::TestGatewaySessionOwner::test_http_shutdown_is_clean
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/websockets/legacy/__init__.py:6: DeprecationWarning: websockets.legacy is deprecated; see https://websockets.readthedocs.io/en/stable/howto/upgrade.html for upgrade instructions
+    warnings.warn(  # deprecated in 14.0 - 2024-11-09
+
+tests/test_mcp_gateway.py::TestGatewaySessionOwner::test_http_shutdown_is_clean
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/uvicorn/protocols/websockets/websockets_impl.py:17: DeprecationWarning: websockets.server.WebSocketServerProtocol is deprecated
+    from websockets.server import WebSocketServerProtocol
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_mcp_gateway.py::TestGatewaySessionOwner::test_http_shutdown_is_clean
+1 failed, 3 warnings in 1.42s

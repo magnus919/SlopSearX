@@ -1,0 +1,33 @@
+.F......................                                                 [100%]
+=================================== FAILURES ===================================
+_____________ TestGateway.test_gateway_proxies_tools_and_resources _____________
+
+self = <tests.test_mcp_gateway.TestGateway object at 0x10dcb0e30>
+remote_server = 61521
+
+    async def test_gateway_proxies_tools_and_resources(self, remote_server: Any) -> None:
+        url = f"http://127.0.0.1:{remote_server}/mcp"
+        gateway = create_gateway(url, token=TOKEN)
+        async with Client(url, auth=TOKEN) as direct:
+>           remote_tools = {tool.name: _field(tool, "input_schema", "inputSchema") for tool in await direct.list_tools()}
+                                       ^^^^^^
+E           NameError: name '_field' is not defined
+
+tests/test_mcp_gateway.py:123: NameError
+=============================== warnings summary ===============================
+tests/test_mcp_gateway.py::TestGateway::test_gateway_proxies_tools_and_resources
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pydantic_settings/sources/utils.py:47: IncompleteFieldDefinitionWarning: Field 'lifespan' has an incomplete definition: its annotation contains an unresolved forward reference, so settings sources may fail to correctly resolve its value. Call `model_rebuild()` on the model where the field is defined, once all the referenced types are defined.
+    warnings.warn(
+
+tests/test_mcp_gateway.py::TestGateway::test_gateway_proxies_tools_and_resources
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/websockets/legacy/__init__.py:6: DeprecationWarning: websockets.legacy is deprecated; see https://websockets.readthedocs.io/en/stable/howto/upgrade.html for upgrade instructions
+    warnings.warn(  # deprecated in 14.0 - 2024-11-09
+
+tests/test_mcp_gateway.py::TestGateway::test_gateway_proxies_tools_and_resources
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/uvicorn/protocols/websockets/websockets_impl.py:17: DeprecationWarning: websockets.server.WebSocketServerProtocol is deprecated
+    from websockets.server import WebSocketServerProtocol
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_mcp_gateway.py::TestGateway::test_gateway_proxies_tools_and_resources
+1 failed, 23 passed, 3 warnings in 1.63s

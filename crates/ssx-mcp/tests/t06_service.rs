@@ -1,0 +1,1098 @@
+//! Actual shared service seams: preview authority, ownership, capture identity.
+#[path = "t06_support/eof.rs"]
+mod eof;
+#[path = "t06_support/fixture.rs"]
+mod fixture;
+#[path = "t06_support/server.rs"]
+mod private_valkey;
+use ssx_application::{
+    policy::{ScopeProposal, SearchPolicy, SearchSurface},
+    snapshot::SnapshotLookup,
+};
+use ssx_domain::{EngineStatus, SearchRequest};
+use ssx_infra::{
+    jev::{JevConfig, JevRouter},
+    search::{SearchCancellation, SearchConfig, SearchError},
+};
+use ssx_mcp::Result;
+use std::{
+    collections::BTreeMap,
+    sync::{
+        Arc,
+        atomic::{AtomicBool, AtomicUsize, Ordering},
+    },
+    time::Duration,
+};
+use tokio::io::AsyncReadExt;
+fn engines() -> Vec<fixture::FakeEngine> {
+    ["wikipedia", "pubmed"]
+        .into_iter()
+        .map(|name| fixture::FakeEngine {
+            name: name.into(),
+            calls: Default::default(),
+            dispatch_receipt: None,
+            count: 3,
+            status: EngineStatus::Ok,
+            delay: Duration::ZERO,
+            results: None,
+        })
+        .collect()
+}
+fn preview() -> ScopeProposal {
+    let mut p = ScopeProposal::generic(SearchRequest {
+        query: "public unrelated query".into(),
+        ..Default::default()
+    });
+    p.surface = SearchSurface::Preview;
+    p
+}
+// This acknowledgment belongs to the exact listener, not its reusable port.
+fn retire_listener(listener: tokio::net::TcpListener, dropped: &AtomicBool) {
+    drop(listener);
+    dropped.store(true, Ordering::SeqCst);
+}
+fn require_listener_retired(dropped: &AtomicBool) -> Result<()> {
+    if dropped.load(Ordering::SeqCst) {
+        Ok(())
+    } else {
+        Err("owned provider listener has not been dropped".into())
+    }
+}
+struct Provider {
+    endpoint: String,
+    listener_dropped: Arc<AtomicBool>,
+    started: Arc<tokio::sync::Semaphore>,
+    closed: Arc<AtomicUsize>,
+    request_read: Arc<tokio::sync::Semaphore>,
+    cancel: tokio_util::sync::CancellationToken,
+    task: Option<tokio::task::JoinHandle<std::result::Result<(), &'static str>>>,
+    failure: Arc<std::sync::Mutex<Option<&'static str>>>,
+}
+impl Provider {
+    async fn new() -> Result<Self> {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
+            .await
+            .map_err(|e| format!("{e:?}"))?;
+        let endpoint = format!("http://{}/v1/systemone", listener.local_addr()?);
+        let listener_dropped = Arc::new(AtomicBool::new(false));
+        let dropped = listener_dropped.clone();
+        let started = Arc::new(tokio::sync::Semaphore::new(0));
+        let closed = Arc::new(AtomicUsize::new(0));
+        let request_read = Arc::new(tokio::sync::Semaphore::new(0));
+        let cancel = tokio_util::sync::CancellationToken::new();
+        let failure = Arc::new(std::sync::Mutex::new(None));
+        let (s, c, ct, f) = (
+            started.clone(),
+            closed.clone(),
+            cancel.clone(),
+            failure.clone(),
+        );
+        let read = request_read.clone();
+        let task = tokio::spawn(async move {
+            let result = async {
+                loop {
+                    let mut socket = tokio::select! {
+                        _ = ct.cancelled() => return Ok(()),
+                        socket = listener.accept() => socket.map_err(|_| "accept failed")?.0,
+                    };
+                    if !read_provider_request(&mut socket, &ct, &read).await? {
+                        return Ok(());
+                    }
+                    // Only a complete bounded request may establish readiness.
+                    s.add_permits(1);
+                    let mut byte = [0];
+                    tokio::select! {
+                        _ = ct.cancelled() => return Ok(()),
+                        n = socket.read(&mut byte) => {
+                            if n.map_err(|_| "peer close read failed")? != 0 {
+                                return Err("unexpected bytes after complete request");
+                            }
+                            c.fetch_add(1, Ordering::SeqCst);
+                        }
+                    }
+                }
+            }
+            .await;
+            // A successful join is not reported until this sole owned socket
+            // was explicitly dropped and its acknowledgment was published.
+            retire_listener(listener, &dropped);
+            if let Err(reason) = result {
+                *f.lock().unwrap() = Some(reason);
+            }
+            s.close();
+            result
+        });
+        Ok(Self {
+            endpoint,
+            listener_dropped,
+            started,
+            closed,
+            cancel,
+            task: Some(task),
+            failure,
+            request_read,
+        })
+    }
+    fn router(&self) -> Arc<JevRouter> {
+        Arc::new(JevRouter::with_endpoint(
+            JevConfig::from_environment(&BTreeMap::from([
+                ("TYPESAFE_API_KEY".into(), "fixture-only".into()),
+                ("JEV_TIMEOUT_MS".into(), "5000".into()),
+            ]))
+            .unwrap(),
+            ssx_registry::Registry::builtins().unwrap(),
+            self.endpoint.clone(),
+        ))
+    }
+    async fn observed(&self) -> Result<()> {
+        tokio::time::timeout(Duration::from_secs(3), self.started.acquire())
+            .await
+            .map_err(|_| "provider readiness observation timeout (3s)")?
+            .map_err(|_| {
+                self.failure
+                    .lock()
+                    .unwrap()
+                    .unwrap_or("provider stopped before readiness")
+            })?
+            .forget();
+        Ok(())
+    }
+    async fn close(mut self) -> Result<()> {
+        self.cancel.cancel();
+        let mut task = self
+            .task
+            .take()
+            .ok_or("provider task was already retired")?;
+        match tokio::time::timeout(Duration::from_secs(2), &mut task).await {
+            Ok(joined) => {
+                joined.map_err(|_| "provider task join failed")??;
+                require_listener_retired(&self.listener_dropped)
+            }
+            Err(_) => {
+                task.abort();
+                // Aborting is followed by a join; dropping a JoinHandle detaches it.
+                let disposition = match task.await {
+                    Err(e) if e.is_cancelled() => "aborted and joined",
+                    Err(_) => "joined after task failure",
+                    Ok(Ok(())) => "completed and joined after guard",
+                    Ok(Err(_)) => "joined after protocol failure",
+                };
+                Err(format!("provider cooperative retirement timeout (2s); {disposition}").into())
+            }
+        }
+    }
+}
+
+impl Drop for Provider {
+    fn drop(&mut self) {
+        self.cancel.cancel();
+        if let Some(task) = &self.task
+            && !task.is_finished()
+        {
+            task.abort();
+        }
+    }
+}
+
+async fn abort_and_join<T>(
+    task: tokio::task::JoinHandle<T>,
+) -> std::result::Result<T, tokio::task::JoinError> {
+    if !task.is_finished() {
+        task.abort();
+    }
+    task.await
+}
+
+async fn wait_for_provider_close(provider: &Provider, expected: usize) -> bool {
+    tokio::time::timeout(Duration::from_secs(2), async {
+        while provider.closed.load(Ordering::SeqCst) < expected {
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+    })
+    .await
+    .is_ok()
+}
+
+async fn warm_optional_provider(
+    provider: &Provider,
+    router: Arc<JevRouter>,
+    policy: ssx_application::policy::PolicyService,
+) -> Result<()> {
+    // Use the exact router installed in the fixture and consume its private
+    // readiness receipt before the measured ownership interval begins.
+    let warm_router = router.clone();
+    let warm = tokio::spawn(async move { warm_router.route(&preview(), &policy, None).await });
+    let observed = provider.observed().await;
+    let joined = abort_and_join(warm).await;
+    let eof = if observed.is_ok() {
+        wait_for_provider_close(provider, 1).await
+    } else {
+        false
+    };
+    let closed_count = provider.closed.load(Ordering::SeqCst);
+    let started_remaining = provider.started.available_permits();
+    let request_read_chunks = provider.request_read.available_permits();
+
+    // Discard all warm-up-only synchronization evidence before measuring.
+    while let Ok(permit) = provider.started.try_acquire() {
+        permit.forget();
+    }
+    while let Ok(permit) = provider.request_read.try_acquire() {
+        permit.forget();
+    }
+    provider.closed.store(0, Ordering::SeqCst);
+
+    observed?;
+    if !matches!(joined, Err(error) if error.is_cancelled()) {
+        return Err("warm-up request was not aborted and joined".into());
+    }
+    if !eof || closed_count != 1 {
+        return Err("warm-up HTTP owner did not reach exactly one EOF".into());
+    }
+    if started_remaining != 0 || request_read_chunks == 0 {
+        return Err("warm-up provider receipt was not fully consumed".into());
+    }
+    Ok(())
+}
+
+/// The fixture accepts only its real Jev POST framing, never partial EOF,
+/// missing/ambiguous length, unbounded headers/body or malformed JSON. No
+/// provider payload/header (including authorization) enters diagnostics.
+async fn read_provider_request(
+    socket: &mut tokio::net::TcpStream,
+    cancel: &tokio_util::sync::CancellationToken,
+    read: &tokio::sync::Semaphore,
+) -> std::result::Result<bool, &'static str> {
+    const HEADER_CAP: usize = 8 * 1024;
+    const REQUEST_CAP: usize = 64 * 1024;
+    let mut bytes = Vec::new();
+    let mut buf = [0; 4096];
+    loop {
+        let n = tokio::select! {
+            _ = cancel.cancelled() => return Ok(false),
+            n = socket.read(&mut buf) => n.map_err(|_| "request read failed")?,
+        };
+        if n == 0 {
+            return Err("incomplete HTTP request before peer EOF");
+        }
+        if bytes.len() + n > REQUEST_CAP {
+            return Err("HTTP request exceeds fixture byte bound");
+        }
+        bytes.extend_from_slice(&buf[..n]);
+        read.add_permits(1);
+        let Some(end) = bytes.windows(4).position(|w| w == b"\r\n\r\n") else {
+            if bytes.len() > HEADER_CAP {
+                return Err("HTTP headers exceed fixture byte bound");
+            }
+            continue;
+        };
+        if end > HEADER_CAP {
+            return Err("HTTP headers exceed fixture byte bound");
+        }
+        let header = std::str::from_utf8(&bytes[..end]).map_err(|_| "invalid HTTP headers")?;
+        let mut lines = header.split("\r\n");
+        if lines.next() != Some("POST /v1/systemone HTTP/1.1") {
+            return Err("unexpected provider request line");
+        }
+        let mut length = None;
+        for line in lines {
+            let (key, value) = line.split_once(':').ok_or("malformed HTTP header")?;
+            if key.eq_ignore_ascii_case("transfer-encoding") {
+                return Err("unsupported HTTP transfer encoding");
+            }
+            if key.eq_ignore_ascii_case("content-length") {
+                if length.is_some() {
+                    return Err("duplicate HTTP content length");
+                }
+                length = Some(
+                    value
+                        .trim()
+                        .parse::<usize>()
+                        .map_err(|_| "invalid HTTP content length")?,
+                );
+            }
+        }
+        let length = length.ok_or("missing HTTP content length")?;
+        let total = (end + 4)
+            .checked_add(length)
+            .filter(|n| *n <= REQUEST_CAP)
+            .ok_or("HTTP request exceeds fixture byte bound")?;
+        if bytes.len() < total {
+            continue;
+        }
+        if bytes.len() != total {
+            return Err("unexpected bytes after HTTP request body");
+        }
+        let body: serde_json::Value =
+            serde_json::from_slice(&bytes[end + 4..]).map_err(|_| "invalid provider JSON body")?;
+        if !body["state"]["user_query"].is_string() || !body["questions"].is_object() {
+            return Err("unexpected provider JSON shape");
+        }
+        return Ok(true);
+    }
+}
+
+#[tokio::test]
+async fn preview_rejects_sensitive_and_disabled_before_optional_provider_and_never_dispatches()
+-> Result<()> {
+    let provider = Provider::new().await.map_err(|e| format!("{e:?}"))?;
+    let server = private_valkey::Server::start();
+    let fixture = fixture::Fixture::with_options(
+        server.url(),
+        SearchPolicy::default(),
+        engines(),
+        &["openalex"],
+        SearchConfig::default(),
+        Some(provider.router()),
+    )
+    .await;
+    for engine in ["hibp", "openalex"] {
+        let mut p = preview();
+        p.request.engines = Some(vec!["wikipedia".into(), engine.into()]);
+        let result = fixture.service.preview_scope(&p).await;
+        assert!(matches!(result, Err(SearchError::Policy(_))));
+    }
+    assert_eq!(provider.started.available_permits(), 0);
+    assert_eq!(fixture.calls(), 0);
+    let mut explicit = preview();
+    explicit.request.engines = Some(vec!["wikipedia".into()]);
+    let value = fixture
+        .service
+        .preview_scope(&explicit)
+        .await
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(value.scope.selected_engines, ["wikipedia"]);
+    assert_eq!(fixture.calls(), 0);
+    assert!(
+        fixture.service.prepare_scope(&explicit).await.is_err(),
+        "preview created dispatch authority"
+    );
+    fixture.service.shutdown().await;
+    assert!(matches!(
+        fixture.service.preview_scope(&explicit).await,
+        Err(SearchError::Closed)
+    ));
+    provider.close().await.map_err(|e| format!("{e:?}"))?;
+    Ok(())
+}
+#[tokio::test]
+async fn preview_timeout_drop_busy_and_shutdown_drain_optional_http_ownership() -> Result<()> {
+    for mode in ["timeout", "drop", "shutdown"] {
+        let provider = Provider::new().await.map_err(|e| format!("{e:?}"))?;
+        let server = private_valkey::Server::start();
+        let router = provider.router();
+        let fixture = fixture::Fixture::with_options(
+            server.url(),
+            SearchPolicy::default(),
+            engines(),
+            &[],
+            SearchConfig {
+                max_callers: 1,
+                optional_port_timeout: if mode == "timeout" {
+                    Duration::from_millis(150)
+                } else {
+                    Duration::from_secs(5)
+                },
+                ..Default::default()
+            },
+            Some(router.clone()),
+        )
+        .await;
+
+        let warm_up = warm_optional_provider(&provider, router, fixture.policy.clone()).await;
+        let mut measured_task = None;
+        let mut provider_observed = false;
+        let mut busy = false;
+        let mut timeout_completed = false;
+        let mut timeout_result_ok = false;
+        let mut drop_cancelled_and_joined = false;
+        let mut explicit_preview_after_drop_ok = false;
+        let mut shutdown_returns_closed = false;
+
+        if warm_up.is_ok() {
+            let service = fixture.service.clone();
+            measured_task = Some(tokio::spawn(async move {
+                service.preview_scope(&preview()).await
+            }));
+            provider_observed = provider.observed().await.is_ok();
+            if provider_observed {
+                busy = matches!(
+                    fixture.service.preview_scope(&preview()).await,
+                    Err(SearchError::Busy)
+                );
+            }
+
+            match mode {
+                "timeout" => {
+                    let completion = if let Some(task) = measured_task.as_mut() {
+                        Some(tokio::time::timeout(Duration::from_secs(2), &mut *task).await)
+                    } else {
+                        None
+                    };
+                    match completion {
+                        Some(Ok(Ok(result))) => {
+                            timeout_completed = true;
+                            timeout_result_ok = result.is_ok();
+                            measured_task.take();
+                        }
+                        Some(Ok(Err(_))) => {
+                            timeout_completed = true;
+                            measured_task.take();
+                        }
+                        Some(Err(_)) | None => {}
+                    }
+                }
+                "drop" => {
+                    if let Some(task) = measured_task.take() {
+                        drop_cancelled_and_joined = matches!(abort_and_join(task).await, Err(error) if error.is_cancelled());
+                    }
+                    if provider_observed {
+                        let mut proposal = preview();
+                        proposal.request.engines = Some(vec!["wikipedia".into()]);
+                        explicit_preview_after_drop_ok =
+                            fixture.service.preview_scope(&proposal).await.is_ok();
+                    }
+                }
+                _ => {
+                    fixture.service.shutdown().await;
+                    let completion = if let Some(task) = measured_task.as_mut() {
+                        Some(tokio::time::timeout(Duration::from_secs(5), &mut *task).await)
+                    } else {
+                        None
+                    };
+                    match completion {
+                        Some(Ok(Ok(result))) => {
+                            shutdown_returns_closed = matches!(result, Err(SearchError::Closed));
+                            measured_task.take();
+                        }
+                        Some(Ok(Err(_))) => {
+                            measured_task.take();
+                        }
+                        Some(Err(_)) | None => {}
+                    }
+                }
+            }
+        }
+
+        // On every timeout or early failure, retire a remaining request before
+        // shutting down the service/provider. Never detach a JoinHandle.
+        if let Some(task) = measured_task.take() {
+            let _ = abort_and_join(task).await;
+        }
+        fixture.service.shutdown().await;
+        let provider_eof = if provider_observed {
+            wait_for_provider_close(&provider, 1).await
+        } else {
+            false
+        };
+        let closed_count = provider.closed.load(Ordering::SeqCst);
+        let engine_calls = fixture.calls();
+        let provider_retirement = provider.close().await;
+
+        assert!(
+            warm_up.is_ok(),
+            "private provider warm-up failed: {warm_up:?}"
+        );
+        assert!(
+            provider_observed,
+            "measured provider request was not observed"
+        );
+        assert!(busy, "second caller was not rejected as Busy");
+        assert!(provider_eof, "optional HTTP ownership did not close");
+        assert_eq!(
+            closed_count, 1,
+            "measured provider request did not reach exactly one EOF"
+        );
+        assert_eq!(engine_calls, 0, "scope preview dispatched a search engine");
+        match mode {
+            "timeout" => {
+                assert!(
+                    timeout_completed,
+                    "timed preview did not finish within two seconds"
+                );
+                assert!(
+                    timeout_result_ok,
+                    "timed preview did not return its fallback result"
+                );
+            }
+            "drop" => {
+                assert!(
+                    drop_cancelled_and_joined,
+                    "dropped preview was not cancelled and joined"
+                );
+                assert!(
+                    explicit_preview_after_drop_ok,
+                    "service did not accept a later explicit preview"
+                );
+            }
+            _ => assert!(
+                shutdown_returns_closed,
+                "shutdown did not close the in-flight preview"
+            ),
+        }
+        provider_retirement.map_err(|e| format!("{e:?}"))?;
+    }
+    Ok(())
+}
+#[tokio::test]
+async fn captured_snapshot_is_service_bound_full_include_independent_and_not_reexecuted()
+-> Result<()> {
+    let server = private_valkey::Server::start();
+    let first = fixture::Fixture::new(server.url(), false).await;
+    let second = fixture::Fixture::new(server.url(), false).await;
+    let proposal = ScopeProposal::generic(SearchRequest {
+        query: "captured identity".into(),
+        engines: Some(vec!["wikipedia".into()]),
+        include: Default::default(),
+        max_results: Some(1),
+        ..Default::default()
+    });
+    let capture = first
+        .service
+        .capture_read(proposal.clone(), SearchCancellation::default())
+        .await
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(capture.full_result_count(), 3);
+    assert_eq!(capture.present().results.len(), 1);
+    let mut connection = server.connection();
+    let before: Vec<String> = redis::cmd("KEYS").arg("*").query(&mut connection)?;
+    assert!(matches!(
+        second
+            .service
+            .snapshot_read_capture(
+                capture,
+                &first.surface.state().snapshots,
+                &[],
+                SearchCancellation::default()
+            )
+            .await,
+        Err(SearchError::InvalidConfiguration)
+    ));
+    let after: Vec<String> = redis::cmd("KEYS").arg("*").query(&mut connection)?;
+    assert_eq!(after.len(), before.len());
+    let capture = first
+        .service
+        .capture_read(proposal.clone(), SearchCancellation::default())
+        .await
+        .map_err(|e| format!("{e:?}"))?;
+    let count = first.calls();
+    let saved = first
+        .service
+        .snapshot_read_capture(
+            capture,
+            &first.surface.state().snapshots,
+            &[],
+            SearchCancellation::default(),
+        )
+        .await
+        .map_err(|e| format!("{e:?}"))?;
+    let id = saved.snapshot.unwrap();
+    assert_eq!(first.calls(), count);
+    assert_eq!(saved.response.results.len(), 1);
+    let SnapshotLookup::Found(snapshot) = first.surface.state().snapshots.read(&id).await else {
+        panic!("saved capture missing")
+    };
+    assert_eq!(snapshot.results().len(), 3);
+    let capture = first
+        .service
+        .capture_read(proposal, SearchCancellation::default())
+        .await
+        .map_err(|e| format!("{e:?}"))?;
+    let cancel = SearchCancellation::default();
+    cancel.cancel();
+    let saved = first
+        .service
+        .snapshot_read_capture(capture, &first.surface.state().snapshots, &[], cancel)
+        .await
+        .map_err(|e| format!("{e:?}"))?;
+    assert!(saved.snapshot.is_err());
+    first.service.shutdown().await;
+    second.service.shutdown().await;
+    Ok(())
+}
+#[tokio::test]
+async fn actual_stdio_rpc_cancellation_drains_prepare_and_preview_before_long_optional_timeout()
+-> Result<()> {
+    use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
+    for name in ["slopsearx_search", "slopsearx_explain_search_scope"] {
+        let provider = Provider::new().await?;
+        let server = private_valkey::Server::start();
+        let mut child = tokio::process::Command::new(env!("CARGO_BIN_EXE_search-qualification"))
+            .args(["stdio", server.url(), &provider.endpoint])
+            .env_clear()
+            .env("PATH", "")
+            .stdin(std::process::Stdio::piped())
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::inherit())
+            .kill_on_drop(true)
+            .spawn()?;
+        let mut input = child.stdin.take().unwrap();
+        let mut output = tokio::io::BufReader::new(child.stdout.take().unwrap());
+        let init = r#"{"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"cancel","version":"1"}}}"#;
+        input.write_all(format!("{init}\n").as_bytes()).await?;
+        input.flush().await?;
+        let mut response = String::new();
+        tokio::time::timeout(Duration::from_secs(5), output.read_line(&mut response)).await??;
+        for cycle in 0..32 {
+            let request = format!(
+                r#"{{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{{"name":"{name}","arguments":{{"query":"public unrelated query {cycle}"}}}}}}"#
+            );
+            input.write_all(format!("{request}\n").as_bytes()).await?;
+            input.flush().await?;
+            provider.observed().await?;
+            input.write_all(b"{\"jsonrpc\":\"2.0\",\"method\":\"notifications/cancelled\",\"params\":{\"requestId\":1}}\n").await?;
+            input.flush().await?;
+            // rmcp intentionally suppresses cancelled replies. Observe actual owned
+            // provider drain and then prove the same external id can be reused.
+            let until = tokio::time::Instant::now() + Duration::from_secs(1);
+            while provider.closed.load(Ordering::SeqCst) <= cycle {
+                assert!(
+                    tokio::time::Instant::now() < until,
+                    "cancel retained optional request"
+                );
+                tokio::task::yield_now().await;
+            }
+            // A completed status call is a same-connection barrier, before EOF.
+            let barrier = format!(
+                r#"{{"jsonrpc":"2.0","id":{},"method":"tools/call","params":{{"name":"slopsearx_get_service_status","arguments":{{}}}}}}"#,
+                100 + cycle
+            );
+            input.write_all(format!("{barrier}\n").as_bytes()).await?;
+            input.flush().await?;
+            response.clear();
+            tokio::time::timeout(Duration::from_secs(1), output.read_line(&mut response)).await??;
+            let value: serde_json::Value = serde_json::from_str(&response)?;
+            assert_eq!(value["id"], 100 + cycle);
+        }
+        assert_eq!(
+            redis::cmd("KEYS")
+                .arg("t06:qualification:dispatch:*")
+                .query::<Vec<String>>(&mut server.connection())?
+                .len(),
+            0,
+            "stdio cancellation dispatched engine"
+        );
+        let status = r#"{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"slopsearx_get_service_status","arguments":{}}}"#;
+        input.write_all(format!("{status}\n").as_bytes()).await?;
+        input.flush().await?;
+        response.clear();
+        tokio::time::timeout(Duration::from_secs(1), output.read_line(&mut response)).await??;
+        let result: serde_json::Value = serde_json::from_str(&response)?;
+        assert_eq!(
+            result["result"]["structuredContent"]["engine_health"]["ok"],
+            0
+        );
+        let reuse = r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"slopsearx_search_targeted","arguments":{"query":"reuse","engines":["wikipedia"]}}}"#;
+        input.write_all(format!("{reuse}\n").as_bytes()).await?;
+        input.flush().await?;
+        response.clear();
+        tokio::time::timeout(Duration::from_secs(1), output.read_line(&mut response)).await??;
+        let result: serde_json::Value = serde_json::from_str(&response)?;
+        assert_eq!(result["result"]["structuredContent"]["meta"]["total"], 3);
+        assert_eq!(
+            redis::cmd("KEYS")
+                .arg("t06:qualification:dispatch:*")
+                .query::<Vec<String>>(&mut server.connection())?
+                .len(),
+            1,
+            "stdio targeted reuse did not execute exactly once"
+        );
+        input.shutdown().await?;
+        drop(input);
+        assert!(
+            tokio::time::timeout(Duration::from_secs(5), child.wait())
+                .await??
+                .success()
+        );
+        provider.close().await?;
+    }
+    Ok(())
+}
+#[tokio::test]
+async fn pre_cancelled_prepare_and_preview_never_contact_provider_or_dispatch() -> Result<()> {
+    let provider = Provider::new().await?;
+    let server = private_valkey::Server::start();
+    let fixture = fixture::Fixture::with_options(
+        server.url(),
+        SearchPolicy::default(),
+        engines(),
+        &[],
+        SearchConfig::default(),
+        Some(provider.router()),
+    )
+    .await;
+    let cancel = SearchCancellation::default();
+    cancel.cancel();
+    assert!(matches!(
+        fixture
+            .service
+            .preview_scope_with_cancellation(&preview(), cancel.clone())
+            .await,
+        Err(SearchError::Cancelled)
+    ));
+    let mut p = preview();
+    p.surface = SearchSurface::Generic;
+    assert!(matches!(
+        fixture
+            .service
+            .prepare_scope_with_cancellation(&p, cancel)
+            .await,
+        Err(SearchError::Cancelled)
+    ));
+    assert_eq!(provider.started.available_permits(), 0);
+    assert_eq!(fixture.calls(), 0);
+    fixture.service.shutdown().await;
+    provider.close().await?;
+    Ok(())
+}
+
+async fn event(stream: &mut reqwest::Response, pending: &mut Vec<u8>) -> Result<(String, String)> {
+    loop {
+        if let Some(i) = pending.windows(2).position(|v| v == b"\n\n") {
+            let frame = String::from_utf8(pending.drain(..i + 2).collect())?;
+            let kind = frame
+                .lines()
+                .find_map(|s| s.strip_prefix("event: "))
+                .unwrap_or("message")
+                .to_owned();
+            let data = frame
+                .lines()
+                .filter_map(|s| s.strip_prefix("data: "))
+                .collect::<Vec<_>>()
+                .join("\n");
+            if !data.is_empty() {
+                return Ok((kind, data));
+            }
+        }
+        pending.extend_from_slice(
+            &tokio::time::timeout(Duration::from_secs(1), stream.chunk())
+                .await??
+                .ok_or("legacy stream EOF")?,
+        );
+        assert!(pending.len() < 4 * 1024 * 1024);
+    }
+}
+#[tokio::test]
+async fn actual_legacy_rpc_cancellation_releases_owned_work_and_message_capacity_before_disconnect()
+-> Result<()> {
+    use ssx_mcp::{
+        harness::Host, legacy::Legacy, oauth::NetworkAuth,
+        search_surface::SearchSurface as NativeSurface,
+    };
+    use tokio_util::sync::CancellationToken;
+    for name in ["slopsearx_search", "slopsearx_explain_search_scope"] {
+        let provider = Provider::new().await?;
+        let server = private_valkey::Server::start();
+        let fixture = fixture::Fixture::with_options(
+            server.url(),
+            SearchPolicy::default(),
+            engines(),
+            &[],
+            SearchConfig {
+                max_callers: 1,
+                optional_port_timeout: Duration::from_secs(10),
+                ..Default::default()
+            },
+            Some(provider.router()),
+        )
+        .await;
+        let surface = fixture.surface.clone();
+        let cancel = CancellationToken::new();
+        let legacy = Legacy::with_factory(
+            Arc::new(move |wire, owner| surface.clone().bind_connection(wire, owner)),
+            NativeSurface::catalogs(),
+            "/messages/",
+            Duration::from_secs(60),
+            cancel.clone(),
+        )?;
+        let auth = NetworkAuth::Static(ssx_domain::oauth::Secret::new("cancel-token".into())?);
+        let host = Host::start(auth.mount(legacy.clone().router("/sse")?), cancel).await?;
+        let base = format!("http://{}", host.address);
+        let mut headers = reqwest::header::HeaderMap::new();
+        headers.insert(
+            reqwest::header::AUTHORIZATION,
+            "Bearer cancel-token".parse()?,
+        );
+        let client = reqwest::Client::builder()
+            .no_proxy()
+            .default_headers(headers)
+            .build()?;
+        let mut stream = client.get(format!("{base}/sse")).send().await?;
+        let mut pending = Vec::new();
+        let (_, path) = event(&mut stream, &mut pending).await?;
+        let url = format!("{base}{path}");
+        let post = |v: ssx_json::Value| {
+            client
+                .post(&url)
+                .header("content-type", "application/json")
+                .body(v.to_string())
+                .send()
+        };
+        assert_eq!(post(ssx_json::json!({"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"legacy-cancel","version":"1"}}})).await?.status(),202);
+        event(&mut stream, &mut pending).await?;
+        for cycle in 0..32 {
+            assert_eq!(post(ssx_json::json!({"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":name,"arguments":{"query":format!("unrelated public query {cycle}")}}})).await?.status(),202);
+            provider.observed().await?;
+            assert_eq!(post(ssx_json::json!({"jsonrpc":"2.0","method":"notifications/cancelled","params":{"requestId":1}})).await?.status(),202);
+            let until = tokio::time::Instant::now() + Duration::from_secs(1);
+            while provider.closed.load(Ordering::SeqCst) <= cycle
+                || legacy.available_message_permits() != 32
+            {
+                assert!(
+                    tokio::time::Instant::now() < until,
+                    "legacy cancellation retained request or pending permit"
+                );
+                tokio::task::yield_now().await;
+            }
+            assert_eq!(fixture.calls(), 0);
+            assert_eq!(post(ssx_json::json!({"jsonrpc":"2.0","id":100+cycle,"method":"tools/call","params":{"name":"slopsearx_get_service_status","arguments":{}}})).await?.status(),202);
+            let (_, line) = event(&mut stream, &mut pending).await?;
+            let reply: ssx_json::Value = ssx_json::from_str(&line)?;
+            assert_eq!(reply["id"].as_u64(), Some((100 + cycle) as u64));
+        }
+        assert_eq!(post(ssx_json::json!({"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"slopsearx_search_targeted","arguments":{"query":"reuse","engines":["wikipedia"]}}})).await?.status(),202);
+        let (_, line) = event(&mut stream, &mut pending).await?;
+        let reply: ssx_json::Value = ssx_json::from_str(&line)?;
+        assert_eq!(
+            reply["result"]["structuredContent"]["meta"]["total"].as_u64(),
+            Some(3)
+        );
+        assert_eq!(fixture.calls(), 1);
+        drop(stream);
+        host.shutdown().await?;
+        assert_eq!(legacy.available_message_permits(), 32);
+        assert_eq!(legacy.available_permits(), 128);
+        fixture.service.shutdown().await;
+        provider.close().await?;
+    }
+    Ok(())
+}
+
+#[tokio::test]
+async fn actual_stateless_http_disconnect_drains_inflight_optional_request() -> Result<()> {
+    use ssx_mcp::{
+        harness::{Host, http_router_for},
+        search_surface::SearchSurface as NativeSurface,
+    };
+    use tokio::io::AsyncWriteExt;
+    for name in ["slopsearx_search", "slopsearx_explain_search_scope"] {
+        let provider = Provider::new().await?;
+        let server = private_valkey::Server::start();
+        let fixture = fixture::Fixture::with_options(
+            server.url(),
+            SearchPolicy::default(),
+            engines(),
+            &[],
+            SearchConfig {
+                max_callers: 1,
+                optional_port_timeout: Duration::from_secs(10),
+                ..Default::default()
+            },
+            Some(provider.router()),
+        )
+        .await;
+        let cancel = tokio_util::sync::CancellationToken::new();
+        let host = Host::start(
+            http_router_for(
+                fixture.surface.clone(),
+                NativeSurface::catalogs(),
+                cancel.clone(),
+            ),
+            cancel,
+        )
+        .await?;
+        let body=ssx_json::json!({"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":name,"arguments":{"query":"unrelated public query"}}}).to_string();
+        let mut socket = tokio::net::TcpStream::connect(host.address).await?;
+        let request = format!(
+            "POST /mcp HTTP/1.1\r\nHost: {}\r\nContent-Type: application/json\r\nAccept: application/json,text/event-stream\r\nMCP-Protocol-Version: 2025-11-25\r\nContent-Length: {}\r\n\r\n{body}",
+            host.address,
+            body.len()
+        );
+        socket.write_all(request.as_bytes()).await?;
+        socket.flush().await?;
+        provider.observed().await?;
+        drop(socket);
+        let check = tokio::time::timeout(Duration::from_secs(1), async {
+            while provider.closed.load(Ordering::SeqCst) == 0 {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await;
+        assert_eq!(fixture.calls(), 0);
+        fixture.service.shutdown().await;
+        host.shutdown().await?;
+        provider.close().await?;
+        check
+            .map_err(|_| format!("stateless HTTP disconnect retained optional request: {name}"))?;
+    }
+    Ok(())
+}
+
+#[tokio::test]
+async fn actual_stdio_eof_during_optional_prepare_and_preview_drains_owned_process() -> Result<()> {
+    eprintln!("T06 EOF control=incomplete-http phase=start");
+    eof::incomplete_readiness_controls().await?;
+    eprintln!("T06 EOF control=incomplete-http phase=passed");
+    eprintln!("T06 EOF control=early-error-cleanup phase=start");
+    eof::early_failure_controls().await?;
+    eprintln!("T06 EOF control=early-error-cleanup phase=passed");
+    eprintln!("T06 EOF control=protocol-and-child-status phase=start");
+    eof::initialization_controls().await?;
+    eprintln!("T06 EOF control=protocol-and-child-status phase=passed");
+    for name in ["slopsearx_search", "slopsearx_explain_search_scope"] {
+        eprintln!("T06 EOF positive tool={name} phase=start");
+        eof::run(name, eof::Fault::None).await?;
+        eprintln!("T06 EOF positive tool={name} phase=passed");
+    }
+    Ok(())
+}
+
+/// Execute the real MCP handler and its production opaque output projection,
+/// using an in-memory SDK connection solely to obtain a real server peer.
+async fn warning_tool_call(
+    surface: &ssx_mcp::search_surface::SearchSurface,
+    peer: rmcp::Peer<rmcp::RoleServer>,
+    name: &str,
+    arguments: serde_json::Value,
+) -> Result<ssx_json::Value> {
+    use rmcp::ServerHandler;
+    let request = serde_json::json!({"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":name,"arguments":arguments}});
+    let mut overlay = ssx_mcp::opaque::Overlay::default();
+    overlay.request(
+        &ssx_mcp::search_surface::SearchSurface::catalogs(),
+        &request.to_string(),
+    )?;
+    let response = surface
+        .call_tool(
+            rmcp::model::CallToolRequestParams::new(name.to_owned())
+                .with_arguments(arguments.as_object().unwrap().clone()),
+            rmcp::service::RequestContext::new(rmcp::model::RequestId::Number(1), peer),
+        )
+        .await?;
+    let rmcp::model::CallToolResponse::Complete(response) = response else {
+        panic!("unexpected incomplete tool response")
+    };
+    let response = serde_json::json!({"jsonrpc":"2.0","id":1,"result":response});
+    let full: ssx_json::Value = ssx_json::from_str(&overlay.response(&response.to_string())?)?;
+    let result = &full["result"];
+    let text: ssx_json::Value = ssx_json::from_str(result["content"][0]["text"].as_str().unwrap())?;
+    assert_eq!(
+        text, result["structuredContent"],
+        "MCP text and structured envelopes differ"
+    );
+    Ok(text)
+}
+
+#[tokio::test]
+async fn runtime_scope_warning_survives_native_mcp_and_snapshot_without_cache_admission()
+-> Result<()> {
+    use rmcp::ServiceExt;
+    use ssx_json::json;
+    let server = private_valkey::Server::start();
+    let mut fake = engines();
+    fake[0].count = 1;
+    fake[1].count = 1;
+    fake[1].delay = Duration::from_secs(60);
+    let fixture = fixture::Fixture::with_engines(server.url(), true, fake).await;
+    let (server_io, client_io) = tokio::io::duplex(65536);
+    let surface = fixture.surface.clone();
+    let serving = tokio::spawn(async move { surface.serve(server_io).await });
+    let client = rmcp::model::ClientConfig::default()
+        .serve(client_io)
+        .await?;
+    let service = serving.await??;
+    let peer = service.peer().clone();
+    let surface = fixture.surface.clone();
+    // prefer_fresh returns before cache IO; deadline-truncated writes are skipped.
+    // Startup, snapshot persistence/reads and connection drain use running time.
+    tokio::time::pause();
+    let call =
+        tokio::spawn(async move {
+            warning_tool_call(&surface, peer, "slopsearx_search", serde_json::json!({
+            "query":"runtime warning regression", "engines":["wikipedia","pubmed"],
+            "freshness":"prefer_fresh", "interactive_timeout_ms":100, "safesearch":"moderate",
+        })).await
+        });
+    // Auto-advance occurs only when all runnable tasks are idle. The immediate
+    // engine and collector therefore finish before this 1ms sleep completes;
+    // the second engine remains pending beyond the 100ms interactive deadline.
+    tokio::time::sleep(Duration::from_millis(1)).await;
+    assert_eq!(fixture.calls(), 2);
+    tokio::time::advance(Duration::from_millis(99)).await;
+    tokio::time::resume();
+    let response = call.await??;
+    assert_eq!(response["meta"]["deadline_exceeded"], true);
+    assert_eq!(response["meta"]["partial"], true);
+    assert_eq!(response["meta"]["cached"], false);
+    assert_eq!(response["results"].as_array().unwrap().len(), 1);
+    assert_eq!(response["engine_outcomes"][0]["status"], "ok");
+    assert_eq!(response["engine_outcomes"][1]["status"], "unavailable");
+    assert_eq!(
+        response["engine_outcomes"][1]["message"],
+        "interactive deadline reached"
+    );
+    let warning =
+        "Interactive deadline reached; captured results or suggestions may be incomplete.";
+    assert_eq!(
+        response["warnings"],
+        json!([
+            "language 'en' is not enforced by selected adapters",
+            "moderate safesearch is requested but may not be enforced by every adapter",
+            warning
+        ])
+    );
+    let cursor =
+        ssx_domain::SnapshotId::new(response["meta"]["cursor"].as_str().unwrap().to_owned())
+            .unwrap();
+    let SnapshotLookup::Found(snapshot) = fixture.surface.state().snapshots.read(&cursor).await
+    else {
+        panic!("snapshot missing")
+    };
+    assert_eq!(snapshot.scope().warnings, [warning]);
+    assert_eq!(snapshot.results().len(), 1);
+    let page = warning_tool_call(
+        &fixture.surface,
+        service.peer().clone(),
+        "slopsearx_read_results",
+        serde_json::json!({"cursor":cursor.as_str()}),
+    )
+    .await?;
+    assert_eq!(page["results"].as_array().unwrap().len(), 1);
+    assert!(
+        page.get("warnings").is_none(),
+        "result-page contract adds no warnings field"
+    );
+    assert_eq!(fixture.calls(), 2);
+    let cached_keys: Vec<String> = redis::cmd("KEYS")
+        .arg("search:*")
+        .query(&mut server.connection())?;
+    assert!(
+        cached_keys.is_empty(),
+        "deadline-truncated result entered cache"
+    );
+    // A deadline-truncated response was not admitted. A separate complete
+    // query proves the ordinary cache path still returns identical warnings.
+    let complete_args = serde_json::json!({"query":"admitted warning cache control", "engines":["wikipedia"], "safesearch":"moderate"});
+    let first = warning_tool_call(
+        &fixture.surface,
+        service.peer().clone(),
+        "slopsearx_search_targeted",
+        complete_args.clone(),
+    )
+    .await?;
+    let after_first = fixture.calls();
+    let cached = warning_tool_call(
+        &fixture.surface,
+        service.peer().clone(),
+        "slopsearx_search_targeted",
+        complete_args,
+    )
+    .await?;
+    assert_eq!(first["meta"]["cached"], false);
+    assert_eq!(cached["meta"]["cached"], true);
+    assert_eq!(cached["warnings"], first["warnings"]);
+    assert_eq!(fixture.calls(), after_first);
+    client.cancel().await?;
+    service.cancel().await?;
+    Ok(())
+}

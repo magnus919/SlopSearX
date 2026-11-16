@@ -21,7 +21,7 @@ import pytest
 import uvicorn
 from fastmcp import Client, FastMCP
 
-from slopsearx.mcp.gateway import _make_proxy, _register_proxy, create_gateway
+from slopsearx.mcp.gateway import _field, _make_proxy, _register_proxy, create_gateway
 from slopsearx.mcp.security import make_http_app
 from slopsearx.mcp.server import create_server
 
@@ -49,7 +49,7 @@ async def _wait_for_port(port: int, timeout: float = 20.0) -> bool:
 
 
 @asynccontextmanager
-async def _gateway_client(gateway: FastMCP):
+async def _gateway_client(gateway: FastMCP, *, check_shutdown: bool = False):
     """Exercise the gateway across its HTTP boundary, with its real lifespan."""
     port = _free_port()
     server = uvicorn.Server(
@@ -77,6 +77,8 @@ async def _gateway_client(gateway: FastMCP):
         # rejects bad credentials; the test asserts that startup failure.
         with suppress(SystemExit):
             await asyncio.wait_for(task, timeout=10)
+        if check_shutdown:
+            assert not server.lifespan.shutdown_failed
 
 
 @pytest.fixture
@@ -119,9 +121,14 @@ class TestGateway:
     async def test_gateway_proxies_tools_and_resources(self, remote_server: Any) -> None:
         url = f"http://127.0.0.1:{remote_server}/mcp"
         gateway = create_gateway(url, token=TOKEN)
+        async with Client(url, auth=TOKEN) as direct:
+            remote_tools = {
+                tool.name: _field(tool, "input_schema", "inputSchema") for tool in await direct.list_tools()
+            }
 
         async with _gateway_client(gateway) as client:
             tools = await client.list_tools()
+            assert {tool.name: _field(tool, "input_schema", "inputSchema") for tool in tools} == remote_tools
             names = [tool.name for tool in tools]
             assert "slopsearx_search" in names
             assert "slopsearx_get_service_status" in names
@@ -335,3 +342,170 @@ class TestCatalogPagination:
         assert requests[1]["params"]["cursor"] == "opaque-next"
         await read.aclose()
         await write.aclose()
+
+
+class TestInputSchemaFidelity:
+    async def test_complete_schema_and_nested_copy(self) -> None:
+        from copy import deepcopy
+
+        schema = {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "Exact query", "minLength": 1},
+                "engines": {"type": "array", "items": {"type": "string", "enum": ["arxiv", "pubmed"]}},
+                "filters": {
+                    "anyOf": [
+                        {
+                            "type": "object",
+                            "properties": {"limit": {"type": "integer", "minimum": 1}},
+                            "additionalProperties": False,
+                        },
+                        {"type": "null"},
+                    ],
+                    "default": None,
+                },
+            },
+            "required": ["query", "engines"],
+            "additionalProperties": False,
+        }
+        expected = deepcopy(schema)
+        server = FastMCP("schema-copy")
+        _register_proxy(server, _make_proxy("remote", schema), "remote", "Description", schema)
+        tool = await server.get_tool("remote")
+        assert tool.parameters == expected
+        assert schema == expected
+        tool.parameters["properties"]["engines"]["items"]["enum"].append("changed")
+        assert schema == expected
+
+    async def test_optional_schema_keeps_direct_registration_compatible(self) -> None:
+        server = FastMCP("old-helper-call")
+        proxy = _make_proxy("simple", {"properties": {"query": {"type": "string"}}, "required": ["query"]})
+        _register_proxy(server, proxy, "simple", "Description")
+        tool = await server.get_tool("simple")
+        assert tool.parameters["properties"]["query"]["type"] == "string"
+        assert tool.parameters["required"] == ["query"]
+
+    async def test_nested_values_forwarded_unchanged(self, monkeypatch: Any) -> None:
+        import json
+
+        from mcp.types import CallToolResult, TextContent
+
+        from slopsearx.mcp import gateway
+
+        schema = {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string"},
+                "engines": {"type": "array", "items": {"type": "string"}},
+                "filters": {"anyOf": [{"type": "object"}, {"type": "null"}], "default": None},
+            },
+            "required": ["query", "engines"],
+        }
+        calls: list[tuple[str, dict[str, Any]]] = []
+
+        class Session:
+            async def call_tool(self, name: str, arguments: dict[str, Any]) -> Any:
+                calls.append((name, arguments))
+                return CallToolResult(content=[TextContent(type="text", text=json.dumps(arguments))])
+
+        monkeypatch.setattr(gateway, "_get_session", lambda: Session())
+        server = FastMCP("schema-call")
+        _register_proxy(server, _make_proxy("remote", schema), "remote", "Description", schema)
+        arguments = {"query": "offline", "engines": ["arxiv"], "filters": {"limit": 2}}
+        async with Client(server) as client:
+            result = await client.call_tool_mcp("remote", arguments)
+        assert calls == [("remote", arguments)]
+        assert gateway._field(result, "structured_content", "structuredContent") == arguments
+
+
+class TestGatewaySessionOwner:
+    @pytest.mark.parametrize("exit_mode", ["normal", "body_error", "cancel"])
+    async def test_connection_scopes_stay_in_owner_task(self, monkeypatch: Any, exit_mode: str) -> None:
+        from slopsearx.mcp import gateway
+
+        entered = asyncio.Event()
+        exited = asyncio.Event()
+        tasks = []
+
+        @asynccontextmanager
+        async def connection(*args: Any, **kwargs: Any):
+            tasks.append(asyncio.current_task())
+            try:
+                yield
+            finally:
+                tasks.append(asyncio.current_task())
+                exited.set()
+
+        monkeypatch.setattr(gateway, "_gateway_connection", connection)
+
+        async def hosting() -> None:
+            async with gateway._gateway_lifespan(FastMCP("owner-test"), "unused", None, 1):
+                entered.set()
+                if exit_mode == "body_error":
+                    raise ValueError("body failed")
+                if exit_mode == "cancel":
+                    await asyncio.Event().wait()
+
+        host = asyncio.create_task(hosting())
+        await asyncio.wait_for(entered.wait(), 1)
+        if exit_mode == "cancel":
+            host.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await host
+        elif exit_mode == "body_error":
+            with pytest.raises(ValueError, match="body failed"):
+                await host
+        else:
+            await host
+        assert exited.is_set()
+        assert len(tasks) == 2
+        assert tasks[0] is tasks[1] and tasks[0] is not host
+        assert tasks[0].done()
+
+    async def test_startup_failure_propagates_and_owner_finishes(self, monkeypatch: Any) -> None:
+        from slopsearx.mcp import gateway
+
+        owners = []
+
+        @asynccontextmanager
+        async def connection(*args: Any, **kwargs: Any):
+            owners.append(asyncio.current_task())
+            raise RuntimeError("startup failed")
+            yield  # pragma: no cover
+
+        monkeypatch.setattr(gateway, "_gateway_connection", connection)
+        with pytest.raises(RuntimeError, match="startup failed"):
+            async with gateway._gateway_lifespan(FastMCP("owner-test"), "unused", None, 1):
+                pytest.fail("startup must fail closed")
+        assert owners[0].done()
+
+    async def test_cancelled_startup_closes_owner(self, monkeypatch: Any) -> None:
+        from slopsearx.mcp import gateway
+
+        entered = asyncio.Event()
+        exited = asyncio.Event()
+        owners = []
+
+        @asynccontextmanager
+        async def connection(*args: Any, **kwargs: Any):
+            owners.append(asyncio.current_task())
+            entered.set()
+            try:
+                await asyncio.Event().wait()
+                yield
+            finally:
+                exited.set()
+
+        monkeypatch.setattr(gateway, "_gateway_connection", connection)
+
+        async def hosting() -> None:
+            async with gateway._gateway_lifespan(FastMCP("owner-test"), "unused", None, 1):
+                pytest.fail("cancelled startup cannot publish a session")
+
+        host = asyncio.create_task(hosting())
+        await asyncio.wait_for(entered.wait(), 1)
+        host.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await host
+        assert exited.is_set()
+        assert owners[0].done()

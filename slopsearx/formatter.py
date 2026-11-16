@@ -499,6 +499,8 @@ def _portal_hidden_inputs(
         "engines": _portal_state_value(state, "engines"),
         "language": _portal_state_value(state, "language", "en"),
         "time_range": _portal_state_value(state, "time_range"),
+        "date_from": _portal_state_value(state, "date_from"),
+        "date_to": _portal_state_value(state, "date_to"),
         "safesearch": str(_portal_state_value(state, "safesearch", 0)),
         "pageno": str(page),
     }
@@ -517,6 +519,8 @@ def _portal_page_url(state: dict[str, Any] | None, page: int) -> str:
         "engines": _portal_state_value(state, "engines"),
         "language": _portal_state_value(state, "language", "en"),
         "time_range": _portal_state_value(state, "time_range"),
+        "date_from": _portal_state_value(state, "date_from"),
+        "date_to": _portal_state_value(state, "date_to"),
         "safesearch": str(_portal_state_value(state, "safesearch", 0)),
         "pageno": str(page),
     }
@@ -531,6 +535,8 @@ def _portal_format_url(state: dict[str, Any] | None, output_format: str) -> str:
         "engines": _portal_state_value(state, "engines"),
         "language": _portal_state_value(state, "language", "en"),
         "time_range": _portal_state_value(state, "time_range"),
+        "date_from": _portal_state_value(state, "date_from"),
+        "date_to": _portal_state_value(state, "date_to"),
         "safesearch": str(_portal_state_value(state, "safesearch", 0)),
         "pageno": str(_portal_state_value(state, "page", 1)),
         "format": output_format,
@@ -719,10 +725,17 @@ def _portal_scope_panel(state: dict[str, Any] | None) -> str:
 
     enforcement = _portal_state_value(state, "filter_enforcement", {})
     status_bits: list[str] = []
-    for key, label in (("time_range", "time"), ("safesearch", "SafeSearch")):
+    for key, label in (
+        ("time_range", "time"),
+        ("safesearch", "SafeSearch"),
+        ("date_from", "published from"),
+        ("date_to", "published through"),
+    ):
         entry = enforcement.get(key) if isinstance(enforcement, dict) else None
         if not isinstance(entry, dict) or not entry.get("requested"):
             continue
+        if key in {"date_from", "date_to"}:
+            label += " (" + html_lib.escape(str(entry["requested"])) + ")"
         status = str(entry.get("status", "unsupported"))
         reason = html_lib.escape(str(entry.get("reason", "")))
         status_bits.append(
@@ -1073,6 +1086,11 @@ def format_yaml_markdown(
             "deadline_exceeded": meta.get("deadline_exceeded", False),
             "query_id": meta.get("query_id", ""),
         }
+        if "date_filter" in meta:
+            yaml_section["meta"]["date_filter"] = meta["date_filter"]
+            # Bounded clients must distinguish successful empty acquisition
+            # from upstream failure, just as they do for the JSON contract.
+            yaml_section["meta"]["engine_status"] = meta.get("engine_status", {})
         if "advisories" in meta:
             yaml_section["meta"]["advisories"] = meta["advisories"]
         if "jev_routing" in meta:

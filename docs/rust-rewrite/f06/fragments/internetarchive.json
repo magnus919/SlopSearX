@@ -1,0 +1,53 @@
+{
+  "api_key_env": "ENGINE_INTERNETARCHIVE_API_KEY",
+  "api_secret_env": null,
+  "auth_class": "none",
+  "categories": [
+    "reference",
+    "web:archive",
+    "historical"
+  ],
+  "caveats": [
+    "opt-in engine, disabled by default"
+  ],
+  "cost_class": "free",
+  "defaults": {
+    "base_url": "https://archive.org",
+    "enabled": false,
+    "max_results": 10,
+    "rate_limit": 5,
+    "timeout_ms": 10000,
+    "type": "api",
+    "weight": 0.6
+  },
+  "display_name": "Internet Archive",
+  "enabled_by_default": false,
+  "enforced_filters": {},
+  "engine_type": "api",
+  "failure_classes": [
+    "rate_limited",
+    "blocked",
+    "error",
+    "timeout"
+  ],
+  "implementation": "unavailable",
+  "name": "internetarchive",
+  "routing": {
+    "purpose": "archived web pages and historical media",
+    "role": "specialist",
+    "use_when": "the query seeks an older or removed version"
+  },
+  "sensitive": false,
+  "supported_filters": {
+    "date_from": false,
+    "date_to": false,
+    "language": false,
+    "pagination": false,
+    "safesearch": false,
+    "time_range": false
+  },
+  "supported_media_types": [],
+  "supported_result_types": [
+    "text"
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "api_key_env": "ENGINE_OPENLIBRARY_API_KEY",
+  "api_secret_env": null,
+  "auth_class": "none",
+  "categories": [
+    "books",
+    "reference"
+  ],
+  "caveats": [],
+  "cost_class": "free",
+  "defaults": {
+    "base_url": "",
+    "enabled": true,
+    "max_results": 10,
+    "rate_limit": null,
+    "timeout_ms": 5000,
+    "type": "api",
+    "weight": 1.0
+  },
+  "display_name": "Open Library",
+  "enabled_by_default": true,
+  "enforced_filters": {},
+  "engine_type": "api",
+  "failure_classes": [
+    "rate_limited",
+    "error",
+    "timeout"
+  ],
+  "implementation": "unavailable",
+  "name": "openlibrary",
+  "routing": {
+    "purpose": "books and editions",
+    "role": "specialist",
+    "use_when": "the query seeks a book, author, ISBN, or edition"
+  },
+  "sensitive": false,
+  "supported_filters": {
+    "date_from": false,
+    "date_to": false,
+    "language": false,
+    "pagination": false,
+    "safesearch": false,
+    "time_range": false
+  },
+  "supported_media_types": [],
+  "supported_result_types": [
+    "text",
+    "media"
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "status": "actual W05 focused HTTP numeric/depth/maxbatch defect regressions pass; full production/O01/W09 qualification remains separate",
+  "original_failure_preserved": "numeric-wire-defect-v1.json",
+  "source_snapshot": "/private/tmp/w05-shared-composition-v1/manifest.json",
+  "source_snapshot_sha256": "50b590169b4568cdc050ceb5eac8362889aa30881a9bc33b482ddb4ad2410a49",
+  "actual_wire_log": "shared-wire-initial-v1.log.json",
+  "counts": {
+    "lib": 21,
+    "wire": 7,
+    "w05_mcp": 3,
+    "ignored": 0,
+    "retained_events": 300,
+    "stored_bytes_each": 65536,
+    "depth_arrays_each": 98
+  },
+  "native_cases": 99,
+  "prior94_preserved": true,
+  "case_manifest_sha256": "b87237963bb192a75d5255f76c1646f46be349569e656e4fd6cb42323952be1a",
+  "output_limits": {
+    "focused_http_bytes": 33554432,
+    "default_input_bytes": 4194304,
+    "pending_requests": 32,
+    "w05_handler_argument_bytes": 65536,
+    "default_http_output_bytes": 4194304,
+    "default_legacy_output_bytes": 16777216
+  },
+  "actual_http_sizes": [
+    13116620,
+    19625420,
+    16371020
+  ],
+  "provider_calls": 0,
+  "oracle": "raw HTTP RawValue envelopes; per-event ssx_json exact public fields; adjacent beyond-u64 and literal reserved object; original opaque string independently retained in current fixture",
+  "negative_controls": "wire-negatives-v1.json",
+  "format_provenance": "/private/tmp/w05-transfer-format-receipt-v3/receipt.json",
+  "formatted_gate_reports": {
+    "W05": {
+      "sha256": "2730cf11d4c69890b0b95cbe4f944e041bdc528aacf5485a4dab77b70077e1ea",
+      "path": "/private/tmp/w05-shared-qualification-v2/W05.json",
+      "qualification": "formatted source before independent string and named assertion strengthening; runtime unchanged"
+    },
+    "F01": {
+      "sha256": "30f96cf5f03b7703d761d566e01aca0a05225b75110a516846ce28d42f1b229e",
+      "path": "/private/tmp/w05-shared-qualification-v2/F01.json",
+      "qualification": "formatted source before independent string and named assertion strengthening; runtime unchanged"
+    },
+    "O06": {
+      "sha256": "79bbdba7cd4acd6735226c98107382cc34ad1f5c203fe38f493134896e89eb77",
+      "path": "/private/tmp/w05-shared-qualification-v2/O06.json",
+      "qualification": "formatted source before independent string and named assertion strengthening; runtime unchanged"
+    },
+    "T01": {
+      "sha256": "2579b55399bb348fb3e1019475a235a387a59fb183a29c903d63d61e5ae3de95",
+      "path": "/private/tmp/w05-shared-qualification-v2/T01.json",
+      "qualification": "formatted source before independent string and named assertion strengthening; runtime unchanged"
+    },
+    "T04": {
+      "sha256": "315c9cce0ef3bb95252fdddf02a1785af94d858798b78406626f0bfbb0bbc6d4",
+      "path": "/private/tmp/w05-shared-qualification-v2/T04.json",
+      "qualification": "formatted source before independent string and named assertion strengthening; runtime unchanged"
+    },
+    "T05": {
+      "sha256": "af2d6078e2969b44e16b325f7d4a85130447b9fad4d9e2b182e32b8000f4a1f6",
+      "path": "/private/tmp/w05-shared-qualification-v2/T05.json",
+      "qualification": "formatted source before independent string and named assertion strengthening; runtime unchanged"
+    },
+    "W04": {
+      "sha256": "793cf1bcabae4f6b9e5786f50feab4b6c6f16719a47c8f7185f738964732edfa",
+      "path": "/private/tmp/w05-shared-qualification-v2/W04.json",
+      "qualification": "formatted source before independent string and named assertion strengthening; runtime unchanged"
+    }
+  }
+}

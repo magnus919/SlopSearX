@@ -1,0 +1,77 @@
+{
+  "schema": "RMCP_SECURITY_SUCCESSOR_V1",
+  "scope": "Exact rmcp/macros 3.5.1 to 3.9.0 security upgrade; reconstruct unchanged accepted portal lock and workspace manifest before existing custody chains. No advisory exemptions.",
+  "baseline_commit": "8ee37a22d393ccff7493c5196be268cd872c140f",
+  "advisories": [
+    "RUSTSEC-2026-0457",
+    "RUSTSEC-2026-0461",
+    "RUSTSEC-2026-0462"
+  ],
+  "rows": [
+    {
+      "path": "Cargo.toml",
+      "prior": {
+        "bytes": 2039,
+        "sha256": "8721602f2bb19541fc3c419834dcdab57b555a5b86b1051d2f7b61a1fbe4f6bc",
+        "mode": "0644"
+      },
+      "current": {
+        "bytes": 2039,
+        "sha256": "fb55fe19bb79aa592b4a9282e0af2fc1ff7efdf0000822811e51c0e3511f89a6",
+        "mode": "0644"
+      },
+      "edits": [
+        {
+          "at": 712,
+          "remove_utf8": "rmcp = { version = \"=3.5.1\" }\n",
+          "insert_utf8": "rmcp = { version = \"=3.9.0\" }\n"
+        }
+      ]
+    },
+    {
+      "path": "Cargo.lock",
+      "prior": {
+        "bytes": 94296,
+        "sha256": "37415fcb0b57ae7ab3f502067485cb39143827aee6e54a8acb2e87b6a7e24549",
+        "mode": "0644"
+      },
+      "current": {
+        "bytes": 94314,
+        "sha256": "89545e8f75650c1d83c7aa5a36c92bc878184cf87cf42d3d0e93b2acc0a1ccd7",
+        "mode": "0644"
+      },
+      "edits": [
+        {
+          "at": 53039,
+          "remove_utf8": "version = \"3.5.1\"\n",
+          "insert_utf8": "version = \"3.9.0\"\n"
+        },
+        {
+          "at": 53122,
+          "remove_utf8": "checksum = \"ab5023804cbe0304cbe06197ac16e645a0a0d0ffa2953bf735c15c2fa0213350\"\n",
+          "insert_utf8": "checksum = \"d24a7e92f4bcaa36b97fa93c4fa7ca8f3e669eced949345b3462dba333c7f909\"\n"
+        },
+        {
+          "at": 53332,
+          "remove_utf8": "",
+          "insert_utf8": " \"libc\",\n"
+        },
+        {
+          "at": 53519,
+          "remove_utf8": "",
+          "insert_utf8": " \"sha2\",\n"
+        },
+        {
+          "at": 53665,
+          "remove_utf8": "version = \"3.5.1\"\n",
+          "insert_utf8": "version = \"3.9.0\"\n"
+        },
+        {
+          "at": 53748,
+          "remove_utf8": "checksum = \"a1da498700030856ba63114bceefa30ba21f5e278cb975e5b9de3529fe842b40\"\n",
+          "insert_utf8": "checksum = \"b3140f24a766f80f9ec1607bde85680959a69b83d46fa9ce87dadab7e67ab029\"\n"
+        }
+      ]
+    }
+  ]
+}

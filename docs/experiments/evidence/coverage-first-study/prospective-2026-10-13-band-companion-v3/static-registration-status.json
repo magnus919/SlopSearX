@@ -1,0 +1,128 @@
+{
+  "acquisition_manifest_schema": "coverage-live-acquisition-manifest/2",
+  "acquisition_profile": "coverage-acquisition-profile/2",
+  "authority": "Prospective public static materials only. No stage admission, phase permit, execution authority, invocation, or qualification is included or inferred.",
+  "band_companion_contract": {
+    "path": "band-companion-contract.json",
+    "same_bytes_for_both_stages": true,
+    "sha256": "29a25b38edd13712ab19eddc75b46a1232937487029fa53dd9668ab8c0ecdbc8"
+  },
+  "candidate_runtime_identity_sha256": "ce4723f03f1beec9d87a630520a39cddf89fcf20d0f1f98d79dcc396cdb237d1",
+  "cohorts": {
+    "path": "cohorts.json",
+    "sha256": "36d4cbff9c93555d35d7269525616f009a21727c8d1141a8a2a61934791038f0"
+  },
+  "late_phase_materials": "stage-bound placeholders only; no acquired task inputs, capture receipts, blind assignments, selector maps, or answer assignments",
+  "lineage": {
+    "all_four_new_and_distinct": true,
+    "all_new_stage_and_packet_ids_excluded_from_retired_inventory": true,
+    "confirmation_is_new_and_uninvoked": true,
+    "confirmation_packet_stage_uuid": "44c5f43a-d973-4850-b09a-10d4d40eb006",
+    "confirmation_stage_uuid": "fac0fc0f-619c-467d-b935-3aa70946cfc7",
+    "development_packet_stage_uuid": "6e70be94-44ae-4258-939c-7c8a20323f1b",
+    "development_pass_receipt": null,
+    "development_stage_uuid": "0d73e0c1-2d97-433d-bae1-b0dd7eb4b1ed"
+  },
+  "protocol": {
+    "path": "protocol.json",
+    "sha256": "567e337d41268f380348abc70ab1bf4a0249852f237797fa361295f1e34afb06"
+  },
+  "qualified_source_closure": {
+    "path": "current-qualified-source-closure.json",
+    "sha256": "2f6b1b7f0946683df4b6e232a94e825d6f381733951b2b5b33ad9bc880d4f33f"
+  },
+  "quality_result": "none; full qualification pending",
+  "retired_identity_ledger_sha256": "b1c6112d58a92b26f9c28512485e20074bc46a040a538fbc0bbeb4eaf1510d28",
+  "retired_stage_uuid_count": 51,
+  "schema": "coverage-acquisition-v2-static-registration-status/1",
+  "scientific_provider_dispatches_under_this_registration": 0,
+  "source_preparation": {
+    "active_environment_sha256": "d41b4de816de1984a7a8dd774d68d5aa45c02da006fc78027b87382a514a21f9",
+    "loaded_project_modules": 101,
+    "locked_environment_audit": "passed",
+    "scientific_calls": 0
+  },
+  "source_revision": "278bbe4b36b91aff706ff9814eaecd2bae452f84",
+  "stages": {
+    "confirmation": {
+      "acquisition_manifest_preview_sha256": "9752be6001851cf6a56974d243bbc286ee01ad7923e8a6ff8b3de86ce80dcb04",
+      "acquisition_plan_sha256": "4e83ac1d3e56c0fc885bfd649e8ad2598a4bcd87320cdbca545f4c7bbc9b60e7",
+      "admission_status": "not_admitted",
+      "capture_plan_sha256": "c050aaaba777c98efbf630eb5ecde8d2b96c82a29620cb44ae06d5a085782810",
+      "execution_outcome": "not_invoked",
+      "full_static_preflight": "passed",
+      "initial_registration_sha256": "6fb783606f744990137445717695a25fd96662ac4924ccc4725964c8d2aa0a41",
+      "navigation_target_count": 5,
+      "packet_stage_uuid": "44c5f43a-d973-4850-b09a-10d4d40eb006",
+      "research_case_count": 8,
+      "selector_operation_count": 39,
+      "stage_uuid": "fac0fc0f-619c-467d-b935-3aa70946cfc7",
+      "static_material_status": "prepared_offline_unqualified",
+      "static_pins": {
+        "acquisition_plan": "4e83ac1d3e56c0fc885bfd649e8ad2598a4bcd87320cdbca545f4c7bbc9b60e7",
+        "answer_assessment_plan": "b9861695c0b2a79a18cd9969cee2dcec536fc31fe8f0e1dc386dc15135313527",
+        "capture_plan": "c050aaaba777c98efbf630eb5ecde8d2b96c82a29620cb44ae06d5a085782810",
+        "coverage_source": "806746b4fa5c497f269933008db76650e2c1113dbd35a08b011d86c4d81f11ca",
+        "dependency_lock": "8ecfcd029d2461631d44a2910ef5cfaa23a436da9cbc9a96ed0302e1d96861d0",
+        "production_rerank_source": "df518bac899fa457e713201192a65f8ee0c3599419382e5be221d5ac366b479e",
+        "protocol": "567e337d41268f380348abc70ab1bf4a0249852f237797fa361295f1e34afb06",
+        "qualified_source_closure": "2f6b1b7f0946683df4b6e232a94e825d6f381733951b2b5b33ad9bc880d4f33f",
+        "reference_manifest": "592c973fd64c09cd8b03a73dd0ce81039db51a07eeb40625beb7572f96107478",
+        "source_capture_manifest": "77a5582c27cbb954e0473d3b3e42d267102969150d38f104df29fc8923d23ad0",
+        "task_input_manifest": "92430aa7491ed7065c7bbde9bb2212ce87645487185c266f6089a622716402f0"
+      },
+      "static_preflight_receipt": {
+        "config_sha256": "64b5f471dd18499db83400af294da4cdc2ad72a8e6b5ff8e17a591e00402aa37",
+        "exit_code": 0,
+        "registration_sha256": "6fb783606f744990137445717695a25fd96662ac4924ccc4725964c8d2aa0a41",
+        "scientific_calls": 0,
+        "source_revision": "278bbe4b36b91aff706ff9814eaecd2bae452f84",
+        "stage_roots_created": false,
+        "status": "static-preflight-passed",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_sha256": "bfb64f53f89f8d2da3dcd6efa44eee9da289b0c219dfc621309b48197949e63f"
+      }
+    },
+    "development": {
+      "acquisition_manifest_preview_sha256": "7675dc553dfc70241d0c54a3abe7722eea69ffe582c837265b1ef5c17c5ca08d",
+      "acquisition_plan_sha256": "645a4e3ca50f433bc2c523a469a82c1b8685104fdcbac8d1463b08551095c9d2",
+      "admission_status": "not_admitted",
+      "capture_plan_sha256": "d41d1f111d7e081bae825f81ff79ce0a0b92bda3bb1eb975ae3ddb037ea4f5b3",
+      "execution_outcome": "not_invoked",
+      "full_static_preflight": "passed",
+      "initial_registration_sha256": "61b153c84ade3746e21547ff6de9c1ebe49fb884771686095ea791c639387941",
+      "navigation_target_count": 5,
+      "packet_stage_uuid": "6e70be94-44ae-4258-939c-7c8a20323f1b",
+      "research_case_count": 8,
+      "selector_operation_count": 39,
+      "stage_uuid": "0d73e0c1-2d97-433d-bae1-b0dd7eb4b1ed",
+      "static_material_status": "prepared_offline_unqualified",
+      "static_pins": {
+        "acquisition_plan": "645a4e3ca50f433bc2c523a469a82c1b8685104fdcbac8d1463b08551095c9d2",
+        "answer_assessment_plan": "9e05d9fc2200421b3bac530c3eb40a8e2b71bcfd7d334202aba55ce14a880482",
+        "capture_plan": "d41d1f111d7e081bae825f81ff79ce0a0b92bda3bb1eb975ae3ddb037ea4f5b3",
+        "coverage_source": "806746b4fa5c497f269933008db76650e2c1113dbd35a08b011d86c4d81f11ca",
+        "dependency_lock": "8ecfcd029d2461631d44a2910ef5cfaa23a436da9cbc9a96ed0302e1d96861d0",
+        "production_rerank_source": "df518bac899fa457e713201192a65f8ee0c3599419382e5be221d5ac366b479e",
+        "protocol": "567e337d41268f380348abc70ab1bf4a0249852f237797fa361295f1e34afb06",
+        "qualified_source_closure": "2f6b1b7f0946683df4b6e232a94e825d6f381733951b2b5b33ad9bc880d4f33f",
+        "reference_manifest": "2c20010cbf1be92824bb5f36156b8165655fc340c1aefb4043ea41e08a2ed6b4",
+        "source_capture_manifest": "9dbf8f8f25a5d8fd303779189fab70d9dc48180bbf49d9e0e055adb2445abda4",
+        "task_input_manifest": "80af6774f0b86a39c071776898a0925e794e89d3d2063341a98523cae98aa8d8"
+      },
+      "static_preflight_receipt": {
+        "config_sha256": "0f155911fe4f77ad8a93c2574a38dacc9faf7abc6be6cdc5470ca7b18dc718c0",
+        "exit_code": 0,
+        "registration_sha256": "61b153c84ade3746e21547ff6de9c1ebe49fb884771686095ea791c639387941",
+        "scientific_calls": 0,
+        "source_revision": "278bbe4b36b91aff706ff9814eaecd2bae452f84",
+        "stage_roots_created": false,
+        "status": "static-preflight-passed",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_sha256": "47ff6922318e042ddb10f9005ec2750594a169a330e89a24c55863f7c7a4f594"
+      }
+    }
+  },
+  "status": "prospective_static_materials_prepared_offline_not_admitted_or_invoked",
+  "superseded_public_registration_merge_commit": "34e17bd21770f2adf66e5a8653833a414e42080f"
+}

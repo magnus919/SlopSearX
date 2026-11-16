@@ -1,0 +1,14 @@
+{
+  "plan_id": "W05",
+  "owner": "workflows",
+  "retirement": "G08 removes capture_source.py and all runnable backend source after frozen native corpus acceptance",
+  "path": "docs/rust-rewrite/w05/capture_source.py",
+  "classification": "temporary_manual_original_reference_oracle",
+  "mandatory_native_gate_dependency": false,
+  "runtime_dependency": false,
+  "network": "disabled before backend import; no providers or production state",
+  "interpreter": "Python 3.14.7 Unicode 16.0.0 pinned comparison only",
+  "inputs": "immutable docs/rust-rewrite/w05/inputs.json",
+  "outputs": "exclusive-create named capture path; no overwrite",
+  "purpose": "capture original pure event envelopes, invalid input classification, redaction and size behavior; storage and actual transport validated natively against private Valkey and loopback"
+}

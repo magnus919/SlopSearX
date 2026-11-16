@@ -1,0 +1,44 @@
+{
+  "qualification": "Darwin positive only",
+  "baseline": "3c5936ad5250eb37d32bc9d0fbb79b098bfd63fe",
+  "source_path_count": 7506,
+  "only_overlay": [
+    "crates/ssx-infra/src/process_pool.rs"
+  ],
+  "qualified_after_sha256": "e412b7eadf3b12a52de317a48a5547659bd1ed751636948b6de2efe392dedafb",
+  "baseline_inventory_count": 207,
+  "candidate_inventory_identical": true,
+  "all_six_existing_fixture_names": "passed exact named single-test commands",
+  "selected_held_writer": "passed both exact success/protocol outcomes plus existing payload/accounting/child-PID/drain assertions",
+  "full_infra_library": "attempt2 all inventory tests passed; no failures or ignored tests; attempt1 retained 200 passed/7 failed with missing required helper",
+  "prior_attempt": {
+    "actual_exit": 101,
+    "passed": 200,
+    "failed": 7,
+    "setup_error": "fresh --lib target lacked required ssx-html-parser; already required workspace build moved before unchanged rerun",
+    "source_changes": false
+  },
+  "checks": {
+    "baseline-lib-list": 0,
+    "selected-held-writer": 0,
+    "fixture-0": 0,
+    "fixture-1": 0,
+    "fixture-2": 0,
+    "fixture-3": 0,
+    "fixture-4": 0,
+    "fixture-5": 0,
+    "candidate-lib-list": 0,
+    "candidate-full-lib-attempt2": 0,
+    "attempt2-fmtcheck": 0,
+    "attempt2-prerequisite-workspace-all-target-build": 0,
+    "attempt2-workspace-all-target-clippy": 0
+  },
+  "runtime_default": "direct helper executable remains production/default; interpreter opt-in only private cfg(test,unix) six generated-script pools",
+  "linux_causal_old_red": "NOT EXECUTED; separate pending root authorization",
+  "historical_ARM_failure": "actual prior ETXTBSY receipt retained separately; cause remains unknown",
+  "docker": "client exists but explicit local daemon socket absent; no daemon/image acquisition/activation",
+  "source_edits": "private single-file overlay and explicitly authorized pinned scoped formatting only; no live branch edit/commit/publication",
+  "all_source_bytes_after_checks": "complete tracked map and membership matched frozen source",
+  "binary_archive_directory": "/private/tmp/process-pool-shell-fixture-darwin-v2/binaries",
+  "root_authority": "final acceptance, Linux ARM qualification and delivery remain root decisions"
+}

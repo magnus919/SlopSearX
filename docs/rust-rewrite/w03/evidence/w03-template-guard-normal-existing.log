@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/Volumes/tank01/magnus/git/slopsearx-w03/docs/rust-rewrite/w03/capture_templates.py", line 77, in <module>
+    if __name__=="__main__":main()
+                            ~~~~^^
+  File "/Volumes/tank01/magnus/git/slopsearx-w03/docs/rust-rewrite/w03/capture_templates.py", line 21, in main
+    output=Path(sys.argv[2]);require(not os.path.lexists(output),"refusing existing output before imports")
+                             ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/tank01/magnus/git/slopsearx-w03/docs/rust-rewrite/w03/capture_templates.py", line 17, in require
+    if not condition: raise RuntimeError(message)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: refusing existing output before imports

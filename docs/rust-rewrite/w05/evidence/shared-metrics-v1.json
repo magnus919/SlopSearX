@@ -1,0 +1,132 @@
+{
+  "status": "actual shared API finite counters and unchanged typed age forwarding qualified; no concrete exporter/gauge/rendering claim",
+  "head": "d83a2dffa17e4739598aec771ff561296c9491ed",
+  "source_state": "four reviewed uncommitted bridge paths after accepted integration metadata checkpoint",
+  "source_files": [
+    {
+      "path": "crates/ssx-infra/src/saved_events/observations.rs",
+      "sha256": "001de9464025eab3a892e0371dbde211dd1b4b236bc091049433d67d6566b8e9"
+    },
+    {
+      "path": "crates/ssx-infra/tests/w05.rs",
+      "sha256": "5a1b9c32fbba6d9d21dbdca05b1357c1ddbea77f40d892d3eb7ea62bcd688308"
+    },
+    {
+      "path": "docs/rust-rewrite/w05/case-manifest.json",
+      "sha256": "b86a161a00e1cdf04b11d6dc532ab86644af1ed8a230a3df2e89f4f229091f96"
+    },
+    {
+      "path": "crates/xtask/src/w05.rs",
+      "sha256": "258c4c7b13ab47ec97af0af842e960e7f623d4d7b23be038600537a3ba29c75f"
+    }
+  ],
+  "case_manifest_sha256": "b86a161a00e1cdf04b11d6dc532ab86644af1ed8a230a3df2e89f4f229091f96",
+  "actual_case_count": 105,
+  "old99_exact_prefix": true,
+  "native_tests": {
+    "ssx-infra": [
+      "original_event_envelopes_and_validation_match_exact_source",
+      "ordered_read_ack_restart_tenant_capacity_and_revocation",
+      "competing_claims_fenced_atomic_publication_and_capacity_rejection",
+      "pause_expiry_atomic_idempotence_capacity_and_retained_horizons",
+      "retention_trim_read_ack_empty_gap_and_exact_large_cursors",
+      "invalid_inputs_and_wrong_types_preflight_without_partial_publication",
+      "source_precision_clock_and_stream_rollover_boundaries",
+      "acknowledgement_v2_migration_collision_quarantine_and_recovery",
+      "scheduler_expiry_capacity_rejects_poll_before_due_and_recovers_same_runner",
+      "shared_metrics_bridge_observes_only_definite_commits_and_acknowledgements"
+    ],
+    "ssx-mcp": [
+      "actual_native_transport_create_wait_repeat_ack_restart_resume_and_grant",
+      "actual_registry_close_fences_admitted_create_and_rejects_late_mutation",
+      "actual_maximum_batches_preserve_100_exact_64k_events_and_escaping"
+    ]
+  },
+  "initial_qualification": {
+    "path": "/private/tmp/w05-shared-metrics-qualification-v1/receipt.json",
+    "sha256": "9680a50181614323ad5c83f1bf99bd0b57d90d658580c8e9f921c29e7f35a283"
+  },
+  "restored_qualification": {
+    "path": "/private/tmp/w05-shared-metrics-qualification-v2-restored/receipt.json",
+    "sha256": "52877af810cc12537d39cc3007f85c88246519a32cad8536d5f5a0fe4a087f0c"
+  },
+  "gates": {
+    "W05": {
+      "path": "/private/tmp/w05-shared-metrics-qualification-v2-restored/W05.json",
+      "sha256": "89c9eb5c6e7504ba09207717362afb148ddcad330aaf88f59598510f32e5230b"
+    },
+    "F01": {
+      "path": "/private/tmp/w05-shared-metrics-qualification-v2-restored/F01.json",
+      "sha256": "130f334fbaf9204dd60b0dd55bf46e4e035ea6ffe96146449d8bf60d4531f466"
+    },
+    "O06": {
+      "path": "/private/tmp/w05-shared-metrics-qualification-v2-restored/O06.json",
+      "sha256": "66b25afce26a4d867d1f01a7f27779952eb21606ee4fcc479efda928521a3011"
+    }
+  },
+  "actual105_completion_counter_exact": true,
+  "executed_W05_commands": 21,
+  "fixed_shared_counters": 15,
+  "shared_metrics_interface_changed": false,
+  "age": "unchanged validated Option<BacklogAge> forwarded; concrete gauge including empty/gap reset is O01 handoff",
+  "negatives": {
+    "head": "d83a2dffa17e4739598aec771ff561296c9491ed",
+    "controls": [
+      {
+        "name": "premature-publication",
+        "path": "crates/ssx-infra/src/saved_events/mod.rs",
+        "before_sha256": "31634472ea798937dc2c112bac6d7e66795da7afaf676da4123ebb2099f78a9d",
+        "mutant_sha256": "c800e411a909e79251eb3e35ef6d26714e17e9292bba99c1f3c4879b6fa1b5e5",
+        "required_failure": "shared success counter preceded committed definition",
+        "pid": 3586,
+        "exit": 101,
+        "actual_named_semantic_failure": true,
+        "test_failed": true,
+        "no_completion": true,
+        "restored_sha256": "31634472ea798937dc2c112bac6d7e66795da7afaf676da4123ebb2099f78a9d",
+        "exact_restore": true,
+        "log_sha256": "5f034c648b39eaa3dcd74033b226df37b084913460afe3d6dfe298b30a5deae8",
+        "remaining_new_fixture_dirs": [],
+        "archived_log": "shared-metrics-negative-premature-publication-v1.log.json"
+      },
+      {
+        "name": "premature-ack",
+        "path": "crates/ssx-infra/src/saved_events/mod.rs",
+        "before_sha256": "31634472ea798937dc2c112bac6d7e66795da7afaf676da4123ebb2099f78a9d",
+        "mutant_sha256": "ce782aa88343dba9ecfcb49594aa9c856474a8629c13cdd73a5cfdef2a32ec25",
+        "required_failure": "shared ack counter preceded atomic acknowledgement authority",
+        "pid": 3691,
+        "exit": 101,
+        "actual_named_semantic_failure": true,
+        "test_failed": true,
+        "no_completion": true,
+        "restored_sha256": "31634472ea798937dc2c112bac6d7e66795da7afaf676da4123ebb2099f78a9d",
+        "exact_restore": true,
+        "log_sha256": "0869539dda19d5a55ac699180676ea766294f86a9bfcf10407f1b44681f48e30",
+        "remaining_new_fixture_dirs": [],
+        "archived_log": "shared-metrics-negative-premature-ack-v1.log.json"
+      },
+      {
+        "name": "omitted-age-forwarding",
+        "path": "crates/ssx-infra/src/saved_events/observations.rs",
+        "before_sha256": "001de9464025eab3a892e0371dbde211dd1b4b236bc091049433d67d6566b8e9",
+        "mutant_sha256": "689f02008bfe9d32a8911853faf28381d64dfb9235b2a9e1e14b25b733c8ed1f",
+        "required_failure": "left: []",
+        "pid": 3747,
+        "exit": 101,
+        "actual_named_semantic_failure": true,
+        "test_failed": true,
+        "no_completion": true,
+        "restored_sha256": "001de9464025eab3a892e0371dbde211dd1b4b236bc091049433d67d6566b8e9",
+        "exact_restore": true,
+        "log_sha256": "17c330d4319867607b2ee4fb6b4adbdfe56a924a28c0297c7df63ca8d9606a96",
+        "remaining_new_fixture_dirs": [],
+        "archived_log": "shared-metrics-negative-omitted-age-forwarding-v1.log.json"
+      }
+    ],
+    "all_semantic_rejected": true,
+    "all_exact_restored": true,
+    "provider_calls": 0
+  },
+  "provider_calls": 0
+}

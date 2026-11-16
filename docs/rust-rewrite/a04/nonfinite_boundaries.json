@@ -1,0 +1,409 @@
+{
+  "schema_version": 1,
+  "plan_id": "A04",
+  "encoding": "Only actual nonfinite float values are tagged with $source_nonfinite_float; this is an observation encoding, not a native expected result.",
+  "records": [
+    {
+      "id": "reddit.nonfinite.nan.single",
+      "engine": "reddit",
+      "config": {},
+      "query": "edge",
+      "params": null,
+      "request": [
+        {
+          "method": "GET",
+          "url": "https://www.reddit.com/search.json?q=edge&limit=10&sort=relevance&t=all&raw_json=1",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native; by /u/SlopSearX)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json",
+            "content-length": "68"
+          },
+          "body_b64": "eyJkYXRhIjp7ImNoaWxkcmVuIjpbeyJkYXRhIjp7InRpdGxlIjoibm9uZmluaXRlIiwic2NvcmUiOiJuYW4ifX1dfX0="
+        }
+      ],
+      "exception_types": [],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "",
+            "title": "nonfinite",
+            "content": "Score: nan | Comments: 0 | Author: [deleted]",
+            "engine": "reddit",
+            "score": {
+              "$source_nonfinite_float": "nan"
+            },
+            "position": 1,
+            "category": "social",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": []
+      }
+    },
+    {
+      "id": "reddit.nonfinite.nan.mixed",
+      "engine": "reddit",
+      "config": {},
+      "query": "edge",
+      "params": null,
+      "request": [
+        {
+          "method": "GET",
+          "url": "https://www.reddit.com/search.json?q=edge&limit=10&sort=relevance&t=all&raw_json=1",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native; by /u/SlopSearX)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json",
+            "content-length": "143"
+          },
+          "body_b64": "eyJkYXRhIjp7ImNoaWxkcmVuIjpbeyJkYXRhIjp7InRpdGxlIjoiYmVmb3JlIiwic2NvcmUiOjF9fSx7ImRhdGEiOnsidGl0bGUiOiJub25maW5pdGUiLCJzY29yZSI6Im5hbiJ9fSx7ImRhdGEiOnsidGl0bGUiOiJhZnRlciIsInNjb3JlIjoyfX1dfX0="
+        }
+      ],
+      "exception_types": [],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "",
+            "title": "before",
+            "content": "Score: 1 | Comments: 0 | Author: [deleted]",
+            "engine": "reddit",
+            "score": 1.0,
+            "position": 1,
+            "category": "social",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "",
+            "title": "nonfinite",
+            "content": "Score: nan | Comments: 0 | Author: [deleted]",
+            "engine": "reddit",
+            "score": {
+              "$source_nonfinite_float": "nan"
+            },
+            "position": 2,
+            "category": "social",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "",
+            "title": "after",
+            "content": "Score: 2 | Comments: 0 | Author: [deleted]",
+            "engine": "reddit",
+            "score": 2.0,
+            "position": 3,
+            "category": "social",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": []
+      }
+    },
+    {
+      "id": "reddit.nonfinite.inf.single",
+      "engine": "reddit",
+      "config": {},
+      "query": "edge",
+      "params": null,
+      "request": [
+        {
+          "method": "GET",
+          "url": "https://www.reddit.com/search.json?q=edge&limit=10&sort=relevance&t=all&raw_json=1",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native; by /u/SlopSearX)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json",
+            "content-length": "68"
+          },
+          "body_b64": "eyJkYXRhIjp7ImNoaWxkcmVuIjpbeyJkYXRhIjp7InRpdGxlIjoibm9uZmluaXRlIiwic2NvcmUiOiJpbmYifX1dfX0="
+        }
+      ],
+      "exception_types": [],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "",
+            "title": "nonfinite",
+            "content": "Score: inf | Comments: 0 | Author: [deleted]",
+            "engine": "reddit",
+            "score": {
+              "$source_nonfinite_float": "inf"
+            },
+            "position": 1,
+            "category": "social",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": []
+      }
+    },
+    {
+      "id": "reddit.nonfinite.inf.mixed",
+      "engine": "reddit",
+      "config": {},
+      "query": "edge",
+      "params": null,
+      "request": [
+        {
+          "method": "GET",
+          "url": "https://www.reddit.com/search.json?q=edge&limit=10&sort=relevance&t=all&raw_json=1",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native; by /u/SlopSearX)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json",
+            "content-length": "143"
+          },
+          "body_b64": "eyJkYXRhIjp7ImNoaWxkcmVuIjpbeyJkYXRhIjp7InRpdGxlIjoiYmVmb3JlIiwic2NvcmUiOjF9fSx7ImRhdGEiOnsidGl0bGUiOiJub25maW5pdGUiLCJzY29yZSI6ImluZiJ9fSx7ImRhdGEiOnsidGl0bGUiOiJhZnRlciIsInNjb3JlIjoyfX1dfX0="
+        }
+      ],
+      "exception_types": [],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "",
+            "title": "before",
+            "content": "Score: 1 | Comments: 0 | Author: [deleted]",
+            "engine": "reddit",
+            "score": 1.0,
+            "position": 1,
+            "category": "social",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "",
+            "title": "nonfinite",
+            "content": "Score: inf | Comments: 0 | Author: [deleted]",
+            "engine": "reddit",
+            "score": {
+              "$source_nonfinite_float": "inf"
+            },
+            "position": 2,
+            "category": "social",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "",
+            "title": "after",
+            "content": "Score: 2 | Comments: 0 | Author: [deleted]",
+            "engine": "reddit",
+            "score": 2.0,
+            "position": 3,
+            "category": "social",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": []
+      }
+    },
+    {
+      "id": "reddit.nonfinite.-inf.single",
+      "engine": "reddit",
+      "config": {},
+      "query": "edge",
+      "params": null,
+      "request": [
+        {
+          "method": "GET",
+          "url": "https://www.reddit.com/search.json?q=edge&limit=10&sort=relevance&t=all&raw_json=1",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native; by /u/SlopSearX)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json",
+            "content-length": "69"
+          },
+          "body_b64": "eyJkYXRhIjp7ImNoaWxkcmVuIjpbeyJkYXRhIjp7InRpdGxlIjoibm9uZmluaXRlIiwic2NvcmUiOiItaW5mIn19XX19"
+        }
+      ],
+      "exception_types": [],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "",
+            "title": "nonfinite",
+            "content": "Score: -inf | Comments: 0 | Author: [deleted]",
+            "engine": "reddit",
+            "score": {
+              "$source_nonfinite_float": "-inf"
+            },
+            "position": 1,
+            "category": "social",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": []
+      }
+    },
+    {
+      "id": "reddit.nonfinite.-inf.mixed",
+      "engine": "reddit",
+      "config": {},
+      "query": "edge",
+      "params": null,
+      "request": [
+        {
+          "method": "GET",
+          "url": "https://www.reddit.com/search.json?q=edge&limit=10&sort=relevance&t=all&raw_json=1",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native; by /u/SlopSearX)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json",
+            "content-length": "144"
+          },
+          "body_b64": "eyJkYXRhIjp7ImNoaWxkcmVuIjpbeyJkYXRhIjp7InRpdGxlIjoiYmVmb3JlIiwic2NvcmUiOjF9fSx7ImRhdGEiOnsidGl0bGUiOiJub25maW5pdGUiLCJzY29yZSI6Ii1pbmYifX0seyJkYXRhIjp7InRpdGxlIjoiYWZ0ZXIiLCJzY29yZSI6Mn19XX19"
+        }
+      ],
+      "exception_types": [],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "",
+            "title": "before",
+            "content": "Score: 1 | Comments: 0 | Author: [deleted]",
+            "engine": "reddit",
+            "score": 1.0,
+            "position": 1,
+            "category": "social",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "",
+            "title": "nonfinite",
+            "content": "Score: -inf | Comments: 0 | Author: [deleted]",
+            "engine": "reddit",
+            "score": {
+              "$source_nonfinite_float": "-inf"
+            },
+            "position": 2,
+            "category": "social",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "",
+            "title": "after",
+            "content": "Score: 2 | Comments: 0 | Author: [deleted]",
+            "engine": "reddit",
+            "score": 2.0,
+            "position": 3,
+            "category": "social",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,144 @@
+/private/tmp/slopsearx-daily-20261014/.venv/lib/python3.12/site-packages/pydantic_settings/sources/utils.py:47: IncompleteFieldDefinitionWarning: Field 'lifespan' has an incomplete definition: its annotation contains an unresolved forward reference, so settings sources may fail to correctly resolve its value. Call `model_rebuild()` on the model where the field is defined, once all the referenced types are defined.
+  warnings.warn(
+[10/14/26 09:02:04] INFO     StreamableHTTP       streamable_http_manager.py:143
+                             session manager                                    
+                             started                                            
+[10/14/26 09:02:05] INFO     HTTP Request: GET                   _client.py:1740
+                             http://127.0.0.1:52400/mcp                         
+                             "HTTP/1.1 401 Unauthorized"                        
+                    INFO     Created new          streamable_http_manager.py:301
+                             transport with                                     
+                             session ID:                                        
+                             64f0591d28ae4f41b33f                               
+                             fa1faad3bca2                                       
+                    WARNING  MCP startup problem: intent 'images'  server.py:144
+                             has media types matching no enabled                
+                             engines: ['image']                                 
+                    WARNING  MCP startup problem: intent 'videos'  server.py:144
+                             has media types matching no enabled                
+                             engines: ['video']                                 
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:52400/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Received session ID:         streamable_http.py:181
+                             64f0591d28ae4f41b33ffa1faad3                       
+                             bca2                                               
+                    INFO     Negotiated protocol version: streamable_http.py:193
+                             2025-11-25                                         
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:52400/mcp                         
+                             "HTTP/1.1 202 Accepted"                            
+                    INFO     HTTP Request: GET                   _client.py:1740
+                             http://127.0.0.1:52400/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:52400/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Processing request of type            server.py:733
+                             ListToolsRequest                                   
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:52400/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:52400/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     Terminating session:         streamable_http.py:788
+                             64f0591d28ae4f41b33ffa1faad3                       
+                             bca2                                               
+                    INFO     HTTP Request: DELETE                _client.py:1740
+                             http://127.0.0.1:52400/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Created new          streamable_http_manager.py:301
+                             transport with                                     
+                             session ID:                                        
+                             a22c44fbba2c4a8c9157                               
+                             84fa580f3961                                       
+                    WARNING  MCP startup problem: intent 'images'  server.py:144
+                             has media types matching no enabled                
+                             engines: ['image']                                 
+                    WARNING  MCP startup problem: intent 'videos'  server.py:144
+                             has media types matching no enabled                
+                             engines: ['video']                                 
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:52400/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Received session ID:         streamable_http.py:181
+                             a22c44fbba2c4a8c915784fa580f                       
+                             3961                                               
+                    INFO     Negotiated protocol version: streamable_http.py:193
+                             2025-11-25                                         
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:52400/mcp                         
+                             "HTTP/1.1 202 Accepted"                            
+                    INFO     HTTP Request: GET                   _client.py:1740
+                             http://127.0.0.1:52400/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:52400/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Processing request of type            server.py:733
+                             ListToolsRequest                                   
+                    INFO     Remote gateway connected to          gateway.py:496
+                             http://127.0.0.1:52400/mcp (38 tools               
+                             registered)                                        
+                    INFO     StreamableHTTP       streamable_http_manager.py:143
+                             session manager                                    
+                             started                                            
+                    INFO     HTTP Request: GET                   _client.py:1740
+                             http://127.0.0.1:52421/mcp                         
+                             "HTTP/1.1 405 Method Not Allowed"                  
+                    INFO     Terminating session: None    streamable_http.py:788
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:52421/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Negotiated protocol version: streamable_http.py:193
+                             2025-11-25                                         
+                    INFO     Terminating session: None    streamable_http.py:788
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:52421/mcp                         
+                             "HTTP/1.1 202 Accepted"                            
+                    INFO     Processing request of type            server.py:733
+                             ListToolsRequest                                   
+                    INFO     Terminating session: None    streamable_http.py:788
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:52421/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:52400/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     Terminating session: None    streamable_http.py:788
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:52421/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:52400/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     Terminating session: None    streamable_http.py:788
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:52421/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     StreamableHTTP       streamable_http_manager.py:147
+                             session manager                                    
+                             shutting down                                      
+                    INFO     Terminating session:         streamable_http.py:788
+                             a22c44fbba2c4a8c915784fa580f                       
+                             3961                                               
+                    INFO     HTTP Request: DELETE                _client.py:1740
+                             http://127.0.0.1:52400/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     StreamableHTTP       streamable_http_manager.py:147
+                             session manager                                    
+                             shutting down                                      
+{"primary_passed": 3, "primary_total": 3, "catalog_equal": 38, "catalog_total": 38, "provider_calls": 0}

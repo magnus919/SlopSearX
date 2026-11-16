@@ -1,0 +1,55 @@
+{
+  "api_key_env": "ENGINE_GITHUB_API_KEY",
+  "api_secret_env": null,
+  "auth_class": "none",
+  "categories": [
+    "reference",
+    "github:code",
+    "github:issues",
+    "github:prs"
+  ],
+  "caveats": [
+    "pagination hardcoded to page 1"
+  ],
+  "cost_class": "free",
+  "defaults": {
+    "base_url": "https://api.github.com",
+    "enabled": true,
+    "max_results": 5,
+    "rate_limit": 0.5,
+    "timeout_ms": 5000,
+    "type": "api",
+    "weight": 0.8
+  },
+  "display_name": "GitHub",
+  "enabled_by_default": true,
+  "enforced_filters": {},
+  "engine_type": "api",
+  "failure_classes": [
+    "rate_limited",
+    "blocked",
+    "error",
+    "timeout",
+    "unavailable"
+  ],
+  "implementation": "unavailable",
+  "name": "github",
+  "routing": {
+    "purpose": "source repositories, issues, and pull requests",
+    "role": "specialist",
+    "use_when": "the query seeks code or repository artifacts"
+  },
+  "sensitive": false,
+  "supported_filters": {
+    "date_from": false,
+    "date_to": false,
+    "language": false,
+    "pagination": false,
+    "safesearch": false,
+    "time_range": false
+  },
+  "supported_media_types": [],
+  "supported_result_types": [
+    "text"
+  ]
+}

@@ -1,0 +1,144 @@
+{
+  "status": "synthetic bounded body preparation, not test execution or actual-source capture",
+  "fixture_source_sha256": {
+    "docs/rust-rewrite/a07/fixtures/europepmc-preprints.json": "2d1115ea10cfbd1a902d60501d33471a0ee800f01f27b9e7c891591e636a5ee1",
+    "docs/rust-rewrite/a07/fixtures/uniprot-success.json": "8dfd341cdc78d85726bdaff3c0628dc24b282cb06f6e194fed105bdfe78f7fe0",
+    "docs/rust-rewrite/a07/fixtures/clinicaltrials-success.json": "b7049fd602eed804929d7173c147e2730035db24ef0e17f0eae1cc4bb92f155e",
+    "docs/rust-rewrite/a07/fixtures/europepmc-biomedical.json": "2c9a29ad299b578a8d1fc16db5ebef0ad0b66333bfb5c4878bfc209ce8e87f96",
+    "docs/rust-rewrite/a07/fixtures/pubmed-summary.json": "f0e7ad77d6e30b78e8eac2d74b07f0fe0981d88c6ca308eccf6ac43de095a190",
+    "docs/rust-rewrite/a07/fixtures/europepmc-long-preprint.json": "8f10cfd306772844976d428ec9a3e778db1a559bb067c147e9b708436fc2762e",
+    "docs/rust-rewrite/a07/fixtures/pubchem-detail.json": "9fa91ac2c90b51922a5e758e47a0baf62ceac4cb41bfb62f3ce58647d6665075",
+    "docs/rust-rewrite/a07/fixtures/pubchem-search.json": "b9822f4ee31a842d19aa9abc5b69874c97e44acee78b3d896be7e0031ef45442",
+    "docs/rust-rewrite/a07/fixtures/pubmed-search.json": "df1cdc5ef7bb4079407e0334aecf1c48c2ad54ac12d77619b8f10fa64633ff48"
+  },
+  "cases": [
+    {
+      "id": "ct-large-one-row",
+      "engine": "clinicaltrials",
+      "kind": "inner-loop/context/quota",
+      "response_bodies": [
+        {
+          "path": "ct-large-one-row-0.json",
+          "bytes": 824725,
+          "sha256": "76f820fe6ae2fdeffc836f7f41c1717cb35f42066857cd738969a2cec11727da",
+          "within_source4MiB": true
+        }
+      ]
+    },
+    {
+      "id": "pc-large-one-row",
+      "engine": "pubchem",
+      "kind": "inner-loop/context/quota",
+      "response_bodies": [
+        {
+          "path": "pc-large-one-row-0.json",
+          "bytes": 38,
+          "sha256": "63535f1fca37e9da176550cd965bbc04f5eec182ab5031451ef075386ee1d4c5",
+          "within_source4MiB": true
+        },
+        {
+          "path": "pc-large-one-row-1.json",
+          "bytes": 639234,
+          "sha256": "7281069d904686961ccadb59371d98ec039f1594247f7c7321d9c2cee98fcb17",
+          "within_source4MiB": true
+        }
+      ]
+    },
+    {
+      "id": "up-large-one-row",
+      "engine": "uniprot",
+      "kind": "inner-loop/context/quota",
+      "response_bodies": [
+        {
+          "path": "up-large-one-row-0.json",
+          "bytes": 365955,
+          "sha256": "5ed5b996f376f2c89b65b93b0a0a88335c0a5020d22cf5d34e890f0dd8733b19",
+          "within_source4MiB": true
+        }
+      ]
+    },
+    {
+      "id": "pm-surrogate-author-after-display",
+      "engine": "pubmed",
+      "kind": "payload-semantic/source-boundary",
+      "response_bodies": [
+        {
+          "path": "pm-surrogate-author-after-display-0.json",
+          "bytes": 37,
+          "sha256": "9ba447af5303a8c02e757f0b566395a1d954a05e28b7cbd0368c06decb6e25cf",
+          "within_source4MiB": true
+        },
+        {
+          "path": "pm-surrogate-author-after-display-1.json",
+          "bytes": 187,
+          "sha256": "1cd0a1bb00dbee0314d50979d5293a485a718b7cb3a06cda06bdda181887f67a",
+          "within_source4MiB": true
+        }
+      ]
+    },
+    {
+      "id": "pm-large-one-row",
+      "engine": "pubmed",
+      "kind": "projection/context/quota",
+      "response_bodies": [
+        {
+          "path": "pm-large-one-row-0.json",
+          "bytes": 37,
+          "sha256": "9ba447af5303a8c02e757f0b566395a1d954a05e28b7cbd0368c06decb6e25cf",
+          "within_source4MiB": true
+        },
+        {
+          "path": "pm-large-one-row-1.json",
+          "bytes": 982280,
+          "sha256": "13a748012b8e63e6c0b67121b13ce47dacc9c91c3c63b5ca67af2620aeac948c",
+          "within_source4MiB": true
+        }
+      ]
+    },
+    {
+      "id": "ep-large-one-row",
+      "engine": "europepmc",
+      "kind": "projection/context/quota",
+      "response_bodies": [
+        {
+          "path": "ep-large-one-row-0.json",
+          "bytes": 601230,
+          "sha256": "b261794076819ce108e0ee2940a1bb0072fb399b60f1a11141457e0cbef9ad4c",
+          "within_source4MiB": true
+        }
+      ]
+    },
+    {
+      "id": "ep-1000-realistic",
+      "engine": "europepmc",
+      "kind": "successful-max-config-realistic",
+      "response_bodies": [
+        {
+          "path": "ep-1000-realistic-0.json",
+          "bytes": 613183,
+          "sha256": "9c1329db236691e4bca093eb39c144dcb1234ce2f26da1cebb8f2b5475ed5de5",
+          "within_source4MiB": true
+        }
+      ]
+    },
+    {
+      "id": "pm-200-realistic",
+      "engine": "pubmed",
+      "kind": "successful-realistic",
+      "response_bodies": [
+        {
+          "path": "pm-200-realistic-0.json",
+          "bytes": 1121,
+          "sha256": "53fba19be56ad756fe85d77e15b58c3f8733b12d9ca6e612dca64aaeb47f51f0",
+          "within_source4MiB": true
+        },
+        {
+          "path": "pm-200-realistic-1.json",
+          "bytes": 206083,
+          "sha256": "2df1046cc14033e6d61349368f894293b9cb91a6032806e4c1611ac054286583",
+          "within_source4MiB": true
+        }
+      ]
+    }
+  ]
+}

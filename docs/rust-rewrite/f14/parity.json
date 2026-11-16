@@ -1,0 +1,153 @@
+{
+  "plan_id": "F14",
+  "issue": 893,
+  "baseline": "730c37a5f48b9830088594582cefb4c2f10a35e8",
+  "status": "source_review_approved_current_main_qualification_and_parent_acceptance_pending",
+  "source_capture": {
+    "sha256": "f3adbefd92e5bc057c1df421a93be3fe3097012af9f56fa4790b1f741b8d7310",
+    "exporter_sha256": "8b41723cfe47b1488fe24cd09948911105f521c8a78809c1b62dd913ef3ea3cd",
+    "files": 24,
+    "cases": 56,
+    "normalizations": [
+      "query_id",
+      "response_time_ms"
+    ],
+    "origin": "actual pinned Python source with synthetic local inputs; not upstream recordings",
+    "independent_parent_recapture": "byte-exact56; historical48prefix and all24bindings preserved"
+  },
+  "source_parity": [
+    "service scope, result order/tiers/provenance, aggregation, partial/all-unresponsive flags, views and request counts; duplicate explicit engines dispatch once",
+    "optional Jev advice is reused across preview/dispatch; source specialist promotion retains raw promoted metadata",
+    "dispatch-start budget, semaphore queue time, configured slowest engine, aggregate multi-request transport budget and remaining suggestion/rerank time",
+    "source local-calendar windows frozen for filter/dispatch/cache, with real native midnight/DST subprocess observations",
+    "Brave primary/DDG fallback, source suggestion keys and TTL, empty-result caching; valid primitive stringification uses accepted Python spelling",
+    "actual build_context environment fallback/flag coercions before explicit native finite bounds",
+    "per-caller policy/client quota precedes cache and singleflight; fresh/workflow isolation and final-waiter ownership"
+  ],
+  "intentional_differences": [
+    {
+      "contract": "finite admission and cancellation ownership",
+      "native": "bounded callers/flights/global dispatch; Busy on excess or draining same-key work; mutex-atomic waiter join/final cancellation; joined task ownership",
+      "source": "no finite caller/flight queue bound; asyncio shield and final waiter cancellation/join"
+    },
+    {
+      "contract": "client quota identity",
+      "native": "dedicated typed ratelimit:client:<digest>:<server bucket> namespace, exact nonempty client bytes hashed; provider keys/Lua unchanged",
+      "source": "raw client identifier reused as engine quota key component",
+      "decision": "parent approved cold ephemeral namespace with G04/G07 admission-window accounting; no durable rewrite"
+    },
+    {
+      "contract": "malformed Brave q",
+      "native": "any nonstring q invalidates whole Brave response, discards valid siblings and triggers DDG; failed fallback is empty",
+      "source": "returns q values unchanged, including null/nonstring, despite list[str] annotation",
+      "decision": "parent approved explicit finite typed boundary; actual contrary source outputs retained"
+    },
+    {
+      "contract": "finite configuration",
+      "native": "accepted F10 finite/nonnegative rate and positive exact-millisecond window; semaphore-representable concurrency",
+      "source": "build_context retains nan/inf/negative rate, zero/submillisecond window and arbitrary-size concurrency",
+      "evidence": "actual source settings plus explicit native reject cases; syntax-error fallback remains exact"
+    },
+    {
+      "contract": "runtime identity and caller metadata",
+      "native": "framed logical generation/scope-order identities, current per-waiter query ID/query/scope/warnings/views, including cached reads",
+      "source": "Python object addresses in flights; positive cache retains producer metadata and sorted-engine base keys",
+      "decision": "native immutable evidence/caller-isolation requirement; recomputable cold cache only, no durable ID change"
+    },
+    {
+      "contract": "optional port safety",
+      "native": "finite optional-port backstop, classified cache misses/write refusal, no fabricated panic text or leaked exception URLs",
+      "source": "concrete clients have their own timeouts, but injected ports need not be bounded; malformed suggestion cache casts may escape typed contract",
+      "evidence": "native accepted transport/storage plus optional-write/full-fresh evidence tests"
+    },
+    {
+      "contract": "bounded publication-date cache authority",
+      "native": "closed proof plus current admitted scope comparison rejects jointly corrupted cached scope/proof; legacy unbounded proof omitted",
+      "source": "d207 accepts cache-scope-self-consistent corruption when cached scope/proof both name Brave; unbounded payload writes null",
+      "decision": "explicit current-authority hardening and legacy byte preservation; other seven cache mutation outcomes agree"
+    }
+  ],
+  "development_negative_results": [
+    "Initial 40ms multi-request test made zero loopback requests because cold HTTP client initialization consumed the budget; revised setup warms client initialization only, then observes two real 100ms exchanges under a 180ms aggregate budget.",
+    "A test incorrectly assumed default safesearch=0 is present in accepted F09 enforcement; removed that unsupported assertion while retaining exact source Jev output and one-provider-request proof.",
+    "Initial client-<digest> EngineKey proposal could collide with a custom engine; replaced before acceptance with a dedicated colon-framed typed namespace and exact real-Valkey noncollision tests."
+  ],
+  "boundaries": {
+    "live_provider_calls": 0,
+    "production_deployment": false,
+    "HTTP_MCP_browser_cutover": false,
+    "F15_provider_rerank_acceptance": false,
+    "O01_production_exporters": false,
+    "performance_or_relevance_claim": false
+  },
+  "date_amendment": {
+    "baseline": "d207d4496129d496fe8a74b040ebe1a71151b6f9",
+    "cases": 22,
+    "files": 11,
+    "sha256": "4a09305db9779b96edff181dc64b0d3d10e65aa7b9af3073588b539e7a32f4c6",
+    "exporter_sha256": "57f06bde66186e763b83de56fa4c05e10af9d4a36b9c350f909ed843af05ba89",
+    "independent_parent_recapture": "byte-exact 22 cases and 11 original Git/SHA bindings",
+    "historical_native_F09_expectation_changes": []
+  },
+  "independent_review_corrections": {
+    "review": "/private/tmp/f14-independent-full-review.md",
+    "prior_48_corpus_sha256": "49393e635e6e96a35dcbc31b0aa738993cb1d213a1f1690288bbb1ec21203219",
+    "native_tests": [
+      "live_circuit_rechecked_after_awaited_cooldown_before_dispatch",
+      "internal_task_panic_stays_synthetic_without_upstream_health",
+      "actual_source_suggestion_wire_encoding_primary_and_fallback"
+    ],
+    "source_wire_cases_added": 8,
+    "date_corpus_unchanged": true
+  },
+  "current_main_integration": {
+    "checkpoint": "2c7cdf44ada9b4d42c4d69d9279bf12f001957af",
+    "upstream": "544c830724a322d05521dac7f902dbe93142c4a1",
+    "merge": "04117109063e915188f720955b1992d86326b746",
+    "reviewed_files_preserved_at_merge": 35,
+    "F01_anchor_updates": [
+      {
+        "path": "slopsearx/formatter.py",
+        "old": "a703e3fbeaaff5e85230caff9b23d994fcaed250",
+        "new": "8fa2bb950dc341adace7b9524b5755e98a4da406"
+      },
+      {
+        "path": "slopsearx/mcp/tools.py",
+        "old": "061593ce45d3e2440e818703af6b50d6e6d99cf1",
+        "new": "d06ecd475b9b523addf79781d2762eddd92f4911"
+      },
+      {
+        "path": "slopsearx/server.py",
+        "old": "f60c03fe48ce837f3b2ad65c58d0336ad3b72983",
+        "new": "412ad973735f0199be9a32da4763437f55a584bb"
+      },
+      {
+        "path": "slopsearx/service.py",
+        "old": "8b45ce71efc3c7cc4a72b962968e146a63e135be",
+        "new": "82eb29d50c4ca98a237949d4d8994cfe3cbeca9f"
+      },
+      {
+        "path": "tests/test_filter_semantics.py",
+        "old": "7c724c4d3367eb505f4e0f3b4ea01bc046bebccc",
+        "new": "6475f5fff325f8476976d664dbb798f42296bafa"
+      },
+      {
+        "path": "tests/test_mcp_enforcement.py",
+        "old": "e422d794e7db1bf0f29ab58edff6c89aa87fe533",
+        "new": "aa2a9be0b47e3e36d106c5af69610dec87f048d2"
+      },
+      {
+        "path": "tests/test_mcp_tools.py",
+        "old": "90495a0038f43ca1140140576f28eec1015b1183",
+        "new": "9804b31ace1575fc1253dd82549d4f3a17bcebda"
+      },
+      {
+        "path": "tests/test_server.py",
+        "old": "128af281562581b96d26111f3e2bfa81501c69d1",
+        "new": "ec95d1c7d79e3cbdee3eac7251cd8a23914912fe"
+      }
+    ],
+    "historical_corpora_unchanged": true,
+    "acceptance": "pending parent acceptance and exact-head CI"
+  }
+}

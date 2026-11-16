@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "plan_id": "W06",
+  "scope": "integrated local native qualification; parent final-head CI/review/delivery remains required",
+  "qualified_head": "4cc5858cc06348c36fad1a22572e00528ef9dcb6",
+  "preunion_checkpoint": "aea0844f1b1cd46245fe29fadbf8d9db5a91bb87",
+  "merged_origin_main": "9fae1639a57b9e3497c04c3f5fe304651d077ad5",
+  "toolchain": "Rust1.99.0; explicit RUSTUP_TOOLCHAIN=1.99.0 for child cargo; CARGO_INCREMENTAL=0",
+  "valkey": "private Valkey8.1.10",
+  "provider_calls": 0,
+  "production_state_used": false,
+  "qualification_sha256": "7481ffcf349c3561b47b97c99ab158ef42abaf941dc9ad8d7cad87e613c7d034",
+  "gate_source_sha256": "fad4b4f022cd9e22c306a779094c8ab527a44894eef9b764706bb16d3bae8f04",
+  "owned_source_manifest": "qualification.json:owned_sources",
+  "all14_reviewed_core_hashes_unchanged": true,
+  "source_cases": 248,
+  "native_cases": 55,
+  "actual_receipts": 303,
+  "actual_unique": 303,
+  "semantic_tests": 37,
+  "explicit_process_probe": 1,
+  "reference_controls_source_only": [
+    "review.runner.deadline_after_acknowledged_renewal",
+    "review.runner.actual_shared_rate_denial",
+    "review.runner.presave_revocation.sensitive",
+    "review.runner.presave_revocation.staged_grant"
+  ],
+  "case_validation": "All303 actual completion receipts compared by exact case ID and expected named test against qualification.json; all37 semantic tests executed exactly and passed0ignored; probe lifecycle asserted by parent test.",
+  "gates": [
+    {
+      "plan_id": "W06",
+      "artifact": "/Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/W06-integrated303-4cc5858c-r1.json",
+      "sha256": "0211e923c8bc0b24abb6805a49d06a1f4bb7cfd85c0b2b4b03d3ae76c0f4e66a",
+      "status": "passed",
+      "executed_commands": 71,
+      "summary_records": 1
+    },
+    {
+      "plan_id": "F01",
+      "artifact": "/Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/F01-integrated303-4cc5858c-r1.json",
+      "sha256": "45e589db3b870d5f0af29ba4005257c810ff639944ccf73871679df6598e82af",
+      "status": "passed",
+      "executed_commands": 418,
+      "summary_records": 0
+    },
+    {
+      "plan_id": "O06",
+      "artifact": "/Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/O06-integrated303-4cc5858c-r1.json",
+      "sha256": "799db1f1735e938f04b1b0b973930db31dda574e05d2cdd4faef9cd3643743ae",
+      "status": "passed",
+      "executed_commands": 1,
+      "summary_records": 0
+    },
+    {
+      "plan_id": "W04",
+      "artifact": "/Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/W04-integrated303-4cc5858c-r1.json",
+      "sha256": "c3493e7b0029b46ee7f16dbe98576fb4d9cd13f837cb20d4f2d8a6fafc7f5762",
+      "status": "passed",
+      "executed_commands": 17,
+      "summary_records": 1
+    },
+    {
+      "plan_id": "W11",
+      "artifact": "/Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/W11-integrated303-4cc5858c-r1.json",
+      "sha256": "2207f8c89a835052213c4c94566748fafc149ef7cb80a33e54917b4dd20d7ca2",
+      "status": "passed",
+      "executed_commands": 34,
+      "summary_records": 5
+    },
+    {
+      "plan_id": "W02",
+      "artifact": "/Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/W02-integrated303-4cc5858c-r1.json",
+      "sha256": "c4407345818d5685a4ab7f043cbb38dd1c893c28215265552be387e34b089d84",
+      "status": "passed",
+      "executed_commands": 19,
+      "summary_records": 1
+    }
+  ],
+  "historical151": {
+    "receipt": "evidence/native-gate-qualification.json",
+    "sha256": "6dd14e840e7b172143131b05c6a42808f9070bdc2fa2b656f7b7ac8c86d720e2",
+    "qualification": "evidence/qualification-component151.json",
+    "qualification_sha256": "474b79b5c4430b743baf465450840816ddd9eb9188a46b4bf36af3c880ab8a0d",
+    "status": "immutable historical component positives and five actual mutation negatives; not a303-case mutation rerun"
+  },
+  "hooks": {
+    "all_files": {
+      "command": "pre-commit run --all-files --show-diff-on-failure",
+      "exit_code": 1,
+      "log": "/private/tmp/W06-integrated303-4cc5858c-r1.all-files-hooks.log",
+      "sha256": "a2b642f95dc391f9a52bcb1cc8dfa7036a612622bc542aab731e788b8c9ff98a",
+      "failures": [
+        "Owned frozen capture_source.py metadata string E501,140>120; no exporter change",
+        "Known unrelated ruff-format wrapping in tests/test_coverage_saved_method_materials.py; exact original bytes restored"
+      ],
+      "other_hooks": "JSON/YAML/TOML/large-file/debug/vulture/import-linter/mypy passed"
+    },
+    "direct_ruff": {
+      "command": "ruff check .",
+      "exit_code": 0,
+      "log": "/private/tmp/W06-integrated303-4cc5858c-r1.direct-ruff.log",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "scoped": {
+      "command": "pre-commit run --show-diff-on-failure --files <all W06 paths changed from origin/main plus pyproject.toml>",
+      "exit_code": 0,
+      "log": "/private/tmp/W06-integrated303-4cc5858c-r1.scoped-hooks.log",
+      "sha256": "5ceee8435fbc6560313956a0d679f5818f3e031bd8be9581807a9d9a9374cd24",
+      "skipped": "import-linter/mypy had no matching changed runtime Python; both passed all-files"
+    },
+    "approved_exception": {
+      "path": "pyproject.toml",
+      "after_sha256": "c57480d1fb1b5f20c393a9fef169fc3baa228a3d187f61bcae65148c3438a6b3",
+      "rule": "Exact docs/rust-rewrite/w06/capture_source.py E501-only per-file ignore; every other selected Ruff rule and file unchanged",
+      "immutable_exporter_sha256": "e7426b72d8a70a1668a9e5a123f3e821ab34b81c926b8f5f824dbf6be40f2594"
+    },
+    "unrelated_formatter_restoration": {
+      "path": "tests/test_coverage_saved_method_materials.py",
+      "reason": "unrelated existing ruff-format wrapping only; inspected exact diff, restored original HEAD bytes",
+      "before_sha256": "7c34ec5aa7e2960f3dd5493085b9a3bb307d713b7729b80df655e7bfd9929df6",
+      "formatter_sha256": "13af66d52d2d99ab0efa8823e799ed984da0aa773b7493a3c69b2cb6c11b8ee8",
+      "restored_sha256": "7c34ec5aa7e2960f3dd5493085b9a3bb307d713b7729b80df655e7bfd9929df6"
+    },
+    "all_files_rerun_after_exception": false
+  },
+  "graphify": {
+    "command": "graphify update .",
+    "exit_code": 0,
+    "mode": "AST only after main union; no LLM calls",
+    "log": "/private/tmp/W06-integrated303-4cc5858c-r1.graphify.log",
+    "sha256": "5095ea12b76b87cb40bd452e6698cfedd2ef202054a47674759c10409d3a93bd",
+    "nodes": 28581,
+    "edges": 59821
+  },
+  "limits": [
+    "Four review runner controls remain source-only and are not emitted as unexecuted native parity receipts",
+    "No continuous authority notification or atomic policy fence after SAVE was sent; definite acknowledged commit may win, orphan snapshots possible",
+    "No provider, production, live MCP/portal composition, performance/relevance or Python-retirement acceptance claim"
+  ]
+}

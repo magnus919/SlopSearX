@@ -1,0 +1,2476 @@
+{
+  "schema_version": 1,
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "unicode": "16.0.0",
+  "producer_sha256": "0a4467e3ed93d6fec08e00d36435d0328dd5e366c6e1044d47d2b6e321edbabe",
+  "results": [
+    {
+      "node": "tests/test_openfda.py::test_exact_name_fields_rank_before_related_and_preserve_provenance",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_openfda.py::test_identified_same_brand_records_keep_distinct_source_links",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_openfda.py::test_engine_entry_blank_base_url_uses_openfda_default",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_openfda.py::test_identifier_free_labels_are_omitted_before_merge_and_format",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_openfda.py::test_empty_exact_query_uses_one_bounded_fielded_broad_fallback",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_openfda.py::test_empty_exact_and_broad_404_is_valid_empty",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_openfda.py::test_malformed_results_are_an_error",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_openfda.py::test_timeout_and_rate_limit_classification_is_preserved",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_edgar_url_contract.py::test_filing_identity_builds_distinct_archive_urls",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_edgar_url_contract.py::test_cik_only_result_retains_canonical_company_url",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_edgar_url_contract.py::test_same_cik_filing_looking_records_without_accessions_are_omitted",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_edgar_url_contract.py::test_valid_provider_archive_link_is_used_without_inventing_identity",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_edgar_url_contract.py::test_provider_archive_link_with_nonstandard_port_is_rejected",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_edgar_url_contract.py::test_unresolved_or_unsafe_identity_is_omitted_and_reported",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_fred.py::TestFREDAdapterRegistration::test_adapter_registered",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_fred.py::TestFREDAdapterSearch::test_search_returns_results",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_fred.py::TestFREDAdapterSearch::test_keeps_api_key_in_query_param",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_fred.py::TestFREDAdapterSearch::test_missing_api_key_returns_not_configured",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_fred.py::TestFREDAdapterSearch::test_empty_key_treated_as_not_configured",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_fred.py::TestFREDAdapterSearch::test_whitespace_key_treated_as_not_configured",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_fred.py::TestFREDAdapterSearch::test_http_status_error_sanitized",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_fred.py::TestFREDAdapterSearch::test_broad_exception_sanitized",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_fred.py::TestFREDAdapterSearch::test_rate_limited",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_fred.py::TestFREDAdapterSearch::test_timeout",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_fred.py::TestFREDAdapterSearch::test_payload_notes_untruncated_long_notes",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_oyez_relevance.py::test_uses_oyez_source_search_and_preserves_relevance_order",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_oyez_relevance.py::test_adapter_does_not_reorder_raw_source_hits",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_oyez_relevance.py::test_unresolved_records_are_omitted_without_empty_url_merge",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_oyez_relevance.py::test_explicit_rest_override_keeps_legacy_case_fixture_shape",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_oyez_relevance.py::test_empty_base_url_from_configured_startup_uses_source_search",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[https://evil.example/cases/1954/1]",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[https://api.oyez.org/not-cases/1954/1]",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[https://api.oyez.org/cases/1954]",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[cases/1954/1]",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_oyez_relevance.py::test_case_url_does_not_infer_identity_without_provider_url",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_new_engines.py::TestOpenFDAAdapter::test_search_returns_results",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_new_engines.py::TestOpenFDAAdapter::test_adapter_registered",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_new_engines.py::TestEdgarAdapter::test_search_returns_results",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_new_engines.py::TestEdgarAdapter::test_adapter_registered",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_new_engines.py::TestFredAdapter::test_search_returns_results",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_new_engines.py::TestFredAdapter::test_search_missing_key",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_new_engines.py::TestFredAdapter::test_adapter_registered",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_new_engines.py::TestOyezAdapter::test_search_returns_results",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_new_engines.py::TestOyezAdapter::test_adapter_registered",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_payload.py::TestFinancialPayload::test_fred_payload",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_payload.py::TestBiomedicalPayload::test_openfda_payload",
+      "outcome": "passed"
+    },
+    {
+      "node": "tests/test_payload.py::TestBiomedicalPayload::test_openfda_absent_fields_stay_absent",
+      "outcome": "passed"
+    }
+  ],
+  "original_adapter_invocations": 38,
+  "helper_derived_adapter_invocations": 5,
+  "helper_assertions": [
+    {
+      "node": "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[https://evil.example/cases/1954/1]",
+      "value": "https://evil.example/cases/1954/1",
+      "output": ""
+    },
+    {
+      "node": "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[https://api.oyez.org/not-cases/1954/1]",
+      "value": "https://api.oyez.org/not-cases/1954/1",
+      "output": ""
+    },
+    {
+      "node": "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[https://api.oyez.org/cases/1954]",
+      "value": "https://api.oyez.org/cases/1954",
+      "output": ""
+    },
+    {
+      "node": "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[cases/1954/1]",
+      "value": "cases/1954/1",
+      "output": ""
+    },
+    {
+      "node": "tests/test_oyez_relevance.py::test_case_url_does_not_infer_identity_without_provider_url",
+      "value": "",
+      "output": ""
+    }
+  ],
+  "records": [
+    {
+      "id": "tests/test_openfda.py::test_exact_name_fields_rank_before_related_and_preserve_provenance#0",
+      "node": "tests/test_openfda.py::test_exact_name_fields_rank_before_related_and_preserve_provenance",
+      "engine": "openfda",
+      "query": "aspirin",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"results\":[{\"set_id\":\"unrelated\",\"openfda\":{\"brand_name\":[\"Naproxen\"],\"manufacturer_name\":[\"Acme Pharma\"],\"generic_name\":[\"Naproxen\"],\"substance_name\":[\"NAPROXEN\"]},\"purpose\":[\"Pain relief\"],\"indications_and_usage\":[\"For the temporary relief of minor aches\"]},{\"set_id\":\"brand\",\"openfda\":{\"brand_name\":[\"ASPIRIN\"],\"manufacturer_name\":[\"Acme Pharma\"],\"generic_name\":[\"Acetylsalicylic Acid\"],\"substance_name\":[\"ASPIRIN\"]},\"purpose\":[\"Pain relief\"],\"indications_and_usage\":[\"For the temporary relief of minor aches\"]},{\"set_id\":\"generic\",\"openfda\":{\"brand_name\":[\"ASA Tablets\"],\"manufacturer_name\":[\"Acme Pharma\"],\"generic_name\":[\"ASPIRIN\"],\"substance_name\":[\"ACETYLSALICYLIC ACID\"]},\"purpose\":[\"Pain relief\"],\"indications_and_usage\":[\"For the temporary relief of minor aches\"]},{\"set_id\":\"substance\",\"openfda\":{\"brand_name\":[\"Pain Relief Tablets\"],\"manufacturer_name\":[\"Acme Pharma\"],\"generic_name\":[\"Acetylsalicylic Acid\"],\"substance_name\":[\"ASPIRIN\"]},\"purpose\":[\"Pain relief\"],\"indications_and_usage\":[\"For the temporary relief of minor aches\"]},{\"set_id\":\"related\",\"openfda\":{\"brand_name\":[\"Aspirin Extra Strength\"],\"manufacturer_name\":[\"Acme Pharma\"],\"generic_name\":[\"Acetylsalicylic Acid\"],\"substance_name\":[\"ACETYLSALICYLIC ACID\"]},\"purpose\":[\"Pain relief\"],\"indications_and_usage\":[\"For the temporary relief of minor aches\"]}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.fda.gov/drug/label.json?search=openfda.brand_name.exact%3A%22aspirin%22+openfda.brand_name.exact%3A%22ASPIRIN%22+openfda.brand_name.exact%3A%22Aspirin%22+openfda.generic_name.exact%3A%22aspirin%22+openfda.generic_name.exact%3A%22ASPIRIN%22+openfda.generic_name.exact%3A%22Aspirin%22+openfda.substance_name.exact%3A%22aspirin%22+openfda.substance_name.exact%3A%22ASPIRIN%22+openfda.substance_name.exact%3A%22Aspirin%22&limit=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://api.fda.gov/drug/label.json?search=set_id.exact%3A%22brand%22&limit=1",
+            "title": "ASPIRIN",
+            "content": "Acme Pharma \u2014 Active: ASPIRIN \u2014 Pain relief \u2014 For the temporary relief of minor aches",
+            "engine": "openfda",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "biomedical",
+              "type": "drug_label",
+              "schema_version": 1,
+              "data": {
+                "brand_name": "ASPIRIN",
+                "generic_name": "Acetylsalicylic Acid",
+                "manufacturer": "Acme Pharma",
+                "substance": "ASPIRIN",
+                "purpose": "Pain relief",
+                "indications": "For the temporary relief of minor aches",
+                "set_id": "brand"
+              },
+              "provenance": {
+                "engine": "openfda",
+                "adapter_fields": [
+                  "brand_name",
+                  "generic_name",
+                  "manufacturer",
+                  "substance",
+                  "purpose",
+                  "indications",
+                  "set_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          },
+          {
+            "url": "https://api.fda.gov/drug/label.json?search=set_id.exact%3A%22generic%22&limit=1",
+            "title": "ASA Tablets",
+            "content": "Acme Pharma \u2014 Active: ACETYLSALICYLIC ACID \u2014 Pain relief \u2014 For the temporary relief of minor aches",
+            "engine": "openfda",
+            "position": 2,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "biomedical",
+              "type": "drug_label",
+              "schema_version": 1,
+              "data": {
+                "brand_name": "ASA Tablets",
+                "generic_name": "ASPIRIN",
+                "manufacturer": "Acme Pharma",
+                "substance": "ACETYLSALICYLIC ACID",
+                "purpose": "Pain relief",
+                "indications": "For the temporary relief of minor aches",
+                "set_id": "generic"
+              },
+              "provenance": {
+                "engine": "openfda",
+                "adapter_fields": [
+                  "brand_name",
+                  "generic_name",
+                  "manufacturer",
+                  "substance",
+                  "purpose",
+                  "indications",
+                  "set_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          },
+          {
+            "url": "https://api.fda.gov/drug/label.json?search=set_id.exact%3A%22substance%22&limit=1",
+            "title": "Pain Relief Tablets",
+            "content": "Acme Pharma \u2014 Active: ASPIRIN \u2014 Pain relief \u2014 For the temporary relief of minor aches",
+            "engine": "openfda",
+            "position": 3,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "biomedical",
+              "type": "drug_label",
+              "schema_version": 1,
+              "data": {
+                "brand_name": "Pain Relief Tablets",
+                "generic_name": "Acetylsalicylic Acid",
+                "manufacturer": "Acme Pharma",
+                "substance": "ASPIRIN",
+                "purpose": "Pain relief",
+                "indications": "For the temporary relief of minor aches",
+                "set_id": "substance"
+              },
+              "provenance": {
+                "engine": "openfda",
+                "adapter_fields": [
+                  "brand_name",
+                  "generic_name",
+                  "manufacturer",
+                  "substance",
+                  "purpose",
+                  "indications",
+                  "set_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          },
+          {
+            "url": "https://api.fda.gov/drug/label.json?search=set_id.exact%3A%22related%22&limit=1",
+            "title": "Aspirin Extra Strength",
+            "content": "Acme Pharma \u2014 Active: ACETYLSALICYLIC ACID \u2014 Pain relief \u2014 For the temporary relief of minor aches",
+            "engine": "openfda",
+            "position": 4,
+            "score": 0.75,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "biomedical",
+              "type": "drug_label",
+              "schema_version": 1,
+              "data": {
+                "brand_name": "Aspirin Extra Strength",
+                "generic_name": "Acetylsalicylic Acid",
+                "manufacturer": "Acme Pharma",
+                "substance": "ACETYLSALICYLIC ACID",
+                "purpose": "Pain relief",
+                "indications": "For the temporary relief of minor aches",
+                "set_id": "related"
+              },
+              "provenance": {
+                "engine": "openfda",
+                "adapter_fields": [
+                  "brand_name",
+                  "generic_name",
+                  "manufacturer",
+                  "substance",
+                  "purpose",
+                  "indications",
+                  "set_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          },
+          {
+            "url": "https://api.fda.gov/drug/label.json?search=set_id.exact%3A%22unrelated%22&limit=1",
+            "title": "Naproxen",
+            "content": "Acme Pharma \u2014 Active: NAPROXEN \u2014 Pain relief \u2014 For the temporary relief of minor aches",
+            "engine": "openfda",
+            "position": 5,
+            "score": 0.25,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "biomedical",
+              "type": "drug_label",
+              "schema_version": 1,
+              "data": {
+                "brand_name": "Naproxen",
+                "generic_name": "Naproxen",
+                "manufacturer": "Acme Pharma",
+                "substance": "NAPROXEN",
+                "purpose": "Pain relief",
+                "indications": "For the temporary relief of minor aches",
+                "set_id": "unrelated"
+              },
+              "provenance": {
+                "engine": "openfda",
+                "adapter_fields": [
+                  "brand_name",
+                  "generic_name",
+                  "manufacturer",
+                  "substance",
+                  "purpose",
+                  "indications",
+                  "set_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_openfda.py::test_identified_same_brand_records_keep_distinct_source_links#0",
+      "node": "tests/test_openfda.py::test_identified_same_brand_records_keep_distinct_source_links",
+      "engine": "openfda",
+      "query": "aspirin",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"results\":[{\"set_id\":\"label-one\",\"openfda\":{\"brand_name\":[\"ASPIRIN\"],\"manufacturer_name\":[\"Acme Pharma\"],\"generic_name\":[\"Acetylsalicylic Acid\"],\"substance_name\":[\"ASPIRIN\"]},\"purpose\":[\"Pain relief\"],\"indications_and_usage\":[\"For the temporary relief of minor aches\"]},{\"set_id\":\"label-two\",\"openfda\":{\"brand_name\":[\"ASPIRIN\"],\"manufacturer_name\":[\"Acme Pharma\"],\"generic_name\":[\"Acetylsalicylic Acid\"],\"substance_name\":[\"ASPIRIN\"]},\"purpose\":[\"Pain relief\"],\"indications_and_usage\":[\"For the temporary relief of minor aches\"]}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.fda.gov/drug/label.json?search=openfda.brand_name.exact%3A%22aspirin%22+openfda.brand_name.exact%3A%22ASPIRIN%22+openfda.brand_name.exact%3A%22Aspirin%22+openfda.generic_name.exact%3A%22aspirin%22+openfda.generic_name.exact%3A%22ASPIRIN%22+openfda.generic_name.exact%3A%22Aspirin%22+openfda.substance_name.exact%3A%22aspirin%22+openfda.substance_name.exact%3A%22ASPIRIN%22+openfda.substance_name.exact%3A%22Aspirin%22&limit=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://api.fda.gov/drug/label.json?search=set_id.exact%3A%22label-one%22&limit=1",
+            "title": "ASPIRIN",
+            "content": "Acme Pharma \u2014 Active: ASPIRIN \u2014 Pain relief \u2014 For the temporary relief of minor aches",
+            "engine": "openfda",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "biomedical",
+              "type": "drug_label",
+              "schema_version": 1,
+              "data": {
+                "brand_name": "ASPIRIN",
+                "generic_name": "Acetylsalicylic Acid",
+                "manufacturer": "Acme Pharma",
+                "substance": "ASPIRIN",
+                "purpose": "Pain relief",
+                "indications": "For the temporary relief of minor aches",
+                "set_id": "label-one"
+              },
+              "provenance": {
+                "engine": "openfda",
+                "adapter_fields": [
+                  "brand_name",
+                  "generic_name",
+                  "manufacturer",
+                  "substance",
+                  "purpose",
+                  "indications",
+                  "set_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          },
+          {
+            "url": "https://api.fda.gov/drug/label.json?search=set_id.exact%3A%22label-two%22&limit=1",
+            "title": "ASPIRIN",
+            "content": "Acme Pharma \u2014 Active: ASPIRIN \u2014 Pain relief \u2014 For the temporary relief of minor aches",
+            "engine": "openfda",
+            "position": 2,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "biomedical",
+              "type": "drug_label",
+              "schema_version": 1,
+              "data": {
+                "brand_name": "ASPIRIN",
+                "generic_name": "Acetylsalicylic Acid",
+                "manufacturer": "Acme Pharma",
+                "substance": "ASPIRIN",
+                "purpose": "Pain relief",
+                "indications": "For the temporary relief of minor aches",
+                "set_id": "label-two"
+              },
+              "provenance": {
+                "engine": "openfda",
+                "adapter_fields": [
+                  "brand_name",
+                  "generic_name",
+                  "manufacturer",
+                  "substance",
+                  "purpose",
+                  "indications",
+                  "set_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_openfda.py::test_engine_entry_blank_base_url_uses_openfda_default#0",
+      "node": "tests/test_openfda.py::test_engine_entry_blank_base_url_uses_openfda_default",
+      "engine": "openfda",
+      "query": "aspirin",
+      "config": {
+        "enabled": true,
+        "base_url": "",
+        "type": "api",
+        "timeout_ms": 1234,
+        "max_results": 2,
+        "rate_limit": null,
+        "weight": 1.0,
+        "api_key": "",
+        "api_secret": null,
+        "user_agent": null,
+        "categories": null,
+        "proxy_pool": null,
+        "scrape_proxy_url": null
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"results\":[]}"
+        },
+        {
+          "status": 200,
+          "wire_body": "{\"results\":[]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.fda.gov/drug/label.json?search=openfda.brand_name.exact%3A%22aspirin%22+openfda.brand_name.exact%3A%22ASPIRIN%22+openfda.brand_name.exact%3A%22Aspirin%22+openfda.generic_name.exact%3A%22aspirin%22+openfda.generic_name.exact%3A%22ASPIRIN%22+openfda.generic_name.exact%3A%22Aspirin%22+openfda.substance_name.exact%3A%22aspirin%22+openfda.substance_name.exact%3A%22ASPIRIN%22+openfda.substance_name.exact%3A%22Aspirin%22&limit=2",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://api.fda.gov/drug/label.json?search=openfda.brand_name%3A%22aspirin%22+openfda.generic_name%3A%22aspirin%22+openfda.substance_name%3A%22aspirin%22&limit=2",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_openfda.py::test_identifier_free_labels_are_omitted_before_merge_and_format#0",
+      "node": "tests/test_openfda.py::test_identifier_free_labels_are_omitted_before_merge_and_format",
+      "engine": "openfda",
+      "query": "aspirin",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"results\":[{\"set_id\":\"\",\"openfda\":{\"brand_name\":[\"ASPIRIN\"],\"manufacturer_name\":[\"Acme Pharma\"],\"generic_name\":[\"Acetylsalicylic Acid\"],\"substance_name\":[\"ASPIRIN\"]},\"purpose\":[\"Pain relief\"],\"indications_and_usage\":[\"For the temporary relief of minor aches\"]},{\"set_id\":\"\",\"openfda\":{\"brand_name\":[\"ASPIRIN\"],\"manufacturer_name\":[\"Acme Pharma\"],\"generic_name\":[\"Acetylsalicylic Acid\"],\"substance_name\":[\"ASPIRIN\"]},\"purpose\":[\"Pain relief\"],\"indications_and_usage\":[\"For the temporary relief of minor aches\"]}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.fda.gov/drug/label.json?search=openfda.brand_name.exact%3A%22aspirin%22+openfda.brand_name.exact%3A%22ASPIRIN%22+openfda.brand_name.exact%3A%22Aspirin%22+openfda.generic_name.exact%3A%22aspirin%22+openfda.generic_name.exact%3A%22ASPIRIN%22+openfda.generic_name.exact%3A%22Aspirin%22+openfda.substance_name.exact%3A%22aspirin%22+openfda.substance_name.exact%3A%22ASPIRIN%22+openfda.substance_name.exact%3A%22Aspirin%22&limit=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": "omitted 2 openFDA label record(s) without a stable source identifier",
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_openfda.py::test_empty_exact_query_uses_one_bounded_fielded_broad_fallback#0",
+      "node": "tests/test_openfda.py::test_empty_exact_query_uses_one_bounded_fielded_broad_fallback",
+      "engine": "openfda",
+      "query": "aspirin",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"results\":[]}"
+        },
+        {
+          "status": 200,
+          "wire_body": "{\"results\":[{\"set_id\":\"broad-1\",\"openfda\":{\"brand_name\":[\"Aspirin Plus\"],\"manufacturer_name\":[\"Acme Pharma\"],\"generic_name\":[\"Acetylsalicylic Acid\"],\"substance_name\":[\"ASPIRIN\"]},\"purpose\":[\"Pain relief\"],\"indications_and_usage\":[\"For the temporary relief of minor aches\"]},{\"set_id\":\"broad-2\",\"openfda\":{\"brand_name\":[\"Naproxen\"],\"manufacturer_name\":[\"Acme Pharma\"],\"generic_name\":[\"Naproxen\"],\"substance_name\":[\"NAPROXEN\"]},\"purpose\":[\"Pain relief\"],\"indications_and_usage\":[\"For the temporary relief of minor aches\"]}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.fda.gov/drug/label.json?search=openfda.brand_name.exact%3A%22aspirin%22+openfda.brand_name.exact%3A%22ASPIRIN%22+openfda.brand_name.exact%3A%22Aspirin%22+openfda.generic_name.exact%3A%22aspirin%22+openfda.generic_name.exact%3A%22ASPIRIN%22+openfda.generic_name.exact%3A%22Aspirin%22+openfda.substance_name.exact%3A%22aspirin%22+openfda.substance_name.exact%3A%22ASPIRIN%22+openfda.substance_name.exact%3A%22Aspirin%22&limit=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://api.fda.gov/drug/label.json?search=openfda.brand_name%3A%22aspirin%22+openfda.generic_name%3A%22aspirin%22+openfda.substance_name%3A%22aspirin%22&limit=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://api.fda.gov/drug/label.json?search=set_id.exact%3A%22broad-1%22&limit=1",
+            "title": "Aspirin Plus",
+            "content": "Acme Pharma \u2014 Active: ASPIRIN \u2014 Pain relief \u2014 For the temporary relief of minor aches",
+            "engine": "openfda",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "biomedical",
+              "type": "drug_label",
+              "schema_version": 1,
+              "data": {
+                "brand_name": "Aspirin Plus",
+                "generic_name": "Acetylsalicylic Acid",
+                "manufacturer": "Acme Pharma",
+                "substance": "ASPIRIN",
+                "purpose": "Pain relief",
+                "indications": "For the temporary relief of minor aches",
+                "set_id": "broad-1"
+              },
+              "provenance": {
+                "engine": "openfda",
+                "adapter_fields": [
+                  "brand_name",
+                  "generic_name",
+                  "manufacturer",
+                  "substance",
+                  "purpose",
+                  "indications",
+                  "set_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          },
+          {
+            "url": "https://api.fda.gov/drug/label.json?search=set_id.exact%3A%22broad-2%22&limit=1",
+            "title": "Naproxen",
+            "content": "Acme Pharma \u2014 Active: NAPROXEN \u2014 Pain relief \u2014 For the temporary relief of minor aches",
+            "engine": "openfda",
+            "position": 2,
+            "score": 0.25,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "biomedical",
+              "type": "drug_label",
+              "schema_version": 1,
+              "data": {
+                "brand_name": "Naproxen",
+                "generic_name": "Naproxen",
+                "manufacturer": "Acme Pharma",
+                "substance": "NAPROXEN",
+                "purpose": "Pain relief",
+                "indications": "For the temporary relief of minor aches",
+                "set_id": "broad-2"
+              },
+              "provenance": {
+                "engine": "openfda",
+                "adapter_fields": [
+                  "brand_name",
+                  "generic_name",
+                  "manufacturer",
+                  "substance",
+                  "purpose",
+                  "indications",
+                  "set_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_openfda.py::test_empty_exact_and_broad_404_is_valid_empty#0",
+      "node": "tests/test_openfda.py::test_empty_exact_and_broad_404_is_valid_empty",
+      "engine": "openfda",
+      "query": "does-not-exist",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 404,
+          "wire_body": ""
+        },
+        {
+          "status": 404,
+          "wire_body": ""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.fda.gov/drug/label.json?search=openfda.brand_name.exact%3A%22does-not-exist%22+openfda.brand_name.exact%3A%22DOES-NOT-EXIST%22+openfda.brand_name.exact%3A%22Does-Not-Exist%22+openfda.brand_name.exact%3A%22Does-not-exist%22+openfda.generic_name.exact%3A%22does-not-exist%22+openfda.generic_name.exact%3A%22DOES-NOT-EXIST%22+openfda.generic_name.exact%3A%22Does-Not-Exist%22+openfda.generic_name.exact%3A%22Does-not-exist%22+openfda.substance_name.exact%3A%22does-not-exist%22+openfda.substance_name.exact%3A%22DOES-NOT-EXIST%22+openfda.substance_name.exact%3A%22Does-Not-Exist%22+openfda.substance_name.exact%3A%22Does-not-exist%22&limit=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        },
+        {
+          "method": "GET",
+          "url": "https://api.fda.gov/drug/label.json?search=openfda.brand_name%3A%22does-not-exist%22+openfda.generic_name%3A%22does-not-exist%22+openfda.substance_name%3A%22does-not-exist%22&limit=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_openfda.py::test_malformed_results_are_an_error#0",
+      "node": "tests/test_openfda.py::test_malformed_results_are_an_error",
+      "engine": "openfda",
+      "query": "aspirin",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"results\":{}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.fda.gov/drug/label.json?search=openfda.brand_name.exact%3A%22aspirin%22+openfda.brand_name.exact%3A%22ASPIRIN%22+openfda.brand_name.exact%3A%22Aspirin%22+openfda.generic_name.exact%3A%22aspirin%22+openfda.generic_name.exact%3A%22ASPIRIN%22+openfda.generic_name.exact%3A%22Aspirin%22+openfda.substance_name.exact%3A%22aspirin%22+openfda.substance_name.exact%3A%22ASPIRIN%22+openfda.substance_name.exact%3A%22Aspirin%22&limit=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "openFDA results must be a JSON array",
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_openfda.py::test_timeout_and_rate_limit_classification_is_preserved#0",
+      "node": "tests/test_openfda.py::test_timeout_and_rate_limit_classification_is_preserved",
+      "engine": "openfda",
+      "query": "aspirin",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 429,
+          "wire_body": ""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.fda.gov/drug/label.json?search=openfda.brand_name.exact%3A%22aspirin%22+openfda.brand_name.exact%3A%22ASPIRIN%22+openfda.brand_name.exact%3A%22Aspirin%22+openfda.generic_name.exact%3A%22aspirin%22+openfda.generic_name.exact%3A%22ASPIRIN%22+openfda.generic_name.exact%3A%22Aspirin%22+openfda.substance_name.exact%3A%22aspirin%22+openfda.substance_name.exact%3A%22ASPIRIN%22+openfda.substance_name.exact%3A%22Aspirin%22&limit=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "rate_limited",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_openfda.py::test_timeout_and_rate_limit_classification_is_preserved#1",
+      "node": "tests/test_openfda.py::test_timeout_and_rate_limit_classification_is_preserved",
+      "engine": "openfda",
+      "query": "aspirin",
+      "config": {
+        "enabled": true
+      },
+      "responses": [],
+      "requests": [],
+      "output": {
+        "status": "timeout",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_edgar_url_contract.py::test_filing_identity_builds_distinct_archive_urls#0",
+      "node": "tests/test_edgar_url_contract.py::test_filing_identity_builds_distinct_archive_urls",
+      "engine": "edgar",
+      "query": "Apple",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"hits\":{\"hits\":[{\"_source\":{\"display_names\":[\"Apple Inc.\"],\"form_type\":\"10-K\",\"filed_at\":\"2024-10-31T00:00:00Z\",\"cik\":\"0000320193\",\"accession_no\":\"0000320193-24-000123\",\"primary_doc\":\"aapl-20240928.htm\"},\"_score\":10.5},{\"_source\":{\"display_names\":[\"Apple Inc.\"],\"form_type\":\"10-Q\",\"filed_at\":\"2025-02-01T00:00:00Z\",\"cik\":\"0000320193\",\"accession_no\":\"0000320193-25-000456\"},\"_score\":9.5}]}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://efts.sec.gov/LATEST/search-index?q=Apple&limit=10&offset=0",
+          "body": "",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; research)",
+            "accept": "application/json, text/plain, */*"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019324000123/aapl-20240928.htm",
+            "title": "Apple Inc. \u2014 10-K",
+            "content": "10-K",
+            "engine": "edgar",
+            "position": 1,
+            "score": 10.5,
+            "category": "general",
+            "published_date": "2024-10-31",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019325000456/0000320193-25-000456-index.html",
+            "title": "Apple Inc. \u2014 10-Q",
+            "content": "10-Q",
+            "engine": "edgar",
+            "position": 2,
+            "score": 9.5,
+            "category": "general",
+            "published_date": "2025-02-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_edgar_url_contract.py::test_cik_only_result_retains_canonical_company_url#0",
+      "node": "tests/test_edgar_url_contract.py::test_cik_only_result_retains_canonical_company_url",
+      "engine": "edgar",
+      "query": "NVIDIA",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"hits\":{\"hits\":[{\"_source\":{\"display_names\":[\"NVIDIA CORP\"],\"cik\":\"0001045810\"}}]}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://efts.sec.gov/LATEST/search-index?q=NVIDIA&limit=10&offset=0",
+          "body": "",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; research)",
+            "accept": "application/json, text/plain, */*"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=1045810",
+            "title": "NVIDIA CORP",
+            "content": "SEC filing",
+            "engine": "edgar",
+            "position": 1,
+            "score": 0.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_edgar_url_contract.py::test_same_cik_filing_looking_records_without_accessions_are_omitted#0",
+      "node": "tests/test_edgar_url_contract.py::test_same_cik_filing_looking_records_without_accessions_are_omitted",
+      "engine": "edgar",
+      "query": "NVIDIA",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"hits\":{\"hits\":[{\"_source\":{\"display_names\":[\"NVIDIA CORP\"],\"form_type\":\"10-K\",\"cik\":\"0001045810\"}},{\"_source\":{\"display_names\":[\"NVIDIA CORP\"],\"filed_at\":\"2025-02-26T00:00:00Z\",\"cik\":\"0001045810\"}}]}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://efts.sec.gov/LATEST/search-index?q=NVIDIA&limit=10&offset=0",
+          "body": "",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; research)",
+            "accept": "application/json, text/plain, */*"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": "2 SEC result(s) omitted because no validated SEC URL or filing identity was available",
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_edgar_url_contract.py::test_valid_provider_archive_link_is_used_without_inventing_identity#0",
+      "node": "tests/test_edgar_url_contract.py::test_valid_provider_archive_link_is_used_without_inventing_identity",
+      "engine": "edgar",
+      "query": "Example",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"hits\":{\"hits\":[{\"_source\":{\"display_names\":[\"Example Corp\"],\"form_type\":\"8-K\",\"filing_url\":\"https://www.sec.gov/Archives/edgar/data/1234567/000123456724000001/filing.htm\"}}]}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://efts.sec.gov/LATEST/search-index?q=Example&limit=10&offset=0",
+          "body": "",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; research)",
+            "accept": "application/json, text/plain, */*"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.sec.gov/Archives/edgar/data/1234567/000123456724000001/filing.htm",
+            "title": "Example Corp \u2014 8-K",
+            "content": "8-K",
+            "engine": "edgar",
+            "position": 1,
+            "score": 0.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_edgar_url_contract.py::test_provider_archive_link_with_nonstandard_port_is_rejected#0",
+      "node": "tests/test_edgar_url_contract.py::test_provider_archive_link_with_nonstandard_port_is_rejected",
+      "engine": "edgar",
+      "query": "Example",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"hits\":{\"hits\":[{\"_source\":{\"display_names\":[\"Example Corp\"],\"filing_url\":\"https://www.sec.gov:8443/Archives/edgar/data/1234567/000123456724000001/filing.htm\"}}]}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://efts.sec.gov/LATEST/search-index?q=Example&limit=10&offset=0",
+          "body": "",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; research)",
+            "accept": "application/json, text/plain, */*"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": "1 SEC result(s) omitted because no validated SEC URL or filing identity was available",
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_edgar_url_contract.py::test_unresolved_or_unsafe_identity_is_omitted_and_reported#0",
+      "node": "tests/test_edgar_url_contract.py::test_unresolved_or_unsafe_identity_is_omitted_and_reported",
+      "engine": "edgar",
+      "query": "unresolved",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"hits\":{\"hits\":[{\"_source\":{\"display_names\":[\"Incomplete Corp\"],\"form_type\":\"10-K\",\"accession_no\":\"not-an-accession\"}},{\"_source\":{\"display_names\":[\"Unsafe Corp\"],\"filing_url\":\"https://example.com/filing.htm\"}}]}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://efts.sec.gov/LATEST/search-index?q=unresolved&limit=10&offset=0",
+          "body": "",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; research)",
+            "accept": "application/json, text/plain, */*"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": "2 SEC result(s) omitted because no validated SEC URL or filing identity was available",
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_fred.py::TestFREDAdapterSearch::test_search_returns_results#0",
+      "node": "tests/test_fred.py::TestFREDAdapterSearch::test_search_returns_results",
+      "engine": "fred",
+      "query": "GDP",
+      "config": {
+        "enabled": true,
+        "api_key": "synthetic-fred-key"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"seriess\":[{\"id\":\"GDP\",\"title\":\"Gross Domestic Product\",\"observation_start\":\"1947-01-01\",\"units\":\"Billions of Dollars\",\"frequency\":\"Quarterly\",\"seasonal_adjustment\":\"Seasonally Adjusted Annual Rate\",\"popularity\":95,\"notes\":\"Gross domestic product (GDP), the value of goods and services produced.\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.stlouisfed.org/fred/series/search?api_key=<synthetic-key>&file_type=json&search_text=GDP&limit=10&order_by=popularity&sort_order=desc",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://fred.stlouisfed.org/series/GDP",
+            "title": "Gross Domestic Product (GDP)",
+            "content": "Quarterly \u2014 Billions of Dollars \u2014 Seasonally Adjusted Annual Rate \u2014 Gross domestic product (GDP), the value of goods and services produced.",
+            "engine": "fred",
+            "position": 1,
+            "score": 95.0,
+            "category": "general",
+            "published_date": "1947-01-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "financial",
+              "type": "economic_series",
+              "schema_version": 1,
+              "data": {
+                "series_id": "GDP",
+                "title": "Gross Domestic Product",
+                "units": "Billions of Dollars",
+                "frequency": "Quarterly",
+                "seasonal_adjustment": "Seasonally Adjusted Annual Rate",
+                "observation_start": "1947-01-01",
+                "notes": "Gross domestic product (GDP), the value of goods and services produced."
+              },
+              "provenance": {
+                "engine": "fred",
+                "adapter_fields": [
+                  "series_id",
+                  "title",
+                  "units",
+                  "frequency",
+                  "seasonal_adjustment",
+                  "observation_start",
+                  "notes"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_fred.py::TestFREDAdapterSearch::test_keeps_api_key_in_query_param#0",
+      "node": "tests/test_fred.py::TestFREDAdapterSearch::test_keeps_api_key_in_query_param",
+      "engine": "fred",
+      "query": "test",
+      "config": {
+        "enabled": true,
+        "api_key": "synthetic-fred-key"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"seriess\":[]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.stlouisfed.org/fred/series/search?api_key=<synthetic-key>&file_type=json&search_text=test&limit=10&order_by=popularity&sort_order=desc",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_fred.py::TestFREDAdapterSearch::test_missing_api_key_returns_not_configured#0",
+      "node": "tests/test_fred.py::TestFREDAdapterSearch::test_missing_api_key_returns_not_configured",
+      "engine": "fred",
+      "query": "test",
+      "config": {
+        "enabled": true,
+        "api_key": ""
+      },
+      "responses": [],
+      "requests": [],
+      "output": {
+        "status": "error",
+        "error_message": "FRED API key not configured. Set ENGINE_FRED_API_KEY env var.",
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_fred.py::TestFREDAdapterSearch::test_empty_key_treated_as_not_configured#0",
+      "node": "tests/test_fred.py::TestFREDAdapterSearch::test_empty_key_treated_as_not_configured",
+      "engine": "fred",
+      "query": "test",
+      "config": {
+        "enabled": true,
+        "api_key": ""
+      },
+      "responses": [],
+      "requests": [],
+      "output": {
+        "status": "error",
+        "error_message": "FRED API key not configured. Set ENGINE_FRED_API_KEY env var.",
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_fred.py::TestFREDAdapterSearch::test_whitespace_key_treated_as_not_configured#0",
+      "node": "tests/test_fred.py::TestFREDAdapterSearch::test_whitespace_key_treated_as_not_configured",
+      "engine": "fred",
+      "query": "test",
+      "config": {
+        "enabled": true,
+        "api_key": "   "
+      },
+      "responses": [],
+      "requests": [],
+      "output": {
+        "status": "error",
+        "error_message": "FRED API key not configured. Set ENGINE_FRED_API_KEY env var.",
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_fred.py::TestFREDAdapterSearch::test_http_status_error_sanitized#0",
+      "node": "tests/test_fred.py::TestFREDAdapterSearch::test_http_status_error_sanitized",
+      "engine": "fred",
+      "query": "test",
+      "config": {
+        "enabled": true,
+        "api_key": "synthetic-fred-key"
+      },
+      "responses": [
+        {
+          "status": 500,
+          "wire_body": ""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.stlouisfed.org/fred/series/search?api_key=<synthetic-key>&file_type=json&search_text=test&limit=10&order_by=popularity&sort_order=desc",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "Server error '500 Internal Server Error' for url 'https://api.stlouisfed.org/fred/series/search?file_type=json&search_text=test&limit=10&order_by=popularity&sort_order=desc%27For+more+information+check%3A+https%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FHTTP%2FStatus%2F500",
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_fred.py::TestFREDAdapterSearch::test_broad_exception_sanitized#0",
+      "node": "tests/test_fred.py::TestFREDAdapterSearch::test_broad_exception_sanitized",
+      "engine": "fred",
+      "query": "test",
+      "config": {
+        "enabled": true,
+        "api_key": "synthetic-fred-key"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "exception": "RuntimeError",
+          "diagnostic": "https://api.stlouisfed.org/fred/series/search?api_key=<synthetic-key>&file_type=json&search_text=test&limit=10"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.stlouisfed.org/fred/series/search?api_key=<synthetic-key>&file_type=json&search_text=test&limit=10&order_by=popularity&sort_order=desc",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "https://api.stlouisfed.org/fred/series/search?file_type=json&search_text=test&limit=10",
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_fred.py::TestFREDAdapterSearch::test_rate_limited#0",
+      "node": "tests/test_fred.py::TestFREDAdapterSearch::test_rate_limited",
+      "engine": "fred",
+      "query": "test",
+      "config": {
+        "enabled": true,
+        "api_key": "synthetic-fred-key"
+      },
+      "responses": [
+        {
+          "status": 429,
+          "wire_body": ""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.stlouisfed.org/fred/series/search?api_key=<synthetic-key>&file_type=json&search_text=test&limit=10&order_by=popularity&sort_order=desc",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "rate_limited",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_fred.py::TestFREDAdapterSearch::test_timeout#0",
+      "node": "tests/test_fred.py::TestFREDAdapterSearch::test_timeout",
+      "engine": "fred",
+      "query": "test",
+      "config": {
+        "enabled": true,
+        "api_key": "synthetic-fred-key"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "exception": "timeout"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.stlouisfed.org/fred/series/search?api_key=<synthetic-key>&file_type=json&search_text=test&limit=10&order_by=popularity&sort_order=desc",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "timeout",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_fred.py::TestFREDAdapterSearch::test_payload_notes_untruncated_long_notes#0",
+      "node": "tests/test_fred.py::TestFREDAdapterSearch::test_payload_notes_untruncated_long_notes",
+      "engine": "fred",
+      "query": "GDP",
+      "config": {
+        "enabled": true,
+        "api_key": "synthetic-fred-key"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"seriess\":[{\"id\":\"GDP\",\"title\":\"Gross Domestic Product\",\"observation_start\":\"1947-01-01\",\"units\":\"Billions of Dollars\",\"frequency\":\"Quarterly\",\"seasonal_adjustment\":\"Seasonally Adjusted Annual Rate\",\"popularity\":95,\"notes\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.stlouisfed.org/fred/series/search?api_key=<synthetic-key>&file_type=json&search_text=GDP&limit=10&order_by=popularity&sort_order=desc",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://fred.stlouisfed.org/series/GDP",
+            "title": "Gross Domestic Product (GDP)",
+            "content": "Quarterly \u2014 Billions of Dollars \u2014 Seasonally Adjusted Annual Rate \u2014 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "engine": "fred",
+            "position": 1,
+            "score": 95.0,
+            "category": "general",
+            "published_date": "1947-01-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "financial",
+              "type": "economic_series",
+              "schema_version": 1,
+              "data": {
+                "series_id": "GDP",
+                "title": "Gross Domestic Product",
+                "units": "Billions of Dollars",
+                "frequency": "Quarterly",
+                "seasonal_adjustment": "Seasonally Adjusted Annual Rate",
+                "observation_start": "1947-01-01",
+                "notes": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+              },
+              "provenance": {
+                "engine": "fred",
+                "adapter_fields": [
+                  "series_id",
+                  "title",
+                  "units",
+                  "frequency",
+                  "seasonal_adjustment",
+                  "observation_start",
+                  "notes"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_oyez_relevance.py::test_uses_oyez_source_search_and_preserves_relevance_order#0",
+      "node": "tests/test_oyez_relevance.py::test_uses_oyez_source_search_and_preserves_relevance_order",
+      "engine": "oyez",
+      "query": "Brown v. Board of Education",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"hits\":{\"hits\":[{\"_score\":6.279115,\"_source\":{\"title\":\"brown v. board of education of topeka (2)\",\"field_court_term\":\"1940-1955\",\"field_docket_number\":\"1\",\"search_api_url\":\"https://api.oyez.org/cases/1940-1955/349us294\"}},{\"_score\":6.2773943,\"_source\":{\"title\":\"brown v. board of education of topeka (1)\",\"field_court_term\":\"1940-1955\",\"field_docket_number\":\"1\",\"search_api_url\":\"https://api.oyez.org/cases/1940-1955/347us483\"}},{\"_score\":5.1956644,\"_source\":{\"title\":\"pickering v. board of education\",\"field_court_term\":\"1967\",\"field_docket_number\":\"510\",\"search_api_url\":\"https://api.oyez.org/cases/1967/510\"}}]}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "POST",
+          "url": "https://beta-search.oyez.org/elasticsearch_index_scotus_nodes/_search",
+          "body": "{\"size\":10,\"query\":{\"multi_match\":{\"query\":\"Brown v. Board of Education\",\"type\":\"cross_fields\",\"fields\":[\"field_docket_number^3\",\"field_additional_docket_numbers^3\",\"title^2\",\"field_court_term\",\"field_first_party\",\"field_second_party\",\"field_facts_of_the_case:value\",\"field_question:value\",\"field_conclusion:value\",\"field_biography:value\",\"field_citation:field_volume\",\"field_citation:field_page\",\"field_citation:field_year^0.2\"]}}}",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1",
+            "content-type": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.oyez.org/cases/1940-1955/349us294",
+            "title": "brown v. board of education of topeka (2)",
+            "content": "Supreme Court term: 1940-1955",
+            "engine": "oyez",
+            "position": 1,
+            "score": 6.279115,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://www.oyez.org/cases/1940-1955/347us483",
+            "title": "brown v. board of education of topeka (1)",
+            "content": "Supreme Court term: 1940-1955",
+            "engine": "oyez",
+            "position": 2,
+            "score": 6.2773943,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://www.oyez.org/cases/1967/510",
+            "title": "pickering v. board of education",
+            "content": "Supreme Court term: 1967",
+            "engine": "oyez",
+            "position": 3,
+            "score": 5.1956644,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_oyez_relevance.py::test_adapter_does_not_reorder_raw_source_hits#0",
+      "node": "tests/test_oyez_relevance.py::test_adapter_does_not_reorder_raw_source_hits",
+      "engine": "oyez",
+      "query": "candidate",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"hits\":{\"hits\":[{\"_score\":1.0,\"_source\":{\"title\":\"fuzzy candidate\",\"url\":\"https://api.oyez.org/cases/1971/1\"}},{\"_score\":9.0,\"_source\":{\"title\":\"exact candidate\",\"url\":\"https://api.oyez.org/cases/1954/1\"}}]}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "POST",
+          "url": "https://beta-search.oyez.org/elasticsearch_index_scotus_nodes/_search",
+          "body": "{\"size\":10,\"query\":{\"multi_match\":{\"query\":\"candidate\",\"type\":\"cross_fields\",\"fields\":[\"field_docket_number^3\",\"field_additional_docket_numbers^3\",\"title^2\",\"field_court_term\",\"field_first_party\",\"field_second_party\",\"field_facts_of_the_case:value\",\"field_question:value\",\"field_conclusion:value\",\"field_biography:value\",\"field_citation:field_volume\",\"field_citation:field_page\",\"field_citation:field_year^0.2\"]}}}",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1",
+            "content-type": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.oyez.org/cases/1971/1",
+            "title": "fuzzy candidate",
+            "content": "U.S. Supreme Court case",
+            "engine": "oyez",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://www.oyez.org/cases/1954/1",
+            "title": "exact candidate",
+            "content": "U.S. Supreme Court case",
+            "engine": "oyez",
+            "position": 2,
+            "score": 9.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_oyez_relevance.py::test_unresolved_records_are_omitted_without_empty_url_merge#0",
+      "node": "tests/test_oyez_relevance.py::test_unresolved_records_are_omitted_without_empty_url_merge",
+      "engine": "oyez",
+      "query": "case",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"hits\":{\"hits\":[{\"_score\":4.0,\"_source\":{\"title\":\"identified case\",\"url\":\"https://api.oyez.org/cases/1954/1\"}},{\"_score\":3.0,\"_source\":{\"title\":\"unresolved case\",\"url\":\"https://evil.example/cases/1954/2\"}},{\"_score\":2.0,\"_source\":{\"title\":\"second identified case\",\"url\":\"https://api.oyez.org/cases/1967/510\"}},{\"_score\":1.0,\"_source\":{\"title\":\"missing identity\"}}]}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "POST",
+          "url": "https://beta-search.oyez.org/elasticsearch_index_scotus_nodes/_search",
+          "body": "{\"size\":10,\"query\":{\"multi_match\":{\"query\":\"case\",\"type\":\"cross_fields\",\"fields\":[\"field_docket_number^3\",\"field_additional_docket_numbers^3\",\"title^2\",\"field_court_term\",\"field_first_party\",\"field_second_party\",\"field_facts_of_the_case:value\",\"field_question:value\",\"field_conclusion:value\",\"field_biography:value\",\"field_citation:field_volume\",\"field_citation:field_page\",\"field_citation:field_year^0.2\"]}}}",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1",
+            "content-type": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.oyez.org/cases/1954/1",
+            "title": "identified case",
+            "content": "U.S. Supreme Court case",
+            "engine": "oyez",
+            "position": 1,
+            "score": 4.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://www.oyez.org/cases/1967/510",
+            "title": "second identified case",
+            "content": "U.S. Supreme Court case",
+            "engine": "oyez",
+            "position": 2,
+            "score": 2.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_oyez_relevance.py::test_explicit_rest_override_keeps_legacy_case_fixture_shape#0",
+      "node": "tests/test_oyez_relevance.py::test_explicit_rest_override_keeps_legacy_case_fixture_shape",
+      "engine": "oyez",
+      "query": "marbury",
+      "config": {
+        "enabled": true,
+        "base_url": "https://api.example.test"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "[{\"name\":\"Marbury v. Madison\",\"term\":\"1801\",\"href\":\"/cases/1801/10\"}]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.example.test/cases?page=1&per_page=10&order=desc&sort=decision_date",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.oyez.org/cases/1801/10",
+            "title": "Marbury v. Madison",
+            "content": "Supreme Court term: 1801",
+            "engine": "oyez",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_oyez_relevance.py::test_empty_base_url_from_configured_startup_uses_source_search#0",
+      "node": "tests/test_oyez_relevance.py::test_empty_base_url_from_configured_startup_uses_source_search",
+      "engine": "oyez",
+      "query": "Brown v. Board of Education",
+      "config": {
+        "enabled": true,
+        "base_url": "",
+        "type": "api",
+        "timeout_ms": 8000,
+        "max_results": 10,
+        "rate_limit": null,
+        "weight": 1.0,
+        "api_key": null,
+        "api_secret": null,
+        "user_agent": null,
+        "categories": null,
+        "proxy_pool": null,
+        "scrape_proxy_url": null
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"hits\":{\"hits\":[]}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "POST",
+          "url": "https://beta-search.oyez.org/elasticsearch_index_scotus_nodes/_search",
+          "body": "{\"size\":10,\"query\":{\"multi_match\":{\"query\":\"Brown v. Board of Education\",\"type\":\"cross_fields\",\"fields\":[\"field_docket_number^3\",\"field_additional_docket_numbers^3\",\"title^2\",\"field_court_term\",\"field_first_party\",\"field_second_party\",\"field_facts_of_the_case:value\",\"field_question:value\",\"field_conclusion:value\",\"field_biography:value\",\"field_citation:field_volume\",\"field_citation:field_page\",\"field_citation:field_year^0.2\"]}}}",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1",
+            "content-type": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_new_engines.py::TestOpenFDAAdapter::test_search_returns_results#0",
+      "node": "tests/test_new_engines.py::TestOpenFDAAdapter::test_search_returns_results",
+      "engine": "openfda",
+      "query": "aspirin",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"results\":[{\"set_id\":\"test-openfda-label\",\"openfda\":{\"brand_name\":[\"Aspirin\"],\"generic_name\":[\"Acetylsalicylic Acid\"],\"manufacturer_name\":[\"Bayer\"],\"substance_name\":[\"ASPIRIN\"]},\"purpose\":[\"Pain reliever\"],\"indications_and_usage\":[\"For relief of headache pain\"]}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.fda.gov/drug/label.json?search=openfda.brand_name.exact%3A%22aspirin%22+openfda.brand_name.exact%3A%22ASPIRIN%22+openfda.brand_name.exact%3A%22Aspirin%22+openfda.generic_name.exact%3A%22aspirin%22+openfda.generic_name.exact%3A%22ASPIRIN%22+openfda.generic_name.exact%3A%22Aspirin%22+openfda.substance_name.exact%3A%22aspirin%22+openfda.substance_name.exact%3A%22ASPIRIN%22+openfda.substance_name.exact%3A%22Aspirin%22&limit=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://api.fda.gov/drug/label.json?search=set_id.exact%3A%22test-openfda-label%22&limit=1",
+            "title": "Aspirin",
+            "content": "Bayer \u2014 Active: ASPIRIN \u2014 Pain reliever \u2014 For relief of headache pain",
+            "engine": "openfda",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "biomedical",
+              "type": "drug_label",
+              "schema_version": 1,
+              "data": {
+                "brand_name": "Aspirin",
+                "generic_name": "Acetylsalicylic Acid",
+                "manufacturer": "Bayer",
+                "substance": "ASPIRIN",
+                "purpose": "Pain reliever",
+                "indications": "For relief of headache pain",
+                "set_id": "test-openfda-label"
+              },
+              "provenance": {
+                "engine": "openfda",
+                "adapter_fields": [
+                  "brand_name",
+                  "generic_name",
+                  "manufacturer",
+                  "substance",
+                  "purpose",
+                  "indications",
+                  "set_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_new_engines.py::TestEdgarAdapter::test_search_returns_results#0",
+      "node": "tests/test_new_engines.py::TestEdgarAdapter::test_search_returns_results",
+      "engine": "edgar",
+      "query": "Apple 10-K",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"hits\":{\"hits\":[{\"_source\":{\"display_names\":[\"Apple Inc.\"],\"form_type\":\"10-K\",\"description\":\"Annual report for fiscal year 2024\",\"filed_at\":\"2024-10-31T00:00:00Z\",\"cik\":\"320193\",\"accession_no\":\"0000320193-24-000123\"},\"_score\":10.5}]}}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://efts.sec.gov/LATEST/search-index?q=Apple+10-K&limit=10&offset=0",
+          "body": "",
+          "headers": {
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; research)",
+            "accept": "application/json, text/plain, */*"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019324000123/0000320193-24-000123-index.html",
+            "title": "Apple Inc. \u2014 10-K",
+            "content": "10-K \u2014 Annual report for fiscal year 2024",
+            "engine": "edgar",
+            "position": 1,
+            "score": 10.5,
+            "category": "general",
+            "published_date": "2024-10-31",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_new_engines.py::TestFredAdapter::test_search_returns_results#0",
+      "node": "tests/test_new_engines.py::TestFredAdapter::test_search_returns_results",
+      "engine": "fred",
+      "query": "GDP",
+      "config": {
+        "enabled": true,
+        "api_key": "synthetic-fred-key"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"seriess\":[{\"id\":\"GDP\",\"title\":\"Gross Domestic Product\",\"observation_start\":\"1947-01-01\",\"units\":\"Billions of Dollars\",\"frequency\":\"Quarterly\",\"seasonal_adjustment\":\"Seasonally Adjusted Annual Rate\",\"popularity\":100}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.stlouisfed.org/fred/series/search?api_key=<synthetic-key>&file_type=json&search_text=GDP&limit=10&order_by=popularity&sort_order=desc",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://fred.stlouisfed.org/series/GDP",
+            "title": "Gross Domestic Product (GDP)",
+            "content": "Quarterly \u2014 Billions of Dollars \u2014 Seasonally Adjusted Annual Rate",
+            "engine": "fred",
+            "position": 1,
+            "score": 100.0,
+            "category": "general",
+            "published_date": "1947-01-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "financial",
+              "type": "economic_series",
+              "schema_version": 1,
+              "data": {
+                "series_id": "GDP",
+                "title": "Gross Domestic Product",
+                "units": "Billions of Dollars",
+                "frequency": "Quarterly",
+                "seasonal_adjustment": "Seasonally Adjusted Annual Rate",
+                "observation_start": "1947-01-01"
+              },
+              "provenance": {
+                "engine": "fred",
+                "adapter_fields": [
+                  "series_id",
+                  "title",
+                  "units",
+                  "frequency",
+                  "seasonal_adjustment",
+                  "observation_start"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_new_engines.py::TestFredAdapter::test_search_missing_key#0",
+      "node": "tests/test_new_engines.py::TestFredAdapter::test_search_missing_key",
+      "engine": "fred",
+      "query": "test",
+      "config": {
+        "enabled": true,
+        "api_key": ""
+      },
+      "responses": [],
+      "requests": [],
+      "output": {
+        "status": "error",
+        "error_message": "FRED API key not configured. Set ENGINE_FRED_API_KEY env var.",
+        "results": []
+      }
+    },
+    {
+      "id": "tests/test_new_engines.py::TestOyezAdapter::test_search_returns_results#0",
+      "node": "tests/test_new_engines.py::TestOyezAdapter::test_search_returns_results",
+      "engine": "oyez",
+      "query": "marbury",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "[{\"name\":\"Marbury v. Madison\",\"term\":\"1801\",\"decision_date\":\"1803-02-24\",\"href\":\"/cases/1801/10\"},{\"name\":\"Brown v. Board of Education\",\"term\":\"1953\",\"decision_date\":\"1954-05-17\",\"href\":\"/cases/1952/1\"}]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "POST",
+          "url": "https://beta-search.oyez.org/elasticsearch_index_scotus_nodes/_search",
+          "body": "{\"size\":10,\"query\":{\"multi_match\":{\"query\":\"marbury\",\"type\":\"cross_fields\",\"fields\":[\"field_docket_number^3\",\"field_additional_docket_numbers^3\",\"title^2\",\"field_court_term\",\"field_first_party\",\"field_second_party\",\"field_facts_of_the_case:value\",\"field_question:value\",\"field_conclusion:value\",\"field_biography:value\",\"field_citation:field_volume\",\"field_citation:field_page\",\"field_citation:field_year^0.2\"]}}}",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1",
+            "content-type": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.oyez.org/cases/1801/10",
+            "title": "Marbury v. Madison",
+            "content": "Decided: 1803-02-24 | Supreme Court term: 1801",
+            "engine": "oyez",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": "1803-02-24",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://www.oyez.org/cases/1952/1",
+            "title": "Brown v. Board of Education",
+            "content": "Decided: 1954-05-17 | Supreme Court term: 1953",
+            "engine": "oyez",
+            "position": 2,
+            "score": 1.0,
+            "category": "general",
+            "published_date": "1954-05-17",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_payload.py::TestFinancialPayload::test_fred_payload#0",
+      "node": "tests/test_payload.py::TestFinancialPayload::test_fred_payload",
+      "engine": "fred",
+      "query": "GDP",
+      "config": {
+        "enabled": true,
+        "api_key": "synthetic-fred-key"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"seriess\":[{\"id\":\"GDP\",\"title\":\"Gross Domestic Product\",\"observation_start\":\"1947-01-01\",\"units\":\"Billions of Dollars\",\"frequency\":\"Quarterly\",\"seasonal_adjustment\":\"Seasonally Adjusted Annual Rate\",\"popularity\":95,\"notes\":\"Gross domestic product (GDP).\"}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.stlouisfed.org/fred/series/search?api_key=<synthetic-key>&file_type=json&search_text=GDP&limit=10&order_by=popularity&sort_order=desc",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://fred.stlouisfed.org/series/GDP",
+            "title": "Gross Domestic Product (GDP)",
+            "content": "Quarterly \u2014 Billions of Dollars \u2014 Seasonally Adjusted Annual Rate \u2014 Gross domestic product (GDP).",
+            "engine": "fred",
+            "position": 1,
+            "score": 95.0,
+            "category": "general",
+            "published_date": "1947-01-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "financial",
+              "type": "economic_series",
+              "schema_version": 1,
+              "data": {
+                "series_id": "GDP",
+                "title": "Gross Domestic Product",
+                "units": "Billions of Dollars",
+                "frequency": "Quarterly",
+                "seasonal_adjustment": "Seasonally Adjusted Annual Rate",
+                "observation_start": "1947-01-01",
+                "notes": "Gross domestic product (GDP)."
+              },
+              "provenance": {
+                "engine": "fred",
+                "adapter_fields": [
+                  "series_id",
+                  "title",
+                  "units",
+                  "frequency",
+                  "seasonal_adjustment",
+                  "observation_start",
+                  "notes"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_payload.py::TestBiomedicalPayload::test_openfda_payload#0",
+      "node": "tests/test_payload.py::TestBiomedicalPayload::test_openfda_payload",
+      "engine": "openfda",
+      "query": "testdrug",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"results\":[{\"set_id\":\"test-openfda-label\",\"openfda\":{\"brand_name\":[\"TestDrug\"],\"generic_name\":[\"Testzol\"],\"manufacturer_name\":[\"Acme Pharma\"],\"substance_name\":[\"Testzol\"]},\"purpose\":[\"For testing\"],\"indications_and_usage\":[\"Used for testing payload extraction\"]}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.fda.gov/drug/label.json?search=openfda.brand_name.exact%3A%22testdrug%22+openfda.brand_name.exact%3A%22TESTDRUG%22+openfda.brand_name.exact%3A%22Testdrug%22+openfda.generic_name.exact%3A%22testdrug%22+openfda.generic_name.exact%3A%22TESTDRUG%22+openfda.generic_name.exact%3A%22Testdrug%22+openfda.substance_name.exact%3A%22testdrug%22+openfda.substance_name.exact%3A%22TESTDRUG%22+openfda.substance_name.exact%3A%22Testdrug%22&limit=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://api.fda.gov/drug/label.json?search=set_id.exact%3A%22test-openfda-label%22&limit=1",
+            "title": "TestDrug",
+            "content": "Acme Pharma \u2014 Active: Testzol \u2014 For testing \u2014 Used for testing payload extraction",
+            "engine": "openfda",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "biomedical",
+              "type": "drug_label",
+              "schema_version": 1,
+              "data": {
+                "brand_name": "TestDrug",
+                "generic_name": "Testzol",
+                "manufacturer": "Acme Pharma",
+                "substance": "Testzol",
+                "purpose": "For testing",
+                "indications": "Used for testing payload extraction",
+                "set_id": "test-openfda-label"
+              },
+              "provenance": {
+                "engine": "openfda",
+                "adapter_fields": [
+                  "brand_name",
+                  "generic_name",
+                  "manufacturer",
+                  "substance",
+                  "purpose",
+                  "indications",
+                  "set_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_payload.py::TestBiomedicalPayload::test_openfda_absent_fields_stay_absent#0",
+      "node": "tests/test_payload.py::TestBiomedicalPayload::test_openfda_absent_fields_stay_absent",
+      "engine": "openfda",
+      "query": "testdrug",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "{\"results\":[{\"set_id\":\"test-openfda-absent-fields\",\"openfda\":{\"brand_name\":[\"TestDrug\"]},\"purpose\":[\"\"],\"indications_and_usage\":[\"\"]}]}"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.fda.gov/drug/label.json?search=openfda.brand_name.exact%3A%22testdrug%22+openfda.brand_name.exact%3A%22TESTDRUG%22+openfda.brand_name.exact%3A%22Testdrug%22+openfda.generic_name.exact%3A%22testdrug%22+openfda.generic_name.exact%3A%22TESTDRUG%22+openfda.generic_name.exact%3A%22Testdrug%22+openfda.substance_name.exact%3A%22testdrug%22+openfda.substance_name.exact%3A%22TESTDRUG%22+openfda.substance_name.exact%3A%22Testdrug%22&limit=10",
+          "body": "",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://api.fda.gov/drug/label.json?search=set_id.exact%3A%22test-openfda-absent-fields%22&limit=1",
+            "title": "TestDrug",
+            "content": "FDA drug labeling information",
+            "engine": "openfda",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "biomedical",
+              "type": "drug_label",
+              "schema_version": 1,
+              "data": {
+                "brand_name": "TestDrug",
+                "set_id": "test-openfda-absent-fields"
+              },
+              "provenance": {
+                "engine": "openfda",
+                "adapter_fields": [
+                  "brand_name",
+                  "set_id"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[https://evil.example/cases/1954/1]#0",
+      "node": "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[https://evil.example/cases/1954/1]",
+      "engine": "oyez",
+      "query": "original Oyez URL helper regression",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "[{\"title\":\"Original URL helper identity control\",\"term\":\"1954\",\"field_docket_number\":\"1\",\"search_api_url\":\"https://evil.example/cases/1954/1\"}]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "POST",
+          "url": "https://beta-search.oyez.org/elasticsearch_index_scotus_nodes/_search",
+          "body": "{\"size\":10,\"query\":{\"multi_match\":{\"query\":\"original Oyez URL helper regression\",\"type\":\"cross_fields\",\"fields\":[\"field_docket_number^3\",\"field_additional_docket_numbers^3\",\"title^2\",\"field_court_term\",\"field_first_party\",\"field_second_party\",\"field_facts_of_the_case:value\",\"field_question:value\",\"field_conclusion:value\",\"field_biography:value\",\"field_citation:field_volume\",\"field_citation:field_page\",\"field_citation:field_year^0.2\"]}}}",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1",
+            "content-type": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      },
+      "helper_assertion": {
+        "node": "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[https://evil.example/cases/1954/1]",
+        "value": "https://evil.example/cases/1954/1",
+        "output": ""
+      },
+      "capture_kind": "whole-adapter replay of captured original helper assertion"
+    },
+    {
+      "id": "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[https://api.oyez.org/not-cases/1954/1]#0",
+      "node": "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[https://api.oyez.org/not-cases/1954/1]",
+      "engine": "oyez",
+      "query": "original Oyez URL helper regression",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "[{\"title\":\"Original URL helper identity control\",\"term\":\"1954\",\"field_docket_number\":\"1\",\"search_api_url\":\"https://api.oyez.org/not-cases/1954/1\"}]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "POST",
+          "url": "https://beta-search.oyez.org/elasticsearch_index_scotus_nodes/_search",
+          "body": "{\"size\":10,\"query\":{\"multi_match\":{\"query\":\"original Oyez URL helper regression\",\"type\":\"cross_fields\",\"fields\":[\"field_docket_number^3\",\"field_additional_docket_numbers^3\",\"title^2\",\"field_court_term\",\"field_first_party\",\"field_second_party\",\"field_facts_of_the_case:value\",\"field_question:value\",\"field_conclusion:value\",\"field_biography:value\",\"field_citation:field_volume\",\"field_citation:field_page\",\"field_citation:field_year^0.2\"]}}}",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1",
+            "content-type": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      },
+      "helper_assertion": {
+        "node": "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[https://api.oyez.org/not-cases/1954/1]",
+        "value": "https://api.oyez.org/not-cases/1954/1",
+        "output": ""
+      },
+      "capture_kind": "whole-adapter replay of captured original helper assertion"
+    },
+    {
+      "id": "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[https://api.oyez.org/cases/1954]#0",
+      "node": "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[https://api.oyez.org/cases/1954]",
+      "engine": "oyez",
+      "query": "original Oyez URL helper regression",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "[{\"title\":\"Original URL helper identity control\",\"term\":\"1954\",\"field_docket_number\":\"1\",\"search_api_url\":\"https://api.oyez.org/cases/1954\"}]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "POST",
+          "url": "https://beta-search.oyez.org/elasticsearch_index_scotus_nodes/_search",
+          "body": "{\"size\":10,\"query\":{\"multi_match\":{\"query\":\"original Oyez URL helper regression\",\"type\":\"cross_fields\",\"fields\":[\"field_docket_number^3\",\"field_additional_docket_numbers^3\",\"title^2\",\"field_court_term\",\"field_first_party\",\"field_second_party\",\"field_facts_of_the_case:value\",\"field_question:value\",\"field_conclusion:value\",\"field_biography:value\",\"field_citation:field_volume\",\"field_citation:field_page\",\"field_citation:field_year^0.2\"]}}}",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1",
+            "content-type": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      },
+      "helper_assertion": {
+        "node": "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[https://api.oyez.org/cases/1954]",
+        "value": "https://api.oyez.org/cases/1954",
+        "output": ""
+      },
+      "capture_kind": "whole-adapter replay of captured original helper assertion"
+    },
+    {
+      "id": "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[cases/1954/1]#0",
+      "node": "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[cases/1954/1]",
+      "engine": "oyez",
+      "query": "original Oyez URL helper regression",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "[{\"title\":\"Original URL helper identity control\",\"term\":\"1954\",\"field_docket_number\":\"1\",\"search_api_url\":\"cases/1954/1\"}]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "POST",
+          "url": "https://beta-search.oyez.org/elasticsearch_index_scotus_nodes/_search",
+          "body": "{\"size\":10,\"query\":{\"multi_match\":{\"query\":\"original Oyez URL helper regression\",\"type\":\"cross_fields\",\"fields\":[\"field_docket_number^3\",\"field_additional_docket_numbers^3\",\"title^2\",\"field_court_term\",\"field_first_party\",\"field_second_party\",\"field_facts_of_the_case:value\",\"field_question:value\",\"field_conclusion:value\",\"field_biography:value\",\"field_citation:field_volume\",\"field_citation:field_page\",\"field_citation:field_year^0.2\"]}}}",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1",
+            "content-type": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      },
+      "helper_assertion": {
+        "node": "tests/test_oyez_relevance.py::test_case_url_rejects_untrusted_or_incomplete_identity[cases/1954/1]",
+        "value": "cases/1954/1",
+        "output": ""
+      },
+      "capture_kind": "whole-adapter replay of captured original helper assertion"
+    },
+    {
+      "id": "tests/test_oyez_relevance.py::test_case_url_does_not_infer_identity_without_provider_url#0",
+      "node": "tests/test_oyez_relevance.py::test_case_url_does_not_infer_identity_without_provider_url",
+      "engine": "oyez",
+      "query": "original Oyez URL helper regression",
+      "config": {
+        "enabled": true
+      },
+      "responses": [
+        {
+          "status": 200,
+          "wire_body": "[{\"title\":\"Original URL helper identity control\",\"term\":\"1954\",\"field_docket_number\":\"1\",\"search_api_url\":\"\"}]"
+        }
+      ],
+      "requests": [
+        {
+          "method": "POST",
+          "url": "https://beta-search.oyez.org/elasticsearch_index_scotus_nodes/_search",
+          "body": "{\"size\":10,\"query\":{\"multi_match\":{\"query\":\"original Oyez URL helper regression\",\"type\":\"cross_fields\",\"fields\":[\"field_docket_number^3\",\"field_additional_docket_numbers^3\",\"title^2\",\"field_court_term\",\"field_first_party\",\"field_second_party\",\"field_facts_of_the_case:value\",\"field_question:value\",\"field_conclusion:value\",\"field_biography:value\",\"field_citation:field_volume\",\"field_citation:field_page\",\"field_citation:field_year^0.2\"]}}}",
+          "headers": {
+            "accept": "*/*",
+            "user-agent": "python-httpx/0.28.1",
+            "content-type": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": []
+      },
+      "helper_assertion": {
+        "node": "tests/test_oyez_relevance.py::test_case_url_does_not_infer_identity_without_provider_url",
+        "value": "",
+        "output": ""
+      },
+      "capture_kind": "whole-adapter replay of captured original helper assertion"
+    }
+  ]
+}

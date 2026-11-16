@@ -1,0 +1,2982 @@
+{
+  "schema_version": 1,
+  "plan_id": "W06",
+  "baseline": "9b7d888da1ee3f7e2ed045c2185ea16f419381e9",
+  "source_controls": {
+    "slopsearx/staged.py": "6a916005fb404369294f8f3d2e0c96ade191beae2be85087640e085bb9d4d256",
+    "slopsearx/mcp/staged_tools.py": "ac49b6942567aaab2c8bb56c15bb325f6a87d68f6c65a75a4bc912a74310a2ff",
+    "slopsearx/mcp/composition.py": "3c3b530a7aebf0dd153f8cb00349438bad7b1308e1d53d1d9a03b9f5b3d81077",
+    "slopsearx/mcp/result_serialization.py": "170d358b3d0b7da2b5aa61c18736ca424b3764f82c8d81d8e0d54329066fe669",
+    "slopsearx/artifacts.py": "61aad828f61008623cc23d57b3a51c2c40e591ebfeece8c4065ec9d5a7470678",
+    "slopsearx/snapshot.py": "85c88b483635003a4a395f40cf48eb83a564b8dd3965ed8a139ba65c1ea88377",
+    "tests/test_staged_search.py": "44bd4207e4f6feced604d9e8f2fc049a9b8ce7062271fe7c1bf27ac9a8c2aa8c",
+    "tests/test_staged_valkey_integration.py": "ef3b19f2f85c2dfb6e15871bcb0a3a818debb4d3b49f57bb3aa3af86bb7e362e",
+    "tests/test_workflow_composition.py": "ab1fc968ccf8aea8c23ca106f59034f16974dd21e09a6d49d5f8a7b3b918d4e9",
+    "tests/test_mcp_tools.py": "f503f109d706f7808132baf9a1cdd5975f27202604524937953b5aa212d89549",
+    "slopsearx/service.py": "45903193ef89987f7be83c1e593e44b7752251a54eb8719eae15a241840102ac",
+    "slopsearx/cache.py": "88155d2060f19bcb7740c9498f8f82378e26c4c60ac4d013bee9913eb333c089"
+  },
+  "additional_sources": {
+    "slopsearx/service.py": "45903193ef89987f7be83c1e593e44b7752251a54eb8719eae15a241840102ac",
+    "slopsearx/cache.py": "88155d2060f19bcb7740c9498f8f82378e26c4c60ac4d013bee9913eb333c089"
+  },
+  "provider_calls": 0,
+  "execution": "actual original StagedSearchRunner + SearchService with permissive _MockEngine; no provider/network",
+  "nondeterminism": {
+    "wall_time": 1000.0,
+    "uuid": "sequential integers left shifted80",
+    "query_id": "q-language-fixed",
+    "latency": "fixture engine outcomes2.0; no elapsed duration in records"
+  },
+  "cases": [
+    {
+      "id": "language.null",
+      "input": {
+        "query": "language evidence",
+        "objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 1
+        },
+        "initial_scope": {
+          "engines": [
+            "wikipedia"
+          ]
+        },
+        "fallback_scope": null,
+        "allow_scope_expansion": false,
+        "filters": {
+          "language": null
+        }
+      },
+      "plan": {
+        "identity": {
+          "version": 1,
+          "query": "language evidence",
+          "objectives": {
+            "requested": {
+              "deadline_ms": 5000,
+              "max_engine_calls": 1
+            },
+            "effective": {
+              "deadline_ms": 5000,
+              "max_engine_calls": 1
+            }
+          },
+          "initial_scope": {
+            "requested": {
+              "engines": [
+                "wikipedia"
+              ]
+            },
+            "selected_engines": [
+              "wikipedia"
+            ],
+            "excluded_engines": [],
+            "routing": {
+              "rule": "explicit engine",
+              "matched_topic": null,
+              "fallback": false,
+              "budget_applied": false
+            }
+          },
+          "fallback_scope": null,
+          "allow_scope_expansion": false,
+          "filters": {
+            "language": null,
+            "time_range": null,
+            "safesearch": "off",
+            "freshness": "no_preference"
+          }
+        },
+        "digest": "503c5aa0aa9a7436be6420501ded2e94a46954e9ed2760e47bb683aedb99d525",
+        "query": "language evidence",
+        "filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": "off",
+          "freshness": "no_preference"
+        },
+        "initial_scope": {
+          "requested": {
+            "engines": [
+              "wikipedia"
+            ]
+          },
+          "selected_engines": [
+            "wikipedia"
+          ],
+          "excluded_engines": [],
+          "routing": {
+            "rule": "explicit engine",
+            "matched_topic": null,
+            "fallback": false,
+            "budget_applied": false
+          }
+        },
+        "fallback_scope": null,
+        "allow_scope_expansion": false,
+        "fallback_when": "clean_empty",
+        "requested_objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 1
+        },
+        "effective_objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 1
+        }
+      },
+      "plan_error": null,
+      "admission": {
+        "contract": "slopsearx.staged_search",
+        "version": 1,
+        "operation_id": "00000000-0001-0000-0000-000000000000",
+        "artifact": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "staged_search",
+          "id": "00000000-0001-0000-0000-000000000000"
+        },
+        "state": "queued",
+        "stop_reason": null,
+        "accepted_at": 1000.0,
+        "execution_deadline_at": 1005.0,
+        "expires_at": 4600.0,
+        "plan_digest": "503c5aa0aa9a7436be6420501ded2e94a46954e9ed2760e47bb683aedb99d525",
+        "plan": {
+          "query": "language evidence",
+          "filters": {
+            "language": null,
+            "time_range": null,
+            "safesearch": "off",
+            "freshness": "no_preference"
+          },
+          "initial_scope": {
+            "requested": {
+              "engines": [
+                "wikipedia"
+              ]
+            },
+            "selected_engines": [
+              "wikipedia"
+            ],
+            "excluded_engines": [],
+            "routing": {
+              "rule": "explicit engine",
+              "matched_topic": null,
+              "fallback": false,
+              "budget_applied": false
+            }
+          },
+          "fallback_scope": null,
+          "allow_scope_expansion": false,
+          "fallback_when": "clean_empty"
+        },
+        "objectives": {
+          "requested": {
+            "deadline_ms": 5000,
+            "max_engine_calls": 1
+          },
+          "effective": {
+            "deadline_ms": 5000,
+            "max_engine_calls": 1
+          },
+          "unmet": []
+        },
+        "budget": {
+          "unit": "adapter_search_invocations",
+          "limit": 1,
+          "reserved": 0,
+          "observed": 0,
+          "remaining": 1
+        },
+        "stages": [
+          {
+            "index": 0,
+            "scope": {
+              "requested": {
+                "engines": [
+                  "wikipedia"
+                ]
+              },
+              "selected_engines": [
+                "wikipedia"
+              ],
+              "excluded_engines": [],
+              "routing": {
+                "rule": "explicit engine",
+                "matched_topic": null,
+                "fallback": false,
+                "budget_applied": false
+              }
+            },
+            "state": "done",
+            "skipped_reason": null,
+            "attempts": [
+              {
+                "attempt_id": "00000000000200000000000000000000",
+                "started_at": 1000.0,
+                "finished_at": 1000.0,
+                "state": "done",
+                "reserved_engine_calls": 1,
+                "observed_engine_calls": 1,
+                "cached": false,
+                "query_id": "q-language-fixed",
+                "cursor": "snap-000000000003",
+                "result_count": 3,
+                "engine_outcomes": [
+                  {
+                    "engine": "wikipedia",
+                    "status": "ok",
+                    "result_count": 3,
+                    "latency_ms": 2.0,
+                    "message": null
+                  }
+                ],
+                "enforcement": {},
+                "error": null,
+                "deadline_exceeded": false
+              }
+            ],
+            "enforcement": {}
+          }
+        ],
+        "results": [],
+        "meta": {
+          "cursor": null,
+          "artifact": null,
+          "query_id": null,
+          "total": 0,
+          "returned": 0,
+          "has_more": false,
+          "selected_result_attempt_id": null,
+          "result_status": "not_available",
+          "elapsed_ms": 0
+        }
+      },
+      "record": {
+        "operation_id": "00000000-0001-0000-0000-000000000000",
+        "tenant": "default",
+        "version": 1,
+        "plan_digest": "503c5aa0aa9a7436be6420501ded2e94a46954e9ed2760e47bb683aedb99d525",
+        "accepted_at": 1000.0,
+        "execution_deadline_at": 1005.0,
+        "expires_at": 4600.0,
+        "state": "completed",
+        "stop_reason": "initial_nonempty",
+        "plan": {
+          "query": "language evidence",
+          "filters": {
+            "language": null,
+            "time_range": null,
+            "safesearch": "off",
+            "freshness": "no_preference"
+          },
+          "initial_scope": {
+            "requested": {
+              "engines": [
+                "wikipedia"
+              ]
+            },
+            "selected_engines": [
+              "wikipedia"
+            ],
+            "excluded_engines": [],
+            "routing": {
+              "rule": "explicit engine",
+              "matched_topic": null,
+              "fallback": false,
+              "budget_applied": false
+            }
+          },
+          "fallback_scope": null,
+          "allow_scope_expansion": false,
+          "fallback_when": "clean_empty"
+        },
+        "objectives": {
+          "requested": {
+            "deadline_ms": 5000,
+            "max_engine_calls": 1
+          },
+          "effective": {
+            "deadline_ms": 5000,
+            "max_engine_calls": 1
+          },
+          "unmet": []
+        },
+        "budget": {
+          "unit": "adapter_search_invocations",
+          "limit": 1,
+          "reserved": 1,
+          "observed": 1
+        },
+        "stages": [
+          {
+            "index": 0,
+            "scope": {
+              "requested": {
+                "engines": [
+                  "wikipedia"
+                ]
+              },
+              "selected_engines": [
+                "wikipedia"
+              ],
+              "excluded_engines": [],
+              "routing": {
+                "rule": "explicit engine",
+                "matched_topic": null,
+                "fallback": false,
+                "budget_applied": false
+              }
+            },
+            "state": "done",
+            "skipped_reason": null,
+            "attempts": [
+              {
+                "attempt_id": "00000000000200000000000000000000",
+                "started_at": 1000.0,
+                "finished_at": 1000.0,
+                "state": "done",
+                "reserved_engine_calls": 1,
+                "observed_engine_calls": 1,
+                "cached": false,
+                "query_id": "q-language-fixed",
+                "cursor": "snap-000000000003",
+                "result_count": 3,
+                "engine_outcomes": [
+                  {
+                    "engine": "wikipedia",
+                    "status": "ok",
+                    "result_count": 3,
+                    "latency_ms": 2.0,
+                    "message": null
+                  }
+                ],
+                "enforcement": {},
+                "error": null,
+                "deadline_exceeded": false
+              }
+            ],
+            "enforcement": {}
+          }
+        ],
+        "retry_keys": [],
+        "selected_result_attempt_id": "00000000000200000000000000000000",
+        "next_stage": 0,
+        "owner_token": null
+      },
+      "rendered": {
+        "contract": "slopsearx.staged_search",
+        "version": 1,
+        "operation_id": "00000000-0001-0000-0000-000000000000",
+        "artifact": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "staged_search",
+          "id": "00000000-0001-0000-0000-000000000000"
+        },
+        "state": "completed",
+        "stop_reason": "initial_nonempty",
+        "accepted_at": 1000.0,
+        "execution_deadline_at": 1005.0,
+        "expires_at": 4600.0,
+        "plan_digest": "503c5aa0aa9a7436be6420501ded2e94a46954e9ed2760e47bb683aedb99d525",
+        "plan": {
+          "query": "language evidence",
+          "filters": {
+            "language": null,
+            "time_range": null,
+            "safesearch": "off",
+            "freshness": "no_preference"
+          },
+          "initial_scope": {
+            "requested": {
+              "engines": [
+                "wikipedia"
+              ]
+            },
+            "selected_engines": [
+              "wikipedia"
+            ],
+            "excluded_engines": [],
+            "routing": {
+              "rule": "explicit engine",
+              "matched_topic": null,
+              "fallback": false,
+              "budget_applied": false
+            }
+          },
+          "fallback_scope": null,
+          "allow_scope_expansion": false,
+          "fallback_when": "clean_empty"
+        },
+        "objectives": {
+          "requested": {
+            "deadline_ms": 5000,
+            "max_engine_calls": 1
+          },
+          "effective": {
+            "deadline_ms": 5000,
+            "max_engine_calls": 1
+          },
+          "unmet": []
+        },
+        "budget": {
+          "unit": "adapter_search_invocations",
+          "limit": 1,
+          "reserved": 1,
+          "observed": 1,
+          "remaining": 0
+        },
+        "stages": [
+          {
+            "index": 0,
+            "scope": {
+              "requested": {
+                "engines": [
+                  "wikipedia"
+                ]
+              },
+              "selected_engines": [
+                "wikipedia"
+              ],
+              "excluded_engines": [],
+              "routing": {
+                "rule": "explicit engine",
+                "matched_topic": null,
+                "fallback": false,
+                "budget_applied": false
+              }
+            },
+            "state": "done",
+            "skipped_reason": null,
+            "attempts": [
+              {
+                "attempt_id": "00000000000200000000000000000000",
+                "started_at": 1000.0,
+                "finished_at": 1000.0,
+                "state": "done",
+                "reserved_engine_calls": 1,
+                "observed_engine_calls": 1,
+                "cached": false,
+                "query_id": "q-language-fixed",
+                "cursor": "snap-000000000003",
+                "result_count": 3,
+                "engine_outcomes": [
+                  {
+                    "engine": "wikipedia",
+                    "status": "ok",
+                    "result_count": 3,
+                    "latency_ms": 2.0,
+                    "message": null
+                  }
+                ],
+                "enforcement": {},
+                "error": null,
+                "deadline_exceeded": false
+              }
+            ],
+            "enforcement": {}
+          }
+        ],
+        "results": [
+          {
+            "title": "wikipedia result 0",
+            "url": "https://wikipedia0.com",
+            "snippet": "Content for wikipedia result 0.",
+            "source_engines": [
+              "wikipedia"
+            ],
+            "source_count": 1,
+            "primary_engine": "wikipedia",
+            "category": "general",
+            "published_at": null,
+            "score": 1.0,
+            "position": 1,
+            "tier": 1,
+            "citation": {
+              "label": "wikipedia result 0",
+              "url": "https://wikipedia0.com"
+            },
+            "retrieval": {
+              "contract": "slopsearx.retrieval_handoff",
+              "version": 1,
+              "eligible": true,
+              "url_status": "ok",
+              "url_reason": null,
+              "scheme": "https"
+            },
+            "result_id": "snap-000000000003:0",
+            "artifact": {
+              "contract": "slopsearx.artifact_ref",
+              "version": 1,
+              "kind": "result",
+              "id": "snap-000000000003:0"
+            }
+          },
+          {
+            "title": "wikipedia result 1",
+            "url": "https://wikipedia1.com",
+            "snippet": "Content for wikipedia result 1.",
+            "source_engines": [
+              "wikipedia"
+            ],
+            "source_count": 1,
+            "primary_engine": "wikipedia",
+            "category": "general",
+            "published_at": null,
+            "score": 1.0,
+            "position": 2,
+            "tier": 1,
+            "citation": {
+              "label": "wikipedia result 1",
+              "url": "https://wikipedia1.com"
+            },
+            "retrieval": {
+              "contract": "slopsearx.retrieval_handoff",
+              "version": 1,
+              "eligible": true,
+              "url_status": "ok",
+              "url_reason": null,
+              "scheme": "https"
+            },
+            "result_id": "snap-000000000003:1",
+            "artifact": {
+              "contract": "slopsearx.artifact_ref",
+              "version": 1,
+              "kind": "result",
+              "id": "snap-000000000003:1"
+            }
+          },
+          {
+            "title": "wikipedia result 2",
+            "url": "https://wikipedia2.com",
+            "snippet": "Content for wikipedia result 2.",
+            "source_engines": [
+              "wikipedia"
+            ],
+            "source_count": 1,
+            "primary_engine": "wikipedia",
+            "category": "general",
+            "published_at": null,
+            "score": 1.0,
+            "position": 3,
+            "tier": 1,
+            "citation": {
+              "label": "wikipedia result 2",
+              "url": "https://wikipedia2.com"
+            },
+            "retrieval": {
+              "contract": "slopsearx.retrieval_handoff",
+              "version": 1,
+              "eligible": true,
+              "url_status": "ok",
+              "url_reason": null,
+              "scheme": "https"
+            },
+            "result_id": "snap-000000000003:2",
+            "artifact": {
+              "contract": "slopsearx.artifact_ref",
+              "version": 1,
+              "kind": "result",
+              "id": "snap-000000000003:2"
+            }
+          }
+        ],
+        "meta": {
+          "cursor": "snap-000000000003",
+          "artifact": {
+            "contract": "slopsearx.artifact_ref",
+            "version": 1,
+            "kind": "snapshot",
+            "id": "snap-000000000003"
+          },
+          "query_id": "q-language-fixed",
+          "total": 3,
+          "returned": 3,
+          "has_more": false,
+          "selected_result_attempt_id": "00000000000200000000000000000000",
+          "result_status": "available",
+          "elapsed_ms": 0
+        }
+      },
+      "fixture_engine_calls": 1
+    },
+    {
+      "id": "language.bool",
+      "input": {
+        "query": "language evidence",
+        "objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 1
+        },
+        "initial_scope": {
+          "engines": [
+            "wikipedia"
+          ]
+        },
+        "fallback_scope": null,
+        "allow_scope_expansion": false,
+        "filters": {
+          "language": true
+        }
+      },
+      "plan": {
+        "identity": {
+          "version": 1,
+          "query": "language evidence",
+          "objectives": {
+            "requested": {
+              "deadline_ms": 5000,
+              "max_engine_calls": 1
+            },
+            "effective": {
+              "deadline_ms": 5000,
+              "max_engine_calls": 1
+            }
+          },
+          "initial_scope": {
+            "requested": {
+              "engines": [
+                "wikipedia"
+              ]
+            },
+            "selected_engines": [
+              "wikipedia"
+            ],
+            "excluded_engines": [],
+            "routing": {
+              "rule": "explicit engine",
+              "matched_topic": null,
+              "fallback": false,
+              "budget_applied": false
+            }
+          },
+          "fallback_scope": null,
+          "allow_scope_expansion": false,
+          "filters": {
+            "language": true,
+            "time_range": null,
+            "safesearch": "off",
+            "freshness": "no_preference"
+          }
+        },
+        "digest": "36c8284297e8ac2bc22ac80af91b03b52c1f597cf5d7236aa016135db23a47aa",
+        "query": "language evidence",
+        "filters": {
+          "language": true,
+          "time_range": null,
+          "safesearch": "off",
+          "freshness": "no_preference"
+        },
+        "initial_scope": {
+          "requested": {
+            "engines": [
+              "wikipedia"
+            ]
+          },
+          "selected_engines": [
+            "wikipedia"
+          ],
+          "excluded_engines": [],
+          "routing": {
+            "rule": "explicit engine",
+            "matched_topic": null,
+            "fallback": false,
+            "budget_applied": false
+          }
+        },
+        "fallback_scope": null,
+        "allow_scope_expansion": false,
+        "fallback_when": "clean_empty",
+        "requested_objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 1
+        },
+        "effective_objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 1
+        }
+      },
+      "plan_error": null,
+      "admission": {
+        "contract": "slopsearx.staged_search",
+        "version": 1,
+        "operation_id": "00000000-0001-0000-0000-000000000000",
+        "artifact": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "staged_search",
+          "id": "00000000-0001-0000-0000-000000000000"
+        },
+        "state": "queued",
+        "stop_reason": null,
+        "accepted_at": 1000.0,
+        "execution_deadline_at": 1005.0,
+        "expires_at": 4600.0,
+        "plan_digest": "36c8284297e8ac2bc22ac80af91b03b52c1f597cf5d7236aa016135db23a47aa",
+        "plan": {
+          "query": "language evidence",
+          "filters": {
+            "language": true,
+            "time_range": null,
+            "safesearch": "off",
+            "freshness": "no_preference"
+          },
+          "initial_scope": {
+            "requested": {
+              "engines": [
+                "wikipedia"
+              ]
+            },
+            "selected_engines": [
+              "wikipedia"
+            ],
+            "excluded_engines": [],
+            "routing": {
+              "rule": "explicit engine",
+              "matched_topic": null,
+              "fallback": false,
+              "budget_applied": false
+            }
+          },
+          "fallback_scope": null,
+          "allow_scope_expansion": false,
+          "fallback_when": "clean_empty"
+        },
+        "objectives": {
+          "requested": {
+            "deadline_ms": 5000,
+            "max_engine_calls": 1
+          },
+          "effective": {
+            "deadline_ms": 5000,
+            "max_engine_calls": 1
+          },
+          "unmet": []
+        },
+        "budget": {
+          "unit": "adapter_search_invocations",
+          "limit": 1,
+          "reserved": 0,
+          "observed": 0,
+          "remaining": 1
+        },
+        "stages": [
+          {
+            "index": 0,
+            "scope": {
+              "requested": {
+                "engines": [
+                  "wikipedia"
+                ]
+              },
+              "selected_engines": [
+                "wikipedia"
+              ],
+              "excluded_engines": [],
+              "routing": {
+                "rule": "explicit engine",
+                "matched_topic": null,
+                "fallback": false,
+                "budget_applied": false
+              }
+            },
+            "state": "done",
+            "skipped_reason": null,
+            "attempts": [
+              {
+                "attempt_id": "00000000000200000000000000000000",
+                "started_at": 1000.0,
+                "finished_at": 1000.0,
+                "state": "done",
+                "reserved_engine_calls": 1,
+                "observed_engine_calls": 1,
+                "cached": false,
+                "query_id": "q-language-fixed",
+                "cursor": "snap-000000000003",
+                "result_count": 3,
+                "engine_outcomes": [
+                  {
+                    "engine": "wikipedia",
+                    "status": "ok",
+                    "result_count": 3,
+                    "latency_ms": 2.0,
+                    "message": null
+                  }
+                ],
+                "enforcement": {
+                  "language": {
+                    "requested": true,
+                    "status": "unsupported",
+                    "reason": "no selected adapter enforces the language filter",
+                    "enforced_by": []
+                  }
+                },
+                "error": null,
+                "deadline_exceeded": false
+              }
+            ],
+            "enforcement": {
+              "language": {
+                "requested": true,
+                "status": "unsupported",
+                "reason": "no selected adapter enforces the language filter",
+                "enforced_by": []
+              }
+            }
+          }
+        ],
+        "results": [],
+        "meta": {
+          "cursor": null,
+          "artifact": null,
+          "query_id": null,
+          "total": 0,
+          "returned": 0,
+          "has_more": false,
+          "selected_result_attempt_id": null,
+          "result_status": "not_available",
+          "elapsed_ms": 0
+        }
+      },
+      "record": {
+        "operation_id": "00000000-0001-0000-0000-000000000000",
+        "tenant": "default",
+        "version": 1,
+        "plan_digest": "36c8284297e8ac2bc22ac80af91b03b52c1f597cf5d7236aa016135db23a47aa",
+        "accepted_at": 1000.0,
+        "execution_deadline_at": 1005.0,
+        "expires_at": 4600.0,
+        "state": "completed",
+        "stop_reason": "initial_nonempty",
+        "plan": {
+          "query": "language evidence",
+          "filters": {
+            "language": true,
+            "time_range": null,
+            "safesearch": "off",
+            "freshness": "no_preference"
+          },
+          "initial_scope": {
+            "requested": {
+              "engines": [
+                "wikipedia"
+              ]
+            },
+            "selected_engines": [
+              "wikipedia"
+            ],
+            "excluded_engines": [],
+            "routing": {
+              "rule": "explicit engine",
+              "matched_topic": null,
+              "fallback": false,
+              "budget_applied": false
+            }
+          },
+          "fallback_scope": null,
+          "allow_scope_expansion": false,
+          "fallback_when": "clean_empty"
+        },
+        "objectives": {
+          "requested": {
+            "deadline_ms": 5000,
+            "max_engine_calls": 1
+          },
+          "effective": {
+            "deadline_ms": 5000,
+            "max_engine_calls": 1
+          },
+          "unmet": []
+        },
+        "budget": {
+          "unit": "adapter_search_invocations",
+          "limit": 1,
+          "reserved": 1,
+          "observed": 1
+        },
+        "stages": [
+          {
+            "index": 0,
+            "scope": {
+              "requested": {
+                "engines": [
+                  "wikipedia"
+                ]
+              },
+              "selected_engines": [
+                "wikipedia"
+              ],
+              "excluded_engines": [],
+              "routing": {
+                "rule": "explicit engine",
+                "matched_topic": null,
+                "fallback": false,
+                "budget_applied": false
+              }
+            },
+            "state": "done",
+            "skipped_reason": null,
+            "attempts": [
+              {
+                "attempt_id": "00000000000200000000000000000000",
+                "started_at": 1000.0,
+                "finished_at": 1000.0,
+                "state": "done",
+                "reserved_engine_calls": 1,
+                "observed_engine_calls": 1,
+                "cached": false,
+                "query_id": "q-language-fixed",
+                "cursor": "snap-000000000003",
+                "result_count": 3,
+                "engine_outcomes": [
+                  {
+                    "engine": "wikipedia",
+                    "status": "ok",
+                    "result_count": 3,
+                    "latency_ms": 2.0,
+                    "message": null
+                  }
+                ],
+                "enforcement": {
+                  "language": {
+                    "requested": true,
+                    "status": "unsupported",
+                    "reason": "no selected adapter enforces the language filter",
+                    "enforced_by": []
+                  }
+                },
+                "error": null,
+                "deadline_exceeded": false
+              }
+            ],
+            "enforcement": {
+              "language": {
+                "requested": true,
+                "status": "unsupported",
+                "reason": "no selected adapter enforces the language filter",
+                "enforced_by": []
+              }
+            }
+          }
+        ],
+        "retry_keys": [],
+        "selected_result_attempt_id": "00000000000200000000000000000000",
+        "next_stage": 0,
+        "owner_token": null
+      },
+      "rendered": {
+        "contract": "slopsearx.staged_search",
+        "version": 1,
+        "operation_id": "00000000-0001-0000-0000-000000000000",
+        "artifact": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "staged_search",
+          "id": "00000000-0001-0000-0000-000000000000"
+        },
+        "state": "completed",
+        "stop_reason": "initial_nonempty",
+        "accepted_at": 1000.0,
+        "execution_deadline_at": 1005.0,
+        "expires_at": 4600.0,
+        "plan_digest": "36c8284297e8ac2bc22ac80af91b03b52c1f597cf5d7236aa016135db23a47aa",
+        "plan": {
+          "query": "language evidence",
+          "filters": {
+            "language": true,
+            "time_range": null,
+            "safesearch": "off",
+            "freshness": "no_preference"
+          },
+          "initial_scope": {
+            "requested": {
+              "engines": [
+                "wikipedia"
+              ]
+            },
+            "selected_engines": [
+              "wikipedia"
+            ],
+            "excluded_engines": [],
+            "routing": {
+              "rule": "explicit engine",
+              "matched_topic": null,
+              "fallback": false,
+              "budget_applied": false
+            }
+          },
+          "fallback_scope": null,
+          "allow_scope_expansion": false,
+          "fallback_when": "clean_empty"
+        },
+        "objectives": {
+          "requested": {
+            "deadline_ms": 5000,
+            "max_engine_calls": 1
+          },
+          "effective": {
+            "deadline_ms": 5000,
+            "max_engine_calls": 1
+          },
+          "unmet": []
+        },
+        "budget": {
+          "unit": "adapter_search_invocations",
+          "limit": 1,
+          "reserved": 1,
+          "observed": 1,
+          "remaining": 0
+        },
+        "stages": [
+          {
+            "index": 0,
+            "scope": {
+              "requested": {
+                "engines": [
+                  "wikipedia"
+                ]
+              },
+              "selected_engines": [
+                "wikipedia"
+              ],
+              "excluded_engines": [],
+              "routing": {
+                "rule": "explicit engine",
+                "matched_topic": null,
+                "fallback": false,
+                "budget_applied": false
+              }
+            },
+            "state": "done",
+            "skipped_reason": null,
+            "attempts": [
+              {
+                "attempt_id": "00000000000200000000000000000000",
+                "started_at": 1000.0,
+                "finished_at": 1000.0,
+                "state": "done",
+                "reserved_engine_calls": 1,
+                "observed_engine_calls": 1,
+                "cached": false,
+                "query_id": "q-language-fixed",
+                "cursor": "snap-000000000003",
+                "result_count": 3,
+                "engine_outcomes": [
+                  {
+                    "engine": "wikipedia",
+                    "status": "ok",
+                    "result_count": 3,
+                    "latency_ms": 2.0,
+                    "message": null
+                  }
+                ],
+                "enforcement": {
+                  "language": {
+                    "requested": true,
+                    "status": "unsupported",
+                    "reason": "no selected adapter enforces the language filter",
+                    "enforced_by": []
+                  }
+                },
+                "error": null,
+                "deadline_exceeded": false
+              }
+            ],
+            "enforcement": {
+              "language": {
+                "requested": true,
+                "status": "unsupported",
+                "reason": "no selected adapter enforces the language filter",
+                "enforced_by": []
+              }
+            }
+          }
+        ],
+        "results": [
+          {
+            "title": "wikipedia result 0",
+            "url": "https://wikipedia0.com",
+            "snippet": "Content for wikipedia result 0.",
+            "source_engines": [
+              "wikipedia"
+            ],
+            "source_count": 1,
+            "primary_engine": "wikipedia",
+            "category": "general",
+            "published_at": null,
+            "score": 1.0,
+            "position": 1,
+            "tier": 1,
+            "citation": {
+              "label": "wikipedia result 0",
+              "url": "https://wikipedia0.com"
+            },
+            "retrieval": {
+              "contract": "slopsearx.retrieval_handoff",
+              "version": 1,
+              "eligible": true,
+              "url_status": "ok",
+              "url_reason": null,
+              "scheme": "https"
+            },
+            "result_id": "snap-000000000003:0",
+            "artifact": {
+              "contract": "slopsearx.artifact_ref",
+              "version": 1,
+              "kind": "result",
+              "id": "snap-000000000003:0"
+            }
+          },
+          {
+            "title": "wikipedia result 1",
+            "url": "https://wikipedia1.com",
+            "snippet": "Content for wikipedia result 1.",
+            "source_engines": [
+              "wikipedia"
+            ],
+            "source_count": 1,
+            "primary_engine": "wikipedia",
+            "category": "general",
+            "published_at": null,
+            "score": 1.0,
+            "position": 2,
+            "tier": 1,
+            "citation": {
+              "label": "wikipedia result 1",
+              "url": "https://wikipedia1.com"
+            },
+            "retrieval": {
+              "contract": "slopsearx.retrieval_handoff",
+              "version": 1,
+              "eligible": true,
+              "url_status": "ok",
+              "url_reason": null,
+              "scheme": "https"
+            },
+            "result_id": "snap-000000000003:1",
+            "artifact": {
+              "contract": "slopsearx.artifact_ref",
+              "version": 1,
+              "kind": "result",
+              "id": "snap-000000000003:1"
+            }
+          },
+          {
+            "title": "wikipedia result 2",
+            "url": "https://wikipedia2.com",
+            "snippet": "Content for wikipedia result 2.",
+            "source_engines": [
+              "wikipedia"
+            ],
+            "source_count": 1,
+            "primary_engine": "wikipedia",
+            "category": "general",
+            "published_at": null,
+            "score": 1.0,
+            "position": 3,
+            "tier": 1,
+            "citation": {
+              "label": "wikipedia result 2",
+              "url": "https://wikipedia2.com"
+            },
+            "retrieval": {
+              "contract": "slopsearx.retrieval_handoff",
+              "version": 1,
+              "eligible": true,
+              "url_status": "ok",
+              "url_reason": null,
+              "scheme": "https"
+            },
+            "result_id": "snap-000000000003:2",
+            "artifact": {
+              "contract": "slopsearx.artifact_ref",
+              "version": 1,
+              "kind": "result",
+              "id": "snap-000000000003:2"
+            }
+          }
+        ],
+        "meta": {
+          "cursor": "snap-000000000003",
+          "artifact": {
+            "contract": "slopsearx.artifact_ref",
+            "version": 1,
+            "kind": "snapshot",
+            "id": "snap-000000000003"
+          },
+          "query_id": "q-language-fixed",
+          "total": 3,
+          "returned": 3,
+          "has_more": false,
+          "selected_result_attempt_id": "00000000000200000000000000000000",
+          "result_status": "available",
+          "elapsed_ms": 0
+        }
+      },
+      "fixture_engine_calls": 1
+    },
+    {
+      "id": "language.integer",
+      "input": {
+        "query": "language evidence",
+        "objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 1
+        },
+        "initial_scope": {
+          "engines": [
+            "wikipedia"
+          ]
+        },
+        "fallback_scope": null,
+        "allow_scope_expansion": false,
+        "filters": {
+          "language": 1
+        }
+      },
+      "plan": {
+        "identity": {
+          "version": 1,
+          "query": "language evidence",
+          "objectives": {
+            "requested": {
+              "deadline_ms": 5000,
+              "max_engine_calls": 1
+            },
+            "effective": {
+              "deadline_ms": 5000,
+              "max_engine_calls": 1
+            }
+          },
+          "initial_scope": {
+            "requested": {
+              "engines": [
+                "wikipedia"
+              ]
+            },
+            "selected_engines": [
+              "wikipedia"
+            ],
+            "excluded_engines": [],
+            "routing": {
+              "rule": "explicit engine",
+              "matched_topic": null,
+              "fallback": false,
+              "budget_applied": false
+            }
+          },
+          "fallback_scope": null,
+          "allow_scope_expansion": false,
+          "filters": {
+            "language": 1,
+            "time_range": null,
+            "safesearch": "off",
+            "freshness": "no_preference"
+          }
+        },
+        "digest": "550fa9d1a23fc3177de922a4b3c76cb62afc4e0e85a5422bcc11efc6aa350748",
+        "query": "language evidence",
+        "filters": {
+          "language": 1,
+          "time_range": null,
+          "safesearch": "off",
+          "freshness": "no_preference"
+        },
+        "initial_scope": {
+          "requested": {
+            "engines": [
+              "wikipedia"
+            ]
+          },
+          "selected_engines": [
+            "wikipedia"
+          ],
+          "excluded_engines": [],
+          "routing": {
+            "rule": "explicit engine",
+            "matched_topic": null,
+            "fallback": false,
+            "budget_applied": false
+          }
+        },
+        "fallback_scope": null,
+        "allow_scope_expansion": false,
+        "fallback_when": "clean_empty",
+        "requested_objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 1
+        },
+        "effective_objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 1
+        }
+      },
+      "plan_error": null,
+      "admission": {
+        "contract": "slopsearx.staged_search",
+        "version": 1,
+        "operation_id": "00000000-0001-0000-0000-000000000000",
+        "artifact": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "staged_search",
+          "id": "00000000-0001-0000-0000-000000000000"
+        },
+        "state": "queued",
+        "stop_reason": null,
+        "accepted_at": 1000.0,
+        "execution_deadline_at": 1005.0,
+        "expires_at": 4600.0,
+        "plan_digest": "550fa9d1a23fc3177de922a4b3c76cb62afc4e0e85a5422bcc11efc6aa350748",
+        "plan": {
+          "query": "language evidence",
+          "filters": {
+            "language": 1,
+            "time_range": null,
+            "safesearch": "off",
+            "freshness": "no_preference"
+          },
+          "initial_scope": {
+            "requested": {
+              "engines": [
+                "wikipedia"
+              ]
+            },
+            "selected_engines": [
+              "wikipedia"
+            ],
+            "excluded_engines": [],
+            "routing": {
+              "rule": "explicit engine",
+              "matched_topic": null,
+              "fallback": false,
+              "budget_applied": false
+            }
+          },
+          "fallback_scope": null,
+          "allow_scope_expansion": false,
+          "fallback_when": "clean_empty"
+        },
+        "objectives": {
+          "requested": {
+            "deadline_ms": 5000,
+            "max_engine_calls": 1
+          },
+          "effective": {
+            "deadline_ms": 5000,
+            "max_engine_calls": 1
+          },
+          "unmet": []
+        },
+        "budget": {
+          "unit": "adapter_search_invocations",
+          "limit": 1,
+          "reserved": 0,
+          "observed": 0,
+          "remaining": 1
+        },
+        "stages": [
+          {
+            "index": 0,
+            "scope": {
+              "requested": {
+                "engines": [
+                  "wikipedia"
+                ]
+              },
+              "selected_engines": [
+                "wikipedia"
+              ],
+              "excluded_engines": [],
+              "routing": {
+                "rule": "explicit engine",
+                "matched_topic": null,
+                "fallback": false,
+                "budget_applied": false
+              }
+            },
+            "state": "done",
+            "skipped_reason": null,
+            "attempts": [
+              {
+                "attempt_id": "00000000000200000000000000000000",
+                "started_at": 1000.0,
+                "finished_at": 1000.0,
+                "state": "done",
+                "reserved_engine_calls": 1,
+                "observed_engine_calls": 1,
+                "cached": false,
+                "query_id": "q-language-fixed",
+                "cursor": "snap-000000000003",
+                "result_count": 3,
+                "engine_outcomes": [
+                  {
+                    "engine": "wikipedia",
+                    "status": "ok",
+                    "result_count": 3,
+                    "latency_ms": 2.0,
+                    "message": null
+                  }
+                ],
+                "enforcement": {
+                  "language": {
+                    "requested": 1,
+                    "status": "unsupported",
+                    "reason": "no selected adapter enforces the language filter",
+                    "enforced_by": []
+                  }
+                },
+                "error": null,
+                "deadline_exceeded": false
+              }
+            ],
+            "enforcement": {
+              "language": {
+                "requested": 1,
+                "status": "unsupported",
+                "reason": "no selected adapter enforces the language filter",
+                "enforced_by": []
+              }
+            }
+          }
+        ],
+        "results": [],
+        "meta": {
+          "cursor": null,
+          "artifact": null,
+          "query_id": null,
+          "total": 0,
+          "returned": 0,
+          "has_more": false,
+          "selected_result_attempt_id": null,
+          "result_status": "not_available",
+          "elapsed_ms": 0
+        }
+      },
+      "record": {
+        "operation_id": "00000000-0001-0000-0000-000000000000",
+        "tenant": "default",
+        "version": 1,
+        "plan_digest": "550fa9d1a23fc3177de922a4b3c76cb62afc4e0e85a5422bcc11efc6aa350748",
+        "accepted_at": 1000.0,
+        "execution_deadline_at": 1005.0,
+        "expires_at": 4600.0,
+        "state": "completed",
+        "stop_reason": "initial_nonempty",
+        "plan": {
+          "query": "language evidence",
+          "filters": {
+            "language": 1,
+            "time_range": null,
+            "safesearch": "off",
+            "freshness": "no_preference"
+          },
+          "initial_scope": {
+            "requested": {
+              "engines": [
+                "wikipedia"
+              ]
+            },
+            "selected_engines": [
+              "wikipedia"
+            ],
+            "excluded_engines": [],
+            "routing": {
+              "rule": "explicit engine",
+              "matched_topic": null,
+              "fallback": false,
+              "budget_applied": false
+            }
+          },
+          "fallback_scope": null,
+          "allow_scope_expansion": false,
+          "fallback_when": "clean_empty"
+        },
+        "objectives": {
+          "requested": {
+            "deadline_ms": 5000,
+            "max_engine_calls": 1
+          },
+          "effective": {
+            "deadline_ms": 5000,
+            "max_engine_calls": 1
+          },
+          "unmet": []
+        },
+        "budget": {
+          "unit": "adapter_search_invocations",
+          "limit": 1,
+          "reserved": 1,
+          "observed": 1
+        },
+        "stages": [
+          {
+            "index": 0,
+            "scope": {
+              "requested": {
+                "engines": [
+                  "wikipedia"
+                ]
+              },
+              "selected_engines": [
+                "wikipedia"
+              ],
+              "excluded_engines": [],
+              "routing": {
+                "rule": "explicit engine",
+                "matched_topic": null,
+                "fallback": false,
+                "budget_applied": false
+              }
+            },
+            "state": "done",
+            "skipped_reason": null,
+            "attempts": [
+              {
+                "attempt_id": "00000000000200000000000000000000",
+                "started_at": 1000.0,
+                "finished_at": 1000.0,
+                "state": "done",
+                "reserved_engine_calls": 1,
+                "observed_engine_calls": 1,
+                "cached": false,
+                "query_id": "q-language-fixed",
+                "cursor": "snap-000000000003",
+                "result_count": 3,
+                "engine_outcomes": [
+                  {
+                    "engine": "wikipedia",
+                    "status": "ok",
+                    "result_count": 3,
+                    "latency_ms": 2.0,
+                    "message": null
+                  }
+                ],
+                "enforcement": {
+                  "language": {
+                    "requested": 1,
+                    "status": "unsupported",
+                    "reason": "no selected adapter enforces the language filter",
+                    "enforced_by": []
+                  }
+                },
+                "error": null,
+                "deadline_exceeded": false
+              }
+            ],
+            "enforcement": {
+              "language": {
+                "requested": 1,
+                "status": "unsupported",
+                "reason": "no selected adapter enforces the language filter",
+                "enforced_by": []
+              }
+            }
+          }
+        ],
+        "retry_keys": [],
+        "selected_result_attempt_id": "00000000000200000000000000000000",
+        "next_stage": 0,
+        "owner_token": null
+      },
+      "rendered": {
+        "contract": "slopsearx.staged_search",
+        "version": 1,
+        "operation_id": "00000000-0001-0000-0000-000000000000",
+        "artifact": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "staged_search",
+          "id": "00000000-0001-0000-0000-000000000000"
+        },
+        "state": "completed",
+        "stop_reason": "initial_nonempty",
+        "accepted_at": 1000.0,
+        "execution_deadline_at": 1005.0,
+        "expires_at": 4600.0,
+        "plan_digest": "550fa9d1a23fc3177de922a4b3c76cb62afc4e0e85a5422bcc11efc6aa350748",
+        "plan": {
+          "query": "language evidence",
+          "filters": {
+            "language": 1,
+            "time_range": null,
+            "safesearch": "off",
+            "freshness": "no_preference"
+          },
+          "initial_scope": {
+            "requested": {
+              "engines": [
+                "wikipedia"
+              ]
+            },
+            "selected_engines": [
+              "wikipedia"
+            ],
+            "excluded_engines": [],
+            "routing": {
+              "rule": "explicit engine",
+              "matched_topic": null,
+              "fallback": false,
+              "budget_applied": false
+            }
+          },
+          "fallback_scope": null,
+          "allow_scope_expansion": false,
+          "fallback_when": "clean_empty"
+        },
+        "objectives": {
+          "requested": {
+            "deadline_ms": 5000,
+            "max_engine_calls": 1
+          },
+          "effective": {
+            "deadline_ms": 5000,
+            "max_engine_calls": 1
+          },
+          "unmet": []
+        },
+        "budget": {
+          "unit": "adapter_search_invocations",
+          "limit": 1,
+          "reserved": 1,
+          "observed": 1,
+          "remaining": 0
+        },
+        "stages": [
+          {
+            "index": 0,
+            "scope": {
+              "requested": {
+                "engines": [
+                  "wikipedia"
+                ]
+              },
+              "selected_engines": [
+                "wikipedia"
+              ],
+              "excluded_engines": [],
+              "routing": {
+                "rule": "explicit engine",
+                "matched_topic": null,
+                "fallback": false,
+                "budget_applied": false
+              }
+            },
+            "state": "done",
+            "skipped_reason": null,
+            "attempts": [
+              {
+                "attempt_id": "00000000000200000000000000000000",
+                "started_at": 1000.0,
+                "finished_at": 1000.0,
+                "state": "done",
+                "reserved_engine_calls": 1,
+                "observed_engine_calls": 1,
+                "cached": false,
+                "query_id": "q-language-fixed",
+                "cursor": "snap-000000000003",
+                "result_count": 3,
+                "engine_outcomes": [
+                  {
+                    "engine": "wikipedia",
+                    "status": "ok",
+                    "result_count": 3,
+                    "latency_ms": 2.0,
+                    "message": null
+                  }
+                ],
+                "enforcement": {
+                  "language": {
+                    "requested": 1,
+                    "status": "unsupported",
+                    "reason": "no selected adapter enforces the language filter",
+                    "enforced_by": []
+                  }
+                },
+                "error": null,
+                "deadline_exceeded": false
+              }
+            ],
+            "enforcement": {
+              "language": {
+                "requested": 1,
+                "status": "unsupported",
+                "reason": "no selected adapter enforces the language filter",
+                "enforced_by": []
+              }
+            }
+          }
+        ],
+        "results": [
+          {
+            "title": "wikipedia result 0",
+            "url": "https://wikipedia0.com",
+            "snippet": "Content for wikipedia result 0.",
+            "source_engines": [
+              "wikipedia"
+            ],
+            "source_count": 1,
+            "primary_engine": "wikipedia",
+            "category": "general",
+            "published_at": null,
+            "score": 1.0,
+            "position": 1,
+            "tier": 1,
+            "citation": {
+              "label": "wikipedia result 0",
+              "url": "https://wikipedia0.com"
+            },
+            "retrieval": {
+              "contract": "slopsearx.retrieval_handoff",
+              "version": 1,
+              "eligible": true,
+              "url_status": "ok",
+              "url_reason": null,
+              "scheme": "https"
+            },
+            "result_id": "snap-000000000003:0",
+            "artifact": {
+              "contract": "slopsearx.artifact_ref",
+              "version": 1,
+              "kind": "result",
+              "id": "snap-000000000003:0"
+            }
+          },
+          {
+            "title": "wikipedia result 1",
+            "url": "https://wikipedia1.com",
+            "snippet": "Content for wikipedia result 1.",
+            "source_engines": [
+              "wikipedia"
+            ],
+            "source_count": 1,
+            "primary_engine": "wikipedia",
+            "category": "general",
+            "published_at": null,
+            "score": 1.0,
+            "position": 2,
+            "tier": 1,
+            "citation": {
+              "label": "wikipedia result 1",
+              "url": "https://wikipedia1.com"
+            },
+            "retrieval": {
+              "contract": "slopsearx.retrieval_handoff",
+              "version": 1,
+              "eligible": true,
+              "url_status": "ok",
+              "url_reason": null,
+              "scheme": "https"
+            },
+            "result_id": "snap-000000000003:1",
+            "artifact": {
+              "contract": "slopsearx.artifact_ref",
+              "version": 1,
+              "kind": "result",
+              "id": "snap-000000000003:1"
+            }
+          },
+          {
+            "title": "wikipedia result 2",
+            "url": "https://wikipedia2.com",
+            "snippet": "Content for wikipedia result 2.",
+            "source_engines": [
+              "wikipedia"
+            ],
+            "source_count": 1,
+            "primary_engine": "wikipedia",
+            "category": "general",
+            "published_at": null,
+            "score": 1.0,
+            "position": 3,
+            "tier": 1,
+            "citation": {
+              "label": "wikipedia result 2",
+              "url": "https://wikipedia2.com"
+            },
+            "retrieval": {
+              "contract": "slopsearx.retrieval_handoff",
+              "version": 1,
+              "eligible": true,
+              "url_status": "ok",
+              "url_reason": null,
+              "scheme": "https"
+            },
+            "result_id": "snap-000000000003:2",
+            "artifact": {
+              "contract": "slopsearx.artifact_ref",
+              "version": 1,
+              "kind": "result",
+              "id": "snap-000000000003:2"
+            }
+          }
+        ],
+        "meta": {
+          "cursor": "snap-000000000003",
+          "artifact": {
+            "contract": "slopsearx.artifact_ref",
+            "version": 1,
+            "kind": "snapshot",
+            "id": "snap-000000000003"
+          },
+          "query_id": "q-language-fixed",
+          "total": 3,
+          "returned": 3,
+          "has_more": false,
+          "selected_result_attempt_id": "00000000000200000000000000000000",
+          "result_status": "available",
+          "elapsed_ms": 0
+        }
+      },
+      "fixture_engine_calls": 1
+    },
+    {
+      "id": "language.list",
+      "input": {
+        "query": "language evidence",
+        "objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 1
+        },
+        "initial_scope": {
+          "engines": [
+            "wikipedia"
+          ]
+        },
+        "fallback_scope": null,
+        "allow_scope_expansion": false,
+        "filters": {
+          "language": []
+        }
+      },
+      "plan": {
+        "identity": {
+          "version": 1,
+          "query": "language evidence",
+          "objectives": {
+            "requested": {
+              "deadline_ms": 5000,
+              "max_engine_calls": 1
+            },
+            "effective": {
+              "deadline_ms": 5000,
+              "max_engine_calls": 1
+            }
+          },
+          "initial_scope": {
+            "requested": {
+              "engines": [
+                "wikipedia"
+              ]
+            },
+            "selected_engines": [
+              "wikipedia"
+            ],
+            "excluded_engines": [],
+            "routing": {
+              "rule": "explicit engine",
+              "matched_topic": null,
+              "fallback": false,
+              "budget_applied": false
+            }
+          },
+          "fallback_scope": null,
+          "allow_scope_expansion": false,
+          "filters": {
+            "language": [],
+            "time_range": null,
+            "safesearch": "off",
+            "freshness": "no_preference"
+          }
+        },
+        "digest": "a59c8498c20c6b011bfc01e9bdeafbf20eedfd4ff2ff83d441c706d9c6b5ec3a",
+        "query": "language evidence",
+        "filters": {
+          "language": [],
+          "time_range": null,
+          "safesearch": "off",
+          "freshness": "no_preference"
+        },
+        "initial_scope": {
+          "requested": {
+            "engines": [
+              "wikipedia"
+            ]
+          },
+          "selected_engines": [
+            "wikipedia"
+          ],
+          "excluded_engines": [],
+          "routing": {
+            "rule": "explicit engine",
+            "matched_topic": null,
+            "fallback": false,
+            "budget_applied": false
+          }
+        },
+        "fallback_scope": null,
+        "allow_scope_expansion": false,
+        "fallback_when": "clean_empty",
+        "requested_objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 1
+        },
+        "effective_objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 1
+        }
+      },
+      "plan_error": null,
+      "admission": {
+        "contract": "slopsearx.staged_search",
+        "version": 1,
+        "operation_id": "00000000-0001-0000-0000-000000000000",
+        "artifact": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "staged_search",
+          "id": "00000000-0001-0000-0000-000000000000"
+        },
+        "state": "queued",
+        "stop_reason": null,
+        "accepted_at": 1000.0,
+        "execution_deadline_at": 1005.0,
+        "expires_at": 4600.0,
+        "plan_digest": "a59c8498c20c6b011bfc01e9bdeafbf20eedfd4ff2ff83d441c706d9c6b5ec3a",
+        "plan": {
+          "query": "language evidence",
+          "filters": {
+            "language": [],
+            "time_range": null,
+            "safesearch": "off",
+            "freshness": "no_preference"
+          },
+          "initial_scope": {
+            "requested": {
+              "engines": [
+                "wikipedia"
+              ]
+            },
+            "selected_engines": [
+              "wikipedia"
+            ],
+            "excluded_engines": [],
+            "routing": {
+              "rule": "explicit engine",
+              "matched_topic": null,
+              "fallback": false,
+              "budget_applied": false
+            }
+          },
+          "fallback_scope": null,
+          "allow_scope_expansion": false,
+          "fallback_when": "clean_empty"
+        },
+        "objectives": {
+          "requested": {
+            "deadline_ms": 5000,
+            "max_engine_calls": 1
+          },
+          "effective": {
+            "deadline_ms": 5000,
+            "max_engine_calls": 1
+          },
+          "unmet": []
+        },
+        "budget": {
+          "unit": "adapter_search_invocations",
+          "limit": 1,
+          "reserved": 0,
+          "observed": 0,
+          "remaining": 1
+        },
+        "stages": [
+          {
+            "index": 0,
+            "scope": {
+              "requested": {
+                "engines": [
+                  "wikipedia"
+                ]
+              },
+              "selected_engines": [
+                "wikipedia"
+              ],
+              "excluded_engines": [],
+              "routing": {
+                "rule": "explicit engine",
+                "matched_topic": null,
+                "fallback": false,
+                "budget_applied": false
+              }
+            },
+            "state": "done",
+            "skipped_reason": null,
+            "attempts": [
+              {
+                "attempt_id": "00000000000200000000000000000000",
+                "started_at": 1000.0,
+                "finished_at": 1000.0,
+                "state": "done",
+                "reserved_engine_calls": 1,
+                "observed_engine_calls": 1,
+                "cached": false,
+                "query_id": "q-language-fixed",
+                "cursor": "snap-000000000003",
+                "result_count": 3,
+                "engine_outcomes": [
+                  {
+                    "engine": "wikipedia",
+                    "status": "ok",
+                    "result_count": 3,
+                    "latency_ms": 2.0,
+                    "message": null
+                  }
+                ],
+                "enforcement": {},
+                "error": null,
+                "deadline_exceeded": false
+              }
+            ],
+            "enforcement": {}
+          }
+        ],
+        "results": [],
+        "meta": {
+          "cursor": null,
+          "artifact": null,
+          "query_id": null,
+          "total": 0,
+          "returned": 0,
+          "has_more": false,
+          "selected_result_attempt_id": null,
+          "result_status": "not_available",
+          "elapsed_ms": 0
+        }
+      },
+      "record": {
+        "operation_id": "00000000-0001-0000-0000-000000000000",
+        "tenant": "default",
+        "version": 1,
+        "plan_digest": "a59c8498c20c6b011bfc01e9bdeafbf20eedfd4ff2ff83d441c706d9c6b5ec3a",
+        "accepted_at": 1000.0,
+        "execution_deadline_at": 1005.0,
+        "expires_at": 4600.0,
+        "state": "completed",
+        "stop_reason": "initial_nonempty",
+        "plan": {
+          "query": "language evidence",
+          "filters": {
+            "language": [],
+            "time_range": null,
+            "safesearch": "off",
+            "freshness": "no_preference"
+          },
+          "initial_scope": {
+            "requested": {
+              "engines": [
+                "wikipedia"
+              ]
+            },
+            "selected_engines": [
+              "wikipedia"
+            ],
+            "excluded_engines": [],
+            "routing": {
+              "rule": "explicit engine",
+              "matched_topic": null,
+              "fallback": false,
+              "budget_applied": false
+            }
+          },
+          "fallback_scope": null,
+          "allow_scope_expansion": false,
+          "fallback_when": "clean_empty"
+        },
+        "objectives": {
+          "requested": {
+            "deadline_ms": 5000,
+            "max_engine_calls": 1
+          },
+          "effective": {
+            "deadline_ms": 5000,
+            "max_engine_calls": 1
+          },
+          "unmet": []
+        },
+        "budget": {
+          "unit": "adapter_search_invocations",
+          "limit": 1,
+          "reserved": 1,
+          "observed": 1
+        },
+        "stages": [
+          {
+            "index": 0,
+            "scope": {
+              "requested": {
+                "engines": [
+                  "wikipedia"
+                ]
+              },
+              "selected_engines": [
+                "wikipedia"
+              ],
+              "excluded_engines": [],
+              "routing": {
+                "rule": "explicit engine",
+                "matched_topic": null,
+                "fallback": false,
+                "budget_applied": false
+              }
+            },
+            "state": "done",
+            "skipped_reason": null,
+            "attempts": [
+              {
+                "attempt_id": "00000000000200000000000000000000",
+                "started_at": 1000.0,
+                "finished_at": 1000.0,
+                "state": "done",
+                "reserved_engine_calls": 1,
+                "observed_engine_calls": 1,
+                "cached": false,
+                "query_id": "q-language-fixed",
+                "cursor": "snap-000000000003",
+                "result_count": 3,
+                "engine_outcomes": [
+                  {
+                    "engine": "wikipedia",
+                    "status": "ok",
+                    "result_count": 3,
+                    "latency_ms": 2.0,
+                    "message": null
+                  }
+                ],
+                "enforcement": {},
+                "error": null,
+                "deadline_exceeded": false
+              }
+            ],
+            "enforcement": {}
+          }
+        ],
+        "retry_keys": [],
+        "selected_result_attempt_id": "00000000000200000000000000000000",
+        "next_stage": 0,
+        "owner_token": null
+      },
+      "rendered": {
+        "contract": "slopsearx.staged_search",
+        "version": 1,
+        "operation_id": "00000000-0001-0000-0000-000000000000",
+        "artifact": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "staged_search",
+          "id": "00000000-0001-0000-0000-000000000000"
+        },
+        "state": "completed",
+        "stop_reason": "initial_nonempty",
+        "accepted_at": 1000.0,
+        "execution_deadline_at": 1005.0,
+        "expires_at": 4600.0,
+        "plan_digest": "a59c8498c20c6b011bfc01e9bdeafbf20eedfd4ff2ff83d441c706d9c6b5ec3a",
+        "plan": {
+          "query": "language evidence",
+          "filters": {
+            "language": [],
+            "time_range": null,
+            "safesearch": "off",
+            "freshness": "no_preference"
+          },
+          "initial_scope": {
+            "requested": {
+              "engines": [
+                "wikipedia"
+              ]
+            },
+            "selected_engines": [
+              "wikipedia"
+            ],
+            "excluded_engines": [],
+            "routing": {
+              "rule": "explicit engine",
+              "matched_topic": null,
+              "fallback": false,
+              "budget_applied": false
+            }
+          },
+          "fallback_scope": null,
+          "allow_scope_expansion": false,
+          "fallback_when": "clean_empty"
+        },
+        "objectives": {
+          "requested": {
+            "deadline_ms": 5000,
+            "max_engine_calls": 1
+          },
+          "effective": {
+            "deadline_ms": 5000,
+            "max_engine_calls": 1
+          },
+          "unmet": []
+        },
+        "budget": {
+          "unit": "adapter_search_invocations",
+          "limit": 1,
+          "reserved": 1,
+          "observed": 1,
+          "remaining": 0
+        },
+        "stages": [
+          {
+            "index": 0,
+            "scope": {
+              "requested": {
+                "engines": [
+                  "wikipedia"
+                ]
+              },
+              "selected_engines": [
+                "wikipedia"
+              ],
+              "excluded_engines": [],
+              "routing": {
+                "rule": "explicit engine",
+                "matched_topic": null,
+                "fallback": false,
+                "budget_applied": false
+              }
+            },
+            "state": "done",
+            "skipped_reason": null,
+            "attempts": [
+              {
+                "attempt_id": "00000000000200000000000000000000",
+                "started_at": 1000.0,
+                "finished_at": 1000.0,
+                "state": "done",
+                "reserved_engine_calls": 1,
+                "observed_engine_calls": 1,
+                "cached": false,
+                "query_id": "q-language-fixed",
+                "cursor": "snap-000000000003",
+                "result_count": 3,
+                "engine_outcomes": [
+                  {
+                    "engine": "wikipedia",
+                    "status": "ok",
+                    "result_count": 3,
+                    "latency_ms": 2.0,
+                    "message": null
+                  }
+                ],
+                "enforcement": {},
+                "error": null,
+                "deadline_exceeded": false
+              }
+            ],
+            "enforcement": {}
+          }
+        ],
+        "results": [
+          {
+            "title": "wikipedia result 0",
+            "url": "https://wikipedia0.com",
+            "snippet": "Content for wikipedia result 0.",
+            "source_engines": [
+              "wikipedia"
+            ],
+            "source_count": 1,
+            "primary_engine": "wikipedia",
+            "category": "general",
+            "published_at": null,
+            "score": 1.0,
+            "position": 1,
+            "tier": 1,
+            "citation": {
+              "label": "wikipedia result 0",
+              "url": "https://wikipedia0.com"
+            },
+            "retrieval": {
+              "contract": "slopsearx.retrieval_handoff",
+              "version": 1,
+              "eligible": true,
+              "url_status": "ok",
+              "url_reason": null,
+              "scheme": "https"
+            },
+            "result_id": "snap-000000000003:0",
+            "artifact": {
+              "contract": "slopsearx.artifact_ref",
+              "version": 1,
+              "kind": "result",
+              "id": "snap-000000000003:0"
+            }
+          },
+          {
+            "title": "wikipedia result 1",
+            "url": "https://wikipedia1.com",
+            "snippet": "Content for wikipedia result 1.",
+            "source_engines": [
+              "wikipedia"
+            ],
+            "source_count": 1,
+            "primary_engine": "wikipedia",
+            "category": "general",
+            "published_at": null,
+            "score": 1.0,
+            "position": 2,
+            "tier": 1,
+            "citation": {
+              "label": "wikipedia result 1",
+              "url": "https://wikipedia1.com"
+            },
+            "retrieval": {
+              "contract": "slopsearx.retrieval_handoff",
+              "version": 1,
+              "eligible": true,
+              "url_status": "ok",
+              "url_reason": null,
+              "scheme": "https"
+            },
+            "result_id": "snap-000000000003:1",
+            "artifact": {
+              "contract": "slopsearx.artifact_ref",
+              "version": 1,
+              "kind": "result",
+              "id": "snap-000000000003:1"
+            }
+          },
+          {
+            "title": "wikipedia result 2",
+            "url": "https://wikipedia2.com",
+            "snippet": "Content for wikipedia result 2.",
+            "source_engines": [
+              "wikipedia"
+            ],
+            "source_count": 1,
+            "primary_engine": "wikipedia",
+            "category": "general",
+            "published_at": null,
+            "score": 1.0,
+            "position": 3,
+            "tier": 1,
+            "citation": {
+              "label": "wikipedia result 2",
+              "url": "https://wikipedia2.com"
+            },
+            "retrieval": {
+              "contract": "slopsearx.retrieval_handoff",
+              "version": 1,
+              "eligible": true,
+              "url_status": "ok",
+              "url_reason": null,
+              "scheme": "https"
+            },
+            "result_id": "snap-000000000003:2",
+            "artifact": {
+              "contract": "slopsearx.artifact_ref",
+              "version": 1,
+              "kind": "result",
+              "id": "snap-000000000003:2"
+            }
+          }
+        ],
+        "meta": {
+          "cursor": "snap-000000000003",
+          "artifact": {
+            "contract": "slopsearx.artifact_ref",
+            "version": 1,
+            "kind": "snapshot",
+            "id": "snap-000000000003"
+          },
+          "query_id": "q-language-fixed",
+          "total": 3,
+          "returned": 3,
+          "has_more": false,
+          "selected_result_attempt_id": "00000000000200000000000000000000",
+          "result_status": "available",
+          "elapsed_ms": 0
+        }
+      },
+      "fixture_engine_calls": 1
+    },
+    {
+      "id": "language.map",
+      "input": {
+        "query": "language evidence",
+        "objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 1
+        },
+        "initial_scope": {
+          "engines": [
+            "wikipedia"
+          ]
+        },
+        "fallback_scope": null,
+        "allow_scope_expansion": false,
+        "filters": {
+          "language": {}
+        }
+      },
+      "plan": {
+        "identity": {
+          "version": 1,
+          "query": "language evidence",
+          "objectives": {
+            "requested": {
+              "deadline_ms": 5000,
+              "max_engine_calls": 1
+            },
+            "effective": {
+              "deadline_ms": 5000,
+              "max_engine_calls": 1
+            }
+          },
+          "initial_scope": {
+            "requested": {
+              "engines": [
+                "wikipedia"
+              ]
+            },
+            "selected_engines": [
+              "wikipedia"
+            ],
+            "excluded_engines": [],
+            "routing": {
+              "rule": "explicit engine",
+              "matched_topic": null,
+              "fallback": false,
+              "budget_applied": false
+            }
+          },
+          "fallback_scope": null,
+          "allow_scope_expansion": false,
+          "filters": {
+            "language": {},
+            "time_range": null,
+            "safesearch": "off",
+            "freshness": "no_preference"
+          }
+        },
+        "digest": "0ed4a507ecad8b4b0789924318c963c1b2b045a2a0c37fdf4553057fcb2ea86d",
+        "query": "language evidence",
+        "filters": {
+          "language": {},
+          "time_range": null,
+          "safesearch": "off",
+          "freshness": "no_preference"
+        },
+        "initial_scope": {
+          "requested": {
+            "engines": [
+              "wikipedia"
+            ]
+          },
+          "selected_engines": [
+            "wikipedia"
+          ],
+          "excluded_engines": [],
+          "routing": {
+            "rule": "explicit engine",
+            "matched_topic": null,
+            "fallback": false,
+            "budget_applied": false
+          }
+        },
+        "fallback_scope": null,
+        "allow_scope_expansion": false,
+        "fallback_when": "clean_empty",
+        "requested_objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 1
+        },
+        "effective_objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 1
+        }
+      },
+      "plan_error": null,
+      "admission": {
+        "contract": "slopsearx.staged_search",
+        "version": 1,
+        "operation_id": "00000000-0001-0000-0000-000000000000",
+        "artifact": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "staged_search",
+          "id": "00000000-0001-0000-0000-000000000000"
+        },
+        "state": "queued",
+        "stop_reason": null,
+        "accepted_at": 1000.0,
+        "execution_deadline_at": 1005.0,
+        "expires_at": 4600.0,
+        "plan_digest": "0ed4a507ecad8b4b0789924318c963c1b2b045a2a0c37fdf4553057fcb2ea86d",
+        "plan": {
+          "query": "language evidence",
+          "filters": {
+            "language": {},
+            "time_range": null,
+            "safesearch": "off",
+            "freshness": "no_preference"
+          },
+          "initial_scope": {
+            "requested": {
+              "engines": [
+                "wikipedia"
+              ]
+            },
+            "selected_engines": [
+              "wikipedia"
+            ],
+            "excluded_engines": [],
+            "routing": {
+              "rule": "explicit engine",
+              "matched_topic": null,
+              "fallback": false,
+              "budget_applied": false
+            }
+          },
+          "fallback_scope": null,
+          "allow_scope_expansion": false,
+          "fallback_when": "clean_empty"
+        },
+        "objectives": {
+          "requested": {
+            "deadline_ms": 5000,
+            "max_engine_calls": 1
+          },
+          "effective": {
+            "deadline_ms": 5000,
+            "max_engine_calls": 1
+          },
+          "unmet": []
+        },
+        "budget": {
+          "unit": "adapter_search_invocations",
+          "limit": 1,
+          "reserved": 0,
+          "observed": 0,
+          "remaining": 1
+        },
+        "stages": [
+          {
+            "index": 0,
+            "scope": {
+              "requested": {
+                "engines": [
+                  "wikipedia"
+                ]
+              },
+              "selected_engines": [
+                "wikipedia"
+              ],
+              "excluded_engines": [],
+              "routing": {
+                "rule": "explicit engine",
+                "matched_topic": null,
+                "fallback": false,
+                "budget_applied": false
+              }
+            },
+            "state": "done",
+            "skipped_reason": null,
+            "attempts": [
+              {
+                "attempt_id": "00000000000200000000000000000000",
+                "started_at": 1000.0,
+                "finished_at": 1000.0,
+                "state": "done",
+                "reserved_engine_calls": 1,
+                "observed_engine_calls": 1,
+                "cached": false,
+                "query_id": "q-language-fixed",
+                "cursor": "snap-000000000003",
+                "result_count": 3,
+                "engine_outcomes": [
+                  {
+                    "engine": "wikipedia",
+                    "status": "ok",
+                    "result_count": 3,
+                    "latency_ms": 2.0,
+                    "message": null
+                  }
+                ],
+                "enforcement": {},
+                "error": null,
+                "deadline_exceeded": false
+              }
+            ],
+            "enforcement": {}
+          }
+        ],
+        "results": [],
+        "meta": {
+          "cursor": null,
+          "artifact": null,
+          "query_id": null,
+          "total": 0,
+          "returned": 0,
+          "has_more": false,
+          "selected_result_attempt_id": null,
+          "result_status": "not_available",
+          "elapsed_ms": 0
+        }
+      },
+      "record": {
+        "operation_id": "00000000-0001-0000-0000-000000000000",
+        "tenant": "default",
+        "version": 1,
+        "plan_digest": "0ed4a507ecad8b4b0789924318c963c1b2b045a2a0c37fdf4553057fcb2ea86d",
+        "accepted_at": 1000.0,
+        "execution_deadline_at": 1005.0,
+        "expires_at": 4600.0,
+        "state": "completed",
+        "stop_reason": "initial_nonempty",
+        "plan": {
+          "query": "language evidence",
+          "filters": {
+            "language": {},
+            "time_range": null,
+            "safesearch": "off",
+            "freshness": "no_preference"
+          },
+          "initial_scope": {
+            "requested": {
+              "engines": [
+                "wikipedia"
+              ]
+            },
+            "selected_engines": [
+              "wikipedia"
+            ],
+            "excluded_engines": [],
+            "routing": {
+              "rule": "explicit engine",
+              "matched_topic": null,
+              "fallback": false,
+              "budget_applied": false
+            }
+          },
+          "fallback_scope": null,
+          "allow_scope_expansion": false,
+          "fallback_when": "clean_empty"
+        },
+        "objectives": {
+          "requested": {
+            "deadline_ms": 5000,
+            "max_engine_calls": 1
+          },
+          "effective": {
+            "deadline_ms": 5000,
+            "max_engine_calls": 1
+          },
+          "unmet": []
+        },
+        "budget": {
+          "unit": "adapter_search_invocations",
+          "limit": 1,
+          "reserved": 1,
+          "observed": 1
+        },
+        "stages": [
+          {
+            "index": 0,
+            "scope": {
+              "requested": {
+                "engines": [
+                  "wikipedia"
+                ]
+              },
+              "selected_engines": [
+                "wikipedia"
+              ],
+              "excluded_engines": [],
+              "routing": {
+                "rule": "explicit engine",
+                "matched_topic": null,
+                "fallback": false,
+                "budget_applied": false
+              }
+            },
+            "state": "done",
+            "skipped_reason": null,
+            "attempts": [
+              {
+                "attempt_id": "00000000000200000000000000000000",
+                "started_at": 1000.0,
+                "finished_at": 1000.0,
+                "state": "done",
+                "reserved_engine_calls": 1,
+                "observed_engine_calls": 1,
+                "cached": false,
+                "query_id": "q-language-fixed",
+                "cursor": "snap-000000000003",
+                "result_count": 3,
+                "engine_outcomes": [
+                  {
+                    "engine": "wikipedia",
+                    "status": "ok",
+                    "result_count": 3,
+                    "latency_ms": 2.0,
+                    "message": null
+                  }
+                ],
+                "enforcement": {},
+                "error": null,
+                "deadline_exceeded": false
+              }
+            ],
+            "enforcement": {}
+          }
+        ],
+        "retry_keys": [],
+        "selected_result_attempt_id": "00000000000200000000000000000000",
+        "next_stage": 0,
+        "owner_token": null
+      },
+      "rendered": {
+        "contract": "slopsearx.staged_search",
+        "version": 1,
+        "operation_id": "00000000-0001-0000-0000-000000000000",
+        "artifact": {
+          "contract": "slopsearx.artifact_ref",
+          "version": 1,
+          "kind": "staged_search",
+          "id": "00000000-0001-0000-0000-000000000000"
+        },
+        "state": "completed",
+        "stop_reason": "initial_nonempty",
+        "accepted_at": 1000.0,
+        "execution_deadline_at": 1005.0,
+        "expires_at": 4600.0,
+        "plan_digest": "0ed4a507ecad8b4b0789924318c963c1b2b045a2a0c37fdf4553057fcb2ea86d",
+        "plan": {
+          "query": "language evidence",
+          "filters": {
+            "language": {},
+            "time_range": null,
+            "safesearch": "off",
+            "freshness": "no_preference"
+          },
+          "initial_scope": {
+            "requested": {
+              "engines": [
+                "wikipedia"
+              ]
+            },
+            "selected_engines": [
+              "wikipedia"
+            ],
+            "excluded_engines": [],
+            "routing": {
+              "rule": "explicit engine",
+              "matched_topic": null,
+              "fallback": false,
+              "budget_applied": false
+            }
+          },
+          "fallback_scope": null,
+          "allow_scope_expansion": false,
+          "fallback_when": "clean_empty"
+        },
+        "objectives": {
+          "requested": {
+            "deadline_ms": 5000,
+            "max_engine_calls": 1
+          },
+          "effective": {
+            "deadline_ms": 5000,
+            "max_engine_calls": 1
+          },
+          "unmet": []
+        },
+        "budget": {
+          "unit": "adapter_search_invocations",
+          "limit": 1,
+          "reserved": 1,
+          "observed": 1,
+          "remaining": 0
+        },
+        "stages": [
+          {
+            "index": 0,
+            "scope": {
+              "requested": {
+                "engines": [
+                  "wikipedia"
+                ]
+              },
+              "selected_engines": [
+                "wikipedia"
+              ],
+              "excluded_engines": [],
+              "routing": {
+                "rule": "explicit engine",
+                "matched_topic": null,
+                "fallback": false,
+                "budget_applied": false
+              }
+            },
+            "state": "done",
+            "skipped_reason": null,
+            "attempts": [
+              {
+                "attempt_id": "00000000000200000000000000000000",
+                "started_at": 1000.0,
+                "finished_at": 1000.0,
+                "state": "done",
+                "reserved_engine_calls": 1,
+                "observed_engine_calls": 1,
+                "cached": false,
+                "query_id": "q-language-fixed",
+                "cursor": "snap-000000000003",
+                "result_count": 3,
+                "engine_outcomes": [
+                  {
+                    "engine": "wikipedia",
+                    "status": "ok",
+                    "result_count": 3,
+                    "latency_ms": 2.0,
+                    "message": null
+                  }
+                ],
+                "enforcement": {},
+                "error": null,
+                "deadline_exceeded": false
+              }
+            ],
+            "enforcement": {}
+          }
+        ],
+        "results": [
+          {
+            "title": "wikipedia result 0",
+            "url": "https://wikipedia0.com",
+            "snippet": "Content for wikipedia result 0.",
+            "source_engines": [
+              "wikipedia"
+            ],
+            "source_count": 1,
+            "primary_engine": "wikipedia",
+            "category": "general",
+            "published_at": null,
+            "score": 1.0,
+            "position": 1,
+            "tier": 1,
+            "citation": {
+              "label": "wikipedia result 0",
+              "url": "https://wikipedia0.com"
+            },
+            "retrieval": {
+              "contract": "slopsearx.retrieval_handoff",
+              "version": 1,
+              "eligible": true,
+              "url_status": "ok",
+              "url_reason": null,
+              "scheme": "https"
+            },
+            "result_id": "snap-000000000003:0",
+            "artifact": {
+              "contract": "slopsearx.artifact_ref",
+              "version": 1,
+              "kind": "result",
+              "id": "snap-000000000003:0"
+            }
+          },
+          {
+            "title": "wikipedia result 1",
+            "url": "https://wikipedia1.com",
+            "snippet": "Content for wikipedia result 1.",
+            "source_engines": [
+              "wikipedia"
+            ],
+            "source_count": 1,
+            "primary_engine": "wikipedia",
+            "category": "general",
+            "published_at": null,
+            "score": 1.0,
+            "position": 2,
+            "tier": 1,
+            "citation": {
+              "label": "wikipedia result 1",
+              "url": "https://wikipedia1.com"
+            },
+            "retrieval": {
+              "contract": "slopsearx.retrieval_handoff",
+              "version": 1,
+              "eligible": true,
+              "url_status": "ok",
+              "url_reason": null,
+              "scheme": "https"
+            },
+            "result_id": "snap-000000000003:1",
+            "artifact": {
+              "contract": "slopsearx.artifact_ref",
+              "version": 1,
+              "kind": "result",
+              "id": "snap-000000000003:1"
+            }
+          },
+          {
+            "title": "wikipedia result 2",
+            "url": "https://wikipedia2.com",
+            "snippet": "Content for wikipedia result 2.",
+            "source_engines": [
+              "wikipedia"
+            ],
+            "source_count": 1,
+            "primary_engine": "wikipedia",
+            "category": "general",
+            "published_at": null,
+            "score": 1.0,
+            "position": 3,
+            "tier": 1,
+            "citation": {
+              "label": "wikipedia result 2",
+              "url": "https://wikipedia2.com"
+            },
+            "retrieval": {
+              "contract": "slopsearx.retrieval_handoff",
+              "version": 1,
+              "eligible": true,
+              "url_status": "ok",
+              "url_reason": null,
+              "scheme": "https"
+            },
+            "result_id": "snap-000000000003:2",
+            "artifact": {
+              "contract": "slopsearx.artifact_ref",
+              "version": 1,
+              "kind": "result",
+              "id": "snap-000000000003:2"
+            }
+          }
+        ],
+        "meta": {
+          "cursor": "snap-000000000003",
+          "artifact": {
+            "contract": "slopsearx.artifact_ref",
+            "version": 1,
+            "kind": "snapshot",
+            "id": "snap-000000000003"
+          },
+          "query_id": "q-language-fixed",
+          "total": 3,
+          "returned": 3,
+          "has_more": false,
+          "selected_result_attempt_id": "00000000000200000000000000000000",
+          "result_status": "available",
+          "elapsed_ms": 0
+        }
+      },
+      "fixture_engine_calls": 1
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+"""Temporary offline source oracle; no runtime imports. Retire in G08."""
+import ast
+import copy
+import hashlib
+import json
+import pathlib
+import subprocess
+
+ROOT = pathlib.Path(__file__).resolve().parents[4]
+SOURCE = ROOT / "slopsearx/staged.py"
+tree = ast.parse(SOURCE.read_text())
+nodes = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name in {"plan_digest", "_normalize_record"}]
+ns = {"hashlib": hashlib, "json": json, "Any": object}
+exec(compile(ast.Module(body=nodes, type_ignores=[]), str(SOURCE), "exec"), ns)
+scope = {"requested": {"engines": ["alpha"]}, "selected_engines": ["alpha"], "excluded_engines": []}
+record = {"operation_id": "legacy:id:雪", "tenant": "org:team", "version": 1,
+          "accepted_at": 100.0, "execution_deadline_at": 130.0, "expires_at": 3700.0,
+          "state": "queued", "stop_reason": None,
+          "plan": {"query": "雪😀 \\\"", "filters": {"language": "en", "time_range": None, "safesearch": "off", "freshness": "no_preference"},
+                   "initial_scope": scope, "fallback_scope": None, "allow_scope_expansion": False, "fallback_when": "clean_empty"},
+          "objectives": {"requested": {"deadline_ms": 30000, "max_engine_calls": 3}, "effective": {"deadline_ms": 30000, "max_engine_calls": 3}, "unmet": []},
+          "budget": {"unit": "adapter_search_invocations", "limit": 3, "reserved": 0, "observed": 0},
+          "stages": [{"index": 0, "scope": scope, "state": "pending", "skipped_reason": None, "attempts": [], "enforcement": {}}],
+          "retry_keys": [], "selected_result_attempt_id": None, "next_stage": 0}
+identity = {"version": record["version"], **{k: record["plan"][k] for k in ("query", "initial_scope", "fallback_scope", "allow_scope_expansion", "filters")},
+            "objectives": {k: record["objectives"][k] for k in ("requested", "effective")}}
+record["plan_digest"] = ns["plan_digest"](identity)
+normalizations = []
+for value in [{}, {"malformed": 1}]:
+    candidate = copy.deepcopy(record)
+    candidate["retry_keys"] = value
+    normalizations.append({"input": candidate, "source": ns["_normalize_record"](copy.deepcopy(candidate)), "native_accept": not value})
+sources = []
+for path in ["slopsearx/staged.py", "slopsearx/mcp/staged_tools.py", "tests/test_staged_search.py", "tests/test_staged_valkey_integration.py"]:
+    sources.append({"path": path, "sha256": hashlib.sha256((ROOT/path).read_bytes()).hexdigest(),
+                    "git_blob": subprocess.check_output(["git", "rev-parse", "HEAD:"+path], cwd=ROOT, text=True).strip()})
+out = {"schema_version": 1, "plan_id": "W11", "baseline": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT,text=True).strip(),
+       "sources": sources, "record": record, "canonical_identity": json.dumps(identity, sort_keys=True, separators=(",", ":"), ensure_ascii=True),
+       "digest": ns["plan_digest"](identity), "normalizations": normalizations,
+       "expiry_equality": {"read_expired": 3700.0 > record["expires_at"], "retry_expired": record["expires_at"] <= 3700.0}}
+(ROOT/"crates/xtask/fixtures/w11/corpus.json").write_text(json.dumps(out, ensure_ascii=True, indent=2)+"\n")

@@ -1,0 +1,86 @@
+{
+  "purpose": "Root-approved optional original-only10reference cases; tagged nonfinite denotes original internal API, never valid public JSON score or wire",
+  "owner_pid": 12276,
+  "started": 1792224700.010102,
+  "command": [
+    "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+    "/Volumes/tank01/magnus/git/slopsearx-a11/docs/rust-rewrite/a11/capture_representation.py",
+    "--allow-original-oracle",
+    "--output",
+    "/Volumes/tank01/magnus/git/slopsearx-a11/docs/rust-rewrite/a11/source-representation-v1.json"
+  ],
+  "inputs": [
+    {
+      "path": "engines/abuseipdb.py",
+      "sha256": "2b48ec5b688a9cc6fb1aa50e5e82a655681b0a760f19e1310952ccaa04828eff"
+    },
+    {
+      "path": "tests/test_abuseipdb.py",
+      "sha256": "3fad36a9b2e5089e61c82c0a66ffd7c6bf84e08dd43493e42b3e754890467435"
+    },
+    {
+      "path": "engines/greynoise.py",
+      "sha256": "53c810ca4b9ea38567ca19e1494f1997381bf16120be2fce62f3a1aa977cea6a"
+    },
+    {
+      "path": "tests/test_greynoise.py",
+      "sha256": "58b934915ac86f05eecd36b57b541a3667285bf6964aa8053b28be9585c2025a"
+    },
+    {
+      "path": "engines/otx.py",
+      "sha256": "4d2e242594689530b1e615cee83181505834e13d289cb83746ca7b7fe4129b79"
+    },
+    {
+      "path": "tests/test_otx.py",
+      "sha256": "0d5860db9048a3c26013c310f78aa7397dd97a6de1ae627b0711c48bac6b27cd"
+    },
+    {
+      "path": "engines/urlhaus.py",
+      "sha256": "71fae6869a6487c3aeb0c7f9f7cc68ca9a2883ec4bce2e647499028f913f36ac"
+    },
+    {
+      "path": "tests/test_urlhaus.py",
+      "sha256": "71ebdfaf63bcb672bf7d15ef9ca9c523d5312c4e785e1fd50ee111cb2b683a24"
+    },
+    {
+      "path": "slopsearx/adapter.py",
+      "sha256": "5883a35c48d0dad1077306fbda21997ee1d32116a8c03633a6b762de0c26d6f3"
+    },
+    {
+      "path": "tests/test_adapters.py",
+      "sha256": "0f5fdc19df84214e5a6422437686d41def5f9e9827ad8dfc8ca8ee8b2ad10454"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/capture_representation.py",
+      "sha256": "c648efd82a8ef107e9df0e18b69210193543173a6405c3a5eed3267653152e33"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/representation-inputs-v1.json",
+      "sha256": "6c9e0fac3a805d8047ece28d5235cb641e54e85dfc2b61566a6585d1f7c5b86e"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/source-regressions-v1.json",
+      "sha256": "5a11c0c4680c2b65acbbbf50fabf1f7ac13ccece133834846ea16693479e84fc"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/source-boundaries-v2.json",
+      "sha256": "eaa6f6f2ed23cc961be7d86f0959595eef166608be6085ecc5d7f104fef0cb2c"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/source-supplement-v1.json",
+      "sha256": "d19a549b075d1e790bb8a5ea4f5a8733c7044e384ef5a4d701e4c60a7aa07d92"
+    }
+  ],
+  "child_pid": 12291,
+  "terminal": true,
+  "actual_exit_code": 0,
+  "ended": 1792224700.2252731,
+  "inputs_equal": true,
+  "log_sha256": "1bf3708d2b6153345d6724fbc9f95d444f7b767a9082c956c36ab8310a4e941c",
+  "outputs": [
+    {
+      "path": "/Volumes/tank01/magnus/git/slopsearx-a11/docs/rust-rewrite/a11/source-representation-v1.json",
+      "sha256": "d61a3d16bda2db43beb7fdbab70ea0e03a2e32f5c541cefacbf54a8f90fcb99c"
+    }
+  ]
+}

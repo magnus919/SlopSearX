@@ -1,0 +1,230 @@
+{
+  "plan_id": "T06",
+  "status": "development coverage mapping; final native/CI evidence is external and required",
+  "source_baseline": "6c44976444340cc8f343fef61e2e8d723b189c19",
+  "tools": [
+    {
+      "name": "slopsearx_search",
+      "arguments": [
+        "query",
+        "intent",
+        "categories",
+        "engines",
+        "language",
+        "time_range",
+        "safesearch",
+        "media_type",
+        "max_results",
+        "include",
+        "freshness",
+        "interactive_timeout_ms"
+      ],
+      "source_matrix_cases": 135,
+      "source_validator_errors": 94,
+      "consumer_boundary_cases": 28,
+      "actual_transports": [
+        "authenticated_http",
+        "native_stdio_process",
+        "authenticated_legacy"
+      ],
+      "negative_dispatch_observer": "fixture AtomicUsize on HTTP/legacy; private per-invocation Valkey receipts from stdio fake engines"
+    },
+    {
+      "name": "slopsearx_search_targeted",
+      "arguments": [
+        "query",
+        "engines",
+        "language",
+        "time_range",
+        "safesearch",
+        "max_results"
+      ],
+      "source_matrix_cases": 70,
+      "source_validator_errors": 49,
+      "consumer_boundary_cases": 0,
+      "actual_transports": [
+        "authenticated_http",
+        "native_stdio_process",
+        "authenticated_legacy"
+      ],
+      "negative_dispatch_observer": "fixture AtomicUsize on HTTP/legacy; private per-invocation Valkey receipts from stdio fake engines"
+    },
+    {
+      "name": "slopsearx_search_jobs",
+      "arguments": [
+        "company",
+        "keywords",
+        "location",
+        "employment_type",
+        "sources",
+        "max_results"
+      ],
+      "source_matrix_cases": 69,
+      "source_validator_errors": 48,
+      "consumer_boundary_cases": 0,
+      "actual_transports": [
+        "authenticated_http",
+        "native_stdio_process",
+        "authenticated_legacy"
+      ],
+      "negative_dispatch_observer": "fixture AtomicUsize on HTTP/legacy; private per-invocation Valkey receipts from stdio fake engines"
+    },
+    {
+      "name": "slopsearx_search_security",
+      "arguments": [
+        "query",
+        "evidence_types",
+        "engines",
+        "max_results"
+      ],
+      "source_matrix_cases": 47,
+      "source_validator_errors": 34,
+      "consumer_boundary_cases": 0,
+      "actual_transports": [
+        "authenticated_http",
+        "native_stdio_process",
+        "authenticated_legacy"
+      ],
+      "negative_dispatch_observer": "fixture AtomicUsize on HTTP/legacy; private per-invocation Valkey receipts from stdio fake engines"
+    },
+    {
+      "name": "slopsearx_search_science",
+      "arguments": [
+        "query",
+        "source_types",
+        "date_from",
+        "date_to",
+        "engines",
+        "max_results"
+      ],
+      "source_matrix_cases": 69,
+      "source_validator_errors": 48,
+      "consumer_boundary_cases": 0,
+      "actual_transports": [
+        "authenticated_http",
+        "native_stdio_process",
+        "authenticated_legacy"
+      ],
+      "negative_dispatch_observer": "fixture AtomicUsize on HTTP/legacy; private per-invocation Valkey receipts from stdio fake engines"
+    },
+    {
+      "name": "slopsearx_list_capabilities",
+      "arguments": [
+        "family",
+        "category",
+        "include_disabled",
+        "include_auth_requirements"
+      ],
+      "source_matrix_cases": 46,
+      "source_validator_errors": 29,
+      "consumer_boundary_cases": 0,
+      "actual_transports": [
+        "authenticated_http",
+        "native_stdio_process",
+        "authenticated_legacy"
+      ],
+      "negative_dispatch_observer": "fixture AtomicUsize on HTTP/legacy; private per-invocation Valkey receipts from stdio fake engines"
+    },
+    {
+      "name": "slopsearx_explain_search_scope",
+      "arguments": [
+        "query",
+        "intent",
+        "categories",
+        "engines",
+        "media_type"
+      ],
+      "source_matrix_cases": 58,
+      "source_validator_errors": 45,
+      "consumer_boundary_cases": 0,
+      "actual_transports": [
+        "authenticated_http",
+        "native_stdio_process",
+        "authenticated_legacy"
+      ],
+      "negative_dispatch_observer": "fixture AtomicUsize on HTTP/legacy; private per-invocation Valkey receipts from stdio fake engines"
+    },
+    {
+      "name": "slopsearx_get_service_status",
+      "arguments": [],
+      "source_matrix_cases": 2,
+      "source_validator_errors": 1,
+      "consumer_boundary_cases": 0,
+      "actual_transports": [
+        "authenticated_http",
+        "native_stdio_process",
+        "authenticated_legacy"
+      ],
+      "negative_dispatch_observer": "fixture AtomicUsize on HTTP/legacy; private per-invocation Valkey receipts from stdio fake engines"
+    },
+    {
+      "name": "slopsearx_read_results",
+      "arguments": [
+        "cursor",
+        "page",
+        "max_results"
+      ],
+      "source_matrix_cases": 36,
+      "source_validator_errors": 19,
+      "consumer_boundary_cases": 28,
+      "actual_transports": [
+        "authenticated_http",
+        "native_stdio_process",
+        "authenticated_legacy"
+      ],
+      "negative_dispatch_observer": "fixture AtomicUsize on HTTP/legacy; private per-invocation Valkey receipts from stdio fake engines"
+    },
+    {
+      "name": "slopsearx_read_result",
+      "arguments": [
+        "result_id"
+      ],
+      "source_matrix_cases": 14,
+      "source_validator_errors": 10,
+      "consumer_boundary_cases": 2,
+      "actual_transports": [
+        "authenticated_http",
+        "native_stdio_process",
+        "authenticated_legacy"
+      ],
+      "negative_dispatch_observer": "fixture AtomicUsize on HTTP/legacy; private per-invocation Valkey receipts from stdio fake engines"
+    },
+    {
+      "name": "slopsearx_read_entities",
+      "arguments": [
+        "cursor",
+        "page",
+        "max_results",
+        "version"
+      ],
+      "source_matrix_cases": 47,
+      "source_validator_errors": 28,
+      "consumer_boundary_cases": 14,
+      "actual_transports": [
+        "authenticated_http",
+        "native_stdio_process",
+        "authenticated_legacy"
+      ],
+      "negative_dispatch_observer": "fixture AtomicUsize on HTTP/legacy; private per-invocation Valkey receipts from stdio fake engines"
+    }
+  ],
+  "resource_reads": 6,
+  "prompt_cases": 41,
+  "raw_prompt_cases": 14,
+  "entity_cases": 86,
+  "snapshot_calls": 15,
+  "temporary_python_entrypoint": "capture_guarded.py only; G08.md enumerates all producers",
+  "intentional_differences": [
+    "authorized explicit inactive engine remains atomic fail-closed as native F09 invariant; source may drop inactive members"
+  ],
+  "pending_delivery": [
+    "final guarded invalid-prompt-params qualification; raw known/unknown14 +escaped already actual3transport green",
+    "T01/T04/T05/F09/F15 affected gates",
+    "reviewed W06/main union",
+    "final locked source-bound build/clippy/fmt/deny",
+    "configured AMD/ARM/portal CI by parent",
+    "T06 xtask/CI/source inventory integration by reviewed parent-owned patches"
+  ],
+  "prompt_semantic_envelope_cases": 3,
+  "malformed_jsonrpc_framework_difference_cases": 2
+}

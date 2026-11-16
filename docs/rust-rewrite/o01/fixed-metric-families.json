@@ -1,0 +1,292 @@
+{
+  "scope": "Exact accepted native registry35definitions; labels remain closed by validation; metadata table alone is not runtime composition evidence",
+  "families": [
+    {
+      "name": "slopsearx_engine_queries_total",
+      "help": "Total queries dispatched per engine",
+      "kind": "counter",
+      "labels": [
+        "engine"
+      ]
+    },
+    {
+      "name": "slopsearx_engine_errors_total",
+      "help": "Failed engine outcomes, excluding successful empty results",
+      "kind": "counter",
+      "labels": [
+        "engine"
+      ]
+    },
+    {
+      "name": "slopsearx_engine_latency_seconds",
+      "help": "Query latency per engine in seconds",
+      "kind": "histogram",
+      "labels": [
+        "engine"
+      ]
+    },
+    {
+      "name": "slopsearx_engine_status",
+      "help": "Engine status (0=ok, 1=degraded, 2=down)",
+      "kind": "gauge",
+      "labels": [
+        "engine"
+      ]
+    },
+    {
+      "name": "slopsearx_cache_hit_total",
+      "help": "Cache hit/miss counters",
+      "kind": "counter",
+      "labels": [
+        "type"
+      ]
+    },
+    {
+      "name": "slopsearx_server_requests_total",
+      "help": "Total search requests handled",
+      "kind": "counter",
+      "labels": [
+
+      ]
+    },
+    {
+      "name": "slopsearx_http_search_completed_total",
+      "help": "Completed HTTP searches by outcome (success, rejected, failure)",
+      "kind": "counter",
+      "labels": [
+        "outcome"
+      ]
+    },
+    {
+      "name": "slopsearx_http_search_duration_seconds",
+      "help": "HTTP search application duration including response rendering, by outcome",
+      "kind": "histogram",
+      "labels": [
+        "outcome"
+      ]
+    },
+    {
+      "name": "slopsearx_server_requests_by_category_total",
+      "help": "Search requests per category",
+      "kind": "counter",
+      "labels": [
+        "category"
+      ]
+    },
+    {
+      "name": "slopsearx_server_requests_by_format_total",
+      "help": "Search requests per output format",
+      "kind": "counter",
+      "labels": [
+        "format"
+      ]
+    },
+    {
+      "name": "slopsearx_server_errors_total",
+      "help": "Server errors by type (timeout, circuit_open, rate_limited, internal)",
+      "kind": "counter",
+      "labels": [
+        "type"
+      ]
+    },
+    {
+      "name": "slopsearx_mcp_tool_calls_total",
+      "help": "MCP tool invocations per tool",
+      "kind": "counter",
+      "labels": [
+        "tool"
+      ]
+    },
+    {
+      "name": "slopsearx_mcp_tool_errors_total",
+      "help": "MCP tool errors per tool and error code",
+      "kind": "counter",
+      "labels": [
+        "code",
+        "tool"
+      ]
+    },
+    {
+      "name": "slopsearx_mcp_tool_latency_seconds",
+      "help": "MCP tool latency per tool in seconds",
+      "kind": "histogram",
+      "labels": [
+        "tool"
+      ]
+    },
+    {
+      "name": "slopsearx_workflow_accepted_total",
+      "help": "Accepted durable workflow operations",
+      "kind": "counter",
+      "labels": [
+        "mode",
+        "workflow"
+      ]
+    },
+    {
+      "name": "slopsearx_workflow_terminal_total",
+      "help": "Durable workflow terminal outcomes",
+      "kind": "counter",
+      "labels": [
+        "outcome",
+        "workflow"
+      ]
+    },
+    {
+      "name": "slopsearx_workflow_retries_total",
+      "help": "Durable workflow retry attempts",
+      "kind": "counter",
+      "labels": [
+        "reason",
+        "workflow"
+      ]
+    },
+    {
+      "name": "slopsearx_workflow_lease_recoveries_total",
+      "help": "Expired workflow leases recovered by a worker",
+      "kind": "counter",
+      "labels": [
+        "workflow"
+      ]
+    },
+    {
+      "name": "slopsearx_workflow_rejections_total",
+      "help": "Rejected workflow operations by reason class",
+      "kind": "counter",
+      "labels": [
+        "reason",
+        "workflow"
+      ]
+    },
+    {
+      "name": "slopsearx_workflow_expired_total",
+      "help": "Observed durable workflow artifact expirations",
+      "kind": "counter",
+      "labels": [
+        "artifact",
+        "workflow"
+      ]
+    },
+    {
+      "name": "slopsearx_workflow_queued",
+      "help": "Queued workflow operations visible to this replica",
+      "kind": "gauge",
+      "labels": [
+        "workflow"
+      ]
+    },
+    {
+      "name": "slopsearx_workflow_running",
+      "help": "Running workflow operations visible to this replica",
+      "kind": "gauge",
+      "labels": [
+        "workflow"
+      ]
+    },
+    {
+      "name": "slopsearx_workflow_active_leases",
+      "help": "Active workflow leases held by this replica",
+      "kind": "gauge",
+      "labels": [
+        "workflow"
+      ]
+    },
+    {
+      "name": "slopsearx_workflow_oldest_claimable_age_seconds",
+      "help": "Age of the oldest claimable workflow operation",
+      "kind": "gauge",
+      "labels": [
+        "workflow"
+      ]
+    },
+    {
+      "name": "slopsearx_workflow_store_items",
+      "help": "Bounded workflow store or index cardinality",
+      "kind": "gauge",
+      "labels": [
+        "workflow"
+      ]
+    },
+    {
+      "name": "slopsearx_workflow_queue_wait_seconds",
+      "help": "Workflow queue wait before claim",
+      "kind": "histogram",
+      "labels": [
+        "workflow"
+      ]
+    },
+    {
+      "name": "slopsearx_workflow_execution_seconds",
+      "help": "Workflow execution duration",
+      "kind": "histogram",
+      "labels": [
+        "outcome",
+        "workflow"
+      ]
+    },
+    {
+      "name": "slopsearx_workflow_report_generation_seconds",
+      "help": "Saved-search report generation duration",
+      "kind": "histogram",
+      "labels": [
+        "workflow"
+      ]
+    },
+    {
+      "name": "slopsearx_workflow_admitted_results",
+      "help": "Results admitted to one durable workflow artifact",
+      "kind": "histogram",
+      "labels": [
+        "workflow"
+      ]
+    },
+    {
+      "name": "slopsearx_saved_search_event_publications_total",
+      "help": "Saved-search outbox events published by event type",
+      "kind": "counter",
+      "labels": [
+        "event_type"
+      ]
+    },
+    {
+      "name": "slopsearx_saved_search_event_reads_total",
+      "help": "Saved-search outbox read operations by closed outcome",
+      "kind": "counter",
+      "labels": [
+        "outcome"
+      ]
+    },
+    {
+      "name": "slopsearx_saved_search_event_acknowledgements_total",
+      "help": "Saved-search outbox acknowledgement operations by closed outcome",
+      "kind": "counter",
+      "labels": [
+        "outcome"
+      ]
+    },
+    {
+      "name": "slopsearx_saved_search_event_retention_gaps_total",
+      "help": "Saved-search outbox reads that observed a retention gap",
+      "kind": "counter",
+      "labels": [
+
+      ]
+    },
+    {
+      "name": "slopsearx_saved_search_event_capacity_rejections_total",
+      "help": "Saved-search outbox operations rejected by bounded resource",
+      "kind": "counter",
+      "labels": [
+        "resource"
+      ]
+    },
+    {
+      "name": "slopsearx_saved_search_event_backlog_age_seconds",
+      "help": "Age of the oldest event returned by the most recent local consumer read",
+      "kind": "gauge",
+      "labels": [
+
+      ]
+    }
+  ]
+}

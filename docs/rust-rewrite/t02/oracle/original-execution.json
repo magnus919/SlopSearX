@@ -1,0 +1,4024 @@
+{
+  "scope": "Original unchanged test bodies with reviewed isolated startup/Config seam; not native execution",
+  "collected": [
+    "tests/test_server.py::TestSearchEndpoint::test_basic_search",
+    "tests/test_server.py::TestSearchEndpoint::test_searxng_routes_and_methods[get-/]",
+    "tests/test_server.py::TestSearchEndpoint::test_searxng_routes_and_methods[get-/search]",
+    "tests/test_server.py::TestSearchEndpoint::test_searxng_routes_and_methods[post-/]",
+    "tests/test_server.py::TestSearchEndpoint::test_searxng_routes_and_methods[post-/search]",
+    "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[0-0-0]",
+    "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[0-0-1]",
+    "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[0-1-0]",
+    "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[0-1-1]",
+    "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[1-0-0]",
+    "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[1-0-1]",
+    "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[1-1-0]",
+    "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[1-1-1]",
+    "tests/test_server.py::TestSearchEndpoint::test_missing_query",
+    "tests/test_server.py::TestSearchEndpoint::test_empty_query",
+    "tests/test_server.py::TestSearchEndpoint::test_whitespace_only_query",
+    "tests/test_server.py::TestSearchEndpoint::test_interactive_deadline[json]",
+    "tests/test_server.py::TestSearchEndpoint::test_interactive_deadline[yaml]",
+    "tests/test_server.py::TestSearchEndpoint::test_default_format_is_html",
+    "tests/test_server.py::TestSearchEndpoint::test_supported_formats[html-text/html-Search results for test]",
+    "tests/test_server.py::TestSearchEndpoint::test_supported_formats[json-application/json-\"results\"]",
+    "tests/test_server.py::TestSearchEndpoint::test_supported_formats[csv-text/csv-title,url,content,engine,publishedDate]",
+    "tests/test_server.py::TestSearchEndpoint::test_supported_formats[rss-application/rss+xml-<rss]",
+    "tests/test_server.py::TestSearchEndpoint::test_supported_formats[yaml-text/vnd.yaml+markdown-## Results Summary]",
+    "tests/test_server.py::TestSearchEndpoint::test_accept_header_negotiates_json",
+    "tests/test_server.py::TestSearchEndpoint::test_disabled_format_returns_403",
+    "tests/test_server.py::TestSearchEndpoint::test_invalid_search_parameters_return_400[params0]",
+    "tests/test_server.py::TestSearchEndpoint::test_invalid_search_parameters_return_400[params1]",
+    "tests/test_server.py::TestSearchEndpoint::test_invalid_search_parameters_return_400[params2]",
+    "tests/test_server.py::TestSearchEndpoint::test_missing_query_default_html_error",
+    "tests/test_server.py::TestSearchEndpoint::test_root_without_query_opens_portal_landing_page",
+    "tests/test_server.py::TestSearchEndpoint::test_portal_html_responses_include_security_headers",
+    "tests/test_server.py::TestSearchEndpoint::test_sensitive_engine_selection_is_rejected_before_dispatch",
+    "tests/test_server.py::TestSearchEndpoint::test_sensitive_engine_selection_is_allowed_with_operator_grant",
+    "tests/test_server.py::TestSearchEndpoint::test_root_machine_format_without_query_keeps_error_contract",
+    "tests/test_server.py::TestSearchEndpoint::test_portal_default_theme_can_be_configured",
+    "tests/test_server.py::TestSearchEndpoint::test_html_results_expose_capability_aware_scope_and_pagination",
+    "tests/test_server.py::TestSearchEndpoint::test_strict_safesearch_is_rejected_before_dispatch",
+    "tests/test_server.py::TestSearchEndpoint::test_yaml_format",
+    "tests/test_server.py::TestSearchEndpoint::test_cached_format[formats0]",
+    "tests/test_server.py::TestSearchEndpoint::test_cached_format[formats1]",
+    "tests/test_server.py::TestSearchEndpoint::test_cached_format[formats2]",
+    "tests/test_server.py::TestSearchEndpoint::test_cached_format[formats3]",
+    "tests/test_server.py::TestSearchEndpoint::test_yaml_all_engines_failed",
+    "tests/test_server.py::TestSearchEndpoint::test_json_format_default",
+    "tests/test_server.py::TestSearchEndpoint::test_unresponsive_engine",
+    "tests/test_server.py::TestSearchEndpoint::test_suggestions_always_present",
+    "tests/test_server.py::TestSearchEndpoint::test_meta_fields",
+    "tests/test_server.py::TestSearchEndpoint::test_empty_scrape_diagnostic_is_opt_in",
+    "tests/test_server.py::TestSearchEndpoint::test_engines_filter",
+    "tests/test_server.py::TestSearchEndpoint::test_nonexistent_engine_filter",
+    "tests/test_server.py::TestSearchEndpoint::test_dispatch_engine_sanitizes_error_message",
+    "tests/test_server.py::TestSearchEndpoint::test_query_params_preserved",
+    "tests/test_server.py::TestSearchEndpoint::test_lone_surrogate_payload_does_not_500",
+    "tests/test_server.py::TestHealthEndpoint::test_health_ok",
+    "tests/test_server.py::TestHealthEndpoint::test_healthz_is_searxng_compatible",
+    "tests/test_server.py::TestHealthEndpoint::test_health_no_engines",
+    "tests/test_server.py::TestEngineConfigPropagation::test_env_var_api_key_flows_to_adapter",
+    "tests/test_server.py::TestRoutingBudgetFrozen::test_runtime_env_change_does_not_alter_budget",
+    "tests/test_server.py::test_invalid_date_window_reports_filter_error",
+    "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params0-200-success]",
+    "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params1-503-failure]",
+    "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params2-503-failure]",
+    "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params3-400-rejected]",
+    "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params4-400-rejected]",
+    "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params5-400-rejected]",
+    "tests/test_server.py::test_landing_and_health_do_not_count_as_completed_searches",
+    "tests/test_server.py::test_completed_search_outcome_classification[429-failure]",
+    "tests/test_server.py::test_completed_search_outcome_classification[403-rejected]",
+    "tests/test_server.py::test_completed_search_outcome_classification[200-success]",
+    "tests/test_server.py::test_completed_search_records_unhandled_failure_without_swallowing[False]",
+    "tests/test_server.py::test_completed_search_records_unhandled_failure_without_swallowing[True]",
+    "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-get-/-json]",
+    "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-get-/-yaml]",
+    "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-get-/search-json]",
+    "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-get-/search-yaml]",
+    "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-post-/-json]",
+    "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-post-/-yaml]",
+    "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-post-/search-json]",
+    "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-post-/search-yaml]",
+    "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-get-/-json]",
+    "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-get-/-yaml]",
+    "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-get-/search-json]",
+    "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-get-/search-yaml]",
+    "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-post-/-json]",
+    "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-post-/-yaml]",
+    "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-post-/search-json]",
+    "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-post-/search-yaml]",
+    "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-get-/-json]",
+    "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-get-/-yaml]",
+    "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-get-/search-json]",
+    "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-get-/search-yaml]",
+    "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-post-/-json]",
+    "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-post-/-yaml]",
+    "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-post-/search-json]",
+    "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-post-/search-yaml]",
+    "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad0]",
+    "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad1]",
+    "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad2]",
+    "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad3]",
+    "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad4]",
+    "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad5]",
+    "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad6]",
+    "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad7]",
+    "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad8]",
+    "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad9]",
+    "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad10]",
+    "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad11]",
+    "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad0]",
+    "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad1]",
+    "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad2]",
+    "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad3]",
+    "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad4]",
+    "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad5]",
+    "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad6]",
+    "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad7]",
+    "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad8]",
+    "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad9]",
+    "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad10]",
+    "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad11]",
+    "tests/test_server.py::test_absolute_dates_upstream_failure_is_not_zero_matches",
+    "tests/test_server.py::test_absolute_dates_are_discoverable_in_openapi",
+    "tests/test_server.py::test_repeated_date_bounds_reject[get]",
+    "tests/test_server.py::test_repeated_date_bounds_reject[post]",
+    "tests/test_server.py::test_http_dates_reach_real_openalex_and_preserve_publication_dates",
+    "tests/test_server.py::test_portal_keeps_absolute_bounds_in_forms_and_machine_links",
+    "tests/test_server.py::test_bounded_formats_without_proof_reject_before_dispatch[get-csv]",
+    "tests/test_server.py::test_bounded_formats_without_proof_reject_before_dispatch[get-rss]",
+    "tests/test_server.py::test_bounded_formats_without_proof_reject_before_dispatch[post-csv]",
+    "tests/test_server.py::test_bounded_formats_without_proof_reject_before_dispatch[post-rss]",
+    "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-root_get_json]",
+    "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-search_get_json]",
+    "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-root_post_json]",
+    "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-search_post_json]",
+    "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-default_html]",
+    "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-explicit_html]",
+    "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-explicit_csv]",
+    "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-explicit_rss]",
+    "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-missing_query_json]",
+    "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-invalid_page_json]",
+    "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-invalid_safesearch_json]",
+    "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-root_get_json]",
+    "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-search_get_json]",
+    "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-root_post_json]",
+    "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-search_post_json]",
+    "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-default_html]",
+    "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-explicit_html]",
+    "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-explicit_csv]",
+    "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-explicit_rss]",
+    "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-missing_query_json]",
+    "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-invalid_page_json]",
+    "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-invalid_safesearch_json]",
+    "tests/test_searxng_api_contract.py::test_disabled_formats_fail_closed_like_reference[0]",
+    "tests/test_searxng_api_contract.py::test_disabled_formats_fail_closed_like_reference[1]",
+    "tests/test_searxng_api_contract.py::test_healthz_and_config_shape_match_reference[0]",
+    "tests/test_searxng_api_contract.py::test_healthz_and_config_shape_match_reference[1]",
+    "tests/test_searxng_api_contract.py::test_result_fields_are_required_but_slopsearx_extensions_are_allowed[0]",
+    "tests/test_searxng_api_contract.py::test_result_fields_are_required_but_slopsearx_extensions_are_allowed[1]",
+    "tests/test_searxng_api_contract.py::test_dependency_dossier_grant_does_not_change_http_search[0]",
+    "tests/test_searxng_api_contract.py::test_dependency_dossier_grant_does_not_change_http_search[1]",
+    "tests/test_searxng_api_contract.py::test_saved_event_grant_does_not_change_http_search[0]",
+    "tests/test_searxng_api_contract.py::test_saved_event_grant_does_not_change_http_search[1]"
+  ],
+  "source_sha256": {
+    "slopsearx/server.py": "6984dea478e4a43d5c9e72e7a72d5af23824de6dfbc0695cb8fdef79176a90dc",
+    "slopsearx/formatter.py": "8eaf74e1215ebaebc7a9d81438e02512aa56b9f5a7929ebb2df35e5b2f632e7a",
+    "slopsearx/middleware.py": "7dbb98e774f84f0ead4ec4c00c623dd03d10c3ef3406a9dd5fd1e701bc662680",
+    "slopsearx/service.py": "45903193ef89987f7be83c1e593e44b7752251a54eb8719eae15a241840102ac",
+    "tests/test_server.py": "fd852c9c117040eda675ce20a4a65cd3070ed634f17cb83c466d905de2c8f558",
+    "tests/test_searxng_api_contract.py": "bd2f9c86e4c0817dca434033a41c545239587c40c9fda0c15b43f054648f4837",
+    "tests/fixtures/searxng_api_contract.json": "e263a5d4f5a9a47a1a23868e0af428929e79c6afd5e31cf21a5a3742a5080379"
+  },
+  "terminal": {
+    "exit_code": 0,
+    "collected": 162,
+    "started": 162,
+    "call_completed": 162,
+    "teardown_completed": 162,
+    "failed_phases": 0,
+    "skipped_phases": 0,
+    "startup_suppressed": true,
+    "source_unchanged": true,
+    "guard_denials": 1
+  },
+  "events": [
+    {
+      "phase": "collection",
+      "nodes": [
+        "tests/test_server.py::TestSearchEndpoint::test_basic_search",
+        "tests/test_server.py::TestSearchEndpoint::test_searxng_routes_and_methods[get-/]",
+        "tests/test_server.py::TestSearchEndpoint::test_searxng_routes_and_methods[get-/search]",
+        "tests/test_server.py::TestSearchEndpoint::test_searxng_routes_and_methods[post-/]",
+        "tests/test_server.py::TestSearchEndpoint::test_searxng_routes_and_methods[post-/search]",
+        "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[0-0-0]",
+        "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[0-0-1]",
+        "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[0-1-0]",
+        "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[0-1-1]",
+        "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[1-0-0]",
+        "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[1-0-1]",
+        "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[1-1-0]",
+        "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[1-1-1]",
+        "tests/test_server.py::TestSearchEndpoint::test_missing_query",
+        "tests/test_server.py::TestSearchEndpoint::test_empty_query",
+        "tests/test_server.py::TestSearchEndpoint::test_whitespace_only_query",
+        "tests/test_server.py::TestSearchEndpoint::test_interactive_deadline[json]",
+        "tests/test_server.py::TestSearchEndpoint::test_interactive_deadline[yaml]",
+        "tests/test_server.py::TestSearchEndpoint::test_default_format_is_html",
+        "tests/test_server.py::TestSearchEndpoint::test_supported_formats[html-text/html-Search results for test]",
+        "tests/test_server.py::TestSearchEndpoint::test_supported_formats[json-application/json-\"results\"]",
+        "tests/test_server.py::TestSearchEndpoint::test_supported_formats[csv-text/csv-title,url,content,engine,publishedDate]",
+        "tests/test_server.py::TestSearchEndpoint::test_supported_formats[rss-application/rss+xml-<rss]",
+        "tests/test_server.py::TestSearchEndpoint::test_supported_formats[yaml-text/vnd.yaml+markdown-## Results Summary]",
+        "tests/test_server.py::TestSearchEndpoint::test_accept_header_negotiates_json",
+        "tests/test_server.py::TestSearchEndpoint::test_disabled_format_returns_403",
+        "tests/test_server.py::TestSearchEndpoint::test_invalid_search_parameters_return_400[params0]",
+        "tests/test_server.py::TestSearchEndpoint::test_invalid_search_parameters_return_400[params1]",
+        "tests/test_server.py::TestSearchEndpoint::test_invalid_search_parameters_return_400[params2]",
+        "tests/test_server.py::TestSearchEndpoint::test_missing_query_default_html_error",
+        "tests/test_server.py::TestSearchEndpoint::test_root_without_query_opens_portal_landing_page",
+        "tests/test_server.py::TestSearchEndpoint::test_portal_html_responses_include_security_headers",
+        "tests/test_server.py::TestSearchEndpoint::test_sensitive_engine_selection_is_rejected_before_dispatch",
+        "tests/test_server.py::TestSearchEndpoint::test_sensitive_engine_selection_is_allowed_with_operator_grant",
+        "tests/test_server.py::TestSearchEndpoint::test_root_machine_format_without_query_keeps_error_contract",
+        "tests/test_server.py::TestSearchEndpoint::test_portal_default_theme_can_be_configured",
+        "tests/test_server.py::TestSearchEndpoint::test_html_results_expose_capability_aware_scope_and_pagination",
+        "tests/test_server.py::TestSearchEndpoint::test_strict_safesearch_is_rejected_before_dispatch",
+        "tests/test_server.py::TestSearchEndpoint::test_yaml_format",
+        "tests/test_server.py::TestSearchEndpoint::test_cached_format[formats0]",
+        "tests/test_server.py::TestSearchEndpoint::test_cached_format[formats1]",
+        "tests/test_server.py::TestSearchEndpoint::test_cached_format[formats2]",
+        "tests/test_server.py::TestSearchEndpoint::test_cached_format[formats3]",
+        "tests/test_server.py::TestSearchEndpoint::test_yaml_all_engines_failed",
+        "tests/test_server.py::TestSearchEndpoint::test_json_format_default",
+        "tests/test_server.py::TestSearchEndpoint::test_unresponsive_engine",
+        "tests/test_server.py::TestSearchEndpoint::test_suggestions_always_present",
+        "tests/test_server.py::TestSearchEndpoint::test_meta_fields",
+        "tests/test_server.py::TestSearchEndpoint::test_empty_scrape_diagnostic_is_opt_in",
+        "tests/test_server.py::TestSearchEndpoint::test_engines_filter",
+        "tests/test_server.py::TestSearchEndpoint::test_nonexistent_engine_filter",
+        "tests/test_server.py::TestSearchEndpoint::test_dispatch_engine_sanitizes_error_message",
+        "tests/test_server.py::TestSearchEndpoint::test_query_params_preserved",
+        "tests/test_server.py::TestSearchEndpoint::test_lone_surrogate_payload_does_not_500",
+        "tests/test_server.py::TestHealthEndpoint::test_health_ok",
+        "tests/test_server.py::TestHealthEndpoint::test_healthz_is_searxng_compatible",
+        "tests/test_server.py::TestHealthEndpoint::test_health_no_engines",
+        "tests/test_server.py::TestEngineConfigPropagation::test_env_var_api_key_flows_to_adapter",
+        "tests/test_server.py::TestRoutingBudgetFrozen::test_runtime_env_change_does_not_alter_budget",
+        "tests/test_server.py::test_invalid_date_window_reports_filter_error",
+        "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params0-200-success]",
+        "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params1-503-failure]",
+        "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params2-503-failure]",
+        "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params3-400-rejected]",
+        "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params4-400-rejected]",
+        "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params5-400-rejected]",
+        "tests/test_server.py::test_landing_and_health_do_not_count_as_completed_searches",
+        "tests/test_server.py::test_completed_search_outcome_classification[429-failure]",
+        "tests/test_server.py::test_completed_search_outcome_classification[403-rejected]",
+        "tests/test_server.py::test_completed_search_outcome_classification[200-success]",
+        "tests/test_server.py::test_completed_search_records_unhandled_failure_without_swallowing[False]",
+        "tests/test_server.py::test_completed_search_records_unhandled_failure_without_swallowing[True]",
+        "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-get-/-json]",
+        "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-get-/-yaml]",
+        "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-get-/search-json]",
+        "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-get-/search-yaml]",
+        "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-post-/-json]",
+        "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-post-/-yaml]",
+        "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-post-/search-json]",
+        "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-post-/search-yaml]",
+        "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-get-/-json]",
+        "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-get-/-yaml]",
+        "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-get-/search-json]",
+        "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-get-/search-yaml]",
+        "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-post-/-json]",
+        "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-post-/-yaml]",
+        "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-post-/search-json]",
+        "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-post-/search-yaml]",
+        "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-get-/-json]",
+        "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-get-/-yaml]",
+        "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-get-/search-json]",
+        "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-get-/search-yaml]",
+        "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-post-/-json]",
+        "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-post-/-yaml]",
+        "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-post-/search-json]",
+        "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-post-/search-yaml]",
+        "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad0]",
+        "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad1]",
+        "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad2]",
+        "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad3]",
+        "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad4]",
+        "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad5]",
+        "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad6]",
+        "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad7]",
+        "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad8]",
+        "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad9]",
+        "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad10]",
+        "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad11]",
+        "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad0]",
+        "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad1]",
+        "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad2]",
+        "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad3]",
+        "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad4]",
+        "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad5]",
+        "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad6]",
+        "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad7]",
+        "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad8]",
+        "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad9]",
+        "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad10]",
+        "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad11]",
+        "tests/test_server.py::test_absolute_dates_upstream_failure_is_not_zero_matches",
+        "tests/test_server.py::test_absolute_dates_are_discoverable_in_openapi",
+        "tests/test_server.py::test_repeated_date_bounds_reject[get]",
+        "tests/test_server.py::test_repeated_date_bounds_reject[post]",
+        "tests/test_server.py::test_http_dates_reach_real_openalex_and_preserve_publication_dates",
+        "tests/test_server.py::test_portal_keeps_absolute_bounds_in_forms_and_machine_links",
+        "tests/test_server.py::test_bounded_formats_without_proof_reject_before_dispatch[get-csv]",
+        "tests/test_server.py::test_bounded_formats_without_proof_reject_before_dispatch[get-rss]",
+        "tests/test_server.py::test_bounded_formats_without_proof_reject_before_dispatch[post-csv]",
+        "tests/test_server.py::test_bounded_formats_without_proof_reject_before_dispatch[post-rss]",
+        "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-root_get_json]",
+        "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-search_get_json]",
+        "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-root_post_json]",
+        "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-search_post_json]",
+        "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-default_html]",
+        "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-explicit_html]",
+        "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-explicit_csv]",
+        "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-explicit_rss]",
+        "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-missing_query_json]",
+        "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-invalid_page_json]",
+        "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-invalid_safesearch_json]",
+        "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-root_get_json]",
+        "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-search_get_json]",
+        "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-root_post_json]",
+        "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-search_post_json]",
+        "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-default_html]",
+        "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-explicit_html]",
+        "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-explicit_csv]",
+        "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-explicit_rss]",
+        "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-missing_query_json]",
+        "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-invalid_page_json]",
+        "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-invalid_safesearch_json]",
+        "tests/test_searxng_api_contract.py::test_disabled_formats_fail_closed_like_reference[0]",
+        "tests/test_searxng_api_contract.py::test_disabled_formats_fail_closed_like_reference[1]",
+        "tests/test_searxng_api_contract.py::test_healthz_and_config_shape_match_reference[0]",
+        "tests/test_searxng_api_contract.py::test_healthz_and_config_shape_match_reference[1]",
+        "tests/test_searxng_api_contract.py::test_result_fields_are_required_but_slopsearx_extensions_are_allowed[0]",
+        "tests/test_searxng_api_contract.py::test_result_fields_are_required_but_slopsearx_extensions_are_allowed[1]",
+        "tests/test_searxng_api_contract.py::test_dependency_dossier_grant_does_not_change_http_search[0]",
+        "tests/test_searxng_api_contract.py::test_dependency_dossier_grant_does_not_change_http_search[1]",
+        "tests/test_searxng_api_contract.py::test_saved_event_grant_does_not_change_http_search[0]",
+        "tests/test_searxng_api_contract.py::test_saved_event_grant_does_not_change_http_search[1]"
+      ]
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_basic_search"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_basic_search",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_basic_search",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_basic_search",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_searxng_routes_and_methods[get-/]"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_searxng_routes_and_methods[get-/]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_searxng_routes_and_methods[get-/]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_searxng_routes_and_methods[get-/]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_searxng_routes_and_methods[get-/search]"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_searxng_routes_and_methods[get-/search]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_searxng_routes_and_methods[get-/search]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_searxng_routes_and_methods[get-/search]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_searxng_routes_and_methods[post-/]"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_searxng_routes_and_methods[post-/]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_searxng_routes_and_methods[post-/]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_searxng_routes_and_methods[post-/]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_searxng_routes_and_methods[post-/search]"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_searxng_routes_and_methods[post-/search]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_searxng_routes_and_methods[post-/search]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_searxng_routes_and_methods[post-/search]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[0-0-0]"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[0-0-0]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[0-0-0]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[0-0-0]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[0-0-1]"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[0-0-1]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[0-0-1]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[0-0-1]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[0-1-0]"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[0-1-0]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[0-1-0]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[0-1-0]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[0-1-1]"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[0-1-1]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[0-1-1]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[0-1-1]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[1-0-0]"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[1-0-0]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[1-0-0]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[1-0-0]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[1-0-1]"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[1-0-1]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[1-0-1]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[1-0-1]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[1-1-0]"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[1-1-0]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[1-1-0]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[1-1-0]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[1-1-1]"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[1-1-1]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[1-1-1]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_additive_mcp_grants_do_not_change_searxng_json[1-1-1]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_missing_query"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_missing_query",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_missing_query",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_missing_query",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_empty_query"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_empty_query",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_empty_query",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_empty_query",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_whitespace_only_query"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_whitespace_only_query",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_whitespace_only_query",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_whitespace_only_query",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_interactive_deadline[json]"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_interactive_deadline[json]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_interactive_deadline[json]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_interactive_deadline[json]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_interactive_deadline[yaml]"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_interactive_deadline[yaml]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_interactive_deadline[yaml]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_interactive_deadline[yaml]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_default_format_is_html"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_default_format_is_html",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_default_format_is_html",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_default_format_is_html",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_supported_formats[html-text/html-Search results for test]"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_supported_formats[html-text/html-Search results for test]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_supported_formats[html-text/html-Search results for test]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_supported_formats[html-text/html-Search results for test]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_supported_formats[json-application/json-\"results\"]"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_supported_formats[json-application/json-\"results\"]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_supported_formats[json-application/json-\"results\"]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_supported_formats[json-application/json-\"results\"]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_supported_formats[csv-text/csv-title,url,content,engine,publishedDate]"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_supported_formats[csv-text/csv-title,url,content,engine,publishedDate]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_supported_formats[csv-text/csv-title,url,content,engine,publishedDate]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_supported_formats[csv-text/csv-title,url,content,engine,publishedDate]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_supported_formats[rss-application/rss+xml-<rss]"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_supported_formats[rss-application/rss+xml-<rss]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_supported_formats[rss-application/rss+xml-<rss]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_supported_formats[rss-application/rss+xml-<rss]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_supported_formats[yaml-text/vnd.yaml+markdown-## Results Summary]"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_supported_formats[yaml-text/vnd.yaml+markdown-## Results Summary]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_supported_formats[yaml-text/vnd.yaml+markdown-## Results Summary]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_supported_formats[yaml-text/vnd.yaml+markdown-## Results Summary]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_accept_header_negotiates_json"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_accept_header_negotiates_json",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_accept_header_negotiates_json",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_accept_header_negotiates_json",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_disabled_format_returns_403"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_disabled_format_returns_403",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_disabled_format_returns_403",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_disabled_format_returns_403",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_invalid_search_parameters_return_400[params0]"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_invalid_search_parameters_return_400[params0]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_invalid_search_parameters_return_400[params0]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_invalid_search_parameters_return_400[params0]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_invalid_search_parameters_return_400[params1]"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_invalid_search_parameters_return_400[params1]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_invalid_search_parameters_return_400[params1]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_invalid_search_parameters_return_400[params1]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_invalid_search_parameters_return_400[params2]"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_invalid_search_parameters_return_400[params2]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_invalid_search_parameters_return_400[params2]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_invalid_search_parameters_return_400[params2]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_missing_query_default_html_error"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_missing_query_default_html_error",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_missing_query_default_html_error",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_missing_query_default_html_error",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_root_without_query_opens_portal_landing_page"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_root_without_query_opens_portal_landing_page",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_root_without_query_opens_portal_landing_page",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_root_without_query_opens_portal_landing_page",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_portal_html_responses_include_security_headers"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_portal_html_responses_include_security_headers",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_portal_html_responses_include_security_headers",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_portal_html_responses_include_security_headers",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_sensitive_engine_selection_is_rejected_before_dispatch"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_sensitive_engine_selection_is_rejected_before_dispatch",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_sensitive_engine_selection_is_rejected_before_dispatch",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_sensitive_engine_selection_is_rejected_before_dispatch",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_sensitive_engine_selection_is_allowed_with_operator_grant"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_sensitive_engine_selection_is_allowed_with_operator_grant",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_sensitive_engine_selection_is_allowed_with_operator_grant",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_sensitive_engine_selection_is_allowed_with_operator_grant",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_root_machine_format_without_query_keeps_error_contract"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_root_machine_format_without_query_keeps_error_contract",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_root_machine_format_without_query_keeps_error_contract",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_root_machine_format_without_query_keeps_error_contract",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_portal_default_theme_can_be_configured"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_portal_default_theme_can_be_configured",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_portal_default_theme_can_be_configured",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_portal_default_theme_can_be_configured",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_html_results_expose_capability_aware_scope_and_pagination"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_html_results_expose_capability_aware_scope_and_pagination",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_html_results_expose_capability_aware_scope_and_pagination",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_html_results_expose_capability_aware_scope_and_pagination",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_strict_safesearch_is_rejected_before_dispatch"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_strict_safesearch_is_rejected_before_dispatch",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_strict_safesearch_is_rejected_before_dispatch",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_strict_safesearch_is_rejected_before_dispatch",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_yaml_format"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_yaml_format",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_yaml_format",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_yaml_format",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_cached_format[formats0]"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_cached_format[formats0]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_cached_format[formats0]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_cached_format[formats0]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_cached_format[formats1]"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_cached_format[formats1]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_cached_format[formats1]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_cached_format[formats1]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_cached_format[formats2]"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_cached_format[formats2]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_cached_format[formats2]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_cached_format[formats2]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_cached_format[formats3]"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_cached_format[formats3]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_cached_format[formats3]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_cached_format[formats3]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_yaml_all_engines_failed"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_yaml_all_engines_failed",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_yaml_all_engines_failed",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_yaml_all_engines_failed",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_json_format_default"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_json_format_default",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_json_format_default",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_json_format_default",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_unresponsive_engine"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_unresponsive_engine",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_unresponsive_engine",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_unresponsive_engine",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_suggestions_always_present"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_suggestions_always_present",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_suggestions_always_present",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_suggestions_always_present",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_meta_fields"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_meta_fields",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_meta_fields",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_meta_fields",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_empty_scrape_diagnostic_is_opt_in"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_empty_scrape_diagnostic_is_opt_in",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_empty_scrape_diagnostic_is_opt_in",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_empty_scrape_diagnostic_is_opt_in",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_engines_filter"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_engines_filter",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_engines_filter",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_engines_filter",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_nonexistent_engine_filter"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_nonexistent_engine_filter",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_nonexistent_engine_filter",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_nonexistent_engine_filter",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_dispatch_engine_sanitizes_error_message"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_dispatch_engine_sanitizes_error_message",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_dispatch_engine_sanitizes_error_message",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_dispatch_engine_sanitizes_error_message",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_query_params_preserved"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_query_params_preserved",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_query_params_preserved",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_query_params_preserved",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_lone_surrogate_payload_does_not_500"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_lone_surrogate_payload_does_not_500",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_lone_surrogate_payload_does_not_500",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestSearchEndpoint::test_lone_surrogate_payload_does_not_500",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestHealthEndpoint::test_health_ok"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestHealthEndpoint::test_health_ok",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestHealthEndpoint::test_health_ok",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestHealthEndpoint::test_health_ok",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestHealthEndpoint::test_healthz_is_searxng_compatible"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestHealthEndpoint::test_healthz_is_searxng_compatible",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestHealthEndpoint::test_healthz_is_searxng_compatible",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestHealthEndpoint::test_healthz_is_searxng_compatible",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestHealthEndpoint::test_health_no_engines"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestHealthEndpoint::test_health_no_engines",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestHealthEndpoint::test_health_no_engines",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestHealthEndpoint::test_health_no_engines",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestEngineConfigPropagation::test_env_var_api_key_flows_to_adapter"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestEngineConfigPropagation::test_env_var_api_key_flows_to_adapter",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestEngineConfigPropagation::test_env_var_api_key_flows_to_adapter",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestEngineConfigPropagation::test_env_var_api_key_flows_to_adapter",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::TestRoutingBudgetFrozen::test_runtime_env_change_does_not_alter_budget"
+    },
+    {
+      "nodeid": "tests/test_server.py::TestRoutingBudgetFrozen::test_runtime_env_change_does_not_alter_budget",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestRoutingBudgetFrozen::test_runtime_env_change_does_not_alter_budget",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::TestRoutingBudgetFrozen::test_runtime_env_change_does_not_alter_budget",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_invalid_date_window_reports_filter_error"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_invalid_date_window_reports_filter_error",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_invalid_date_window_reports_filter_error",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_invalid_date_window_reports_filter_error",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params0-200-success]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params0-200-success]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params0-200-success]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params0-200-success]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params1-503-failure]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params1-503-failure]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params1-503-failure]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params1-503-failure]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params2-503-failure]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params2-503-failure]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params2-503-failure]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params2-503-failure]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params3-400-rejected]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params3-400-rejected]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params3-400-rejected]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params3-400-rejected]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params4-400-rejected]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params4-400-rejected]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params4-400-rejected]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params4-400-rejected]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params5-400-rejected]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params5-400-rejected]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params5-400-rejected]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_metrics_cover_early_returns[params5-400-rejected]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_landing_and_health_do_not_count_as_completed_searches"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_landing_and_health_do_not_count_as_completed_searches",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_landing_and_health_do_not_count_as_completed_searches",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_landing_and_health_do_not_count_as_completed_searches",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_completed_search_outcome_classification[429-failure]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_outcome_classification[429-failure]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_outcome_classification[429-failure]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_outcome_classification[429-failure]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_completed_search_outcome_classification[403-rejected]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_outcome_classification[403-rejected]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_outcome_classification[403-rejected]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_outcome_classification[403-rejected]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_completed_search_outcome_classification[200-success]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_outcome_classification[200-success]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_outcome_classification[200-success]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_outcome_classification[200-success]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_completed_search_records_unhandled_failure_without_swallowing[False]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_records_unhandled_failure_without_swallowing[False]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_records_unhandled_failure_without_swallowing[False]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_records_unhandled_failure_without_swallowing[False]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_completed_search_records_unhandled_failure_without_swallowing[True]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_records_unhandled_failure_without_swallowing[True]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_records_unhandled_failure_without_swallowing[True]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_completed_search_records_unhandled_failure_without_swallowing[True]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-get-/-json]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-get-/-json]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-get-/-json]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-get-/-json]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-get-/-yaml]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-get-/-yaml]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-get-/-yaml]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-get-/-yaml]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-get-/search-json]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-get-/search-json]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-get-/search-json]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-get-/search-json]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-get-/search-yaml]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-get-/search-yaml]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-get-/search-yaml]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-get-/search-yaml]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-post-/-json]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-post-/-json]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-post-/-json]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-post-/-json]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-post-/-yaml]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-post-/-yaml]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-post-/-yaml]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-post-/-yaml]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-post-/search-json]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-post-/search-json]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-post-/search-json]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-post-/search-json]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-post-/search-yaml]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-post-/search-yaml]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-post-/search-yaml]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds0-post-/search-yaml]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-get-/-json]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-get-/-json]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-get-/-json]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-get-/-json]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-get-/-yaml]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-get-/-yaml]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-get-/-yaml]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-get-/-yaml]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-get-/search-json]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-get-/search-json]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-get-/search-json]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-get-/search-json]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-get-/search-yaml]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-get-/search-yaml]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-get-/search-yaml]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-get-/search-yaml]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-post-/-json]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-post-/-json]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-post-/-json]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-post-/-json]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-post-/-yaml]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-post-/-yaml]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-post-/-yaml]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-post-/-yaml]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-post-/search-json]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-post-/search-json]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-post-/search-json]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-post-/search-json]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-post-/search-yaml]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-post-/search-yaml]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-post-/search-yaml]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds1-post-/search-yaml]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-get-/-json]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-get-/-json]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-get-/-json]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-get-/-json]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-get-/-yaml]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-get-/-yaml]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-get-/-yaml]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-get-/-yaml]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-get-/search-json]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-get-/search-json]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-get-/search-json]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-get-/search-json]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-get-/search-yaml]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-get-/search-yaml]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-get-/search-yaml]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-get-/search-yaml]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-post-/-json]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-post-/-json]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-post-/-json]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-post-/-json]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-post-/-yaml]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-post-/-yaml]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-post-/-yaml]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-post-/-yaml]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-post-/search-json]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-post-/search-json]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-post-/search-json]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-post-/search-json]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-post-/search-yaml]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-post-/search-yaml]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-post-/search-yaml]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_forward_and_prove_audited_scope[bounds2-post-/search-yaml]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad0]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad0]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad0]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad0]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad1]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad1]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad1]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad1]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad2]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad2]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad2]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad2]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad3]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad3]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad3]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad3]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad4]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad4]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad4]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad4]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad5]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad5]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad5]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad5]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad6]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad6]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad6]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad6]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad7]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad7]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad7]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad7]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad8]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad8]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad8]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad8]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad9]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad9]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad9]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad9]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad10]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad10]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad10]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad10]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad11]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad11]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad11]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[get-bad11]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad0]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad0]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad0]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad0]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad1]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad1]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad1]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad1]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad2]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad2]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad2]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad2]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad3]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad3]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad3]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad3]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad4]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad4]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad4]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad4]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad5]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad5]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad5]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad5]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad6]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad6]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad6]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad6]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad7]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad7]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad7]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad7]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad8]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad8]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad8]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad8]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad9]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad9]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad9]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad9]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad10]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad10]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad10]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad10]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad11]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad11]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad11]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_reject_before_dispatch[post-bad11]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_upstream_failure_is_not_zero_matches"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_upstream_failure_is_not_zero_matches",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_upstream_failure_is_not_zero_matches",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_upstream_failure_is_not_zero_matches",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_absolute_dates_are_discoverable_in_openapi"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_are_discoverable_in_openapi",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_are_discoverable_in_openapi",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_absolute_dates_are_discoverable_in_openapi",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_repeated_date_bounds_reject[get]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_repeated_date_bounds_reject[get]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_repeated_date_bounds_reject[get]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_repeated_date_bounds_reject[get]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_repeated_date_bounds_reject[post]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_repeated_date_bounds_reject[post]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_repeated_date_bounds_reject[post]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_repeated_date_bounds_reject[post]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_http_dates_reach_real_openalex_and_preserve_publication_dates"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_http_dates_reach_real_openalex_and_preserve_publication_dates",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_http_dates_reach_real_openalex_and_preserve_publication_dates",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_http_dates_reach_real_openalex_and_preserve_publication_dates",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_portal_keeps_absolute_bounds_in_forms_and_machine_links"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_portal_keeps_absolute_bounds_in_forms_and_machine_links",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_portal_keeps_absolute_bounds_in_forms_and_machine_links",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_portal_keeps_absolute_bounds_in_forms_and_machine_links",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_bounded_formats_without_proof_reject_before_dispatch[get-csv]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_bounded_formats_without_proof_reject_before_dispatch[get-csv]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_bounded_formats_without_proof_reject_before_dispatch[get-csv]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_bounded_formats_without_proof_reject_before_dispatch[get-csv]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_bounded_formats_without_proof_reject_before_dispatch[get-rss]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_bounded_formats_without_proof_reject_before_dispatch[get-rss]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_bounded_formats_without_proof_reject_before_dispatch[get-rss]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_bounded_formats_without_proof_reject_before_dispatch[get-rss]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_bounded_formats_without_proof_reject_before_dispatch[post-csv]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_bounded_formats_without_proof_reject_before_dispatch[post-csv]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_bounded_formats_without_proof_reject_before_dispatch[post-csv]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_bounded_formats_without_proof_reject_before_dispatch[post-csv]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_server.py::test_bounded_formats_without_proof_reject_before_dispatch[post-rss]"
+    },
+    {
+      "nodeid": "tests/test_server.py::test_bounded_formats_without_proof_reject_before_dispatch[post-rss]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_bounded_formats_without_proof_reject_before_dispatch[post-rss]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_server.py::test_bounded_formats_without_proof_reject_before_dispatch[post-rss]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-root_get_json]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-root_get_json]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-root_get_json]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-root_get_json]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-search_get_json]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-search_get_json]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-search_get_json]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-search_get_json]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-root_post_json]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-root_post_json]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-root_post_json]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-root_post_json]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-search_post_json]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-search_post_json]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-search_post_json]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-search_post_json]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-default_html]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-default_html]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-default_html]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-default_html]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-explicit_html]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-explicit_html]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-explicit_html]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-explicit_html]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-explicit_csv]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-explicit_csv]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-explicit_csv]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-explicit_csv]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-explicit_rss]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-explicit_rss]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-explicit_rss]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-explicit_rss]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-missing_query_json]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-missing_query_json]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-missing_query_json]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-missing_query_json]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-invalid_page_json]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-invalid_page_json]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-invalid_page_json]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-invalid_page_json]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-invalid_safesearch_json]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-invalid_safesearch_json]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-invalid_safesearch_json]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[0-invalid_safesearch_json]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-root_get_json]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-root_get_json]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-root_get_json]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-root_get_json]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-search_get_json]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-search_get_json]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-search_get_json]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-search_get_json]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-root_post_json]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-root_post_json]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-root_post_json]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-root_post_json]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-search_post_json]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-search_post_json]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-search_post_json]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-search_post_json]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-default_html]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-default_html]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-default_html]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-default_html]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-explicit_html]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-explicit_html]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-explicit_html]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-explicit_html]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-explicit_csv]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-explicit_csv]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-explicit_csv]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-explicit_csv]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-explicit_rss]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-explicit_rss]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-explicit_rss]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-explicit_rss]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-missing_query_json]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-missing_query_json]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-missing_query_json]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-missing_query_json]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-invalid_page_json]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-invalid_page_json]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-invalid_page_json]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-invalid_page_json]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-invalid_safesearch_json]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-invalid_safesearch_json]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-invalid_safesearch_json]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_request_matrix_matches_pinned_searxng_contract[1-invalid_safesearch_json]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_disabled_formats_fail_closed_like_reference[0]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_disabled_formats_fail_closed_like_reference[0]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_disabled_formats_fail_closed_like_reference[0]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_disabled_formats_fail_closed_like_reference[0]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_disabled_formats_fail_closed_like_reference[1]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_disabled_formats_fail_closed_like_reference[1]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_disabled_formats_fail_closed_like_reference[1]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_disabled_formats_fail_closed_like_reference[1]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_healthz_and_config_shape_match_reference[0]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_healthz_and_config_shape_match_reference[0]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_healthz_and_config_shape_match_reference[0]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_healthz_and_config_shape_match_reference[0]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_healthz_and_config_shape_match_reference[1]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_healthz_and_config_shape_match_reference[1]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_healthz_and_config_shape_match_reference[1]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_healthz_and_config_shape_match_reference[1]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_result_fields_are_required_but_slopsearx_extensions_are_allowed[0]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_result_fields_are_required_but_slopsearx_extensions_are_allowed[0]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_result_fields_are_required_but_slopsearx_extensions_are_allowed[0]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_result_fields_are_required_but_slopsearx_extensions_are_allowed[0]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_result_fields_are_required_but_slopsearx_extensions_are_allowed[1]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_result_fields_are_required_but_slopsearx_extensions_are_allowed[1]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_result_fields_are_required_but_slopsearx_extensions_are_allowed[1]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_result_fields_are_required_but_slopsearx_extensions_are_allowed[1]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_dependency_dossier_grant_does_not_change_http_search[0]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_dependency_dossier_grant_does_not_change_http_search[0]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_dependency_dossier_grant_does_not_change_http_search[0]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_dependency_dossier_grant_does_not_change_http_search[0]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_dependency_dossier_grant_does_not_change_http_search[1]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_dependency_dossier_grant_does_not_change_http_search[1]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_dependency_dossier_grant_does_not_change_http_search[1]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_dependency_dossier_grant_does_not_change_http_search[1]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_saved_event_grant_does_not_change_http_search[0]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_saved_event_grant_does_not_change_http_search[0]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_saved_event_grant_does_not_change_http_search[0]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_saved_event_grant_does_not_change_http_search[0]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "phase": "started",
+      "nodeid": "tests/test_searxng_api_contract.py::test_saved_event_grant_does_not_change_http_search[1]"
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_saved_event_grant_does_not_change_http_search[1]",
+      "phase": "setup",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_saved_event_grant_does_not_change_http_search[1]",
+      "phase": "call",
+      "outcome": "passed",
+      "longrepr": null
+    },
+    {
+      "nodeid": "tests/test_searxng_api_contract.py::test_saved_event_grant_does_not_change_http_search[1]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "longrepr": null
+    }
+  ],
+  "guards": [
+    {
+      "event": "numeric_getaddrinfo",
+      "allowed": "original local numeric classification only",
+      "host": "mock0.com"
+    },
+    {
+      "event": "numeric_getaddrinfo",
+      "allowed": "original local numeric classification only",
+      "host": "mock1.com"
+    },
+    {
+      "event": "numeric_getaddrinfo",
+      "allowed": "original local numeric classification only",
+      "host": "mock2.com"
+    },
+    {
+      "event": "numeric_getaddrinfo",
+      "allowed": "original local numeric classification only",
+      "host": "mock0.com"
+    },
+    {
+      "event": "numeric_getaddrinfo",
+      "allowed": "original local numeric classification only",
+      "host": "mock1.com"
+    },
+    {
+      "event": "numeric_getaddrinfo",
+      "allowed": "original local numeric classification only",
+      "host": "mock2.com"
+    },
+    {
+      "event": "numeric_getaddrinfo",
+      "allowed": "original local numeric classification only",
+      "host": "mock0.com"
+    },
+    {
+      "event": "numeric_getaddrinfo",
+      "allowed": "original local numeric classification only",
+      "host": "mock1.com"
+    },
+    {
+      "event": "numeric_getaddrinfo",
+      "allowed": "original local numeric classification only",
+      "host": "mock2.com"
+    },
+    {
+      "event": "numeric_getaddrinfo",
+      "allowed": "original local numeric classification only",
+      "host": "mock0.com"
+    },
+    {
+      "event": "numeric_getaddrinfo",
+      "allowed": "original local numeric classification only",
+      "host": "mock1.com"
+    },
+    {
+      "event": "numeric_getaddrinfo",
+      "allowed": "original local numeric classification only",
+      "host": "mock2.com"
+    },
+    {
+      "event": "socket.__new__",
+      "denied": true,
+      "args": "(<socket.socket fd=-1, family=0, type=0, proto=0>, 30, 1, 0)"
+    },
+    {
+      "event": "numeric_getaddrinfo",
+      "allowed": "original local numeric classification only",
+      "host": "mock0.com"
+    },
+    {
+      "event": "numeric_getaddrinfo",
+      "allowed": "original local numeric classification only",
+      "host": "mock1.com"
+    },
+    {
+      "event": "numeric_getaddrinfo",
+      "allowed": "original local numeric classification only",
+      "host": "mock2.com"
+    },
+    {
+      "event": "numeric_getaddrinfo",
+      "allowed": "original local numeric classification only",
+      "host": "example.test"
+    },
+    {
+      "event": "numeric_getaddrinfo",
+      "allowed": "original local numeric classification only",
+      "host": "example.test"
+    },
+    {
+      "event": "numeric_getaddrinfo",
+      "allowed": "original local numeric classification only",
+      "host": "example.test"
+    },
+    {
+      "event": "numeric_getaddrinfo",
+      "allowed": "original local numeric classification only",
+      "host": "example.test"
+    }
+  ],
+  "producer_sha256": "38f61efd29262aa8047b859f7279a0312c835e6765d43fad4958ee028a8d91a4"
+}

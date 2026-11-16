@@ -1,0 +1,100 @@
+{
+  "baseline": "7ae6e634831a12528b983cc5d5dd722c25618a71",
+  "qualification": "private v3 exact source; compiled paths are retained in receipts",
+  "publishable_files": [
+    {
+      "path": "crates/ssx-infra/src/research_planning.rs",
+      "sha256": "9029a36140b78fe493f2777cd5b8e712b18568d875b21b7d86431d3ae81bd890",
+      "bytes": 93067
+    },
+    {
+      "path": "crates/ssx-mcp/src/research_planning.rs",
+      "sha256": "7b1350cb9b4073d22cef9020c9ebd029e7ed1de904c4271647ecd360ae1ee2d1",
+      "bytes": 15579
+    },
+    {
+      "path": "crates/ssx-mcp/tests/w03.rs",
+      "sha256": "4885829a3da4be9abc0a287952fa5441a15e192f074608736e1c77a3dc399496",
+      "bytes": 48974
+    },
+    {
+      "path": "crates/ssx-mcp/tests/w03_support/mod.rs",
+      "sha256": "21dd16999331336a5f9520441f3996fee78f955527b41fc935b057cd3b85f2f3",
+      "bytes": 1771
+    },
+    {
+      "path": "crates/xtask/src/w03.rs",
+      "sha256": "e2930e02076a03dc89ec2ef8629afb68d08f15bf7857620db3d1bf9dc106afce",
+      "bytes": 19933
+    },
+    {
+      "path": "docs/rust-rewrite/w03/native-tests.json",
+      "sha256": "6e9c23bcea1aca7d9b68a0b8e1e103d5e85472eeddcaf810e55818ded071f6e3",
+      "bytes": 11006
+    }
+  ],
+  "raw_evidence": [
+    {
+      "path": "old-selected.log.gz",
+      "raw_sha256": "5f928ff5fd5dc0bb61098ece4cfbadb920e14b5d52144077d54d3a4005dfa3c8",
+      "gzip_sha256": "16c88cbc37df0583eaae1ad3863669bcec9f4a6dd4b780a2e9a2ee0b69ebf1c8",
+      "raw_bytes": 1045
+    },
+    {
+      "path": "new-selected.log.gz",
+      "raw_sha256": "bc37b2ad367e2d25ccb4938cb8d4101c16369a9a7ee94972740cf5e684f38e7e",
+      "gzip_sha256": "9521e8bd6390958e487e8658ccc98e676d66050453b9cea72c26ec8d0cb1108e",
+      "raw_bytes": 508
+    },
+    {
+      "path": "all6-mcp.log.gz",
+      "raw_sha256": "ce2b793c87d54faacac5535f0165e9cec80a5cc62a0120d98c22703e7f92a0f4",
+      "gzip_sha256": "fe639687263484cb1eb0560e24d0cb54088cb3aefda7f34e7f2dcd01301cfcd9",
+      "raw_bytes": 848
+    },
+    {
+      "path": "workspace-all-target-build.log.gz",
+      "raw_sha256": "5b12ad3e76f308c320fa21a09f25d65d67af5767b39c703cf74b08cd311cd9b0",
+      "gzip_sha256": "24376ff18e2ac9e929f794d7bb6e0c4c8abe23ddd47a2f0562bc83e0bed4274f",
+      "raw_bytes": 2266
+    },
+    {
+      "path": "workspace-all-target-clippy.log.gz",
+      "raw_sha256": "c849e969b56df8b9b9199cb578b271d0a9d7a95db3fe75d7b5072f088f84d87d",
+      "gzip_sha256": "58af8127850b2c0a454a6db88fba8b18c3bcc690df716a13f7bdd8800aaf9b62",
+      "raw_bytes": 8394
+    },
+    {
+      "path": "fmtcheck.log.gz",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzip_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "raw_bytes": 0
+    },
+    {
+      "path": "W02.json.gz",
+      "raw_sha256": "67931dc1a620ae3225dcb56f939321eaa7b580603ecb621e523c293e8cc50bcf",
+      "gzip_sha256": "7ba19073d133dc8c50af623d2b2534e4ddb070276444299848311e878a1e0ac5",
+      "raw_bytes": 2118287
+    },
+    {
+      "path": "W03.json.gz",
+      "raw_sha256": "a3eecbb697a998fa15ef012d8e8c24a6843045ff8ca7d133306b4d1fb048b65a",
+      "gzip_sha256": "733a8e617d23d8a40b3f12ea52b0c61696f32ba6089d168ec7df4c1329f21689",
+      "raw_bytes": 2189001
+    }
+  ],
+  "root_acceptance_sha256": "242dceaa0134778fef3c1433b0ba64f9f11fa6a7f7c240ff3e217490e1e67bcd",
+  "limits": [
+    "one registry initial-start pool; independent registries and direct extend/retry are outside global bound",
+    "two sessions submit sequential starts; initialization contention is statically synchronized but not forced by test barrier",
+    "shutdown interrupts owned work and retains durable accounting; untouched queued jobs recover successfully",
+    "no live providers, production, source captures, live branch edits, commits or publication"
+  ],
+  "prior_failures": [
+    "v1 quoted-path verifier failure before Rust",
+    "v1 first tank-target sandbox denial before compilation",
+    "v2 fmtcheck1 followed by explicitly approved scoped v3 pinned formatting",
+    "v3 unsuitable token verifier rejected trailing commas/closure braces before native v3 tests; replaced by isolated exact pinned formatter reproduction"
+  ],
+  "fresh_hosted_checks_required": true
+}

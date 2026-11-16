@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "plan_id": "W06",
+  "status": "preunion gate/source binding freeze; full integrated gate pending parent release",
+  "gate_sha256": "fad4b4f022cd9e22c306a779094c8ab527a44894eef9b764706bb16d3bae8f04",
+  "qualification_sha256": "7481ffcf349c3561b47b97c99ab158ef42abaf941dc9ad8d7cad87e613c7d034",
+  "owned_source_identities": {
+    "Cargo.lock": "da352846b0c840c02493a135de5f9bb733907f702b1133cd56e0ee49fae8052e",
+    "crates/ssx-application/src/lib.rs": "174408b7b238faf670d2877edf198ddeb14e1b5b0e638dee726adcc78db1e7a0",
+    "crates/ssx-application/src/policy.rs": "d31cf1d643d4b5754d8da760a3c03b408958ca859dda97e8a9adf3e96bc107cd",
+    "crates/ssx-application/src/staged.rs": "c153cb0f71c4ac661e7dcb26b429ad66285c4c3debba8178711bf8f7ae537a75",
+    "crates/ssx-application/tests/w06.rs": "07353aca4fe7778a29daaf9282dc6254420480cd19dda8783975d84b0d56344c",
+    "crates/ssx-infra/Cargo.toml": "6523a44e34259bb656a4cd61983ac05f3b9269847b7f5014e7ec66bb823c5c23",
+    "crates/ssx-infra/src/lib.rs": "fb39989daa0d42f1922bb1facde3ec31f6bf5bd6a595d2db83d5ae72d8613b5e",
+    "crates/ssx-infra/src/staged_runner.rs": "b74c4b14c09205c213ce163fea702d58bbb8826144e87db6819a1b2c7516cb06",
+    "crates/ssx-infra/src/staged_service.rs": "c9c279c9e34485650dad904aaf9c27586235aa9e215290c217fd02201a46746b",
+    "crates/ssx-infra/src/valkey/saved.rs": "c01c9c23cad3f0db600641bff7d21f91ef6af6eea17df8d7c1b5570fab6aa88c",
+    "crates/ssx-infra/src/valkey/scripts.rs": "8d9ab94a6c7bb8d834bb411b8f348a10391d80854e455a85fb3889a53577572e",
+    "crates/ssx-infra/src/valkey/staged.rs": "2af5c91484844d63f4d1b6d917c8f9eb9f7c9ee18b69237f1399c50f5c5e781c",
+    "crates/ssx-infra/src/valkey/scripts/staged_interrupt_acknowledged.lua": "112e2f9aba13f8a188f1922de7681f81cad12e257f727f021ed95c93e58d45b9",
+    "crates/ssx-infra/tests/w06.rs": "c0076c432cd1f241e8c70270f8f2c3283f48fc056eb8761aa884b3ea57ceb63e"
+  },
+  "source_cases": 248,
+  "native_cases": 55,
+  "actual_focused_log_case_receipts": 303,
+  "actual_unique": 303,
+  "source_only_reference_controls": [
+    "review.runner.deadline_after_acknowledged_renewal",
+    "review.runner.actual_shared_rate_denial",
+    "review.runner.presave_revocation.sensitive",
+    "review.runner.presave_revocation.staged_grant"
+  ],
+  "test_inventory": {
+    "ssx-application": {
+      "semantic_tests": [
+        "source_plans_preserve_full_outcomes_and_identity_bytes",
+        "source_completion_preserves_full_records_and_dispatch_requests",
+        "source_replay_equivalence_preserves_original_requested_objectives",
+        "source_retained_authority_preserves_full_policy_envelopes",
+        "source_review_plans_preserve_malformed_scope_and_fallback_order",
+        "source_huge_integer_fallback_truthiness_preserves_validation_order"
+      ],
+      "worker_probes": []
+    },
+    "ssx-infra": {
+      "semantic_tests": [
+        "nonempty_initial_real_acquisition_snapshot_fence_replay",
+        "clean_empty_runs_disjoint_fallback_with_owned_histories",
+        "failed_empty_initial_never_authorizes_fallback",
+        "cached_empty_never_authorizes_fallback_observed_zero",
+        "preview_strict_integer_scope_filters_and_replay_identity",
+        "acknowledged_deadline_budget_claims_and_recovery_are_not_inferred",
+        "duplicate_owners_and_index_loss_conserve_unknown_retry_budgets",
+        "owned_shutdown_interrupts_blocked_renewal_and_preserves_shared_flights",
+        "policy_revocation_after_acquisition_retains_no_reference",
+        "saved_source_membership_lineage_replay_and_error_precedence",
+        "killed_native_owner_restart_preserves_identity_and_unknown_spend",
+        "source_rendered_responses_use_full_native_snapshots_and_shared_mcp_projection",
+        "source_saved_report_resolution_preserves_full_original_error_envelopes",
+        "source_replay_checks_requested_identity_and_resolves_sources_before_lookup",
+        "renewal_reply_barrier_shutdown_is_joined_and_keeps_foreign_owner",
+        "snapshot_reply_lease_loss_or_caller_drop_never_publishes_stale_reference",
+        "acknowledged_save_and_unknown_save_are_distinct_commit_races",
+        "dropped_caller_cancels_and_joins_owned_http_without_closing_shared_search",
+        "background_discovery_rebuilds_ready_index_and_joins_shutdown",
+        "deadline_after_acknowledged_renewal_is_rechecked_without_dispatch",
+        "initial_policy_rejection_closes_owned_claim_without_acquisition",
+        "recovery_acknowledgments_are_exact_single_owner_and_unknown_reply_is_not_an_event",
+        "retained_reads_and_replay_preserve_evidence_without_authorizing_dispatch",
+        "source_initial_renewal_loss_preserves_full_claim_without_dispatch",
+        "claim_events_require_exact_acknowledgment_and_never_infer_lost_reply",
+        "publication_rechecks_policy_after_acquisition_before_sending_save",
+        "typed_shared_search_failure_uses_reviewed_public_diagnostic_and_unknown_budget",
+        "source_review_invalid_and_default_views_preserve_complete_envelopes",
+        "source_review_admission_collision_preserves_winner_and_exact_conflict",
+        "source_saved_report_authority_uses_current_retained_policy_not_creation_fingerprint",
+        "source_review_public_preconditions_replay_sources_and_store_errors_are_exact"
+      ],
+      "worker_probes": [
+        "native_staged_owner_process_probe"
+      ]
+    }
+  },
+  "packet_files": {
+    "docs/rust-rewrite/w06/qualification.json": "7481ffcf349c3561b47b97c99ab158ef42abaf941dc9ad8d7cad87e613c7d034",
+    "docs/rust-rewrite/w06/README.md": "c67a0c74b14429f6d2d81e4622a70ecec239c65c331fac57b8e40bc8801cec19",
+    "docs/rust-rewrite/w06/PARITY.md": "3801cc509a3deab932e748e5262e66bafae1a038ebdd9d6a59d415d01c8b19ab",
+    "docs/rust-rewrite/w06/HANDOFF.md": "894bdc97bf3dbd30f6a56131ba2a99b5374fc9324592095a891a7c861e6ec5e8",
+    "docs/rust-rewrite/w06/oracle-inventory.json": "fa02d7dfbaaa7d46c82bdd9286459460ffff252e23f0d181f2a14ffd967186ef",
+    "docs/rust-rewrite/w06/evidence/qualification-component151.json": "474b79b5c4430b743baf465450840816ddd9eb9188a46b4bf36af3c880ab8a0d",
+    "docs/rust-rewrite/w06/evidence/gate303-focused-checks.json": "125e2891334400c716fcf6600f53b18d33124913bbc134daacb696979fec1da7",
+    "docs/rust-rewrite/w06/evidence/independent-composed-source-assessment.json": "6284ee20d81831afdd2aa856eea54f96bba4207d885614c1e96dce4986560a2a",
+    "docs/rust-rewrite/w06/evidence/independent-r04-final-review.json": "718375bac6877fcdb81b8d7201e4d3c045f56b7157d1530f7a4e13ba42da6c00"
+  },
+  "focused_test_logs": {
+    "application": {
+      "path": "/Volumes/tank01/magnus/rust-builds/slopsearx/w06/evidence/r04-huge-truthiness-application.log",
+      "sha256": "e867363510e126ce4fcc648561f9b214b6df3f19f827175ee474f7fa35a23258"
+    },
+    "infra_previous_unchanged": {
+      "path": "/Volumes/tank01/magnus/rust-builds/slopsearx/w06/evidence/review-corrections-infra.log",
+      "sha256": "e0fe872b1aa27ced69793d17b04a0ff04e99fe04e07b4da8dac485d3ff02a755"
+    },
+    "clippy": {
+      "path": "/Volumes/tank01/magnus/rust-builds/slopsearx/w06/evidence/r04-huge-truthiness-clippy.log",
+      "sha256": "5afe6adc1a23f719f0ebbd194b6c28073d89917e3599a4ea74cfcfad880e1bdc"
+    }
+  },
+  "full_W06_gate_run": false,
+  "sealed151_evidence_preserved": true,
+  "global_inventory_and_runtime_files_edited": false
+}

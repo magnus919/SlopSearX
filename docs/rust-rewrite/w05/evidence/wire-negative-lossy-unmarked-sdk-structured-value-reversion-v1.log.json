@@ -1,0 +1,6 @@
+{
+  "stdout": "   Compiling ssx-mcp v0.1.0 (/Volumes/tank01/magnus/git/slopsearx-w05/crates/ssx-mcp)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 9.01s\n     Running tests/w05.rs (/Volumes/tank01/magnus/rust-builds/slopsearx/w05/debug/deps/w05-bb02813cd0544c32)\n\nrunning 1 test\n\nthread 'actual_maximum_batches_preserve_100_exact_64k_events_and_escaping' (34408511) panicked at crates/ssx-mcp/tests/w05.rs:689:13:\nassertion `left == right` failed: historic integer must remain exact in structuredContent\n  left: Number(Number(\"18446744073709551617\"))\n right: Number(Number(\"1.8446744073709552e+19\"))\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\ntest actual_maximum_batches_preserve_100_exact_64k_events_and_escaping ... FAILED\n\nfailures:\n\nfailures:\n    actual_maximum_batches_preserve_100_exact_64k_events_and_escaping\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 2.14s\n\nerror: test failed, to rerun pass `-p ssx-mcp --test w05`\n",
+  "sha256": "efccfda8e6dc73c208f7deb2bc86c321c9be1741c3ad242da434c91fdc601af8",
+  "control": "lossy-unmarked-sdk-structured-value-reversion",
+  "terminal_exit": 101
+}

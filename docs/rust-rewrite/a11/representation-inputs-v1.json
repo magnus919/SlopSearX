@@ -1,0 +1,352 @@
+{
+  "schema_version": 1,
+  "purpose": "Exact source-reachable public FiniteF64 and scalar UTF8 representation boundaries; source Python nonfinite values preserved via existing approved tagged-reference serializer, never claimed public JSON numbers",
+  "cases": [
+    {
+      "id": "a11-representation/abuseipdb/score-nan",
+      "engine": "abuseipdb",
+      "query": "8.8.8.8",
+      "config": {
+        "enabled": true,
+        "api_key": "fixture-only-key"
+      },
+      "params": {
+        "page": 7,
+        "language": "sv",
+        "safesearch": 2,
+        "time_range": "month"
+      },
+      "response": {
+        "status": 200,
+        "json": {
+          "data": {
+            "abuseConfidenceScore": "NaN",
+            "totalReports": 3,
+            "countryCode": "US",
+            "isp": "Example ISP",
+            "domain": "example.org",
+            "usageType": "hosting",
+            "lastReportedAt": "2026-01-02T03:04:05",
+            "reports": [
+              {
+                "categories": [
+                  14,
+                  3,
+                  14
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "a11-representation/abuseipdb/score-positive-infinity",
+      "engine": "abuseipdb",
+      "query": "8.8.8.8",
+      "config": {
+        "enabled": true,
+        "api_key": "fixture-only-key"
+      },
+      "params": {
+        "page": 7,
+        "language": "sv",
+        "safesearch": 2,
+        "time_range": "month"
+      },
+      "response": {
+        "status": 200,
+        "json": {
+          "data": {
+            "abuseConfidenceScore": "Infinity",
+            "totalReports": 3,
+            "countryCode": "US",
+            "isp": "Example ISP",
+            "domain": "example.org",
+            "usageType": "hosting",
+            "lastReportedAt": "2026-01-02T03:04:05",
+            "reports": [
+              {
+                "categories": [
+                  14,
+                  3,
+                  14
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "a11-representation/abuseipdb/score-negative-infinity",
+      "engine": "abuseipdb",
+      "query": "8.8.8.8",
+      "config": {
+        "enabled": true,
+        "api_key": "fixture-only-key"
+      },
+      "params": {
+        "page": 7,
+        "language": "sv",
+        "safesearch": 2,
+        "time_range": "month"
+      },
+      "response": {
+        "status": 200,
+        "json": {
+          "data": {
+            "abuseConfidenceScore": "-Infinity",
+            "totalReports": 3,
+            "countryCode": "US",
+            "isp": "Example ISP",
+            "domain": "example.org",
+            "usageType": "hosting",
+            "lastReportedAt": "2026-01-02T03:04:05",
+            "reports": [
+              {
+                "categories": [
+                  14,
+                  3,
+                  14
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "a11-representation/otx/score-nan",
+      "engine": "otx",
+      "query": "8.8.8.8",
+      "config": {
+        "enabled": true,
+        "api_key": "fixture-only-key"
+      },
+      "params": {
+        "page": 7,
+        "language": "sv",
+        "safesearch": 2,
+        "time_range": "month"
+      },
+      "response": {
+        "status": 200,
+        "json": {
+          "base_score": "NaN",
+          "pulse_info": {
+            "count": 2
+          },
+          "tags": [
+            "one",
+            "two"
+          ],
+          "country_code": "US",
+          "asn": "AS123",
+          "reputation": 3
+        }
+      }
+    },
+    {
+      "id": "a11-representation/otx/score-positive-infinity",
+      "engine": "otx",
+      "query": "8.8.8.8",
+      "config": {
+        "enabled": true,
+        "api_key": "fixture-only-key"
+      },
+      "params": {
+        "page": 7,
+        "language": "sv",
+        "safesearch": 2,
+        "time_range": "month"
+      },
+      "response": {
+        "status": 200,
+        "json": {
+          "base_score": "Infinity",
+          "pulse_info": {
+            "count": 2
+          },
+          "tags": [
+            "one",
+            "two"
+          ],
+          "country_code": "US",
+          "asn": "AS123",
+          "reputation": 3
+        }
+      }
+    },
+    {
+      "id": "a11-representation/otx/score-negative-infinity",
+      "engine": "otx",
+      "query": "8.8.8.8",
+      "config": {
+        "enabled": true,
+        "api_key": "fixture-only-key"
+      },
+      "params": {
+        "page": 7,
+        "language": "sv",
+        "safesearch": 2,
+        "time_range": "month"
+      },
+      "response": {
+        "status": 200,
+        "json": {
+          "base_score": "-Infinity",
+          "pulse_info": {
+            "count": 2
+          },
+          "tags": [
+            "one",
+            "two"
+          ],
+          "country_code": "US",
+          "asn": "AS123",
+          "reputation": 3
+        }
+      }
+    },
+    {
+      "id": "a11-representation/abuseipdb/public-surrogate",
+      "engine": "abuseipdb",
+      "query": "8.8.8.8",
+      "config": {
+        "enabled": true,
+        "api_key": "fixture-only-key"
+      },
+      "params": {
+        "page": 7,
+        "language": "sv",
+        "safesearch": 2,
+        "time_range": "month"
+      },
+      "response": {
+        "status": 200,
+        "json": {
+          "data": {
+            "abuseConfidenceScore": 42,
+            "totalReports": 3,
+            "countryCode": "\ud800",
+            "isp": "Example ISP",
+            "domain": "example.org",
+            "usageType": "hosting",
+            "lastReportedAt": "2026-01-02T03:04:05",
+            "reports": [
+              {
+                "categories": [
+                  14,
+                  3,
+                  14
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "a11-representation/greynoise/public-surrogate",
+      "engine": "greynoise",
+      "query": "8.8.8.8",
+      "config": {
+        "enabled": true,
+        "api_key": "fixture-only-key"
+      },
+      "params": {
+        "page": 7,
+        "language": "sv",
+        "safesearch": 2,
+        "time_range": "month"
+      },
+      "response": {
+        "status": 200,
+        "json": {
+          "ip": "8.8.8.8",
+          "noise": true,
+          "riot": false,
+          "classification": "malicious",
+          "tags": [
+            "scanner",
+            "bot"
+          ],
+          "last_seen": "2026-01-02",
+          "name": "\ud800",
+          "link": "https://example.org/details",
+          "bot": true
+        }
+      }
+    },
+    {
+      "id": "a11-representation/otx/public-surrogate",
+      "engine": "otx",
+      "query": "8.8.8.8",
+      "config": {
+        "enabled": true,
+        "api_key": "fixture-only-key"
+      },
+      "params": {
+        "page": 7,
+        "language": "sv",
+        "safesearch": 2,
+        "time_range": "month"
+      },
+      "response": {
+        "status": 200,
+        "json": {
+          "base_score": 4.5,
+          "pulse_info": {
+            "count": 2
+          },
+          "tags": [
+            "one",
+            "two"
+          ],
+          "country_code": "\ud800",
+          "asn": "AS123",
+          "reputation": 3
+        }
+      }
+    },
+    {
+      "id": "a11-representation/urlhaus/public-surrogate",
+      "engine": "urlhaus",
+      "query": "evil.example.org",
+      "config": {
+        "enabled": true,
+        "api_key": "fixture-only-key"
+      },
+      "params": {
+        "page": 7,
+        "language": "sv",
+        "safesearch": 2,
+        "time_range": "month"
+      },
+      "response": {
+        "status": 200,
+        "json": {
+          "query_status": "ok",
+          "urls": [
+            {
+              "query_status": "ok",
+              "id": "12",
+              "url": "https://evil.example.org/malware",
+              "host": "evil.example.org",
+              "threat": "\ud800",
+              "tags": [
+                "elf",
+                "bot"
+              ],
+              "file_type": "exe",
+              "firstseen": "2026-01-02",
+              "lastseen": "2026-01-03",
+              "url_status": "online"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

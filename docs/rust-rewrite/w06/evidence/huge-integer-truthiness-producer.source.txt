@@ -1,0 +1,48 @@
+import hashlib, json, pathlib, sys
+
+root = pathlib.Path('/private/tmp/slopsearx-w06')
+packet = json.loads((root / 'docs/rust-rewrite/w06/evidence/review-public-source-outcomes.json').read_text())
+controls = packet['source_controls']
+if '--wrong-source-hash' in sys.argv:
+    controls['slopsearx/mcp/staged_tools.py'] = '0' * 64
+if sys.version_info[:3] != (3, 14, 7):
+    raise RuntimeError('unpinned interpreter')
+for path, expected in controls.items():
+    if hashlib.sha256((root / path).read_bytes()).hexdigest() != expected:
+        raise RuntimeError('source drift: ' + path)
+sys.path.insert(0, str(root))
+from slopsearx.capabilities import MCPPolicy
+from slopsearx.mcp import staged_tools
+from slopsearx.mcp.state import set_state
+from tests.test_mcp_tools import _build_state
+
+policy = MCPPolicy()
+policy.enabled_tools['staged_search'] = True
+state = _build_state(['wikipedia', 'brave'], policy=policy)
+set_state(state)
+rows = []
+for name, literal in [
+    ('positive_huge_integer', '1' + '0' * 400),
+    ('negative_huge_integer', '-1' + '0' * 400),
+    ('zero_integer', '0'),
+    ('negative_zero_integer', '-0'),
+    ('zero_float', '0.0'),
+    ('negative_zero_float', '-0.0'),
+    ('finite_nonzero_float', '1e300'),
+    ('finite_negative_nonzero_float', '-1e300'),
+]:
+    for consent in [False, True]:
+        fallback = json.loads(literal)
+        inputs = dict(query='huge integer truthiness', objectives={'deadline_ms': 5000, 'max_engine_calls': 2}, initial_scope={'engines': ['wikipedia']}, fallback_scope=fallback, allow_scope_expansion=consent, filters=None)
+        plan, error = staged_tools._build_plan(**inputs)
+        expected_field = 'scope' if bool(fallback) == consent else 'fallback_scope'
+        if plan is not None or error is None or error['error']['field'] != expected_field:
+            raise RuntimeError(f'wrong validation order {name}/{consent}: {error}')
+        rows.append(dict(id=f'huge_truthiness.{name}.{str(consent).lower()}', input=inputs, fallback_json=literal, output={'plan': plan, 'error': error}))
+if sum(e.calls for e in state.ctx.active_engines.values()):
+    raise RuntimeError('source capture dispatched')
+set_state(None)
+output = dict(schema_version=1, plan_id='W06', review_id='W06-R04', baseline=packet['baseline'], source_controls=controls, context=packet['context'], provider_calls=0, execution='actual original _build_plan over JSON-decoded huge integers, finite floats and signed-zero controls', cases=rows)
+destination = root / 'docs/rust-rewrite/w06/evidence/huge-integer-truthiness-source-outcomes.json'
+destination.write_text(json.dumps(output, indent=2) + '\n')
+print(json.dumps({'cases': len(rows), 'sha256': hashlib.sha256(destination.read_bytes()).hexdigest()}))

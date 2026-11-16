@@ -1,0 +1,764 @@
+{
+  "status": "Complete69-single-byte source-origin inventory plus CJK mapping-chain packet for parent review; legacy-grant policy and HP/KOI8-T upstream scope are explicitly unresolved, not blanket PSF approval",
+  "terms_scope": {
+    "url": "https://www.unicode.org/copyright.html",
+    "retrieved": "2026-10-16",
+    "raw_html_sha256": "9f83fb0a046180c87d22c2678e79300475125611ac8dfc2da303db6c6b347251",
+    "local_original": "/private/tmp/a05-unicode-mapping-terms.html",
+    "basis": "Section2.2 includes computer data files under Unicode Public; section3.3 assigns Unicode License v3 unless a specific exception is identified. Each listed file was inspected for exceptions.",
+    "full_license": "LICENSE-UNICODE"
+  },
+  "sources": [
+    {
+      "name": "CP932",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP932.TXT",
+      "sha256": "c9bc0b0cd42e0fbcb82a09635bb5abed86afbdd4abc9e76fa5716638217cb59f",
+      "local_original": "/private/tmp/a05-upstream-CP932.TXT",
+      "source_chain": "CPython3.14.7 Tools/unicode/genmap_* references this official mapping path; CPython algorithms/patches retain separate PSF attribution",
+      "affected_canonical_families": [
+        "cp932",
+        "euc_jp",
+        "shift_jis",
+        "iso2022_jp variants"
+      ],
+      "proposed_license": "Unicode-3.0 per official Unicode Data Files default scope; no specific contrary license in inspected mapping file",
+      "notice_file": "MAPPING-UPSTREAM-NOTICES.txt"
+    },
+    {
+      "name": "CP936",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP936.TXT",
+      "sha256": "b86f601c575e9ab457380b6f7abef03c75499cc6075bdc8b4b27f3f2de74bf6a",
+      "local_original": "/private/tmp/a05-upstream-CP936.TXT",
+      "source_chain": "CPython3.14.7 Tools/unicode/genmap_* references this official mapping path; CPython algorithms/patches retain separate PSF attribution",
+      "affected_canonical_families": [
+        "gbk",
+        "gb18030"
+      ],
+      "proposed_license": "Unicode-3.0 per official Unicode Data Files default scope; no specific contrary license in inspected mapping file",
+      "notice_file": "MAPPING-UPSTREAM-NOTICES.txt"
+    },
+    {
+      "name": "CP949",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP949.TXT",
+      "sha256": "f57e6fef9d1ed44f445e319a8e1b879ce6b6064520ab571c341e47b892e32abc",
+      "local_original": "/private/tmp/a05-upstream-CP949.TXT",
+      "source_chain": "CPython3.14.7 Tools/unicode/genmap_* references this official mapping path; CPython algorithms/patches retain separate PSF attribution",
+      "affected_canonical_families": [
+        "cp949",
+        "euc_kr",
+        "johab",
+        "iso2022_kr"
+      ],
+      "proposed_license": "Unicode-3.0 per official Unicode Data Files default scope; no specific contrary license in inspected mapping file",
+      "notice_file": "MAPPING-UPSTREAM-NOTICES.txt"
+    },
+    {
+      "name": "CP950",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP950.TXT",
+      "sha256": "ed403857b05e07ecd5667c7eff6b25898cb1fefe2d06cfe718d82d631e6058b6",
+      "local_original": "/private/tmp/a05-upstream-CP950.TXT",
+      "source_chain": "CPython3.14.7 Tools/unicode/genmap_* references this official mapping path; CPython algorithms/patches retain separate PSF attribution",
+      "affected_canonical_families": [
+        "cp950"
+      ],
+      "proposed_license": "Unicode-3.0 per official Unicode Data Files default scope; no specific contrary license in inspected mapping file",
+      "notice_file": "MAPPING-UPSTREAM-NOTICES.txt"
+    },
+    {
+      "name": "BIG5",
+      "url": "https://www.unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/OTHER/BIG5.TXT",
+      "sha256": "d1b60c58a1d327918f1616a620162c60ad2079a229ee42a73488f186e11f3aac",
+      "local_original": "/private/tmp/a05-upstream-BIG5.TXT",
+      "source_chain": "CPython3.14.7 Tools/unicode/genmap_* references this official mapping path; CPython algorithms/patches retain separate PSF attribution",
+      "affected_canonical_families": [
+        "big5"
+      ],
+      "proposed_license": "Unicode-3.0 per official Unicode Data Files default scope; no specific contrary license in inspected mapping file",
+      "notice_file": "MAPPING-UPSTREAM-NOTICES.txt"
+    },
+    {
+      "name": "JIS0208",
+      "url": "https://www.unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/JIS/JIS0208.TXT",
+      "sha256": "1c571870457f19c97720631fa83ee491549a96ba1436da1296786a67d8632e87",
+      "local_original": "/private/tmp/a05-upstream-JIS0208.TXT",
+      "source_chain": "CPython3.14.7 Tools/unicode/genmap_* references this official mapping path; CPython algorithms/patches retain separate PSF attribution",
+      "affected_canonical_families": [
+        "euc_jp",
+        "shift_jis",
+        "ISO2022 JIS0208 designations"
+      ],
+      "proposed_license": "Unicode-3.0 per official Unicode Data Files default scope; no specific contrary license in inspected mapping file",
+      "notice_file": "MAPPING-UPSTREAM-NOTICES.txt"
+    },
+    {
+      "name": "JIS0212",
+      "url": "https://www.unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/JIS/JIS0212.TXT",
+      "sha256": "477820bb3055bbcc90880d788cd95607d221dc94457bae249231adecf13c12e6",
+      "local_original": "/private/tmp/a05-upstream-JIS0212.TXT",
+      "source_chain": "CPython3.14.7 Tools/unicode/genmap_* references this official mapping path; CPython algorithms/patches retain separate PSF attribution",
+      "affected_canonical_families": [
+        "euc_jp",
+        "ISO2022 JIS0212 designations"
+      ],
+      "proposed_license": "Unicode-3.0 per official Unicode Data Files default scope; no specific contrary license in inspected mapping file",
+      "notice_file": "MAPPING-UPSTREAM-NOTICES.txt"
+    },
+    {
+      "name": "GB18030 ICU original",
+      "url": "https://raw.githubusercontent.com/unicode-org/icu-data/bae5ca647fa41703393dbf00240ec1b807a9c353/charset/data/xml/gb-18030-2000.xml",
+      "sha256": "a0eccd5460cff9d5ea32194369971286c11af80fb1b09c4d9d77ff046e22b5cc",
+      "cpython_source_sha256": "47350d44c6db23e0f0c9e9f4a1bf2e966369f52357fd01425bc06b9aaf83f943",
+      "exact_byte_relationship": "CPython file equals immutable official ICU file plus one trailing LF; both raw hashes retained",
+      "affected_canonical_families": [
+        "gb18030",
+        "gb18030_ranges.rs"
+      ],
+      "proposed_license": "Unicode-3.0 with full LICENSE-ICU-DATA including legacy ICU notice retained; scoped parent review pending",
+      "notice_file": "LICENSE-ICU-DATA"
+    }
+  ],
+  "additional_notices": [
+    "MAPPING-SOURCE-NOTICES.txt",
+    "PYTHON-SOURCE-NOTICES.txt",
+    "CJK-MAPPING-NOTICES.txt"
+  ],
+  "hkscs": "Separate independently approved WHATWG/ICU manifest provenance/hkscs/manifest.json; not derived from HK government mapping",
+  "single_byte_referenced_official_mappings": [
+    {
+      "canonical": "cp037",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/EBCDIC/CP037.TXT",
+      "sha256": "794ec1593c5bc95c2df9efb388ba8943b770db163a1076002cde647a268566b1",
+      "local_original": "/private/tmp/a05-single-map-cp037.TXT",
+      "original_header_sha256": "2e7f816cf5265e617712f17adb22ac05ae42efa625020703c4c136e5987c80c5",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file default scope; no contrary per-file grant/restriction in inspected full comment preface"
+    },
+    {
+      "canonical": "cp1026",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/EBCDIC/CP1026.TXT",
+      "sha256": "b400aa5868fadd78e335e0abb4d57e589da899719e9c238dd469fb4780cc79b5",
+      "local_original": "/private/tmp/a05-single-map-cp1026.TXT",
+      "original_header_sha256": "764e384780266d176f2d3775dec2a856765446208eda861e6b20b957221a8371",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file default scope; no contrary per-file grant/restriction in inspected full comment preface"
+    },
+    {
+      "canonical": "cp1250",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP1250.TXT",
+      "sha256": "e6535e3c81f4aff1a4b369c46e588a2423d6a75da341e01a6cea108c7542c19a",
+      "local_original": "/private/tmp/a05-single-map-cp1250.TXT",
+      "original_header_sha256": "f6763d4b001323b12139cdf0c826f150ec422340f33a5c0e41af8697235dc7fa",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file default scope; no contrary per-file grant/restriction in inspected full comment preface"
+    },
+    {
+      "canonical": "cp1251",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP1251.TXT",
+      "sha256": "d9d491808bd7956c26ef8ed07fa63015bfab32860720e07d5bf3a64a609927ee",
+      "local_original": "/private/tmp/a05-single-map-cp1251.TXT",
+      "original_header_sha256": "c2926caea62eb6b58343e952098c533a7328f5e530597a9b032da95528f10442",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file default scope; no contrary per-file grant/restriction in inspected full comment preface"
+    },
+    {
+      "canonical": "cp1252",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP1252.TXT",
+      "sha256": "f607ae328b4dff5e9bfef725f5fff0ae23f38797f8a5b95998a0d2735c0e8fad",
+      "local_original": "/private/tmp/a05-single-map-cp1252.TXT",
+      "original_header_sha256": "62ecf87a0524c0bcca0938e06ace21acfd2ac4c647a4486750806b41b0b9b8ae",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file default scope; no contrary per-file grant/restriction in inspected full comment preface"
+    },
+    {
+      "canonical": "cp1253",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP1253.TXT",
+      "sha256": "85d917854926ef09b22abefd19c7b61494e229fa391b648dc332f1fac0879ce3",
+      "local_original": "/private/tmp/a05-single-map-cp1253.TXT",
+      "original_header_sha256": "3900b2bf2684a0cf3e4b62085cb3bce6a667dec8e71ec101482c08a9efd2baea",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file default scope; no contrary per-file grant/restriction in inspected full comment preface"
+    },
+    {
+      "canonical": "cp1254",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP1254.TXT",
+      "sha256": "f93569399f81abce90441793c118d2524770b58d9c5774de3233c64d88c9fca0",
+      "local_original": "/private/tmp/a05-single-map-cp1254.TXT",
+      "original_header_sha256": "2514eadc0f050e14d145bf3453b7bc84755721f78c1a3016024da2b56f41f9f7",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file default scope; no contrary per-file grant/restriction in inspected full comment preface"
+    },
+    {
+      "canonical": "cp1255",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP1255.TXT",
+      "sha256": "67ab4e3e7c088be41e0f230fa9c2c5b9a803395bec8027a5ee77df74432290c7",
+      "local_original": "/private/tmp/a05-single-map-cp1255.TXT",
+      "original_header_sha256": "f88049e036e4189696a2ee1d1ac1f924306a0560e38917b11b2de20f38a351cd",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file default scope; no contrary per-file grant/restriction in inspected full comment preface"
+    },
+    {
+      "canonical": "cp1256",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP1256.TXT",
+      "sha256": "fd5835c5e3be668d4fa3dc3d0d3a6491795646fc9629c0892f45dd08aa72f367",
+      "local_original": "/private/tmp/a05-single-map-cp1256.TXT",
+      "original_header_sha256": "70e65e8ae600fc7a6221e953cd4d8dc3fbd00f76a0ba0dade534d7674133419f",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file default scope; no contrary per-file grant/restriction in inspected full comment preface"
+    },
+    {
+      "canonical": "cp1257",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP1257.TXT",
+      "sha256": "5ac72f382ea4f64fe61854e0dae7d311583bd1dd20797697d4dce32b175a268b",
+      "local_original": "/private/tmp/a05-single-map-cp1257.TXT",
+      "original_header_sha256": "679d760a70f9794a73a5489f710a7e7edc5bb0a2c0884c22f481bc48f8087f66",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file default scope; no contrary per-file grant/restriction in inspected full comment preface"
+    },
+    {
+      "canonical": "cp1258",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP1258.TXT",
+      "sha256": "2457d5d0fbb1d444136c579edc488d0a34474d58a36b6eb2adacba88c068df2e",
+      "local_original": "/private/tmp/a05-single-map-cp1258.TXT",
+      "original_header_sha256": "14f11ca7436c0425997c64b1731c8b4cdec1af47e4f4e34d9aec030fe0a40da3",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file default scope; no contrary per-file grant/restriction in inspected full comment preface"
+    },
+    {
+      "canonical": "cp424",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MISC/CP424.TXT",
+      "sha256": "9326c2d29419aa2ecccc0e22a96acf87b92bd00f0f7e832896b5f684c561431e",
+      "local_original": "/private/tmp/a05-single-map-cp424.TXT",
+      "original_header_sha256": "478060c388e88afe8c2a79184b7971fc803943531ce5981326fb06d7b3d637a1",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Specific legacy Unicode mapping grant permits use of information in Unicode-supporting products and copies with original notice attached; exact grant retained. Do not label historical grant MIT or silently replace it with modern Unicode3 text."
+    },
+    {
+      "canonical": "cp437",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/PC/CP437.TXT",
+      "sha256": "6bad4dabcdf5940227c7d81fab130dcb18a77850b5d79de28b5dc4e047b0aaac",
+      "local_original": "/private/tmp/a05-single-map-cp437.TXT",
+      "original_header_sha256": "a1a212eddd8b724a1a640532d2e60c853ccaf363cf11fcb921f0c8bb0a9a2c0c",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file default scope; no contrary per-file grant/restriction in inspected full comment preface"
+    },
+    {
+      "canonical": "cp500",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/EBCDIC/CP500.TXT",
+      "sha256": "b7c0a76359e222e5b51045d9c591b682b8d7a23a5629d909dc663d34daf2fcf0",
+      "local_original": "/private/tmp/a05-single-map-cp500.TXT",
+      "original_header_sha256": "959e7cb2d77aebc233114290ce57825c69a2d9653b3677c451946c4a601d577e",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file default scope; no contrary per-file grant/restriction in inspected full comment preface"
+    },
+    {
+      "canonical": "cp775",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/PC/CP775.TXT",
+      "sha256": "3853eeb4f9bd2d760ba616dd857646efa653549d1532e7bce509f7fda65e470b",
+      "local_original": "/private/tmp/a05-single-map-cp775.TXT",
+      "original_header_sha256": "94cc70c17a263efc1a4880eb0bb620f481e5ff87e36a33d68ca923a1be92860e",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file default scope; no contrary per-file grant/restriction in inspected full comment preface"
+    },
+    {
+      "canonical": "cp850",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/PC/CP850.TXT",
+      "sha256": "ffdcc3c1c72f1aef600a63547100ef3dc452a09ad84923d382085519751c7479",
+      "local_original": "/private/tmp/a05-single-map-cp850.TXT",
+      "original_header_sha256": "e57d15723a2feb1a25740db1e3ec20c7f67ef48464b00309704e63e6c225cf4e",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file default scope; no contrary per-file grant/restriction in inspected full comment preface"
+    },
+    {
+      "canonical": "cp852",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/PC/CP852.TXT",
+      "sha256": "440d098e9f2b79eeacbe2bbc1814960b6554c885740615047f5b528c2947afb6",
+      "local_original": "/private/tmp/a05-single-map-cp852.TXT",
+      "original_header_sha256": "2654b4ef32fb254d4d9e2a6372a1726cc85662b28458dee52e2285abba8f0dcd",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file default scope; no contrary per-file grant/restriction in inspected full comment preface"
+    },
+    {
+      "canonical": "cp855",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/PC/CP855.TXT",
+      "sha256": "b77ca096db4ff4fb1323c33804271575ce15d778c8b983f28405438e73ca5925",
+      "local_original": "/private/tmp/a05-single-map-cp855.TXT",
+      "original_header_sha256": "4dbca410d90c87a5438a2792f5f8f2f7733ba8577aa7ce40b92743325c1eef25",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file default scope; no contrary per-file grant/restriction in inspected full comment preface"
+    },
+    {
+      "canonical": "cp857",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/PC/CP857.TXT",
+      "sha256": "6396619b918ce2fe3c366630e5652b25153bbd4bb01c8109ba8f7ed8a261658d",
+      "local_original": "/private/tmp/a05-single-map-cp857.TXT",
+      "original_header_sha256": "d6c8212157e58d7f6388fcc2e60fef241bde4a0a0c92bd35c3080442fe5e1fca",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file default scope; no contrary per-file grant/restriction in inspected full comment preface"
+    },
+    {
+      "canonical": "cp860",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/PC/CP860.TXT",
+      "sha256": "1b3f983eac02d9ae9fc28106f2f3476ca1e4b337c7287f1a004372e14dd11e6a",
+      "local_original": "/private/tmp/a05-single-map-cp860.TXT",
+      "original_header_sha256": "411aac091c821d3c8dec073f5b75309b85f20bca41300635fe154838901e0df0",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file default scope; no contrary per-file grant/restriction in inspected full comment preface"
+    },
+    {
+      "canonical": "cp861",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/PC/CP861.TXT",
+      "sha256": "51c7f3ef5a435e69637237be2a414aef8dfc4f891365b686ff8d56b681f32074",
+      "local_original": "/private/tmp/a05-single-map-cp861.TXT",
+      "original_header_sha256": "7294adadaf5a756eba9ad7b34c6dfd7758b385d2964511af3773af76ce79c428",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file default scope; no contrary per-file grant/restriction in inspected full comment preface"
+    },
+    {
+      "canonical": "cp862",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/PC/CP862.TXT",
+      "sha256": "054c7d796da8c57a437955948e156077f3cc1b85c8f240fc375150fea89b438a",
+      "local_original": "/private/tmp/a05-single-map-cp862.TXT",
+      "original_header_sha256": "f49b25b303ac0abd417d331abaa18e29bacc5710349a4416bf2cc1e8f1c57400",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file default scope; no contrary per-file grant/restriction in inspected full comment preface"
+    },
+    {
+      "canonical": "cp863",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/PC/CP863.TXT",
+      "sha256": "f467a2a652ce3f74bb3fa86c8767dd06cbde90edfb73bf3a5541ae4cbe806d7b",
+      "local_original": "/private/tmp/a05-single-map-cp863.TXT",
+      "original_header_sha256": "a8d7a403f61bf8483fce70fde43351d9338daf2c462b4b3770b17fbe1a3d8808",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file default scope; no contrary per-file grant/restriction in inspected full comment preface"
+    },
+    {
+      "canonical": "cp864",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/PC/CP864.TXT",
+      "sha256": "113a62a7cdaba406cdf4091cf1f1e794387ee09a4d53f33b01c1178c35ec4f1b",
+      "local_original": "/private/tmp/a05-single-map-cp864.TXT",
+      "original_header_sha256": "5b33411ae49c7fff9df2172457f54dcadc929f0011883fb0d05cda84871c8185",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file default scope; no contrary per-file grant/restriction in inspected full comment preface"
+    },
+    {
+      "canonical": "cp865",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/PC/CP865.TXT",
+      "sha256": "e31eeb03a39a5fbdd5e23de60a22af4219c9987de2088386855ab20f273f470a",
+      "local_original": "/private/tmp/a05-single-map-cp865.TXT",
+      "original_header_sha256": "c6720a11dbd85caefe40d3c4c141078210afc4f655d925aa8479c2bc5533f8d0",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file default scope; no contrary per-file grant/restriction in inspected full comment preface"
+    },
+    {
+      "canonical": "cp866",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/PC/CP866.TXT",
+      "sha256": "abcc96dd4253321eb5e542c1ece3adab10df0cc20ec5d1124a0cec22d636c924",
+      "local_original": "/private/tmp/a05-single-map-cp866.TXT",
+      "original_header_sha256": "8b9087b745d7afa9ea8ddddb55285589631c5df3cf9c4c8e6f3f8ca57b9c2a12",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file default scope; no contrary per-file grant/restriction in inspected full comment preface"
+    },
+    {
+      "canonical": "cp869",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/PC/CP869.TXT",
+      "sha256": "a98207634e459cbfe895e98a5e58c4f787283191d9cbfb977fec3207a2d85203",
+      "local_original": "/private/tmp/a05-single-map-cp869.TXT",
+      "original_header_sha256": "7d2c778bca11db27a6af665313e4ebf549808cd9371b78c0bdbc1039f6e4c90c",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file default scope; no contrary per-file grant/restriction in inspected full comment preface"
+    },
+    {
+      "canonical": "cp874",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP874.TXT",
+      "sha256": "f45277e205ff5aa8f0625c52b04614bbd9d8836c142e9b90235748b0a9921ec9",
+      "local_original": "/private/tmp/a05-single-map-cp874.TXT",
+      "original_header_sha256": "6a0ca240eecc11431588249a20d5393f75bccf2ec54191ef213bae261828966c",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file default scope; no contrary per-file grant/restriction in inspected full comment preface"
+    },
+    {
+      "canonical": "iso8859-6",
+      "url": "https://www.unicode.org/Public/MAPPINGS/ISO8859/8859-6.TXT",
+      "sha256": "7012241bd7143a3bf98861e497cd3cc092edebc3e063fc7d576420f22d22f11e",
+      "local_original": "/private/tmp/a05-single-map-iso8859-6.TXT",
+      "original_header_sha256": "616a395bb72cbcc3e876f4fb4952d125b72584e05ca4214233ea5347cd791268",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 via explicit per-file Unicode terms reference; original copyright/header retained"
+    },
+    {
+      "canonical": "cp1006",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MISC/CP1006.TXT",
+      "sha256": "43e9ef242a3bff8860176b06d114467f13e6b83797c38be48a8f1ff822b957ef",
+      "local_original": "/private/tmp/a05-single-map-cp1006.TXT",
+      "original_header_sha256": "68578d9435f4a3b64ace07f2a069b2ddb473e306bd4e521e78e341c068ec14ff",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Specific legacy Unicode mapping grant permits use of information in Unicode-supporting products and copies with original notice attached; exact grant retained. Do not label historical grant MIT or silently replace it with modern Unicode3 text."
+    },
+    {
+      "canonical": "cp737",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/PC/CP737.TXT",
+      "sha256": "9bf9ffe61e03bdeecd68e806e12af562fd638285a8f0fbabc8fc9cd137d65fbf",
+      "local_original": "/private/tmp/a05-single-map-cp737.TXT",
+      "original_header_sha256": "29c651c2d6f9e7eabaa9e12777ac9e2ec97d04a086d19d01e9e14be5e1a158dc",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file default scope; no contrary per-file grant/restriction in inspected full comment preface"
+    },
+    {
+      "canonical": "cp856",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MISC/CP856.TXT",
+      "sha256": "e7e019a3d8eb00174aca1a0e4c3c062932c3f3d896fb7f758985ad75b689ff11",
+      "local_original": "/private/tmp/a05-single-map-cp856.TXT",
+      "original_header_sha256": "f382818c6a0acbc6390992e892292c2cfac439c91b8d5baba110d8d7bed3d0cc",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Specific legacy Unicode mapping grant permits use of information in Unicode-supporting products and copies with original notice attached; exact grant retained. Do not label historical grant MIT or silently replace it with modern Unicode3 text."
+    },
+    {
+      "canonical": "cp875",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/EBCDIC/CP875.TXT",
+      "sha256": "3a68a8705bd680dd113887784c110dc464b6212d96ed688fe57997b27092200f",
+      "local_original": "/private/tmp/a05-single-map-cp875.TXT",
+      "original_header_sha256": "70148b069c99db71a705691cff6094066ae3c71baaf2207bc83f73ae3b33439b",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file default scope; no contrary per-file grant/restriction in inspected full comment preface"
+    },
+    {
+      "canonical": "iso8859-2",
+      "url": "https://www.unicode.org/Public/MAPPINGS/ISO8859/8859-2.TXT",
+      "sha256": "020946e114335b17e7d29fe8a8449786cffed714cf409b11d0b3a375197188d1",
+      "local_original": "/private/tmp/a05-single-map-iso8859-2.TXT",
+      "original_header_sha256": "3af634863a3e21243d728b54ebcbbadf0bc11473ed0dff0183e6e3855eed2b80",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 via explicit per-file Unicode terms reference; original copyright/header retained"
+    },
+    {
+      "canonical": "iso8859-3",
+      "url": "https://www.unicode.org/Public/MAPPINGS/ISO8859/8859-3.TXT",
+      "sha256": "23b2d7815946cb1232c71a1543033afc396c750ffa19a3771662cf23e6194552",
+      "local_original": "/private/tmp/a05-single-map-iso8859-3.TXT",
+      "original_header_sha256": "2e3cc03d34db8bb0401b5df07d33bb704c554632f00fd38ec8c9aa5980d85a63",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 via explicit per-file Unicode terms reference; original copyright/header retained"
+    },
+    {
+      "canonical": "iso8859-4",
+      "url": "https://www.unicode.org/Public/MAPPINGS/ISO8859/8859-4.TXT",
+      "sha256": "e717699903bef2144234279a598ce39b44502942c9cc23a2ce2069a65f46b00d",
+      "local_original": "/private/tmp/a05-single-map-iso8859-4.TXT",
+      "original_header_sha256": "d87bae263e256a72a7a4ac81d883de83b832c70d6d57d0267659b40937b47f79",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 via explicit per-file Unicode terms reference; original copyright/header retained"
+    },
+    {
+      "canonical": "iso8859-9",
+      "url": "https://www.unicode.org/Public/MAPPINGS/ISO8859/8859-9.TXT",
+      "sha256": "4397082eb5cbbc299264b3b73405cc0946ec5c79328eb9de75f8a5da1ab8e712",
+      "local_original": "/private/tmp/a05-single-map-iso8859-9.TXT",
+      "original_header_sha256": "c1bd40bfffd24a4748c13286cc8cf749ffa77bf94e7fd5e87d4db38f10d5550f",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 via explicit per-file Unicode terms reference; original copyright/header retained"
+    },
+    {
+      "canonical": "iso8859-10",
+      "url": "https://www.unicode.org/Public/MAPPINGS/ISO8859/8859-10.TXT",
+      "sha256": "3441c37377c6721586255282ef4302c0ca61796674361959b3a2591f823a0e67",
+      "local_original": "/private/tmp/a05-single-map-iso8859-10.TXT",
+      "original_header_sha256": "72a121a8809d01aea55e2d98088c29efcb48861525888f01106c58427900c909",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 via explicit per-file Unicode terms reference; original copyright/header retained"
+    },
+    {
+      "canonical": "iso8859-5",
+      "url": "https://www.unicode.org/Public/MAPPINGS/ISO8859/8859-5.TXT",
+      "sha256": "9a2efea39673f95c5daa277c46ad09a41e95f27c225270424a604d033db9bd8f",
+      "local_original": "/private/tmp/a05-single-map-iso8859-5.TXT",
+      "original_header_sha256": "b9eb1122825c1cba0c52bb36a9c948cb0613aeaa86055f64a96b987b55afd7b9",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 via explicit per-file Unicode terms reference; original copyright/header retained"
+    },
+    {
+      "canonical": "iso8859-7",
+      "url": "https://www.unicode.org/Public/MAPPINGS/ISO8859/8859-7.TXT",
+      "sha256": "94f4a1c89ba6b2e1c1f8b30676cb5d15f232dbac36ae4ad20018a65e0f3fb9a3",
+      "local_original": "/private/tmp/a05-single-map-iso8859-7.TXT",
+      "original_header_sha256": "a7bebd1123963aadfe270c6bcf16b73b9e32a96c8ea835238297c402a3c20106",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 via explicit per-file Unicode terms reference; original copyright/header retained"
+    },
+    {
+      "canonical": "iso8859-8",
+      "url": "https://www.unicode.org/Public/MAPPINGS/ISO8859/8859-8.TXT",
+      "sha256": "cbe3205c5c6f92589d6a8673d56c51d89659ae290185457e6e2f81fee7a1ad2d",
+      "local_original": "/private/tmp/a05-single-map-iso8859-8.TXT",
+      "original_header_sha256": "88a5600d969ec13d78b886224edd863f50a5ec29f30107f568ee44f73ea9c38b",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 via explicit per-file Unicode terms reference; original copyright/header retained"
+    },
+    {
+      "canonical": "koi8-r",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MISC/KOI8-R.TXT",
+      "sha256": "83d73a3884a33784fc4a6b3711067ff3ea2c606b5d2e72cb326ad857d973363c",
+      "local_original": "/private/tmp/a05-single-map-koi8-r.TXT",
+      "original_header_sha256": "5b63ca6c31dcbf13eef7309d9e9d03bebb2c83be887f4349818b59c247baa697",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 via explicit per-file Unicode terms reference; original copyright/header retained"
+    },
+    {
+      "canonical": "iso8859-11",
+      "url": "https://www.unicode.org/Public/MAPPINGS/ISO8859/8859-11.TXT",
+      "sha256": "a6c8891b5e43bbcf55ac356b0a31be8c8322a09fba183b7b7507e9252587bc13",
+      "local_original": "/private/tmp/a05-single-map-iso8859-11.TXT",
+      "original_header_sha256": "51a6b40267b7f17f6b4b85263be022bea9039a87dc19a58ef2a02de52c937550",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 via explicit per-file Unicode terms reference; original copyright/header retained"
+    },
+    {
+      "canonical": "iso8859-13",
+      "url": "https://www.unicode.org/Public/MAPPINGS/ISO8859/8859-13.TXT",
+      "sha256": "375cc8d45b331c29e5630bf5c821c85572ffba60487d4d279341bbd13f46750f",
+      "local_original": "/private/tmp/a05-single-map-iso8859-13.TXT",
+      "original_header_sha256": "f177b7f978a1a005ca98d753be935e7d40204650062481d97426cc81b765959b",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 via explicit per-file Unicode terms reference; original copyright/header retained"
+    },
+    {
+      "canonical": "iso8859-14",
+      "url": "https://www.unicode.org/Public/MAPPINGS/ISO8859/8859-14.TXT",
+      "sha256": "5e72e1c79b2907504111c0965953261c4584cb984465cd88d616452c12fd3782",
+      "local_original": "/private/tmp/a05-single-map-iso8859-14.TXT",
+      "original_header_sha256": "e944e71710f231b8c37ed339a63a9b405375f6401a9c66616d6b774dec2ea038",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 via explicit per-file Unicode terms reference; original copyright/header retained"
+    },
+    {
+      "canonical": "iso8859-15",
+      "url": "https://www.unicode.org/Public/MAPPINGS/ISO8859/8859-15.TXT",
+      "sha256": "bc72d7bd5be1d15bdad8e684f9ae9f573c361bb73812c3084ed1b7622a05e58f",
+      "local_original": "/private/tmp/a05-single-map-iso8859-15.TXT",
+      "original_header_sha256": "70ff6a246d9deb78b829458dfe3e95631e7b455ab1df5f6adf4cc1f50b6317e7",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 via explicit per-file Unicode terms reference; original copyright/header retained"
+    },
+    {
+      "canonical": "iso8859-16",
+      "url": "https://www.unicode.org/Public/MAPPINGS/ISO8859/8859-16.TXT",
+      "sha256": "9164ce844b2bf3f56805c2e9ab8453cc53868757e7f75c4b8dcee7376894d55c",
+      "local_original": "/private/tmp/a05-single-map-iso8859-16.TXT",
+      "original_header_sha256": "9162573aa7d42422014dba61ae633752ac26c8bf5e6bf46dd2205fc782ffefe8",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 via explicit per-file Unicode terms reference; original copyright/header retained"
+    },
+    {
+      "canonical": "kz1048",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MISC/KZ1048.TXT",
+      "sha256": "3be886500f845133e469f97841e0be5be1aaf0bdc44d6086c70399dce1097c60",
+      "local_original": "/private/tmp/a05-single-map-kz1048.TXT",
+      "original_header_sha256": "2d443bf79f4334a6e8b530192cbb232371278b13d3f5d1992580777e1fb4632c",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Specific legacy Unicode mapping grant permits use of information in Unicode-supporting products and copies with original notice attached; exact grant retained. Do not label historical grant MIT or silently replace it with modern Unicode3 text."
+    },
+    {
+      "canonical": "mac-arabic",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/ARABIC.TXT",
+      "sha256": "c66a997335e65f40aeee8fd63cd1d3b04b74ad50bf32fbf3e4d7214c9497d428",
+      "local_original": "/private/tmp/a05-single-map-mac-arabic.TXT",
+      "original_header_sha256": "7d8c155edbe0198c3c3320d4498a556528c84393c917edc91e1cdc963f2bcccb",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file scope; retain specific Apple copyright/disclaimer and companion ReadMe. No separate use/copy restriction identified in inspected notices."
+    },
+    {
+      "canonical": "mac-latin2",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/MAC/LATIN2.TXT",
+      "sha256": "2501534b546b56d2006ee6a5d907cb899aac1333035b0a44cbd89fd164ab4b37",
+      "local_original": "/private/tmp/a05-single-map-mac-latin2.TXT",
+      "original_header_sha256": "cdb69f4048d6b1ce2303b2278cfae7c2b16f46083b4b5a6807007112beefbf43",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file default scope; no contrary per-file grant/restriction in inspected full comment preface"
+    },
+    {
+      "canonical": "mac-croatian",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/CROATIAN.TXT",
+      "sha256": "cd3b6a79271664df7e4a935766906961bcfc6bf85cc8b9c877381a22044cf84e",
+      "local_original": "/private/tmp/a05-single-map-mac-croatian.TXT",
+      "original_header_sha256": "0d14adf2165ec7da6f6cbba62c71ae82b4f1b17aed61cb9ec21e9f0d66f7a324",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file scope; retain specific Apple copyright/disclaimer and companion ReadMe. No separate use/copy restriction identified in inspected notices."
+    },
+    {
+      "canonical": "mac-cyrillic",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/CYRILLIC.TXT",
+      "sha256": "092ca7d0fe584b3fde176af4f2a175ceeba07b4c1a1c0b472c2016a6c92eafcc",
+      "local_original": "/private/tmp/a05-single-map-mac-cyrillic.TXT",
+      "original_header_sha256": "dc4472894a66507207ea5b796f44ccbc0cbec105d695a66df9250800f3bbbdaf",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file scope; retain specific Apple copyright/disclaimer and companion ReadMe. No separate use/copy restriction identified in inspected notices."
+    },
+    {
+      "canonical": "mac-farsi",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/FARSI.TXT",
+      "sha256": "ae9ed45404c3ecf617fbd4a910717eabe5b811a2b216c5503410c42be3616bce",
+      "local_original": "/private/tmp/a05-single-map-mac-farsi.TXT",
+      "original_header_sha256": "95a7b8164d6f367b59a83dbee30721106e46e62829d1c61b7889dd42d1765a12",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file scope; retain specific Apple copyright/disclaimer and companion ReadMe. No separate use/copy restriction identified in inspected notices."
+    },
+    {
+      "canonical": "mac-greek",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/GREEK.TXT",
+      "sha256": "d57b3e0644a54f33396d53f3ca63a8483e96526de0d62be1dcd6eb40399a398e",
+      "local_original": "/private/tmp/a05-single-map-mac-greek.TXT",
+      "original_header_sha256": "e6a0c97bf8a8e269d77d7fb2f7387dfe66c773a255d9246b8e68647c1485d35a",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file scope; retain specific Apple copyright/disclaimer and companion ReadMe. No separate use/copy restriction identified in inspected notices."
+    },
+    {
+      "canonical": "mac-iceland",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/ICELAND.TXT",
+      "sha256": "39b8d242bd0995a3b9f205273f098c1ff9bab4505a213c4e0313a700e47f26ce",
+      "local_original": "/private/tmp/a05-single-map-mac-iceland.TXT",
+      "original_header_sha256": "9b5d7bf2297e5f8ffef1c7047e6365f7bc58471e11ee2e9e2479b43611c1d8aa",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file scope; retain specific Apple copyright/disclaimer and companion ReadMe. No separate use/copy restriction identified in inspected notices."
+    },
+    {
+      "canonical": "mac-roman",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/ROMAN.TXT",
+      "sha256": "18e571645be895e9553ed5c842ea8f65f9c5d3c9ccb43e66e0c33a132ed0d721",
+      "local_original": "/private/tmp/a05-single-map-mac-roman.TXT",
+      "original_header_sha256": "ae78a3dead02a0de13deb67024183acb1f4b64b0efad65cd958d38caa25dbf17",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file scope; retain specific Apple copyright/disclaimer and companion ReadMe. No separate use/copy restriction identified in inspected notices."
+    },
+    {
+      "canonical": "mac-romanian",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/ROMANIAN.TXT",
+      "sha256": "a05436e00507e757e8badb5d582985b3c9d765b07609c2aeae9033dcfa02f43a",
+      "local_original": "/private/tmp/a05-single-map-mac-romanian.TXT",
+      "original_header_sha256": "4248e73ce9edb6da98d2fc7a4d70f93246c49798618dea0a422cdd58d8b705f3",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file scope; retain specific Apple copyright/disclaimer and companion ReadMe. No separate use/copy restriction identified in inspected notices."
+    },
+    {
+      "canonical": "mac-turkish",
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/TURKISH.TXT",
+      "sha256": "afce027def8db108de0607a76f1aae00787a4b2c7a44f68a359d9053c50a30bf",
+      "local_original": "/private/tmp/a05-single-map-mac-turkish.TXT",
+      "original_header_sha256": "7b5534e700007cc084de8af2c43d7261ef34704083976c043d4ddafd635ab1ca",
+      "notice_file": "MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "source_chain": "Exact mapping path named by corresponding CPython3.14.7 codec header; PSF transformations/patches are separately attributed",
+      "proposed_reuse_basis": "Unicode-3.0 official Public data-file scope; retain specific Apple copyright/disclaimer and companion ReadMe. No separate use/copy restriction identified in inspected notices."
+    }
+  ],
+  "single_byte_other_sources": [
+    {
+      "canonical": "cp1125",
+      "basis": "CPython source codec file under retained PSF root; no independent mapping source or contrary notice named in file"
+    },
+    {
+      "canonical": "cp858",
+      "basis": "CPython PSF implementation explicitly modified from cp850; underlying cp850 official Unicode source separately listed"
+    },
+    {
+      "canonical": "cp1140",
+      "basis": "Local CPython mapping CP1140.TXT contains explicit PSF contributor agreement plus legacy Unicode notice; full original notice retained"
+    },
+    {
+      "canonical": "cp273",
+      "basis": "Local CPython mapping CP273.TXT has no file-specific notice; root PSF source permission basis; source hash recorded"
+    },
+    {
+      "canonical": "hp-roman8",
+      "basis": "Native mapping independently derived from pinned ICU UCM; parent verified all256 source points, original licenses and negative input checks; provenance/singlebyte-icu/manifest.json. Historical Python observations are not native generator input.",
+      "historical_basis": "CPython header identifies Keld Simonsen charmaps and HP LaserJet IIP manual and explicitly says Used with permission; complete prelude retained. Exact original permission scope not independently recaptured; parent review required."
+    },
+    {
+      "canonical": "ptcp154",
+      "basis": "CPython header retains Marc-Andre Lemburg/CNRI/Guido copyrights, covered by complete retained Python historical license stack; no separate upstream grant in file"
+    },
+    {
+      "canonical": "cp720",
+      "basis": "CPython source says generated on Windows Vista by Tools/unicode/genwincodec.py720; source code/root PSF attribution retained; no external mapping document copied"
+    },
+    {
+      "canonical": "koi8-t",
+      "basis": "Native mapping independently derived from pinned ICU UCM; parent verified all256 source points, original licenses and negative input checks; provenance/singlebyte-icu/manifest.json. Historical Python observations are not native generator input.",
+      "historical_basis": "CPython source file under root PSF links Apple libiconv test mapping and Wikipedia; neither separate upstream permission nor original data-file notice is established by that pointer. Parent review/source-chain determination required; no new license assumption made."
+    },
+    {
+      "canonical": "tis-620",
+      "basis": "Local CPython TIS-620 mapping retains contributor agreement and explicit legacy Unicode source grant; full original notice retained"
+    },
+    {
+      "canonical": "koi8-u",
+      "basis": "Local CPython KOI8-U mapping retains contributor agreement and explicit legacy Unicode source grant; full original notice retained"
+    },
+    {
+      "canonical": "palmos",
+      "basis": "CPython source attributes Sjoerd Mullender and ISO8859-15 base; root PSF and separately listed Unicode ISO8859-15 source notices retained"
+    }
+  ],
+  "single_byte_inventory_count": 69,
+  "apple_companion": {
+    "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/ReadMe.txt",
+    "sha256": "238758a906d84ec9bd2c5934738768ea96a9c9f9b1a7465741720cdf3ca48391",
+    "local_original": "/private/tmp/a05-apple-mapping-ReadMe.txt",
+    "observed": "copyright/trademarks/disclaimer and technical mapping discussion; official directory explicitly links Unicode terms for all contents; no additional license restriction identified",
+    "directory": "https://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/"
+  }
+}

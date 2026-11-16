@@ -1,0 +1,102 @@
+
+#[tokio::test]
+async fn actual_worst_escaping_maximum_batch_raw_http_characterization() {
+    for granted in [true] {
+        let server = w05_support::Server::start();
+        let engine = Arc::new(FixtureEngine(0.into()));
+        let deps = search_support::dependencies(vec![("brave", engine.clone())]);
+        let policy = deps.policy.clone();
+        let search = SearchService::new(SearchConfig::default(), deps).unwrap();
+        let store = SavedStore::new(
+            Arc::new(server.store()),
+            TenantId::new("tenant:wire").unwrap(),
+        );
+        let authority = Arc::new(StaticSavedAuthority {
+            search: policy.clone(),
+            saved_granted: true,
+            auth_configured: BTreeMap::from([("brave".into(), false)]),
+            limits: SavedLimits::default(),
+        });
+        let publisher = EventPublisher {
+            limits: EventLimits::default(),
+            authority: Arc::new(StaticEventAuthority {
+                search: policy,
+                events_granted: granted,
+                saved_granted: true,
+            }),
+            observer: Arc::new(NoopEventObserver),
+        };
+        let principal =
+            EventPrincipal::new(store.tenant().clone(), "trusted-fixture-subject".into()).unwrap();
+        let events = EventService::new(store.clone(), &principal, publisher);
+        let registry =
+            SavedEventRegistry::new(events, search.clone(), authority, Duration::from_secs(2))
+                .unwrap();
+        let cancel = CancellationToken::new();
+        let router = http_router(registry.clone(), cancel.clone());
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        assert!(address.ip().is_loopback());
+        let url = format!("http://{address}/mcp");
+        let parsed = url::Url::parse(&url).unwrap();
+        assert_eq!(parsed.scheme(), "http");
+        assert_eq!(parsed.host_str(), Some("127.0.0.1"));
+        assert_eq!(parsed.port(), Some(address.port()));
+        let shutdown = cancel.clone();
+        let host = tokio::spawn(async move {
+            axum::serve(listener, router)
+                .with_graceful_shutdown(shutdown.cancelled_owned())
+                .await
+                .unwrap();
+        });
+        // no_proxy prevents inherited proxy settings from routing this fixture.
+        let http = reqwest::Client::builder()
+            .timeout(Duration::from_secs(10))
+            .no_proxy()
+            .redirect(reqwest::redirect::Policy::none())
+            .build()
+            .unwrap();
+
+
+        let mut connection=redis::Client::open(server.url.as_str()).unwrap().get_connection().unwrap();
+        let now=store.now().await.unwrap();
+        let stream=ssx_infra::valkey::keys::saved("events",store.tenant(),None).unwrap();
+        for (variant,pattern,escaped_bytes) in [("quote-backslash", "\"\\", 4), ("control-heavy", "\"\\\0\n\t\r", 16)] {
+        let _:usize=redis::cmd("DEL").arg(&stream).query(&mut connection).unwrap();
+        let mut expected=Vec::new();
+        for i in 0..100 {
+            let mut payload=ssx_json::json!({"event_id":format!("historic-{i}"),"event_type":"report_created","occurred_at":now,"_policy_engines":["brave"],"opaque":""});
+            let empty=ssx_infra::saved_events::codec::Event::from_payload(payload.clone()).unwrap().bytes().unwrap().len();
+            let budget=65536-empty;
+            let opaque=pattern.repeat(budget/escaped_bytes)+&"x".repeat(budget%escaped_bytes);
+            expected.push(opaque.clone());
+            payload["opaque"]=ssx_json::json!(opaque);
+            let event=ssx_infra::saved_events::codec::Event::from_payload(payload).unwrap();
+            let data=event.bytes().unwrap();assert_eq!(data.len(),65536);
+            let _:String=redis::cmd("XADD").arg(&stream).arg("*").arg("payload").arg(data).query(&mut connection).unwrap();
+        }
+        let init=http.post(&url).header("accept","application/json, text/event-stream").json(&json!({"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"w05-raw-batch","version":"1"}}})).send().await.unwrap();
+        assert!(init.status().is_success());let session=init.headers().get("mcp-session-id").cloned();let _=init.bytes().await.unwrap();
+        let mut ready=http.post(&url).header("accept","application/json, text/event-stream").header("mcp-protocol-version","2025-11-25").json(&json!({"jsonrpc":"2.0","method":"notifications/initialized"}));
+        if let Some(s)=&session {ready=ready.header("mcp-session-id",s);}
+        assert!(ready.send().await.unwrap().status().is_success());
+        let mut request=http.post(&url).header("accept","application/json, text/event-stream").header("mcp-protocol-version","2025-11-25").json(&json!({"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"slopsearx_read_saved_search_events","arguments":{"consumer_id":"raw-full-batch","limit":100}}}));
+        if let Some(s)=&session {request=request.header("mcp-session-id",s);}
+        let response=request.send().await.unwrap();assert!(response.status().is_success());let bytes=response.bytes().await.unwrap();
+        #[derive(serde::Deserialize)] struct Wire {result:WireResult}
+        #[derive(serde::Deserialize)] struct WireResult {content:Vec<WireText>,#[serde(rename="structuredContent")]structured:Box<serde_json::value::RawValue>}
+        #[derive(serde::Deserialize)] struct WireText {text:String}
+        #[derive(serde::Deserialize)] struct Batch {returned:usize,events:Vec<Box<serde_json::value::RawValue>>}
+        let wire:Wire=serde_json::from_slice(&bytes).unwrap();
+        let text:Batch=serde_json::from_str(&wire.result.content[0].text).unwrap();let structured:Batch=serde_json::from_str(wire.result.structured.get()).unwrap();
+        assert_eq!(text.returned,100);assert_eq!(structured.returned,100);assert_eq!(text.events.len(),100);assert_eq!(structured.events.len(),100);
+        for (index,(t,s)) in text.events.iter().zip(&structured.events).enumerate() {
+            let t:ssx_json::Value=ssx_json::from_str(t.get()).unwrap();let s:ssx_json::Value=ssx_json::from_str(s.get()).unwrap();assert_eq!(t,s);assert_eq!(t["opaque"].as_str().unwrap(),expected[index]);
+        }
+        assert!(bytes.len()>4*1024*1024);assert!(wire.result.content[0].text.len()>4*1024*1024);
+        assert!(ssx_json::from_slice::<ssx_json::Value>(&bytes).is_err());
+        println!("W05_MAX_BATCH_ESCAPING_CHARACTERIZATION:variant={variant};events=100;stored_event_bytes=65536;http_bytes={};text_bytes={};structured_bytes={};all_per_event_ssx_json_equal=true",bytes.len(),wire.result.content[0].text.len(),wire.result.structured.get().len());
+        }
+        registry.close().await;search.shutdown().await;cancel.cancel();tokio::time::timeout(Duration::from_secs(3),host).await.unwrap().unwrap();drop(connection);drop(registry);drop(store);drop(server);
+    }
+}

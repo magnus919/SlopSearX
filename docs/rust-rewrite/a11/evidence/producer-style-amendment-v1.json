@@ -1,0 +1,92 @@
+{
+  "purpose": "Current manual oracle style only, no new execution. Historical executed archives and all original captures unchanged.",
+  "created": 1792227447.3534532,
+  "analysis_python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "scope": "Split/sort contiguous stdlib imports, exact sha lambda\u2192def return expression, E402 guard-position comment. Backend imports and all other AST statement/order exact. No native runtime/hook exclusions.",
+  "prior_static_check": {
+    "actual_exit_code": 1,
+    "tool_observed_error": "unexpected producer AST/protocol change: capture_config_reachability.py",
+    "cause": "Ruff did not recognize isort-off with inline explanatory suffix and reordered backend imports; static comparison rejected it before any execution.",
+    "rejected_source_archive": "/private/tmp/a11-producer-style-amendment-v1/config-rejected-backend-order.py.txt",
+    "rejected_source_sha256": "45c21728755cdffb3114b9a1a6b71669ffed007077014cce99ec9d9901019f08",
+    "final_backend_order_repaired": true,
+    "rejected_candidate_never_executed": true
+  },
+  "normalizer_source": "/private/tmp/a11-producer-style-amendment-v1.py",
+  "normalizer_sha256": "2447a05471a62f859d8ef5a09c747216e7932587e3b41f9f5c05840c50b6dad2",
+  "commands": [
+    {
+      "command": [
+        "/Volumes/tank01/magnus/rust-builds/slopsearx/pre-commit-cache/repo7dgyo0vq/py_env-python3.12/bin/ruff",
+        "format",
+        "/Volumes/tank01/magnus/git/slopsearx-a11/docs/rust-rewrite/a11/capture_boundaries.py",
+        "/Volumes/tank01/magnus/git/slopsearx-a11/docs/rust-rewrite/a11/capture_supplement.py",
+        "/Volumes/tank01/magnus/git/slopsearx-a11/docs/rust-rewrite/a11/capture_representation.py",
+        "/Volumes/tank01/magnus/git/slopsearx-a11/docs/rust-rewrite/a11/capture_config_reachability.py"
+      ],
+      "actual_exit_code": 0,
+      "log": "/private/tmp/a11-producer-style-amendment-v1/final-0.log",
+      "sha256": "383df188576f1eee9b833e5e2f7d5d2f4b5a2c3a05e57a27613153e344923a48"
+    },
+    {
+      "command": [
+        "/Volumes/tank01/magnus/rust-builds/slopsearx/pre-commit-cache/repo7dgyo0vq/py_env-python3.12/bin/ruff",
+        "check",
+        "--no-cache",
+        "/Volumes/tank01/magnus/git/slopsearx-a11/docs/rust-rewrite/a11/capture_boundaries.py",
+        "/Volumes/tank01/magnus/git/slopsearx-a11/docs/rust-rewrite/a11/capture_supplement.py",
+        "/Volumes/tank01/magnus/git/slopsearx-a11/docs/rust-rewrite/a11/capture_representation.py",
+        "/Volumes/tank01/magnus/git/slopsearx-a11/docs/rust-rewrite/a11/capture_config_reachability.py"
+      ],
+      "actual_exit_code": 0,
+      "log": "/private/tmp/a11-producer-style-amendment-v1/final-1.log",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    }
+  ],
+  "rows": [
+    {
+      "path": "docs/rust-rewrite/a11/capture_boundaries.py",
+      "before_sha256": "2a50f3127c8f817f89da0f93f6ada35cf67c73760441f36ff8b9b74cebc34da8",
+      "current_producer_sha256": "a40b194073618a572307e610f9ce9092e8b947ccdcad3689ad31afec55dbdab2",
+      "patch_path": "/private/tmp/a11-producer-style-amendment-v1/capture_boundaries.py.final.patch",
+      "patch_sha256": "cd4bbd9e9948e39f44320b413b5255febb2c43c45948149505bc6d51ae760f73",
+      "literal_ast_equal": false,
+      "normalized_protocol_ast_equal": true,
+      "normalized_protocol_ast_sha256": "d975604a3b4425473a2f4cc3b0f0dce825c7edfe94bedd9fb3bbdd3cadd4a03f",
+      "executed_after_amendment": false
+    },
+    {
+      "path": "docs/rust-rewrite/a11/capture_supplement.py",
+      "before_sha256": "56c70f33381c94bb3a3e3f1b123998ede674d0bbfff6f5dbc0678edc505e74eb",
+      "current_producer_sha256": "a26345d493374be83dc0aec8483d82a17cc710ef8eb6b2ffe527c8017b93bdc7",
+      "patch_path": "/private/tmp/a11-producer-style-amendment-v1/capture_supplement.py.final.patch",
+      "patch_sha256": "5916b7f0fd5023f801f5a698abb7d0fec4c031d92d3bad6a78d2b946055497df",
+      "literal_ast_equal": false,
+      "normalized_protocol_ast_equal": true,
+      "normalized_protocol_ast_sha256": "b6aa6f74a0834f6541f31d9752c0e5ab96f99397ca18ce66444152988aaf4847",
+      "executed_after_amendment": false
+    },
+    {
+      "path": "docs/rust-rewrite/a11/capture_representation.py",
+      "before_sha256": "6b733fadb09e3574698a09ce5c88a0afff1afa2d7c41129cfbea9edfd1b6f500",
+      "current_producer_sha256": "b58150d657e1d2da021a197131ef778a5916cf0331aaa11e1aab45f1a047ecb9",
+      "patch_path": "/private/tmp/a11-producer-style-amendment-v1/capture_representation.py.final.patch",
+      "patch_sha256": "bb7231ffaec035dcae26c070fc73f510564d97bc46411e1a03d88fee1bacd5dc",
+      "literal_ast_equal": false,
+      "normalized_protocol_ast_equal": true,
+      "normalized_protocol_ast_sha256": "52e7d343eb54b6d8e85902fe9d0bcee974e7eebdf48104fc15230c50a1cdcb04",
+      "executed_after_amendment": false
+    },
+    {
+      "path": "docs/rust-rewrite/a11/capture_config_reachability.py",
+      "before_sha256": "689977208ea868b34d0a93065d1ff3fa0d8fb894e521c3e1a1c936e53e64ad32",
+      "current_producer_sha256": "e76ceedbd82f519fc3e974a885fe121f14ca403b3a36a0bb9f5ac17eb4c037df",
+      "patch_path": "/private/tmp/a11-producer-style-amendment-v1/capture_config_reachability.py.final.patch",
+      "patch_sha256": "0008c097d731753e518deabeb9e261afe7e8fb918730f9b4faeb9e515f86be8b",
+      "literal_ast_equal": false,
+      "normalized_protocol_ast_equal": true,
+      "normalized_protocol_ast_sha256": "04d2b8e58314e7231d0f877bcfad6db163c5dad70c1e67abf77c53b2ff78ec96",
+      "executed_after_amendment": false
+    }
+  ]
+}

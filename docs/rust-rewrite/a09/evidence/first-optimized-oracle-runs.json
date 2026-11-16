@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "kind": "actual manual offline source executions in optimized mode; never invoked by native gate",
+  "python": "3.14.7",
+  "unicode": "16.0.0",
+  "records": [
+    {
+      "producer_path": "docs/rust-rewrite/a09/oracle/export_source.py",
+      "producer_sha256": "eef0d23f5ad62e7cbf04dae25628b44ae89e8d9d25ea4e0414ca400aa508eb7e",
+      "command": [
+        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+        "-O",
+        "/Users/magnus/.codex/worktrees/rust-a09-media-adapters/SlopSearX/docs/rust-rewrite/a09/oracle/export_source.py"
+      ],
+      "start_utc": "2026-10-17T01:45:32.884191+00:00",
+      "end_utc": "2026-10-17T01:45:33.220450+00:00",
+      "exit_code": 0,
+      "wall_time_seconds": 0.33553741697687656,
+      "stdout_path": "docs/rust-rewrite/a09/evidence/export_source.py.optimized.stdout.txt",
+      "stdout_sha256": "89fcc63008a6770747da52d6855d841e08229542e18737bb81175b60c63754a3",
+      "outputs": [
+        {
+          "path": "docs/rust-rewrite/a09/source.json",
+          "sha256": "9a7c1e17ac900e9afef00dd4ef98402977bad42fd3b3d7e53ff26fa828fcbb87"
+        }
+      ]
+    },
+    {
+      "producer_path": "docs/rust-rewrite/a09/oracle/export_regressions.py",
+      "producer_sha256": "181891f1a87dbe9d8d6ef148d7e7349800a0001b349b2e9d8e5260bdcbf117b2",
+      "command": [
+        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+        "-O",
+        "/Users/magnus/.codex/worktrees/rust-a09-media-adapters/SlopSearX/docs/rust-rewrite/a09/oracle/export_regressions.py"
+      ],
+      "start_utc": "2026-10-17T01:45:33.220728+00:00",
+      "end_utc": "2026-10-17T01:45:34.784666+00:00",
+      "exit_code": 0,
+      "wall_time_seconds": 1.5635251250350848,
+      "stdout_path": "docs/rust-rewrite/a09/evidence/export_regressions.py.optimized.stdout.txt",
+      "stdout_sha256": "fd9c69f1fc62eb78d096204b8456e8a1a5053152116551f8096aded31bc364a9",
+      "outputs": [
+        {
+          "path": "docs/rust-rewrite/a09/regressions.json",
+          "sha256": "db6e77d08a31556c76a4386bdaaf9e994fff94bdf3c1275eb23724efe02b6839"
+        }
+      ]
+    },
+    {
+      "producer_path": "docs/rust-rewrite/a09/oracle/export_word.py",
+      "producer_sha256": "ab2975e01f5e8480a59b90efc3d45cca82be593828f0d6cca659b8e4b832035b",
+      "command": [
+        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+        "-O",
+        "/Users/magnus/.codex/worktrees/rust-a09-media-adapters/SlopSearX/docs/rust-rewrite/a09/oracle/export_word.py"
+      ],
+      "start_utc": "2026-10-17T01:45:34.784815+00:00",
+      "end_utc": "2026-10-17T01:45:35.055805+00:00",
+      "exit_code": 0,
+      "wall_time_seconds": 0.2707381660002284,
+      "stdout_path": "docs/rust-rewrite/a09/evidence/export_word.py.optimized.stdout.txt",
+      "stdout_sha256": "3d87e7cf5bee98c77640fcd6fa1b10ce7b89230266b881c0f881f064b1c1fbd5",
+      "outputs": [
+        {
+          "path": "docs/rust-rewrite/a09/word16.json",
+          "sha256": "6acf4940b68d7342baea613bb8857c570c7da4b3c9ff825c82ea69147ceffbb3"
+        }
+      ]
+    },
+    {
+      "producer_path": "docs/rust-rewrite/a09/oracle/export_timeouts.py",
+      "producer_sha256": "82e43ccfc759d769f9909a6267f06b675c8087d4e210765c46c18d177345c3ad",
+      "command": [
+        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+        "-O",
+        "/Users/magnus/.codex/worktrees/rust-a09-media-adapters/SlopSearX/docs/rust-rewrite/a09/oracle/export_timeouts.py"
+      ],
+      "start_utc": "2026-10-17T01:45:35.055929+00:00",
+      "end_utc": "2026-10-17T01:45:35.946291+00:00",
+      "exit_code": 0,
+      "wall_time_seconds": 0.890056874952279,
+      "stdout_path": "docs/rust-rewrite/a09/evidence/export_timeouts.py.optimized.stdout.txt",
+      "stdout_sha256": "635c59603bed09fa9e19579f308136a49f5a6f90e6287189b4051146c815fcb2",
+      "outputs": [
+        {
+          "path": "docs/rust-rewrite/a09/timeouts.json",
+          "sha256": "146f4280d9f3fe02787fb9352011bd9f33f35f0d05156bae99c4a37754765392"
+        }
+      ]
+    }
+  ],
+  "historical_note": "First optimized execution; subsequent whitespace hook altered regression stdout file. Original recorded raw hash retained. Requalified with immutable JSON-wrapped stdout next."
+}

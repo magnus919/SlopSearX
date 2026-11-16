@@ -1,0 +1,28 @@
+{
+  "all_scientific_protocol_settings_unchanged_except_cohort_binding": true,
+  "band_companion_sha256": "5b802406687af0a3c1cd318a4f5dfc6250f2643e81547d2739f7521e81740ed2",
+  "candidate_code_unchanged": true,
+  "changes": [
+    {
+      "after": "container registry",
+      "before": "artifact registry",
+      "case": "D27-R05",
+      "reason": "same registry availability/integrity task; test a domain-aligned terminology correction without changing candidate or task"
+    },
+    {
+      "after": "backstage",
+      "before": "backstage platform",
+      "case": "D27-N03",
+      "reason": "use exact project name for unchanged official-repository navigation task"
+    }
+  ],
+  "cohorts_sha256": "ad731b5d99907242dbc7c6be0c671049e179df76d50a2148886e7e34b6b28b30",
+  "confirmation_definitions_unchanged": true,
+  "expected_query_yield": "untested hypothesis; no guarantee; no query tuning after registration",
+  "only_two_development_query_leaves_changed": true,
+  "original_and_replacement_outcomes_preserved": true,
+  "protocol_sha256": "cfac29e7d406dc4c7e45030fafeb6ba466923cfeb19b34e427d344507c9d9ba9",
+  "schema": "coverage-prospective-input-correction-audit/1",
+  "scientific_calls": 0,
+  "status": "prepared-offline-not-registered-or-invoked"
+}

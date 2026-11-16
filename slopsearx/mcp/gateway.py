@@ -21,11 +21,13 @@ import inspect
 import json
 import logging
 from contextlib import asynccontextmanager
+from copy import deepcopy
 from dataclasses import dataclass
 from importlib import import_module
 from typing import Any, AsyncIterator, Awaitable, Callable, cast
 
 from fastmcp import FastMCP
+from fastmcp.tools import FunctionTool
 from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
 from mcp.types import CallToolResult, PaginatedRequestParams
@@ -188,8 +190,8 @@ def _make_proxy(tool_name: str, input_schema: dict[str, Any]) -> Callable[..., A
     """Build a callable that forwards one tool call to the remote server.
 
     The returned function carries a ``__signature__`` derived from the
-    remote tool's input schema, so the gateway's advertised tool schema
-    matches the remote's.
+    remote tool's input schema for invocation. Registration separately
+    preserves the complete remote discovery schema.
     """
     properties = input_schema.get("properties") or {}
     required = set(input_schema.get("required") or [])
@@ -225,7 +227,13 @@ def _make_proxy(tool_name: str, input_schema: dict[str, Any]) -> Callable[..., A
     return proxy
 
 
-def _register_proxy(server: FastMCP, proxy: Callable[..., Awaitable[Any]], tool_name: str, description: str) -> None:
+def _register_proxy(
+    server: FastMCP,
+    proxy: Callable[..., Awaitable[Any]],
+    tool_name: str,
+    description: str,
+    input_schema: dict[str, Any] | None = None,
+) -> None:
     """Register a proxy with both the bundled and standalone FastMCP APIs.
 
     FastMCP 3/4 derive the tool name and description from the callable and
@@ -240,7 +248,13 @@ def _register_proxy(server: FastMCP, proxy: Callable[..., Awaitable[Any]], tool_
     if "name" in add_tool_parameters:
         server.add_tool(proxy, name=tool_name, description=description)  # type: ignore[call-arg]
     else:
-        server.add_tool(proxy)
+        tool = FunctionTool.from_function(proxy)
+        if input_schema is not None:
+            # Python signatures cannot express all remote JSON Schema details.
+            # Preserve discovery independently of the existing callable's
+            # argument handling; upstream validation remains authoritative.
+            tool.parameters = deepcopy(input_schema)
+        server.add_tool(tool)
 
 
 # ---------------------------------------------------------------------------
@@ -390,6 +404,45 @@ async def _gateway_lifespan(
     remote_url: str,
     token: str | None,
     connect_timeout: float,
+    **options: Any,
+) -> AsyncIterator[None]:
+    """Keep the upstream client's cancel scopes in one dedicated task.
+
+    FastMCP enters other task groups after this lifespan yields. Its later
+    cleanup therefore cannot safely unwind the MCP client's AnyIO scopes in
+    the hosting task. The owner enters and exits all upstream scopes itself.
+    """
+    ready: asyncio.Future[None] = asyncio.get_running_loop().create_future()
+    stop = asyncio.Event()
+
+    async def own_connection() -> None:
+        try:
+            async with _gateway_connection(server, remote_url, token, connect_timeout, **options):
+                ready.set_result(None)
+                await stop.wait()
+        except BaseException as exc:
+            if not ready.done():
+                ready.set_exception(exc)
+            raise
+
+    owner = asyncio.create_task(own_connection(), name="slopsearx-gateway-upstream")
+    try:
+        await asyncio.shield(ready)
+        yield
+    finally:
+        stop.set()
+        if not ready.done():
+            ready.cancel()
+            owner.cancel()
+        await owner
+
+
+@asynccontextmanager
+async def _gateway_connection(
+    server: FastMCP,
+    remote_url: str,
+    token: str | None,
+    connect_timeout: float,
     *,
     oauth: bool = False,
     oauth_callback_port: int = 8765,
@@ -425,7 +478,10 @@ async def _gateway_lifespan(
             read, write = streams[0], streams[1]
             async with ClientSession(read, write) as session:
                 try:
-                    await session.initialize()
+                    # Interactive OAuth runs inside initialize and has its own
+                    # authorization budget; do not truncate the browser flow.
+                    async with asyncio.timeout(None if oauth else connect_timeout):
+                        await session.initialize()
                 except Exception as exc:  # noqa: BLE001 — wrap into a clear startup error
                     raise RuntimeError(f"cannot connect to remote SlopSearX MCP server at {remote_url}: {exc}") from exc
 
@@ -438,7 +494,9 @@ async def _gateway_lifespan(
 
                 for tool in tools:
                     input_schema = _field(tool, "input_schema", "inputSchema") or {}
-                    _register_proxy(server, _make_proxy(tool.name, input_schema), tool.name, tool.description or "")
+                    _register_proxy(
+                        server, _make_proxy(tool.name, input_schema), tool.name, tool.description or "", input_schema
+                    )
                 logger.info(
                     "Remote gateway connected to %s (%d tools registered)",
                     remote_url,

@@ -121,6 +121,42 @@ class PartialStream(httpx.AsyncByteStream):
         return None
 
 
+class ChunkedStream(httpx.AsyncByteStream):
+    def __init__(self, chunks: tuple[bytes, ...], error: Exception | None = None) -> None:
+        self.chunks = chunks
+        self.error = error
+
+    async def __aiter__(self):
+        for chunk in self.chunks:
+            yield chunk
+        if self.error is not None:
+            raise self.error
+
+    async def aclose(self) -> None:
+        return None
+
+
+async def execute_chunked_error(chunks: tuple[bytes, ...], *, error: Exception | None = None):
+    prepared = prepared_stage()
+    ledger = core.StudyRun(prepared)
+    roots = PrivateRoots()
+    operation_id = prepared.operation_ids[0]
+    stream = ChunkedStream(chunks, error)
+    kwargs = invoke_w0_kwargs(
+        prepared,
+        ledger,
+        roots,
+        operation_id,
+        httpx.MockTransport(lambda request: httpx.Response(502, stream=stream, request=request)),
+    )
+    result = await execution.execute_selector_call(**kwargs)
+    archived = (roots.archive / prepared.stage_uuid / operation_id / "response.bin").read_bytes()
+    receipt = json.loads((roots.archive / prepared.stage_uuid / operation_id / "receipt.json").read_bytes())
+    all_private = b"".join(path.read_bytes() for path in roots.root.rglob("*") if path.is_file())
+    roots.close()
+    return result, archived, receipt, all_private
+
+
 def permit_for(
     prepared: core.PreparedStage,
     operation_id: str,
@@ -357,7 +393,9 @@ async def test_success_archives_before_parse_and_failure_closes_full_inventory()
         receipt_sha256=replay_receipt["receipt_sha256"],
         compiled_request=compiled,
     )
-    assert replayed.reason == "missing_facet_lead"
+    assert replayed.status == "selected"
+    assert replayed.reason == "no_eligible_facet_leads_score_ranked"
+    assert replayed.audit["unreserved_facets"]
     candidate_replay_roots.close()
 
     async def fail(request: httpx.Request) -> httpx.Response:
@@ -706,6 +744,61 @@ async def test_reflected_explicit_api_key_is_never_archived() -> None:
     inventory = json.loads((roots.result / f"{prepared.stage_uuid}.terminal-inventory.json").read_bytes())
     assert inventory["operations"][0]["state"] == "partial-or-interrupted"
     roots.close()
+
+
+@pytest.mark.asyncio
+async def test_benign_credential_prefix_at_chunk_boundary_is_preserved() -> None:
+    key = b"Synthetic-Key-Do-Not-Persist-9283"
+    prefix = key[:9]
+    chunks = (b"benign diagnostic: " + prefix, b"X was not a credential")
+    body = b"".join(chunks)
+    result, archived, receipt, all_private = await execute_chunked_error(chunks)
+
+    assert result.status == "http-failure"
+    assert receipt["status"] == "http-failure"
+    assert archived == body
+    assert key not in all_private
+
+
+@pytest.mark.asyncio
+async def test_full_credential_split_across_chunks_is_suppressed() -> None:
+    key = b"Synthetic-Key-Do-Not-Persist-9283"
+    result, archived, receipt, all_private = await execute_chunked_error(
+        (b"reflected= " + key[:11], key[11:] + b" end")
+    )
+
+    assert result.status == "credential-reflection-suppressed"
+    assert result.response_bytes == 0
+    assert receipt["status"] == "credential-reflection-suppressed"
+    assert archived == b""
+    assert key[:9] not in all_private
+
+
+@pytest.mark.asyncio
+async def test_truncated_cap_suffix_matching_credential_prefix_is_suppressed() -> None:
+    key = b"Synthetic-Key-Do-Not-Persist-9283"
+    prefix = key[:9]
+    first = b"x" * (execution.MAX_RESPONSE_BYTES - len(prefix))
+    result, archived, receipt, all_private = await execute_chunked_error((first, prefix + b"tail"))
+
+    assert result.status == "credential-reflection-suppressed"
+    assert result.response_bytes == 0
+    assert receipt["status"] == "credential-reflection-suppressed"
+    assert archived == b""
+    assert prefix not in all_private
+
+
+@pytest.mark.asyncio
+async def test_interrupted_partial_credential_prefix_is_suppressed() -> None:
+    key = b"Synthetic-Key-Do-Not-Persist-9283"
+    result, archived, receipt, all_private = await execute_chunked_error(
+        (b"upstream error: " + key[:9],), error=httpx.ReadError("synthetic interruption")
+    )
+
+    assert result.status == "credential-reflection-suppressed"
+    assert receipt["status"] == "credential-reflection-suppressed"
+    assert archived == b""
+    assert key[:9] not in all_private
 
 
 @pytest.mark.asyncio

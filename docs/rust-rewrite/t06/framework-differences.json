@@ -1,0 +1,56 @@
+{
+  "status": "accepted finite framework-diagnostic difference; exactly two outer scalar/array params cases",
+  "scope": "Only outer scalar/array params, invalid JSONRPCRequest grammar. Legitimate request IDs and semantic prompt parameters remain parity requirements.",
+  "decision": "Retain actual native SDK transport rejection; do not synthesize Pydantic union stack/URL diagnostics. This is an explicit diagnostic/status difference, not parity and not a G01 deferral.",
+  "source": {
+    "baseline": "6c44976444340cc8f343fef61e2e8d723b189c19",
+    "versions": {
+      "fastmcp": "4.0.11",
+      "mcp": "2.3.0"
+    },
+    "capture_sha256": "55d72ad80336eaedc161d670c89301d7bd04d01221086fe9b25414d2fce4300c",
+    "producer_sha256": "9605100a887ea512253c739079ec5d082dd9131413805d7566b980cece980518"
+  },
+  "native_before": {
+    "capture_sha256": "a9ef20f5a4b6400d0b7edb93e9bf825309ec644565145b2ce3918d1e1eeba640",
+    "fixture_sha256": "484dc556e346ae924625a258bd42e50303a81f7bc084dffe2b171aeaa2eb15f2",
+    "source_files": [
+      {
+        "file": "crates/ssx-mcp/src/opaque.rs",
+        "sha256": "5257bf7af49acd12d26df32480c590af85d6513f7c6267a6947ec1c95557848b"
+      },
+      {
+        "file": "crates/ssx-mcp/src/search_surface/mod.rs",
+        "sha256": "6a04f6b4c13676727d2ad2de4401f925e736c5877d3d18643b35a6582123f5c7"
+      }
+    ],
+    "lock_sha256": "7a817a526ae404e349029a82167ef2ec2fd7e9d886984d7f8bf6c0566475845d",
+    "log": "t06-prompt-profile-v42.log; characterize_malformed_prompt_envelope_boundary asserts0 engine calls for every row"
+  },
+  "cases": [
+    {
+      "case": "params_scalar",
+      "source_status": 400,
+      "source_body": "{\"jsonrpc\":\"2.0\",\"id\":null,\"error\":{\"code\":-32602,\"message\":\"Validation error: 4 validation errors for union[JSONRPCRequest,JSONRPCNotification,JSONRPCResponse,JSONRPCError]\\nJSONRPCRequest.params\\n  Input should be a valid dictionary [type=dict_type, input_value=1, input_type=int]\\n    For further information visit https://errors.pydantic.dev/2.13/v/dict_type\\nJSONRPCNotification.params\\n  Input should be a valid dictionary [type=dict_type, input_value=1, input_type=int]\\n    For further information visit https://errors.pydantic.dev/2.13/v/dict_type\\nJSONRPCResponse.result\\n  Field required [type=missing, input_value={'jsonrpc': '2.0', 'id': ...ompts/get', 'params': 1}, input_type=dict]\\n    For further information visit https://errors.pydantic.dev/2.13/v/missing\\nJSONRPCError.error\\n  Field required [type=missing, input_value={'jsonrpc': '2.0', 'id': ...ompts/get', 'params': 1}, input_type=dict]\\n    For further information visit https://errors.pydantic.dev/2.13/v/missing\"}}",
+      "native_status": 415,
+      "native_body": "fail to deserialize request body data did not match any variant of untagged enum JsonRpcMessage",
+      "source_engine_dispatches": 0,
+      "native_engine_dispatches": 0
+    },
+    {
+      "case": "params_array",
+      "source_status": 400,
+      "source_body": "{\"jsonrpc\":\"2.0\",\"id\":null,\"error\":{\"code\":-32602,\"message\":\"Validation error: 4 validation errors for union[JSONRPCRequest,JSONRPCNotification,JSONRPCResponse,JSONRPCError]\\nJSONRPCRequest.params\\n  Input should be a valid dictionary [type=dict_type, input_value=[], input_type=list]\\n    For further information visit https://errors.pydantic.dev/2.13/v/dict_type\\nJSONRPCNotification.params\\n  Input should be a valid dictionary [type=dict_type, input_value=[], input_type=list]\\n    For further information visit https://errors.pydantic.dev/2.13/v/dict_type\\nJSONRPCResponse.result\\n  Field required [type=missing, input_value={'jsonrpc': '2.0', 'id': ...mpts/get', 'params': []}, input_type=dict]\\n    For further information visit https://errors.pydantic.dev/2.13/v/missing\\nJSONRPCError.error\\n  Field required [type=missing, input_value={'jsonrpc': '2.0', 'id': ...mpts/get', 'params': []}, input_type=dict]\\n    For further information visit https://errors.pydantic.dev/2.13/v/missing\"}}",
+      "native_status": 415,
+      "native_body": "fail to deserialize request body data did not match any variant of untagged enum JsonRpcMessage",
+      "source_engine_dispatches": 0,
+      "native_engine_dispatches": 0
+    }
+  ],
+  "acceptance": {
+    "owner": "parent delivery task /root",
+    "scope": "Only the two listed invalid JSONRPC grammar rows; no broader SDK diagnostic parity",
+    "evidence": "Immutable t06-final-replay-freeze-v46 manifest62bbc404c3ef6dfe5d8d213ae14b130929110c7bb53a4db43945a9108d16db28; parent independent full client/source review /private/tmp/t06-parent-v46-runtime-review.json",
+    "history": "Original proposed ledger and native/source before observations remain frozen in v46 checkpoint. Source400/Pydantic JSON versus native415/SDK text retained intentionally; actual wrong-token401 precedes parsing and both rows dispatch zero engines."
+  }
+}

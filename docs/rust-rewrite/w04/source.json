@@ -1,0 +1,4092 @@
+{
+  "baseline": "1bad48bbe4e25e2f60d5b86668e92bbce922fdf0",
+  "sources": {
+    "slopsearx/saved_models.py": "0a9fc0864b414a0a27b29509e2da3006b44976e94716c56a837559fe553d0593",
+    "slopsearx/saved_runner.py": "07fafa028edcf156bc9d3e7c818d15bdd32acbf4cefc837375bc78c138ac4b07",
+    "slopsearx/saved_store.py": "9e3d03577d6721a5ef46e19b872b1c8744471e167e305130b48db582bd0006df",
+    "tests/test_saved_models.py": "0ddd6384a444a4d7ee8bf394f889b52a73a5021387b0eb77925acd386ee4c16a",
+    "tests/test_saved_searches.py": "6c90ec7cbac3f2bcfb817014819c002b3da89b722e4a98d5b2f8d66c31495013",
+    "tests/test_saved_valkey.py": "ad61bcf008dcff5dbb7577318c6c1420d1402020d30fb179a7120e18d9d98649"
+  },
+  "cases": [
+    {
+      "name": "first",
+      "definition": {
+        "search_id": "saved",
+        "tenant": "tenant",
+        "query": "query",
+        "engines": [
+          "wikipedia"
+        ],
+        "interval_seconds": 60,
+        "retention_seconds": 3600,
+        "max_results": 100,
+        "max_reports": 20,
+        "created_at": 0.0,
+        "expires_at": 3600.0,
+        "next_due": 0.0,
+        "revision": 1,
+        "paused": false,
+        "policy_fingerprint": "",
+        "last_slot": -1,
+        "latest_run_id": null,
+        "baseline": null,
+        "lease_token": null,
+        "lease_expires_at": 0,
+        "deleted": false
+      },
+      "rows": [
+        {
+          "url": "https://a.test",
+          "title": "title",
+          "content": "source text",
+          "engine": "wikipedia"
+        }
+      ],
+      "response": {},
+      "observation": {
+        "window": {
+          "query": "query",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 100,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": false,
+        "coverage": {
+          "wikipedia": "ok"
+        },
+        "discovered_count": 1,
+        "records": {
+          "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+            "url": "https://a.test",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "fields": {
+              "title": "title",
+              "content": "source text",
+              "published_date": null
+            }
+          }
+        },
+        "incomparable_reasons": []
+      },
+      "report": {
+        "run_id": "run-golden",
+        "search_id": "saved",
+        "revision": 1,
+        "scheduled_at": 20.0,
+        "started_at": 20.0,
+        "finished_at": 20.0,
+        "missed_slots": 2,
+        "status": "baseline_initialized",
+        "incomparable_reasons": [],
+        "baseline_reason": "first_observation",
+        "baseline_observed_at": null,
+        "observation": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 20.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 1,
+          "records": {
+            "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          "incomparable_reasons": []
+        },
+        "events": [],
+        "expires_at": 3600.0
+      },
+      "replacement": {
+        "window": {
+          "query": "query",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 100,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": false,
+        "coverage": {
+          "wikipedia": "ok"
+        },
+        "discovered_count": 1,
+        "records": {
+          "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+            "url": "https://a.test",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "fields": {
+              "title": "title",
+              "content": "source text",
+              "published_date": null
+            }
+          }
+        },
+        "incomparable_reasons": [],
+        "expires_at": 3600.0
+      },
+      "report_spaced_bytes": 882,
+      "report_spaced_sha256": "e0be339682ed00093fc3673f73ae4b7df2e5c6ea08f5c89ec681187c04d151d5"
+    },
+    {
+      "name": "changes",
+      "definition": {
+        "search_id": "saved",
+        "tenant": "tenant",
+        "query": "query",
+        "engines": [
+          "wikipedia"
+        ],
+        "interval_seconds": 60,
+        "retention_seconds": 3600,
+        "max_results": 100,
+        "max_reports": 20,
+        "created_at": 0.0,
+        "expires_at": 3600.0,
+        "next_due": 0.0,
+        "revision": 1,
+        "paused": false,
+        "policy_fingerprint": "",
+        "last_slot": -1,
+        "latest_run_id": null,
+        "baseline": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 10.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 2,
+          "records": {
+            "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "3046f675caefd18fb8328dd2fe662633e0977a85e1d05f0cc372fc6e4085bf37": {
+              "url": "https://b.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          "incomparable_reasons": [],
+          "expires_at": 3600.0
+        },
+        "lease_token": null,
+        "lease_expires_at": 0,
+        "deleted": false
+      },
+      "rows": [
+        {
+          "url": "https://a.test",
+          "title": "new",
+          "content": "source text",
+          "engine": "wikipedia"
+        },
+        {
+          "url": "https://c.test",
+          "title": "title",
+          "content": "source text",
+          "engine": "wikipedia"
+        }
+      ],
+      "response": {},
+      "observation": {
+        "window": {
+          "query": "query",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 100,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": false,
+        "coverage": {
+          "wikipedia": "ok"
+        },
+        "discovered_count": 2,
+        "records": {
+          "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+            "url": "https://a.test",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "fields": {
+              "title": "new",
+              "content": "source text",
+              "published_date": null
+            }
+          },
+          "f58145da91ed0b4d59217880faca58f1b5275a7e40f5994492142b276088ec9c": {
+            "url": "https://c.test",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "fields": {
+              "title": "title",
+              "content": "source text",
+              "published_date": null
+            }
+          }
+        },
+        "incomparable_reasons": []
+      },
+      "report": {
+        "run_id": "run-golden",
+        "search_id": "saved",
+        "revision": 1,
+        "scheduled_at": 20.0,
+        "started_at": 20.0,
+        "finished_at": 20.0,
+        "missed_slots": 2,
+        "status": "compared",
+        "incomparable_reasons": [],
+        "baseline_reason": null,
+        "baseline_observed_at": 10.0,
+        "observation": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 20.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 2,
+          "records": {
+            "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "new",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "f58145da91ed0b4d59217880faca58f1b5275a7e40f5994492142b276088ec9c": {
+              "url": "https://c.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          "incomparable_reasons": []
+        },
+        "events": [
+          {
+            "event_id": "c07dd254cdcbf1c2b86d9bf5b55dafd76a1d7277de5adb4b37de3e2d3b1b8ce0",
+            "kind": "not_observed_in_latest_run",
+            "identity": "3046f675caefd18fb8328dd2fe662633e0977a85e1d05f0cc372fc6e4085bf37",
+            "before": {
+              "url": "https://b.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "after": null
+          },
+          {
+            "event_id": "6b87161fdf2bae965dbd61a40bfe13136885d59f6974e1b31a664279d453ce94",
+            "kind": "source_field_changed",
+            "identity": "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b",
+            "before": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "after": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "new",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          {
+            "event_id": "57f58b2f608a00319270d140b1469056ad36058a60452748d16c47a00126a095",
+            "kind": "added",
+            "identity": "f58145da91ed0b4d59217880faca58f1b5275a7e40f5994492142b276088ec9c",
+            "before": null,
+            "after": {
+              "url": "https://c.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          }
+        ],
+        "expires_at": 3600.0
+      },
+      "replacement": {
+        "window": {
+          "query": "query",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 100,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": false,
+        "coverage": {
+          "wikipedia": "ok"
+        },
+        "discovered_count": 2,
+        "records": {
+          "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+            "url": "https://a.test",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "fields": {
+              "title": "new",
+              "content": "source text",
+              "published_date": null
+            }
+          },
+          "f58145da91ed0b4d59217880faca58f1b5275a7e40f5994492142b276088ec9c": {
+            "url": "https://c.test",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "fields": {
+              "title": "title",
+              "content": "source text",
+              "published_date": null
+            }
+          }
+        },
+        "incomparable_reasons": [],
+        "expires_at": 3600.0
+      },
+      "report_spaced_bytes": 2339,
+      "report_spaced_sha256": "dba3d99aee33d50e522dc4d0379f9cd2be1996ef5e7346d2f2040aad9843f1d0"
+    },
+    {
+      "name": "ranking",
+      "definition": {
+        "search_id": "saved",
+        "tenant": "tenant",
+        "query": "query",
+        "engines": [
+          "wikipedia"
+        ],
+        "interval_seconds": 60,
+        "retention_seconds": 3600,
+        "max_results": 100,
+        "max_reports": 20,
+        "created_at": 0.0,
+        "expires_at": 3600.0,
+        "next_due": 0.0,
+        "revision": 1,
+        "paused": false,
+        "policy_fingerprint": "",
+        "last_slot": -1,
+        "latest_run_id": null,
+        "baseline": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 10.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 2,
+          "records": {
+            "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "3046f675caefd18fb8328dd2fe662633e0977a85e1d05f0cc372fc6e4085bf37": {
+              "url": "https://b.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          "incomparable_reasons": [],
+          "expires_at": 3600.0
+        },
+        "lease_token": null,
+        "lease_expires_at": 0,
+        "deleted": false
+      },
+      "rows": [
+        {
+          "url": "https://b.test",
+          "title": "title",
+          "content": "source text",
+          "engine": "wikipedia",
+          "score": 200,
+          "position": 10,
+          "tier": 2
+        },
+        {
+          "url": "https://a.test",
+          "title": "title",
+          "content": "source text",
+          "engine": "wikipedia"
+        }
+      ],
+      "response": {},
+      "observation": {
+        "window": {
+          "query": "query",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 100,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": false,
+        "coverage": {
+          "wikipedia": "ok"
+        },
+        "discovered_count": 2,
+        "records": {
+          "3046f675caefd18fb8328dd2fe662633e0977a85e1d05f0cc372fc6e4085bf37": {
+            "url": "https://b.test",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "fields": {
+              "title": "title",
+              "content": "source text",
+              "published_date": null
+            }
+          },
+          "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+            "url": "https://a.test",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "fields": {
+              "title": "title",
+              "content": "source text",
+              "published_date": null
+            }
+          }
+        },
+        "incomparable_reasons": []
+      },
+      "report": {
+        "run_id": "run-golden",
+        "search_id": "saved",
+        "revision": 1,
+        "scheduled_at": 20.0,
+        "started_at": 20.0,
+        "finished_at": 20.0,
+        "missed_slots": 2,
+        "status": "compared",
+        "incomparable_reasons": [],
+        "baseline_reason": null,
+        "baseline_observed_at": 10.0,
+        "observation": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 20.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 2,
+          "records": {
+            "3046f675caefd18fb8328dd2fe662633e0977a85e1d05f0cc372fc6e4085bf37": {
+              "url": "https://b.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          "incomparable_reasons": []
+        },
+        "events": [],
+        "expires_at": 3600.0
+      },
+      "replacement": {
+        "window": {
+          "query": "query",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 100,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": false,
+        "coverage": {
+          "wikipedia": "ok"
+        },
+        "discovered_count": 2,
+        "records": {
+          "3046f675caefd18fb8328dd2fe662633e0977a85e1d05f0cc372fc6e4085bf37": {
+            "url": "https://b.test",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "fields": {
+              "title": "title",
+              "content": "source text",
+              "published_date": null
+            }
+          },
+          "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+            "url": "https://a.test",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "fields": {
+              "title": "title",
+              "content": "source text",
+              "published_date": null
+            }
+          }
+        },
+        "incomparable_reasons": [],
+        "expires_at": 3600.0
+      },
+      "report_spaced_bytes": 1079,
+      "report_spaced_sha256": "e4d8217d9b6848707ded25cf302bb44876c9b200471d18d118b99643feea3410"
+    },
+    {
+      "name": "outage",
+      "definition": {
+        "search_id": "saved",
+        "tenant": "tenant",
+        "query": "query",
+        "engines": [
+          "wikipedia"
+        ],
+        "interval_seconds": 60,
+        "retention_seconds": 3600,
+        "max_results": 100,
+        "max_reports": 20,
+        "created_at": 0.0,
+        "expires_at": 3600.0,
+        "next_due": 0.0,
+        "revision": 1,
+        "paused": false,
+        "policy_fingerprint": "",
+        "last_slot": -1,
+        "latest_run_id": null,
+        "baseline": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 10.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 2,
+          "records": {
+            "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "3046f675caefd18fb8328dd2fe662633e0977a85e1d05f0cc372fc6e4085bf37": {
+              "url": "https://b.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          "incomparable_reasons": [],
+          "expires_at": 3600.0
+        },
+        "lease_token": null,
+        "lease_expires_at": 0,
+        "deleted": false
+      },
+      "rows": [],
+      "response": {
+        "status": "timeout"
+      },
+      "observation": {
+        "window": {
+          "query": "query",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 100,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": false,
+        "coverage": {
+          "wikipedia": "timeout"
+        },
+        "discovered_count": 0,
+        "records": {},
+        "incomparable_reasons": [
+          "incomplete_engine_coverage"
+        ]
+      },
+      "report": {
+        "run_id": "run-golden",
+        "search_id": "saved",
+        "revision": 1,
+        "scheduled_at": 20.0,
+        "started_at": 20.0,
+        "finished_at": 20.0,
+        "missed_slots": 2,
+        "status": "incomparable",
+        "incomparable_reasons": [
+          "incomplete_engine_coverage"
+        ],
+        "baseline_reason": null,
+        "baseline_observed_at": 10.0,
+        "observation": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 20.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "timeout"
+          },
+          "discovered_count": 0,
+          "records": {},
+          "incomparable_reasons": [
+            "incomplete_engine_coverage"
+          ]
+        },
+        "events": [],
+        "expires_at": 3600.0
+      },
+      "replacement": null,
+      "report_spaced_bytes": 698,
+      "report_spaced_sha256": "6052a19745e8f3d379c4d8a60e90e0977571030095011e973b2e22c82038add5"
+    },
+    {
+      "name": "cached",
+      "definition": {
+        "search_id": "saved",
+        "tenant": "tenant",
+        "query": "query",
+        "engines": [
+          "wikipedia"
+        ],
+        "interval_seconds": 60,
+        "retention_seconds": 3600,
+        "max_results": 100,
+        "max_reports": 20,
+        "created_at": 0.0,
+        "expires_at": 3600.0,
+        "next_due": 0.0,
+        "revision": 1,
+        "paused": false,
+        "policy_fingerprint": "",
+        "last_slot": -1,
+        "latest_run_id": null,
+        "baseline": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 10.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 2,
+          "records": {
+            "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "3046f675caefd18fb8328dd2fe662633e0977a85e1d05f0cc372fc6e4085bf37": {
+              "url": "https://b.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          "incomparable_reasons": [],
+          "expires_at": 3600.0
+        },
+        "lease_token": null,
+        "lease_expires_at": 0,
+        "deleted": false
+      },
+      "rows": [],
+      "response": {
+        "cached": true
+      },
+      "observation": {
+        "window": {
+          "query": "query",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 100,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": true,
+        "coverage": {
+          "wikipedia": "ok"
+        },
+        "discovered_count": 0,
+        "records": {},
+        "incomparable_reasons": [
+          "cached_observation"
+        ]
+      },
+      "report": {
+        "run_id": "run-golden",
+        "search_id": "saved",
+        "revision": 1,
+        "scheduled_at": 20.0,
+        "started_at": 20.0,
+        "finished_at": 20.0,
+        "missed_slots": 2,
+        "status": "incomparable",
+        "incomparable_reasons": [
+          "cached_observation"
+        ],
+        "baseline_reason": null,
+        "baseline_observed_at": 10.0,
+        "observation": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 20.0,
+          "query_id": "q-fixed",
+          "cached": true,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 0,
+          "records": {},
+          "incomparable_reasons": [
+            "cached_observation"
+          ]
+        },
+        "events": [],
+        "expires_at": 3600.0
+      },
+      "replacement": null,
+      "report_spaced_bytes": 676,
+      "report_spaced_sha256": "95b496e96fa64b1797f30848d2b95c23043690af8db0684fddc19cb21651bcbc"
+    },
+    {
+      "name": "partial",
+      "definition": {
+        "search_id": "saved",
+        "tenant": "tenant",
+        "query": "query",
+        "engines": [
+          "wikipedia"
+        ],
+        "interval_seconds": 60,
+        "retention_seconds": 3600,
+        "max_results": 100,
+        "max_reports": 20,
+        "created_at": 0.0,
+        "expires_at": 3600.0,
+        "next_due": 0.0,
+        "revision": 1,
+        "paused": false,
+        "policy_fingerprint": "",
+        "last_slot": -1,
+        "latest_run_id": null,
+        "baseline": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 10.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 2,
+          "records": {
+            "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "3046f675caefd18fb8328dd2fe662633e0977a85e1d05f0cc372fc6e4085bf37": {
+              "url": "https://b.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          "incomparable_reasons": [],
+          "expires_at": 3600.0
+        },
+        "lease_token": null,
+        "lease_expires_at": 0,
+        "deleted": false
+      },
+      "rows": [],
+      "response": {
+        "partial": true
+      },
+      "observation": {
+        "window": {
+          "query": "query",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 100,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": false,
+        "coverage": {
+          "wikipedia": "ok"
+        },
+        "discovered_count": 0,
+        "records": {},
+        "incomparable_reasons": [
+          "incomplete_response"
+        ]
+      },
+      "report": {
+        "run_id": "run-golden",
+        "search_id": "saved",
+        "revision": 1,
+        "scheduled_at": 20.0,
+        "started_at": 20.0,
+        "finished_at": 20.0,
+        "missed_slots": 2,
+        "status": "incomparable",
+        "incomparable_reasons": [
+          "incomplete_response"
+        ],
+        "baseline_reason": null,
+        "baseline_observed_at": 10.0,
+        "observation": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 20.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 0,
+          "records": {},
+          "incomparable_reasons": [
+            "incomplete_response"
+          ]
+        },
+        "events": [],
+        "expires_at": 3600.0
+      },
+      "replacement": null,
+      "report_spaced_bytes": 679,
+      "report_spaced_sha256": "bf129df1415188852f09bf1320b6aa02222f79f9ab341f705a723c8d71c91799"
+    },
+    {
+      "name": "deadline",
+      "definition": {
+        "search_id": "saved",
+        "tenant": "tenant",
+        "query": "query",
+        "engines": [
+          "wikipedia"
+        ],
+        "interval_seconds": 60,
+        "retention_seconds": 3600,
+        "max_results": 100,
+        "max_reports": 20,
+        "created_at": 0.0,
+        "expires_at": 3600.0,
+        "next_due": 0.0,
+        "revision": 1,
+        "paused": false,
+        "policy_fingerprint": "",
+        "last_slot": -1,
+        "latest_run_id": null,
+        "baseline": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 10.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 2,
+          "records": {
+            "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "3046f675caefd18fb8328dd2fe662633e0977a85e1d05f0cc372fc6e4085bf37": {
+              "url": "https://b.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          "incomparable_reasons": [],
+          "expires_at": 3600.0
+        },
+        "lease_token": null,
+        "lease_expires_at": 0,
+        "deleted": false
+      },
+      "rows": [],
+      "response": {
+        "deadline_exceeded": true
+      },
+      "observation": {
+        "window": {
+          "query": "query",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 100,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": false,
+        "coverage": {
+          "wikipedia": "ok"
+        },
+        "discovered_count": 0,
+        "records": {},
+        "incomparable_reasons": [
+          "incomplete_response"
+        ]
+      },
+      "report": {
+        "run_id": "run-golden",
+        "search_id": "saved",
+        "revision": 1,
+        "scheduled_at": 20.0,
+        "started_at": 20.0,
+        "finished_at": 20.0,
+        "missed_slots": 2,
+        "status": "incomparable",
+        "incomparable_reasons": [
+          "incomplete_response"
+        ],
+        "baseline_reason": null,
+        "baseline_observed_at": 10.0,
+        "observation": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 20.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 0,
+          "records": {},
+          "incomparable_reasons": [
+            "incomplete_response"
+          ]
+        },
+        "events": [],
+        "expires_at": 3600.0
+      },
+      "replacement": null,
+      "report_spaced_bytes": 679,
+      "report_spaced_sha256": "bf129df1415188852f09bf1320b6aa02222f79f9ab341f705a723c8d71c91799"
+    },
+    {
+      "name": "unresponsive",
+      "definition": {
+        "search_id": "saved",
+        "tenant": "tenant",
+        "query": "query",
+        "engines": [
+          "wikipedia"
+        ],
+        "interval_seconds": 60,
+        "retention_seconds": 3600,
+        "max_results": 100,
+        "max_reports": 20,
+        "created_at": 0.0,
+        "expires_at": 3600.0,
+        "next_due": 0.0,
+        "revision": 1,
+        "paused": false,
+        "policy_fingerprint": "",
+        "last_slot": -1,
+        "latest_run_id": null,
+        "baseline": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 10.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 2,
+          "records": {
+            "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "3046f675caefd18fb8328dd2fe662633e0977a85e1d05f0cc372fc6e4085bf37": {
+              "url": "https://b.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          "incomparable_reasons": [],
+          "expires_at": 3600.0
+        },
+        "lease_token": null,
+        "lease_expires_at": 0,
+        "deleted": false
+      },
+      "rows": [],
+      "response": {
+        "all_unresponsive": true
+      },
+      "observation": {
+        "window": {
+          "query": "query",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 100,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": false,
+        "coverage": {
+          "wikipedia": "ok"
+        },
+        "discovered_count": 0,
+        "records": {},
+        "incomparable_reasons": [
+          "incomplete_response"
+        ]
+      },
+      "report": {
+        "run_id": "run-golden",
+        "search_id": "saved",
+        "revision": 1,
+        "scheduled_at": 20.0,
+        "started_at": 20.0,
+        "finished_at": 20.0,
+        "missed_slots": 2,
+        "status": "incomparable",
+        "incomparable_reasons": [
+          "incomplete_response"
+        ],
+        "baseline_reason": null,
+        "baseline_observed_at": 10.0,
+        "observation": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 20.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 0,
+          "records": {},
+          "incomparable_reasons": [
+            "incomplete_response"
+          ]
+        },
+        "events": [],
+        "expires_at": 3600.0
+      },
+      "replacement": null,
+      "report_spaced_bytes": 679,
+      "report_spaced_sha256": "bf129df1415188852f09bf1320b6aa02222f79f9ab341f705a723c8d71c91799"
+    },
+    {
+      "name": "scope",
+      "definition": {
+        "search_id": "saved",
+        "tenant": "tenant",
+        "query": "query",
+        "engines": [
+          "wikipedia"
+        ],
+        "interval_seconds": 60,
+        "retention_seconds": 3600,
+        "max_results": 100,
+        "max_reports": 20,
+        "created_at": 0.0,
+        "expires_at": 3600.0,
+        "next_due": 0.0,
+        "revision": 1,
+        "paused": false,
+        "policy_fingerprint": "",
+        "last_slot": -1,
+        "latest_run_id": null,
+        "baseline": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 10.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 2,
+          "records": {
+            "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "3046f675caefd18fb8328dd2fe662633e0977a85e1d05f0cc372fc6e4085bf37": {
+              "url": "https://b.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          "incomparable_reasons": [],
+          "expires_at": 3600.0
+        },
+        "lease_token": null,
+        "lease_expires_at": 0,
+        "deleted": false
+      },
+      "rows": [],
+      "response": {
+        "scope": [
+          "brave"
+        ]
+      },
+      "observation": {
+        "window": {
+          "query": "query",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 100,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": false,
+        "coverage": {
+          "wikipedia": "ok"
+        },
+        "discovered_count": 0,
+        "records": {},
+        "incomparable_reasons": [
+          "scope_changed"
+        ]
+      },
+      "report": {
+        "run_id": "run-golden",
+        "search_id": "saved",
+        "revision": 1,
+        "scheduled_at": 20.0,
+        "started_at": 20.0,
+        "finished_at": 20.0,
+        "missed_slots": 2,
+        "status": "incomparable",
+        "incomparable_reasons": [
+          "scope_changed"
+        ],
+        "baseline_reason": null,
+        "baseline_observed_at": 10.0,
+        "observation": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 20.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 0,
+          "records": {},
+          "incomparable_reasons": [
+            "scope_changed"
+          ]
+        },
+        "events": [],
+        "expires_at": 3600.0
+      },
+      "replacement": null,
+      "report_spaced_bytes": 667,
+      "report_spaced_sha256": "36eb8d7c4edce9fb3161717538d1baf1a72b7ba854b66551f1d834abeff37952"
+    },
+    {
+      "name": "truncated",
+      "definition": {
+        "search_id": "saved",
+        "tenant": "tenant",
+        "query": "query",
+        "engines": [
+          "wikipedia"
+        ],
+        "interval_seconds": 60,
+        "retention_seconds": 3600,
+        "max_results": 1,
+        "max_reports": 20,
+        "created_at": 0.0,
+        "expires_at": 3600.0,
+        "next_due": 0.0,
+        "revision": 1,
+        "paused": false,
+        "policy_fingerprint": "",
+        "last_slot": -1,
+        "latest_run_id": null,
+        "baseline": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 10.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 2,
+          "records": {
+            "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "3046f675caefd18fb8328dd2fe662633e0977a85e1d05f0cc372fc6e4085bf37": {
+              "url": "https://b.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          "incomparable_reasons": [],
+          "expires_at": 3600.0
+        },
+        "lease_token": null,
+        "lease_expires_at": 0,
+        "deleted": false
+      },
+      "rows": [
+        {
+          "url": "https://a.test",
+          "title": "title",
+          "content": "source text",
+          "engine": "wikipedia"
+        },
+        {
+          "url": "https://b.test",
+          "title": "title",
+          "content": "source text",
+          "engine": "wikipedia"
+        }
+      ],
+      "response": {},
+      "observation": {
+        "window": {
+          "query": "query",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 1,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": false,
+        "coverage": {
+          "wikipedia": "ok"
+        },
+        "discovered_count": 2,
+        "records": {
+          "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+            "url": "https://a.test",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "fields": {
+              "title": "title",
+              "content": "source text",
+              "published_date": null
+            }
+          }
+        },
+        "incomparable_reasons": [
+          "observation_truncated"
+        ]
+      },
+      "report": {
+        "run_id": "run-golden",
+        "search_id": "saved",
+        "revision": 1,
+        "scheduled_at": 20.0,
+        "started_at": 20.0,
+        "finished_at": 20.0,
+        "missed_slots": 2,
+        "status": "incomparable",
+        "incomparable_reasons": [
+          "observation_truncated"
+        ],
+        "baseline_reason": "comparison_window_changed",
+        "baseline_observed_at": null,
+        "observation": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 1,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 20.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 2,
+          "records": {
+            "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          "incomparable_reasons": [
+            "observation_truncated"
+          ]
+        },
+        "events": [],
+        "expires_at": 3600.0
+      },
+      "replacement": null,
+      "report_spaced_bytes": 926,
+      "report_spaced_sha256": "473084f75230bba28534ee872561e509d4ce130fc6724e304e67f74e24e6b465"
+    },
+    {
+      "name": "provenance",
+      "definition": {
+        "search_id": "saved",
+        "tenant": "tenant",
+        "query": "query",
+        "engines": [
+          "wikipedia"
+        ],
+        "interval_seconds": 60,
+        "retention_seconds": 3600,
+        "max_results": 100,
+        "max_reports": 20,
+        "created_at": 0.0,
+        "expires_at": 3600.0,
+        "next_due": 0.0,
+        "revision": 1,
+        "paused": false,
+        "policy_fingerprint": "",
+        "last_slot": -1,
+        "latest_run_id": null,
+        "baseline": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 10.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 2,
+          "records": {
+            "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "3046f675caefd18fb8328dd2fe662633e0977a85e1d05f0cc372fc6e4085bf37": {
+              "url": "https://b.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          "incomparable_reasons": [],
+          "expires_at": 3600.0
+        },
+        "lease_token": null,
+        "lease_expires_at": 0,
+        "deleted": false
+      },
+      "rows": [
+        {
+          "url": "https://a.test",
+          "title": "title",
+          "content": "source text",
+          "engine": "brave"
+        }
+      ],
+      "response": {},
+      "observation": {
+        "window": {
+          "query": "query",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 100,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": false,
+        "coverage": {
+          "wikipedia": "ok"
+        },
+        "discovered_count": 1,
+        "records": {
+          "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+            "url": "https://a.test",
+            "engine": "brave",
+            "engines": [
+              "brave"
+            ],
+            "fields": {
+              "title": "title",
+              "content": "source text",
+              "published_date": null
+            }
+          }
+        },
+        "incomparable_reasons": []
+      },
+      "report": {
+        "run_id": "run-golden",
+        "search_id": "saved",
+        "revision": 1,
+        "scheduled_at": 20.0,
+        "started_at": 20.0,
+        "finished_at": 20.0,
+        "missed_slots": 2,
+        "status": "incomparable",
+        "incomparable_reasons": [
+          "source_provenance_changed"
+        ],
+        "baseline_reason": null,
+        "baseline_observed_at": 10.0,
+        "observation": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 20.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 1,
+          "records": {
+            "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+              "url": "https://a.test",
+              "engine": "brave",
+              "engines": [
+                "brave"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          "incomparable_reasons": []
+        },
+        "events": [],
+        "expires_at": 3600.0
+      },
+      "replacement": null,
+      "report_spaced_bytes": 878,
+      "report_spaced_sha256": "54db360041c22b25059c6a1bcb02cdbb579f8f1e932abcad836bc66bbfb9fc2f"
+    },
+    {
+      "name": "ambiguous",
+      "definition": {
+        "search_id": "saved",
+        "tenant": "tenant",
+        "query": "query",
+        "engines": [
+          "wikipedia"
+        ],
+        "interval_seconds": 60,
+        "retention_seconds": 3600,
+        "max_results": 100,
+        "max_reports": 20,
+        "created_at": 0.0,
+        "expires_at": 3600.0,
+        "next_due": 0.0,
+        "revision": 1,
+        "paused": false,
+        "policy_fingerprint": "",
+        "last_slot": -1,
+        "latest_run_id": null,
+        "baseline": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 10.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 2,
+          "records": {
+            "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "3046f675caefd18fb8328dd2fe662633e0977a85e1d05f0cc372fc6e4085bf37": {
+              "url": "https://b.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          "incomparable_reasons": [],
+          "expires_at": 3600.0
+        },
+        "lease_token": null,
+        "lease_expires_at": 0,
+        "deleted": false
+      },
+      "rows": [
+        {
+          "url": "https://a.test/",
+          "title": "title",
+          "content": "source text",
+          "engine": "wikipedia"
+        },
+        {
+          "url": "https://a.test",
+          "title": "different",
+          "content": "source text",
+          "engine": "wikipedia"
+        }
+      ],
+      "response": {},
+      "observation": {
+        "window": {
+          "query": "query",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 100,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": false,
+        "coverage": {
+          "wikipedia": "ok"
+        },
+        "discovered_count": 2,
+        "records": {
+          "f0b99cd50e2d3bb5b74d1727a3e8287430f722fe7571ac19208deae7e563d209": {
+            "url": "https://a.test/",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "fields": {
+              "title": "title",
+              "content": "source text",
+              "published_date": null
+            }
+          },
+          "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+            "url": "https://a.test",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "fields": {
+              "title": "different",
+              "content": "source text",
+              "published_date": null
+            }
+          }
+        },
+        "incomparable_reasons": []
+      },
+      "report": {
+        "run_id": "run-golden",
+        "search_id": "saved",
+        "revision": 1,
+        "scheduled_at": 20.0,
+        "started_at": 20.0,
+        "finished_at": 20.0,
+        "missed_slots": 2,
+        "status": "compared",
+        "incomparable_reasons": [],
+        "baseline_reason": null,
+        "baseline_observed_at": 10.0,
+        "observation": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 20.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 2,
+          "records": {
+            "f0b99cd50e2d3bb5b74d1727a3e8287430f722fe7571ac19208deae7e563d209": {
+              "url": "https://a.test/",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "different",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          "incomparable_reasons": []
+        },
+        "events": [
+          {
+            "event_id": "c07dd254cdcbf1c2b86d9bf5b55dafd76a1d7277de5adb4b37de3e2d3b1b8ce0",
+            "kind": "not_observed_in_latest_run",
+            "identity": "3046f675caefd18fb8328dd2fe662633e0977a85e1d05f0cc372fc6e4085bf37",
+            "before": {
+              "url": "https://b.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "after": null
+          },
+          {
+            "event_id": "6b87161fdf2bae965dbd61a40bfe13136885d59f6974e1b31a664279d453ce94",
+            "kind": "source_field_changed",
+            "identity": "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b",
+            "before": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "after": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "different",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          {
+            "event_id": "b81b43699823a15d64a003ce9472cc756ddc69d0130e41a41710075e4b1c6fc5",
+            "kind": "added",
+            "identity": "f0b99cd50e2d3bb5b74d1727a3e8287430f722fe7571ac19208deae7e563d209",
+            "before": null,
+            "after": {
+              "url": "https://a.test/",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          }
+        ],
+        "expires_at": 3600.0
+      },
+      "replacement": {
+        "window": {
+          "query": "query",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 100,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": false,
+        "coverage": {
+          "wikipedia": "ok"
+        },
+        "discovered_count": 2,
+        "records": {
+          "f0b99cd50e2d3bb5b74d1727a3e8287430f722fe7571ac19208deae7e563d209": {
+            "url": "https://a.test/",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "fields": {
+              "title": "title",
+              "content": "source text",
+              "published_date": null
+            }
+          },
+          "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+            "url": "https://a.test",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "fields": {
+              "title": "different",
+              "content": "source text",
+              "published_date": null
+            }
+          }
+        },
+        "incomparable_reasons": [],
+        "expires_at": 3600.0
+      },
+      "report_spaced_bytes": 2353,
+      "report_spaced_sha256": "7563b984958221e7dfb0113d1bfaa07c7d4b53005d54a5118cc23e01b42dbf1d"
+    },
+    {
+      "name": "utf8_oversize",
+      "definition": {
+        "search_id": "saved",
+        "tenant": "tenant",
+        "query": "query",
+        "engines": [
+          "wikipedia"
+        ],
+        "interval_seconds": 60,
+        "retention_seconds": 3600,
+        "max_results": 100,
+        "max_reports": 20,
+        "created_at": 0.0,
+        "expires_at": 3600.0,
+        "next_due": 0.0,
+        "revision": 1,
+        "paused": false,
+        "policy_fingerprint": "",
+        "last_slot": -1,
+        "latest_run_id": null,
+        "baseline": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 10.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 2,
+          "records": {
+            "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "3046f675caefd18fb8328dd2fe662633e0977a85e1d05f0cc372fc6e4085bf37": {
+              "url": "https://b.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          "incomparable_reasons": [],
+          "expires_at": 3600.0
+        },
+        "lease_token": null,
+        "lease_expires_at": 0,
+        "deleted": false
+      },
+      "rows": [
+        {
+          "url": "https://a.test",
+          "title": "\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea",
+          "content": "source text",
+          "engine": "wikipedia"
+        }
+      ],
+      "response": {},
+      "observation": {
+        "window": {
+          "query": "query",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 100,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": false,
+        "coverage": {
+          "wikipedia": "ok"
+        },
+        "discovered_count": 1,
+        "records": {},
+        "incomparable_reasons": [
+          "unrepresentable_source_record"
+        ]
+      },
+      "report": {
+        "run_id": "run-golden",
+        "search_id": "saved",
+        "revision": 1,
+        "scheduled_at": 20.0,
+        "started_at": 20.0,
+        "finished_at": 20.0,
+        "missed_slots": 2,
+        "status": "incomparable",
+        "incomparable_reasons": [
+          "unrepresentable_source_record"
+        ],
+        "baseline_reason": null,
+        "baseline_observed_at": 10.0,
+        "observation": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 20.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 1,
+          "records": {},
+          "incomparable_reasons": [
+            "unrepresentable_source_record"
+          ]
+        },
+        "events": [],
+        "expires_at": 3600.0
+      },
+      "replacement": null,
+      "report_spaced_bytes": 699,
+      "report_spaced_sha256": "3489c6b34452490af867e15a20b04ce49ca582ff35548fcbd180a1046b39ae83"
+    },
+    {
+      "name": "empty_url",
+      "definition": {
+        "search_id": "saved",
+        "tenant": "tenant",
+        "query": "query",
+        "engines": [
+          "wikipedia"
+        ],
+        "interval_seconds": 60,
+        "retention_seconds": 3600,
+        "max_results": 100,
+        "max_reports": 20,
+        "created_at": 0.0,
+        "expires_at": 3600.0,
+        "next_due": 0.0,
+        "revision": 1,
+        "paused": false,
+        "policy_fingerprint": "",
+        "last_slot": -1,
+        "latest_run_id": null,
+        "baseline": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 10.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 2,
+          "records": {
+            "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "3046f675caefd18fb8328dd2fe662633e0977a85e1d05f0cc372fc6e4085bf37": {
+              "url": "https://b.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          "incomparable_reasons": [],
+          "expires_at": 3600.0
+        },
+        "lease_token": null,
+        "lease_expires_at": 0,
+        "deleted": false
+      },
+      "rows": [
+        {
+          "url": "",
+          "title": "title",
+          "content": "source text",
+          "engine": "wikipedia"
+        }
+      ],
+      "response": {},
+      "observation": {
+        "window": {
+          "query": "query",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 100,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": false,
+        "coverage": {
+          "wikipedia": "ok"
+        },
+        "discovered_count": 1,
+        "records": {},
+        "incomparable_reasons": [
+          "unrepresentable_source_record"
+        ]
+      },
+      "report": {
+        "run_id": "run-golden",
+        "search_id": "saved",
+        "revision": 1,
+        "scheduled_at": 20.0,
+        "started_at": 20.0,
+        "finished_at": 20.0,
+        "missed_slots": 2,
+        "status": "incomparable",
+        "incomparable_reasons": [
+          "unrepresentable_source_record"
+        ],
+        "baseline_reason": null,
+        "baseline_observed_at": 10.0,
+        "observation": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 20.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 1,
+          "records": {},
+          "incomparable_reasons": [
+            "unrepresentable_source_record"
+          ]
+        },
+        "events": [],
+        "expires_at": 3600.0
+      },
+      "replacement": null,
+      "report_spaced_bytes": 699,
+      "report_spaced_sha256": "3489c6b34452490af867e15a20b04ce49ca582ff35548fcbd180a1046b39ae83"
+    },
+    {
+      "name": "unicode",
+      "definition": {
+        "search_id": "saved",
+        "tenant": "tenant",
+        "query": "query",
+        "engines": [
+          "wikipedia"
+        ],
+        "interval_seconds": 60,
+        "retention_seconds": 3600,
+        "max_results": 100,
+        "max_reports": 20,
+        "created_at": 0.0,
+        "expires_at": 3600.0,
+        "next_due": 0.0,
+        "revision": 1,
+        "paused": false,
+        "policy_fingerprint": "",
+        "last_slot": -1,
+        "latest_run_id": null,
+        "baseline": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 10.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 2,
+          "records": {
+            "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "3046f675caefd18fb8328dd2fe662633e0977a85e1d05f0cc372fc6e4085bf37": {
+              "url": "https://b.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          "incomparable_reasons": [],
+          "expires_at": 3600.0
+        },
+        "lease_token": null,
+        "lease_expires_at": 0,
+        "deleted": false
+      },
+      "rows": [
+        {
+          "url": "https://\u96ea.test/\ud83d\ude00",
+          "title": "\u96ea\ud83d\ude00",
+          "content": "source text",
+          "engine": "wikipedia"
+        }
+      ],
+      "response": {},
+      "observation": {
+        "window": {
+          "query": "query",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 100,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": false,
+        "coverage": {
+          "wikipedia": "ok"
+        },
+        "discovered_count": 1,
+        "records": {
+          "0a959f8bd7606a85f370daa59e083c13cb0aedf8318bff19b163bd7428032544": {
+            "url": "https://\u96ea.test/\ud83d\ude00",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "fields": {
+              "title": "\u96ea\ud83d\ude00",
+              "content": "source text",
+              "published_date": null
+            }
+          }
+        },
+        "incomparable_reasons": []
+      },
+      "report": {
+        "run_id": "run-golden",
+        "search_id": "saved",
+        "revision": 1,
+        "scheduled_at": 20.0,
+        "started_at": 20.0,
+        "finished_at": 20.0,
+        "missed_slots": 2,
+        "status": "compared",
+        "incomparable_reasons": [],
+        "baseline_reason": null,
+        "baseline_observed_at": 10.0,
+        "observation": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 20.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 1,
+          "records": {
+            "0a959f8bd7606a85f370daa59e083c13cb0aedf8318bff19b163bd7428032544": {
+              "url": "https://\u96ea.test/\ud83d\ude00",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "\u96ea\ud83d\ude00",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          "incomparable_reasons": []
+        },
+        "events": [
+          {
+            "event_id": "d2e4f3f8e676da6f4e2c72b70266e65ec849f0eb0a284c13d40aad0a5c1184bf",
+            "kind": "added",
+            "identity": "0a959f8bd7606a85f370daa59e083c13cb0aedf8318bff19b163bd7428032544",
+            "before": null,
+            "after": {
+              "url": "https://\u96ea.test/\ud83d\ude00",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "\u96ea\ud83d\ude00",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          {
+            "event_id": "c07dd254cdcbf1c2b86d9bf5b55dafd76a1d7277de5adb4b37de3e2d3b1b8ce0",
+            "kind": "not_observed_in_latest_run",
+            "identity": "3046f675caefd18fb8328dd2fe662633e0977a85e1d05f0cc372fc6e4085bf37",
+            "before": {
+              "url": "https://b.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "after": null
+          },
+          {
+            "event_id": "cff95958f13183c0a2054c9219325a2430652531bd1b2697a3d45e3f8c7319c2",
+            "kind": "not_observed_in_latest_run",
+            "identity": "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b",
+            "before": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "after": null
+          }
+        ],
+        "expires_at": 3600.0
+      },
+      "replacement": {
+        "window": {
+          "query": "query",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 100,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": false,
+        "coverage": {
+          "wikipedia": "ok"
+        },
+        "discovered_count": 1,
+        "records": {
+          "0a959f8bd7606a85f370daa59e083c13cb0aedf8318bff19b163bd7428032544": {
+            "url": "https://\u96ea.test/\ud83d\ude00",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "fields": {
+              "title": "\u96ea\ud83d\ude00",
+              "content": "source text",
+              "published_date": null
+            }
+          }
+        },
+        "incomparable_reasons": [],
+        "expires_at": 3600.0
+      },
+      "report_spaced_bytes": 2037,
+      "report_spaced_sha256": "e05647f20a8c70905dac5f22472da312eb726b7709b8ec755c4719ca3c766862"
+    },
+    {
+      "name": "expired",
+      "definition": {
+        "search_id": "saved",
+        "tenant": "tenant",
+        "query": "query",
+        "engines": [
+          "wikipedia"
+        ],
+        "interval_seconds": 60,
+        "retention_seconds": 3600,
+        "max_results": 100,
+        "max_reports": 20,
+        "created_at": 0.0,
+        "expires_at": 3600.0,
+        "next_due": 0.0,
+        "revision": 1,
+        "paused": false,
+        "policy_fingerprint": "",
+        "last_slot": -1,
+        "latest_run_id": null,
+        "baseline": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 10.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 2,
+          "records": {
+            "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "3046f675caefd18fb8328dd2fe662633e0977a85e1d05f0cc372fc6e4085bf37": {
+              "url": "https://b.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          "incomparable_reasons": [],
+          "expires_at": 15.0
+        },
+        "lease_token": null,
+        "lease_expires_at": 0,
+        "deleted": false
+      },
+      "rows": [],
+      "response": {},
+      "observation": {
+        "window": {
+          "query": "query",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 100,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": false,
+        "coverage": {
+          "wikipedia": "ok"
+        },
+        "discovered_count": 0,
+        "records": {},
+        "incomparable_reasons": []
+      },
+      "report": {
+        "run_id": "run-golden",
+        "search_id": "saved",
+        "revision": 1,
+        "scheduled_at": 20.0,
+        "started_at": 20.0,
+        "finished_at": 20.0,
+        "missed_slots": 2,
+        "status": "baseline_initialized",
+        "incomparable_reasons": [],
+        "baseline_reason": "baseline_expired",
+        "baseline_observed_at": null,
+        "observation": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 20.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 0,
+          "records": {},
+          "incomparable_reasons": []
+        },
+        "events": [],
+        "expires_at": 3600.0
+      },
+      "replacement": {
+        "window": {
+          "query": "query",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 100,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": false,
+        "coverage": {
+          "wikipedia": "ok"
+        },
+        "discovered_count": 0,
+        "records": {},
+        "incomparable_reasons": [],
+        "expires_at": 3600.0
+      },
+      "report_spaced_bytes": 659,
+      "report_spaced_sha256": "be3a11fd2da2967c16a69def0e25b2167d699d71af86b0cb4e84d173f5bc170d"
+    },
+    {
+      "name": "window",
+      "definition": {
+        "search_id": "saved",
+        "tenant": "tenant",
+        "query": "changed",
+        "engines": [
+          "wikipedia"
+        ],
+        "interval_seconds": 60,
+        "retention_seconds": 3600,
+        "max_results": 100,
+        "max_reports": 20,
+        "created_at": 0.0,
+        "expires_at": 3600.0,
+        "next_due": 0.0,
+        "revision": 1,
+        "paused": false,
+        "policy_fingerprint": "",
+        "last_slot": -1,
+        "latest_run_id": null,
+        "baseline": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 10.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 2,
+          "records": {
+            "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "3046f675caefd18fb8328dd2fe662633e0977a85e1d05f0cc372fc6e4085bf37": {
+              "url": "https://b.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          "incomparable_reasons": [],
+          "expires_at": 3600.0
+        },
+        "lease_token": null,
+        "lease_expires_at": 0,
+        "deleted": false
+      },
+      "rows": [],
+      "response": {},
+      "observation": {
+        "window": {
+          "query": "changed",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 100,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": false,
+        "coverage": {
+          "wikipedia": "ok"
+        },
+        "discovered_count": 0,
+        "records": {},
+        "incomparable_reasons": []
+      },
+      "report": {
+        "run_id": "run-golden",
+        "search_id": "saved",
+        "revision": 1,
+        "scheduled_at": 20.0,
+        "started_at": 20.0,
+        "finished_at": 20.0,
+        "missed_slots": 2,
+        "status": "baseline_initialized",
+        "incomparable_reasons": [],
+        "baseline_reason": "comparison_window_changed",
+        "baseline_observed_at": null,
+        "observation": {
+          "window": {
+            "query": "changed",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 20.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 0,
+          "records": {},
+          "incomparable_reasons": []
+        },
+        "events": [],
+        "expires_at": 3600.0
+      },
+      "replacement": {
+        "window": {
+          "query": "changed",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 100,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": false,
+        "coverage": {
+          "wikipedia": "ok"
+        },
+        "discovered_count": 0,
+        "records": {},
+        "incomparable_reasons": [],
+        "expires_at": 3600.0
+      },
+      "report_spaced_bytes": 670,
+      "report_spaced_sha256": "34817cfcba4b9bddff91418bba24da13e391b956ffb710335bc1fd8dad7b21ee"
+    },
+    {
+      "name": "provenance_order",
+      "definition": {
+        "search_id": "saved",
+        "tenant": "tenant",
+        "query": "query",
+        "engines": [
+          "wikipedia"
+        ],
+        "interval_seconds": 60,
+        "retention_seconds": 3600,
+        "max_results": 100,
+        "max_reports": 20,
+        "created_at": 0.0,
+        "expires_at": 3600.0,
+        "next_due": 0.0,
+        "revision": 1,
+        "paused": false,
+        "policy_fingerprint": "",
+        "last_slot": -1,
+        "latest_run_id": null,
+        "baseline": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 10.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 2,
+          "records": {
+            "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "brave",
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "3046f675caefd18fb8328dd2fe662633e0977a85e1d05f0cc372fc6e4085bf37": {
+              "url": "https://b.test",
+              "engine": "wikipedia",
+              "engines": [
+                "brave",
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          "incomparable_reasons": [],
+          "expires_at": 3600.0
+        },
+        "lease_token": null,
+        "lease_expires_at": 0,
+        "deleted": false
+      },
+      "rows": [
+        {
+          "url": "https://a.test",
+          "title": "title",
+          "content": "source text",
+          "engine": "wikipedia",
+          "engines": [
+            "wikipedia",
+            "brave"
+          ]
+        }
+      ],
+      "response": {},
+      "observation": {
+        "window": {
+          "query": "query",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 100,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": false,
+        "coverage": {
+          "wikipedia": "ok"
+        },
+        "discovered_count": 1,
+        "records": {
+          "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+            "url": "https://a.test",
+            "engine": "wikipedia",
+            "engines": [
+              "brave",
+              "wikipedia"
+            ],
+            "fields": {
+              "title": "title",
+              "content": "source text",
+              "published_date": null
+            }
+          }
+        },
+        "incomparable_reasons": []
+      },
+      "report": {
+        "run_id": "run-golden",
+        "search_id": "saved",
+        "revision": 1,
+        "scheduled_at": 20.0,
+        "started_at": 20.0,
+        "finished_at": 20.0,
+        "missed_slots": 2,
+        "status": "compared",
+        "incomparable_reasons": [],
+        "baseline_reason": null,
+        "baseline_observed_at": 10.0,
+        "observation": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 20.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 1,
+          "records": {
+            "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "brave",
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          "incomparable_reasons": []
+        },
+        "events": [
+          {
+            "event_id": "c07dd254cdcbf1c2b86d9bf5b55dafd76a1d7277de5adb4b37de3e2d3b1b8ce0",
+            "kind": "not_observed_in_latest_run",
+            "identity": "3046f675caefd18fb8328dd2fe662633e0977a85e1d05f0cc372fc6e4085bf37",
+            "before": {
+              "url": "https://b.test",
+              "engine": "wikipedia",
+              "engines": [
+                "brave",
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "after": null
+          }
+        ],
+        "expires_at": 3600.0
+      },
+      "replacement": {
+        "window": {
+          "query": "query",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 100,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": false,
+        "coverage": {
+          "wikipedia": "ok"
+        },
+        "discovered_count": 1,
+        "records": {
+          "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+            "url": "https://a.test",
+            "engine": "wikipedia",
+            "engines": [
+              "brave",
+              "wikipedia"
+            ],
+            "fields": {
+              "title": "title",
+              "content": "source text",
+              "published_date": null
+            }
+          }
+        },
+        "incomparable_reasons": [],
+        "expires_at": 3600.0
+      },
+      "report_spaced_bytes": 1252,
+      "report_spaced_sha256": "c66a810714a4fb03b8a7963657cdd0ee275d07111c0e58ca7825b93e48917811"
+    },
+    {
+      "name": "provenance_set_changed",
+      "definition": {
+        "search_id": "saved",
+        "tenant": "tenant",
+        "query": "query",
+        "engines": [
+          "wikipedia"
+        ],
+        "interval_seconds": 60,
+        "retention_seconds": 3600,
+        "max_results": 100,
+        "max_reports": 20,
+        "created_at": 0.0,
+        "expires_at": 3600.0,
+        "next_due": 0.0,
+        "revision": 1,
+        "paused": false,
+        "policy_fingerprint": "",
+        "last_slot": -1,
+        "latest_run_id": null,
+        "baseline": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 10.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 2,
+          "records": {
+            "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "3046f675caefd18fb8328dd2fe662633e0977a85e1d05f0cc372fc6e4085bf37": {
+              "url": "https://b.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          "incomparable_reasons": [],
+          "expires_at": 3600.0
+        },
+        "lease_token": null,
+        "lease_expires_at": 0,
+        "deleted": false
+      },
+      "rows": [
+        {
+          "url": "https://a.test",
+          "title": "title",
+          "content": "source text",
+          "engine": "wikipedia",
+          "engines": [
+            "brave",
+            "wikipedia"
+          ]
+        }
+      ],
+      "response": {},
+      "observation": {
+        "window": {
+          "query": "query",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 100,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": false,
+        "coverage": {
+          "wikipedia": "ok"
+        },
+        "discovered_count": 1,
+        "records": {
+          "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+            "url": "https://a.test",
+            "engine": "wikipedia",
+            "engines": [
+              "brave",
+              "wikipedia"
+            ],
+            "fields": {
+              "title": "title",
+              "content": "source text",
+              "published_date": null
+            }
+          }
+        },
+        "incomparable_reasons": []
+      },
+      "report": {
+        "run_id": "run-golden",
+        "search_id": "saved",
+        "revision": 1,
+        "scheduled_at": 20.0,
+        "started_at": 20.0,
+        "finished_at": 20.0,
+        "missed_slots": 2,
+        "status": "incomparable",
+        "incomparable_reasons": [
+          "source_provenance_changed"
+        ],
+        "baseline_reason": null,
+        "baseline_observed_at": 10.0,
+        "observation": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 20.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 1,
+          "records": {
+            "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "brave",
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          "incomparable_reasons": []
+        },
+        "events": [],
+        "expires_at": 3600.0
+      },
+      "replacement": null,
+      "report_spaced_bytes": 895,
+      "report_spaced_sha256": "06ad79da03980478297fddcab03a3546cc48dc0bb346e99d0a96c824424c0300"
+    },
+    {
+      "name": "published_date_only",
+      "definition": {
+        "search_id": "saved",
+        "tenant": "tenant",
+        "query": "query",
+        "engines": [
+          "wikipedia"
+        ],
+        "interval_seconds": 60,
+        "retention_seconds": 3600,
+        "max_results": 100,
+        "max_reports": 20,
+        "created_at": 0.0,
+        "expires_at": 3600.0,
+        "next_due": 0.0,
+        "revision": 1,
+        "paused": false,
+        "policy_fingerprint": "",
+        "last_slot": -1,
+        "latest_run_id": null,
+        "baseline": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 10.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 2,
+          "records": {
+            "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "3046f675caefd18fb8328dd2fe662633e0977a85e1d05f0cc372fc6e4085bf37": {
+              "url": "https://b.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          "incomparable_reasons": [],
+          "expires_at": 3600.0
+        },
+        "lease_token": null,
+        "lease_expires_at": 0,
+        "deleted": false
+      },
+      "rows": [
+        {
+          "url": "https://a.test",
+          "title": "title",
+          "content": "source text",
+          "engine": "wikipedia",
+          "published_date": "2026-10-16"
+        }
+      ],
+      "response": {},
+      "observation": {
+        "window": {
+          "query": "query",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 100,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": false,
+        "coverage": {
+          "wikipedia": "ok"
+        },
+        "discovered_count": 1,
+        "records": {
+          "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+            "url": "https://a.test",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "fields": {
+              "title": "title",
+              "content": "source text",
+              "published_date": "2026-10-16"
+            }
+          }
+        },
+        "incomparable_reasons": []
+      },
+      "report": {
+        "run_id": "run-golden",
+        "search_id": "saved",
+        "revision": 1,
+        "scheduled_at": 20.0,
+        "started_at": 20.0,
+        "finished_at": 20.0,
+        "missed_slots": 2,
+        "status": "compared",
+        "incomparable_reasons": [],
+        "baseline_reason": null,
+        "baseline_observed_at": 10.0,
+        "observation": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 20.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 1,
+          "records": {
+            "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": "2026-10-16"
+              }
+            }
+          },
+          "incomparable_reasons": []
+        },
+        "events": [
+          {
+            "event_id": "c07dd254cdcbf1c2b86d9bf5b55dafd76a1d7277de5adb4b37de3e2d3b1b8ce0",
+            "kind": "not_observed_in_latest_run",
+            "identity": "3046f675caefd18fb8328dd2fe662633e0977a85e1d05f0cc372fc6e4085bf37",
+            "before": {
+              "url": "https://b.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "after": null
+          },
+          {
+            "event_id": "6b87161fdf2bae965dbd61a40bfe13136885d59f6974e1b31a664279d453ce94",
+            "kind": "source_field_changed",
+            "identity": "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b",
+            "before": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "after": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": "2026-10-16"
+              }
+            }
+          }
+        ],
+        "expires_at": 3600.0
+      },
+      "replacement": {
+        "window": {
+          "query": "query",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 100,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": false,
+        "coverage": {
+          "wikipedia": "ok"
+        },
+        "discovered_count": 1,
+        "records": {
+          "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+            "url": "https://a.test",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "fields": {
+              "title": "title",
+              "content": "source text",
+              "published_date": "2026-10-16"
+            }
+          }
+        },
+        "incomparable_reasons": [],
+        "expires_at": 3600.0
+      },
+      "report_spaced_bytes": 1775,
+      "report_spaced_sha256": "7bd570fb63c5e09dff9a3a823763c1bc4c7547bb4467ea7b4230fa14c5a4d664"
+    },
+    {
+      "name": "published_date_empty",
+      "definition": {
+        "search_id": "saved",
+        "tenant": "tenant",
+        "query": "query",
+        "engines": [
+          "wikipedia"
+        ],
+        "interval_seconds": 60,
+        "retention_seconds": 3600,
+        "max_results": 100,
+        "max_reports": 20,
+        "created_at": 0.0,
+        "expires_at": 3600.0,
+        "next_due": 0.0,
+        "revision": 1,
+        "paused": false,
+        "policy_fingerprint": "",
+        "last_slot": -1,
+        "latest_run_id": null,
+        "baseline": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 10.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 2,
+          "records": {
+            "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "3046f675caefd18fb8328dd2fe662633e0977a85e1d05f0cc372fc6e4085bf37": {
+              "url": "https://b.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            }
+          },
+          "incomparable_reasons": [],
+          "expires_at": 3600.0
+        },
+        "lease_token": null,
+        "lease_expires_at": 0,
+        "deleted": false
+      },
+      "rows": [
+        {
+          "url": "https://a.test",
+          "title": "title",
+          "content": "source text",
+          "engine": "wikipedia",
+          "published_date": ""
+        }
+      ],
+      "response": {},
+      "observation": {
+        "window": {
+          "query": "query",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 100,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": false,
+        "coverage": {
+          "wikipedia": "ok"
+        },
+        "discovered_count": 1,
+        "records": {
+          "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+            "url": "https://a.test",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "fields": {
+              "title": "title",
+              "content": "source text",
+              "published_date": ""
+            }
+          }
+        },
+        "incomparable_reasons": []
+      },
+      "report": {
+        "run_id": "run-golden",
+        "search_id": "saved",
+        "revision": 1,
+        "scheduled_at": 20.0,
+        "started_at": 20.0,
+        "finished_at": 20.0,
+        "missed_slots": 2,
+        "status": "compared",
+        "incomparable_reasons": [],
+        "baseline_reason": null,
+        "baseline_observed_at": 10.0,
+        "observation": {
+          "window": {
+            "query": "query",
+            "engines": [
+              "wikipedia"
+            ],
+            "page": 1,
+            "max_results": 100,
+            "revision": 1,
+            "identity_version": "url-source-window-v1",
+            "policy_fingerprint": ""
+          },
+          "observed_at": 20.0,
+          "query_id": "q-fixed",
+          "cached": false,
+          "coverage": {
+            "wikipedia": "ok"
+          },
+          "discovered_count": 1,
+          "records": {
+            "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": ""
+              }
+            }
+          },
+          "incomparable_reasons": []
+        },
+        "events": [
+          {
+            "event_id": "c07dd254cdcbf1c2b86d9bf5b55dafd76a1d7277de5adb4b37de3e2d3b1b8ce0",
+            "kind": "not_observed_in_latest_run",
+            "identity": "3046f675caefd18fb8328dd2fe662633e0977a85e1d05f0cc372fc6e4085bf37",
+            "before": {
+              "url": "https://b.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "after": null
+          },
+          {
+            "event_id": "6b87161fdf2bae965dbd61a40bfe13136885d59f6974e1b31a664279d453ce94",
+            "kind": "source_field_changed",
+            "identity": "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b",
+            "before": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": null
+              }
+            },
+            "after": {
+              "url": "https://a.test",
+              "engine": "wikipedia",
+              "engines": [
+                "wikipedia"
+              ],
+              "fields": {
+                "title": "title",
+                "content": "source text",
+                "published_date": ""
+              }
+            }
+          }
+        ],
+        "expires_at": 3600.0
+      },
+      "replacement": {
+        "window": {
+          "query": "query",
+          "engines": [
+            "wikipedia"
+          ],
+          "page": 1,
+          "max_results": 100,
+          "revision": 1,
+          "identity_version": "url-source-window-v1",
+          "policy_fingerprint": ""
+        },
+        "observed_at": 20.0,
+        "query_id": "q-fixed",
+        "cached": false,
+        "coverage": {
+          "wikipedia": "ok"
+        },
+        "discovered_count": 1,
+        "records": {
+          "68168a7a0a0af0b9378bf4a8f952efb439e1be195f8935cbc14e3bb4fd463c1b": {
+            "url": "https://a.test",
+            "engine": "wikipedia",
+            "engines": [
+              "wikipedia"
+            ],
+            "fields": {
+              "title": "title",
+              "content": "source text",
+              "published_date": ""
+            }
+          }
+        },
+        "incomparable_reasons": [],
+        "expires_at": 3600.0
+      },
+      "report_spaced_bytes": 1755,
+      "report_spaced_sha256": "6b84b37cd75d19370660a7cc75d0dc77bab2cf04934170c5b1a96bac79d430ba"
+    }
+  ]
+}

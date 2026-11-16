@@ -1,0 +1,2150 @@
+{
+  "schema_version": 1,
+  "plan_id": "T05",
+  "baseline": "403dfd3720e969fa829f426136bf0f05b0360c56",
+  "python": "3.14.7",
+  "python_hash_seed": "0",
+  "mcp": "2.3.0",
+  "fastmcp": "4.0.11",
+  "sources": {
+    "slopsearx/mcp/oauth.py": "6c29136856842ef57a2878d1a7651d30df40931b",
+    "slopsearx/mcp/security.py": "a0d6300d0883f2cca19e3bbd70ce7126b33ee6a9",
+    "slopsearx/mcp/server.py": "f5f7c6c368e2b6dc3f8056090e978f3bd6243649",
+    "tests/test_mcp_oauth.py": "f889dbe1f3b9890bd1b6f7c08474c7a9759ae75a",
+    "tests/test_mcp_security.py": "1f45cee42ecb4bd59e21ead4c26abfbd52eb0f7e",
+    "uv.lock": "24e92a80e8ecc761880fe603a01da41312dea180"
+  },
+  "capture": "independent loopback HTTP client; synthetic provider; zero external/provider calls",
+  "normalization": "opaque IDs/tokens/codes and issuance epoch only; no status/body/error/header normalization",
+  "cases": [
+    {
+      "case": "metadata:/.well-known/oauth-authorization-server",
+      "request": {
+        "method": "GET",
+        "path": "/.well-known/oauth-authorization-server",
+        "headers": {
+          "Origin": "https://client.example"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "cache-control": "public, max-age=3600",
+          "access-control-allow-origin": "*"
+        },
+        "body": {
+          "issuer": "http://127.0.0.1/",
+          "authorization_endpoint": "http://127.0.0.1/authorize",
+          "token_endpoint": "http://127.0.0.1/token",
+          "registration_endpoint": "http://127.0.0.1/register",
+          "response_types_supported": [
+            "code"
+          ],
+          "grant_types_supported": [
+            "authorization_code",
+            "refresh_token"
+          ],
+          "token_endpoint_auth_methods_supported": [
+            "client_secret_post",
+            "client_secret_basic"
+          ],
+          "revocation_endpoint": "http://127.0.0.1/revoke",
+          "revocation_endpoint_auth_methods_supported": [
+            "client_secret_post",
+            "client_secret_basic"
+          ],
+          "code_challenge_methods_supported": [
+            "S256"
+          ]
+        }
+      }
+    },
+    {
+      "case": "metadata:/.well-known/oauth-protected-resource/mcp",
+      "request": {
+        "method": "GET",
+        "path": "/.well-known/oauth-protected-resource/mcp",
+        "headers": {
+          "Origin": "https://client.example"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "cache-control": "public, max-age=3600",
+          "access-control-allow-origin": "*"
+        },
+        "body": {
+          "resource": "http://127.0.0.1/mcp",
+          "authorization_servers": [
+            "http://127.0.0.1/"
+          ],
+          "scopes_supported": [],
+          "bearer_methods_supported": [
+            "header"
+          ]
+        }
+      }
+    },
+    {
+      "case": "metadata:/.well-known/openid-configuration",
+      "request": {
+        "method": "GET",
+        "path": "/.well-known/openid-configuration",
+        "headers": {
+          "Origin": "https://client.example"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "content-type": "text/plain; charset=utf-8"
+        },
+        "body": "Not Found"
+      }
+    },
+    {
+      "case": "cors:/register",
+      "request": {
+        "method": "OPTIONS",
+        "path": "/register",
+        "headers": {
+          "Origin": "https://client.example",
+          "Access-Control-Request-Method": "POST",
+          "Access-Control-Request-Headers": "authorization,content-type"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "text/plain; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "POST, OPTIONS",
+          "access-control-allow-headers": "Accept, Accept-Language, Content-Language, Content-Type, mcp-protocol-version",
+          "access-control-max-age": "600"
+        },
+        "body": "Disallowed CORS headers"
+      }
+    },
+    {
+      "case": "cors:/token",
+      "request": {
+        "method": "OPTIONS",
+        "path": "/token",
+        "headers": {
+          "Origin": "https://client.example",
+          "Access-Control-Request-Method": "POST",
+          "Access-Control-Request-Headers": "authorization,content-type"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "text/plain; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "POST, OPTIONS",
+          "access-control-allow-headers": "Accept, Accept-Language, Content-Language, Content-Type, mcp-protocol-version",
+          "access-control-max-age": "600"
+        },
+        "body": "Disallowed CORS headers"
+      }
+    },
+    {
+      "case": "cors:/revoke",
+      "request": {
+        "method": "OPTIONS",
+        "path": "/revoke",
+        "headers": {
+          "Origin": "https://client.example",
+          "Access-Control-Request-Method": "POST",
+          "Access-Control-Request-Headers": "authorization,content-type"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "text/plain; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "POST, OPTIONS",
+          "access-control-allow-headers": "Accept, Accept-Language, Content-Language, Content-Type, mcp-protocol-version",
+          "access-control-max-age": "600"
+        },
+        "body": "Disallowed CORS headers"
+      }
+    },
+    {
+      "case": "cors:/.well-known/oauth-authorization-server",
+      "request": {
+        "method": "OPTIONS",
+        "path": "/.well-known/oauth-authorization-server",
+        "headers": {
+          "Origin": "https://client.example",
+          "Access-Control-Request-Method": "GET",
+          "Access-Control-Request-Headers": "authorization,content-type"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "text/plain; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Accept, Accept-Language, Content-Language, Content-Type, mcp-protocol-version",
+          "access-control-max-age": "600"
+        },
+        "body": "Disallowed CORS headers"
+      }
+    },
+    {
+      "case": "protected:missing:GET",
+      "request": {
+        "method": "GET",
+        "path": "/mcp",
+        "headers": {
+          "Accept": "application/json, text/event-stream"
+        }
+      },
+      "response": {
+        "status": 405,
+        "headers": {
+          "content-type": "text/plain; charset=utf-8",
+          "allow": "DELETE, POST"
+        },
+        "body": "Method Not Allowed"
+      }
+    },
+    {
+      "case": "protected:missing:HEAD",
+      "request": {
+        "method": "HEAD",
+        "path": "/mcp",
+        "headers": {
+          "Accept": "application/json, text/event-stream"
+        }
+      },
+      "response": {
+        "status": 405,
+        "headers": {
+          "content-type": "text/plain; charset=utf-8",
+          "allow": "DELETE, POST"
+        },
+        "body": ""
+      }
+    },
+    {
+      "case": "protected:missing:POST",
+      "request": {
+        "method": "POST",
+        "path": "/mcp",
+        "headers": {
+          "Accept": "application/json, text/event-stream"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "www-authenticate": "Bearer resource_metadata=\"http://127.0.0.1/.well-known/oauth-protected-resource/mcp\""
+        },
+        "body": ""
+      }
+    },
+    {
+      "case": "protected:missing:DELETE",
+      "request": {
+        "method": "DELETE",
+        "path": "/mcp",
+        "headers": {
+          "Accept": "application/json, text/event-stream"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "www-authenticate": "Bearer resource_metadata=\"http://127.0.0.1/.well-known/oauth-protected-resource/mcp\""
+        },
+        "body": ""
+      }
+    },
+    {
+      "case": "protected:missing:PUT",
+      "request": {
+        "method": "PUT",
+        "path": "/mcp",
+        "headers": {
+          "Accept": "application/json, text/event-stream"
+        }
+      },
+      "response": {
+        "status": 405,
+        "headers": {
+          "content-type": "text/plain; charset=utf-8",
+          "allow": "DELETE, POST"
+        },
+        "body": "Method Not Allowed"
+      }
+    },
+    {
+      "case": "register:missing",
+      "request": {
+        "method": "POST",
+        "path": "/register",
+        "json": {}
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "error": "invalid_client_metadata",
+          "error_description": "redirect_uris: Field required"
+        }
+      }
+    },
+    {
+      "case": "register:null",
+      "request": {
+        "method": "POST",
+        "path": "/register",
+        "json": {
+          "redirect_uris": null
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "response_types": [
+            "code"
+          ],
+          "token_endpoint_auth_method": "client_secret_post",
+          "grant_types": [
+            "authorization_code",
+            "refresh_token"
+          ],
+          "application_type": "native",
+          "client_id": "<client1>",
+          "client_secret": "<secret1>",
+          "client_id_issued_at": "<epoch-seconds>",
+          "client_secret_expires_at": 0
+        }
+      }
+    },
+    {
+      "case": "register:empty",
+      "request": {
+        "method": "POST",
+        "path": "/register",
+        "json": {
+          "redirect_uris": []
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "error": "invalid_client_metadata",
+          "error_description": "redirect_uris: List should have at least 1 item after validation, not 0"
+        }
+      }
+    },
+    {
+      "case": "register:bad-url",
+      "request": {
+        "method": "POST",
+        "path": "/register",
+        "json": {
+          "redirect_uris": [
+            "not a URL"
+          ]
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "error": "invalid_client_metadata",
+          "error_description": "redirect_uris.0: Input should be a valid URL, relative URL without a base"
+        }
+      }
+    },
+    {
+      "case": "register:bad-method",
+      "request": {
+        "method": "POST",
+        "path": "/register",
+        "json": {
+          "redirect_uris": [
+            "http://localhost/cb"
+          ],
+          "token_endpoint_auth_method": "bad"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "error": "invalid_client_metadata",
+          "error_description": "token_endpoint_auth_method: Input should be 'none', 'client_secret_post', 'client_secret_basic' or 'private_key_jwt'"
+        }
+      }
+    },
+    {
+      "case": "register:private-key",
+      "request": {
+        "method": "POST",
+        "path": "/register",
+        "json": {
+          "redirect_uris": [
+            "http://localhost/cb"
+          ],
+          "token_endpoint_auth_method": "private_key_jwt"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "error": "invalid_client_metadata",
+          "error_description": "token_endpoint_auth_method 'private_key_jwt' is not supported"
+        }
+      }
+    },
+    {
+      "case": "register:bad-grants",
+      "request": {
+        "method": "POST",
+        "path": "/register",
+        "json": {
+          "redirect_uris": [
+            "http://localhost/cb"
+          ],
+          "grant_types": [
+            "refresh_token"
+          ]
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "error": "invalid_client_metadata",
+          "error_description": "grant_types must include 'authorization_code'"
+        }
+      }
+    },
+    {
+      "case": "register:bad-response",
+      "request": {
+        "method": "POST",
+        "path": "/register",
+        "json": {
+          "redirect_uris": [
+            "http://localhost/cb"
+          ],
+          "response_types": []
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "error": "invalid_client_metadata",
+          "error_description": "response_types must include 'code' for authorization_code grant"
+        }
+      }
+    },
+    {
+      "case": "register:bad-app-type",
+      "request": {
+        "method": "POST",
+        "path": "/register",
+        "json": {
+          "redirect_uris": [
+            "http://localhost/cb"
+          ],
+          "application_type": "other"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "error": "invalid_client_metadata",
+          "error_description": "application_type: Input should be 'web' or 'native'"
+        }
+      }
+    },
+    {
+      "case": "register:public",
+      "request": {
+        "method": "POST",
+        "path": "/register",
+        "json": {
+          "redirect_uris": [
+            "http://localhost/cb"
+          ],
+          "token_endpoint_auth_method": "none",
+          "scope": "read write"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "response_types": [
+            "code"
+          ],
+          "scope": "read write",
+          "redirect_uris": [
+            "http://localhost/cb"
+          ],
+          "token_endpoint_auth_method": "none",
+          "grant_types": [
+            "authorization_code",
+            "refresh_token"
+          ],
+          "application_type": "native",
+          "client_id": "<client2>",
+          "client_id_issued_at": "<epoch-seconds>"
+        }
+      }
+    },
+    {
+      "case": "register:post",
+      "request": {
+        "method": "POST",
+        "path": "/register",
+        "json": {
+          "redirect_uris": [
+            "http://localhost/cb"
+          ],
+          "scope": "read write"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "response_types": [
+            "code"
+          ],
+          "scope": "read write",
+          "redirect_uris": [
+            "http://localhost/cb"
+          ],
+          "token_endpoint_auth_method": "client_secret_post",
+          "grant_types": [
+            "authorization_code",
+            "refresh_token"
+          ],
+          "application_type": "native",
+          "client_id": "<client3>",
+          "client_secret": "<secret2>",
+          "client_id_issued_at": "<epoch-seconds>",
+          "client_secret_expires_at": 0
+        }
+      }
+    },
+    {
+      "case": "register:basic",
+      "request": {
+        "method": "POST",
+        "path": "/register",
+        "json": {
+          "redirect_uris": [
+            "http://localhost/cb"
+          ],
+          "token_endpoint_auth_method": "client_secret_basic",
+          "scope": "read"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "response_types": [
+            "code"
+          ],
+          "scope": "read",
+          "redirect_uris": [
+            "http://localhost/cb"
+          ],
+          "token_endpoint_auth_method": "client_secret_basic",
+          "grant_types": [
+            "authorization_code",
+            "refresh_token"
+          ],
+          "application_type": "native",
+          "client_id": "<client4>",
+          "client_secret": "<secret3>",
+          "client_id_issued_at": "<epoch-seconds>",
+          "client_secret_expires_at": 0
+        }
+      }
+    },
+    {
+      "case": "register:full",
+      "request": {
+        "method": "POST",
+        "path": "/register",
+        "json": {
+          "redirect_uris": [
+            "custom:/callback",
+            "http://localhost/cb"
+          ],
+          "token_endpoint_auth_method": "none",
+          "scope": "read write",
+          "client_name": "synthetic client",
+          "client_uri": "https://example.com",
+          "logo_uri": "",
+          "contacts": [
+            "a@example.com"
+          ],
+          "tos_uri": "https://example.com/tos",
+          "policy_uri": "https://example.com/policy",
+          "jwks_uri": "https://example.com/keys",
+          "jwks": {
+            "keys": []
+          },
+          "software_id": "synthetic",
+          "software_version": "1",
+          "unknown_field": "ignored"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "response_types": [
+            "code"
+          ],
+          "scope": "read write",
+          "client_name": "synthetic client",
+          "client_uri": "https://example.com",
+          "contacts": [
+            "a@example.com"
+          ],
+          "tos_uri": "https://example.com/tos",
+          "policy_uri": "https://example.com/policy",
+          "jwks_uri": "https://example.com/keys",
+          "jwks": {
+            "keys": []
+          },
+          "software_id": "synthetic",
+          "software_version": "1",
+          "redirect_uris": [
+            "custom:/callback",
+            "http://localhost/cb"
+          ],
+          "token_endpoint_auth_method": "none",
+          "grant_types": [
+            "authorization_code",
+            "refresh_token"
+          ],
+          "application_type": "native",
+          "client_id": "<client5>",
+          "client_id_issued_at": "<epoch-seconds>"
+        }
+      }
+    },
+    {
+      "case": "authorize:unknown-client",
+      "request": {
+        "method": "GET",
+        "path": "/authorize",
+        "params": {
+          "client_id": "unknown-client",
+          "response_type": "code",
+          "code_challenge": "l9qsDumZjfytbJwJcNpcpBHIYjOpRMJbR1ZvanvB3dU",
+          "redirect_uri": "http://localhost/cb",
+          "state": "source-state",
+          "scope": "read",
+          "resource": "http://127.0.0.1/mcp"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json",
+          "cache-control": "no-store"
+        },
+        "body": {
+          "error": "invalid_request",
+          "error_description": "Client ID 'unknown-client' not found",
+          "state": "source-state"
+        }
+      }
+    },
+    {
+      "case": "authorize:bad-redirect",
+      "request": {
+        "method": "GET",
+        "path": "/authorize",
+        "params": {
+          "client_id": "<client2>",
+          "response_type": "code",
+          "code_challenge": "l9qsDumZjfytbJwJcNpcpBHIYjOpRMJbR1ZvanvB3dU",
+          "redirect_uri": "http://other.invalid/cb",
+          "state": "source-state",
+          "scope": "read",
+          "resource": "http://127.0.0.1/mcp"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json",
+          "cache-control": "no-store"
+        },
+        "body": {
+          "error": "invalid_request",
+          "error_description": "Redirect URI 'http://other.invalid/cb' not registered for client",
+          "state": "source-state"
+        }
+      }
+    },
+    {
+      "case": "authorize:bad-scope",
+      "request": {
+        "method": "GET",
+        "path": "/authorize",
+        "params": {
+          "client_id": "<client2>",
+          "response_type": "code",
+          "code_challenge": "l9qsDumZjfytbJwJcNpcpBHIYjOpRMJbR1ZvanvB3dU",
+          "redirect_uri": "http://localhost/cb",
+          "state": "source-state",
+          "scope": "admin",
+          "resource": "http://127.0.0.1/mcp"
+        }
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "cache-control": "no-store",
+          "location": "http://localhost/cb?error=invalid_scope&error_description=Client+was+not+registered+with+scope+admin&state=source-state"
+        },
+        "body": ""
+      }
+    },
+    {
+      "case": "authorize:bad-response",
+      "request": {
+        "method": "GET",
+        "path": "/authorize",
+        "params": {
+          "client_id": "<client2>",
+          "response_type": "token",
+          "code_challenge": "l9qsDumZjfytbJwJcNpcpBHIYjOpRMJbR1ZvanvB3dU",
+          "redirect_uri": "http://localhost/cb",
+          "state": "source-state",
+          "scope": "read",
+          "resource": "http://127.0.0.1/mcp"
+        }
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "cache-control": "no-store",
+          "location": "http://localhost/cb?error=unsupported_response_type&error_description=response_type%3A+Input+should+be+%27code%27&state=source-state"
+        },
+        "body": ""
+      }
+    },
+    {
+      "case": "authorize:plain",
+      "request": {
+        "method": "GET",
+        "path": "/authorize",
+        "params": {
+          "client_id": "<client2>",
+          "response_type": "code",
+          "code_challenge": "l9qsDumZjfytbJwJcNpcpBHIYjOpRMJbR1ZvanvB3dU",
+          "redirect_uri": "http://localhost/cb",
+          "state": "source-state",
+          "scope": "read",
+          "resource": "http://127.0.0.1/mcp",
+          "code_challenge_method": "plain"
+        }
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "cache-control": "no-store",
+          "location": "http://localhost/cb?error=invalid_request&error_description=code_challenge_method%3A+Input+should+be+%27S256%27&state=source-state"
+        },
+        "body": ""
+      }
+    },
+    {
+      "case": "authorize:empty-challenge",
+      "request": {
+        "method": "GET",
+        "path": "/authorize",
+        "params": {
+          "client_id": "<client2>",
+          "response_type": "code",
+          "code_challenge": "",
+          "redirect_uri": "http://localhost/cb",
+          "state": "source-state",
+          "scope": "read",
+          "resource": "http://127.0.0.1/mcp"
+        }
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "cache-control": "no-store",
+          "location": "http://localhost/cb?code=<code1>&state=source-state"
+        },
+        "body": ""
+      }
+    },
+    {
+      "case": "authorize:foreign-resource",
+      "request": {
+        "method": "GET",
+        "path": "/authorize",
+        "params": {
+          "client_id": "<client2>",
+          "response_type": "code",
+          "code_challenge": "l9qsDumZjfytbJwJcNpcpBHIYjOpRMJbR1ZvanvB3dU",
+          "redirect_uri": "http://localhost/cb",
+          "state": "source-state",
+          "scope": "read",
+          "resource": "https://other.example/mcp"
+        }
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "cache-control": "no-store",
+          "location": "http://localhost/cb?code=<code2>&state=source-state"
+        },
+        "body": ""
+      }
+    },
+    {
+      "case": "authorize:multipart",
+      "request": {
+        "method": "POST",
+        "path": "/authorize",
+        "files": {
+          "client_id": [
+            null,
+            "<client2>"
+          ],
+          "response_type": [
+            null,
+            "code"
+          ],
+          "code_challenge": [
+            null,
+            "l9qsDumZjfytbJwJcNpcpBHIYjOpRMJbR1ZvanvB3dU"
+          ],
+          "redirect_uri": [
+            null,
+            "http://localhost/cb"
+          ],
+          "state": [
+            null,
+            "source-state"
+          ],
+          "scope": [
+            null,
+            "read"
+          ],
+          "resource": [
+            null,
+            "http://127.0.0.1/mcp"
+          ]
+        }
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "cache-control": "no-store",
+          "location": "http://localhost/cb?code=<code3>&state=source-state"
+        },
+        "body": ""
+      }
+    },
+    {
+      "case": "token:multipart",
+      "request": {
+        "method": "POST",
+        "path": "/token",
+        "files": {
+          "client_id": [
+            null,
+            "<client2>"
+          ],
+          "grant_type": [
+            null,
+            "authorization_code"
+          ],
+          "code": [
+            null,
+            "unknown"
+          ],
+          "code_verifier": [
+            null,
+            "wrong"
+          ]
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+          "pragma": "no-cache"
+        },
+        "body": {
+          "error": "invalid_grant",
+          "error_description": "authorization code does not exist"
+        }
+      }
+    },
+    {
+      "case": "revoke:multipart",
+      "request": {
+        "method": "POST",
+        "path": "/revoke",
+        "files": {
+          "client_id": [
+            null,
+            "<client2>"
+          ],
+          "client_secret": [
+            null,
+            ""
+          ],
+          "token": [
+            null,
+            "unknown"
+          ]
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "cache-control": "no-store",
+          "pragma": "no-cache"
+        },
+        "body": ""
+      }
+    },
+    {
+      "case": "cors-allowed:/register",
+      "request": {
+        "method": "OPTIONS",
+        "path": "/register",
+        "headers": {
+          "Origin": "https://client.example",
+          "Access-Control-Request-Method": "POST",
+          "Access-Control-Request-Headers": "content-type"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "text/plain; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "POST, OPTIONS",
+          "access-control-allow-headers": "Accept, Accept-Language, Content-Language, Content-Type, mcp-protocol-version",
+          "access-control-max-age": "600"
+        },
+        "body": "OK"
+      }
+    },
+    {
+      "case": "cors-allowed:/token",
+      "request": {
+        "method": "OPTIONS",
+        "path": "/token",
+        "headers": {
+          "Origin": "https://client.example",
+          "Access-Control-Request-Method": "POST",
+          "Access-Control-Request-Headers": "content-type"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "text/plain; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "POST, OPTIONS",
+          "access-control-allow-headers": "Accept, Accept-Language, Content-Language, Content-Type, mcp-protocol-version",
+          "access-control-max-age": "600"
+        },
+        "body": "OK"
+      }
+    },
+    {
+      "case": "cors-allowed:/revoke",
+      "request": {
+        "method": "OPTIONS",
+        "path": "/revoke",
+        "headers": {
+          "Origin": "https://client.example",
+          "Access-Control-Request-Method": "POST",
+          "Access-Control-Request-Headers": "content-type"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "text/plain; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "POST, OPTIONS",
+          "access-control-allow-headers": "Accept, Accept-Language, Content-Language, Content-Type, mcp-protocol-version",
+          "access-control-max-age": "600"
+        },
+        "body": "OK"
+      }
+    },
+    {
+      "case": "cors-allowed:/.well-known/oauth-authorization-server",
+      "request": {
+        "method": "OPTIONS",
+        "path": "/.well-known/oauth-authorization-server",
+        "headers": {
+          "Origin": "https://client.example",
+          "Access-Control-Request-Method": "GET",
+          "Access-Control-Request-Headers": "content-type"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "text/plain; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET, OPTIONS",
+          "access-control-allow-headers": "Accept, Accept-Language, Content-Language, Content-Type, mcp-protocol-version",
+          "access-control-max-age": "600"
+        },
+        "body": "OK"
+      }
+    },
+    {
+      "case": "authorize:missing:response_type",
+      "request": {
+        "method": "GET",
+        "path": "/authorize",
+        "params": {
+          "client_id": "<client2>",
+          "code_challenge": "l9qsDumZjfytbJwJcNpcpBHIYjOpRMJbR1ZvanvB3dU",
+          "redirect_uri": "http://localhost/cb",
+          "state": "source-state",
+          "scope": "read",
+          "resource": "http://127.0.0.1/mcp"
+        }
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "cache-control": "no-store",
+          "location": "http://localhost/cb?error=invalid_request&error_description=response_type%3A+Field+required&state=source-state"
+        },
+        "body": ""
+      }
+    },
+    {
+      "case": "authorize:missing:code_challenge",
+      "request": {
+        "method": "GET",
+        "path": "/authorize",
+        "params": {
+          "client_id": "<client2>",
+          "response_type": "code",
+          "redirect_uri": "http://localhost/cb",
+          "state": "source-state",
+          "scope": "read",
+          "resource": "http://127.0.0.1/mcp"
+        }
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "cache-control": "no-store",
+          "location": "http://localhost/cb?error=invalid_request&error_description=code_challenge%3A+Field+required&state=source-state"
+        },
+        "body": ""
+      }
+    },
+    {
+      "case": "authorize:missing:client_id",
+      "request": {
+        "method": "GET",
+        "path": "/authorize",
+        "params": {
+          "response_type": "code",
+          "code_challenge": "l9qsDumZjfytbJwJcNpcpBHIYjOpRMJbR1ZvanvB3dU",
+          "redirect_uri": "http://localhost/cb",
+          "state": "source-state",
+          "scope": "read",
+          "resource": "http://127.0.0.1/mcp"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json",
+          "cache-control": "no-store"
+        },
+        "body": {
+          "error": "invalid_request",
+          "error_description": "client_id: Field required",
+          "state": "source-state"
+        }
+      }
+    },
+    {
+      "case": "authorize:good",
+      "request": {
+        "method": "GET",
+        "path": "/authorize",
+        "params": {
+          "client_id": "<client2>",
+          "response_type": "code",
+          "code_challenge": "l9qsDumZjfytbJwJcNpcpBHIYjOpRMJbR1ZvanvB3dU",
+          "redirect_uri": "http://localhost/cb",
+          "state": "source-state",
+          "scope": "read",
+          "resource": "http://127.0.0.1/mcp"
+        }
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "cache-control": "no-store",
+          "location": "http://localhost/cb?code=<code4>&state=source-state"
+        },
+        "body": ""
+      }
+    },
+    {
+      "case": "token:bad-verifier",
+      "request": {
+        "method": "POST",
+        "path": "/token",
+        "data": {
+          "grant_type": "authorization_code",
+          "client_id": "<client2>",
+          "code": "<code4>",
+          "redirect_uri": "http://localhost/cb",
+          "code_verifier": "wrong"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+          "pragma": "no-cache"
+        },
+        "body": {
+          "error": "invalid_grant",
+          "error_description": "incorrect code_verifier"
+        }
+      }
+    },
+    {
+      "case": "token:bad-redirect",
+      "request": {
+        "method": "POST",
+        "path": "/token",
+        "data": {
+          "grant_type": "authorization_code",
+          "client_id": "<client2>",
+          "code": "<code4>",
+          "redirect_uri": "http://other.invalid/cb",
+          "code_verifier": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+          "pragma": "no-cache"
+        },
+        "body": {
+          "error": "invalid_request",
+          "error_description": "redirect_uri did not match the one used when creating auth code"
+        }
+      }
+    },
+    {
+      "case": "token:unknown-code",
+      "request": {
+        "method": "POST",
+        "path": "/token",
+        "data": {
+          "grant_type": "authorization_code",
+          "client_id": "<client2>",
+          "code": "unknown",
+          "redirect_uri": "http://localhost/cb",
+          "code_verifier": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+          "pragma": "no-cache"
+        },
+        "body": {
+          "error": "invalid_grant",
+          "error_description": "authorization code does not exist"
+        }
+      }
+    },
+    {
+      "case": "token:missing-redirect",
+      "request": {
+        "method": "POST",
+        "path": "/token",
+        "data": {
+          "grant_type": "authorization_code",
+          "client_id": "<client2>",
+          "code": "<code4>",
+          "code_verifier": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+          "pragma": "no-cache"
+        },
+        "body": {
+          "error": "invalid_request",
+          "error_description": "redirect_uri did not match the one used when creating auth code"
+        }
+      }
+    },
+    {
+      "case": "token:missing-client",
+      "request": {
+        "method": "POST",
+        "path": "/token",
+        "data": {
+          "grant_type": "authorization_code",
+          "code": "<code4>",
+          "redirect_uri": "http://localhost/cb",
+          "code_verifier": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+          "pragma": "no-cache"
+        },
+        "body": {
+          "error": "invalid_client",
+          "error_description": "Missing client_id"
+        }
+      }
+    },
+    {
+      "case": "token:good",
+      "request": {
+        "method": "POST",
+        "path": "/token",
+        "data": {
+          "grant_type": "authorization_code",
+          "client_id": "<client2>",
+          "code": "<code4>",
+          "redirect_uri": "http://localhost/cb",
+          "code_verifier": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+          "pragma": "no-cache"
+        },
+        "body": {
+          "access_token": "<access1>",
+          "token_type": "Bearer",
+          "expires_in": 3600,
+          "scope": "read",
+          "refresh_token": "<refresh1>"
+        }
+      }
+    },
+    {
+      "case": "token:replay",
+      "request": {
+        "method": "POST",
+        "path": "/token",
+        "data": {
+          "grant_type": "authorization_code",
+          "client_id": "<client2>",
+          "code": "<code4>",
+          "redirect_uri": "http://localhost/cb",
+          "code_verifier": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+          "pragma": "no-cache"
+        },
+        "body": {
+          "error": "invalid_grant",
+          "error_description": "authorization code does not exist"
+        }
+      }
+    },
+    {
+      "case": "refresh:bad-scope",
+      "request": {
+        "method": "POST",
+        "path": "/token",
+        "data": {
+          "grant_type": "refresh_token",
+          "client_id": "<client2>",
+          "refresh_token": "<refresh1>",
+          "scope": "admin"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+          "pragma": "no-cache"
+        },
+        "body": {
+          "error": "invalid_scope",
+          "error_description": "cannot request scope `admin` not provided by refresh token"
+        }
+      }
+    },
+    {
+      "case": "refresh:good",
+      "request": {
+        "method": "POST",
+        "path": "/token",
+        "data": {
+          "grant_type": "refresh_token",
+          "client_id": "<client2>",
+          "refresh_token": "<refresh1>"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+          "pragma": "no-cache"
+        },
+        "body": {
+          "access_token": "<access2>",
+          "token_type": "Bearer",
+          "expires_in": 3600,
+          "scope": "read",
+          "refresh_token": "<refresh2>"
+        }
+      }
+    },
+    {
+      "case": "refresh:replay",
+      "request": {
+        "method": "POST",
+        "path": "/token",
+        "data": {
+          "grant_type": "refresh_token",
+          "client_id": "<client2>",
+          "refresh_token": "<refresh1>"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+          "pragma": "no-cache"
+        },
+        "body": {
+          "error": "invalid_grant",
+          "error_description": "refresh token does not exist"
+        }
+      }
+    },
+    {
+      "case": "protected:valid-post",
+      "request": {
+        "method": "POST",
+        "path": "/mcp",
+        "headers": {
+          "Authorization": "Bearer <access2>",
+          "Accept": "application/json, text/event-stream"
+        },
+        "json": {
+          "jsonrpc": "2.0",
+          "id": 1,
+          "method": "ping"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "jsonrpc": "2.0",
+          "id": 1,
+          "result": {}
+        }
+      }
+    },
+    {
+      "case": "revoke:missing-secret",
+      "request": {
+        "method": "POST",
+        "path": "/revoke",
+        "data": {
+          "client_id": "<client2>",
+          "token": "<access2>"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "error": "invalid_request",
+          "error_description": "client_secret: Field required"
+        }
+      }
+    },
+    {
+      "case": "revoke:bad-hint",
+      "request": {
+        "method": "POST",
+        "path": "/revoke",
+        "data": {
+          "client_id": "<client2>",
+          "client_secret": "",
+          "token": "<access2>",
+          "token_type_hint": "wrong"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "error": "invalid_request",
+          "error_description": "token_type_hint: Input should be 'access_token' or 'refresh_token'"
+        }
+      }
+    },
+    {
+      "case": "revoke:good",
+      "request": {
+        "method": "POST",
+        "path": "/revoke",
+        "data": {
+          "client_id": "<client2>",
+          "client_secret": "",
+          "token": "<access2>"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "cache-control": "no-store",
+          "pragma": "no-cache"
+        },
+        "body": ""
+      }
+    },
+    {
+      "case": "revoke:unknown",
+      "request": {
+        "method": "POST",
+        "path": "/revoke",
+        "data": {
+          "client_id": "<client2>",
+          "client_secret": "",
+          "token": "unknown"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "cache-control": "no-store",
+          "pragma": "no-cache"
+        },
+        "body": ""
+      }
+    },
+    {
+      "case": "protected:revoked-post",
+      "request": {
+        "method": "POST",
+        "path": "/mcp",
+        "headers": {
+          "Authorization": "Bearer <access2>",
+          "Accept": "application/json, text/event-stream"
+        },
+        "json": {
+          "jsonrpc": "2.0",
+          "id": 1,
+          "method": "ping"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json",
+          "www-authenticate": "Bearer error=\"invalid_token\", error_description=\"Authentication failed. The provided bearer token is invalid, expired, or no longer recognized by the server. To resolve: clear authentication tokens in your MCP client and reconnect. Your client should automatically re-register and obtain new tokens.\", resource_metadata=\"http://127.0.0.1/.well-known/oauth-protected-resource/mcp\""
+        },
+        "body": {
+          "error": "invalid_token",
+          "error_description": "Authentication failed. The provided bearer token is invalid, expired, or no longer recognized by the server. To resolve: clear authentication tokens in your MCP client and reconnect. Your client should automatically re-register and obtain new tokens."
+        }
+      }
+    },
+    {
+      "case": "authorize:implicit-post",
+      "request": {
+        "method": "POST",
+        "path": "/authorize",
+        "data": {
+          "client_id": "<client2>",
+          "response_type": "code",
+          "code_challenge": "l9qsDumZjfytbJwJcNpcpBHIYjOpRMJbR1ZvanvB3dU",
+          "state": "source-state",
+          "scope": "read",
+          "resource": "http://127.0.0.1/mcp"
+        }
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "cache-control": "no-store",
+          "location": "http://localhost/cb?code=<code5>&state=source-state"
+        },
+        "body": ""
+      }
+    },
+    {
+      "case": "token:implicit-with-redirect",
+      "request": {
+        "method": "POST",
+        "path": "/token",
+        "data": {
+          "grant_type": "authorization_code",
+          "client_id": "<client2>",
+          "code": "<code5>",
+          "redirect_uri": "http://localhost/cb",
+          "code_verifier": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+          "pragma": "no-cache"
+        },
+        "body": {
+          "error": "invalid_request",
+          "error_description": "redirect_uri did not match the one used when creating auth code"
+        }
+      }
+    },
+    {
+      "case": "token:implicit-malformed-redirect",
+      "request": {
+        "method": "POST",
+        "path": "/token",
+        "data": {
+          "grant_type": "authorization_code",
+          "client_id": "<client2>",
+          "code": "<code5>",
+          "redirect_uri": "not a url",
+          "code_verifier": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+          "pragma": "no-cache"
+        },
+        "body": {
+          "error": "invalid_request",
+          "error_description": "authorization_code.redirect_uri: Input should be a valid URL, relative URL without a base"
+        }
+      }
+    },
+    {
+      "case": "token:implicit-good",
+      "request": {
+        "method": "POST",
+        "path": "/token",
+        "data": {
+          "grant_type": "authorization_code",
+          "client_id": "<client2>",
+          "code": "<code5>",
+          "code_verifier": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+          "pragma": "no-cache"
+        },
+        "body": {
+          "access_token": "<access3>",
+          "token_type": "Bearer",
+          "expires_in": 3600,
+          "scope": "read",
+          "refresh_token": "<refresh3>"
+        }
+      }
+    },
+    {
+      "case": "client-auth:post-missing",
+      "request": {
+        "method": "POST",
+        "path": "/token",
+        "data": {
+          "grant_type": "refresh_token",
+          "client_id": "<client3>",
+          "refresh_token": "unknown"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+          "pragma": "no-cache"
+        },
+        "body": {
+          "error": "invalid_client",
+          "error_description": "Client secret is required"
+        }
+      }
+    },
+    {
+      "case": "client-auth:post-wrong",
+      "request": {
+        "method": "POST",
+        "path": "/token",
+        "data": {
+          "grant_type": "refresh_token",
+          "client_id": "<client3>",
+          "refresh_token": "unknown",
+          "client_secret": "wrong"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+          "pragma": "no-cache"
+        },
+        "body": {
+          "error": "invalid_client",
+          "error_description": "Invalid client_secret"
+        }
+      }
+    },
+    {
+      "case": "client-auth:post-good",
+      "request": {
+        "method": "POST",
+        "path": "/token",
+        "data": {
+          "grant_type": "refresh_token",
+          "client_id": "<client3>",
+          "refresh_token": "unknown",
+          "client_secret": "<secret2>"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+          "pragma": "no-cache"
+        },
+        "body": {
+          "error": "invalid_grant",
+          "error_description": "refresh token does not exist"
+        }
+      }
+    },
+    {
+      "case": "client-auth:basic-missing",
+      "request": {
+        "method": "POST",
+        "path": "/token",
+        "data": {
+          "grant_type": "refresh_token",
+          "client_id": "<client4>",
+          "refresh_token": "unknown"
+        },
+        "headers": {
+          "Authorization": ""
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+          "pragma": "no-cache"
+        },
+        "body": {
+          "error": "invalid_client",
+          "error_description": "Missing or invalid Basic authentication in Authorization header"
+        }
+      }
+    },
+    {
+      "case": "client-auth:basic-bad-case",
+      "request": {
+        "method": "POST",
+        "path": "/token",
+        "data": {
+          "grant_type": "refresh_token",
+          "client_id": "<client4>",
+          "refresh_token": "unknown"
+        },
+        "headers": {
+          "Authorization": "basic PGNsaWVudDQ+OjxzZWNyZXQzPg=="
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+          "pragma": "no-cache"
+        },
+        "body": {
+          "error": "invalid_client",
+          "error_description": "Missing or invalid Basic authentication in Authorization header"
+        }
+      }
+    },
+    {
+      "case": "client-auth:basic-wrong",
+      "request": {
+        "method": "POST",
+        "path": "/token",
+        "data": {
+          "grant_type": "refresh_token",
+          "client_id": "<client4>",
+          "refresh_token": "unknown"
+        },
+        "headers": {
+          "Authorization": "Basic PGNsaWVudDQ+Ondyb25n"
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+          "pragma": "no-cache"
+        },
+        "body": {
+          "error": "invalid_client",
+          "error_description": "Invalid client_secret"
+        }
+      }
+    },
+    {
+      "case": "client-auth:basic-good",
+      "request": {
+        "method": "POST",
+        "path": "/token",
+        "data": {
+          "grant_type": "refresh_token",
+          "client_id": "<client4>",
+          "refresh_token": "unknown"
+        },
+        "headers": {
+          "Authorization": "Basic PGNsaWVudDQ+OjxzZWNyZXQzPg=="
+        }
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+          "pragma": "no-cache"
+        },
+        "body": {
+          "error": "invalid_grant",
+          "error_description": "refresh token does not exist"
+        }
+      }
+    },
+    {
+      "case": "register:empty-placeholder:scope",
+      "request": {
+        "method": "POST",
+        "path": "/register",
+        "json": {
+          "redirect_uris": [
+            "http://localhost/cb"
+          ],
+          "token_endpoint_auth_method": "none",
+          "scope": ""
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "response_types": [
+            "code"
+          ],
+          "redirect_uris": [
+            "http://localhost/cb"
+          ],
+          "token_endpoint_auth_method": "none",
+          "grant_types": [
+            "authorization_code",
+            "refresh_token"
+          ],
+          "application_type": "native",
+          "client_id": "<client6>",
+          "client_id_issued_at": "<epoch-seconds>"
+        }
+      }
+    },
+    {
+      "case": "register:empty-placeholder:client_name",
+      "request": {
+        "method": "POST",
+        "path": "/register",
+        "json": {
+          "redirect_uris": [
+            "http://localhost/cb"
+          ],
+          "token_endpoint_auth_method": "none",
+          "client_name": ""
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "response_types": [
+            "code"
+          ],
+          "redirect_uris": [
+            "http://localhost/cb"
+          ],
+          "token_endpoint_auth_method": "none",
+          "grant_types": [
+            "authorization_code",
+            "refresh_token"
+          ],
+          "application_type": "native",
+          "client_id": "<client7>",
+          "client_id_issued_at": "<epoch-seconds>"
+        }
+      }
+    },
+    {
+      "case": "register:empty-placeholder:software_id",
+      "request": {
+        "method": "POST",
+        "path": "/register",
+        "json": {
+          "redirect_uris": [
+            "http://localhost/cb"
+          ],
+          "token_endpoint_auth_method": "none",
+          "software_id": ""
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "response_types": [
+            "code"
+          ],
+          "redirect_uris": [
+            "http://localhost/cb"
+          ],
+          "token_endpoint_auth_method": "none",
+          "grant_types": [
+            "authorization_code",
+            "refresh_token"
+          ],
+          "application_type": "native",
+          "client_id": "<client8>",
+          "client_id_issued_at": "<epoch-seconds>"
+        }
+      }
+    },
+    {
+      "case": "register:empty-placeholder:software_version",
+      "request": {
+        "method": "POST",
+        "path": "/register",
+        "json": {
+          "redirect_uris": [
+            "http://localhost/cb"
+          ],
+          "token_endpoint_auth_method": "none",
+          "software_version": ""
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "response_types": [
+            "code"
+          ],
+          "redirect_uris": [
+            "http://localhost/cb"
+          ],
+          "token_endpoint_auth_method": "none",
+          "grant_types": [
+            "authorization_code",
+            "refresh_token"
+          ],
+          "application_type": "native",
+          "client_id": "<client9>",
+          "client_id_issued_at": "<epoch-seconds>"
+        }
+      }
+    },
+    {
+      "case": "register:empty-placeholder:jwks",
+      "request": {
+        "method": "POST",
+        "path": "/register",
+        "json": {
+          "redirect_uris": [
+            "http://localhost/cb"
+          ],
+          "token_endpoint_auth_method": "none",
+          "jwks": ""
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "response_types": [
+            "code"
+          ],
+          "redirect_uris": [
+            "http://localhost/cb"
+          ],
+          "token_endpoint_auth_method": "none",
+          "grant_types": [
+            "authorization_code",
+            "refresh_token"
+          ],
+          "application_type": "native",
+          "client_id": "<client10>",
+          "client_id_issued_at": "<epoch-seconds>"
+        }
+      }
+    },
+    {
+      "case": "authorize:bad-response-missing-challenge",
+      "request": {
+        "method": "GET",
+        "path": "/authorize",
+        "params": {
+          "client_id": "<client2>",
+          "response_type": "token",
+          "redirect_uri": "http://localhost/cb",
+          "state": "source-state",
+          "scope": "read",
+          "resource": "http://127.0.0.1/mcp"
+        }
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "cache-control": "no-store",
+          "location": "http://localhost/cb?error=unsupported_response_type&error_description=response_type%3A+Input+should+be+%27code%27%0Acode_challenge%3A+Field+required&state=source-state"
+        },
+        "body": ""
+      }
+    },
+    {
+      "case": "register:authorization-code-only",
+      "request": {
+        "method": "POST",
+        "path": "/register",
+        "json": {
+          "redirect_uris": [
+            "http://localhost/cb"
+          ],
+          "token_endpoint_auth_method": "none",
+          "grant_types": [
+            "authorization_code"
+          ]
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "response_types": [
+            "code"
+          ],
+          "redirect_uris": [
+            "http://localhost/cb"
+          ],
+          "token_endpoint_auth_method": "none",
+          "grant_types": [
+            "authorization_code"
+          ],
+          "application_type": "native",
+          "client_id": "<client11>",
+          "client_id_issued_at": "<epoch-seconds>"
+        }
+      }
+    },
+    {
+      "case": "token:disallowed-refresh-missing-token",
+      "request": {
+        "method": "POST",
+        "path": "/token",
+        "data": {
+          "client_id": "<client11>",
+          "grant_type": "refresh_token"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+          "pragma": "no-cache"
+        },
+        "body": {
+          "error": "invalid_request",
+          "error_description": "refresh_token.refresh_token: Field required"
+        }
+      }
+    },
+    {
+      "case": "token:disallowed-refresh-complete",
+      "request": {
+        "method": "POST",
+        "path": "/token",
+        "data": {
+          "client_id": "<client11>",
+          "grant_type": "refresh_token",
+          "refresh_token": "unknown"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+          "pragma": "no-cache"
+        },
+        "body": {
+          "error": "unsupported_grant_type",
+          "error_description": "Unsupported grant type (supported grant types are ['authorization_code'])"
+        }
+      }
+    },
+    {
+      "case": "token:unknown-code-malformed-redirect",
+      "request": {
+        "method": "POST",
+        "path": "/token",
+        "data": {
+          "grant_type": "authorization_code",
+          "client_id": "<client2>",
+          "code": "unknown",
+          "redirect_uri": "not a url",
+          "code_verifier": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+          "pragma": "no-cache"
+        },
+        "body": {
+          "error": "invalid_request",
+          "error_description": "authorization_code.redirect_uri: Input should be a valid URL, relative URL without a base"
+        }
+      }
+    }
+  ]
+}

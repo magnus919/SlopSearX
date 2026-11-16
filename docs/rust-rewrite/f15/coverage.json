@@ -1,0 +1,1496 @@
+{
+  "schema_version": 1,
+  "plan_id": "F15",
+  "baseline": "4dfc0f5691b6a5a1c039a2837372b1977422ec27",
+  "source_bindings": [
+    {
+      "path": "slopsearx/rerank.py",
+      "sha256": "df518bac899fa457e713201192a65f8ee0c3599419382e5be221d5ac366b479e",
+      "git_blob": "0e462dbfe0520683e4b37980b8407f320b87a7d6"
+    },
+    {
+      "path": "slopsearx/advisories.py",
+      "sha256": "c4963dcd1cbd304e09062971500f00053f8ee06eabee15c70c819d5f8a52b71c",
+      "git_blob": "ebeb860f3021fb13949a8ca99b5d9923cba87f41"
+    },
+    {
+      "path": "slopsearx/service.py",
+      "sha256": "45903193ef89987f7be83c1e593e44b7752251a54eb8719eae15a241840102ac",
+      "git_blob": "82eb29d50c4ca98a237949d4d8994cfe3cbeca9f"
+    },
+    {
+      "path": "slopsearx/router.py",
+      "sha256": "ef06ec73b7a94e8ae7880127d2974fc52050741e3a140d0407070d17cc925065",
+      "git_blob": "ef14e463d2d49bcdb2af60dd02691649cd80a639"
+    },
+    {
+      "path": "slopsearx/adapter.py",
+      "sha256": "5883a35c48d0dad1077306fbda21997ee1d32116a8c03633a6b762de0c26d6f3",
+      "git_blob": "664e853d9ab1330596d01899ebe015701de09e88"
+    },
+    {
+      "path": "slopsearx/config.py",
+      "sha256": "1cf76b8732439782342a9d217fb2f7c423f688533f287dbf78729a1defc5236e",
+      "git_blob": "761db0521d74ec6d955aa8a84fd92a4a62533c43"
+    },
+    {
+      "path": "slopsearx/filters.py",
+      "sha256": "f0edd2f633cc9a42c49660ca74b225732cbc82937a15ad58a5b0dbeb76e103a9",
+      "git_blob": "e1a1cac35c5fcbbf2e6fb7728241953aa8047669"
+    },
+    {
+      "path": "slopsearx/capabilities.py",
+      "sha256": "ed4e332a4df1de32d83b9dd2b62dddb622082ab4c236c0c9cef8d8d23336fd6f",
+      "git_blob": "5ef6f90750352fdadbc877561d3520c1fe774fdb"
+    },
+    {
+      "path": "slopsearx/formatter.py",
+      "sha256": "8eaf74e1215ebaebc7a9d81438e02512aa56b9f5a7929ebb2df35e5b2f632e7a",
+      "git_blob": "8fa2bb950dc341adace7b9524b5755e98a4da406"
+    },
+    {
+      "path": "slopsearx/server.py",
+      "sha256": "6984dea478e4a43d5c9e72e7a72d5af23824de6dfbc0695cb8fdef79176a90dc",
+      "git_blob": "412ad973735f0199be9a32da4763437f55a584bb"
+    },
+    {
+      "path": "slopsearx/mcp/tools.py",
+      "sha256": "6bbbdb270f14fda7d90ae8dbe1983aae33526df430f76a960f0c7483417eb35a",
+      "git_blob": "d06ecd475b9b523addf79781d2762eddd92f4911"
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "sha256": "f5113ab6e2bddf516469dd493bb2757a7479593c290892abb93a7c73ee59013d",
+      "git_blob": "1a4dd6f8dc3e7551d2cd21386dc0a3e09a2deb09"
+    },
+    {
+      "path": "tests/test_advisories.py",
+      "sha256": "5102b127221c2911eb2f0950b7bc46ccc7c22265bb3e200e042b77f72d73fd88",
+      "git_blob": "f2e9917d447863b2220bf15aefcf1289673d1e20"
+    }
+  ],
+  "source_parameterized_case_count": 77,
+  "native_tests": [
+    "read_capture_preserves_full_canonical_per_caller_views_and_snapshot_semantics",
+    "provider_strict_answers_stable_ties_usage_and_input_bounds_execute",
+    "cached_read_uses_current_trusted_availability_without_new_execution_or_authority",
+    "actual_source_provider_cases_replay_exact_wire_identity_usage_and_decisions",
+    "actual_source_projection_and_advisory_cases_replay_full_objects",
+    "actual_source_host_cases_preserve_whole_results_tier_crossing_and_fixed_tail",
+    "real_socket_provider_bounds_gzip_redirect_free_wire_and_cancellation_release_slots",
+    "expired_host_deadline_never_polls_or_dispatches_provider",
+    "composed_native_provider_cache_admission_and_sensitive_no_send",
+    "composed_native_cancellation_and_concurrent_shutdown_join_transport",
+    "composed_native_identity_overrides_manual_identity_and_waiters_share_execution",
+    "real_native_oversized_identity_header_rejects_before_held_body_and_closes_socket",
+    "keyless_ranking_and_credential_config_factory_execute",
+    "configured_native_stage_suppresses_specialist_promotion_for_every_outcome",
+    "actual_native_service_remaining_interactive_budget_cancels_provider_socket"
+  ],
+  "obligations": [
+    {
+      "path": "tests/test_rerank.py",
+      "name": "test_keyless_preserves_configured_ranking",
+      "line": 70,
+      "end_line": 74,
+      "parameterized_instances": [
+        "tests/test_rerank.py::test_keyless_preserves_configured_ranking[presence]",
+        "tests/test_rerank.py::test_keyless_preserves_configured_ranking[reciprocal_rank_fusion]"
+      ],
+      "assertions": [
+        {
+          "line": 73,
+          "end_line": 73,
+          "source": "assert [r.url for r in result.results] == [\"https://example.org/a\", \"https://example.org/b\"]"
+        },
+        {
+          "line": 74,
+          "end_line": 74,
+          "source": "assert result.ranking_explanation != \"semantic_shortlist_rerank\""
+        }
+      ],
+      "native_evidence": [
+        "keyless_ranking_and_credential_config_factory_execute"
+      ],
+      "owner": "F15",
+      "boundary": "Actual-source request/response replay plus finite native resource and parser policy documented in PARITY.md."
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "name": "test_key_enables_jev_reranker",
+      "line": 77,
+      "end_line": 81,
+      "parameterized_instances": [
+        "tests/test_rerank.py::test_key_enables_jev_reranker"
+      ],
+      "assertions": [
+        {
+          "line": 79,
+          "end_line": 79,
+          "source": "assert JevReranker.from_environment() is None"
+        },
+        {
+          "line": 81,
+          "end_line": 81,
+          "source": "assert isinstance(JevReranker.from_environment(), JevReranker)"
+        }
+      ],
+      "native_evidence": [
+        "keyless_ranking_and_credential_config_factory_execute"
+      ],
+      "owner": "F15",
+      "boundary": "Native JevConfig environment validation and actual JevReranker construction. Production host selection/wiring from operator environment remains T02/T03/T06 composition; no new public wire input."
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "name": "test_provider_neutral_order_preserves_provenance_filters_and_wire_contract",
+      "line": 84,
+      "end_line": 99,
+      "parameterized_instances": [
+        "tests/test_rerank.py::test_provider_neutral_order_preserves_provenance_filters_and_wire_contract"
+      ],
+      "assertions": [
+        {
+          "line": 90,
+          "end_line": 90,
+          "source": "assert enhanced.ranking_explanation == \"semantic_shortlist_rerank\""
+        },
+        {
+          "line": 91,
+          "end_line": 91,
+          "source": "assert [r.url for r in enhanced.results] == list(reversed([r.url for r in base.results]))"
+        },
+        {
+          "line": 97,
+          "end_line": 97,
+          "source": "assert [r.position for r in enhanced.results] == [1, 2]"
+        },
+        {
+          "line": 98,
+          "end_line": 98,
+          "source": "assert enhanced.scope == base.scope"
+        },
+        {
+          "line": 99,
+          "end_line": 99,
+          "source": "assert set(format_json(enhanced.results, enhanced.query)) == set(format_json(base.results, base.query))"
+        },
+        {
+          "line": 94,
+          "end_line": 96,
+          "source": "assert {k: v for k, v in vars(result).items() if k != \"position\"} == {\n            k: v for k, v in vars(original).items() if k != \"position\"\n        }"
+        }
+      ],
+      "native_evidence": [
+        "actual_source_host_cases_preserve_whole_results_tier_crossing_and_fixed_tail",
+        "composed_native_provider_cache_admission_and_sensitive_no_send"
+      ],
+      "owner": "F14,F15",
+      "boundary": "Pure provider-ID permutation only; whole native result records preserved; accepted F14 configured-stage promotion composition retained."
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "name": "test_relevance_crosses_source_tiers_and_unshortlisted_tail_stays_fixed",
+      "line": 102,
+      "end_line": 113,
+      "parameterized_instances": [
+        "tests/test_rerank.py::test_relevance_crosses_source_tiers_and_unshortlisted_tail_stays_fixed"
+      ],
+      "assertions": [
+        {
+          "line": 110,
+          "end_line": 110,
+          "source": "assert len(provider.candidates) == 40"
+        },
+        {
+          "line": 111,
+          "end_line": 111,
+          "source": "assert [r.title for r in response.results[:40]] == [str(i) for i in reversed(range(40))]"
+        },
+        {
+          "line": 112,
+          "end_line": 112,
+          "source": "assert [r.title for r in response.results[40:]] == [str(i) for i in range(40, 45)]"
+        },
+        {
+          "line": 113,
+          "end_line": 113,
+          "source": "assert [r.tier for r in response.results] == [2] * 37 + [1] * 3 + [2] * 5"
+        }
+      ],
+      "native_evidence": [
+        "actual_source_host_cases_preserve_whole_results_tier_crossing_and_fixed_tail",
+        "composed_native_provider_cache_admission_and_sensitive_no_send"
+      ],
+      "owner": "F14,F15",
+      "boundary": "Pure provider-ID permutation only; whole native result records preserved; accepted F14 configured-stage promotion composition retained."
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "name": "test_membership_invalid_advice_falls_back_without_caching",
+      "line": 117,
+      "end_line": 131,
+      "parameterized_instances": [
+        "tests/test_rerank.py::test_membership_invalid_advice_falls_back_without_caching[ids0]",
+        "tests/test_rerank.py::test_membership_invalid_advice_falls_back_without_caching[ids1]",
+        "tests/test_rerank.py::test_membership_invalid_advice_falls_back_without_caching[ids2]",
+        "tests/test_rerank.py::test_membership_invalid_advice_falls_back_without_caching[ids3]"
+      ],
+      "assertions": [
+        {
+          "line": 130,
+          "end_line": 130,
+          "source": "assert provider.calls == 2"
+        },
+        {
+          "line": 131,
+          "end_line": 131,
+          "source": "assert not cache.values"
+        },
+        {
+          "line": 128,
+          "end_line": 128,
+          "source": "assert result.results[0].url == \"https://example.org/a\""
+        },
+        {
+          "line": 129,
+          "end_line": 129,
+          "source": "assert result.ranking_explanation != \"semantic_shortlist_rerank\""
+        }
+      ],
+      "native_evidence": [
+        "composed_native_provider_cache_admission_and_sensitive_no_send",
+        "actual_source_host_cases_preserve_whole_results_tier_crossing_and_fixed_tail"
+      ],
+      "owner": "F15",
+      "boundary": "Actual-source request/response replay plus finite native resource and parser policy documented in PARITY.md."
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "name": "test_errors_and_timeout_fall_back",
+      "line": 134,
+      "end_line": 151,
+      "parameterized_instances": [
+        "tests/test_rerank.py::test_errors_and_timeout_fall_back"
+      ],
+      "assertions": [
+        {
+          "line": 142,
+          "end_line": 142,
+          "source": "assert result.results[0].url.endswith(\"/a\")"
+        },
+        {
+          "line": 151,
+          "end_line": 151,
+          "source": "assert result.results[0].url.endswith(\"/a\")"
+        }
+      ],
+      "native_evidence": [
+        "composed_native_provider_cache_admission_and_sensitive_no_send",
+        "configured_native_stage_suppresses_specialist_promotion_for_every_outcome"
+      ],
+      "owner": "F15",
+      "boundary": "Actual-source request/response replay plus finite native resource and parser policy documented in PARITY.md."
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "name": "test_cache_hit_skips_provider_and_identity_separates_paths",
+      "line": 154,
+      "end_line": 169,
+      "parameterized_instances": [
+        "tests/test_rerank.py::test_cache_hit_skips_provider_and_identity_separates_paths"
+      ],
+      "assertions": [
+        {
+          "line": 162,
+          "end_line": 162,
+          "source": "assert provider.calls == feed.calls == 1"
+        },
+        {
+          "line": 164,
+          "end_line": 164,
+          "source": "assert _routing_cache_digest(ctx) != enabled_digest"
+        },
+        {
+          "line": 166,
+          "end_line": 166,
+          "source": "assert provider.calls == 2"
+        },
+        {
+          "line": 168,
+          "end_line": 168,
+          "source": "assert _routing_cache_digest(ctx) != enabled_digest"
+        },
+        {
+          "line": 169,
+          "end_line": 169,
+          "source": "assert (await SearchService(ctx).search(request())).results[0].url.endswith(\"/a\")"
+        },
+        {
+          "line": 161,
+          "end_line": 161,
+          "source": "assert (await SearchService(ctx).search(request())).results[0].url.endswith(\"/b\")"
+        }
+      ],
+      "native_evidence": [
+        "composed_native_identity_overrides_manual_identity_and_waiters_share_execution",
+        "composed_native_provider_cache_admission_and_sensitive_no_send",
+        "keyless_ranking_and_credential_config_factory_execute"
+      ],
+      "owner": "F15",
+      "boundary": "Native automatic concrete identity; real Valkey cache admission."
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "name": "test_host_ordering_policy_change_does_not_reuse_prior_cached_order",
+      "line": 172,
+      "end_line": 179,
+      "parameterized_instances": [
+        "tests/test_rerank.py::test_host_ordering_policy_change_does_not_reuse_prior_cached_order"
+      ],
+      "assertions": [
+        {
+          "line": 179,
+          "end_line": 179,
+          "source": "assert feed.calls == provider.calls == 2"
+        }
+      ],
+      "native_evidence": [
+        "composed_native_identity_overrides_manual_identity_and_waiters_share_execution"
+      ],
+      "owner": "F15",
+      "boundary": "Native automatic concrete identity; real Valkey cache admission."
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "name": "test_enabled_reranker_disables_specialist_promotion_in_every_outcome",
+      "line": 183,
+      "end_line": 216,
+      "parameterized_instances": [
+        "tests/test_rerank.py::test_enabled_reranker_disables_specialist_promotion_in_every_outcome[success]",
+        "tests/test_rerank.py::test_enabled_reranker_disables_specialist_promotion_in_every_outcome[error]",
+        "tests/test_rerank.py::test_enabled_reranker_disables_specialist_promotion_in_every_outcome[timeout]",
+        "tests/test_rerank.py::test_enabled_reranker_disables_specialist_promotion_in_every_outcome[invalid]",
+        "tests/test_rerank.py::test_enabled_reranker_disables_specialist_promotion_in_every_outcome[skipped]",
+        "tests/test_rerank.py::test_enabled_reranker_disables_specialist_promotion_in_every_outcome[keyless]"
+      ],
+      "assertions": [
+        {
+          "line": 211,
+          "end_line": 211,
+          "source": "assert suffixes == ([\"s\", \"a\", \"b\"] if mode == \"keyless\" else [\"a\", \"b\", \"s\"])"
+        },
+        {
+          "line": 212,
+          "end_line": 214,
+          "source": "assert result.ranking_explanation == (\n        \"semantic_shortlist_rerank\" if mode == \"success\" else \"tier_then_cross_engine_presence\"\n    )"
+        },
+        {
+          "line": 215,
+          "end_line": 215,
+          "source": "assert result.scope.jev_added_engines == [\"pubmed\"]"
+        },
+        {
+          "line": 216,
+          "end_line": 216,
+          "source": "assert provider.calls == (0 if mode in {\"skipped\", \"keyless\"} else 1)"
+        }
+      ],
+      "native_evidence": [
+        "configured_native_stage_suppresses_specialist_promotion_for_every_outcome"
+      ],
+      "owner": "F14,F15",
+      "boundary": "Pure provider-ID permutation only; whole native result records preserved; accepted F14 configured-stage promotion composition retained."
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "name": "test_same_candidates_can_gain_or_lose_between_general_and_specialist",
+      "line": 219,
+      "end_line": 239,
+      "parameterized_instances": [
+        "tests/test_rerank.py::test_same_candidates_can_gain_or_lose_between_general_and_specialist"
+      ],
+      "assertions": [
+        {
+          "line": 237,
+          "end_line": 237,
+          "source": "assert [r.url.rsplit(\"/\", 1)[-1] for r in result.results] == [\"strong\", \"a\", \"b\", \"weak\"]"
+        },
+        {
+          "line": 238,
+          "end_line": 238,
+          "source": "assert [r.tier for r in result.results] == [2, 1, 1, 2]"
+        },
+        {
+          "line": 239,
+          "end_line": 239,
+          "source": "assert [r.position for r in result.results] == [1, 2, 3, 4]"
+        }
+      ],
+      "native_evidence": [
+        "actual_source_host_cases_preserve_whole_results_tier_crossing_and_fixed_tail",
+        "composed_native_provider_cache_admission_and_sensitive_no_send"
+      ],
+      "owner": "F14,F15",
+      "boundary": "Pure provider-ID permutation only; whole native result records preserved; accepted F14 configured-stage promotion composition retained."
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "name": "test_sensitive_scope_is_not_sent_to_reranker",
+      "line": 242,
+      "end_line": 248,
+      "parameterized_instances": [
+        "tests/test_rerank.py::test_sensitive_scope_is_not_sent_to_reranker"
+      ],
+      "assertions": [
+        {
+          "line": 248,
+          "end_line": 248,
+          "source": "assert provider.calls == 0"
+        }
+      ],
+      "native_evidence": [
+        "composed_native_provider_cache_admission_and_sensitive_no_send"
+      ],
+      "owner": "F14,F15",
+      "boundary": "Accepted F14 provenance guard plus real F15 sensitive selected scope no-send; source provenance cases retained."
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "name": "test_sensitive_result_provenance_is_not_sent_to_reranker",
+      "line": 251,
+      "end_line": 259,
+      "parameterized_instances": [
+        "tests/test_rerank.py::test_sensitive_result_provenance_is_not_sent_to_reranker"
+      ],
+      "assertions": [
+        {
+          "line": 259,
+          "end_line": 259,
+          "source": "assert provider.calls == 0"
+        }
+      ],
+      "native_evidence": [
+        "search::f15_sensitive_tests::sensitive_post_rank_engine_and_provenance_are_excluded"
+      ],
+      "owner": "F14,F15",
+      "boundary": "Same post-rank guard boundary as source monkeypatched-ranker assertion. Accepted F11 normalizes feed provenance before this boundary; no public mutable rank authority is introduced."
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "name": "test_singleflight_and_interrupted_waiter_do_not_duplicate_advice",
+      "line": 262,
+      "end_line": 285,
+      "parameterized_instances": [
+        "tests/test_rerank.py::test_singleflight_and_interrupted_waiter_do_not_duplicate_advice"
+      ],
+      "assertions": [
+        {
+          "line": 282,
+          "end_line": 282,
+          "source": "assert (await second).results[0].url.endswith(\"/b\")"
+        },
+        {
+          "line": 283,
+          "end_line": 283,
+          "source": "assert provider.calls == 1"
+        },
+        {
+          "line": 284,
+          "end_line": 284,
+          "source": "assert not ctx.search_flights.tasks"
+        },
+        {
+          "line": 285,
+          "end_line": 285,
+          "source": "assert not ctx.search_flights.waiters"
+        }
+      ],
+      "native_evidence": [
+        "composed_native_identity_overrides_manual_identity_and_waiters_share_execution",
+        "composed_native_cancellation_and_concurrent_shutdown_join_transport",
+        "real_socket_provider_bounds_gzip_redirect_free_wire_and_cancellation_release_slots"
+      ],
+      "owner": "F15",
+      "boundary": "Real native provider socket lifecycle and shared SearchService ownership."
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "name": "test_jev_score_and_untrusted_payload_bounds",
+      "line": 295,
+      "end_line": 335,
+      "parameterized_instances": [
+        "tests/test_rerank.py::test_jev_score_and_untrusted_payload_bounds"
+      ],
+      "assertions": [
+        {
+          "line": 328,
+          "end_line": 328,
+          "source": "assert result.results[0].url.endswith(\"/b\")"
+        },
+        {
+          "line": 330,
+          "end_line": 330,
+          "source": "assert candidates[0][\"url\"] == \"https://example.org/a\""
+        },
+        {
+          "line": 331,
+          "end_line": 331,
+          "source": "assert len(candidates[0][\"snippet\"].encode()) <= 1200"
+        },
+        {
+          "line": 332,
+          "end_line": 332,
+          "source": "assert len(candidates[0][\"title\"].encode()) <= 256"
+        },
+        {
+          "line": 333,
+          "end_line": 333,
+          "source": "assert \"untrusted evidence\" in bodies[0][\"questions\"][\"c0\"][\"instructions\"]"
+        },
+        {
+          "line": 334,
+          "end_line": 334,
+          "source": "assert \"private\" not in caplog.text and \"secret\" not in caplog.text and \"Ignore task\" not in caplog.text"
+        },
+        {
+          "line": 335,
+          "end_line": 335,
+          "source": "assert \"input_tokens=123\" in caplog.text"
+        }
+      ],
+      "native_evidence": [
+        "actual_source_provider_cases_replay_exact_wire_identity_usage_and_decisions",
+        "provider_strict_answers_stable_ties_usage_and_input_bounds_execute"
+      ],
+      "owner": "F15",
+      "boundary": "Actual-source request/response replay plus finite native resource and parser policy documented in PARITY.md."
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "name": "test_jev_invalid_responses_fall_back_without_retries",
+      "line": 342,
+      "end_line": 378,
+      "parameterized_instances": [
+        "tests/test_rerank.py::test_jev_invalid_responses_fall_back_without_retries[model]",
+        "tests/test_rerank.py::test_jev_invalid_responses_fall_back_without_retries[missing]",
+        "tests/test_rerank.py::test_jev_invalid_responses_fall_back_without_retries[extra]",
+        "tests/test_rerank.py::test_jev_invalid_responses_fall_back_without_retries[nan]",
+        "tests/test_rerank.py::test_jev_invalid_responses_fall_back_without_retries[bool]",
+        "tests/test_rerank.py::test_jev_invalid_responses_fall_back_without_retries[range]",
+        "tests/test_rerank.py::test_jev_invalid_responses_fall_back_without_retries[wrong_type]",
+        "tests/test_rerank.py::test_jev_invalid_responses_fall_back_without_retries[http]",
+        "tests/test_rerank.py::test_jev_invalid_responses_fall_back_without_retries[json]",
+        "tests/test_rerank.py::test_jev_invalid_responses_fall_back_without_retries[nonobject]",
+        "tests/test_rerank.py::test_jev_invalid_responses_fall_back_without_retries[redirect]"
+      ],
+      "assertions": [
+        {
+          "line": 377,
+          "end_line": 377,
+          "source": "assert result.results[0].url.endswith(\"/a\")"
+        },
+        {
+          "line": 378,
+          "end_line": 378,
+          "source": "assert calls == 1"
+        }
+      ],
+      "native_evidence": [
+        "actual_source_provider_cases_replay_exact_wire_identity_usage_and_decisions",
+        "provider_strict_answers_stable_ties_usage_and_input_bounds_execute"
+      ],
+      "owner": "F15",
+      "boundary": "Actual-source request/response replay plus finite native resource and parser policy documented in PARITY.md."
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "name": "test_last_cancelled_waiter_releases_flight_and_next_search_can_retry",
+      "line": 381,
+      "end_line": 401,
+      "parameterized_instances": [
+        "tests/test_rerank.py::test_last_cancelled_waiter_releases_flight_and_next_search_can_retry"
+      ],
+      "assertions": [
+        {
+          "line": 399,
+          "end_line": 399,
+          "source": "assert not ctx.search_flights.tasks and not ctx.search_flights.waiters"
+        },
+        {
+          "line": 400,
+          "end_line": 400,
+          "source": "assert (await SearchService(ctx).search(request())).results[0].url.endswith(\"/b\")"
+        },
+        {
+          "line": 401,
+          "end_line": 401,
+          "source": "assert provider.calls == 2"
+        }
+      ],
+      "native_evidence": [
+        "composed_native_identity_overrides_manual_identity_and_waiters_share_execution",
+        "composed_native_cancellation_and_concurrent_shutdown_join_transport",
+        "real_socket_provider_bounds_gzip_redirect_free_wire_and_cancellation_release_slots"
+      ],
+      "owner": "F15",
+      "boundary": "Real native provider socket lifecycle and shared SearchService ownership."
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "name": "test_jev_concurrency_and_cancel_release",
+      "line": 404,
+      "end_line": 438,
+      "parameterized_instances": [
+        "tests/test_rerank.py::test_jev_concurrency_and_cancel_release"
+      ],
+      "assertions": [
+        {
+          "line": 436,
+          "end_line": 436,
+          "source": "assert all(await asyncio.gather(*tasks[1:]))"
+        },
+        {
+          "line": 437,
+          "end_line": 437,
+          "source": "assert calls == 3 and maximum == 2"
+        },
+        {
+          "line": 438,
+          "end_line": 438,
+          "source": "assert await provider.rerank(\"public\", candidates) is not None"
+        }
+      ],
+      "native_evidence": [
+        "composed_native_identity_overrides_manual_identity_and_waiters_share_execution",
+        "composed_native_cancellation_and_concurrent_shutdown_join_transport",
+        "real_socket_provider_bounds_gzip_redirect_free_wire_and_cancellation_release_slots"
+      ],
+      "owner": "F15",
+      "boundary": "Real native provider socket lifecycle and shared SearchService ownership."
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "name": "test_jev_queued_cancellation_releases_admission_slot",
+      "line": 441,
+      "end_line": 476,
+      "parameterized_instances": [
+        "tests/test_rerank.py::test_jev_queued_cancellation_releases_admission_slot"
+      ],
+      "assertions": [
+        {
+          "line": 474,
+          "end_line": 474,
+          "source": "assert all(await asyncio.gather(*first))"
+        },
+        {
+          "line": 475,
+          "end_line": 475,
+          "source": "assert await provider.rerank(\"public\", candidates) is not None"
+        },
+        {
+          "line": 476,
+          "end_line": 476,
+          "source": "assert calls == 3"
+        }
+      ],
+      "native_evidence": [
+        "composed_native_identity_overrides_manual_identity_and_waiters_share_execution",
+        "composed_native_cancellation_and_concurrent_shutdown_join_transport",
+        "real_socket_provider_bounds_gzip_redirect_free_wire_and_cancellation_release_slots"
+      ],
+      "owner": "F15",
+      "boundary": "Real native provider socket lifecycle and shared SearchService ownership."
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "name": "test_jev_queue_wait_counts_toward_deadline_and_releases_slot",
+      "line": 479,
+      "end_line": 509,
+      "parameterized_instances": [
+        "tests/test_rerank.py::test_jev_queue_wait_counts_toward_deadline_and_releases_slot"
+      ],
+      "assertions": [
+        {
+          "line": 508,
+          "end_line": 508,
+          "source": "assert await provider.rerank(\"public\", candidates) is not None"
+        },
+        {
+          "line": 509,
+          "end_line": 509,
+          "source": "assert calls == 1"
+        },
+        {
+          "line": 503,
+          "end_line": 503,
+          "source": "assert await asyncio.wait_for(provider.rerank(\"public\", candidates), 0.3) is None"
+        },
+        {
+          "line": 504,
+          "end_line": 504,
+          "source": "assert calls == 0"
+        }
+      ],
+      "native_evidence": [
+        "rerank::f15_provider_tests::native_queue_wait_expires_without_dispatch_and_releases_admission"
+      ],
+      "owner": "F15",
+      "boundary": "Actual-source request/response replay plus finite native resource and parser policy documented in PARITY.md."
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "name": "test_interactive_deadline_bounds_advice",
+      "line": 512,
+      "end_line": 520,
+      "parameterized_instances": [
+        "tests/test_rerank.py::test_interactive_deadline_bounds_advice"
+      ],
+      "assertions": [
+        {
+          "line": 520,
+          "end_line": 520,
+          "source": "assert result.results[0].url.endswith(\"/a\")"
+        }
+      ],
+      "native_evidence": [
+        "actual_native_service_remaining_interactive_budget_cancels_provider_socket",
+        "expired_host_deadline_never_polls_or_dispatches_provider"
+      ],
+      "owner": "F15",
+      "boundary": "Actual-source request/response replay plus finite native resource and parser policy documented in PARITY.md."
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "name": "test_query_request_size_bounds_and_stable_score_ties",
+      "line": 523,
+      "end_line": 548,
+      "parameterized_instances": [
+        "tests/test_rerank.py::test_query_request_size_bounds_and_stable_score_ties"
+      ],
+      "assertions": [
+        {
+          "line": 540,
+          "end_line": 540,
+          "source": "assert await provider.rerank(\"q\" * 4097, cs) is None"
+        },
+        {
+          "line": 541,
+          "end_line": 541,
+          "source": "assert await provider.rerank(\"public\", (cs[0], cs[0])) is None"
+        },
+        {
+          "line": 542,
+          "end_line": 542,
+          "source": "assert await provider.rerank(\"public\", (cs[0],)) is None"
+        },
+        {
+          "line": 544,
+          "end_line": 544,
+          "source": "assert await provider.rerank(\"public\", cs) is None"
+        },
+        {
+          "line": 545,
+          "end_line": 545,
+          "source": "assert calls == 0"
+        },
+        {
+          "line": 548,
+          "end_line": 548,
+          "source": "assert decision is not None and decision.ordered_ids == (\"c0\", \"c1\")"
+        }
+      ],
+      "native_evidence": [
+        "actual_source_provider_cases_replay_exact_wire_identity_usage_and_decisions",
+        "provider_strict_answers_stable_ties_usage_and_input_bounds_execute"
+      ],
+      "owner": "F15",
+      "boundary": "Actual-source request/response replay plus finite native resource and parser policy documented in PARITY.md."
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "name": "test_jev_direct_candidate_field_limits_reject_without_transport",
+      "line": 551,
+      "end_line": 570,
+      "parameterized_instances": [
+        "tests/test_rerank.py::test_jev_direct_candidate_field_limits_reject_without_transport"
+      ],
+      "assertions": [
+        {
+          "line": 566,
+          "end_line": 569,
+          "source": "assert (\n        await provider.rerank(\"\u00e9\" * 2049, (RerankCandidate(\"c0\", \"t\", \"u\", \"s\"), RerankCandidate(\"c1\", \"t\", \"u\", \"s\")))\n        is None\n    )"
+        },
+        {
+          "line": 570,
+          "end_line": 570,
+          "source": "assert calls == 0"
+        },
+        {
+          "line": 565,
+          "end_line": 565,
+          "source": "assert await provider.rerank(\"public\", (good, bad)) is None"
+        }
+      ],
+      "native_evidence": [
+        "actual_source_provider_cases_replay_exact_wire_identity_usage_and_decisions",
+        "provider_strict_answers_stable_ties_usage_and_input_bounds_execute"
+      ],
+      "owner": "F15",
+      "boundary": "Actual-source request/response replay plus finite native resource and parser policy documented in PARITY.md."
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "name": "test_jev_direct_candidate_field_exact_limits_are_accepted",
+      "line": 573,
+      "end_line": 590,
+      "parameterized_instances": [
+        "tests/test_rerank.py::test_jev_direct_candidate_field_exact_limits_are_accepted"
+      ],
+      "assertions": [
+        {
+          "line": 590,
+          "end_line": 590,
+          "source": "assert decision is not None and decision.ordered_ids == (\"c1\", \"c0\")"
+        }
+      ],
+      "native_evidence": [
+        "actual_source_provider_cases_replay_exact_wire_identity_usage_and_decisions",
+        "provider_strict_answers_stable_ties_usage_and_input_bounds_execute"
+      ],
+      "owner": "F15",
+      "boundary": "Actual-source request/response replay plus finite native resource and parser policy documented in PARITY.md."
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "name": "test_jev_json_rejects_ambiguous_and_nonfinite_documents",
+      "line": 593,
+      "end_line": 614,
+      "parameterized_instances": [
+        "tests/test_rerank.py::test_jev_json_rejects_ambiguous_and_nonfinite_documents"
+      ],
+      "assertions": [
+        {
+          "line": 613,
+          "end_line": 613,
+          "source": "assert outcomes == [None] * len(raw_documents)"
+        },
+        {
+          "line": 614,
+          "end_line": 614,
+          "source": "assert calls == len(raw_documents)"
+        }
+      ],
+      "native_evidence": [
+        "actual_source_provider_cases_replay_exact_wire_identity_usage_and_decisions",
+        "provider_strict_answers_stable_ties_usage_and_input_bounds_execute"
+      ],
+      "owner": "F15",
+      "boundary": "Actual-source request/response replay plus finite native resource and parser policy documented in PARITY.md."
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "name": "test_jev_streamed_response_byte_limit_and_exact_boundary",
+      "line": 617,
+      "end_line": 661,
+      "parameterized_instances": [
+        "tests/test_rerank.py::test_jev_streamed_response_byte_limit_and_exact_boundary"
+      ],
+      "assertions": [
+        {
+          "line": 656,
+          "end_line": 656,
+          "source": "assert (await provider.rerank(\"public\", candidates)).ordered_ids == (\"c1\", \"c0\")"
+        },
+        {
+          "line": 657,
+          "end_line": 657,
+          "source": "assert await provider.rerank(\"public\", candidates) is None"
+        },
+        {
+          "line": 659,
+          "end_line": 659,
+          "source": "assert await provider.rerank(\"public\", candidates) is None"
+        },
+        {
+          "line": 660,
+          "end_line": 660,
+          "source": "assert calls == 3"
+        },
+        {
+          "line": 661,
+          "end_line": 661,
+          "source": "assert caplog.text.count(\"Jev rerank unavailable: ValueError\") == 2"
+        }
+      ],
+      "native_evidence": [
+        "actual_source_provider_cases_replay_exact_wire_identity_usage_and_decisions",
+        "real_socket_provider_bounds_gzip_redirect_free_wire_and_cancellation_release_slots"
+      ],
+      "owner": "F15",
+      "boundary": "Actual-source request/response replay plus finite native resource and parser policy documented in PARITY.md."
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "name": "test_jev_gzip_decoded_body_is_bounded",
+      "line": 664,
+      "end_line": 692,
+      "parameterized_instances": [
+        "tests/test_rerank.py::test_jev_gzip_decoded_body_is_bounded"
+      ],
+      "assertions": [
+        {
+          "line": 689,
+          "end_line": 689,
+          "source": "assert (await provider.rerank(\"public\", candidates)).ordered_ids == (\"c1\", \"c0\")"
+        },
+        {
+          "line": 691,
+          "end_line": 691,
+          "source": "assert await provider.rerank(\"public\", candidates) is None"
+        },
+        {
+          "line": 692,
+          "end_line": 692,
+          "source": "assert \"Jev rerank unavailable: ValueError\" in caplog.text"
+        }
+      ],
+      "native_evidence": [
+        "actual_source_provider_cases_replay_exact_wire_identity_usage_and_decisions",
+        "real_socket_provider_bounds_gzip_redirect_free_wire_and_cancellation_release_slots"
+      ],
+      "owner": "F15",
+      "boundary": "Actual-source request/response replay plus finite native resource and parser policy documented in PARITY.md."
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "name": "test_jev_rejects_surrogate_ids_and_versions_cache_identity",
+      "line": 695,
+      "end_line": 703,
+      "parameterized_instances": [
+        "tests/test_rerank.py::test_jev_rejects_surrogate_ids_and_versions_cache_identity"
+      ],
+      "assertions": [
+        {
+          "line": 699,
+          "end_line": 699,
+          "source": "assert await provider.rerank(\"public\", (good, bad)) is None"
+        },
+        {
+          "line": 700,
+          "end_line": 700,
+          "source": "assert provider.cache_identity().startswith(\"jev-score-v2:\")"
+        },
+        {
+          "line": 703,
+          "end_line": 703,
+          "source": "assert provider.cache_identity() != original_identity"
+        }
+      ],
+      "native_evidence": [
+        "composed_native_identity_overrides_manual_identity_and_waiters_share_execution",
+        "composed_native_provider_cache_admission_and_sensitive_no_send",
+        "actual_source_provider_cases_replay_exact_wire_identity_usage_and_decisions"
+      ],
+      "owner": "F15",
+      "boundary": "Native automatic concrete identity; real Valkey cache admission."
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "name": "test_jev_advertised_oversize_fails_before_read_and_without_retry",
+      "line": 706,
+      "end_line": 723,
+      "parameterized_instances": [
+        "tests/test_rerank.py::test_jev_advertised_oversize_fails_before_read_and_without_retry"
+      ],
+      "assertions": [
+        {
+          "line": 722,
+          "end_line": 722,
+          "source": "assert await provider.rerank(\"public\", candidates) is None"
+        },
+        {
+          "line": 723,
+          "end_line": 723,
+          "source": "assert calls == 1"
+        }
+      ],
+      "native_evidence": [
+        "real_native_oversized_identity_header_rejects_before_held_body_and_closes_socket"
+      ],
+      "owner": "F08,F15",
+      "boundary": "Opt-in actual response header guard; separate12 actual-source header/read observations."
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "name": "test_http_portal_wiring_and_html_ranking_label",
+      "line": 726,
+      "end_line": 745,
+      "parameterized_instances": [
+        "tests/test_rerank.py::test_http_portal_wiring_and_html_ranking_label"
+      ],
+      "assertions": [
+        {
+          "line": 737,
+          "end_line": 737,
+          "source": "assert server._current_context().rerank_provider is provider"
+        },
+        {
+          "line": 743,
+          "end_line": 743,
+          "source": "assert html.status_code == 200"
+        },
+        {
+          "line": 744,
+          "end_line": 744,
+          "source": "assert \"Semantic relevance orders the bounded shortlist\" in html.text"
+        },
+        {
+          "line": 745,
+          "end_line": 745,
+          "source": "assert \"original source-fusion score\" in html.text"
+        },
+        {
+          "line": 740,
+          "end_line": 740,
+          "source": "assert response.status_code == 200"
+        },
+        {
+          "line": 741,
+          "end_line": 741,
+          "source": "assert response.json()[\"results\"][0][\"url\"].endswith(\"/b\")"
+        }
+      ],
+      "native_evidence": [
+        "read_capture_preserves_full_canonical_per_caller_views_and_snapshot_semantics",
+        "cached_read_uses_current_trusted_availability_without_new_execution_or_authority"
+      ],
+      "owner": "T02,T03,T06",
+      "boundary": "F15 preserves shared native read-boundary data. Native public HTTP/MCP/portal serialization, HTML escaping/collapsed layout and live production catalog wiring remain successor-owned; Python source assertions remain immutable observations."
+    },
+    {
+      "path": "tests/test_advisories.py",
+      "name": "test_relevant_unavailable_sources_are_operator_owned",
+      "line": 26,
+      "end_line": 44,
+      "parameterized_instances": [
+        "tests/test_advisories.py::test_relevant_unavailable_sources_are_operator_owned[False-engines]",
+        "tests/test_advisories.py::test_relevant_unavailable_sources_are_operator_owned[False-categories]",
+        "tests/test_advisories.py::test_relevant_unavailable_sources_are_operator_owned[False-topic]",
+        "tests/test_advisories.py::test_relevant_unavailable_sources_are_operator_owned[False-fallback]",
+        "tests/test_advisories.py::test_relevant_unavailable_sources_are_operator_owned[False-media]",
+        "tests/test_advisories.py::test_relevant_unavailable_sources_are_operator_owned[True-engines]",
+        "tests/test_advisories.py::test_relevant_unavailable_sources_are_operator_owned[True-categories]",
+        "tests/test_advisories.py::test_relevant_unavailable_sources_are_operator_owned[True-topic]",
+        "tests/test_advisories.py::test_relevant_unavailable_sources_are_operator_owned[True-fallback]",
+        "tests/test_advisories.py::test_relevant_unavailable_sources_are_operator_owned[True-media]"
+      ],
+      "assertions": [
+        {
+          "line": 41,
+          "end_line": 41,
+          "source": "assert source[\"reason\"] == (\"engine_disabled\" if disabled else \"credentials_missing\")"
+        },
+        {
+          "line": 42,
+          "end_line": 42,
+          "source": "assert source[\"action\"][\"actor\"] == \"operator\""
+        },
+        {
+          "line": 43,
+          "end_line": 43,
+          "source": "assert source[\"expected_quality_gain\"] == \"unmeasured\""
+        },
+        {
+          "line": 44,
+          "end_line": 44,
+          "source": "assert \"needle\" not in str(notes)"
+        }
+      ],
+      "native_evidence": [
+        "actual_source_projection_and_advisory_cases_replay_full_objects",
+        "cached_read_uses_current_trusted_availability_without_new_execution_or_authority"
+      ],
+      "owner": "F15",
+      "boundary": "Exact source note objects plus current catalog/policy and canonical full count."
+    },
+    {
+      "path": "tests/test_advisories.py",
+      "name": "test_sensitive_sources_never_advertised",
+      "line": 48,
+      "end_line": 57,
+      "parameterized_instances": [
+        "tests/test_advisories.py::test_sensitive_sources_never_advertised[capability]",
+        "tests/test_advisories.py::test_sensitive_sources_never_advertised[context]",
+        "tests/test_advisories.py::test_sensitive_sources_never_advertised[policy]"
+      ],
+      "assertions": [
+        {
+          "line": 57,
+          "end_line": 57,
+          "source": "assert notes == []"
+        }
+      ],
+      "native_evidence": [
+        "actual_source_projection_and_advisory_cases_replay_full_objects",
+        "cached_read_uses_current_trusted_availability_without_new_execution_or_authority"
+      ],
+      "owner": "F15",
+      "boundary": "Exact source note objects plus current catalog/policy and canonical full count."
+    },
+    {
+      "path": "tests/test_advisories.py",
+      "name": "test_no_unrelated_or_credentialed_source_advisory",
+      "line": 60,
+      "end_line": 68,
+      "parameterized_instances": [
+        "tests/test_advisories.py::test_no_unrelated_or_credentialed_source_advisory"
+      ],
+      "assertions": [
+        {
+          "line": 66,
+          "end_line": 66,
+          "source": "assert search_advisories(SearchRequest(query=\"x\", engines=[\"wikipedia\"]), ScopeDecision(), ctx) == []"
+        },
+        {
+          "line": 68,
+          "end_line": 68,
+          "source": "assert search_advisories(SearchRequest(query=\"x\", engines=[\"brave\"]), ScopeDecision(), ctx) == []"
+        }
+      ],
+      "native_evidence": [
+        "actual_source_projection_and_advisory_cases_replay_full_objects",
+        "cached_read_uses_current_trusted_availability_without_new_execution_or_authority"
+      ],
+      "owner": "F15",
+      "boundary": "Exact source note objects plus current catalog/policy and canonical full count."
+    },
+    {
+      "path": "tests/test_advisories.py",
+      "name": "test_jev_only_on_automatic_scopes_and_available_state",
+      "line": 71,
+      "end_line": 80,
+      "parameterized_instances": [
+        "tests/test_advisories.py::test_jev_only_on_automatic_scopes_and_available_state"
+      ],
+      "assertions": [
+        {
+          "line": 75,
+          "end_line": 75,
+          "source": "assert len(notes) == 1"
+        },
+        {
+          "line": 76,
+          "end_line": 76,
+          "source": "assert notes[0][\"code\"] == \"optional_routing_unavailable\""
+        },
+        {
+          "line": 78,
+          "end_line": 78,
+          "source": "assert search_advisories(request, ScopeDecision(), ctx) == []"
+        },
+        {
+          "line": 80,
+          "end_line": 80,
+          "source": "assert search_advisories(request, ScopeDecision(jev_added_engines=[\"arxiv\"]), ctx) == []"
+        }
+      ],
+      "native_evidence": [
+        "actual_source_projection_and_advisory_cases_replay_full_objects",
+        "cached_read_uses_current_trusted_availability_without_new_execution_or_authority"
+      ],
+      "owner": "F15",
+      "boundary": "Exact source note objects plus current catalog/policy and canonical full count."
+    },
+    {
+      "path": "tests/test_advisories.py",
+      "name": "test_bounded_sorted_and_derived_from_current_catalog",
+      "line": 83,
+      "end_line": 94,
+      "parameterized_instances": [
+        "tests/test_advisories.py::test_bounded_sorted_and_derived_from_current_catalog"
+      ],
+      "assertions": [
+        {
+          "line": 89,
+          "end_line": 89,
+          "source": "assert [n.get(\"engine\") for n in first] == [None, \"arxiv\", \"brave\"]"
+        },
+        {
+          "line": 90,
+          "end_line": 90,
+          "source": "assert len(first) == 3"
+        },
+        {
+          "line": 93,
+          "end_line": 93,
+          "source": "assert [n.get(\"engine\") for n in second] == [None, \"brave\", \"wikipedia\"]"
+        },
+        {
+          "line": 94,
+          "end_line": 94,
+          "source": "assert not hasattr(cached_scope, \"advisories\")"
+        }
+      ],
+      "native_evidence": [
+        "actual_source_projection_and_advisory_cases_replay_full_objects",
+        "cached_read_uses_current_trusted_availability_without_new_execution_or_authority"
+      ],
+      "owner": "F15",
+      "boundary": "Exact source note objects plus current catalog/policy and canonical full count."
+    },
+    {
+      "path": "tests/test_advisories.py",
+      "name": "test_configured_jev_does_not_emit_missing_routing_note",
+      "line": 97,
+      "end_line": 101,
+      "parameterized_instances": [
+        "tests/test_advisories.py::test_configured_jev_does_not_emit_missing_routing_note"
+      ],
+      "assertions": [
+        {
+          "line": 101,
+          "end_line": 101,
+          "source": "assert search_advisories(SearchRequest(query=\"x\"), ScopeDecision(), ctx) == []"
+        }
+      ],
+      "native_evidence": [
+        "actual_source_projection_and_advisory_cases_replay_full_objects",
+        "cached_read_uses_current_trusted_availability_without_new_execution_or_authority"
+      ],
+      "owner": "F15",
+      "boundary": "Exact source note objects plus current catalog/policy and canonical full count."
+    },
+    {
+      "path": "tests/test_advisories.py",
+      "name": "test_reranking_threshold_and_attributed_evidence",
+      "line": 105,
+      "end_line": 112,
+      "parameterized_instances": [
+        "tests/test_advisories.py::test_reranking_threshold_and_attributed_evidence[0-False]",
+        "tests/test_advisories.py::test_reranking_threshold_and_attributed_evidence[5-False]",
+        "tests/test_advisories.py::test_reranking_threshold_and_attributed_evidence[6-True]",
+        "tests/test_advisories.py::test_reranking_threshold_and_attributed_evidence[40-True]",
+        "tests/test_advisories.py::test_reranking_threshold_and_attributed_evidence[100-True]"
+      ],
+      "assertions": [
+        {
+          "line": 108,
+          "end_line": 108,
+          "source": "assert bool(notes) is expected"
+        },
+        {
+          "line": 110,
+          "end_line": 110,
+          "source": "assert notes[0][\"quality_evidence\"] == \"operator_reported_production\""
+        },
+        {
+          "line": 111,
+          "end_line": 111,
+          "source": "assert notes[0][\"expected_quality_gain\"] == \"unmeasured\""
+        },
+        {
+          "line": 112,
+          "end_line": 112,
+          "source": "assert notes[0][\"action\"][\"actor\"] == \"operator\""
+        }
+      ],
+      "native_evidence": [
+        "actual_source_projection_and_advisory_cases_replay_full_objects",
+        "read_capture_preserves_full_canonical_per_caller_views_and_snapshot_semantics"
+      ],
+      "owner": "F15",
+      "boundary": "Exact source note objects plus current catalog/policy and canonical full count."
+    },
+    {
+      "path": "tests/test_advisories.py",
+      "name": "test_reranking_suppressed_for_sensitive_scope_and_configured_provider",
+      "line": 115,
+      "end_line": 123,
+      "parameterized_instances": [
+        "tests/test_advisories.py::test_reranking_suppressed_for_sensitive_scope_and_configured_provider"
+      ],
+      "assertions": [
+        {
+          "line": 119,
+          "end_line": 119,
+          "source": "assert search_advisories(SearchRequest(query=\"x\", engines=[\"hibp\"]), ScopeDecision(), ctx, result_count=40) == []"
+        },
+        {
+          "line": 121,
+          "end_line": 123,
+          "source": "assert (\n        search_advisories(SearchRequest(query=\"x\", engines=[\"wikipedia\"]), ScopeDecision(), ctx, result_count=40) == []\n    )"
+        }
+      ],
+      "native_evidence": [
+        "actual_source_projection_and_advisory_cases_replay_full_objects",
+        "cached_read_uses_current_trusted_availability_without_new_execution_or_authority"
+      ],
+      "owner": "F15",
+      "boundary": "Exact source note objects plus current catalog/policy and canonical full count."
+    },
+    {
+      "path": "tests/test_advisories.py",
+      "name": "test_portal_advisories_collapsed_and_escaped",
+      "line": 126,
+      "end_line": 134,
+      "parameterized_instances": [
+        "tests/test_advisories.py::test_portal_advisories_collapsed_and_escaped"
+      ],
+      "assertions": [
+        {
+          "line": 131,
+          "end_line": 131,
+          "source": "assert '<details class=\"notice\"><summary>Source availability</summary>' in html"
+        },
+        {
+          "line": 132,
+          "end_line": 132,
+          "source": "assert \"&lt;script&gt;operator&lt;/script&gt;\" in html"
+        },
+        {
+          "line": 133,
+          "end_line": 133,
+          "source": "assert \"<script>operator</script>\" not in html"
+        },
+        {
+          "line": 134,
+          "end_line": 134,
+          "source": "assert \"advisories:\" in format_yaml_markdown([], \"x\", meta={\"advisories\": notes})"
+        }
+      ],
+      "native_evidence": [
+        "read_capture_preserves_full_canonical_per_caller_views_and_snapshot_semantics",
+        "cached_read_uses_current_trusted_availability_without_new_execution_or_authority"
+      ],
+      "owner": "T02,T03,T06",
+      "boundary": "F15 preserves shared native read-boundary data. Native public HTTP/MCP/portal serialization, HTML escaping/collapsed layout and live production catalog wiring remain successor-owned; Python source assertions remain immutable observations."
+    },
+    {
+      "path": "tests/test_advisories.py",
+      "name": "test_mcp_uses_full_count_before_presentation_slice",
+      "line": 137,
+      "end_line": 154,
+      "parameterized_instances": [
+        "tests/test_advisories.py::test_mcp_uses_full_count_before_presentation_slice"
+      ],
+      "assertions": [
+        {
+          "line": 149,
+          "end_line": 149,
+          "source": "assert len(body[\"results\"]) == 1"
+        },
+        {
+          "line": 151,
+          "end_line": 151,
+          "source": "assert note[\"capability\"] == \"jev_reranking\""
+        },
+        {
+          "line": 152,
+          "end_line": 152,
+          "source": "assert note[\"quality_evidence\"] == \"operator_reported_production\""
+        }
+      ],
+      "native_evidence": [
+        "read_capture_preserves_full_canonical_per_caller_views_and_snapshot_semantics",
+        "cached_read_uses_current_trusted_availability_without_new_execution_or_authority"
+      ],
+      "owner": "T02,T03,T06",
+      "boundary": "F15 preserves shared native read-boundary data. Native public HTTP/MCP/portal serialization, HTML escaping/collapsed layout and live production catalog wiring remain successor-owned; Python source assertions remain immutable observations."
+    },
+    {
+      "path": "tests/test_advisories.py",
+      "name": "test_cached_mcp_response_uses_current_availability",
+      "line": 157,
+      "end_line": 180,
+      "parameterized_instances": [
+        "tests/test_advisories.py::test_cached_mcp_response_uses_current_availability"
+      ],
+      "assertions": [
+        {
+          "line": 173,
+          "end_line": 173,
+          "source": "assert first[\"meta\"][\"advisories\"][0][\"reason\"] == \"credentials_missing\""
+        },
+        {
+          "line": 176,
+          "end_line": 176,
+          "source": "assert second[\"meta\"][\"cached\"] is True"
+        },
+        {
+          "line": 177,
+          "end_line": 177,
+          "source": "assert \"advisories\" not in second[\"meta\"]"
+        },
+        {
+          "line": 178,
+          "end_line": 178,
+          "source": "assert state.ctx.active_engines[\"wikipedia\"].calls == 1"
+        }
+      ],
+      "native_evidence": [
+        "read_capture_preserves_full_canonical_per_caller_views_and_snapshot_semantics",
+        "cached_read_uses_current_trusted_availability_without_new_execution_or_authority"
+      ],
+      "owner": "T02,T03,T06",
+      "boundary": "F15 preserves shared native read-boundary data. Native public HTTP/MCP/portal serialization, HTML escaping/collapsed layout and live production catalog wiring remain successor-owned; Python source assertions remain immutable observations."
+    },
+    {
+      "path": "tests/test_advisories.py",
+      "name": "test_media_intersects_requested_source_scope",
+      "line": 184,
+      "end_line": 193,
+      "parameterized_instances": [
+        "tests/test_advisories.py::test_media_intersects_requested_source_scope[False]",
+        "tests/test_advisories.py::test_media_intersects_requested_source_scope[True]"
+      ],
+      "assertions": [
+        {
+          "line": 193,
+          "end_line": 193,
+          "source": "assert search_advisories(request, ScopeDecision(), ctx) == []"
+        }
+      ],
+      "native_evidence": [
+        "actual_source_projection_and_advisory_cases_replay_full_objects",
+        "cached_read_uses_current_trusted_availability_without_new_execution_or_authority"
+      ],
+      "owner": "F15",
+      "boundary": "Exact source note objects plus current catalog/policy and canonical full count."
+    },
+    {
+      "path": "tests/test_advisories.py",
+      "name": "test_http_uses_operator_sensitive_policy",
+      "line": 196,
+      "end_line": 219,
+      "parameterized_instances": [
+        "tests/test_advisories.py::test_http_uses_operator_sensitive_policy"
+      ],
+      "assertions": [
+        {
+          "line": 219,
+          "end_line": 219,
+          "source": "assert body.get(\"meta\", {}).get(\"advisories\", []) == []"
+        }
+      ],
+      "native_evidence": [
+        "read_capture_preserves_full_canonical_per_caller_views_and_snapshot_semantics",
+        "cached_read_uses_current_trusted_availability_without_new_execution_or_authority"
+      ],
+      "owner": "T02,T03,T06",
+      "boundary": "F15 preserves shared native read-boundary data. Native public HTTP/MCP/portal serialization, HTML escaping/collapsed layout and live production catalog wiring remain successor-owned; Python source assertions remain immutable observations."
+    }
+  ],
+  "additional_native_obligations": [
+    "Flat iterative parser/error destruction; cooperative heartbeat and expired deadline",
+    "Shared exact numeric normalization with finite policy owned by caller",
+    "Raw canonical cache and snapshot objects contain no read-boundary advisories",
+    "Concurrent native provider shutdown joins actual held sockets"
+  ],
+  "source_limitations": [
+    "No live provider/relevance/latency improvement claim",
+    "Pinned CPython recursion threshold is an environment observation; safe native flat parser accepts deeper unused structures",
+    "T02/T03/T06 public transport output and live advisory catalog wiring remain downstream",
+    "Only raw JSON numeric consumers in ssx-json Number, SourceJSON and F15 adopt FloatNormalizer; domain storage Python-float string coercion and A06 Semantic Scholar string front-end remain separately owned"
+  ]
+}

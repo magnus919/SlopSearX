@@ -1,0 +1,107 @@
+{
+  "historical_source_artifacts": {
+    "docs/rust-rewrite/a07/source-amendments/pubchem-independent-budget-original-v1.json": {
+      "classification": "Historical failed fixture source; its 300+300 wall-delay oracle is superseded, not relabelled as passed evidence.",
+      "sha256": "25418d4e67381955d14275e37f9c52b2eafde81c3ee372ca2473017d73f52f96"
+    },
+    "docs/rust-rewrite/a07/source-amendments/pubchem-independent-budget-owner-clock-v1.json": {
+      "runtime_status": "UNAPPLIED_UNCOMPILED_UNRUN; milestones are intended assertions, not actual measurements.",
+      "sha256": "c2961952a5b8e0bdc0fbad51dabdb4227cac9c119378af009a3bda5f14fc9fa3"
+    },
+    "preservation": "Keep both source artifacts byte-for-byte, with their original point-in-time statuses."
+  },
+  "limits": [
+    "No provider calls were made.",
+    "No complete rewrite milestone, global G02 accounting, full HTML/MCP transport, production rollout, or default-budget throughput result is claimed.",
+    "The negative run used the qualified source at HEAD 6523152 against a later docs-only main at 8aecf43; this relationship is distinct from the positive run's 0/0 base."
+  ],
+  "negative_control": {
+    "exit_code": 101,
+    "expected_boundary": "PUBCHEM_RENEWAL_BOUNDARY: second request expired at first request deadline",
+    "independent_review": "Accepted with no findings; root verified original source restoration and full source/status pins.",
+    "mutant_source_sha256": "bc59b9554e92c0b3bce350d09c93bb89d3a1865373a55dd58816762600266a13",
+    "mutation": "Remove the second session.set_deadline renewal in the PubChem second-request path; restore and verify the original bytes after the test.",
+    "negative_divergence_at_run": "0 2",
+    "origin_main_at_negative_run": "8aecf43ae8b2c25946f92c688f8a4ae299c53af5",
+    "original_source_sha256": "69693fef8959d1ef0db05fc3ae18f693552c500863ce7f8cb307076dcd224084",
+    "published_raw_stdout": {
+      "bytes": 904,
+      "content_policy": "Publish these exact bytes. The file is a byte-identical copy of the retained native stdout.",
+      "path": "docs/rust-rewrite/a07/qualification/pubchem-owner-clock-negative.stdout",
+      "sha256": "032e93c436be3a08f8c2c35a25d59f004b84f3d05750d823cd25ac53f964e160"
+    },
+    "source_base_commit": "652315253a933f7222acb94f480284991c2125f7",
+    "status": "qualified_expected_failure_then_restored",
+    "test": "adapters::clinicaltrials::resource_tests::pubchem_second_request_renews_500ms_budget_on_the_same_manual_owner"
+  },
+  "positive_run": {
+    "aggregate_breakdown": "5 + 263 + 19 + 6 + 7 + 2 = 302 across the whole A07 gate",
+    "candidate_paths_as_run": [
+      {
+        "bytes": 16557,
+        "path": "crates/ssx-infra/src/research_runner/completion_tests.rs",
+        "sha256": "1b75f762a8a278b41124636eb54fc9d60ecdad28738b7a4db47007300d49e76e"
+      },
+      {
+        "bytes": 30369,
+        "path": "crates/ssx-infra/tests/a07_biomedical.rs",
+        "sha256": "6197dc61021719257105ce255b981ccbb95a2ed5fe60cbff67e891f3b2d0cf9a"
+      },
+      {
+        "bytes": 37892,
+        "path": "crates/ssx-infra/tests/support/a07_resources.rs",
+        "sha256": "4c4fb9750de167dc458837cbddf3212aa9d60580c4265180f65d10e497b5faa7"
+      },
+      {
+        "bytes": 23406,
+        "path": "crates/xtask/src/a07.rs",
+        "sha256": "094e41deefc5924e4c11f905f537715da2f81ffac3331d530abfe4df31b62f46"
+      },
+      {
+        "bytes": 6014,
+        "path": "docs/rust-rewrite/a07/README.md",
+        "sha256": "f1e68fb37e3b6987f09a7627f1902ce6286bb45b0d004d7af1fe4d94ccee8908"
+      },
+      {
+        "bytes": 32339,
+        "path": "docs/rust-rewrite/a07/source-amendments/pubchem-independent-budget-original-v1.json",
+        "sha256": "25418d4e67381955d14275e37f9c52b2eafde81c3ee372ca2473017d73f52f96"
+      },
+      {
+        "bytes": 5334,
+        "path": "docs/rust-rewrite/a07/source-amendments/pubchem-independent-budget-owner-clock-v1.json",
+        "sha256": "c2961952a5b8e0bdc0fbad51dabdb4227cac9c119378af009a3bda5f14fc9fa3"
+      }
+    ],
+    "candidate_state": "Execution used the base commit plus the seven uncommitted candidate paths listed here. The base commit alone does not contain this PR candidate; reproduce from the delivered PR source.",
+    "controller_plan_sha256": "2894bb47bd1a032a078fd3f38ca6ce7f6489c8dc1464208d9ee27e04d17df79d",
+    "count_scope": "This is the whole-gate aggregate, not a sum of the six controller commands; those commands include overlapping controls.",
+    "delivery_main_after_docs_only_pr1039": "8aecf43ae8b2c25946f92c688f8a4ae299c53af5",
+    "delivery_relation": "Main later advanced by docs-only PR #1039. The qualified Rust source is unchanged; exact-head delivery checks remain required.",
+    "origin_main_at_positive_run": "652315253a933f7222acb94f480284991c2125f7",
+    "portable_reproduction": {
+      "commands": [
+        "cargo +1.99.0 fmt --all -- --check",
+        "cargo +1.99.0 test --offline --locked -p ssx-infra --test a07_biomedical -- --show-output",
+        "cargo +1.99.0 test --offline --locked -p ssx-infra --lib adapters::clinicaltrials::resource_tests::pubchem_second_request_renews_500ms_budget_on_the_same_manual_owner -- --exact --show-output",
+        "cargo +1.99.0 test --offline --locked -p ssx-infra --lib adapters::clinicaltrials::resource_tests:: -- --show-output",
+        "cargo +1.99.0 clippy --offline --locked --workspace --all-targets -- -D warnings",
+        "cargo +1.99.0 run --offline --locked -p xtask -- check A07 --output \"$A07_REPORT\""
+      ],
+      "environment_note": "Run from this PR candidate with Rust 1.99.0 and dependencies already cached for offline operation. Choose a short, owned A07_TMP under the configured build root, create it, and set TMPDIR, TMP, TEMP and SLOPSEARX_TEST_TEMP_ROOT to it for test commands. The full fixture socket path must stay below 104 bytes. Set SLOPSEARX_TEST_VALKEY_SERVER to an existing disposable Valkey server executable. Keep actual HOME unchanged; choose A07_REPORT outside the source checkout.",
+      "report_path_policy": "Choose A07_REPORT outside the source checkout; the report hash above identifies the retained as-run report.",
+      "toolchain": "Rust 1.99.0"
+    },
+    "positive_divergence_at_run": "0 0",
+    "source_base_commit": "652315253a933f7222acb94f480284991c2125f7",
+    "source_branch": "codex/a07-pubchem-owner-clock",
+    "source_snapshot_sha256": "b57ecefd4f35043726626db5eed7e910875e7dd8da83453bce0f0456c9f7ac45",
+    "whole_a07_aggregate_pass_count": 302,
+    "whole_a07_report_sha256": "6fc0aa9d0af85880c3597ce2238d2944c5e7b9a25b79646999dce9535d0a3c5c",
+    "whole_a07_report_status": "passed"
+  },
+  "publication_path": "docs/rust-rewrite/a07/qualification/pubchem-owner-clock-qualification.json",
+  "publication_status": "local_qualification_record_exact_head_delivery_checks_pending",
+  "schema": "a07-pubchem-owner-clock-qualification-v2",
+  "scope": "A07 PubChem owner-clock and resource-fixture qualification only; no complete-milestone or production-rollout claim."
+}

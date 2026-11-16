@@ -1,0 +1,3107 @@
+{
+  "schema_version": 1,
+  "plan_id": "W06",
+  "review_id": "W06-R04",
+  "baseline": "9b7d888da1ee3f7e2ed045c2185ea16f419381e9",
+  "source_controls": {
+    "slopsearx/staged.py": "6a916005fb404369294f8f3d2e0c96ade191beae2be85087640e085bb9d4d256",
+    "slopsearx/mcp/staged_tools.py": "ac49b6942567aaab2c8bb56c15bb325f6a87d68f6c65a75a4bc912a74310a2ff",
+    "slopsearx/mcp/composition.py": "3c3b530a7aebf0dd153f8cb00349438bad7b1308e1d53d1d9a03b9f5b3d81077",
+    "slopsearx/mcp/result_serialization.py": "170d358b3d0b7da2b5aa61c18736ca424b3764f82c8d81d8e0d54329066fe669",
+    "slopsearx/artifacts.py": "61aad828f61008623cc23d57b3a51c2c40e591ebfeece8c4065ec9d5a7470678",
+    "slopsearx/snapshot.py": "85c88b483635003a4a395f40cf48eb83a564b8dd3965ed8a139ba65c1ea88377",
+    "tests/test_staged_search.py": "44bd4207e4f6feced604d9e8f2fc049a9b8ce7062271fe7c1bf27ac9a8c2aa8c",
+    "tests/test_staged_valkey_integration.py": "ef3b19f2f85c2dfb6e15871bcb0a3a818debb4d3b49f57bb3aa3af86bb7e362e",
+    "tests/test_workflow_composition.py": "ab1fc968ccf8aea8c23ca106f59034f16974dd21e09a6d49d5f8a7b3b918d4e9",
+    "tests/test_mcp_tools.py": "f503f109d706f7808132baf9a1cdd5975f27202604524937953b5aa212d89549",
+    "slopsearx/service.py": "45903193ef89987f7be83c1e593e44b7752251a54eb8719eae15a241840102ac",
+    "slopsearx/cache.py": "88155d2060f19bcb7740c9498f8f82378e26c4c60ac4d013bee9913eb333c089",
+    "slopsearx/capabilities.py": "ed4e332a4df1de32d83b9dd2b62dddb622082ab4c236c0c9cef8d8d23336fd6f",
+    "slopsearx/mcp/tools.py": "6bbbdb270f14fda7d90ae8dbe1983aae33526df430f76a960f0c7483417eb35a"
+  },
+  "context": {
+    "catalog": [
+      {
+        "name": "abuseipdb",
+        "display_name": "AbuseIPDB",
+        "engine_type": "api",
+        "categories": [
+          "security",
+          "threat-intel"
+        ],
+        "enabled": true,
+        "auth_class": "required",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "blocked",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "freemium",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "arxiv",
+        "display_name": "arXiv",
+        "engine_type": "api",
+        "categories": [
+          "science",
+          "reference"
+        ],
+        "enabled": true,
+        "auth_class": "none",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "ashby",
+        "display_name": "Ashby",
+        "engine_type": "api",
+        "categories": [
+          "jobs"
+        ],
+        "enabled": true,
+        "auth_class": "none",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [
+          "requires a company name in the query; returns no full job descriptions"
+        ],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "brave",
+        "display_name": "Brave Search API",
+        "engine_type": "api",
+        "categories": [
+          "general",
+          "news",
+          "science",
+          "images"
+        ],
+        "enabled": true,
+        "auth_class": "required",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit",
+          "unscoped"
+        ],
+        "caveats": [
+          "safesearch parameter not enforced"
+        ],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text",
+          "answers",
+          "media"
+        ],
+        "supported_media_types": [
+          "image",
+          "video"
+        ],
+        "failure_classes": [
+          "rate_limited",
+          "blocked",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "freemium",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": true
+      },
+      {
+        "name": "censys",
+        "display_name": "Censys",
+        "engine_type": "api",
+        "categories": [
+          "it",
+          "security"
+        ],
+        "enabled": true,
+        "auth_class": "required",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "blocked",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "freemium",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "clinicaltrials",
+        "display_name": "ClinicalTrials.gov",
+        "engine_type": "api",
+        "categories": [
+          "medical",
+          "health",
+          "science"
+        ],
+        "enabled": true,
+        "auth_class": "unknown",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "crates",
+        "display_name": "crates.io",
+        "engine_type": "api",
+        "categories": [
+          "it",
+          "reference",
+          "packages"
+        ],
+        "enabled": true,
+        "auth_class": "unknown",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "crtsh",
+        "display_name": "CRT.sh (Certificate Transparency)",
+        "engine_type": "api",
+        "categories": [
+          "it",
+          "security"
+        ],
+        "enabled": true,
+        "auth_class": "unknown",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "blocked",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "cve",
+        "display_name": "CVE Program (MITRE)",
+        "engine_type": "api",
+        "categories": [
+          "it",
+          "security"
+        ],
+        "enabled": true,
+        "auth_class": "none",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "blocked",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "dehashed",
+        "display_name": "DeHashed",
+        "engine_type": "api",
+        "categories": [
+          "security",
+          "threat-intel"
+        ],
+        "enabled": true,
+        "auth_class": "required",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": true,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "blocked",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "paid",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "dockerhub",
+        "display_name": "Docker Hub",
+        "engine_type": "api",
+        "categories": [
+          "it",
+          "reference",
+          "packages"
+        ],
+        "enabled": true,
+        "auth_class": "unknown",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "duckduckgo",
+        "display_name": "DuckDuckGo",
+        "engine_type": "scrape",
+        "categories": [
+          "general",
+          "news",
+          "images"
+        ],
+        "enabled": true,
+        "auth_class": "none",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit",
+          "unscoped"
+        ],
+        "caveats": [
+          "scrape adapter \u2014 subject to blocking and CAPTCHAs"
+        ],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text",
+          "media"
+        ],
+        "supported_media_types": [
+          "image"
+        ],
+        "failure_classes": [
+          "rate_limited",
+          "blocked",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "edgar",
+        "display_name": "SEC EDGAR",
+        "engine_type": "api",
+        "categories": [
+          "finance",
+          "reference"
+        ],
+        "enabled": true,
+        "auth_class": "unknown",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "epss",
+        "display_name": "FIRST EPSS (Exploit Prediction)",
+        "engine_type": "api",
+        "categories": [
+          "security",
+          "threat-intel"
+        ],
+        "enabled": true,
+        "auth_class": "unknown",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "blocked",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "europepmc",
+        "display_name": "Europe PMC (EMBL-EBI)",
+        "engine_type": "api",
+        "categories": [
+          "science",
+          "reference",
+          "medical",
+          "health"
+        ],
+        "enabled": false,
+        "auth_class": "none",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text",
+          "structured"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "exploitdb",
+        "display_name": "Exploit-DB",
+        "engine_type": "scrape",
+        "categories": [
+          "security",
+          "exploit"
+        ],
+        "enabled": true,
+        "auth_class": "unknown",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "blocked",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "fred",
+        "display_name": "FRED",
+        "engine_type": "api",
+        "categories": [
+          "finance",
+          "reference",
+          "economics"
+        ],
+        "enabled": true,
+        "auth_class": "required",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "freemium",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "github",
+        "display_name": "GitHub",
+        "engine_type": "api",
+        "categories": [
+          "reference",
+          "github:code",
+          "github:issues",
+          "github:prs"
+        ],
+        "enabled": true,
+        "auth_class": "none",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [
+          "pagination hardcoded to page 1"
+        ],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "blocked",
+          "error",
+          "timeout",
+          "unavailable"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "google",
+        "display_name": "Google Search",
+        "engine_type": "scrape",
+        "categories": [
+          "general",
+          "news"
+        ],
+        "enabled": true,
+        "auth_class": "none",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit",
+          "unscoped"
+        ],
+        "caveats": [
+          "scrape adapter \u2014 subject to blocking and CAPTCHAs"
+        ],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "blocked",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "greenhouse",
+        "display_name": "Greenhouse",
+        "engine_type": "api",
+        "categories": [
+          "jobs"
+        ],
+        "enabled": true,
+        "auth_class": "none",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [
+          "requires a company name in the query; returns no full job descriptions"
+        ],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "greynoise",
+        "display_name": "GreyNoise",
+        "engine_type": "api",
+        "categories": [
+          "security",
+          "threat-intel"
+        ],
+        "enabled": true,
+        "auth_class": "unknown",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "blocked",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "hackernews",
+        "display_name": "Hacker News",
+        "engine_type": "api",
+        "categories": [
+          "general",
+          "news"
+        ],
+        "enabled": true,
+        "auth_class": "none",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit",
+          "unscoped"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "hibp",
+        "display_name": "Have I Been Pwned",
+        "engine_type": "api",
+        "categories": [
+          "security",
+          "reference"
+        ],
+        "enabled": true,
+        "auth_class": "required",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": true,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "blocked",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "freemium",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "huggingface",
+        "display_name": "HuggingFace",
+        "engine_type": "api",
+        "categories": [
+          "science",
+          "huggingface:datasets",
+          "huggingface:papers"
+        ],
+        "enabled": true,
+        "auth_class": "none",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "intelx",
+        "display_name": "Intelligence X (IntelX)",
+        "engine_type": "api",
+        "categories": [
+          "security",
+          "threat-intel"
+        ],
+        "enabled": true,
+        "auth_class": "required",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "blocked",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "freemium",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "internetarchive",
+        "display_name": "Internet Archive",
+        "engine_type": "api",
+        "categories": [
+          "reference",
+          "web:archive",
+          "historical"
+        ],
+        "enabled": false,
+        "auth_class": "none",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [
+          "opt-in engine, disabled by default"
+        ],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "blocked",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "lever",
+        "display_name": "Lever",
+        "engine_type": "api",
+        "categories": [
+          "jobs"
+        ],
+        "enabled": true,
+        "auth_class": "none",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [
+          "requires a company name in the query; returns no full job descriptions"
+        ],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "mitreattack",
+        "display_name": "MITRE ATT&CK",
+        "engine_type": "api",
+        "categories": [
+          "security",
+          "reference"
+        ],
+        "enabled": true,
+        "auth_class": "unknown",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "blocked",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "musicbrainz",
+        "display_name": "MusicBrainz",
+        "engine_type": "api",
+        "categories": [
+          "music",
+          "reference"
+        ],
+        "enabled": true,
+        "auth_class": "unknown",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "nominatim",
+        "display_name": "Nominatim (OSM)",
+        "engine_type": "api",
+        "categories": [
+          "geography",
+          "reference"
+        ],
+        "enabled": true,
+        "auth_class": "unknown",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "npm",
+        "display_name": "npm",
+        "engine_type": "api",
+        "categories": [
+          "it",
+          "reference",
+          "packages"
+        ],
+        "enabled": true,
+        "auth_class": "unknown",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "nvd",
+        "display_name": "NVD (National Vulnerability Database)",
+        "engine_type": "api",
+        "categories": [
+          "it",
+          "security"
+        ],
+        "enabled": true,
+        "auth_class": "none",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "blocked",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "openalex",
+        "display_name": "OpenAlex",
+        "engine_type": "api",
+        "categories": [
+          "science",
+          "reference"
+        ],
+        "enabled": true,
+        "auth_class": "none",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": true,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": true,
+          "date_to": true
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": "local",
+          "safesearch": null,
+          "pagination": null,
+          "date_from": "upstream",
+          "date_to": "upstream"
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "openfda",
+        "display_name": "openFDA",
+        "engine_type": "api",
+        "categories": [
+          "medical",
+          "health",
+          "science",
+          "government"
+        ],
+        "enabled": true,
+        "auth_class": "unknown",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "openlibrary",
+        "display_name": "Open Library",
+        "engine_type": "api",
+        "categories": [
+          "books",
+          "reference"
+        ],
+        "enabled": true,
+        "auth_class": "unknown",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text",
+          "media"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "otx",
+        "display_name": "AlienVault OTX",
+        "engine_type": "api",
+        "categories": [
+          "security",
+          "threat-intel"
+        ],
+        "enabled": true,
+        "auth_class": "required",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "blocked",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "freemium",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "oyez",
+        "display_name": "Oyez (SCOTUS)",
+        "engine_type": "api",
+        "categories": [
+          "reference",
+          "legal"
+        ],
+        "enabled": true,
+        "auth_class": "unknown",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "pubchem",
+        "display_name": "PubChem",
+        "engine_type": "api",
+        "categories": [
+          "science",
+          "reference",
+          "chemistry",
+          "medical"
+        ],
+        "enabled": true,
+        "auth_class": "unknown",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "pubmed",
+        "display_name": "PubMed",
+        "engine_type": "api",
+        "categories": [
+          "science",
+          "reference",
+          "medical",
+          "health"
+        ],
+        "enabled": true,
+        "auth_class": "unknown",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "pypi",
+        "display_name": "PyPI",
+        "engine_type": "api",
+        "categories": [
+          "it",
+          "reference",
+          "packages"
+        ],
+        "enabled": true,
+        "auth_class": "unknown",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "reddit",
+        "display_name": "Reddit",
+        "engine_type": "api",
+        "categories": [
+          "general",
+          "social",
+          "reddit:subreddit"
+        ],
+        "enabled": true,
+        "auth_class": "none",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit",
+          "unscoped"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text",
+          "media"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "blocked",
+          "error",
+          "timeout",
+          "unavailable"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "rubygems",
+        "display_name": "RubyGems",
+        "engine_type": "api",
+        "categories": [
+          "it",
+          "reference",
+          "packages"
+        ],
+        "enabled": true,
+        "auth_class": "unknown",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "semanticscholar",
+        "display_name": "Semantic Scholar",
+        "engine_type": "api",
+        "categories": [
+          "science",
+          "reference"
+        ],
+        "enabled": true,
+        "auth_class": "none",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "shodan",
+        "display_name": "Shodan",
+        "engine_type": "api",
+        "categories": [
+          "it",
+          "security"
+        ],
+        "enabled": true,
+        "auth_class": "required",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "blocked",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "freemium",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "stackexchange",
+        "display_name": "Stack Exchange",
+        "engine_type": "api",
+        "categories": [
+          "general",
+          "reference",
+          "science",
+          "stackexchange:code",
+          "stackexchange:serverfault"
+        ],
+        "enabled": true,
+        "auth_class": "none",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit",
+          "unscoped"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "error"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "tmdb",
+        "display_name": "TMDB",
+        "engine_type": "api",
+        "categories": [
+          "movies",
+          "entertainment"
+        ],
+        "enabled": true,
+        "auth_class": "required",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text",
+          "media"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "freemium",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "uniprot",
+        "display_name": "UniProt",
+        "engine_type": "api",
+        "categories": [
+          "science",
+          "reference",
+          "biology",
+          "medical"
+        ],
+        "enabled": true,
+        "auth_class": "unknown",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "urlhaus",
+        "display_name": "URLhaus (abuse.ch)",
+        "engine_type": "api",
+        "categories": [
+          "security",
+          "threat-intel"
+        ],
+        "enabled": true,
+        "auth_class": "required",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "blocked",
+          "error",
+          "timeout",
+          "unavailable"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "virustotal",
+        "display_name": "VirusTotal",
+        "engine_type": "api",
+        "categories": [
+          "security",
+          "malware"
+        ],
+        "enabled": true,
+        "auth_class": "required",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "blocked",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "freemium",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "vulncheck",
+        "display_name": "VulnCheck Community",
+        "engine_type": "api",
+        "categories": [
+          "security",
+          "threat-intel"
+        ],
+        "enabled": true,
+        "auth_class": "required",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "blocked",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "freemium",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": false
+      },
+      {
+        "name": "wikipedia",
+        "display_name": "Wikipedia",
+        "engine_type": "api",
+        "categories": [
+          "general",
+          "science",
+          "reference"
+        ],
+        "enabled": true,
+        "auth_class": "none",
+        "auth_configured": false,
+        "scope_hints": [
+          "explicit",
+          "unscoped"
+        ],
+        "caveats": [],
+        "sensitive": false,
+        "supported_filters": {
+          "language": false,
+          "time_range": false,
+          "safesearch": false,
+          "pagination": false,
+          "date_from": false,
+          "date_to": false
+        },
+        "enforced_filters": {
+          "language": null,
+          "time_range": null,
+          "safesearch": null,
+          "pagination": null,
+          "date_from": null,
+          "date_to": null
+        },
+        "supported_result_types": [
+          "text",
+          "corrections",
+          "infoboxes",
+          "media"
+        ],
+        "supported_media_types": [],
+        "failure_classes": [
+          "rate_limited",
+          "blocked",
+          "error",
+          "timeout"
+        ],
+        "cost_class": "free",
+        "last_known_status": "unknown",
+        "last_known_status_at": null,
+        "last_known_status_stale": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "active": true
+      }
+    ],
+    "active_engines": {
+      "wikipedia": {
+        "categories": [
+          "general"
+        ],
+        "engine_type": "api"
+      },
+      "brave": {
+        "categories": [
+          "general"
+        ],
+        "engine_type": "api"
+      }
+    },
+    "tier1_engines": [
+      "brave",
+      "wikipedia"
+    ],
+    "sensitive_engines": [
+      "dehashed",
+      "hibp"
+    ],
+    "router": null,
+    "max_query_length": 500,
+    "staged_max_deadline_ms": 30000,
+    "staged_max_engine_calls": 64
+  },
+  "provider_calls": 0,
+  "execution": "actual original _build_plan over JSON-decoded huge integers, finite floats and signed-zero controls",
+  "cases": [
+    {
+      "id": "huge_truthiness.positive_huge_integer.false",
+      "input": {
+        "query": "huge integer truthiness",
+        "objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 2
+        },
+        "initial_scope": {
+          "engines": [
+            "wikipedia"
+          ]
+        },
+        "fallback_scope": 10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000,
+        "allow_scope_expansion": false,
+        "filters": null
+      },
+      "fallback_json": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "output": {
+        "plan": null,
+        "error": {
+          "error": {
+            "code": "invalid_input",
+            "message": "fallback_scope and allow_scope_expansion=true must be supplied together",
+            "field": "fallback_scope"
+          }
+        }
+      }
+    },
+    {
+      "id": "huge_truthiness.positive_huge_integer.true",
+      "input": {
+        "query": "huge integer truthiness",
+        "objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 2
+        },
+        "initial_scope": {
+          "engines": [
+            "wikipedia"
+          ]
+        },
+        "fallback_scope": 10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000,
+        "allow_scope_expansion": true,
+        "filters": null
+      },
+      "fallback_json": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "output": {
+        "plan": null,
+        "error": {
+          "error": {
+            "code": "invalid_input",
+            "message": "scope must contain exactly one of engines or intent",
+            "field": "scope"
+          }
+        }
+      }
+    },
+    {
+      "id": "huge_truthiness.negative_huge_integer.false",
+      "input": {
+        "query": "huge integer truthiness",
+        "objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 2
+        },
+        "initial_scope": {
+          "engines": [
+            "wikipedia"
+          ]
+        },
+        "fallback_scope": -10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000,
+        "allow_scope_expansion": false,
+        "filters": null
+      },
+      "fallback_json": "-10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "output": {
+        "plan": null,
+        "error": {
+          "error": {
+            "code": "invalid_input",
+            "message": "fallback_scope and allow_scope_expansion=true must be supplied together",
+            "field": "fallback_scope"
+          }
+        }
+      }
+    },
+    {
+      "id": "huge_truthiness.negative_huge_integer.true",
+      "input": {
+        "query": "huge integer truthiness",
+        "objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 2
+        },
+        "initial_scope": {
+          "engines": [
+            "wikipedia"
+          ]
+        },
+        "fallback_scope": -10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000,
+        "allow_scope_expansion": true,
+        "filters": null
+      },
+      "fallback_json": "-10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "output": {
+        "plan": null,
+        "error": {
+          "error": {
+            "code": "invalid_input",
+            "message": "scope must contain exactly one of engines or intent",
+            "field": "scope"
+          }
+        }
+      }
+    },
+    {
+      "id": "huge_truthiness.zero_integer.false",
+      "input": {
+        "query": "huge integer truthiness",
+        "objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 2
+        },
+        "initial_scope": {
+          "engines": [
+            "wikipedia"
+          ]
+        },
+        "fallback_scope": 0,
+        "allow_scope_expansion": false,
+        "filters": null
+      },
+      "fallback_json": "0",
+      "output": {
+        "plan": null,
+        "error": {
+          "error": {
+            "code": "invalid_input",
+            "message": "scope must contain exactly one of engines or intent",
+            "field": "scope"
+          }
+        }
+      }
+    },
+    {
+      "id": "huge_truthiness.zero_integer.true",
+      "input": {
+        "query": "huge integer truthiness",
+        "objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 2
+        },
+        "initial_scope": {
+          "engines": [
+            "wikipedia"
+          ]
+        },
+        "fallback_scope": 0,
+        "allow_scope_expansion": true,
+        "filters": null
+      },
+      "fallback_json": "0",
+      "output": {
+        "plan": null,
+        "error": {
+          "error": {
+            "code": "invalid_input",
+            "message": "fallback_scope and allow_scope_expansion=true must be supplied together",
+            "field": "fallback_scope"
+          }
+        }
+      }
+    },
+    {
+      "id": "huge_truthiness.negative_zero_integer.false",
+      "input": {
+        "query": "huge integer truthiness",
+        "objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 2
+        },
+        "initial_scope": {
+          "engines": [
+            "wikipedia"
+          ]
+        },
+        "fallback_scope": 0,
+        "allow_scope_expansion": false,
+        "filters": null
+      },
+      "fallback_json": "-0",
+      "output": {
+        "plan": null,
+        "error": {
+          "error": {
+            "code": "invalid_input",
+            "message": "scope must contain exactly one of engines or intent",
+            "field": "scope"
+          }
+        }
+      }
+    },
+    {
+      "id": "huge_truthiness.negative_zero_integer.true",
+      "input": {
+        "query": "huge integer truthiness",
+        "objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 2
+        },
+        "initial_scope": {
+          "engines": [
+            "wikipedia"
+          ]
+        },
+        "fallback_scope": 0,
+        "allow_scope_expansion": true,
+        "filters": null
+      },
+      "fallback_json": "-0",
+      "output": {
+        "plan": null,
+        "error": {
+          "error": {
+            "code": "invalid_input",
+            "message": "fallback_scope and allow_scope_expansion=true must be supplied together",
+            "field": "fallback_scope"
+          }
+        }
+      }
+    },
+    {
+      "id": "huge_truthiness.zero_float.false",
+      "input": {
+        "query": "huge integer truthiness",
+        "objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 2
+        },
+        "initial_scope": {
+          "engines": [
+            "wikipedia"
+          ]
+        },
+        "fallback_scope": 0.0,
+        "allow_scope_expansion": false,
+        "filters": null
+      },
+      "fallback_json": "0.0",
+      "output": {
+        "plan": null,
+        "error": {
+          "error": {
+            "code": "invalid_input",
+            "message": "scope must contain exactly one of engines or intent",
+            "field": "scope"
+          }
+        }
+      }
+    },
+    {
+      "id": "huge_truthiness.zero_float.true",
+      "input": {
+        "query": "huge integer truthiness",
+        "objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 2
+        },
+        "initial_scope": {
+          "engines": [
+            "wikipedia"
+          ]
+        },
+        "fallback_scope": 0.0,
+        "allow_scope_expansion": true,
+        "filters": null
+      },
+      "fallback_json": "0.0",
+      "output": {
+        "plan": null,
+        "error": {
+          "error": {
+            "code": "invalid_input",
+            "message": "fallback_scope and allow_scope_expansion=true must be supplied together",
+            "field": "fallback_scope"
+          }
+        }
+      }
+    },
+    {
+      "id": "huge_truthiness.negative_zero_float.false",
+      "input": {
+        "query": "huge integer truthiness",
+        "objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 2
+        },
+        "initial_scope": {
+          "engines": [
+            "wikipedia"
+          ]
+        },
+        "fallback_scope": -0.0,
+        "allow_scope_expansion": false,
+        "filters": null
+      },
+      "fallback_json": "-0.0",
+      "output": {
+        "plan": null,
+        "error": {
+          "error": {
+            "code": "invalid_input",
+            "message": "scope must contain exactly one of engines or intent",
+            "field": "scope"
+          }
+        }
+      }
+    },
+    {
+      "id": "huge_truthiness.negative_zero_float.true",
+      "input": {
+        "query": "huge integer truthiness",
+        "objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 2
+        },
+        "initial_scope": {
+          "engines": [
+            "wikipedia"
+          ]
+        },
+        "fallback_scope": -0.0,
+        "allow_scope_expansion": true,
+        "filters": null
+      },
+      "fallback_json": "-0.0",
+      "output": {
+        "plan": null,
+        "error": {
+          "error": {
+            "code": "invalid_input",
+            "message": "fallback_scope and allow_scope_expansion=true must be supplied together",
+            "field": "fallback_scope"
+          }
+        }
+      }
+    },
+    {
+      "id": "huge_truthiness.finite_nonzero_float.false",
+      "input": {
+        "query": "huge integer truthiness",
+        "objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 2
+        },
+        "initial_scope": {
+          "engines": [
+            "wikipedia"
+          ]
+        },
+        "fallback_scope": 1e+300,
+        "allow_scope_expansion": false,
+        "filters": null
+      },
+      "fallback_json": "1e300",
+      "output": {
+        "plan": null,
+        "error": {
+          "error": {
+            "code": "invalid_input",
+            "message": "fallback_scope and allow_scope_expansion=true must be supplied together",
+            "field": "fallback_scope"
+          }
+        }
+      }
+    },
+    {
+      "id": "huge_truthiness.finite_nonzero_float.true",
+      "input": {
+        "query": "huge integer truthiness",
+        "objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 2
+        },
+        "initial_scope": {
+          "engines": [
+            "wikipedia"
+          ]
+        },
+        "fallback_scope": 1e+300,
+        "allow_scope_expansion": true,
+        "filters": null
+      },
+      "fallback_json": "1e300",
+      "output": {
+        "plan": null,
+        "error": {
+          "error": {
+            "code": "invalid_input",
+            "message": "scope must contain exactly one of engines or intent",
+            "field": "scope"
+          }
+        }
+      }
+    },
+    {
+      "id": "huge_truthiness.finite_negative_nonzero_float.false",
+      "input": {
+        "query": "huge integer truthiness",
+        "objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 2
+        },
+        "initial_scope": {
+          "engines": [
+            "wikipedia"
+          ]
+        },
+        "fallback_scope": -1e+300,
+        "allow_scope_expansion": false,
+        "filters": null
+      },
+      "fallback_json": "-1e300",
+      "output": {
+        "plan": null,
+        "error": {
+          "error": {
+            "code": "invalid_input",
+            "message": "fallback_scope and allow_scope_expansion=true must be supplied together",
+            "field": "fallback_scope"
+          }
+        }
+      }
+    },
+    {
+      "id": "huge_truthiness.finite_negative_nonzero_float.true",
+      "input": {
+        "query": "huge integer truthiness",
+        "objectives": {
+          "deadline_ms": 5000,
+          "max_engine_calls": 2
+        },
+        "initial_scope": {
+          "engines": [
+            "wikipedia"
+          ]
+        },
+        "fallback_scope": -1e+300,
+        "allow_scope_expansion": true,
+        "filters": null
+      },
+      "fallback_json": "-1e300",
+      "output": {
+        "plan": null,
+        "error": {
+          "error": {
+            "code": "invalid_input",
+            "message": "scope must contain exactly one of engines or intent",
+            "field": "scope"
+          }
+        }
+      }
+    }
+  ]
+}

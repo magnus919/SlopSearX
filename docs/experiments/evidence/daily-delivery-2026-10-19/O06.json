@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "plan_id": "O06",
+  "scope": "additive CI inventory, native helpers and protected review trust preparation; pending-owner mappings are not semantic parity or cutover evidence",
+  "status": "passed",
+  "error": null,
+  "started_unix_ms": 1792415002701,
+  "finished_unix_ms": 1792415040750,
+  "toolchain": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: aarch64-apple-darwin\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+  "source_files": "source-blobs.json",
+  "commands": [
+    {
+      "args": [
+        "test",
+        "--locked",
+        "-p",
+        "xtask",
+        "o06::tests::"
+      ],
+      "exit_code": 0,
+      "program": "cargo",
+      "stderr": "   Compiling xtask v0.1.0 (/private/tmp/slopsearx-delivery-20261019/crates/xtask)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.68s\n     Running unittests src/main.rs (/Volumes/tank01/magnus/rust-builds/slopsearx/1010-warnings/debug/deps/xtask-04df569c48a97a17)\n",
+      "stdout": "\nrunning 14 tests\ntest o06::tests::permissions_cannot_expand ... ok\ntest o06::tests::mirror_preserves_and_is_idempotent ... ok\ntest o06::tests::bootstrap_rejects_untrusted_identity_and_target_source ... ok\ntest o06::tests::manifest_rejects_missing_duplicate_and_mutable_platforms ... ok\ntest o06::tests::gate_ledger_rejects_failure_weakening_and_all_execution_control_drift ... ok\ntest o06::tests::bootstrap_executes_only_immutable_checkout_and_checks_actual_head ... ok\ntest o06::tests::yaml_and_hygiene_fail_closed_on_ambiguous_or_malformed_sources ... ok\ntest o06::tests::ordinary_f13_exact_byte_exception_and_manifest_digest_guard_remain ... ok\ntest o06::tests::pinned_source_assets_reject_unknown_duplicate_traversal_and_absent_declarations ... ok\ntest o06::tests::actual_source_hygiene_rejects_changed_assets_and_unlisted_binary_or_oversized_source ... ok\ntest o06::tests::pinned_text_keeps_semantic_validation_and_only_named_whitespace_waivers ... ok\ntest o06::tests::only_reviewed_generated_rust_path_gets_size_allowance_with_full_hygiene ... ok\ntest o06::tests::protected_workflow_mutation_cannot_self_authorize_by_repinning ... ok\ntest o06::tests::subprocess_environment_failure_output_and_deadline_are_bounded ... ok\n\ntest result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 91 filtered out; finished in 1.06s\n\n"
+    }
+  ],
+  "original_report_sha256": "f9f577f8e89315fdda3997e381af21de97da5b7b26e487f10753ba740cfa5d18",
+  "original_report_bytes": 7801789,
+  "reviewed_candidate": "e74eed7e2d01509905bcc18dbcf4e223905e6813",
+  "retention": "Derived receipt: T06/O06 command outputs verbatim; F01 outputs hashed. Git identity command bodies/diff omitted; all source blobs retained once; source independently verified against candidate."
+}

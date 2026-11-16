@@ -1,0 +1,324 @@
+{
+  "all11_parent_outputs_exact": true,
+  "bindings": [
+    {
+      "source_helper_identity": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_mismatched_ip_response_is_error::greynoise._parse_ip::0",
+      "operation": "_parse_ip",
+      "source_exception": {
+        "class": "ValueError",
+        "message": "GreyNoise response IP did not match the requested IP"
+      },
+      "source_parent_identity": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_mismatched_ip_response_is_error::greynoise.search::0",
+      "source_parent_complete_output": {
+        "results": [],
+        "status": "error",
+        "error_message": "GreyNoise response IP did not match the requested IP",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "actual_native_parent_output": {
+        "results": [],
+        "status": "error",
+        "error_message": "GreyNoise response IP did not match the requested IP",
+        "answers": [],
+        "infoboxes": [],
+        "corrections": [],
+        "synthetic": false
+      },
+      "native_projection": "actual associated engine search; source internal raise becomes typed Result consumed by search, no standalone helper exception API",
+      "full_parent_outputs_exact": true
+    },
+    {
+      "source_helper_identity": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_malformed_response_shape_is_error::greynoise._parse_ip::0",
+      "operation": "_parse_ip",
+      "source_exception": {
+        "class": "ValueError",
+        "message": "GreyNoise returned malformed JSON; expected an object"
+      },
+      "source_parent_identity": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_malformed_response_shape_is_error::greynoise.search::0",
+      "source_parent_complete_output": {
+        "results": [],
+        "status": "error",
+        "error_message": "GreyNoise returned malformed JSON; expected an object",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "actual_native_parent_output": {
+        "results": [],
+        "status": "error",
+        "error_message": "GreyNoise returned malformed JSON; expected an object",
+        "answers": [],
+        "infoboxes": [],
+        "corrections": [],
+        "synthetic": false
+      },
+      "native_projection": "actual associated engine search; source internal raise becomes typed Result consumed by search, no standalone helper exception API",
+      "full_parent_outputs_exact": true
+    },
+    {
+      "source_helper_identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[invalid-host.example-invalid_host]::urlhaus._parse_response::0",
+      "operation": "_parse_response",
+      "source_exception": {
+        "class": "ValueError",
+        "message": "URLhaus rejected invalid input (invalid_host) for host query"
+      },
+      "source_parent_identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[invalid-host.example-invalid_host]::urlhaus.search::0",
+      "source_parent_complete_output": {
+        "results": [],
+        "status": "error",
+        "error_message": "URLhaus rejected invalid input (invalid_host) for host query",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "actual_native_parent_output": {
+        "results": [],
+        "status": "error",
+        "error_message": "URLhaus rejected invalid input (invalid_host) for host query",
+        "answers": [],
+        "infoboxes": [],
+        "corrections": [],
+        "synthetic": false
+      },
+      "native_projection": "actual associated engine search; source internal raise becomes typed Result consumed by search, no standalone helper exception API",
+      "full_parent_outputs_exact": true
+    },
+    {
+      "source_helper_identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[https://example.com/not-malware-invalid_url]::urlhaus._parse_response::0",
+      "operation": "_parse_response",
+      "source_exception": {
+        "class": "ValueError",
+        "message": "URLhaus rejected invalid input (invalid_url) for url query"
+      },
+      "source_parent_identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[https://example.com/not-malware-invalid_url]::urlhaus.search::0",
+      "source_parent_complete_output": {
+        "results": [],
+        "status": "error",
+        "error_message": "URLhaus rejected invalid input (invalid_url) for url query",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "actual_native_parent_output": {
+        "results": [],
+        "status": "error",
+        "error_message": "URLhaus rejected invalid input (invalid_url) for url query",
+        "answers": [],
+        "infoboxes": [],
+        "corrections": [],
+        "synthetic": false
+      },
+      "native_projection": "actual associated engine search; source internal raise becomes typed Result consumed by search, no standalone helper exception API",
+      "full_parent_outputs_exact": true
+    },
+    {
+      "source_helper_identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[0123456789abcdef0123456789abcdef-invalid_md5]::urlhaus._parse_response::0",
+      "operation": "_parse_response",
+      "source_exception": {
+        "class": "ValueError",
+        "message": "URLhaus rejected invalid input (invalid_md5) for payload query"
+      },
+      "source_parent_identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[0123456789abcdef0123456789abcdef-invalid_md5]::urlhaus.search::0",
+      "source_parent_complete_output": {
+        "results": [],
+        "status": "error",
+        "error_message": "URLhaus rejected invalid input (invalid_md5) for payload query",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "actual_native_parent_output": {
+        "results": [],
+        "status": "error",
+        "error_message": "URLhaus rejected invalid input (invalid_md5) for payload query",
+        "answers": [],
+        "infoboxes": [],
+        "corrections": [],
+        "synthetic": false
+      },
+      "native_projection": "actual associated engine search; source internal raise becomes typed Result consumed by search, no standalone helper exception API",
+      "full_parent_outputs_exact": true
+    },
+    {
+      "source_helper_identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[example.com-invalid_url]::urlhaus._parse_response::0",
+      "operation": "_parse_response",
+      "source_exception": {
+        "class": "ValueError",
+        "message": "URLhaus rejected invalid input (invalid_url) for host query"
+      },
+      "source_parent_identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[example.com-invalid_url]::urlhaus.search::0",
+      "source_parent_complete_output": {
+        "results": [],
+        "status": "error",
+        "error_message": "URLhaus rejected invalid input (invalid_url) for host query",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "actual_native_parent_output": {
+        "results": [],
+        "status": "error",
+        "error_message": "URLhaus rejected invalid input (invalid_url) for host query",
+        "answers": [],
+        "infoboxes": [],
+        "corrections": [],
+        "synthetic": false
+      },
+      "native_projection": "actual associated engine search; source internal raise becomes typed Result consumed by search, no standalone helper exception API",
+      "full_parent_outputs_exact": true
+    },
+    {
+      "source_helper_identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[https://example.com/not-malware-invalid_host]::urlhaus._parse_response::0",
+      "operation": "_parse_response",
+      "source_exception": {
+        "class": "ValueError",
+        "message": "URLhaus rejected invalid input (invalid_host) for url query"
+      },
+      "source_parent_identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[https://example.com/not-malware-invalid_host]::urlhaus.search::0",
+      "source_parent_complete_output": {
+        "results": [],
+        "status": "error",
+        "error_message": "URLhaus rejected invalid input (invalid_host) for url query",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "actual_native_parent_output": {
+        "results": [],
+        "status": "error",
+        "error_message": "URLhaus rejected invalid input (invalid_host) for url query",
+        "answers": [],
+        "infoboxes": [],
+        "corrections": [],
+        "synthetic": false
+      },
+      "native_projection": "actual associated engine search; source internal raise becomes typed Result consumed by search, no standalone helper exception API",
+      "full_parent_outputs_exact": true
+    },
+    {
+      "source_helper_identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[0123456789abcdef0123456789abcdef-invalid_host]::urlhaus._parse_response::0",
+      "operation": "_parse_response",
+      "source_exception": {
+        "class": "ValueError",
+        "message": "URLhaus rejected invalid input (invalid_host) for payload query"
+      },
+      "source_parent_identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[0123456789abcdef0123456789abcdef-invalid_host]::urlhaus.search::0",
+      "source_parent_complete_output": {
+        "results": [],
+        "status": "error",
+        "error_message": "URLhaus rejected invalid input (invalid_host) for payload query",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "actual_native_parent_output": {
+        "results": [],
+        "status": "error",
+        "error_message": "URLhaus rejected invalid input (invalid_host) for payload query",
+        "answers": [],
+        "infoboxes": [],
+        "corrections": [],
+        "synthetic": false
+      },
+      "native_projection": "actual associated engine search; source internal raise becomes typed Result consumed by search, no standalone helper exception API",
+      "full_parent_outputs_exact": true
+    },
+    {
+      "source_helper_identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload0]::urlhaus._parse_response::0",
+      "operation": "_parse_response",
+      "source_exception": {
+        "class": "ValueError",
+        "message": "URLhaus response is missing a non-empty urls list"
+      },
+      "source_parent_identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload0]::urlhaus.search::0",
+      "source_parent_complete_output": {
+        "results": [],
+        "status": "error",
+        "error_message": "URLhaus response is missing a non-empty urls list",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "actual_native_parent_output": {
+        "results": [],
+        "status": "error",
+        "error_message": "URLhaus response is missing a non-empty urls list",
+        "answers": [],
+        "infoboxes": [],
+        "corrections": [],
+        "synthetic": false
+      },
+      "native_projection": "actual associated engine search; source internal raise becomes typed Result consumed by search, no standalone helper exception API",
+      "full_parent_outputs_exact": true
+    },
+    {
+      "source_helper_identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload1]::urlhaus._parse_response::0",
+      "operation": "_parse_response",
+      "source_exception": {
+        "class": "ValueError",
+        "message": "URLhaus response is missing a non-empty urls list"
+      },
+      "source_parent_identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload1]::urlhaus.search::0",
+      "source_parent_complete_output": {
+        "results": [],
+        "status": "error",
+        "error_message": "URLhaus response is missing a non-empty urls list",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "actual_native_parent_output": {
+        "results": [],
+        "status": "error",
+        "error_message": "URLhaus response is missing a non-empty urls list",
+        "answers": [],
+        "infoboxes": [],
+        "corrections": [],
+        "synthetic": false
+      },
+      "native_projection": "actual associated engine search; source internal raise becomes typed Result consumed by search, no standalone helper exception API",
+      "full_parent_outputs_exact": true
+    },
+    {
+      "source_helper_identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload2]::urlhaus._parse_response::0",
+      "operation": "_parse_response",
+      "source_exception": {
+        "class": "ValueError",
+        "message": "URLhaus returned unexpected query_status: provider_error"
+      },
+      "source_parent_identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload2]::urlhaus.search::0",
+      "source_parent_complete_output": {
+        "results": [],
+        "status": "error",
+        "error_message": "URLhaus returned unexpected query_status: provider_error",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "actual_native_parent_output": {
+        "results": [],
+        "status": "error",
+        "error_message": "URLhaus returned unexpected query_status: provider_error",
+        "answers": [],
+        "infoboxes": [],
+        "corrections": [],
+        "synthetic": false
+      },
+      "native_projection": "actual associated engine search; source internal raise becomes typed Result consumed by search, no standalone helper exception API",
+      "full_parent_outputs_exact": true
+    }
+  ]
+}

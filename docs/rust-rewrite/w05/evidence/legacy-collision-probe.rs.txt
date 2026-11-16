@@ -1,0 +1,14 @@
+//! Temporary private characterization only; does not claim the unsafe behavior is accepted.
+#[allow(dead_code,unused_imports)]
+#[path="w05_support/mod.rs"]mod support;
+use ssx_domain::TenantId;
+use ssx_infra::{saved_events::codec::ConsumerId,valkey::{*,saved::{SavedStore,events::EventLimits}}};
+use std::sync::Arc;
+#[tokio::test]
+async fn characterize_original_and_current_ack_tenant_boundary_collision(){
+ let server=support::Server::start();let backend=Arc::new(server.store());let a=SavedStore::new(backend.clone(),TenantId::new("a").unwrap());let b=a.for_tenant(TenantId::new("a:b").unwrap());let ca=ConsumerId::new("b:c").unwrap();let cb=ConsumerId::new("c").unwrap();let ka=keys::saved("event-ack",a.tenant(),Some(ca.as_str())).unwrap();let kb=keys::saved("event-ack",b.tenant(),Some(cb.as_str())).unwrap();assert_eq!(ka,kb);
+ let now=a.now().await.unwrap();let aid=format!("{}-0",((now-1.0)*1000.0) as u64);let bid=format!("{}-0",((now-2.0)*1000.0) as u64);let sa=keys::saved("events",a.tenant(),None).unwrap();let sb=keys::saved("events",b.tenant(),None).unwrap();let mut conn=server.connection();for (key,cursor) in [(&sa,&aid),(&sb,&bid)]{let _:String=redis::cmd("XADD").arg(key).arg(cursor).arg("payload").arg("{\"event_id\":\"event-fixture\"}").query(&mut conn).unwrap();}
+ let consumers=keys::saved("event-consumers",a.tenant(),None).unwrap();let args=vec![now.to_string(),aid.clone(),"420".into(),(now+420.0).to_string(),ca.as_str().into(),"10".into(),"0-0".into()];assert_eq!(backend.run(scripts::Script::SavedAckEvent,&[&ka,&consumers,&sa],&args).await.unwrap(),scripts::Reply::SavedAck(scripts::SavedAck::Advanced));let batch=b.read_events(&cb,None,10,EventLimits::default()).await.unwrap();assert_eq!(batch.acknowledged.as_str(),aid);assert!(batch.events.is_empty());
+ let _:usize=redis::cmd("DEL").arg(&ka).query(&mut conn).unwrap();a.acknowledge_event(&ca,&ssx_infra::saved_events::codec::Cursor::new(aid.clone()).unwrap(),EventLimits::default()).await.unwrap();let batch=b.read_events(&cb,None,10,EventLimits::default()).await.unwrap();assert_eq!(batch.acknowledged.as_str(),aid);assert!(batch.events.is_empty());assert_eq!(b.read_events(&cb,Some(&ssx_infra::saved_events::codec::Cursor::zero()),10,EventLimits::default()).await.unwrap().events.len(),1);
+ drop(conn);drop(a);drop(b);drop(backend);drop(server);println!("W05_COLLISION_CONFIRMED: source-original and current-native legacy ack key permits a/b:c versus a:b/c state influence; explicit cursor proves b event remains unacknowledged");
+}

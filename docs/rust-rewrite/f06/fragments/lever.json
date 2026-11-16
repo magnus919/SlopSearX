@@ -1,0 +1,50 @@
+{
+  "api_key_env": "ENGINE_LEVER_API_KEY",
+  "api_secret_env": null,
+  "auth_class": "none",
+  "categories": [
+    "jobs"
+  ],
+  "caveats": [
+    "requires a company name in the query; returns no full job descriptions"
+  ],
+  "cost_class": "free",
+  "defaults": {
+    "base_url": "https://api.lever.co/v0/postings",
+    "enabled": true,
+    "max_results": 10,
+    "rate_limit": 1,
+    "timeout_ms": 5000,
+    "type": "api",
+    "weight": 0.5
+  },
+  "display_name": "Lever",
+  "enabled_by_default": true,
+  "enforced_filters": {},
+  "engine_type": "api",
+  "failure_classes": [
+    "rate_limited",
+    "error",
+    "timeout"
+  ],
+  "implementation": "unavailable",
+  "name": "lever",
+  "routing": {
+    "purpose": "jobs hosted by Lever",
+    "role": "specialist",
+    "use_when": "the query seeks current job openings"
+  },
+  "sensitive": false,
+  "supported_filters": {
+    "date_from": false,
+    "date_to": false,
+    "language": false,
+    "pagination": false,
+    "safesearch": false,
+    "time_range": false
+  },
+  "supported_media_types": [],
+  "supported_result_types": [
+    "text"
+  ]
+}

@@ -1,0 +1,1375 @@
+{
+  "scope": "temporary offline invocation of inventoried export_source.capture; retire executable oracle G08",
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "source_sha256": {
+    "docs/rust-rewrite/a06/oracle/export_source.py": "fac50ade3842d15169ea76ecb626f2f5a55d0aa8c7454f910c0c262f3175a65c",
+    "engines/semanticscholar.py": "4a5daf809e77ff7001f9ba2b92f3d035eec507a7e3c199d2180582de3d4b8b8c"
+  },
+  "records": [
+    {
+      "id": "semanticscholar.json_diagnostic.00",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": ""
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Expecting value: line 1 column 1 (char 0)",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.01",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "ew=="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Expecting property name enclosed in double quotes: line 1 column 2 (char 1)",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.02",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "WyLDqSIsCn0="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Expecting value: line 2 column 1 (char 6)",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.03",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "eyJ4IjoxfSB0cmFpbGluZw=="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Extra data: line 1 column 9 (char 8)",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.04",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "ImJhZAEi"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Invalid control character at: line 1 column 5 (char 4)",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.05",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "/w=="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'utf-8' codec can't decode byte 0xff in position 0: invalid start byte",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.06",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "77u//w=="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'utf-8' codec can't decode byte 0xff in position 0: invalid start byte",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.07",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "ww=="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'utf-8' codec can't decode byte 0xc3 in position 0: unexpected end of data",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.08",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "4oJ4"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'utf-8' codec can't decode bytes in position 0-1: invalid continuation byte",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.09",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "7aCA/w=="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'utf-8' codec can't decode byte 0xff in position 3: invalid start byte",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.10",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "4ICA"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'utf-8' codec can't decode byte 0xe0 in position 0: invalid continuation byte",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.11",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "8ICAgA=="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'utf-8' codec can't decode byte 0xf0 in position 0: invalid continuation byte",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.12",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "9JCAgA=="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'utf-8' codec can't decode byte 0xf4 in position 0: invalid continuation byte",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.13",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "9YCAgA=="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'utf-8' codec can't decode byte 0xf5 in position 0: invalid start byte",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.14",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "//5bACIA6QAiACwACgB9AA=="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Expecting value: line 2 column 1 (char 6)",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.15",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "//57AHg="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'utf-16-le' codec can't decode byte 0x78 in position 4: truncated data",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.16",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "/v8AWwAiAOkAIgAsAAoAfQ=="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Expecting value: line 2 column 1 (char 6)",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.17",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "/v8Ae3g="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'utf-16-be' codec can't decode byte 0x78 in position 4: truncated data",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.18",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "//4AAFsAAAAiAAAA6QAAACIAAAAsAAAACgAAAH0AAAA="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Expecting value: line 2 column 1 (char 6)",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.19",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "//4AAHsAAAB4"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'utf-32-le' codec can't decode byte 0x78 in position 8: truncated data",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.20",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "AAD+/wAAAFsAAAAiAAAA6QAAACIAAAAsAAAACgAAAH0="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Expecting value: line 2 column 1 (char 6)",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.21",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "AAD+/wAAAHt4"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'utf-32-be' codec can't decode byte 0x78 in position 8: truncated data",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.22",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "//4A2Hg="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'utf-16-le' codec can't decode byte 0x78 in position 4: truncated data",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.23",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "//4AAAAAEQA="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'utf-32-le' codec can't decode bytes in position 4-7: code point not in range(0x110000)",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.24",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "AAD+/wARAAA="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "'utf-32-be' codec can't decode bytes in position 4-7: code point not in range(0x110000)",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.25",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "Ilx4Ig=="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Invalid \\escape: line 1 column 2 (char 1)",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.26",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "Ilx1MTJ4NCI="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Invalid \\uXXXX escape: line 1 column 3 (char 2)",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.27",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "Ilx1MSI="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Invalid \\uXXXX escape: line 1 column 3 (char 2)",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.28",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "ImFiYw=="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Unterminated string starting at: line 1 column 1 (char 0)",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.29",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "WyJhIiwgIlw="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Unterminated string starting at: line 1 column 7 (char 6)",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.30",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "LQ=="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Expecting value: line 1 column 1 (char 0)",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.31",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "Wy0gXQ=="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Expecting value: line 1 column 2 (char 1)",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.32",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "LUluZg=="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Expecting value: line 1 column 1 (char 0)",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.33",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "eyJhYmNcdTEyeDQiOjB9"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Invalid \\uXXXX escape: line 1 column 7 (char 6)",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "semanticscholar.json_diagnostic.34",
+      "engine": "semanticscholar",
+      "query": "test",
+      "responses": [
+        {
+          "status": 200,
+          "headers": {},
+          "body_b64": "Ilx1ZDgwMFx1MTJ4NCI="
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=5&fields=title%2Curl%2Cabstract%2CcitationCount%2CpublicationDate%2CexternalIds%2Cauthors",
+          "headers": {
+            "host": "api.semanticscholar.org",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)"
+          }
+        }
+      ],
+      "client_options": [
+        {
+          "timeout": 5.0
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Invalid \\uXXXX escape: line 1 column 9 (char 8)",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    }
+  ]
+}

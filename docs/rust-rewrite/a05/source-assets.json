@@ -1,0 +1,2917 @@
+{
+  "schema_version": 1,
+  "assets": [
+    {
+      "path": "crates/ssx-domain/tests/fixtures/a05_previous_media_sanitizer.rs",
+      "bytes": 8521,
+      "sha256": "185be519f41cba4804393a6c6b04bad94b0cb4d46fc7e64d9a5bb04f05acb72d",
+      "encoding": "utf8",
+      "kind": "frozen prior source fixture",
+      "provenance": "accepted A05 media-sanitizer source snapshot",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": true,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/LICENSE-PYTHON",
+      "bytes": 13804,
+      "sha256": "b0e25a78cffb43f4d92de8b61ccfa1f1f98ecbc22330b54b5251e7b6ba010231",
+      "encoding": "utf8",
+      "kind": "licensed upstream source/notice",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": true
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/MAPPING-SOURCE-NOTICES.txt",
+      "bytes": 9216,
+      "sha256": "9c4513edac4afbe1c2f462c29a059b51c558ea1f215e35321b088c61fc7755ff",
+      "encoding": "utf8",
+      "kind": "licensed upstream source/notice",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": true,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/MAPPING-UPSTREAM-NOTICES.txt",
+      "bytes": 11235,
+      "sha256": "72578f1999953b73be6145b872eacad1f6d9477591bb85edcf225d3ee0acbc54",
+      "encoding": "utf8",
+      "kind": "licensed upstream source/notice",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": true,
+        "preserve_trailing": true,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/MAPPING-UPSTREAM-SINGLEBYTE-NOTICES.txt",
+      "bytes": 112578,
+      "sha256": "606bfddb61c9d0c3a2f88d4172bf4d5fa8c0d88c535b6bfd558484cb40bc076d",
+      "encoding": "utf8",
+      "kind": "licensed upstream source/notice",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": true,
+        "preserve_final_newline": true,
+        "preserve_trailing": true,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/PYTHON-SOURCE-NOTICES.txt",
+      "bytes": 11961,
+      "sha256": "eef8248191b178ab558bb4a2832afe9b2d452b30ed26f9ec7a107f8868b0b996",
+      "encoding": "utf8",
+      "kind": "licensed upstream source/notice",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": true,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/UNICODE-SOURCE-HEADERS.txt",
+      "bytes": 4990,
+      "sha256": "4205cfec58762d8ac8169089abc86bef6831c0b849a809c9fbfb5481f48e038c",
+      "encoding": "utf8",
+      "kind": "licensed upstream source/notice",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": true,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/hkscs/source-validity-only.bin",
+      "bytes": 8192,
+      "sha256": "9109699c47243cbcd085314c5e7c2bb81646f2d3397375a35a52fcc62533381b",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/hkscs/whatwg-index-big5.txt",
+      "bytes": 688943,
+      "sha256": "08e24270c8e95d998c994c03f907e972480dc01f58743e078654cc466203c8ff",
+      "encoding": "utf8",
+      "kind": "licensed upstream source/notice",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna/UNICODE-3.2-ORIGINAL-NOTICE.html",
+      "bytes": 1525,
+      "sha256": "c457c304bc1b96ee58441cfc13e9fd3ad36287a49ffd35c43338b8d03834189f",
+      "encoding": "utf8",
+      "kind": "licensed upstream source/notice",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": true,
+        "preserve_trailing": true,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna/UnicodeCharacterDatabase-3.2.0.html",
+      "bytes": 17808,
+      "sha256": "f0fef265be892599b21519cc881fce125d635a3f8976eda4e4b6465d5065fb9a",
+      "encoding": "utf8",
+      "kind": "licensed upstream source/notice",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": true,
+        "preserve_final_newline": false,
+        "preserve_trailing": true,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna/inputs/CompositionExclusions-3.2.0.txt",
+      "bytes": 7457,
+      "sha256": "1d3a450d0f39902710df4972ac4a60ec31fbcb54ffd4d53cd812fc1200c732cb",
+      "encoding": "utf8",
+      "kind": "licensed upstream source/notice",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": true,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna/inputs/SpecialCasing-16.0.0.txt",
+      "bytes": 16809,
+      "sha256": "8d5de354eef79f2395a54c9c7dcebbaf3d30fc962d0f85611ea97aa973a0c451",
+      "encoding": "utf8",
+      "kind": "licensed upstream source/notice",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": true,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna/inputs/UnicodeData-16.0.0.txt",
+      "bytes": 2175362,
+      "sha256": "ff58e5823bd095166564a006e47d111130813dcf8bf234ef79fa51a870edb48f",
+      "encoding": "utf8",
+      "kind": "licensed upstream source/notice",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna/inputs/UnicodeData-3.2.0.txt",
+      "bytes": 836989,
+      "sha256": "5e444028b6e76d96f9dc509609c5e3222bf609056f35e5fcde7e6fb8a58cd446",
+      "encoding": "utf8",
+      "kind": "licensed upstream source/notice",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/singlebyte-icu/koi8-t.ucm",
+      "bytes": 5041,
+      "sha256": "171d77bcba2343f7e3fecba7bec4da625b079c5f27f24c4e54aae15a66e96802",
+      "encoding": "utf8",
+      "kind": "licensed upstream source/notice",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": true,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/big5.pairs.bin",
+      "bytes": 137100,
+      "sha256": "603594bb1e79752f25b50d72ff5ce0f3ae88a942e8c81a36f82e3daa2b4ca3dc",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/big5.single.bin",
+      "bytes": 1024,
+      "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/big5hkscs.pairs.bin",
+      "bytes": 184020,
+      "sha256": "fc9461564284bac32fca61da4fb07b5b8a144b6943092425f0ac51876d1b344a",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/big5hkscs.single.bin",
+      "bytes": 1024,
+      "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/cp932.pairs.bin",
+      "bytes": 96040,
+      "sha256": "b51e5e105b1e9b777b5fc0ddc080860a8444881ac40533e2b1669d1b414007ac",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/cp932.single.bin",
+      "bytes": 1024,
+      "sha256": "f5f3981063d66814ca8db6f94f7fa973fa4826dbb5ac3fa7ce8e02ea3600f99f",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/cp949.pairs.bin",
+      "bytes": 170480,
+      "sha256": "53d7b966f810d955efb6cb92f3280126ae412e0688a4e46b444ee662626a95d4",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/cp949.single.bin",
+      "bytes": 1024,
+      "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/cp950.pairs.bin",
+      "bytes": 137520,
+      "sha256": "89af3c2176761d1bb76b8c61fed4877ab467f3b552bcd9c3bc99a28f6139da89",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/cp950.single.bin",
+      "bytes": 1024,
+      "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/euc_jis_2004.pairs.bin",
+      "bytes": 91160,
+      "sha256": "68d20bf66d1aa2f509e9e2b1dc1401a3dd9e1ef7219674a4076cf8ec45f004fc",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/euc_jis_2004.single.bin",
+      "bytes": 1024,
+      "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/euc_jis_2004.triples.bin",
+      "bytes": 85030,
+      "sha256": "57e77b5703e6a040ccd08be4322fbf05f9b35bdfcebfa65819aa95849a9d0d2b",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/euc_jisx0213.pairs.bin",
+      "bytes": 91160,
+      "sha256": "1cc39aebc4c4bf90d9b7e431bdf0a306104437d98a7e3b159c6b28765535c7a8",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/euc_jisx0213.single.bin",
+      "bytes": 1024,
+      "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/euc_jisx0213.triples.bin",
+      "bytes": 85030,
+      "sha256": "8ff036f49e9de9ebdcd8c055528d7df007dec8b116dec50469cb40523664cd87",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/euc_jp.pairs.bin",
+      "bytes": 71980,
+      "sha256": "ff25787a4fd0f23e987023188444cbdeb494ec6985eacaace939afbdc71c12f5",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/euc_jp.single.bin",
+      "bytes": 1024,
+      "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/euc_jp.triples.bin",
+      "bytes": 60670,
+      "sha256": "4bc2f48ecae2307bff49571d531cf45e28da43d3a4886a09bdc0c5902dcb8d2c",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/euc_kr.pairs.bin",
+      "bytes": 82260,
+      "sha256": "4c113fb80dd7ff04e62417887f0d61241083ad47becae4bfab78dc22736157df",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/euc_kr.single.bin",
+      "bytes": 1024,
+      "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/gb18030.pairs.bin",
+      "bytes": 252200,
+      "sha256": "ccc6e1e022d66c88cc16ac18de3d94595095b496d866d30136c2097b100cb566",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/gb18030.single.bin",
+      "bytes": 1024,
+      "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/gb2312.pairs.bin",
+      "bytes": 74450,
+      "sha256": "0c62f0718d021cc5f7d0f9aebe12c62813db620673b17477d00b295ee5c55339",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/gb2312.single.bin",
+      "bytes": 1024,
+      "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/gbk.pairs.bin",
+      "bytes": 217910,
+      "sha256": "5ef8bf4c9643a792ddfc6dc0e6f70fc99453afd8d846a31009dd5f89988572fb",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/gbk.single.bin",
+      "bytes": 1024,
+      "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/johab.pairs.bin",
+      "bytes": 170650,
+      "sha256": "864edf098cefd7e2f6c3eb6ee4e936f315e7c1314c9049cd809dec5d2b73ecc9",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/johab.single.bin",
+      "bytes": 1024,
+      "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/shift_jis.pairs.bin",
+      "bytes": 68790,
+      "sha256": "76cc259c1fd8eb8e39d668d72422a9180e6c533a81ed2967c6202d5c0205c4c0",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/shift_jis.single.bin",
+      "bytes": 1024,
+      "sha256": "29fdf4b03f25fb9cfae0d5ceba9b658497268a7f043d3e13d7a152e9124fca6e",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/shift_jis_2004.pairs.bin",
+      "bytes": 112330,
+      "sha256": "559304f05cf5d6ff468c6169f2222c67d2653f669a6282494d2c3ca2c4f1b927",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/shift_jis_2004.single.bin",
+      "bytes": 1024,
+      "sha256": "dde9ffb93d76fb44b4e6e3c209b021baabb51644934def3c14e7d167790dce5d",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/shift_jisx0213.pairs.bin",
+      "bytes": 112330,
+      "sha256": "59d22cc9f01036288d8640d3ed643df25aea1611ac86b29367500cc428cbfb2b",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/cjk/shift_jisx0213.single.bin",
+      "bytes": 1024,
+      "sha256": "dde9ffb93d76fb44b4e6e3c209b021baabb51644934def3c14e7d167790dce5d",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/iso2022/gb2312.bin",
+      "bytes": 74450,
+      "sha256": "7574d029b9ddf8626671117e378ad05ac47094d7aad27391148485cf0160f5ba",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/iso2022/jis0208.bin",
+      "bytes": 68790,
+      "sha256": "0416112dcb0970a36b4a15c4a81d12b26415e38149543e08b9e34d5723e12b6d",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/iso2022/jis0212.bin",
+      "bytes": 60670,
+      "sha256": "c7cd2049ea68c0e1818a57414a560d7cf06f468414485d2356781f1dd3ee60a0",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/iso2022/jis0213_2000_1.bin",
+      "bytes": 87870,
+      "sha256": "7029af04afa447689f93827b81e77ba805f32716a9d153316802f4371ef6c040",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/iso2022/jis0213_2000_2.bin",
+      "bytes": 24360,
+      "sha256": "b2a26bcc095be14d44ae9fb54301acff1345e593909fcc5cb10ab510a4777360",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/iso2022/jis0213_2004_1.bin",
+      "bytes": 87970,
+      "sha256": "1d37c3ffe71db2269db566bdcb1140c18a2e3bebc56c4bb2dce65a555df12fa5",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/iso2022/jis0213_2004_2.bin",
+      "bytes": 24360,
+      "sha256": "b2a26bcc095be14d44ae9fb54301acff1345e593909fcc5cb10ab510a4777360",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/iso2022/ksx1001.bin",
+      "bytes": 82260,
+      "sha256": "bc07ce8231127b1b9127feb75e8340e5b07db070423163307fea47c28e4aec05",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/unicode_names.rs",
+      "bytes": 2159503,
+      "sha256": "c9ff0bf97ae36ad98006939785e23f391eff9b7b64778f60068bc42db20a2f29",
+      "encoding": "utf8",
+      "kind": "generated Rust table",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/NormalizationTest-3.2.0.txt",
+      "bytes": 2025975,
+      "sha256": "c4513869bb7098d19838be4a1fd5d760843c5804bfe03bd6bbb20623ceb6e57d",
+      "encoding": "utf8",
+      "kind": "licensed upstream source/notice",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/algorithm-strict/raw-unicode-escape-source.json.strict.zlib",
+      "bytes": 22,
+      "sha256": "67776ca2ee2b67aaadcddf364930aca36831d200956a854e4f9fc611e3db386b",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/algorithm-strict/unicode-escape-source.json.strict.zlib",
+      "bytes": 28,
+      "sha256": "4e02e9c195188e6b04285a13e9b3edc709ee596ca74dd7acf608be6789aa3780",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/algorithm-strict/unicode-name-source.json.strict.zlib",
+      "bytes": 148,
+      "sha256": "3271039f0c3fc22ce44e6f09e142bcdd7113589a3aa321fe317fac88a4a25454",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/algorithm-strict/unicode-utf-7.json.zlib.strict.zlib",
+      "bytes": 311,
+      "sha256": "f385130e43b3a8f29bd3ded9803c8fd70361aa69847180a026713615fe97de92",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/big5.valid.bin",
+      "bytes": 8224,
+      "sha256": "201cfa80cfa171862275fb0fb563a6c00365ece9dcd33083f43ee658c9d845de",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/big5hkscs.valid.bin",
+      "bytes": 8224,
+      "sha256": "3f9768f72d44d19d81fa457c7c665d32216a244b7abb48b2a6cf590dc70be427",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/cp932.valid.bin",
+      "bytes": 8224,
+      "sha256": "a9a3ef55573d7b0b766dc7417909a545d88a93f7a1743c8e8895de579050b831",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/cp949.valid.bin",
+      "bytes": 8224,
+      "sha256": "b06c8bc05fd5669196112a47d35cd94f66cfbb01d9fb0fb02ce7da677cdb2d78",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/cp950.valid.bin",
+      "bytes": 8224,
+      "sha256": "c20ecf9596783f209e77fd46cf85eb487e123e82b3bb2e0028a98244611bba20",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/euc_jis_2004.valid.bin",
+      "bytes": 8224,
+      "sha256": "db97d929e170a4ec6586af6a6fe861e302708281d78b1b883e2eaaa2ec4653ff",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/euc_jisx0213.valid.bin",
+      "bytes": 8224,
+      "sha256": "016282e27fd801c079699617d157ccc4b42af2f94aa317f0ce0beeffa248bbee",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/euc_jp.valid.bin",
+      "bytes": 8224,
+      "sha256": "c2dbaa67564b660ebf7f6354b27514ffae809d88aaf06914a3b1f7957576311d",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/euc_kr.valid.bin",
+      "bytes": 8224,
+      "sha256": "fe13607d63c43b780ba123719992190b86d7a563128543c0799cd192a284de30",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/gb18030.valid.bin",
+      "bytes": 8224,
+      "sha256": "386d2f7dc0a4bb1ed0986fb8fc1db5f24171271ea0c0458bd627fea6076d0de6",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/gb2312.valid.bin",
+      "bytes": 8224,
+      "sha256": "e6b42fc00fdf3a4e0c84c12b55a8b6604fef8fae5d61ec59c3bf0a9efec0412d",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/gbk.valid.bin",
+      "bytes": 8224,
+      "sha256": "97394e6cf8290be58e44ab558b9502abdee448115f0d76656f17817f5503a4c2",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/johab.valid.bin",
+      "bytes": 8224,
+      "sha256": "130522f4a7d1c0f1c73b51f82ae51021329d025510b9e9e4e8627e735b555ceb",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/shift_jis.valid.bin",
+      "bytes": 8224,
+      "sha256": "02c2dde4fe2ec12884b2c4662db56eae154c1ee8bab28c81b8ec1a20f6c48789",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/shift_jis_2004.valid.bin",
+      "bytes": 8224,
+      "sha256": "48baf3ca251a7568f4f5c8633233cef3de66174d723409a274489cce80b06722",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk-strict-validity/shift_jisx0213.valid.bin",
+      "bytes": 8224,
+      "sha256": "ab13f21e2b3451626f206ca4761677c95f283ed0a34997039c03834526f71a50",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/big5.source-pairs.bin",
+      "bytes": 589824,
+      "sha256": "e812a2ee2a62abd95028c194e6688225c45109ee9a16d56ecc91fd7abbe6061f",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/big5hkscs.source-pairs.bin",
+      "bytes": 589824,
+      "sha256": "1da375a3aa6756ef8dbb804032bc43f9181037c493a4118d684089b239e711a2",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/cp932.source-pairs.bin",
+      "bytes": 589824,
+      "sha256": "be525c1a938157ea209114f794de4e79591a242177d0cbdcd3b8b46386d21dc3",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/cp949.source-pairs.bin",
+      "bytes": 589824,
+      "sha256": "31a71fa88ca2e9dd3837dd56b50b4c59770c9779cf01166aa183eee053487f80",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/cp950.source-pairs.bin",
+      "bytes": 589824,
+      "sha256": "6444109b7c58f71b3c3b1c50f8d06891959e2b694cb3dd268368d0480c945743",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/euc_jis_2004.source-pairs.bin",
+      "bytes": 589824,
+      "sha256": "211479ab2c0a60512b9fb1c8f704c424d6c569e36118ea344be8f000c33a526b",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/euc_jis_2004.source-triples.bin",
+      "bytes": 851968,
+      "sha256": "2270de649600cb096524fc30415b3e6e0cbdf68ed42653d1df8a26d085343081",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/euc_jisx0213.source-pairs.bin",
+      "bytes": 589824,
+      "sha256": "621b6959265b251242cde6c44d20c68635aec7b85c00c8599a8021660161d3f0",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/euc_jisx0213.source-triples.bin",
+      "bytes": 851968,
+      "sha256": "689e11c5f17c6b5601a05797e1a76ef467e2a947bc9706a96da9208e60cec518",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/euc_jp.source-pairs.bin",
+      "bytes": 589824,
+      "sha256": "23fba6ab8140220e2677c9d71d058d31c1e9d43b9c2efedaee765d32beb11ba7",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/euc_jp.source-triples.bin",
+      "bytes": 851968,
+      "sha256": "039f22d4e03fa294a9d00cbfa7184ab56effd7d67ac3b8af236a21d5487052e8",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/euc_kr.source-pairs.bin",
+      "bytes": 589824,
+      "sha256": "82d437db5c65d183917b724ab04b1ee3f80130ed640e149e16e0ce3cea16d3f6",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/gb18030.source-pairs.bin",
+      "bytes": 589824,
+      "sha256": "2686bc1b1bed5649e6fca7b11a928d4d564355785f92ddf139ddd1c6258600e5",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/gb2312.source-pairs.bin",
+      "bytes": 589824,
+      "sha256": "21bba014d012e268395ac0dfb860a6c1cbb56eea5215e5690d596d83958cf255",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/gbk.source-pairs.bin",
+      "bytes": 589824,
+      "sha256": "9980831a34dc913b26e479b39e2b8ebf9ef7cfab5bdfaf5342d4b52d2dc4ecaf",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/johab.source-pairs.bin",
+      "bytes": 589824,
+      "sha256": "72b73de329b80038c80d8f644e5475f10880cf00d38cba6ebdd3afb19518f211",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/shift_jis.source-pairs.bin",
+      "bytes": 589824,
+      "sha256": "7fd1f65971c90e228c328457c74a53c35efb1deec006cca0aac37ecaec3ad8f8",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/shift_jis_2004.source-pairs.bin",
+      "bytes": 589824,
+      "sha256": "1d8b8d4ef8ca14533c6106b2d74a1c9b688563dbc7b38ddad5022f9919449838",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/cjk/shift_jisx0213.source-pairs.bin",
+      "bytes": 589824,
+      "sha256": "2fc128f633ae10fa1f177fa3b6e30e6a56a95db201b378ecef11d5de5689b6b1",
+      "encoding": "binary",
+      "kind": "native mapping/validity bytes",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/gb18030-4byte-source.zlib",
+      "bytes": 2752635,
+      "sha256": "00af70299a8d75e1c620ef80bb86d25dedb04b9b246d5ad81fc55e586367c117",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/hz-source.zlib",
+      "bytes": 65542,
+      "sha256": "4d98ac0e4c1d1667ca374e4318b4de6fb649bb2fa863195365f680e2b4b833a2",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/idna-all-points-source.bin.zlib",
+      "bytes": 1350907,
+      "sha256": "cf945b54b0d04ba1dfcb0f394a6428686e0f01e71a0df126ce392e318275f6b1",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp-0.zlib",
+      "bytes": 51472,
+      "sha256": "f2bc8d3ddc6191b6d3b2b3392b5711a5294a89193631fd6f670754a7945e827a",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp-1.zlib",
+      "bytes": 30643,
+      "sha256": "11947ae70a06ca3241e7d671f010904033cf78a55e342040f4e0f1960c1d2499",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp-2.zlib",
+      "bytes": 30643,
+      "sha256": "11947ae70a06ca3241e7d671f010904033cf78a55e342040f4e0f1960c1d2499",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp-3.zlib",
+      "bytes": 51500,
+      "sha256": "8673f3c7d7e6221ef01bcc8235fc8d9c2a629bdf264296887353c5f28a4b3534",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_1-0.zlib",
+      "bytes": 51472,
+      "sha256": "f2bc8d3ddc6191b6d3b2b3392b5711a5294a89193631fd6f670754a7945e827a",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_1-1.zlib",
+      "bytes": 30643,
+      "sha256": "11947ae70a06ca3241e7d671f010904033cf78a55e342040f4e0f1960c1d2499",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_1-2.zlib",
+      "bytes": 30643,
+      "sha256": "11947ae70a06ca3241e7d671f010904033cf78a55e342040f4e0f1960c1d2499",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_1-3.zlib",
+      "bytes": 51500,
+      "sha256": "8673f3c7d7e6221ef01bcc8235fc8d9c2a629bdf264296887353c5f28a4b3534",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_1-4.zlib",
+      "bytes": 27792,
+      "sha256": "5cf592f78e9308beae38089254921f5fc02cc53d9f830fc6ba281e21e2b85c6e",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-0.zlib",
+      "bytes": 51474,
+      "sha256": "ce30e57c40ffba0e937a2b92749059929bdfc8e0c7744f4d32d8fc60c93103ff",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-1.zlib",
+      "bytes": 30649,
+      "sha256": "4a741ca1d6dce15466679e837b2a0c084b07d1ea02e9b3ce2dd9a9e1b90d9b2d",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-10.zlib",
+      "bytes": 51478,
+      "sha256": "5ff8dc5b08132f15e6d24e94f9ca4d202885cdce5cb80bd834d1c7c3dce23bee",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-11.zlib",
+      "bytes": 51463,
+      "sha256": "fbadbdfa0a47be5c20cc7d16626130d34f3f0784b7fe7e8a9e03bd759781524f",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-2.zlib",
+      "bytes": 30649,
+      "sha256": "4a741ca1d6dce15466679e837b2a0c084b07d1ea02e9b3ce2dd9a9e1b90d9b2d",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-3.zlib",
+      "bytes": 51499,
+      "sha256": "fa9ac8f2085c4bd2c7053d11b9d1b7f0cad59886baeb7ec3c80f7c43fd384951",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-4.zlib",
+      "bytes": 27796,
+      "sha256": "dfdb90f6d141e3bb02cda779a254dbaacfdf49a93fce223e74e7b3efa4c4f685",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-5.zlib",
+      "bytes": 35797,
+      "sha256": "611ead2d9629d44d87cd0e0a1cc03015dc66fe57be7e3d458366fdb8ff7a363d",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-6.zlib",
+      "bytes": 32748,
+      "sha256": "b06d01c20e8dbec80ded2a79cf3cf9aeb734e37c197c671785cab56fe56e2228",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-7.zlib",
+      "bytes": 8189,
+      "sha256": "71824b21db609513f99387788b38e2c9380d7cee14bcdc17cace8fa64cbc3332",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-8.zlib",
+      "bytes": 8189,
+      "sha256": "71824b21db609513f99387788b38e2c9380d7cee14bcdc17cace8fa64cbc3332",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2-9.zlib",
+      "bytes": 51478,
+      "sha256": "5ff8dc5b08132f15e6d24e94f9ca4d202885cdce5cb80bd834d1c7c3dce23bee",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2004-0.zlib",
+      "bytes": 51472,
+      "sha256": "f2bc8d3ddc6191b6d3b2b3392b5711a5294a89193631fd6f670754a7945e827a",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2004-1.zlib",
+      "bytes": 30643,
+      "sha256": "11947ae70a06ca3241e7d671f010904033cf78a55e342040f4e0f1960c1d2499",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2004-2.zlib",
+      "bytes": 37235,
+      "sha256": "65f12dffb5af31be862086d01b6d351761c37043de2df5f43c528811a7a84bd9",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_2004-3.zlib",
+      "bytes": 16465,
+      "sha256": "38cc3b85be9a9e5779f5687a77ae96a41ebddd8491acca6cfd2b6f7b20ba9134",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_3-0.zlib",
+      "bytes": 51472,
+      "sha256": "f2bc8d3ddc6191b6d3b2b3392b5711a5294a89193631fd6f670754a7945e827a",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_3-1.zlib",
+      "bytes": 30643,
+      "sha256": "11947ae70a06ca3241e7d671f010904033cf78a55e342040f4e0f1960c1d2499",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_3-2.zlib",
+      "bytes": 37204,
+      "sha256": "0833a728e61006b3006490b4f0bb44e6bd6fcd736090d48c526238a85cef066d",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_3-3.zlib",
+      "bytes": 16465,
+      "sha256": "38cc3b85be9a9e5779f5687a77ae96a41ebddd8491acca6cfd2b6f7b20ba9134",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_ext-0.zlib",
+      "bytes": 51472,
+      "sha256": "f2bc8d3ddc6191b6d3b2b3392b5711a5294a89193631fd6f670754a7945e827a",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_ext-1.zlib",
+      "bytes": 30643,
+      "sha256": "11947ae70a06ca3241e7d671f010904033cf78a55e342040f4e0f1960c1d2499",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_ext-2.zlib",
+      "bytes": 30643,
+      "sha256": "11947ae70a06ca3241e7d671f010904033cf78a55e342040f4e0f1960c1d2499",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_ext-3.zlib",
+      "bytes": 51500,
+      "sha256": "8673f3c7d7e6221ef01bcc8235fc8d9c2a629bdf264296887353c5f28a4b3534",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_ext-4.zlib",
+      "bytes": 32197,
+      "sha256": "0183046448d6b420d4d61e509c686b1633b4960a98ff0f763dbf96f07cc5f293",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_jp_ext-5.zlib",
+      "bytes": 27792,
+      "sha256": "5cf592f78e9308beae38089254921f5fc02cc53d9f830fc6ba281e21e2b85c6e",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_kr-0.zlib",
+      "bytes": 51142,
+      "sha256": "fc4fd45c298276e670993fcde3bdf8a2899584d65d527e634f00101ac75308e7",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_kr-1.zlib",
+      "bytes": 51142,
+      "sha256": "fc4fd45c298276e670993fcde3bdf8a2899584d65d527e634f00101ac75308e7",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_kr-2.zlib",
+      "bytes": 36105,
+      "sha256": "630fc4aff137759373cae9074af7ad638ed298914a230999e47423ad0a23bae7",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/iso2022_kr-3.zlib",
+      "bytes": 35895,
+      "sha256": "bf4342acf0fa311c5930ec83aa194e6caa4b5b3346f66492b0d7c71619ac0aab",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/iso2022/targeted.json",
+      "bytes": 5869813,
+      "sha256": "a826a2e510b754b8ca03ce82024c34c01653d4ff97a8cab7fca1ea9a457fe199",
+      "encoding": "utf8",
+      "kind": "source JSON observation",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/label-alnum-source-bits.zlib",
+      "bytes": 1593,
+      "sha256": "ea8846f047c5ac59dfbef6f7f39c07f3a1c89c6ce87584a0e433f1dba0599f5b",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/label-dotted-source.json",
+      "bytes": 1728544,
+      "sha256": "ba177129c2fc75f575c95e4e08e7d72213f09e484abc757c16a9b093104f186e",
+      "encoding": "utf8",
+      "kind": "source JSON observation",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/lower-ascii-source.json",
+      "bytes": 1798082,
+      "sha256": "d5c5c97071b8700213c2c4a078fdde3217f9f706cda9c28e4eeaef65fc071679",
+      "encoding": "utf8",
+      "kind": "source JSON observation",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/hz-0.modes.zlib",
+      "bytes": 203,
+      "sha256": "007d5169159eaf0fd84c19bf1d3f5c92192e2578c19519d3482497a98cd0c58b",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/hz-1.modes.zlib",
+      "bytes": 201,
+      "sha256": "578bb5ce5368c4bd0071104ae547f22fb6860ecec75d83e53312af81057599ae",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-0.modes.zlib",
+      "bytes": 211,
+      "sha256": "74456906bb44b72a0f11d00ebfb592639a094537ca26986c29bef957875e3ca9",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-1.modes.zlib",
+      "bytes": 211,
+      "sha256": "74456906bb44b72a0f11d00ebfb592639a094537ca26986c29bef957875e3ca9",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-10.modes.zlib",
+      "bytes": 239,
+      "sha256": "dc4bc21e4c5194f168e391db8cc3890215f92d74bc6382ff236b4289070338a8",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-11.modes.zlib",
+      "bytes": 211,
+      "sha256": "74456906bb44b72a0f11d00ebfb592639a094537ca26986c29bef957875e3ca9",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-12.modes.zlib",
+      "bytes": 247,
+      "sha256": "2a486205edef250cee16b1cc3363d4d37a3efa0ec16e06d3b1285f9f6906d971",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-13.modes.zlib",
+      "bytes": 211,
+      "sha256": "74456906bb44b72a0f11d00ebfb592639a094537ca26986c29bef957875e3ca9",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-14.modes.zlib",
+      "bytes": 245,
+      "sha256": "0524f38520895fc0dfb797452c6b2752bfb60e8cfa00bd4ac513264b7dee2cd0",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-15.modes.zlib",
+      "bytes": 245,
+      "sha256": "0524f38520895fc0dfb797452c6b2752bfb60e8cfa00bd4ac513264b7dee2cd0",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-16.modes.zlib",
+      "bytes": 211,
+      "sha256": "74456906bb44b72a0f11d00ebfb592639a094537ca26986c29bef957875e3ca9",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-17.modes.zlib",
+      "bytes": 247,
+      "sha256": "1b11fe19724ce8dea28a6f12a3069cdff4846d1051c0ff2f4941445323ff143c",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-18.modes.zlib",
+      "bytes": 246,
+      "sha256": "4262357c4f628eacd99b81add8f70afdd7a7ea4939d48baaccbeaeba034b8106",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-19.modes.zlib",
+      "bytes": 244,
+      "sha256": "b7417d9bcd579742fcb1185d082624bc3519bf4f7d508cd39bfcf0f987949f52",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-2.modes.zlib",
+      "bytes": 248,
+      "sha256": "78464e41db9efb3ac2f1f30c63b7d2cedd5f7e0fe19db84a901e2ebc305db7ef",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-20.modes.zlib",
+      "bytes": 132,
+      "sha256": "62a9d956ffe327408b2e8a88c7add1a84685eed533d285fd6ad82145bde024e0",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-21.modes.zlib",
+      "bytes": 132,
+      "sha256": "62a9d956ffe327408b2e8a88c7add1a84685eed533d285fd6ad82145bde024e0",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-22.modes.zlib",
+      "bytes": 211,
+      "sha256": "74456906bb44b72a0f11d00ebfb592639a094537ca26986c29bef957875e3ca9",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-23.modes.zlib",
+      "bytes": 211,
+      "sha256": "74456906bb44b72a0f11d00ebfb592639a094537ca26986c29bef957875e3ca9",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-24.modes.zlib",
+      "bytes": 214,
+      "sha256": "aa4dc5165725fc639817366b33f6a073cf653f1bd5229bb757c304d51bd78434",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-25.modes.zlib",
+      "bytes": 211,
+      "sha256": "74456906bb44b72a0f11d00ebfb592639a094537ca26986c29bef957875e3ca9",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-26.modes.zlib",
+      "bytes": 239,
+      "sha256": "dc4bc21e4c5194f168e391db8cc3890215f92d74bc6382ff236b4289070338a8",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-27.modes.zlib",
+      "bytes": 236,
+      "sha256": "e1069f78add5c9cfdc273719d605e1ddc490f3d5f34c197319d7b87c4b396817",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-28.modes.zlib",
+      "bytes": 170,
+      "sha256": "a69d7a7cb837d96e25570ebf09552e0558085baa590f4d4aeacee429e7028df0",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-29.modes.zlib",
+      "bytes": 211,
+      "sha256": "74456906bb44b72a0f11d00ebfb592639a094537ca26986c29bef957875e3ca9",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-3.modes.zlib",
+      "bytes": 246,
+      "sha256": "7b3a0f9f984a175ea8d7ce07af5758ddb710469aaa07de09a57f19862e572193",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-30.modes.zlib",
+      "bytes": 239,
+      "sha256": "dc4bc21e4c5194f168e391db8cc3890215f92d74bc6382ff236b4289070338a8",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-31.modes.zlib",
+      "bytes": 247,
+      "sha256": "89949c85f206e29137f07ddb3444aa58b49edcdd1725e37e628c96766d296620",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-32.modes.zlib",
+      "bytes": 170,
+      "sha256": "a69d7a7cb837d96e25570ebf09552e0558085baa590f4d4aeacee429e7028df0",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-33.modes.zlib",
+      "bytes": 211,
+      "sha256": "74456906bb44b72a0f11d00ebfb592639a094537ca26986c29bef957875e3ca9",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-34.modes.zlib",
+      "bytes": 239,
+      "sha256": "dc4bc21e4c5194f168e391db8cc3890215f92d74bc6382ff236b4289070338a8",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-35.modes.zlib",
+      "bytes": 239,
+      "sha256": "dc4bc21e4c5194f168e391db8cc3890215f92d74bc6382ff236b4289070338a8",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-36.modes.zlib",
+      "bytes": 211,
+      "sha256": "74456906bb44b72a0f11d00ebfb592639a094537ca26986c29bef957875e3ca9",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-37.modes.zlib",
+      "bytes": 191,
+      "sha256": "0dc81045c08666dad04c60e492dc2dd8186e1d7c2372be7bde9a19be64eed8c1",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-38.modes.zlib",
+      "bytes": 247,
+      "sha256": "2a486205edef250cee16b1cc3363d4d37a3efa0ec16e06d3b1285f9f6906d971",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-4.modes.zlib",
+      "bytes": 211,
+      "sha256": "74456906bb44b72a0f11d00ebfb592639a094537ca26986c29bef957875e3ca9",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-5.modes.zlib",
+      "bytes": 239,
+      "sha256": "dc4bc21e4c5194f168e391db8cc3890215f92d74bc6382ff236b4289070338a8",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-6.modes.zlib",
+      "bytes": 239,
+      "sha256": "dc4bc21e4c5194f168e391db8cc3890215f92d74bc6382ff236b4289070338a8",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-7.modes.zlib",
+      "bytes": 211,
+      "sha256": "74456906bb44b72a0f11d00ebfb592639a094537ca26986c29bef957875e3ca9",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-8.modes.zlib",
+      "bytes": 211,
+      "sha256": "74456906bb44b72a0f11d00ebfb592639a094537ca26986c29bef957875e3ca9",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-9.modes.zlib",
+      "bytes": 239,
+      "sha256": "dc4bc21e4c5194f168e391db8cc3890215f92d74bc6382ff236b4289070338a8",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/stateful-strict/iso-targeted.modes.zlib",
+      "bytes": 416,
+      "sha256": "a98e73b6f922a095174e0e362a0e839c79abcb895ecfdb4f4036911d8114a275",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/strict-overflow-source.json",
+      "bytes": 1903818,
+      "sha256": "914384c5344e939ee6a7d959ddb593eb6041f85343bac18c445ac4714adeeadd",
+      "encoding": "utf8",
+      "kind": "source JSON observation",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/strict-parameter-source.json",
+      "bytes": 956911,
+      "sha256": "1b0c4e6a86bdacf03635ae7bfef4d11f087067aa9525c00074db276b7f4a0197",
+      "encoding": "utf8",
+      "kind": "source JSON observation",
+      "provenance": "crates/ssx-source-codecs/attribution.json and retained adjacent source notices/fixtures",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/unicode-name-source.json",
+      "bytes": 3910257,
+      "sha256": "d4af24adcbe1aba41380e983ab29f549178b98df58926c5b2dedad9e53735f66",
+      "encoding": "utf8",
+      "kind": "source JSON observation",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/unicode/utf-16-be.json.zlib",
+      "bytes": 492211,
+      "sha256": "a57c3a013f052c7740855bc0e6d33e1941ffe16ef0ac49e9a6f47460f4ecfa91",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/unicode/utf-16-le.json.zlib",
+      "bytes": 421946,
+      "sha256": "cdcbd54d51785868c406467a3d484de1226132f08b9a39b3d94982ee9538ed59",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/unicode/utf-16.json.zlib",
+      "bytes": 92777,
+      "sha256": "215e4975f002172136e9f88bad955690b005580d307fc3f632e7e9495fab92fd",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/unicode/utf-32-be.json.zlib",
+      "bytes": 82669,
+      "sha256": "2eb3fddeb7bb7abfc30add605bdaaaf762ea7da5ba1e504dc0a8de2855b5ba0e",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/unicode/utf-32-le.json.zlib",
+      "bytes": 82677,
+      "sha256": "0af2ea7e373f03abc58671d793f3bdf9ecf817e7676055709e7123691c798ff6",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/unicode/utf-32.json.zlib",
+      "bytes": 81778,
+      "sha256": "91a70f4dab80be58834981ced03f9b7d40df467868fee4e445abfb6e3cebf0a7",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/unicode/utf-7.json.zlib",
+      "bytes": 685560,
+      "sha256": "54452e9d49add51279ce05fa0dc523dc96469bcd75a69c7b4b2924a06914b044",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/unicode/utf-8-sig.json.zlib",
+      "bytes": 368994,
+      "sha256": "b840eb5e95cc4c5204af50f9cafbc59c17a7d2d6a6b127a26ea669f010b8ca9c",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "crates/ssx-source-codecs/tests/unicode/utf-8.json.zlib",
+      "bytes": 368990,
+      "sha256": "5d760463dbc4ac62d9aa73854a2f539fa9ae6e62d9cc8a1e312b58c04a84810a",
+      "encoding": "binary",
+      "kind": "compressed native source oracle",
+      "provenance": "docs/rust-rewrite/a05/coverage.json codec_evidence",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "contracts/unicode/python-text-source/Modules___sre__sre.c.txt",
+      "bytes": 95890,
+      "sha256": "6d847eb25d5c50e3b33dcb2e39accd9c73f619c2d211a34ed32bb93e9c7299a8",
+      "encoding": "utf8",
+      "kind": "licensed upstream source/notice",
+      "provenance": "CPython 3.14.7 / Unicode16 static nonexecuted source inputs; docs/rust-rewrite/a13/remaining/cpython-input-pins.json; original input and PSF license preserved byte-exact",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "contracts/unicode/python-text-source/Include__cpython__unicodeobject.h.txt",
+      "bytes": 27627,
+      "sha256": "a3f5e7c3f6795fb1f0794fd4e41df2fc823c1a7844e82fe96ccc42c94f63146b",
+      "encoding": "utf8",
+      "kind": "licensed upstream source/notice",
+      "provenance": "CPython 3.14.7 / Unicode16 static nonexecuted source inputs; docs/rust-rewrite/a13/remaining/cpython-input-pins.json; original input and PSF license preserved byte-exact",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "contracts/unicode/python-text-source/Objects__unicodectype.c.txt",
+      "bytes": 7236,
+      "sha256": "9d7a35ac40018ad087c5d2d15f8214d5831456947d858e5b5c0cd9d529e4ce61",
+      "encoding": "utf8",
+      "kind": "licensed upstream source/notice",
+      "provenance": "CPython 3.14.7 / Unicode16 static nonexecuted source inputs; docs/rust-rewrite/a13/remaining/cpython-input-pins.json; original input and PSF license preserved byte-exact",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": true,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "contracts/unicode/python-text-source/Objects__unicodetype_db.h.txt",
+      "bytes": 281705,
+      "sha256": "14ec556848551d98523554080f2d09f6d0a64c83854f43b92c51e10440af2134",
+      "encoding": "utf8",
+      "kind": "licensed upstream source/notice",
+      "provenance": "CPython 3.14.7 / Unicode16 static nonexecuted source inputs; docs/rust-rewrite/a13/remaining/cpython-input-pins.json; original input and PSF license preserved byte-exact",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": true,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "contracts/unicode/python-text-source/Objects__unicodeobject.c.txt",
+      "bytes": 496004,
+      "sha256": "dc0da0c0379a64bf3e6277d53678c5eb8181a409ceec44868150ba47f89d11a3",
+      "encoding": "utf8",
+      "kind": "licensed upstream source/notice",
+      "provenance": "CPython 3.14.7 / Unicode16 static nonexecuted source inputs; docs/rust-rewrite/a13/remaining/cpython-input-pins.json; original input and PSF license preserved byte-exact",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "contracts/unicode/python-text-source/Include__patchlevel.h.txt",
+      "bytes": 1773,
+      "sha256": "16a8955952cbaefd16f85909b73a0a6c182ec813f9544a12c28897c95b8d3f22",
+      "encoding": "utf8",
+      "kind": "licensed upstream source/notice",
+      "provenance": "CPython 3.14.7 / Unicode16 static nonexecuted source inputs; docs/rust-rewrite/a13/remaining/cpython-input-pins.json; original input and PSF license preserved byte-exact",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "contracts/unicode/python-text-source/Modules__unicodedata_db.h.txt",
+      "bytes": 588046,
+      "sha256": "00a5ed9e602bb55e9f080333ac8cbc360352eea9de960eec69efdb0c3d68b110",
+      "encoding": "utf8",
+      "kind": "licensed upstream source/notice",
+      "provenance": "CPython 3.14.7 / Unicode16 static nonexecuted source inputs; docs/rust-rewrite/a13/remaining/cpython-input-pins.json; original input and PSF license preserved byte-exact",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": true,
+        "preserve_trailing": false,
+        "license_separator": false
+      }
+    },
+    {
+      "path": "contracts/unicode/python-text-source/LICENSE.txt",
+      "bytes": 13804,
+      "sha256": "b0e25a78cffb43f4d92de8b61ccfa1f1f98ecbc22330b54b5251e7b6ba010231",
+      "encoding": "utf8",
+      "kind": "licensed upstream source/notice",
+      "provenance": "CPython 3.14.7 / Unicode16 static nonexecuted source inputs; docs/rust-rewrite/a13/remaining/cpython-input-pins.json; original input and PSF license preserved byte-exact",
+      "text_rules": {
+        "preserve_cr": false,
+        "preserve_final_newline": false,
+        "preserve_trailing": false,
+        "license_separator": true
+      }
+    }
+  ]
+}

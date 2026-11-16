@@ -1,0 +1,439 @@
+{
+  "schema_version": 1,
+  "status": "source-projected; native transport comparison not yet executed",
+  "predecessor": "98330f1a94b5f50ad228117ce392601c0ce4dea4",
+  "profile_source": "docs/rust-rewrite/t06/source.json catalog.tools",
+  "sources": {
+    "slopsearx/mcp/receipt_tools.py": "a9052e4e0fa7918d076c775e4a2c73ce7ead1e4de114064aa9d38f6a7b6221ed",
+    "slopsearx/mcp/lineage_tools.py": "2e44fe63074adb26ab7f6f68ea925ccb800b5bb8855d163c9ca118c30846e520",
+    "slopsearx/mcp/tool_registry.py": "86042fb94dd05f7176ec154e00745ea3ecdc560790e8e137987c985b1dcd58b7",
+    "slopsearx/mcp/server.py": "94f9fc7cff17550b26458e52c8e053462518ece02d260eed396eaec695fef10a",
+    "uv.lock": "8ecfcd029d2461631d44a2910ef5cfaa23a436da9cbc9a96ed0302e1d96861d0"
+  },
+  "tools": [
+    {
+      "_meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      },
+      "description": "Store one attributed retrieval observation without fetching supplied data.",
+      "inputSchema": {
+        "properties": {
+          "result_id": {
+            "type": "string"
+          },
+          "retriever": {
+            "type": "string"
+          },
+          "idempotency_key": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "captured_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "final_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "content_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "capture_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "passage_refs": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "failure_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "failure_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "result_id",
+          "retriever",
+          "idempotency_key",
+          "status"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "name": "slopsearx_submit_retrieval_receipt",
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "title": "Slopsearx Submit Retrieval Receipt"
+    },
+    {
+      "_meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      },
+      "description": "Read bounded attributed observations without altering their source snapshot.",
+      "inputSchema": {
+        "properties": {
+          "result_id": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "integer",
+            "default": 20
+          }
+        },
+        "required": [
+          "result_id"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "name": "slopsearx_read_retrieval_receipts",
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "title": "Slopsearx Read Retrieval Receipts"
+    },
+    {
+      "_meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      },
+      "description": "Join explicit results, a lineage cut, or one workflow source to observations.",
+      "inputSchema": {
+        "properties": {
+          "result_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "artifacts": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "max_depth": {
+            "type": "integer",
+            "default": 2
+          },
+          "max_nodes": {
+            "type": "integer",
+            "default": 100
+          },
+          "source": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "type": "object",
+        "additionalProperties": false
+      },
+      "name": "slopsearx_export_research_manifest",
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "title": "Slopsearx Export Research Manifest"
+    },
+    {
+      "_meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      },
+      "description": "Resolve a bounded lineage graph without dispatch or retention extension.",
+      "inputSchema": {
+        "properties": {
+          "artifact": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "direction": {
+            "type": "string",
+            "default": "both"
+          },
+          "max_depth": {
+            "type": "integer",
+            "default": 2
+          },
+          "max_nodes": {
+            "type": "integer",
+            "default": 100
+          }
+        },
+        "required": [
+          "artifact"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "name": "slopsearx_get_artifact_lineage",
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "title": "Slopsearx Get Artifact Lineage"
+    }
+  ],
+  "descriptor_derivation": "Current pinned Python AST parameter order, exact annotations/defaults, docstrings and return types; metadata/schema-cleaning projection follows the frozen FastMCP 4.0.11 T06 profile. Runtime descriptor equality is pending, not asserted.",
+  "function_contracts": [
+    {
+      "name": "slopsearx_submit_retrieval_receipt",
+      "source": "slopsearx/mcp/receipt_tools.py",
+      "line": 169,
+      "description": "Store one attributed retrieval observation without fetching supplied data.",
+      "parameters": [
+        {
+          "name": "result_id",
+          "annotation": "str",
+          "required": true
+        },
+        {
+          "name": "retriever",
+          "annotation": "str",
+          "required": true
+        },
+        {
+          "name": "idempotency_key",
+          "annotation": "str",
+          "required": true
+        },
+        {
+          "name": "status",
+          "annotation": "str",
+          "required": true
+        },
+        {
+          "name": "captured_at",
+          "annotation": "str | None",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "final_url",
+          "annotation": "str | None",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "content_sha256",
+          "annotation": "str | None",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "capture_ref",
+          "annotation": "str | None",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "passage_refs",
+          "annotation": "list[dict[str, str]] | None",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "failure_code",
+          "annotation": "str | None",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "failure_message",
+          "annotation": "str | None",
+          "required": false,
+          "default": null
+        }
+      ],
+      "returns": "dict[str, Any]"
+    },
+    {
+      "name": "slopsearx_read_retrieval_receipts",
+      "source": "slopsearx/mcp/receipt_tools.py",
+      "line": 273,
+      "description": "Read bounded attributed observations without altering their source snapshot.",
+      "parameters": [
+        {
+          "name": "result_id",
+          "annotation": "str",
+          "required": true
+        },
+        {
+          "name": "limit",
+          "annotation": "StrictInt",
+          "required": false,
+          "default": 20
+        }
+      ],
+      "returns": "dict[str, Any]"
+    },
+    {
+      "name": "slopsearx_export_research_manifest",
+      "source": "slopsearx/mcp/receipt_tools.py",
+      "line": 280,
+      "description": "Join explicit results, a lineage cut, or one workflow source to observations.",
+      "parameters": [
+        {
+          "name": "result_ids",
+          "annotation": "list[str] | None",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "artifacts",
+          "annotation": "list[dict[str, Any]] | None",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "max_depth",
+          "annotation": "StrictInt",
+          "required": false,
+          "default": 2
+        },
+        {
+          "name": "max_nodes",
+          "annotation": "StrictInt",
+          "required": false,
+          "default": 100
+        },
+        {
+          "name": "source",
+          "annotation": "dict[str, Any] | None",
+          "required": false,
+          "default": null
+        }
+      ],
+      "returns": "dict[str, Any]"
+    },
+    {
+      "name": "slopsearx_get_artifact_lineage",
+      "source": "slopsearx/mcp/lineage_tools.py",
+      "line": 403,
+      "description": "Resolve a bounded lineage graph without dispatch or retention extension.",
+      "parameters": [
+        {
+          "name": "artifact",
+          "annotation": "dict[str, Any]",
+          "required": true
+        },
+        {
+          "name": "direction",
+          "annotation": "str",
+          "required": false,
+          "default": "both"
+        },
+        {
+          "name": "max_depth",
+          "annotation": "StrictInt",
+          "required": false,
+          "default": 2
+        },
+        {
+          "name": "max_nodes",
+          "annotation": "StrictInt",
+          "required": false,
+          "default": 100
+        }
+      ],
+      "returns": "dict[str, Any]"
+    }
+  ]
+}

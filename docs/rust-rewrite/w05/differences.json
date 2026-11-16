@@ -1,0 +1,62 @@
+{
+  "plan_id": "W05",
+  "status": "candidate differences reviewed in development; final acceptance pending",
+  "differences": [
+    {
+      "id": "W05-D01",
+      "source": "Python store accepts caller now for retention cutoff and acknowledgement TTL scores; Valkey XADD still assigns real stream IDs. In-memory source also uses caller now and event occurred_at while publishing.",
+      "native": "Persisted retention, acknowledgement scores, expiry publication eligibility and physical TTLs use Valkey TIME, consistently with accepted W04. Event occurred_at preserves original finished_at or definition expiry; backlog age is clamped independently.",
+      "reason": "An arbitrary caller clock cannot delete durable events or change retention authority.",
+      "evidence": [
+        "authoritative-stream-time-not-event-clock",
+        "event-retention-plus-margin-ttl",
+        "expiry-original-time-envelope",
+        "read-trims-without-publisher",
+        "ack-trims-without-read"
+      ]
+    },
+    {
+      "id": "W05-D02",
+      "source": "Python validates canonical decimal cursors up to64 characters, but acknowledgement Lua compares tonumber components, rounding adjacent integers above2^53. Read forwards a valid oversize component to Valkey, which rejects IDs outsideu64.",
+      "native": "Same canonical decimal grammar and64-character bound, exact decimal length/lexical comparisons, exact future/expired distinction and read interval clamping for oversize sequences. Oversize millisecond values read empty and cannot be acknowledged past the tail.",
+      "reason": "Retain documented cursor precision and monotonic progression across source/native readers.",
+      "evidence": [
+        "u53-adjacent-ack-cursors-exact",
+        "canonical-64-digit-future-read-ack",
+        "oversize-sequence-clamped",
+        "exact-decimal-comparison"
+      ]
+    },
+    {
+      "id": "W05-D03",
+      "source": "Historical scripts do not preflight every mutable key type; a Lua command error may follow earlier changes.",
+      "native": "Retain accepted W04 raw-CAS/ownership/TTL/report-eviction preflight and add stream/ack/pause/expiry key-type checks before mutation; reject fully exhausted max-u64/max-u64 stream generation before writing. Valid old-timestamp/max-sequence streams still publish normally.",
+      "reason": "Lua does not roll back. A definite rejection must not publish partial report/baseline/outbox state. Trim/prune-only rejection side effects remain explicit source behavior.",
+      "evidence": [
+        "wrong-type-preflight-no-publication",
+        "extreme-stream-id-preflight-no-publication",
+        "old-ms-max-sequence-valid-rollover",
+        "capacity-rejection-trim-only-side-effect"
+      ]
+    },
+    {
+      "id": "W05-D04",
+      "source": "Legacy raw tenant:consumer acknowledgement suffix can collide when either accepted identifier contains colons; actual source-exact Lua/native characterization is retained.",
+      "native": "Length-delimited UTF8 tenant v2 acknowledgement key. Read-only structurally unambiguous legacy fallback; atomic monotonic migration on explicit ack. Ambiguous present legacy default read returns cursor_conflict before mutation; explicit replay returns acknowledgement_recovery and explicit retained ack establishes only the caller tenant/consumer v2 authority. Native authority wins; legacy bytes are never changed.",
+      "reason": "Preserve tenant/consumer fences without narrowing accepted identifier grammar or guessing historical ownership.",
+      "evidence": [
+        "legacy-unambiguous-read-no-ack",
+        "legacy-monotonic-idempotent-v2-migration",
+        "legacy-capacity-slot-reused",
+        "legacy-ambiguous-default-quarantined",
+        "legacy-explicit-replay-no-ack",
+        "legacy-explicit-ack-resolves-only-own-tenant",
+        "v2-colliding-owner-restart-isolated",
+        "legacy-state-byte-exact-preserved",
+        "v2-utf8-length-key-uniqueness",
+        "actual-mcp-legacy-quarantine-explicit-recovery"
+      ],
+      "migration": "G04 drain-and-migrate required for legacy/native acknowledgement writers; no mixed-writer correctness or automatic ambiguous ownership claim."
+    }
+  ]
+}

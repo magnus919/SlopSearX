@@ -1,0 +1,54 @@
+{
+  "plan_id": "W02",
+  "issue": 906,
+  "baseline": "5aa7983aebc2dddbf00727d5a7e6b1192b3dfee0",
+  "status": "implementation_candidate_pending_review",
+  "parity": [
+    "Valkey discovery, tenant-bound claim authority, token renewal/release and stale publication fencing",
+    "acknowledged reservation identity, full canonical snapshots, immutable prior attempts, conserved unknown dispatch spend",
+    "successful versus empty versus failed coverage, requested time_range enforcement and required credential provenance",
+    "cancel, deadline-derived terminal outcomes, retries/extensions and caller completion preservation",
+    "shared search authorization before dispatch and existing with_revalidated gate inside authoritative publication",
+    "dependency_dossier workflow grants and separate conserved adapter-call/result budget"
+  ],
+  "intentional_differences": [
+    {
+      "contract": "owned work on lease loss and shutdown",
+      "source": "keep-alive returns when renewal is false; in-flight query may continue until later stale save",
+      "native": "supervised authority monitor cancels and joins owned search; renewal I/O observes shutdown independently of store timeout",
+      "reason": "explicit lifecycle ownership without claiming reversal of remote calls"
+    },
+    {
+      "contract": "in-flight durable cancellation",
+      "source": "in-flight calls may finish and save results before next cancellation reload",
+      "native": "observed durable cancellation interrupts owned capture; charged attempt settles cancelled and completed prior evidence remains",
+      "reason": "truthful cancellation with conserved uncertain spend and fenced publication"
+    },
+    {
+      "contract": "snapshot persistence failure",
+      "source": "unexpected snapshot failure can escape the query without settlement",
+      "native": "failed/unknown snapshot persistence settles failed with no admitted cursor; a committed orphan remains possible",
+      "reason": "explicit failed outcome without refund, false success or cross-key rollback claim"
+    },
+    {
+      "contract": "unrepresentable timers and malformed opaque workflow budgets",
+      "source": "persisted finite deadlines have no timer representation bound; workflow budget conversions trust supplied shape",
+      "native": "large finite horizons use checked optional timers; constructor rejects unrepresentable Valkey expiry/Instant settings; present malformed counters fail closed instead of using larger defaults",
+      "reason": "prevent worker panics and inadvertent spend authorization while preserving stored horizons and all acknowledged charges"
+    },
+    {
+      "contract": "immutable denied-workflow attempt audit",
+      "source": "workflow grant denial appends a failed predispatch attempt without reservation accounting",
+      "native": "reserve and immediately settle denied attempt under W01; attempt and engine reservation charges are conserved, actual dossier adapter-call budget remains unchanged and provider dispatch is zero; exhausted reservations append no attempt",
+      "reason": "retain denial diagnostics across retry while satisfying accepted W01 charged-attempt invariant; no-work and malformed-budget outcomes are not blanket-charged"
+    }
+  ],
+  "limitations": [
+    "configured grants are immutable per SearchService lifetime; no hot revocation guarantee",
+    "explicit-scope circuit authority semantics preserved rather than redefined as grant revocation",
+    "W09 owns public workflow schemas/planning/error mapping and trusted identity extraction",
+    "O04/server composition still wires native process configuration; this change does not deploy or replace the foundation worker binary",
+    "await the explicit shutdown protocol for joined completion; asynchronous Drop cannot await",
+    "no exactly-once remote execution, no production provider campaign, no browser cutover claim"
+  ]
+}

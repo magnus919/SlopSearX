@@ -189,9 +189,7 @@ class PinnedReceiptAuthorityTests(unittest.TestCase):
             invalid_evidence = dict(evidence, grok_image_digest=invalid_image_id)
             invalid_raw = receipt("protected-source-capture", bindings.__dict__, evidence=invalid_evidence)
             with self.subTest(grok_image_digest=invalid_image_id):
-                with self.assertRaisesRegex(
-                    authority.LocalAuthorityError, "capture-qualification-evidence-invalid"
-                ):
+                with self.assertRaisesRegex(authority.LocalAuthorityError, "capture-qualification-evidence-invalid"):
                     authority.ProtectedCaptureReceiptVerifier().verify(invalid_raw, digest(invalid_raw), bindings)
 
         invalid_other_evidence = dict(evidence, grok_config_sha256="sha256:" + "6" * 64)

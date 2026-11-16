@@ -1,0 +1,665 @@
+﻿2026-10-14T13:12:37.9370476Z Current runner version: '2.337.0'
+2026-10-14T13:12:37.9395552Z ##[group]Runner Image Provisioner
+2026-10-14T13:12:37.9396419Z Hosted Compute Agent
+2026-10-14T13:12:37.9397512Z Version: 20261002.596
+2026-10-14T13:12:37.9398258Z Commit: c3d12f3313a95f25162a1503be624f3b0617f8c0
+2026-10-14T13:12:37.9398984Z Build Date: 2026-10-02T22:28:27Z
+2026-10-14T13:12:37.9399778Z Worker ID: {d55f3b26-f5eb-4593-bd31-36d93fd130fd}
+2026-10-14T13:12:37.9400550Z Region: westus
+2026-10-14T13:12:37.9401138Z Cloud: Azure
+2026-10-14T13:12:37.9401696Z ##[endgroup]
+2026-10-14T13:12:37.9403224Z ##[group]Operating System
+2026-10-14T13:12:37.9403974Z Ubuntu
+2026-10-14T13:12:37.9404498Z 24.04.5
+2026-10-14T13:12:37.9405037Z LTS
+2026-10-14T13:12:37.9405602Z ##[endgroup]
+2026-10-14T13:12:37.9406142Z ##[group]Runner Image
+2026-10-14T13:12:37.9406863Z Image: ubuntu-24.04
+2026-10-14T13:12:37.9407820Z Version: 20261004.327.1
+2026-10-14T13:12:37.9409306Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261004.327/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-14T13:12:37.9410946Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261004.327
+2026-10-14T13:12:37.9412037Z ##[endgroup]
+2026-10-14T13:12:37.9413218Z ##[group]GITHUB_TOKEN Permissions
+2026-10-14T13:12:37.9415221Z Contents: read
+2026-10-14T13:12:37.9415887Z Metadata: read
+2026-10-14T13:12:37.9416523Z Packages: read
+2026-10-14T13:12:37.9417421Z ##[endgroup]
+2026-10-14T13:12:37.9419558Z Secret source: Actions
+2026-10-14T13:12:37.9420668Z Cache mode: write
+2026-10-14T13:12:37.9421361Z Prepare workflow directory
+2026-10-14T13:12:37.9769734Z Prepare all required actions
+2026-10-14T13:12:37.9820140Z Getting action download info
+2026-10-14T13:12:38.3510590Z Download action repository 'actions/checkout@v7' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+2026-10-14T13:12:38.4624000Z Download action repository 'actions/setup-python@v7' (SHA:5fda3b95a4ea91299a34e894583c3862153e4b97)
+2026-10-14T13:12:38.6465138Z Complete job name: quality
+2026-10-14T13:12:38.7261031Z ##[group]Run actions/checkout@v7
+2026-10-14T13:12:38.7261917Z with:
+2026-10-14T13:12:38.7262360Z   repository: magnus919/SlopSearX
+2026-10-14T13:12:38.7266382Z   token: ***
+2026-10-14T13:12:38.7266816Z   ssh-strict: true
+2026-10-14T13:12:38.7267517Z   ssh-user: git
+2026-10-14T13:12:38.7267963Z   persist-credentials: true
+2026-10-14T13:12:38.7268475Z   clean: true
+2026-10-14T13:12:38.7268914Z   sparse-checkout-cone-mode: true
+2026-10-14T13:12:38.7269457Z   fetch-depth: 1
+2026-10-14T13:12:38.7269880Z   fetch-tags: false
+2026-10-14T13:12:38.7270310Z   show-progress: true
+2026-10-14T13:12:38.7270748Z   lfs: false
+2026-10-14T13:12:38.7271147Z   submodules: false
+2026-10-14T13:12:38.7271585Z   set-safe-directory: true
+2026-10-14T13:12:38.7272078Z   allow-unsafe-pr-checkout: false
+2026-10-14T13:12:38.7272870Z ##[endgroup]
+2026-10-14T13:12:38.8268097Z Syncing repository: magnus919/SlopSearX
+2026-10-14T13:12:38.8270621Z ##[group]Getting Git version info
+2026-10-14T13:12:38.8271844Z Working directory is '/home/runner/work/SlopSearX/SlopSearX'
+2026-10-14T13:12:38.8273574Z [command]/usr/bin/git version
+2026-10-14T13:12:38.8364425Z git version 2.55.0
+2026-10-14T13:12:38.8390244Z ##[endgroup]
+2026-10-14T13:12:38.8403697Z Temporarily overriding HOME='/home/runner/work/_temp/f12eec3c-db3c-48ad-8bbd-1ba565a13dd0' before making global git config changes
+2026-10-14T13:12:38.8406209Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-14T13:12:38.8412814Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/SlopSearX/SlopSearX
+2026-10-14T13:12:38.8465816Z Deleting the contents of '/home/runner/work/SlopSearX/SlopSearX'
+2026-10-14T13:12:38.8469450Z ##[group]Determining repository object format
+2026-10-14T13:12:38.8470877Z ##[endgroup]
+2026-10-14T13:12:38.8472161Z ##[group]Initializing the repository
+2026-10-14T13:12:38.8474938Z [command]/usr/bin/git init /home/runner/work/SlopSearX/SlopSearX
+2026-10-14T13:12:38.8587346Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-14T13:12:38.8589833Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-14T13:12:38.8591590Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-14T13:12:38.8593126Z hint: call:
+2026-10-14T13:12:38.8594043Z hint:
+2026-10-14T13:12:38.8595084Z hint: 	git config --global init.defaultBranch <name>
+2026-10-14T13:12:38.8596322Z hint:
+2026-10-14T13:12:38.8597679Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-14T13:12:38.8599525Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-14T13:12:38.8600999Z hint:
+2026-10-14T13:12:38.8601867Z hint: 	git branch -m <name>
+2026-10-14T13:12:38.8602876Z hint:
+2026-10-14T13:12:38.8603881Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-14T13:12:38.8605193Z Initialized empty Git repository in /home/runner/work/SlopSearX/SlopSearX/.git/
+2026-10-14T13:12:38.8608838Z [command]/usr/bin/git remote add origin https://github.com/magnus919/SlopSearX
+2026-10-14T13:12:38.8656806Z ##[endgroup]
+2026-10-14T13:12:38.8658657Z ##[group]Disabling automatic garbage collection
+2026-10-14T13:12:38.8664261Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-14T13:12:38.8699358Z ##[endgroup]
+2026-10-14T13:12:38.8701126Z ##[group]Setting up auth
+2026-10-14T13:12:38.8702351Z Removing SSH command configuration
+2026-10-14T13:12:38.8704924Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-14T13:12:38.8741907Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-14T13:12:38.9143269Z Removing HTTP extra header
+2026-10-14T13:12:38.9149570Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-14T13:12:38.9189622Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-14T13:12:38.9409685Z Removing includeIf entries pointing to credentials config files
+2026-10-14T13:12:38.9415398Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-14T13:12:38.9452194Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-14T13:12:38.9676370Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-9db1930b-79f3-43a8-984a-5b701c29e52e.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-14T13:12:38.9718513Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/SlopSearX/SlopSearX/.git.path /home/runner/work/_temp/git-credentials-9db1930b-79f3-43a8-984a-5b701c29e52e.config
+2026-10-14T13:12:38.9755835Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/SlopSearX/SlopSearX/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-9db1930b-79f3-43a8-984a-5b701c29e52e.config
+2026-10-14T13:12:38.9793916Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-9db1930b-79f3-43a8-984a-5b701c29e52e.config
+2026-10-14T13:12:38.9831105Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-9db1930b-79f3-43a8-984a-5b701c29e52e.config
+2026-10-14T13:12:38.9864112Z ##[endgroup]
+2026-10-14T13:12:38.9865534Z ##[group]Fetching the repository
+2026-10-14T13:12:38.9872139Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +eb8dc3660ad8d567f78a5ed96c249f62f9a97c17:refs/remotes/pull/841/merge
+2026-10-14T13:12:43.4676815Z From https://github.com/magnus919/SlopSearX
+2026-10-14T13:12:43.4679376Z  * [new ref]         eb8dc3660ad8d567f78a5ed96c249f62f9a97c17 -> pull/841/merge
+2026-10-14T13:12:43.4682485Z ##[endgroup]
+2026-10-14T13:12:43.4683579Z ##[group]Determining the checkout info
+2026-10-14T13:12:43.4684833Z ##[endgroup]
+2026-10-14T13:12:43.4685575Z [command]/usr/bin/git sparse-checkout disable
+2026-10-14T13:12:43.4746908Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-14T13:12:43.4783090Z ##[group]Checking out the ref
+2026-10-14T13:12:43.4787610Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/841/merge
+2026-10-14T13:12:44.3192319Z Note: switching to 'refs/remotes/pull/841/merge'.
+2026-10-14T13:12:44.3192972Z 
+2026-10-14T13:12:44.3193329Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-10-14T13:12:44.3194062Z changes and commit them, and you can discard any commits you make in this
+2026-10-14T13:12:44.3194763Z state without impacting any branches by switching back to a branch.
+2026-10-14T13:12:44.3195177Z 
+2026-10-14T13:12:44.3195532Z If you want to create a new branch to retain commits you create, you may
+2026-10-14T13:12:44.3196194Z do so (now or later) by using -c with the switch command. Example:
+2026-10-14T13:12:44.3196558Z 
+2026-10-14T13:12:44.3196726Z   git switch -c <new-branch-name>
+2026-10-14T13:12:44.3197296Z 
+2026-10-14T13:12:44.3197601Z Or undo this operation with:
+2026-10-14T13:12:44.3197900Z 
+2026-10-14T13:12:44.3198047Z   git switch -
+2026-10-14T13:12:44.3198262Z 
+2026-10-14T13:12:44.3198587Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-10-14T13:12:44.3240497Z 
+2026-10-14T13:12:44.3241255Z HEAD is now at eb8dc36 Merge 0d775a09dcc40bba9e322346006f9aa36dd6880f into fd00cc6b0fe047d92bc2de67c7ba531bc95867eb
+2026-10-14T13:12:44.3243892Z ##[endgroup]
+2026-10-14T13:12:44.3292109Z [command]/usr/bin/git log -1 --format=%H
+2026-10-14T13:12:44.3321440Z eb8dc3660ad8d567f78a5ed96c249f62f9a97c17
+2026-10-14T13:12:44.3668817Z ##[group]Run actions/setup-python@v7
+2026-10-14T13:12:44.3669191Z with:
+2026-10-14T13:12:44.3669463Z   python-version: 3.12
+2026-10-14T13:12:44.3669729Z   cache: pip
+2026-10-14T13:12:44.3669985Z   check-latest: false
+2026-10-14T13:12:44.3672632Z   token: ***
+2026-10-14T13:12:44.3672903Z   update-environment: true
+2026-10-14T13:12:44.3673217Z   allow-prereleases: false
+2026-10-14T13:12:44.3673499Z   freethreaded: false
+2026-10-14T13:12:44.3673763Z ##[endgroup]
+2026-10-14T13:12:44.4822702Z ##[group]Installed versions
+2026-10-14T13:12:44.4908135Z Successfully set up CPython (3.12.15)
+2026-10-14T13:12:44.4909187Z ##[endgroup]
+2026-10-14T13:12:45.4343096Z [command]/opt/hostedtoolcache/Python/3.12.15/x64/bin/pip cache dir
+2026-10-14T13:12:45.7365624Z /home/runner/.cache/pip
+2026-10-14T13:12:46.0182174Z Cache hit for: setup-python-Linux-x64-24.04-Ubuntu-python-3.12.15-pip-6e1564da1712ddd8dbc372e242fb20aebb92df2ebf0b25e57d9bdd6f686f24d0
+2026-10-14T13:12:47.2912542Z Received 0 of 102224935 (0.0%), 0.0 MBs/sec
+2026-10-14T13:12:48.2917621Z Received 98030631 of 102224935 (95.9%), 46.7 MBs/sec
+2026-10-14T13:12:49.1816541Z Received 102224935 of 102224935 (100.0%), 33.7 MBs/sec
+2026-10-14T13:12:49.1819781Z Cache Size: ~97 MB (102224935 B)
+2026-10-14T13:12:49.1861156Z [command]/usr/bin/tar -xf /home/runner/work/_temp/e0f305fb-13e6-468d-a839-51b5ce1678e6/cache.tzst -P -C /home/runner/work/SlopSearX/SlopSearX --use-compress-program unzstd
+2026-10-14T13:12:49.3946251Z Cache restored successfully
+2026-10-14T13:12:49.3998630Z Cache restored from key: setup-python-Linux-x64-24.04-Ubuntu-python-3.12.15-pip-6e1564da1712ddd8dbc372e242fb20aebb92df2ebf0b25e57d9bdd6f686f24d0
+2026-10-14T13:12:49.4189795Z ##[group]Run python -m pip install --upgrade pip
+2026-10-14T13:12:49.4190298Z [36;1mpython -m pip install --upgrade pip[0m
+2026-10-14T13:12:49.4190653Z [36;1mpip install -e ".[dev]"[0m
+2026-10-14T13:12:49.4471988Z shell: /usr/bin/bash -e {0}
+2026-10-14T13:12:49.4472358Z env:
+2026-10-14T13:12:49.4472735Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.15/x64
+2026-10-14T13:12:49.4473350Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib/pkgconfig
+2026-10-14T13:12:49.4474237Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+2026-10-14T13:12:49.4474753Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+2026-10-14T13:12:49.4475273Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+2026-10-14T13:12:49.4475789Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib
+2026-10-14T13:12:49.4476227Z ##[endgroup]
+2026-10-14T13:12:50.0408288Z Requirement already satisfied: pip in /opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages (26.2.1)
+2026-10-14T13:12:50.5387630Z Obtaining file:///home/runner/work/SlopSearX/SlopSearX
+2026-10-14T13:12:50.5410497Z   Installing build dependencies: started
+2026-10-14T13:12:51.1224643Z   Installing build dependencies: finished with status 'done'
+2026-10-14T13:12:51.1230594Z   Checking if build backend supports build_editable: started
+2026-10-14T13:12:51.4639599Z   Checking if build backend supports build_editable: finished with status 'done'
+2026-10-14T13:12:51.4647296Z   Getting requirements to build editable: started
+2026-10-14T13:12:51.8356506Z   Getting requirements to build editable: finished with status 'done'
+2026-10-14T13:12:51.8369407Z   Preparing editable metadata (pyproject.toml): started
+2026-10-14T13:12:52.0523790Z   Preparing editable metadata (pyproject.toml): finished with status 'done'
+2026-10-14T13:12:52.1605280Z Collecting fastapi>=0.115.0 (from slopsearx==0.6.0)
+2026-10-14T13:12:52.2041429Z   Downloading fastapi-0.143.1-py3-none-any.whl.metadata (26 kB)
+2026-10-14T13:12:52.3304027Z Collecting pydantic<3,>=2.0 (from slopsearx==0.6.0)
+2026-10-14T13:12:52.3329013Z   Downloading pydantic-2.14.1-py3-none-any.whl.metadata (133 kB)
+2026-10-14T13:12:52.3652916Z Collecting httpx>=0.28.0 (from slopsearx==0.6.0)
+2026-10-14T13:12:52.3665884Z   Using cached httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+2026-10-14T13:12:52.5918678Z Collecting lxml>=5.3.0 (from slopsearx==0.6.0)
+2026-10-14T13:12:52.5933815Z   Using cached lxml-6.1.3-cp312-cp312-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl.metadata (3.3 kB)
+2026-10-14T13:12:52.6025786Z Collecting cssselect>=1.2 (from slopsearx==0.6.0)
+2026-10-14T13:12:52.6037684Z   Using cached cssselect-1.6.0-py3-none-any.whl.metadata (2.4 kB)
+2026-10-14T13:12:52.6345401Z Collecting pyyaml>=6.0 (from slopsearx==0.6.0)
+2026-10-14T13:12:52.6358247Z   Using cached pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+2026-10-14T13:12:52.6549393Z Collecting uvicorn>=0.34.0 (from uvicorn[standard]>=0.34.0->slopsearx==0.6.0)
+2026-10-14T13:12:52.6561086Z   Using cached uvicorn-0.54.0-py3-none-any.whl.metadata (6.6 kB)
+2026-10-14T13:12:52.6677873Z Collecting valkey>=6.0.0 (from slopsearx==0.6.0)
+2026-10-14T13:12:52.6705006Z   Downloading valkey-6.2.0-py3-none-any.whl.metadata (9.4 kB)
+2026-10-14T13:12:52.6836386Z Collecting structlog>=24.0 (from slopsearx==0.6.0)
+2026-10-14T13:12:52.6848975Z   Using cached structlog-26.1.0-py3-none-any.whl.metadata (9.7 kB)
+2026-10-14T13:12:52.7277253Z Collecting sentry-sdk>=2.0 (from slopsearx==0.6.0)
+2026-10-14T13:12:52.7301165Z   Downloading sentry_sdk-2.72.0-py3-none-any.whl.metadata (11 kB)
+2026-10-14T13:12:52.7634198Z Collecting fastmcp<5,>=2.0 (from slopsearx==0.6.0)
+2026-10-14T13:12:52.7646188Z   Using cached fastmcp-4.1.0-py3-none-any.whl.metadata (9.2 kB)
+2026-10-14T13:12:52.7816120Z Collecting mcp<3,>=1.0 (from slopsearx==0.6.0)
+2026-10-14T13:12:52.7828404Z   Using cached mcp-2.3.0-py3-none-any.whl.metadata (6.6 kB)
+2026-10-14T13:12:52.8084457Z Collecting pytest>=8.0 (from slopsearx==0.6.0)
+2026-10-14T13:12:52.8096464Z   Using cached pytest-9.1.1-py3-none-any.whl.metadata (7.6 kB)
+2026-10-14T13:12:52.8222623Z Collecting packaging>=24.0 (from slopsearx==0.6.0)
+2026-10-14T13:12:52.8234459Z   Using cached packaging-26.3-py3-none-any.whl.metadata (3.5 kB)
+2026-10-14T13:12:52.8403409Z Collecting jsonschema<5,>=4.23 (from slopsearx==0.6.0)
+2026-10-14T13:12:52.8415235Z   Using cached jsonschema-4.26.0-py3-none-any.whl.metadata (7.6 kB)
+2026-10-14T13:12:52.8545013Z Collecting prometheus-client>=0.21 (from slopsearx==0.6.0)
+2026-10-14T13:12:52.8556821Z   Using cached prometheus_client-0.26.0-py3-none-any.whl.metadata (2.1 kB)
+2026-10-14T13:12:52.8692579Z Collecting pytest-asyncio>=0.24.0 (from slopsearx==0.6.0)
+2026-10-14T13:12:52.8704666Z   Using cached pytest_asyncio-1.4.0-py3-none-any.whl.metadata (4.1 kB)
+2026-10-14T13:12:53.2150130Z Collecting ruff>=0.9.0 (from slopsearx==0.6.0)
+2026-10-14T13:12:53.2165690Z   Using cached ruff-0.17.0-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (20 kB)
+2026-10-14T13:12:53.4103772Z Collecting mypy>=1.13 (from slopsearx==0.6.0)
+2026-10-14T13:12:53.4118737Z   Using cached mypy-2.4.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+2026-10-14T13:12:53.4683902Z Collecting pytest-cov>=6.0 (from slopsearx==0.6.0)
+2026-10-14T13:12:53.4699301Z   Using cached pytest_cov-7.1.0-py3-none-any.whl.metadata (32 kB)
+2026-10-14T13:12:53.5221097Z Collecting pip-tools>=7.4 (from slopsearx==0.6.0)
+2026-10-14T13:12:53.5233888Z   Using cached pip_tools-7.6.2-py3-none-any.whl.metadata (25 kB)
+2026-10-14T13:12:53.6811818Z Collecting pre-commit>=4.0 (from slopsearx==0.6.0)
+2026-10-14T13:12:53.6839353Z   Downloading pre_commit-4.7.0-py2.py3-none-any.whl.metadata (1.2 kB)
+2026-10-14T13:12:54.0202180Z Collecting radon>=6.0 (from slopsearx==0.6.0)
+2026-10-14T13:12:54.0215001Z   Using cached radon-6.0.1-py2.py3-none-any.whl.metadata (8.2 kB)
+2026-10-14T13:12:54.2666176Z Collecting vulture>=2.11 (from slopsearx==0.6.0)
+2026-10-14T13:12:54.2679071Z   Using cached vulture-2.16-py3-none-any.whl.metadata (15 kB)
+2026-10-14T13:12:54.2794953Z Collecting import-linter>=2.3 (from slopsearx==0.6.0)
+2026-10-14T13:12:54.2806732Z   Using cached import_linter-2.15-py3-none-any.whl.metadata (2.4 kB)
+2026-10-14T13:12:54.3061865Z Collecting deptry>=0.21 (from slopsearx==0.6.0)
+2026-10-14T13:12:54.3073994Z   Using cached deptry-0.25.1-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.7 kB)
+2026-10-14T13:12:54.3198903Z Collecting pip-audit>=2.8 (from slopsearx==0.6.0)
+2026-10-14T13:12:54.3211162Z   Using cached pip_audit-2.10.1-py3-none-any.whl.metadata (28 kB)
+2026-10-14T13:12:54.3338089Z Collecting fastmcp-slim==4.1.0 (from fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:54.3350462Z   Using cached fastmcp_slim-4.1.0-py3-none-any.whl.metadata (10 kB)
+2026-10-14T13:12:54.3497696Z Collecting mcp-types<3.0.0,>=2.0.0 (from fastmcp-slim==4.1.0->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:54.3509849Z   Using cached mcp_types-2.3.0-py3-none-any.whl.metadata (1.9 kB)
+2026-10-14T13:12:54.3673072Z Collecting platformdirs>=4.0.0 (from fastmcp-slim==4.1.0->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:54.3695498Z   Downloading platformdirs-4.13.0-py3-none-any.whl.metadata (5.5 kB)
+2026-10-14T13:12:54.3839690Z Collecting pydantic-settings>=2.0.0 (from fastmcp-slim==4.1.0->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:54.3869155Z   Downloading pydantic_settings-2.16.0-py3-none-any.whl.metadata (4.0 kB)
+2026-10-14T13:12:54.4028189Z Collecting python-dotenv>=1.1.0 (from fastmcp-slim==4.1.0->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:54.4040454Z   Using cached python_dotenv-1.2.4-py3-none-any.whl.metadata (29 kB)
+2026-10-14T13:12:54.4289686Z Collecting rich>=13.9.4 (from fastmcp-slim==4.1.0->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:54.4301761Z   Using cached rich-15.0.0-py3-none-any.whl.metadata (18 kB)
+2026-10-14T13:12:54.4444355Z Collecting typing-extensions>=4.0.0 (from fastmcp-slim==4.1.0->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:54.4456515Z   Using cached typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+2026-10-14T13:12:54.4606386Z Collecting authlib>=1.6.11 (from fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:54.4628034Z   Downloading authlib-1.9.0-py2.py3-none-any.whl.metadata (10 kB)
+2026-10-14T13:12:54.4735861Z Collecting exceptiongroup>=1.2.2 (from fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:54.4748715Z   Using cached exceptiongroup-1.3.1-py3-none-any.whl.metadata (6.7 kB)
+2026-10-14T13:12:54.4840714Z Collecting httpx2>=2.5.0 (from fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:54.4852342Z   Using cached httpx2-2.13.1-py3-none-any.whl.metadata (9.8 kB)
+2026-10-14T13:12:54.5031691Z Collecting opentelemetry-api>=1.28.0 (from fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:54.5043365Z   Using cached opentelemetry_api-1.45.1-py3-none-any.whl.metadata (1.4 kB)
+2026-10-14T13:12:54.5126178Z Collecting py-key-value-aio<0.5.0,>=0.4.4 (from py-key-value-aio[filetree,keyring,memory]<0.5.0,>=0.4.4; extra == "client"->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:54.5138422Z   Using cached py_key_value_aio-0.4.6-py3-none-any.whl.metadata (16 kB)
+2026-10-14T13:12:54.5410693Z Collecting starlette>=1.0.1 (from fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:54.5433937Z   Downloading starlette-1.8.0-py3-none-any.whl.metadata (6.6 kB)
+2026-10-14T13:12:54.5696102Z Collecting cyclopts>=4.0.0 (from fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:54.5708934Z   Using cached cyclopts-5.2.0-py3-none-any.whl.metadata (12 kB)
+2026-10-14T13:12:54.5814027Z Collecting griffelib>=2.0.0 (from fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:54.5826243Z   Using cached griffelib-2.3.2-py3-none-any.whl.metadata (1.3 kB)
+2026-10-14T13:12:54.5946500Z Collecting joserfc>=1.5.0 (from fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:54.5959074Z   Using cached joserfc-1.7.5-py3-none-any.whl.metadata (3.1 kB)
+2026-10-14T13:12:54.6032593Z Collecting jsonref>=1.1.0 (from fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:54.6044756Z   Using cached jsonref-1.1.0-py3-none-any.whl.metadata (2.7 kB)
+2026-10-14T13:12:54.6133435Z Collecting jsonschema-path>=0.3.4 (from fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:54.6145743Z   Using cached jsonschema_path-0.5.0-py3-none-any.whl.metadata (8.1 kB)
+2026-10-14T13:12:54.6238497Z Collecting openapi-pydantic>=0.5.1 (from fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:54.6250821Z   Using cached openapi_pydantic-0.6.0-py3-none-any.whl.metadata (12 kB)
+2026-10-14T13:12:54.6404732Z Collecting pyperclip>=1.9.0 (from fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:54.6417042Z   Using cached pyperclip-1.11.0-py3-none-any.whl.metadata (2.4 kB)
+2026-10-14T13:12:54.6511880Z Collecting python-multipart>=0.0.26 (from fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:54.6524278Z   Using cached python_multipart-0.0.32-py3-none-any.whl.metadata (2.1 kB)
+2026-10-14T13:12:54.6607801Z Collecting uncalled-for>=0.4.0 (from fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:54.6620276Z   Using cached uncalled_for-0.4.1-py3-none-any.whl.metadata (3.3 kB)
+2026-10-14T13:12:54.7641468Z Collecting watchfiles>=1.0.0 (from fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:54.7655605Z   Using cached watchfiles-1.3.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.9 kB)
+2026-10-14T13:12:54.8698431Z Collecting websockets>=15.0.1 (from fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:54.8712855Z   Using cached websockets-17.2-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (6.3 kB)
+2026-10-14T13:12:54.8826417Z Collecting attrs>=22.2.0 (from jsonschema<5,>=4.23->slopsearx==0.6.0)
+2026-10-14T13:12:54.8838936Z   Using cached attrs-26.1.0-py3-none-any.whl.metadata (8.8 kB)
+2026-10-14T13:12:54.8931436Z Collecting jsonschema-specifications>=2023.03.6 (from jsonschema<5,>=4.23->slopsearx==0.6.0)
+2026-10-14T13:12:54.8942889Z   Using cached jsonschema_specifications-2025.9.1-py3-none-any.whl.metadata (2.9 kB)
+2026-10-14T13:12:54.9105792Z Collecting referencing>=0.28.4 (from jsonschema<5,>=4.23->slopsearx==0.6.0)
+2026-10-14T13:12:54.9118206Z   Using cached referencing-0.37.0-py3-none-any.whl.metadata (2.8 kB)
+2026-10-14T13:12:55.1605284Z Collecting rpds-py>=0.25.0 (from jsonschema<5,>=4.23->slopsearx==0.6.0)
+2026-10-14T13:12:55.1619851Z   Using cached rpds_py-2026.9.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.1 kB)
+2026-10-14T13:12:55.1764606Z Collecting anyio>=4.9 (from mcp<3,>=1.0->slopsearx==0.6.0)
+2026-10-14T13:12:55.1776847Z   Using cached anyio-4.15.1-py3-none-any.whl.metadata (4.7 kB)
+2026-10-14T13:12:55.1927402Z Collecting pyjwt>=2.10.1 (from pyjwt[crypto]>=2.10.1->mcp<3,>=1.0->slopsearx==0.6.0)
+2026-10-14T13:12:55.1940627Z   Using cached pyjwt-2.15.1-py3-none-any.whl.metadata (3.5 kB)
+2026-10-14T13:12:55.2082917Z Collecting sse-starlette>=3.0.0 (from mcp<3,>=1.0->slopsearx==0.6.0)
+2026-10-14T13:12:55.2095188Z   Using cached sse_starlette-3.5.0-py3-none-any.whl.metadata (15 kB)
+2026-10-14T13:12:55.2208765Z Collecting typing-inspection>=0.4.1 (from mcp<3,>=1.0->slopsearx==0.6.0)
+2026-10-14T13:12:55.2221438Z   Using cached typing_inspection-0.4.4-py3-none-any.whl.metadata (2.6 kB)
+2026-10-14T13:12:55.2401265Z Collecting beartype>=0.20.0 (from py-key-value-aio<0.5.0,>=0.4.4->py-key-value-aio[filetree,keyring,memory]<0.5.0,>=0.4.4; extra == "client"->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:55.2423999Z   Downloading beartype-0.23.1-py3-none-any.whl.metadata (35 kB)
+2026-10-14T13:12:55.2739361Z Collecting aiofile>=3.12.3 (from py-key-value-aio[filetree,keyring,memory]<0.5.0,>=0.4.4; extra == "client"->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:55.2751408Z   Using cached aiofile-3.12.3-py3-none-any.whl.metadata (17 kB)
+2026-10-14T13:12:55.2969040Z Collecting keyring>=25.6.0 (from py-key-value-aio[filetree,keyring,memory]<0.5.0,>=0.4.4; extra == "client"->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:55.2981038Z   Using cached keyring-25.7.0-py3-none-any.whl.metadata (21 kB)
+2026-10-14T13:12:55.3148504Z Collecting cachetools>=5.0.0 (from py-key-value-aio[filetree,keyring,memory]<0.5.0,>=0.4.4; extra == "client"->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:55.3160075Z   Using cached cachetools-7.2.1-py3-none-any.whl.metadata (5.5 kB)
+2026-10-14T13:12:55.3250670Z Collecting annotated-types>=0.6.0 (from pydantic<3,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:55.3263462Z   Using cached annotated_types-0.8.0-py3-none-any.whl.metadata (15 kB)
+2026-10-14T13:12:56.0170903Z Collecting pydantic-core==2.50.1 (from pydantic<3,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:56.0201845Z   Downloading pydantic_core-2.50.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.5 kB)
+2026-10-14T13:12:56.0719543Z Collecting caio~=0.12.0 (from aiofile>=3.12.3->py-key-value-aio[filetree,keyring,memory]<0.5.0,>=0.4.4; extra == "client"->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:56.0730034Z   Using cached caio-0.12.9-cp312-cp312-manylinux_2_34_x86_64.whl.metadata (4.6 kB)
+2026-10-14T13:12:56.0860044Z Collecting idna>=2.8 (from anyio>=4.9->mcp<3,>=1.0->slopsearx==0.6.0)
+2026-10-14T13:12:56.0871921Z   Using cached idna-3.20-py3-none-any.whl.metadata (7.2 kB)
+2026-10-14T13:12:56.2980773Z Collecting cryptography>=45.0.1 (from authlib>=1.6.11->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:56.2994281Z   Using cached cryptography-50.0.2-cp311-abi3-manylinux_2_34_x86_64.whl.metadata (4.4 kB)
+2026-10-14T13:12:56.3991123Z Collecting cffi>=2.0.0 (from cryptography>=45.0.1->authlib>=1.6.11->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:56.4003025Z   Using cached cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.5 kB)
+2026-10-14T13:12:56.4093677Z Collecting pycparser (from cffi>=2.0.0->cryptography>=45.0.1->authlib>=1.6.11->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:56.4105194Z   Using cached pycparser-3.11-py3-none-any.whl.metadata (8.2 kB)
+2026-10-14T13:12:56.4211319Z Collecting docstring-parser<4.0,>=0.15 (from cyclopts>=4.0.0->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:56.4222796Z   Using cached docstring_parser-0.18.0-py3-none-any.whl.metadata (3.5 kB)
+2026-10-14T13:12:56.4325385Z Collecting rich-rst<3,>=2.0.1 (from cyclopts>=4.0.0->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:56.4336702Z   Using cached rich_rst-2.2.0-py3-none-any.whl.metadata (5.0 kB)
+2026-10-14T13:12:56.4572828Z Collecting pygments>=2.0.0 (from rich-rst<3,>=2.0.1->cyclopts>=4.0.0->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:56.4587883Z   Using cached pygments-2.21.0-py3-none-any.whl.metadata (2.5 kB)
+2026-10-14T13:12:56.4785015Z Collecting click<9,>=8.0.0 (from deptry>=0.21->slopsearx==0.6.0)
+2026-10-14T13:12:56.4801484Z   Using cached click-8.5.0-py3-none-any.whl.metadata (2.6 kB)
+2026-10-14T13:12:56.4939650Z Collecting requirements-parser<1,>=0.11.0 (from deptry>=0.21->slopsearx==0.6.0)
+2026-10-14T13:12:56.4951454Z   Using cached requirements_parser-0.13.1-py3-none-any.whl.metadata (4.8 kB)
+2026-10-14T13:12:56.5190828Z Collecting tomli>=2.0.1 (from deptry>=0.21->slopsearx==0.6.0)
+2026-10-14T13:12:56.5203138Z   Using cached tomli-2.5.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (10 kB)
+2026-10-14T13:12:56.5365044Z Collecting annotated-doc>=0.0.2 (from fastapi>=0.115.0->slopsearx==0.6.0)
+2026-10-14T13:12:56.5376703Z   Using cached annotated_doc-0.0.5-py3-none-any.whl.metadata (6.5 kB)
+2026-10-14T13:12:56.5560212Z Collecting certifi (from httpx>=0.28.0->slopsearx==0.6.0)
+2026-10-14T13:12:56.5571898Z   Using cached certifi-2026.7.22-py3-none-any.whl.metadata (2.5 kB)
+2026-10-14T13:12:56.5688412Z Collecting httpcore==1.* (from httpx>=0.28.0->slopsearx==0.6.0)
+2026-10-14T13:12:56.5700193Z   Using cached httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+2026-10-14T13:12:56.5797527Z Collecting h11>=0.16 (from httpcore==1.*->httpx>=0.28.0->slopsearx==0.6.0)
+2026-10-14T13:12:56.5809367Z   Using cached h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+2026-10-14T13:12:56.5920556Z Collecting httpcore2==2.13.1 (from httpx2>=2.5.0->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:56.5931948Z   Using cached httpcore2-2.13.1-py3-none-any.whl.metadata (26 kB)
+2026-10-14T13:12:56.6044471Z Collecting truststore>=0.10 (from httpx2>=2.5.0->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:56.6067228Z   Downloading truststore-0.10.5-py3-none-any.whl.metadata (4.5 kB)
+2026-10-14T13:12:56.7210893Z Collecting grimp>=3.17 (from import-linter>=2.3->slopsearx==0.6.0)
+2026-10-14T13:12:56.7223766Z   Using cached grimp-3.17-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.8 kB)
+2026-10-14T13:12:56.7383617Z Collecting pathable<0.7.0,>=0.6.0 (from jsonschema-path>=0.3.4->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:56.7395376Z   Using cached pathable-0.6.0-py3-none-any.whl.metadata (7.2 kB)
+2026-10-14T13:12:56.7568261Z Collecting SecretStorage>=3.2 (from keyring>=25.6.0->py-key-value-aio[filetree,keyring,memory]<0.5.0,>=0.4.4; extra == "client"->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:56.7580250Z   Using cached secretstorage-3.5.0-py3-none-any.whl.metadata (4.0 kB)
+2026-10-14T13:12:56.7658692Z Collecting jeepney>=0.4.2 (from keyring>=25.6.0->py-key-value-aio[filetree,keyring,memory]<0.5.0,>=0.4.4; extra == "client"->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:56.7670741Z   Using cached jeepney-0.9.0-py3-none-any.whl.metadata (1.2 kB)
+2026-10-14T13:12:56.7760832Z Collecting jaraco.classes (from keyring>=25.6.0->py-key-value-aio[filetree,keyring,memory]<0.5.0,>=0.4.4; extra == "client"->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:56.7772736Z   Using cached jaraco.classes-3.4.0-py3-none-any.whl.metadata (2.6 kB)
+2026-10-14T13:12:56.7901951Z Collecting jaraco.functools (from keyring>=25.6.0->py-key-value-aio[filetree,keyring,memory]<0.5.0,>=0.4.4; extra == "client"->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:56.7913927Z   Using cached jaraco_functools-4.6.0-py3-none-any.whl.metadata (2.9 kB)
+2026-10-14T13:12:56.8018594Z Collecting jaraco.context (from keyring>=25.6.0->py-key-value-aio[filetree,keyring,memory]<0.5.0,>=0.4.4; extra == "client"->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:56.8030773Z   Using cached jaraco_context-6.1.2-py3-none-any.whl.metadata (4.2 kB)
+2026-10-14T13:12:56.8135676Z Collecting mypy_extensions>=1.0.0 (from mypy>=1.13->slopsearx==0.6.0)
+2026-10-14T13:12:56.8148350Z   Using cached mypy_extensions-1.1.0-py3-none-any.whl.metadata (1.1 kB)
+2026-10-14T13:12:56.8233797Z Collecting pathspec>=1.0.0 (from mypy>=1.13->slopsearx==0.6.0)
+2026-10-14T13:12:56.8245920Z   Using cached pathspec-1.1.1-py3-none-any.whl.metadata (14 kB)
+2026-10-14T13:12:56.9452348Z Collecting librt>=0.16.0 (from mypy>=1.13->slopsearx==0.6.0)
+2026-10-14T13:12:56.9466591Z   Using cached librt-0.16.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (1.3 kB)
+2026-10-14T13:12:56.9935074Z Collecting ast-serialize<1.0.0,>=0.11.2 (from mypy>=1.13->slopsearx==0.6.0)
+2026-10-14T13:12:56.9959591Z   Downloading ast_serialize-0.13.0-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (1.4 kB)
+2026-10-14T13:12:57.0169754Z Collecting CacheControl>=0.13.0 (from CacheControl[filecache]>=0.13.0->pip-audit>=2.8->slopsearx==0.6.0)
+2026-10-14T13:12:57.0182160Z   Using cached cachecontrol-0.14.4-py3-none-any.whl.metadata (3.1 kB)
+2026-10-14T13:12:57.0430014Z Collecting cyclonedx-python-lib<12,>=5 (from pip-audit>=2.8->slopsearx==0.6.0)
+2026-10-14T13:12:57.0442537Z   Using cached cyclonedx_python_lib-11.12.0-py3-none-any.whl.metadata (6.9 kB)
+2026-10-14T13:12:57.0555188Z Collecting pip-api>=0.0.28 (from pip-audit>=2.8->slopsearx==0.6.0)
+2026-10-14T13:12:57.0567354Z   Using cached pip_api-0.0.35-py3-none-any.whl.metadata (17 kB)
+2026-10-14T13:12:57.0661075Z Collecting pip-requirements-parser>=32.0.0 (from pip-audit>=2.8->slopsearx==0.6.0)
+2026-10-14T13:12:57.0673364Z   Using cached pip_requirements_parser-32.0.1-py3-none-any.whl.metadata (9.3 kB)
+2026-10-14T13:12:57.0847326Z Collecting requests>=2.31.0 (from pip-audit>=2.8->slopsearx==0.6.0)
+2026-10-14T13:12:57.0859911Z   Using cached requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)
+2026-10-14T13:12:57.1002006Z Collecting tomli-w>=1.2.0 (from pip-audit>=2.8->slopsearx==0.6.0)
+2026-10-14T13:12:57.1014201Z   Using cached tomli_w-1.2.0-py3-none-any.whl.metadata (5.7 kB)
+2026-10-14T13:12:57.1665351Z Collecting license-expression<31,>=30 (from cyclonedx-python-lib<12,>=5->pip-audit>=2.8->slopsearx==0.6.0)
+2026-10-14T13:12:57.1681012Z   Using cached license_expression-30.4.4-py3-none-any.whl.metadata (11 kB)
+2026-10-14T13:12:57.1838716Z Collecting packageurl-python<2,>=0.11 (from cyclonedx-python-lib<12,>=5->pip-audit>=2.8->slopsearx==0.6.0)
+2026-10-14T13:12:57.1851524Z   Using cached packageurl_python-0.17.6-py3-none-any.whl.metadata (5.1 kB)
+2026-10-14T13:12:57.1977390Z Collecting py-serializable<3.0.0,>=2.1.0 (from cyclonedx-python-lib<12,>=5->pip-audit>=2.8->slopsearx==0.6.0)
+2026-10-14T13:12:57.1990052Z   Using cached py_serializable-2.1.0-py3-none-any.whl.metadata (4.3 kB)
+2026-10-14T13:12:57.2085795Z Collecting sortedcontainers<3.0.0,>=2.4.0 (from cyclonedx-python-lib<12,>=5->pip-audit>=2.8->slopsearx==0.6.0)
+2026-10-14T13:12:57.2097856Z   Using cached sortedcontainers-2.4.0-py2.py3-none-any.whl.metadata (10 kB)
+2026-10-14T13:12:57.2218437Z Collecting boolean.py>=4.0 (from license-expression<31,>=30->cyclonedx-python-lib<12,>=5->pip-audit>=2.8->slopsearx==0.6.0)
+2026-10-14T13:12:57.2230160Z   Using cached boolean_py-5.0-py3-none-any.whl.metadata (2.3 kB)
+2026-10-14T13:12:57.2339337Z Collecting defusedxml<0.8.0,>=0.7.1 (from py-serializable<3.0.0,>=2.1.0->cyclonedx-python-lib<12,>=5->pip-audit>=2.8->slopsearx==0.6.0)
+2026-10-14T13:12:57.2350820Z   Using cached defusedxml-0.7.1-py2.py3-none-any.whl.metadata (32 kB)
+2026-10-14T13:12:57.3173206Z Collecting msgpack<2.0.0,>=0.5.2 (from CacheControl>=0.13.0->CacheControl[filecache]>=0.13.0->pip-audit>=2.8->slopsearx==0.6.0)
+2026-10-14T13:12:57.3187719Z   Using cached msgpack-1.2.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (8.3 kB)
+2026-10-14T13:12:57.3422211Z Collecting filelock>=3.8.0 (from CacheControl[filecache]>=0.13.0->pip-audit>=2.8->slopsearx==0.6.0)
+2026-10-14T13:12:57.3445415Z   Downloading filelock-4.1.1-py3-none-any.whl.metadata (2.0 kB)
+2026-10-14T13:12:57.3500621Z Requirement already satisfied: pip in /opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages (from pip-api>=0.0.28->pip-audit>=2.8->slopsearx==0.6.0) (26.2.1)
+2026-10-14T13:12:57.3693952Z Collecting pyparsing (from pip-requirements-parser>=32.0.0->pip-audit>=2.8->slopsearx==0.6.0)
+2026-10-14T13:12:57.3706301Z   Using cached pyparsing-3.3.3-py3-none-any.whl.metadata (5.9 kB)
+2026-10-14T13:12:57.3820246Z Collecting build>=1.0.0 (from pip-tools>=7.4->slopsearx==0.6.0)
+2026-10-14T13:12:57.3833193Z   Using cached build-1.6.1-py3-none-any.whl.metadata (5.6 kB)
+2026-10-14T13:12:57.3917069Z Collecting pyproject_hooks (from pip-tools>=7.4->slopsearx==0.6.0)
+2026-10-14T13:12:57.3929637Z   Using cached pyproject_hooks-1.3.3-py3-none-any.whl.metadata (1.3 kB)
+2026-10-14T13:12:57.4777577Z Collecting setuptools (from pip-tools>=7.4->slopsearx==0.6.0)
+2026-10-14T13:12:57.4791333Z   Using cached setuptools-84.0.0-py3-none-any.whl.metadata (6.6 kB)
+2026-10-14T13:12:57.4998702Z Collecting wheel (from pip-tools>=7.4->slopsearx==0.6.0)
+2026-10-14T13:12:57.5010623Z   Using cached wheel-0.48.0-py3-none-any.whl.metadata (2.3 kB)
+2026-10-14T13:12:57.5146320Z Collecting cfgv>=2.0.0 (from pre-commit>=4.0->slopsearx==0.6.0)
+2026-10-14T13:12:57.5158707Z   Using cached cfgv-3.5.0-py2.py3-none-any.whl.metadata (8.9 kB)
+2026-10-14T13:12:57.5461556Z Collecting identify>=1.0.0 (from pre-commit>=4.0->slopsearx==0.6.0)
+2026-10-14T13:12:57.5473586Z   Using cached identify-2.6.20-py2.py3-none-any.whl.metadata (4.4 kB)
+2026-10-14T13:12:57.5577387Z Collecting nodeenv>=0.11.1 (from pre-commit>=4.0->slopsearx==0.6.0)
+2026-10-14T13:12:57.5589458Z   Using cached nodeenv-1.11.0-py2.py3-none-any.whl.metadata (40 kB)
+2026-10-14T13:12:57.5987274Z Collecting virtualenv>=20.10.0 (from pre-commit>=4.0->slopsearx==0.6.0)
+2026-10-14T13:12:57.6009804Z   Downloading virtualenv-21.14.7-py3-none-any.whl.metadata (4.1 kB)
+2026-10-14T13:12:57.6240521Z Collecting email-validator>=2.0.0 (from pydantic[email]>=2.12.0->fastmcp-slim==4.1.0->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:57.6251413Z   Using cached email_validator-2.3.0-py3-none-any.whl.metadata (26 kB)
+2026-10-14T13:12:57.6371372Z Collecting dnspython>=2.0.0 (from email-validator>=2.0.0->pydantic[email]>=2.12.0->fastmcp-slim==4.1.0->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:57.6382107Z   Using cached dnspython-2.9.0-py3-none-any.whl.metadata (5.7 kB)
+2026-10-14T13:12:57.6607003Z Collecting iniconfig>=1.0.1 (from pytest>=8.0->slopsearx==0.6.0)
+2026-10-14T13:12:57.6619405Z   Using cached iniconfig-2.3.1-py3-none-any.whl.metadata (2.8 kB)
+2026-10-14T13:12:57.6714892Z Collecting pluggy<2,>=1.5 (from pytest>=8.0->slopsearx==0.6.0)
+2026-10-14T13:12:57.6726945Z   Using cached pluggy-1.6.0-py3-none-any.whl.metadata (4.8 kB)
+2026-10-14T13:12:58.1265279Z Collecting coverage>=7.10.6 (from coverage[toml]>=7.10.6->pytest-cov>=6.0->slopsearx==0.6.0)
+2026-10-14T13:12:58.1279483Z   Using cached coverage-7.16.2-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (8.2 kB)
+2026-10-14T13:12:58.1470218Z Collecting mando<0.8,>=0.6 (from radon>=6.0->slopsearx==0.6.0)
+2026-10-14T13:12:58.1482179Z   Using cached mando-0.7.1-py2.py3-none-any.whl.metadata (7.4 kB)
+2026-10-14T13:12:58.1603459Z Collecting colorama>=0.4.1 (from radon>=6.0->slopsearx==0.6.0)
+2026-10-14T13:12:58.1615372Z   Using cached colorama-0.4.6-py2.py3-none-any.whl.metadata (17 kB)
+2026-10-14T13:12:58.1725993Z Collecting six (from mando<0.8,>=0.6->radon>=6.0->slopsearx==0.6.0)
+2026-10-14T13:12:58.1738128Z   Using cached six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+2026-10-14T13:12:58.2897886Z Collecting charset_normalizer<4,>=2 (from requests>=2.31.0->pip-audit>=2.8->slopsearx==0.6.0)
+2026-10-14T13:12:58.2911645Z   Using cached charset_normalizer-3.5.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (46 kB)
+2026-10-14T13:12:58.3113740Z Collecting urllib3<3,>=1.26 (from requests>=2.31.0->pip-audit>=2.8->slopsearx==0.6.0)
+2026-10-14T13:12:58.3125629Z   Using cached urllib3-2.8.0-py3-none-any.whl.metadata (7.4 kB)
+2026-10-14T13:12:58.3378068Z Collecting markdown-it-py>=2.2.0 (from rich>=13.9.4->fastmcp-slim==4.1.0->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:58.3390248Z   Using cached markdown_it_py-4.2.0-py3-none-any.whl.metadata (7.4 kB)
+2026-10-14T13:12:58.3511239Z Collecting mdurl~=0.1 (from markdown-it-py>=2.2.0->rich>=13.9.4->fastmcp-slim==4.1.0->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:58.3523162Z   Using cached mdurl-0.1.2-py3-none-any.whl.metadata (1.6 kB)
+2026-10-14T13:12:58.4168680Z Collecting httptools>=0.8.0 (from uvicorn[standard]>=0.34.0->slopsearx==0.6.0)
+2026-10-14T13:12:58.4181648Z   Using cached httptools-0.9.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (3.5 kB)
+2026-10-14T13:12:58.4530982Z Collecting uvloop>=0.15.1 (from uvicorn[standard]>=0.34.0->slopsearx==0.6.0)
+2026-10-14T13:12:58.4543957Z   Using cached uvloop-0.23.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (5.1 kB)
+2026-10-14T13:12:58.4707222Z Collecting distlib<1,>=0.4.3 (from virtualenv>=20.10.0->pre-commit>=4.0->slopsearx==0.6.0)
+2026-10-14T13:12:58.4719965Z   Using cached distlib-0.4.3-py2.py3-none-any.whl.metadata (5.3 kB)
+2026-10-14T13:12:58.4886788Z Collecting python-discovery>=1.6.1 (from virtualenv>=20.10.0->pre-commit>=4.0->slopsearx==0.6.0)
+2026-10-14T13:12:58.4899360Z   Using cached python_discovery-1.6.2-py3-none-any.whl.metadata (5.1 kB)
+2026-10-14T13:12:58.5152129Z Collecting more-itertools (from jaraco.classes->keyring>=25.6.0->py-key-value-aio[filetree,keyring,memory]<0.5.0,>=0.4.4; extra == "client"->fastmcp-slim[client,server]==4.1.0->fastmcp<5,>=2.0->slopsearx==0.6.0)
+2026-10-14T13:12:58.5174522Z   Downloading more_itertools-11.2.0-py3-none-any.whl.metadata (42 kB)
+2026-10-14T13:12:58.5361368Z Using cached fastmcp-4.1.0-py3-none-any.whl (8.2 kB)
+2026-10-14T13:12:58.5373407Z Using cached fastmcp_slim-4.1.0-py3-none-any.whl (911 kB)
+2026-10-14T13:12:58.5388712Z Using cached jsonschema-4.26.0-py3-none-any.whl (90 kB)
+2026-10-14T13:12:58.5401298Z Using cached mcp-2.3.0-py3-none-any.whl (368 kB)
+2026-10-14T13:12:58.5414324Z Using cached mcp_types-2.3.0-py3-none-any.whl (69 kB)
+2026-10-14T13:12:58.5426349Z Using cached py_key_value_aio-0.4.6-py3-none-any.whl (171 kB)
+2026-10-14T13:12:58.5449031Z Downloading pydantic-2.14.1-py3-none-any.whl (488 kB)
+2026-10-14T13:12:58.5517833Z Downloading pydantic_core-2.50.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.2 MB)
+2026-10-14T13:12:58.5615782Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.2/2.2 MB 268.0 MB/s  0:00:00
+2026-10-14T13:12:58.5627959Z Using cached pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (807 kB)
+2026-10-14T13:12:58.5642482Z Using cached aiofile-3.12.3-py3-none-any.whl (22 kB)
+2026-10-14T13:12:58.5656681Z Using cached caio-0.12.9-cp312-cp312-manylinux_2_34_x86_64.whl (162 kB)
+2026-10-14T13:12:58.5669341Z Using cached annotated_types-0.8.0-py3-none-any.whl (13 kB)
+2026-10-14T13:12:58.5681308Z Using cached anyio-4.15.1-py3-none-any.whl (132 kB)
+2026-10-14T13:12:58.5693406Z Using cached attrs-26.1.0-py3-none-any.whl (67 kB)
+2026-10-14T13:12:58.5715401Z Downloading authlib-1.9.0-py2.py3-none-any.whl (265 kB)
+2026-10-14T13:12:58.5759833Z Downloading beartype-0.23.1-py3-none-any.whl (1.6 MB)
+2026-10-14T13:12:58.5832360Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.6/1.6 MB 260.5 MB/s  0:00:00
+2026-10-14T13:12:58.5844538Z Using cached cachetools-7.2.1-py3-none-any.whl (17 kB)
+2026-10-14T13:12:58.5856958Z Using cached cryptography-50.0.2-cp311-abi3-manylinux_2_34_x86_64.whl (4.8 MB)
+2026-10-14T13:12:58.5885833Z Using cached cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (221 kB)
+2026-10-14T13:12:58.5898520Z Using cached cssselect-1.6.0-py3-none-any.whl (22 kB)
+2026-10-14T13:12:58.5910427Z Using cached cyclopts-5.2.0-py3-none-any.whl (289 kB)
+2026-10-14T13:12:58.5923421Z Using cached docstring_parser-0.18.0-py3-none-any.whl (22 kB)
+2026-10-14T13:12:58.5935445Z Using cached rich_rst-2.2.0-py3-none-any.whl (279 kB)
+2026-10-14T13:12:58.5948713Z Using cached deptry-0.25.1-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.9 MB)
+2026-10-14T13:12:58.5967324Z Using cached click-8.5.0-py3-none-any.whl (125 kB)
+2026-10-14T13:12:58.5979803Z Using cached requirements_parser-0.13.1-py3-none-any.whl (14 kB)
+2026-10-14T13:12:58.5991852Z Using cached exceptiongroup-1.3.1-py3-none-any.whl (16 kB)
+2026-10-14T13:12:58.6015989Z Downloading fastapi-0.143.1-py3-none-any.whl (144 kB)
+2026-10-14T13:12:58.6049225Z Using cached annotated_doc-0.0.5-py3-none-any.whl (5.3 kB)
+2026-10-14T13:12:58.6061098Z Using cached griffelib-2.3.2-py3-none-any.whl (169 kB)
+2026-10-14T13:12:58.6073804Z Using cached httpx-0.28.1-py3-none-any.whl (73 kB)
+2026-10-14T13:12:58.6085951Z Using cached httpcore-1.0.9-py3-none-any.whl (78 kB)
+2026-10-14T13:12:58.6098243Z Using cached h11-0.16.0-py3-none-any.whl (37 kB)
+2026-10-14T13:12:58.6110217Z Using cached httpx2-2.13.1-py3-none-any.whl (95 kB)
+2026-10-14T13:12:58.6122293Z Using cached httpcore2-2.13.1-py3-none-any.whl (83 kB)
+2026-10-14T13:12:58.6134301Z Using cached idna-3.20-py3-none-any.whl (69 kB)
+2026-10-14T13:12:58.6146324Z Using cached import_linter-2.15-py3-none-any.whl (640 kB)
+2026-10-14T13:12:58.6160939Z Using cached grimp-3.17-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.3 MB)
+2026-10-14T13:12:58.6180825Z Using cached joserfc-1.7.5-py3-none-any.whl (71 kB)
+2026-10-14T13:12:58.6193000Z Using cached jsonref-1.1.0-py3-none-any.whl (9.4 kB)
+2026-10-14T13:12:58.6204911Z Using cached jsonschema_path-0.5.0-py3-none-any.whl (24 kB)
+2026-10-14T13:12:58.6216646Z Using cached pathable-0.6.0-py3-none-any.whl (18 kB)
+2026-10-14T13:12:58.6228840Z Using cached referencing-0.37.0-py3-none-any.whl (26 kB)
+2026-10-14T13:12:58.6240922Z Using cached jsonschema_specifications-2025.9.1-py3-none-any.whl (18 kB)
+2026-10-14T13:12:58.6252877Z Using cached keyring-25.7.0-py3-none-any.whl (39 kB)
+2026-10-14T13:12:58.6264824Z Using cached jeepney-0.9.0-py3-none-any.whl (49 kB)
+2026-10-14T13:12:58.6277789Z Using cached lxml-6.1.3-cp312-cp312-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl (5.2 MB)
+2026-10-14T13:12:58.6308202Z Using cached mypy-2.4.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (15.6 MB)
+2026-10-14T13:12:58.6387627Z Downloading ast_serialize-0.13.0-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.3 MB)
+2026-10-14T13:12:58.6461054Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 208.0 MB/s  0:00:00
+2026-10-14T13:12:58.6474002Z Using cached librt-0.16.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (531 kB)
+2026-10-14T13:12:58.6487793Z Using cached mypy_extensions-1.1.0-py3-none-any.whl (5.0 kB)
+2026-10-14T13:12:58.6499915Z Using cached openapi_pydantic-0.6.0-py3-none-any.whl (96 kB)
+2026-10-14T13:12:58.6512186Z Using cached opentelemetry_api-1.45.1-py3-none-any.whl (60 kB)
+2026-10-14T13:12:58.6524519Z Using cached packaging-26.3-py3-none-any.whl (129 kB)
+2026-10-14T13:12:58.6536741Z Using cached pathspec-1.1.1-py3-none-any.whl (57 kB)
+2026-10-14T13:12:58.6548960Z Using cached pip_audit-2.10.1-py3-none-any.whl (62 kB)
+2026-10-14T13:12:58.6561338Z Using cached cyclonedx_python_lib-11.12.0-py3-none-any.whl (529 kB)
+2026-10-14T13:12:58.6575185Z Using cached license_expression-30.4.4-py3-none-any.whl (120 kB)
+2026-10-14T13:12:58.6587547Z Using cached packageurl_python-0.17.6-py3-none-any.whl (36 kB)
+2026-10-14T13:12:58.6599717Z Using cached py_serializable-2.1.0-py3-none-any.whl (23 kB)
+2026-10-14T13:12:58.6611759Z Using cached defusedxml-0.7.1-py2.py3-none-any.whl (25 kB)
+2026-10-14T13:12:58.6623915Z Using cached sortedcontainers-2.4.0-py2.py3-none-any.whl (29 kB)
+2026-10-14T13:12:58.6635987Z Using cached typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+2026-10-14T13:12:58.6675654Z Using cached boolean_py-5.0-py3-none-any.whl (26 kB)
+2026-10-14T13:12:58.6676623Z Using cached cachecontrol-0.14.4-py3-none-any.whl (22 kB)
+2026-10-14T13:12:58.6680635Z Using cached msgpack-1.2.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (472 kB)
+2026-10-14T13:12:58.6705812Z Downloading filelock-4.1.1-py3-none-any.whl (132 kB)
+2026-10-14T13:12:58.6739813Z Using cached pip_api-0.0.35-py3-none-any.whl (123 kB)
+2026-10-14T13:12:58.6753936Z Using cached pip_requirements_parser-32.0.1-py3-none-any.whl (35 kB)
+2026-10-14T13:12:58.6766121Z Using cached pip_tools-7.6.2-py3-none-any.whl (76 kB)
+2026-10-14T13:12:58.6778534Z Using cached build-1.6.1-py3-none-any.whl (31 kB)
+2026-10-14T13:12:58.6801460Z Downloading platformdirs-4.13.0-py3-none-any.whl (32 kB)
+2026-10-14T13:12:58.6844551Z Downloading pre_commit-4.7.0-py2.py3-none-any.whl (226 kB)
+2026-10-14T13:12:58.6879049Z Using cached cfgv-3.5.0-py2.py3-none-any.whl (7.4 kB)
+2026-10-14T13:12:58.6891294Z Using cached identify-2.6.20-py2.py3-none-any.whl (99 kB)
+2026-10-14T13:12:58.6903717Z Using cached nodeenv-1.11.0-py2.py3-none-any.whl (34 kB)
+2026-10-14T13:12:58.6915878Z Using cached prometheus_client-0.26.0-py3-none-any.whl (64 kB)
+2026-10-14T13:12:58.6939270Z Downloading pydantic_settings-2.16.0-py3-none-any.whl (80 kB)
+2026-10-14T13:12:58.6970585Z Using cached email_validator-2.3.0-py3-none-any.whl (35 kB)
+2026-10-14T13:12:58.6982751Z Using cached dnspython-2.9.0-py3-none-any.whl (354 kB)
+2026-10-14T13:12:58.6996088Z Using cached pygments-2.21.0-py3-none-any.whl (1.3 MB)
+2026-10-14T13:12:58.7013393Z Using cached pyjwt-2.15.1-py3-none-any.whl (33 kB)
+2026-10-14T13:12:58.7025341Z Using cached pyperclip-1.11.0-py3-none-any.whl (11 kB)
+2026-10-14T13:12:58.7037371Z Using cached pytest-9.1.1-py3-none-any.whl (386 kB)
+2026-10-14T13:12:58.7050945Z Using cached pluggy-1.6.0-py3-none-any.whl (20 kB)
+2026-10-14T13:12:58.7063055Z Using cached iniconfig-2.3.1-py3-none-any.whl (7.6 kB)
+2026-10-14T13:12:58.7075016Z Using cached pytest_asyncio-1.4.0-py3-none-any.whl (16 kB)
+2026-10-14T13:12:58.7086956Z Using cached pytest_cov-7.1.0-py3-none-any.whl (22 kB)
+2026-10-14T13:12:58.7100515Z Using cached coverage-7.16.2-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (258 kB)
+2026-10-14T13:12:58.7113003Z Using cached python_dotenv-1.2.4-py3-none-any.whl (23 kB)
+2026-10-14T13:12:58.7125056Z Using cached python_multipart-0.0.32-py3-none-any.whl (30 kB)
+2026-10-14T13:12:58.7136996Z Using cached radon-6.0.1-py2.py3-none-any.whl (52 kB)
+2026-10-14T13:12:58.7150173Z Using cached mando-0.7.1-py2.py3-none-any.whl (28 kB)
+2026-10-14T13:12:58.7162209Z Using cached colorama-0.4.6-py2.py3-none-any.whl (25 kB)
+2026-10-14T13:12:58.7174081Z Using cached requests-2.34.2-py3-none-any.whl (73 kB)
+2026-10-14T13:12:58.7186588Z Using cached charset_normalizer-3.5.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (257 kB)
+2026-10-14T13:12:58.7198982Z Using cached urllib3-2.8.0-py3-none-any.whl (135 kB)
+2026-10-14T13:12:58.7210948Z Using cached certifi-2026.7.22-py3-none-any.whl (136 kB)
+2026-10-14T13:12:58.7222630Z Using cached rich-15.0.0-py3-none-any.whl (310 kB)
+2026-10-14T13:12:58.7235276Z Using cached markdown_it_py-4.2.0-py3-none-any.whl (91 kB)
+2026-10-14T13:12:58.7246908Z Using cached mdurl-0.1.2-py3-none-any.whl (10.0 kB)
+2026-10-14T13:12:58.7259233Z Using cached rpds_py-2026.9.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (371 kB)
+2026-10-14T13:12:58.7272136Z Using cached ruff-0.17.0-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (10.4 MB)
+2026-10-14T13:12:58.7321051Z Using cached secretstorage-3.5.0-py3-none-any.whl (15 kB)
+2026-10-14T13:12:58.7347815Z Downloading sentry_sdk-2.72.0-py3-none-any.whl (544 kB)
+2026-10-14T13:12:58.7404957Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 544.8/544.8 kB 96.8 MB/s  0:00:00
+2026-10-14T13:12:58.7417916Z Using cached sse_starlette-3.5.0-py3-none-any.whl (17 kB)
+2026-10-14T13:12:58.7440716Z Downloading starlette-1.8.0-py3-none-any.whl (79 kB)
+2026-10-14T13:12:58.7472215Z Using cached structlog-26.1.0-py3-none-any.whl (73 kB)
+2026-10-14T13:12:58.7485205Z Using cached tomli-2.5.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (286 kB)
+2026-10-14T13:12:58.7498306Z Using cached tomli_w-1.2.0-py3-none-any.whl (6.7 kB)
+2026-10-14T13:12:58.7520895Z Downloading truststore-0.10.5-py3-none-any.whl (19 kB)
+2026-10-14T13:12:58.7551096Z Using cached typing_inspection-0.4.4-py3-none-any.whl (14 kB)
+2026-10-14T13:12:58.7563307Z Using cached uncalled_for-0.4.1-py3-none-any.whl (14 kB)
+2026-10-14T13:12:58.7575354Z Using cached uvicorn-0.54.0-py3-none-any.whl (87 kB)
+2026-10-14T13:12:58.7588044Z Using cached httptools-0.9.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (552 kB)
+2026-10-14T13:12:58.7602626Z Using cached uvloop-0.23.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (4.5 MB)
+2026-10-14T13:12:58.7653598Z Downloading valkey-6.2.0-py3-none-any.whl (261 kB)
+2026-10-14T13:12:58.7737028Z Downloading virtualenv-21.14.7-py3-none-any.whl (5.5 MB)
+2026-10-14T13:12:58.7910669Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.5/5.5 MB 350.0 MB/s  0:00:00
+2026-10-14T13:12:58.7924118Z Using cached distlib-0.4.3-py2.py3-none-any.whl (470 kB)
+2026-10-14T13:12:58.7937886Z Using cached python_discovery-1.6.2-py3-none-any.whl (38 kB)
+2026-10-14T13:12:58.7950120Z Using cached vulture-2.16-py3-none-any.whl (26 kB)
+2026-10-14T13:12:58.7962712Z Using cached watchfiles-1.3.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (458 kB)
+2026-10-14T13:12:58.7976666Z Using cached websockets-17.2-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (225 kB)
+2026-10-14T13:12:58.7989355Z Using cached jaraco.classes-3.4.0-py3-none-any.whl (6.8 kB)
+2026-10-14T13:12:58.8001462Z Using cached jaraco_context-6.1.2-py3-none-any.whl (7.9 kB)
+2026-10-14T13:12:58.8013432Z Using cached jaraco_functools-4.6.0-py3-none-any.whl (11 kB)
+2026-10-14T13:12:58.8037804Z Downloading more_itertools-11.2.0-py3-none-any.whl (74 kB)
+2026-10-14T13:12:58.8069713Z Using cached pycparser-3.11-py3-none-any.whl (51 kB)
+2026-10-14T13:12:58.8081963Z Using cached pyparsing-3.3.3-py3-none-any.whl (126 kB)
+2026-10-14T13:12:58.8094783Z Using cached pyproject_hooks-1.3.3-py3-none-any.whl (10 kB)
+2026-10-14T13:12:58.8106758Z Using cached setuptools-84.0.0-py3-none-any.whl (818 kB)
+2026-10-14T13:12:58.8121897Z Using cached six-1.17.0-py2.py3-none-any.whl (11 kB)
+2026-10-14T13:12:58.8134028Z Using cached wheel-0.48.0-py3-none-any.whl (33 kB)
+2026-10-14T13:12:59.1895779Z Building wheels for collected packages: slopsearx
+2026-10-14T13:12:59.1904968Z   Building editable for slopsearx (pyproject.toml): started
+2026-10-14T13:12:59.4397586Z   Building editable for slopsearx (pyproject.toml): finished with status 'done'
+2026-10-14T13:12:59.4403965Z   Created wheel for slopsearx: filename=slopsearx-0.6.0-0.editable-py3-none-any.whl size=12118 sha256=ef13f153ad32c9bf61f7409ce5405372c3e39c8c1cd99d57f3382c9a25632d2d
+2026-10-14T13:12:59.4406244Z   Stored in directory: /tmp/pip-ephem-wheel-cache-nphwh7_7/wheels/3b/c7/ec/b3cfeca3757e8775c736f41370162f2d1cced8fff97610c9f2
+2026-10-14T13:12:59.4432615Z Successfully built slopsearx
+2026-10-14T13:12:59.6700727Z Installing collected packages: sortedcontainers, pyperclip, distlib, boolean.py, websockets, vulture, valkey, uvloop, urllib3, uncalled-for, typing-extensions, truststore, tomli-w, tomli, structlog, six, setuptools, ruff, rpds-py, pyyaml, python-multipart, python-dotenv, pyproject_hooks, pyparsing, pyjwt, pygments, pycparser, prometheus-client, pluggy, platformdirs, pip-api, pathspec, pathable, packaging, packageurl-python, nodeenv, mypy_extensions, msgpack, more-itertools, mdurl, lxml, license-expression, librt, jsonref, jeepney, jaraco.context, iniconfig, idna, identify, httptools, h11, grimp, griffelib, filelock, docstring-parser, dnspython, defusedxml, cssselect, coverage, colorama, click, charset_normalizer, cfgv, certifi, caio, cachetools, beartype, attrs, ast-serialize, annotated-types, annotated-doc, wheel, uvicorn, typing-inspection, sentry-sdk, requirements-parser, requests, referencing, python-discovery, pytest, pydantic-core, py-serializable, py-key-value-aio, pip-requirements-parser, opentelemetry-api, mypy, markdown-it-py, mando, jaraco.functools, jaraco.classes, httpcore2, httpcore, exceptiongroup, email-validator, cffi, build, anyio, aiofile, watchfiles, virtualenv, starlette, rich, radon, pytest-cov, pytest-asyncio, pydantic, pip-tools, jsonschema-specifications, jsonschema-path, httpx2, httpx, deptry, cyclonedx-python-lib, cryptography, CacheControl, sse-starlette, SecretStorage, rich-rst, pydantic-settings, pre-commit, openapi-pydantic, mcp-types, jsonschema, joserfc, import-linter, fastapi, pip-audit, mcp, keyring, fastmcp-slim, cyclopts, authlib, fastmcp, slopsearx
+2026-10-14T13:13:10.6769765Z 
+2026-10-14T13:13:10.6879917Z Successfully installed CacheControl-0.14.4 SecretStorage-3.5.0 aiofile-3.12.3 annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.15.1 ast-serialize-0.13.0 attrs-26.1.0 authlib-1.9.0 beartype-0.23.1 boolean.py-5.0 build-1.6.1 cachetools-7.2.1 caio-0.12.9 certifi-2026.7.22 cffi-2.1.1 cfgv-3.5.0 charset_normalizer-3.5.2 click-8.5.0 colorama-0.4.6 coverage-7.16.2 cryptography-50.0.2 cssselect-1.6.0 cyclonedx-python-lib-11.12.0 cyclopts-5.2.0 defusedxml-0.7.1 deptry-0.25.1 distlib-0.4.3 dnspython-2.9.0 docstring-parser-0.18.0 email-validator-2.3.0 exceptiongroup-1.3.1 fastapi-0.143.1 fastmcp-4.1.0 fastmcp-slim-4.1.0 filelock-4.1.1 griffelib-2.3.2 grimp-3.17 h11-0.16.0 httpcore-1.0.9 httpcore2-2.13.1 httptools-0.9.0 httpx-0.28.1 httpx2-2.13.1 identify-2.6.20 idna-3.20 import-linter-2.15 iniconfig-2.3.1 jaraco.classes-3.4.0 jaraco.context-6.1.2 jaraco.functools-4.6.0 jeepney-0.9.0 joserfc-1.7.5 jsonref-1.1.0 jsonschema-4.26.0 jsonschema-path-0.5.0 jsonschema-specifications-2025.9.1 keyring-25.7.0 librt-0.16.0 license-expression-30.4.4 lxml-6.1.3 mando-0.7.1 markdown-it-py-4.2.0 mcp-2.3.0 mcp-types-2.3.0 mdurl-0.1.2 more-itertools-11.2.0 msgpack-1.2.3 mypy-2.4.0 mypy_extensions-1.1.0 nodeenv-1.11.0 openapi-pydantic-0.6.0 opentelemetry-api-1.45.1 packageurl-python-0.17.6 packaging-26.3 pathable-0.6.0 pathspec-1.1.1 pip-api-0.0.35 pip-audit-2.10.1 pip-requirements-parser-32.0.1 pip-tools-7.6.2 platformdirs-4.13.0 pluggy-1.6.0 pre-commit-4.7.0 prometheus-client-0.26.0 py-key-value-aio-0.4.6 py-serializable-2.1.0 pycparser-3.11 pydantic-2.14.1 pydantic-core-2.50.1 pydantic-settings-2.16.0 pygments-2.21.0 pyjwt-2.15.1 pyparsing-3.3.3 pyperclip-1.11.0 pyproject_hooks-1.3.3 pytest-9.1.1 pytest-asyncio-1.4.0 pytest-cov-7.1.0 python-discovery-1.6.2 python-dotenv-1.2.4 python-multipart-0.0.32 pyyaml-6.0.3 radon-6.0.1 referencing-0.37.0 requests-2.34.2 requirements-parser-0.13.1 rich-15.0.0 rich-rst-2.2.0 rpds-py-2026.9.1 ruff-0.17.0 sentry-sdk-2.72.0 setuptools-84.0.0 six-1.17.0 slopsearx-0.6.0 sortedcontainers-2.4.0 sse-starlette-3.5.0 starlette-1.8.0 structlog-26.1.0 tomli-2.5.0 tomli-w-1.2.0 truststore-0.10.5 typing-extensions-4.16.0 typing-inspection-0.4.4 uncalled-for-0.4.1 urllib3-2.8.0 uvicorn-0.54.0 uvloop-0.23.0 valkey-6.2.0 virtualenv-21.14.7 vulture-2.16 watchfiles-1.3.0 websockets-17.2 wheel-0.48.0
+2026-10-14T13:13:11.0408599Z ##[group]Run ruff check .
+2026-10-14T13:13:11.0408908Z [36;1mruff check .[0m
+2026-10-14T13:13:11.0475535Z shell: /usr/bin/bash -e {0}
+2026-10-14T13:13:11.0475808Z env:
+2026-10-14T13:13:11.0476090Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.15/x64
+2026-10-14T13:13:11.0476560Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib/pkgconfig
+2026-10-14T13:13:11.0477195Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+2026-10-14T13:13:11.0477631Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+2026-10-14T13:13:11.0478072Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+2026-10-14T13:13:11.0478495Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib
+2026-10-14T13:13:11.0478847Z ##[endgroup]
+2026-10-14T13:13:11.1513502Z I001 [*] Import block is un-sorted or un-formatted
+2026-10-14T13:13:11.1513959Z   --> tests/test_mcp_gateway_lifecycle.py:3:1
+2026-10-14T13:13:11.1514300Z    |
+2026-10-14T13:13:11.1514728Z  1 |   """Run real gateway teardown in a fresh process, as for other transport probes."""
+2026-10-14T13:13:11.1515149Z  2 |
+2026-10-14T13:13:11.1515337Z  3 | / import asyncio
+2026-10-14T13:13:11.1515590Z  4 | | from typing import Any
+2026-10-14T13:13:11.1515821Z  5 | |
+2026-10-14T13:13:11.1516013Z  6 | | import pytest
+2026-10-14T13:13:11.1516229Z  7 | | import uvicorn
+2026-10-14T13:13:11.1516460Z  8 | | from fastmcp import Client
+2026-10-14T13:13:11.1516712Z  9 | |
+2026-10-14T13:13:11.1517337Z 10 | | from slopsearx.mcp.gateway import _field, create_gateway
+2026-10-14T13:13:11.1518073Z 11 | | from slopsearx.mcp.security import make_http_app
+2026-10-14T13:13:11.1518687Z 12 | | from slopsearx.mcp.server import create_server
+2026-10-14T13:13:11.1519453Z 13 | | from tests.test_mcp_gateway import TOKEN, _free_port, _gateway_client, _wait_for_port
+2026-10-14T13:13:11.1520302Z    | |_____________________________________________________________________________________^
+2026-10-14T13:13:11.1520882Z 14 |
+2026-10-14T13:13:11.1521206Z 15 |   @pytest.fixture
+2026-10-14T13:13:11.1521579Z    |
+2026-10-14T13:13:11.1521898Z help: Organize imports
+2026-10-14T13:13:11.1522243Z    |
+2026-10-14T13:13:11.1522519Z 14 |
+2026-10-14T13:13:11.1522872Z 15 +
+2026-10-14T13:13:11.1523185Z 16 | @pytest.fixture
+2026-10-14T13:13:11.1523512Z    |
+2026-10-14T13:13:11.1523678Z 
+2026-10-14T13:13:11.1523814Z Found 1 error.
+2026-10-14T13:13:11.1524179Z [*] 1 fixable with `--fix`.
+2026-10-14T13:13:11.1542641Z ##[error]Process completed with exit code 1.
+2026-10-14T13:13:11.1715144Z Post job cleanup.
+2026-10-14T13:13:11.2621808Z [command]/usr/bin/git version
+2026-10-14T13:13:11.2670637Z git version 2.55.0
+2026-10-14T13:13:11.2712565Z Temporarily overriding HOME='/home/runner/work/_temp/dd1358b7-b205-47a7-b13b-aee512ec1856' before making global git config changes
+2026-10-14T13:13:11.2714059Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-14T13:13:11.2719035Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/SlopSearX/SlopSearX
+2026-10-14T13:13:11.2752859Z Removing SSH command configuration
+2026-10-14T13:13:11.2761455Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-14T13:13:11.2800109Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-14T13:13:11.3061368Z Removing HTTP extra header
+2026-10-14T13:13:11.3068172Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-14T13:13:11.3114459Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-14T13:13:11.3375527Z Removing includeIf entries pointing to credentials config files
+2026-10-14T13:13:11.3385835Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-14T13:13:11.3441501Z includeif.gitdir:/home/runner/work/SlopSearX/SlopSearX/.git.path
+2026-10-14T13:13:11.3442957Z includeif.gitdir:/home/runner/work/SlopSearX/SlopSearX/.git/worktrees/*.path
+2026-10-14T13:13:11.3444208Z includeif.gitdir:/github/workspace/.git.path
+2026-10-14T13:13:11.3445261Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-14T13:13:11.3451241Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/SlopSearX/SlopSearX/.git.path
+2026-10-14T13:13:11.3492009Z /home/runner/work/_temp/git-credentials-9db1930b-79f3-43a8-984a-5b701c29e52e.config
+2026-10-14T13:13:11.3509039Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/SlopSearX/SlopSearX/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-9db1930b\-79f3\-43a8\-984a\-5b701c29e52e\.config
+2026-10-14T13:13:11.3599020Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/SlopSearX/SlopSearX/.git/worktrees/*.path
+2026-10-14T13:13:11.3630365Z /home/runner/work/_temp/git-credentials-9db1930b-79f3-43a8-984a-5b701c29e52e.config
+2026-10-14T13:13:11.3644323Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/SlopSearX/SlopSearX/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-9db1930b\-79f3\-43a8\-984a\-5b701c29e52e\.config
+2026-10-14T13:13:11.3698326Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-10-14T13:13:11.3726450Z /github/runner_temp/git-credentials-9db1930b-79f3-43a8-984a-5b701c29e52e.config
+2026-10-14T13:13:11.3734869Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-9db1930b\-79f3\-43a8\-984a\-5b701c29e52e\.config
+2026-10-14T13:13:11.3775215Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-14T13:13:11.3803301Z /github/runner_temp/git-credentials-9db1930b-79f3-43a8-984a-5b701c29e52e.config
+2026-10-14T13:13:11.3811348Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-9db1930b\-79f3\-43a8\-984a\-5b701c29e52e\.config
+2026-10-14T13:13:11.3851961Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-14T13:13:11.4103294Z Removing credentials config '/home/runner/work/_temp/git-credentials-9db1930b-79f3-43a8-984a-5b701c29e52e.config'
+2026-10-14T13:13:11.4293052Z Cleaning up orphan processes

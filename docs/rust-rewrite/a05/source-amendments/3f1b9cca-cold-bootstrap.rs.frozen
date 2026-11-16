@@ -1,0 +1,123 @@
+struct ColdBootstrap {
+    seen: Mutex<Vec<Request>>,
+    started: tokio::sync::Notify,
+    dispatched: tokio::sync::Notify,
+    clock: Mutex<Option<tokio::time::Instant>>,
+    elapsed: Mutex<Vec<std::time::Duration>>,
+}
+impl Transport for ColdBootstrap {
+    fn exchange(&self, r: Request) -> ExchangeFuture<'_> {
+        Box::pin(async move {
+            let home = r.url.path() == "/home";
+            self.seen.lock().unwrap().push(r.clone());
+            if home {
+                *self.clock.lock().unwrap() = Some(tokio::time::Instant::now());
+                self.started.notify_one();
+                tokio::time::sleep(std::time::Duration::from_secs(30)).await;
+                unreachable!("bootstrap must expire")
+            };
+            let primary = r.url.path() == "/html";
+            let second_search = self
+                .seen
+                .lock()
+                .unwrap()
+                .iter()
+                .filter(|r| r.url.path() == "/home")
+                .count()
+                == 2;
+            if primary {
+                self.elapsed
+                    .lock()
+                    .unwrap()
+                    .push(self.clock.lock().unwrap().unwrap().elapsed());
+                self.dispatched.notify_one();
+            }
+            let body = if !primary {
+                "<table><tr><td><a class='result-link' href='/cold-lite'>Cold Lite</a></td></tr></table>"
+            } else if second_search {
+                "challenge"
+            } else {
+                "<div class='result'><a class='result__a' href='/cold'>Cold</a></div>"
+            };
+            Ok(Response {
+                status: 200,
+                url: r.url,
+                headers: reqwest::header::HeaderMap::new(),
+                body: body.as_bytes().to_vec(),
+            })
+        })
+    }
+}
+#[tokio::test]
+async fn cold_bootstrap_expires_without_spending_search_deadline_or_leaking_cookies() {
+    let transport = Arc::new(ColdBootstrap {
+        seen: Mutex::new(vec![]),
+        started: tokio::sync::Notify::new(),
+        dispatched: tokio::sync::Notify::new(),
+        clock: Mutex::new(None),
+        elapsed: Mutex::new(vec![]),
+    });
+    let http = Arc::new(AdapterHttp::default());
+    http.set_transport(transport.clone()).unwrap();
+    let mut config = HtmlConfig::default();
+    config.duckduckgo.bootstrap_url = "http://cold.invalid/home".into();
+    config.duckduckgo.base_url = "http://cold.invalid/html".into();
+    config.duckduckgo.fallback_base_url = "http://cold.invalid/lite".into();
+    let mut registry = Registry::builtins().unwrap();
+    register_html(
+        &mut registry,
+        http.clone(),
+        Arc::new(AllowAllAdmission),
+        config,
+    )
+    .unwrap();
+    let engine = registry.instantiate("duckduckgo").unwrap();
+    for index in 0..2 {
+        tokio::time::pause();
+        let drive = async {
+            transport.started.notified().await;
+            tokio::time::advance(std::time::Duration::from_millis(4)).await;
+            tokio::task::yield_now().await;
+            assert_eq!(
+                transport.elapsed.lock().unwrap().len(),
+                index,
+                "bootstrap expired before its5ms budget"
+            );
+            // Tokio's millisecond timer wheel observes the5ms deadline on the
+            // next tick; drive6ms explicitly, never a wall-clock tolerance.
+            tokio::time::advance(std::time::Duration::from_millis(2)).await;
+            transport.dispatched.notified().await;
+            tokio::time::resume();
+        };
+        let request = SearchRequest::default();
+        let (r, ()) = tokio::join!(engine.search(&request), drive);
+        assert_eq!(r.status, EngineStatus::Ok);
+        assert_eq!(
+            r.results[0].url,
+            if index == 0 { "/cold" } else { "/cold-lite" }
+        );
+    }
+    assert_eq!(
+        *transport.elapsed.lock().unwrap(),
+        vec![std::time::Duration::from_millis(6); 2]
+    );
+    let seen = transport.seen.lock().unwrap().clone();
+    assert_eq!(seen.len(), 5);
+    for (r, path) in seen
+        .iter()
+        .zip(["/home", "/html", "/home", "/html", "/lite"])
+    {
+        assert_eq!(r.url.path(), path);
+        assert_eq!(
+            r.method,
+            if path == "/home" {
+                reqwest::Method::GET
+            } else {
+                reqwest::Method::POST
+            }
+        );
+        assert!(!r.headers.contains_key("cookie"));
+    }
+    http.shutdown_and_wait().await;
+}
+

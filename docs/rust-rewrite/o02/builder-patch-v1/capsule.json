@@ -1,0 +1,76 @@
+{
+  "schema": "O02_BUILDER_PATCH_1_99_1_V1",
+  "parent": "011dbfd7eedc47cf60d7d27569d90cee1587da21",
+  "rows": [
+    {
+      "path": "Dockerfile",
+      "prior": {
+        "bytes": 2427,
+        "sha256": "05bb1d6087f15b85904283e6cac78582465169f4fa43f2f5f681390a09dc3607",
+        "mode": "0644"
+      },
+      "current": {
+        "bytes": 2427,
+        "sha256": "f1670459690fd72574e12cfaa8fe121337053fdd526a541119c4ae5de1ca77e5",
+        "mode": "0644"
+      },
+      "edits": [
+        {
+          "at": 83,
+          "remove_utf8": "FROM rust:1.99.0-bookworm@sha256:114c7a4425406451c2866b6aafe69fe29b1b298832db1277d411ac73c82d04d6 AS healthcheck-builder\n",
+          "insert_utf8": "FROM rust:1.99.1-bookworm@sha256:e6f2cff35d0f309acf8433b4f05878ed77092602c5065cc81801177da0bb3a9c AS healthcheck-builder\n"
+        }
+      ]
+    },
+    {
+      "path": "scripts/verify_docker_base_digest.py",
+      "prior": {
+        "bytes": 5548,
+        "sha256": "835207d44b4fe5871a356f1953d1850ee73a8c639ca9ebf9bd7c26de04cb2fd5",
+        "mode": "0644"
+      },
+      "current": {
+        "bytes": 5551,
+        "sha256": "6f5d779ccf35400771f2d56f9524dceed1026f78a341de083359eb94e623a87a",
+        "mode": "0644"
+      },
+      "edits": [
+        {
+          "at": 1672,
+          "remove_utf8": "    r\"^\\s*FROM\\s+rust:(?P<tag>1\\.99\\.0-bookworm)@(?P<digest>sha256:[0-9a-f]{64})\\s+AS\\s+healthcheck-builder\\s*$\",\n",
+          "insert_utf8": "    r\"^\\s*FROM\\s+rust:(?P<tag>1\\.99\\.[01]-bookworm)@(?P<digest>sha256:[0-9a-f]{64})\\s+AS\\s+healthcheck-builder\\s*$\",\n"
+        }
+      ]
+    },
+    {
+      "path": "tests/test_deployment_artifacts.py",
+      "prior": {
+        "bytes": 12872,
+        "sha256": "e7634a07ab53f6409386a9515f46ab65ebccfb0747235d6ad43a07dcf54f431c",
+        "mode": "0644"
+      },
+      "current": {
+        "bytes": 13659,
+        "sha256": "50ca66e5a204eb35d76d7848b8f4b4c526e8a810204482357317ae9fd91b4208",
+        "mode": "0644"
+      },
+      "edits": [
+        {
+          "at": 11733,
+          "remove_utf8": "    assert bases[0][1] == \"1.99.0-bookworm\"\n",
+          "insert_utf8": "    assert bases[0][1] == \"1.99.1-bookworm\"\n"
+        },
+        {
+          "at": 12120,
+          "remove_utf8": "        dockerfile.replace(\"rust:1.99.0-bookworm@sha256:\", \"rust:1.99.0-bookworm@bad:\"),\n",
+          "insert_utf8": "        dockerfile.replace(\"@sha256:\", \"@bad:\", 1),\n"
+        },
+        {
+          "at": 12872,
+          "remove_utf8": "",
+          "insert_utf8": "\n\n@pytest.mark.parametrize(\"tag\", [\"1.99.0-bookworm\", \"1.99.1-bookworm\"])\ndef test_health_builder_accepts_reviewed_patch_tags(tag: str) -> None:\n    digest = \"sha256:\" + \"a\" * 64\n    dockerfile = f\"FROM rust:{tag}@{digest} AS healthcheck-builder\\nFROM python:3.14-slim@{digest}\\n\"\n    assert verify.pinned_bases(dockerfile) == [\n        (\"library/rust\", tag, digest),\n        (\"library/python\", \"3.14-slim\", digest),\n    ]\n\n\n@pytest.mark.parametrize(\"tag\", [\"1.99.2-bookworm\", \"1.100.0-bookworm\", \"1.99.1-alpine\", \"latest\"])\ndef test_health_builder_rejects_unreviewed_tags(tag: str) -> None:\n    digest = \"sha256:\" + \"a\" * 64\n    dockerfile = f\"FROM rust:{tag}@{digest} AS healthcheck-builder\\nFROM python:3.14-slim@{digest}\\n\"\n    with pytest.raises(SystemExit, match=\"recognized\"):\n        verify.pinned_bases(dockerfile)\n"
+        }
+      ]
+    }
+  ]
+}

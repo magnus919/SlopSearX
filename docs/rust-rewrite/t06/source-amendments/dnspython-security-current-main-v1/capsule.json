@@ -1,0 +1,303 @@
+{
+  "schema": "T06_DNSPYTHON_SECURITY_SOURCE_SUCCESSOR_V1",
+  "baseline": "c2d2b5c485c2bd9b8bca6dcfb0448d4e6e4b7c4e",
+  "scope": "Issue #1128 source identity reconciliation from current main c2d2b5c only; historical qualification evidence remains unchanged and does not certify successor behavior.",
+  "rows": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "current": {
+        "bytes": 16840,
+        "sha256": "5c1ad02869e6dfb15c2e612cca3a41c12f2efc2d81db0c09613137102f8c517d",
+        "mode": "0644"
+      },
+      "current_git_blob": "4c32a4b46fedde236aae51ccb0b9c80d7d4794ff",
+      "prior": {
+        "bytes": 16830,
+        "sha256": "6d488e519ce4a1505f84d1805636419417ab58ca30bcf014471c6cb9b34e2825",
+        "mode": "0644"
+      },
+      "prior_git_blob": "465872070e89da0c4f8198789fb3fa3827fd84c5",
+      "edits": [
+        {
+          "at": 2131,
+          "remove_utf8": "        run: deptry . --per-rule-ignores \"DEP002=lxml|uvicorn|pytest|pytest-asyncio|ruff|cssselect|mypy|pytest-cov|pip-tools|pre-commit|radon|vulture|import-linter|deptry|pip-audit|fastmcp|prometheus-client|dnspython,DEP003=starlette\"\n",
+          "insert_utf8": "        run: deptry . --per-rule-ignores \"DEP002=lxml|uvicorn|pytest|pytest-asyncio|ruff|cssselect|mypy|pytest-cov|pip-tools|pre-commit|radon|vulture|import-linter|deptry|pip-audit|fastmcp|prometheus-client,DEP003=starlette\"\n"
+        }
+      ]
+    },
+    {
+      "path": ".github/workflows/nightly.yml",
+      "current": {
+        "bytes": 3229,
+        "sha256": "87874379f14e781c543bc1a413cf03b59e470ee541536de27182b2f292ade8e3",
+        "mode": "0644"
+      },
+      "current_git_blob": "faa442bea0eb274d09ccf9fa2de49295b4a1ed12",
+      "prior": {
+        "bytes": 3219,
+        "sha256": "cd3cc1f3379b03e1d229713b1f2afb4536ce9ecbad48bae5bf285d26399587c4",
+        "mode": "0644"
+      },
+      "prior_git_blob": "52403417e7d6504ff798c4edd51a78bb93cbc72f",
+      "edits": [
+        {
+          "at": 2175,
+          "remove_utf8": "        run: deptry . --per-rule-ignores \"DEP002=lxml|uvicorn|pytest|pytest-asyncio|ruff|cssselect|mypy|pytest-cov|pip-tools|pre-commit|radon|vulture|import-linter|deptry|pip-audit|dnspython,DEP003=starlette\"\n",
+          "insert_utf8": "        run: deptry . --per-rule-ignores \"DEP002=lxml|uvicorn|pytest|pytest-asyncio|ruff|cssselect|mypy|pytest-cov|pip-tools|pre-commit|radon|vulture|import-linter|deptry|pip-audit,DEP003=starlette\"\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/xtask/src/w07.rs",
+      "current": {
+        "bytes": 51485,
+        "sha256": "2545f2cbcc9a99116e193724aea392b9598a4192fb26a5cd79a8f41b77b08c6e",
+        "mode": "0644"
+      },
+      "current_git_blob": "da0ad65ba205f02beea4b17837d0822032769559",
+      "prior": {
+        "bytes": 51100,
+        "sha256": "58dcb35c58665492e11dbc731b88471fcfb29e96b7550fb4d7830e984910de17",
+        "mode": "0644"
+      },
+      "prior_git_blob": "d8e69686700de998bd5dd27e79d56792fd3cdce8",
+      "edits": [
+        {
+          "at": 5850,
+          "remove_utf8": "    let bytes = if let Some(current) =\n        crate::t06::lock_amendment::dnspython_security::current_operand(root, path)?\n    {\n        current\n    } else {\n        let metadata =\n            fs::symlink_metadata(root.join(path)).map_err(|e| format!(\"W07 {path}: {e}\"))?;\n        if !metadata.is_file() || metadata.file_type().is_symlink() {\n            return Err(format!(\n                \"W07 source leaf must be a regular non-symlink file: {path}\"\n            ));\n        }\n        fs::read(root.join(path)).map_err(|e| format!(\"W07 {path}: {e}\"))?\n    };\n",
+          "insert_utf8": "    let metadata = fs::symlink_metadata(root.join(path)).map_err(|e| format!(\"W07 {path}: {e}\"))?;\n    if !metadata.is_file() || metadata.file_type().is_symlink() {\n        return Err(format!(\n            \"W07 source leaf must be a regular non-symlink file: {path}\"\n        ));\n    }\n    let bytes = fs::read(root.join(path)).map_err(|e| format!(\"W07 {path}: {e}\"))?;\n"
+        },
+        {
+          "at": 7055,
+          "remove_utf8": "        if let Some(operand) = crate::t06::lock_amendment::dnspython_security::frozen_operand(\n            root, path, expected, &bytes,\n        )? {\n            return Ok(operand);\n        }\n",
+          "insert_utf8": ""
+        }
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/ci/gates.json",
+      "current": {
+        "bytes": 176465,
+        "sha256": "45c7f9f39791ee75c3e6d91f6da1ecca2e213ed29080dea13f853511dd0c655e",
+        "mode": "0644"
+      },
+      "current_git_blob": "a436239ec26a7af5de3c255e0824802dfc6f3787",
+      "prior": {
+        "bytes": 176445,
+        "sha256": "cf54f6683c29cf16aad239eddb982e3046e9c669102fde58750efa5a9ef30d11",
+        "mode": "0644"
+      },
+      "prior_git_blob": "924bf3634db240bc51ef13459e0c52ad8255b031",
+      "edits": [
+        {
+          "at": 10705,
+          "remove_utf8": "              \"run\": \"deptry . --per-rule-ignores \\\"DEP002=lxml|uvicorn|pytest|pytest-asyncio|ruff|cssselect|mypy|pytest-cov|pip-tools|pre-commit|radon|vulture|import-linter|deptry|pip-audit|fastmcp|prometheus-client|dnspython,DEP003=starlette\\\"\"\n",
+          "insert_utf8": "              \"run\": \"deptry . --per-rule-ignores \\\"DEP002=lxml|uvicorn|pytest|pytest-asyncio|ruff|cssselect|mypy|pytest-cov|pip-tools|pre-commit|radon|vulture|import-linter|deptry|pip-audit|fastmcp|prometheus-client,DEP003=starlette\\\"\"\n"
+        },
+        {
+          "at": 44140,
+          "remove_utf8": "              \"run\": \"deptry . --per-rule-ignores \\\"DEP002=lxml|uvicorn|pytest|pytest-asyncio|ruff|cssselect|mypy|pytest-cov|pip-tools|pre-commit|radon|vulture|import-linter|deptry|pip-audit|dnspython,DEP003=starlette\\\"\"\n",
+          "insert_utf8": "              \"run\": \"deptry . --per-rule-ignores \\\"DEP002=lxml|uvicorn|pytest|pytest-asyncio|ruff|cssselect|mypy|pytest-cov|pip-tools|pre-commit|radon|vulture|import-linter|deptry|pip-audit,DEP003=starlette\\\"\"\n"
+        }
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/t03/source-successor-v1.rs",
+      "current": {
+        "bytes": 40547,
+        "sha256": "9090524bb86a7679a0c7d3c95698cdd34f2b8e350bc50545bca19b950df70f03",
+        "mode": "0644"
+      },
+      "current_git_blob": "c6f955083f7dae389136e5799c8446e14932ef0c",
+      "prior": {
+        "bytes": 37969,
+        "sha256": "6649ff65dda37711fb4228d3b656fb3f408c5a13ab13dbda86f51df23d69c7fd",
+        "mode": "0644"
+      },
+      "prior_git_blob": "c9edcf8b6986665046cbcc1511f0291da53793e9",
+      "edits": [
+        {
+          "at": 172,
+          "remove_utf8": "#[path = \"../t06/source-amendments/dnspython-security-current-main-v1.rs\"]\n#[allow(\n    dead_code,\n    clippy::duplicate_mod,\n    reason = \"Independent qualification roots intentionally compile this stateless T03 proof leaf\"\n)]\nmod dnspython_security_outer;\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 20310,
+          "remove_utf8": "fn w07_source_frames(root: &Path, supplied: Option<&[u8]>) -> Result<(Vec<u8>, Vec<u8>, Vec<u8>)> {\n",
+          "insert_utf8": "fn w07_current_frame(root: &Path) -> Result<(Vec<u8>, Vec<u8>)> {\n"
+        },
+        {
+          "at": 20608,
+          "remove_utf8": "    let physical = dnspython_security_outer::current_operand(root, W07_SOURCE)?\n        .ok_or(\"T03 W07 outer physical operand missing\")?;\n    if let Some(supplied) = supplied {\n        need(physical == supplied, \"supplied bytes are physical current\")?;\n    }\n    let accepted = dnspython_security_outer::prior(root, W07_SOURCE, &physical)?;\n    let prior = inverse(pin, row, &accepted, 0o644)?;\n",
+          "insert_utf8": "    let physical = regular(root, W07_SOURCE, pin.current_bytes)?;\n    let prior = inverse(pin, row, &physical, 0o644)?;\n"
+        },
+        {
+          "at": 21419,
+          "remove_utf8": "    Ok((physical, accepted, prior))\n}\n// Existing #1131 controls continue to exercise precisely their accepted bytes.\nfn w07_current_frame(root: &Path) -> Result<(Vec<u8>, Vec<u8>)> {\n    let (_, accepted, prior) = w07_source_frames(root, None)?;\n    Ok((accepted, prior))\n}\nfn w07_physical_current_frame(root: &Path) -> Result<(Vec<u8>, Vec<u8>)> {\n    let (physical, _, prior) = w07_source_frames(root, None)?;\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 21858,
+          "remove_utf8": "}\nfn w07_outer_controls(root: &Path) -> Result<()> {\n    let (physical, accepted, logical) = w07_source_frames(root, None)?;\n    let doc = decode(CAPSULE)?;\n    let source = pin(&doc, W07_SOURCE)?;\n    let predecessor = inverse(&source, row(&doc, W07_SOURCE)?, &logical, 0o644)?;\n    need(\n        physical != accepted\n            && accepted != logical\n            && dnspython_security_outer::prior(root, W07_SOURCE, &physical)? == accepted\n            && prior(root, W07_SOURCE, &physical)? == predecessor,\n        \"W07 outer physical to c2d2b5c to #1131 to T03 composition positive\",\n    )?;\n    need(\n        dnspython_security_outer::prior(root, W07_SOURCE, &accepted).is_err()\n            && prior(root, W07_SOURCE, &accepted).is_err()\n            && prior(root, W07_SOURCE, &logical).is_err()\n            && prior(root, W07_SOURCE, &predecessor).is_err(),\n        \"W07 reconstructed operands cannot substitute for outer physical source\",\n    )?;\n    let mut changed = physical.clone();\n    changed[0] ^= 1;\n    need(\n        dnspython_security_outer::prior(root, W07_SOURCE, &changed).is_err()\n            && prior(root, W07_SOURCE, &changed).is_err(),\n        \"changed W07 outer supplied physical bytes rejected\",\n    )?;\n    let w07_doc = decode_w07(W07_CAPSULE)?;\n    let w07_pin = pin(&w07_doc, W07_SOURCE)?;\n    need(\n        inverse(&w07_pin, row(&w07_doc, W07_SOURCE)?, &physical, 0o644).is_err()\n            && frame(W07_SOURCE, &accepted, 0o644).is_err()\n            && frame(W07_SOURCE, &physical, 0o644).is_err(),\n        \"W07 outer and historical inverse layers cannot be skipped\",\n    )?;\n    Ok(())\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 35963,
+          "remove_utf8": "        let (_, _, logical) = w07_source_frames(root, Some(supplied))?;\n",
+          "insert_utf8": "        let (physical, logical) = w07_current_frame(root)?;\n        need(physical == supplied, \"supplied bytes are physical current\")?;\n"
+        },
+        {
+          "at": 37038,
+          "remove_utf8": "    w07_outer_controls(root)?;\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 37451,
+          "remove_utf8": "            w07_physical_current_frame(root)?\n",
+          "insert_utf8": "            w07_current_frame(root)?\n"
+        }
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/t06/source-amendments/lock_amendment.rs",
+      "current": {
+        "bytes": 20890,
+        "sha256": "ab59c665b7b681ce1db4f329357392bae493711974979309aadaa1029ef43a69",
+        "mode": "0644"
+      },
+      "current_git_blob": "a222e2296b53c54194f4fcaee1f95c9a1b5123fe",
+      "prior": {
+        "bytes": 20017,
+        "sha256": "e4781692fc1c26b36de292eec98f9a222c2df079f2fe94823903b4849ff32651",
+        "mode": "0644"
+      },
+      "prior_git_blob": "5a686f11ea1de603197be1317462ceb4c976484c",
+      "edits": [
+        {
+          "at": 0,
+          "remove_utf8": "//! Finite lock successors; historical captures retain their original profile.\n#[path = \"dnspython-security-current-main-v1.rs\"]\npub mod dnspython_security;\n",
+          "insert_utf8": "//! One finite lock successor; historical captures retain their original profile.\n"
+        },
+        {
+          "at": 11926,
+          "remove_utf8": "    let current = dnspython_security::predecessor(root, SOURCE_PATH)?;\n    // The outer reader proved physical current0644, full bytes and exact Git\n    // predecessor. Preserve the unchanged v1 packaging proof on that operand.\n    validate_materials(&raw, path, historical_pin, &current, 0o644)?;\n",
+          "insert_utf8": "    let source = root.join(SOURCE_PATH);\n    let metadata = fs::symlink_metadata(&source).map_err(|e| e.to_string())?;\n    require(\n        metadata.file_type().is_file(),\n        \"current lock must be a regular file\",\n    )?;\n    #[cfg(unix)]\n    let mode = {\n        use std::os::unix::fs::PermissionsExt;\n        metadata.permissions().mode() & 0o7777\n    };\n    #[cfg(not(unix))]\n    let mode = 0; // This qualification currently supports Linux and macOS only.\n    let current = fs::read(source).map_err(|e| e.to_string())?;\n    validate_materials(&raw, path, historical_pin, &current, mode)?;\n"
+        },
+        {
+          "at": 13297,
+          "remove_utf8": "            && current == dnspython_security::current_git_blob(path)?,\n",
+          "insert_utf8": "            && current == CURRENT_BLOB,\n"
+        },
+        {
+          "at": 13560,
+          "remove_utf8": "    const PHYSICAL: &[u8] = include_bytes!(\"../../../../uv.lock\");\n",
+          "insert_utf8": "    const LIVE: &[u8] = include_bytes!(\"../../../../uv.lock\");\n"
+        },
+        {
+          "at": 13956,
+          "remove_utf8": "        let predecessor = dnspython_security::frame(SOURCE_PATH, PHYSICAL, 0o644).unwrap();\n        validate_materials(RAW, SOURCE_PATH, HISTORICAL_SHA256, &predecessor, 0o644).unwrap();\n        let root = Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../..\");\n        dnspython_security::controls(&root).unwrap();\n        verify(&root, SOURCE_PATH, HISTORICAL_SHA256).unwrap();\n        let live_git = std::process::Command::new(\"git\")\n            .args([\"hash-object\", \"--\", SOURCE_PATH])\n            .current_dir(&root)\n            .output()\n            .unwrap();\n        assert!(live_git.status.success());\n        let live_blob = std::str::from_utf8(&live_git.stdout).unwrap().trim();\n        verify_git_pins(SOURCE_PATH, HISTORICAL_BLOB, HISTORICAL_BLOB, live_blob).unwrap();\n",
+          "insert_utf8": "        validate_materials(RAW, SOURCE_PATH, HISTORICAL_SHA256, LIVE, 0o644).unwrap();\n        verify_git_pins(SOURCE_PATH, HISTORICAL_BLOB, HISTORICAL_BLOB, CURRENT_BLOB).unwrap();\n"
+        },
+        {
+          "at": 15144,
+          "remove_utf8": "            std::str::from_utf8(&predecessor).unwrap(),\n",
+          "insert_utf8": "            std::str::from_utf8(LIVE).unwrap(),\n"
+        },
+        {
+          "at": 15520,
+          "remove_utf8": "        let predecessor = dnspython_security::frame(SOURCE_PATH, PHYSICAL, 0o644).unwrap();\n        let live = std::str::from_utf8(&predecessor).unwrap();\n",
+          "insert_utf8": "        let live = std::str::from_utf8(LIVE).unwrap();\n"
+        },
+        {
+          "at": 17180,
+          "remove_utf8": "        let predecessor = dnspython_security::frame(SOURCE_PATH, PHYSICAL, 0o644).unwrap();\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 17344,
+          "remove_utf8": "        let live = std::str::from_utf8(&predecessor).unwrap();\n",
+          "insert_utf8": "        let live = std::str::from_utf8(LIVE).unwrap();\n"
+        },
+        {
+          "at": 19019,
+          "remove_utf8": "        let predecessor = dnspython_security::frame(SOURCE_PATH, PHYSICAL, 0o644).unwrap();\n        assert!(\n            validate_materials(RAW, \"other.lock\", HISTORICAL_SHA256, &predecessor, 0o644).is_err()\n        );\n        assert!(\n            validate_materials(RAW, SOURCE_PATH, &\"0\".repeat(64), &predecessor, 0o644).is_err()\n        );\n        assert!(\n            validate_materials(RAW, SOURCE_PATH, HISTORICAL_SHA256, &predecessor, 0o755).is_err()\n        );\n",
+          "insert_utf8": "        assert!(validate_materials(RAW, \"other.lock\", HISTORICAL_SHA256, LIVE, 0o644).is_err());\n        assert!(validate_materials(RAW, SOURCE_PATH, &\"0\".repeat(64), LIVE, 0o644).is_err());\n        assert!(validate_materials(RAW, SOURCE_PATH, HISTORICAL_SHA256, LIVE, 0o755).is_err());\n"
+        },
+        {
+          "at": 20342,
+          "remove_utf8": "            (SOURCE_PATH, HISTORICAL_BLOB, HISTORICAL_BLOB, CURRENT_BLOB),\n",
+          "insert_utf8": ""
+        }
+      ]
+    },
+    {
+      "path": "pyproject.toml",
+      "current": {
+        "bytes": 5425,
+        "sha256": "d8b7a42dfcaf4963bc22e072f044bafe676cd90cba6f0194fbc8b87c32a187a0",
+        "mode": "0644"
+      },
+      "current_git_blob": "6395a16d8b21aeaa681748eb6550d1748ff50125",
+      "prior": {
+        "bytes": 5292,
+        "sha256": "c8f6d7d8ebdf0508c65e2372b51869ad47e9d33bc3856ffbc73f14a350910dce",
+        "mode": "0644"
+      },
+      "prior_git_blob": "4801a91ae68ac01a12792bb415d1c9ba03556510",
+      "edits": [
+        {
+          "at": 613,
+          "remove_utf8": "    \"dnspython>=2.9.2,<3\",\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 3684,
+          "remove_utf8": "# dnspython is a direct security floor for FastMCP's transitive email-validation dependency.\nper_rule_ignores = {DEP002 = [\"lxml\", \"uvicorn\", \"pytest\", \"pytest-asyncio\", \"ruff\", \"cssselect\", \"mypy\", \"pytest-cov\", \"pip-tools\", \"pre-commit\", \"radon\", \"vulture\", \"import-linter\", \"deptry\", \"pip-audit\", \"fastmcp\", \"prometheus-client\", \"dnspython\"], DEP003 = [\"starlette\"]}\n",
+          "insert_utf8": "per_rule_ignores = {DEP002 = [\"lxml\", \"uvicorn\", \"pytest\", \"pytest-asyncio\", \"ruff\", \"cssselect\", \"mypy\", \"pytest-cov\", \"pip-tools\", \"pre-commit\", \"radon\", \"vulture\", \"import-linter\", \"deptry\", \"pip-audit\", \"fastmcp\", \"prometheus-client\"], DEP003 = [\"starlette\"]}\n"
+        }
+      ]
+    },
+    {
+      "path": "uv.lock",
+      "current": {
+        "bytes": 470840,
+        "sha256": "b56c01276cfe649d85f40827388b43789672854f3fb5af3c408650748abc01a6",
+        "mode": "0644"
+      },
+      "current_git_blob": "f381a1daf48ef6463e7bbb1a637a6a1e6e954bfe",
+      "prior": {
+        "bytes": 470758,
+        "sha256": "b910471be0f0a6f4ebfea3a86dbce6f0ef74cc8cea5cd098d10623eeee610254",
+        "mode": "0644"
+      },
+      "prior_git_blob": "ffd869ca0dab8d8f749bdbcb1ffba9899a15518c",
+      "edits": [
+        {
+          "at": 147967,
+          "remove_utf8": "version = \"2.9.2\"\n",
+          "insert_utf8": "version = \"2.9.0\"\n"
+        },
+        {
+          "at": 148035,
+          "remove_utf8": "sdist = { url = \"https://files.pythonhosted.org/packages/76/49/900383b471c645a3c397f47b3211d1fcecb3a540c98f683494cdf86b33de/dnspython-2.9.2.tar.gz\", hash = \"sha256:8d4d39a513e649d634004ce4d39ade2352efcea472a0247535a5c2d18a9d7ba9\", size = 455484, upload-time = \"2026-11-03T23:56:53.601Z\" }\n",
+          "insert_utf8": "sdist = { url = \"https://files.pythonhosted.org/packages/ef/4a/50822184bd67cc6493f0fb6a880749158fcd31ab3fa07409acfd91f9fc85/dnspython-2.9.0.tar.gz\", hash = \"sha256:b44dc6b18f07a8b1c56676a19fbfdb5209415b046a9cece286baafa87ff3f7f1\", size = 423560, upload-time = \"2026-10-09T00:07:24.352Z\" }\n"
+        },
+        {
+          "at": 148335,
+          "remove_utf8": "    { url = \"https://files.pythonhosted.org/packages/1e/0c/5346358b3a20275d256978c35203ddc2c8617f78c1b23795b79ba22ced6d/dnspython-2.9.2-py3-none-any.whl\", hash = \"sha256:af15f7d385a6ae2fb35a796fde2138004c8c42c7389090e2addc83e3b3340fd8\", size = 360455, upload-time = \"2026-11-03T23:56:52.088Z\" },\n",
+          "insert_utf8": "    { url = \"https://files.pythonhosted.org/packages/10/02/cdcc9b7c051786a103c3b09e1003a82fa0c66bcb91ffbdabcfbf7b4163b9/dnspython-2.9.0-py3-none-any.whl\", hash = \"sha256:9a4aedb833c3c1b49214d04d44d3032ab7a9135f7c1d29a549b4ff78fd82fda9\", size = 354822, upload-time = \"2026-10-09T00:07:22.622Z\" },\n"
+        },
+        {
+          "at": 393323,
+          "remove_utf8": "    { name = \"dnspython\" },\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 394278,
+          "remove_utf8": "    { name = \"dnspython\", specifier = \">=2.9.2,<3\" },\n",
+          "insert_utf8": ""
+        }
+      ]
+    }
+  ]
+}

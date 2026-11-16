@@ -1,0 +1,31 @@
+"""Temporary offline pinned-SDK protocol oracle; synthetic keys; retire at G08."""
+import hashlib
+import json
+from pathlib import Path
+import socket
+import sys
+ROOT = Path('/private/tmp/slopsearx-rust-oracle-py314/lib/python3.14/site-packages/sentry_sdk')
+PINS = {path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest() for path in ['utils.py', 'transport.py', 'envelope.py']}
+def forbidden(*args, **kwargs):
+    raise RuntimeError('offline SDK oracle forbids network')
+socket.socket.connect = forbidden
+socket.create_connection = forbidden
+from sentry_sdk.utils import Dsn
+from sentry_sdk.envelope import Envelope
+cases = []
+for dsn in ['https://publickey@monitor.invalid/12', 'http://publickey@127.0.0.1:12345/prefix/00012', 'https://publickey:syntheticsecret@monitor.invalid/+12', 'https://publickey@monitor.invalid/١٢', 'https://publickey@monitor.invalid/no-project', 'ftp://publickey@monitor.invalid/12', 'https://monitor.invalid/12']:
+    try:
+        parsed = Dsn(dsn)
+        auth = parsed.to_auth(client='sentry.python/2.71.0')
+        output = {'endpoint': auth.get_api_url(), 'authentication': auth.to_header()}
+    except Exception as error:
+        output = {'error_type': type(error).__name__, 'message': str(error)}
+    cases.append({'id': 'sentry.dsn.' + str(len(cases)), 'input': dsn, 'output': output})
+event = {'event_id': '1234567890abcdef1234567890abcdef', 'platform': 'python', 'level': 'error', 'logger': 'slopsearx', 'message': 'synthetic offline event'}
+envelope = Envelope(headers={'event_id': event['event_id']})
+envelope.add_event(event)
+body = envelope.serialize()
+if body.count(b'\n') != 3 or b'"type":"event"' not in body:
+    raise RuntimeError('unexpected pinned source envelope framing')
+cases.append({'id': 'sentry.envelope.event', 'input': event, 'output_utf8': body.decode('utf-8')})
+print(json.dumps({'scope': 'offline SDK utilities and envelope serializer only; no init/transport/client', 'python': sys.version, 'source_root': str(ROOT), 'source_sha256': PINS, 'cases': cases}, ensure_ascii=False, indent=2, sort_keys=True))

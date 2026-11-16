@@ -1,0 +1,268 @@
+{
+  "schema_version": 1,
+  "source_blob": "bb4ac3c8eb3adafcd012ecb93fa8aef8a47ec6d4",
+  "darwin": {
+    "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+    "platform": "macOS-27.0-arm64-arm-64bit-Mach-O"
+  },
+  "linux": {
+    "host": "gpuslut01",
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+    "platform": "Linux",
+    "observation": "Standalone standard-library socket.getaddrinfo AI_NUMERICHOST probe; no DNS or repository source copied"
+  },
+  "interpretation": "Linux classifications are derived from exact source branch order and independently observed numeric-only candidates. Whole-source remote execution was denied by automatic approval review. Linux CI native replay remains required before merge.",
+  "cases": [
+    {
+      "host": "08.8.8.8",
+      "darwin_numeric_candidates": [
+        "8.8.8.8"
+      ],
+      "linux_numeric_candidates": [],
+      "darwin_source_classification": [
+        "ok",
+        null,
+        "http",
+        "http://08.8.8.8/"
+      ],
+      "linux_source_classification_from_candidate_probe": [
+        "ambiguous",
+        "URL host is a malformed dotted numeric literal; canonicalization is ambiguous",
+        "http",
+        null
+      ]
+    },
+    {
+      "host": "018.1.1.1",
+      "darwin_numeric_candidates": [
+        "18.1.1.1"
+      ],
+      "linux_numeric_candidates": [],
+      "darwin_source_classification": [
+        "ok",
+        null,
+        "http",
+        "http://018.1.1.1/"
+      ],
+      "linux_source_classification_from_candidate_probe": [
+        "ambiguous",
+        "URL host is a malformed dotted numeric literal; canonicalization is ambiguous",
+        "http",
+        null
+      ]
+    },
+    {
+      "host": "4429711368",
+      "darwin_numeric_candidates": [
+        "8.8.8.8"
+      ],
+      "linux_numeric_candidates": [],
+      "darwin_source_classification": [
+        "ok",
+        null,
+        "http",
+        "http://4429711368/"
+      ],
+      "linux_source_classification_from_candidate_probe": [
+        "ambiguous",
+        "URL host is a malformed dotted numeric literal; canonicalization is ambiguous",
+        "http",
+        null
+      ]
+    },
+    {
+      "host": "4294967296",
+      "darwin_numeric_candidates": [
+        "0.0.0.0"
+      ],
+      "linux_numeric_candidates": [],
+      "darwin_source_classification": [
+        "ambiguous",
+        "URL host is a non-global literal IP address; not a safe fetch target",
+        "http",
+        null
+      ],
+      "linux_source_classification_from_candidate_probe": [
+        "ambiguous",
+        "URL host is a malformed dotted numeric literal; canonicalization is ambiguous",
+        "http",
+        null
+      ]
+    },
+    {
+      "host": "4294967297",
+      "darwin_numeric_candidates": [
+        "0.0.0.1"
+      ],
+      "linux_numeric_candidates": [],
+      "darwin_source_classification": [
+        "ambiguous",
+        "URL host is a non-global literal IP address; not a safe fetch target",
+        "http",
+        null
+      ],
+      "linux_source_classification_from_candidate_probe": [
+        "ambiguous",
+        "URL host is a malformed dotted numeric literal; canonicalization is ambiguous",
+        "http",
+        null
+      ]
+    },
+    {
+      "host": "0x100000000",
+      "darwin_numeric_candidates": [
+        "0.0.0.0"
+      ],
+      "linux_numeric_candidates": [],
+      "darwin_source_classification": [
+        "ambiguous",
+        "URL host is a non-global literal IP address; not a safe fetch target",
+        "http",
+        null
+      ],
+      "linux_source_classification_from_candidate_probe": [
+        "ok",
+        null,
+        "http",
+        "http://0x100000000/"
+      ]
+    },
+    {
+      "host": "0x108080808",
+      "darwin_numeric_candidates": [
+        "8.8.8.8"
+      ],
+      "linux_numeric_candidates": [],
+      "darwin_source_classification": [
+        "ok",
+        null,
+        "http",
+        "http://0x108080808/"
+      ],
+      "linux_source_classification_from_candidate_probe": [
+        "ok",
+        null,
+        "http",
+        "http://0x108080808/"
+      ]
+    },
+    {
+      "host": "010.010.010.010",
+      "darwin_numeric_candidates": [
+        "10.10.10.10"
+      ],
+      "linux_numeric_candidates": [
+        "8.8.8.8"
+      ],
+      "darwin_source_classification": [
+        "ambiguous",
+        "URL host is a non-global literal IP address; not a safe fetch target",
+        "http",
+        null
+      ],
+      "linux_source_classification_from_candidate_probe": [
+        "ok",
+        null,
+        "http",
+        "http://010.010.010.010/"
+      ]
+    },
+    {
+      "host": "0177.0.0.1",
+      "darwin_numeric_candidates": [
+        "177.0.0.1"
+      ],
+      "linux_numeric_candidates": [
+        "127.0.0.1"
+      ],
+      "darwin_source_classification": [
+        "ambiguous",
+        "URL host is a non-global literal IP address; not a safe fetch target",
+        "http",
+        null
+      ],
+      "linux_source_classification_from_candidate_probe": [
+        "ambiguous",
+        "URL host is a non-global literal IP address; not a safe fetch target",
+        "http",
+        null
+      ]
+    },
+    {
+      "host": "0300.1.2.3",
+      "darwin_numeric_candidates": [
+        "192.1.2.3"
+      ],
+      "linux_numeric_candidates": [
+        "192.1.2.3"
+      ],
+      "darwin_source_classification": [
+        "ok",
+        null,
+        "http",
+        "http://0300.1.2.3/"
+      ],
+      "linux_source_classification_from_candidate_probe": [
+        "ok",
+        null,
+        "http",
+        "http://0300.1.2.3/"
+      ]
+    },
+    {
+      "host": "001.002.003.004",
+      "darwin_numeric_candidates": [
+        "1.2.3.4"
+      ],
+      "linux_numeric_candidates": [
+        "1.2.3.4"
+      ],
+      "darwin_source_classification": [
+        "ok",
+        null,
+        "http",
+        "http://001.002.003.004/"
+      ],
+      "linux_source_classification_from_candidate_probe": [
+        "ok",
+        null,
+        "http",
+        "http://001.002.003.004/"
+      ]
+    },
+    {
+      "host": "0x",
+      "darwin_numeric_candidates": [],
+      "linux_numeric_candidates": [],
+      "darwin_source_classification": [
+        "ambiguous",
+        "URL host is a non-global literal IP address; not a safe fetch target",
+        "http",
+        null
+      ],
+      "linux_source_classification_from_candidate_probe": [
+        "ambiguous",
+        "URL host is a non-global literal IP address; not a safe fetch target",
+        "http",
+        null
+      ]
+    },
+    {
+      "host": "1.2.3.4.",
+      "darwin_numeric_candidates": [],
+      "linux_numeric_candidates": [],
+      "darwin_source_classification": [
+        "ok",
+        null,
+        "http",
+        "http://1.2.3.4./"
+      ],
+      "linux_source_classification_from_candidate_probe": [
+        "ok",
+        null,
+        "http",
+        "http://1.2.3.4./"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "native_execution": false,
+  "scope": "actual original SearchService synthetic-engine/in-memory audit composition, no network",
+  "cases": 4,
+  "command": [
+    "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+    "-O",
+    "/private/tmp/o01-source-supplement/service_capture.py"
+  ],
+  "exit_code": 0,
+  "replay_byte_equal": true,
+  "artifacts": [
+    {
+      "path": "/private/tmp/o01-source-supplement/service_capture.py",
+      "sha256": "13d1317c3dce8310c294fc948a7b1d505d2e8b2bf5a03142d0cc25178ba91822"
+    },
+    {
+      "path": "/private/tmp/o01-source-supplement/source-pins.json",
+      "sha256": "8bc4a0e55a45e6826b3ce65ce63a81c5fb77ac3c843661f37ecb6107404bf641"
+    },
+    {
+      "path": "/private/tmp/o01-source-supplement/service-source.json",
+      "sha256": "df50b42475634b6023b6093ab059f03e6f3a390dd819869833499a1a1ab289a5"
+    },
+    {
+      "path": "/private/tmp/o01-source-supplement/service-replay.json",
+      "sha256": "df50b42475634b6023b6093ab059f03e6f3a390dd819869833499a1a1ab289a5"
+    },
+    {
+      "path": "/private/tmp/o01-source-supplement/service.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/private/tmp/o01-source-supplement/service-replay.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

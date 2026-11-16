@@ -1,0 +1,18 @@
+[package]
+name = "ssx-domain"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license = "MIT AND Unicode-3.0"
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+ssx-json.workspace = true
+url.workspace = true
+ssx-owned-budget.workspace = true

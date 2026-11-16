@@ -1,0 +1,1638 @@
+{
+  "schema_version": 1,
+  "plan_id": "A07",
+  "issue": 926,
+  "baseline": "1e9dd82d62456fe6f511cc5ade88bae619fac027",
+  "status": "implemented and parent-reviewed runtime/factory/gate/CI, normally integrated with F15/W11/W02; final documentation-head reports and focused PR/exact-head CI govern delivery",
+  "source_inventory": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "d710c84ebad4582dc607cc3bdb806a5a5253259e4cabd5c515f51e55c3588af8",
+      "git_blob": "fa5b75d5407dfb90613d617d4f6c24f236b06aa4"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "sha256": "2df6be141a3b06c662a4062af79eb074248ea70f297a7bf4c65432c10feba681",
+      "git_blob": "8950cc84fbf5abebf8c72a1a8fe39b4cd9ef3eb1"
+    },
+    {
+      "path": "docs/rust-rewrite/CASE_STUDY.md",
+      "sha256": "da92206b79b788b468fc8c0ab3b19f68fe6747d86b4f73af7d01ec362ff47a39",
+      "git_blob": "d609376fa8a8dba26de1d941a60351915f2b1687"
+    },
+    {
+      "path": "docs/rust-rewrite/a01/README.md",
+      "sha256": "7dfe805866c574f6b781886cf8a225af9b2e72314b77837c617cdb2078a20faa",
+      "git_blob": "90e0b39d9ea18687a66f3bd6b5a6cf52e6029f35"
+    },
+    {
+      "path": "docs/rust-rewrite/a01/coverage.json",
+      "sha256": "45c6abe5d280d1ce30c8759ec6eece1d584c69c66794cd1d8a0e9e6545e45a4e",
+      "git_blob": "2f64a8164d62542b0801eea533891465cdb50e03"
+    },
+    {
+      "path": "docs/rust-rewrite/a01/cases.json",
+      "sha256": "3c17a05a2aac67c86e5dd72b24d8854f8497fede22b227e2bba08af894a629ef",
+      "git_blob": "bc2e6e628fc99fe06ce6a87e0538db8f5757ebb8"
+    },
+    {
+      "path": "crates/ssx-application/src/lib.rs",
+      "sha256": "b32df70afbd227526075e70c5ea361460ad62a7c7578c99cb7210e075f72ea2e",
+      "git_blob": "bd5cf1e12ab0b3c4ebd8e1620fb4c9e6089a8954"
+    },
+    {
+      "path": "crates/ssx-infra/src/http.rs",
+      "sha256": "cb68a6b0dc4527f4559f3e0e4671170258cea9b8c737d0dc76c561f0aac67c57",
+      "git_blob": "39760b3733ebfe66e967f8622e5a3730e8c7e61c"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/mod.rs",
+      "sha256": "ff5605574e3ddb6ee67878184d558655b0d91533da6421e96116500236b5849e",
+      "git_blob": "455a7d00dc6434f6d5ca28f73a43c9216ad37b0a"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/source_json.rs",
+      "sha256": "6830b97144e7084cea8329d383a7da9baf389b4955eae804da438afec96f2d79",
+      "git_blob": "2fcd1c7d66a7a007a186980a1eb4aadc62200875"
+    },
+    {
+      "path": "crates/ssx-json/src/lib.rs",
+      "sha256": "c2e5c1e0b02b7a1899897f282486156c4b60fe3680905b092a54d3efb8c52895",
+      "git_blob": "89e77f0a33bef2ea404dc77e4a8c3a75a4781956"
+    },
+    {
+      "path": "crates/xtask/src/main.rs",
+      "sha256": "d3f1563534b6109e7c46a7b3d59e70988df2e221414b812daff51abf5c216e60",
+      "git_blob": "f6a406319341219b73d805133f4be2445fd2bff1"
+    },
+    {
+      "path": "docs/rust-rewrite/ci/gates.json",
+      "sha256": "ea9dd9b4ab143651bef6fbe49f8d15f2074558a3852e4ce7ed7c23e779787ab7",
+      "git_blob": "35b68ae26ac61a00fcb2a3c7715739e315f41286"
+    },
+    {
+      "path": "engines/pubmed.py",
+      "sha256": "ac7b78c12f890ac5bcb9360cfc0c7059377b680b77902e016181ba70ae0f688c",
+      "git_blob": "8425948f5a115d0d46afce3a625bce49ee0b0fcd"
+    },
+    {
+      "path": "engines/europepmc.py",
+      "sha256": "c8811e83b2117eb53011e96a8e9462a30462da43bebb6a8cea6cb7a8dc702dbf",
+      "git_blob": "f1c026cca5fab094e77e7658ef69edebbe3ea7e3"
+    },
+    {
+      "path": "engines/clinicaltrials.py",
+      "sha256": "28d1981607b05988a264c0950bd3b151608c7992d7fa0d543421a8577a2295c7",
+      "git_blob": "23c8ab6ba1e1510cc7b9a5ec5e3a7365bf13fb03"
+    },
+    {
+      "path": "engines/pubchem.py",
+      "sha256": "aa57ea70db504d260ef3d295fafc344e8d911341bbb1bbe3bee5f1880aa2b0c1",
+      "git_blob": "e027508d33240f1fb6eb63d41c7ccceb252eafd7"
+    },
+    {
+      "path": "engines/uniprot.py",
+      "sha256": "03887fe7af9da041cb2185e7c21d85d57adc8acd343629af613191b36e55944c",
+      "git_blob": "2a1564c948e4f2220dd970e564da0ba865348bea"
+    },
+    {
+      "path": "docs/rust-rewrite/f06/fragments/pubmed.json",
+      "sha256": "7e2b276ce40764cddf8b7081bcf9944521a6acf3ae8224b3d3dfc9c66503d88e",
+      "git_blob": "f94e7ab4d7bc6afc44c60bdb6fb0df52f0b7e986"
+    },
+    {
+      "path": "docs/rust-rewrite/f06/fragments/europepmc.json",
+      "sha256": "fa38b6ea0a4c4725c893c3607cb6175b19c721eafd7d315f8b7837471ab89b14",
+      "git_blob": "81d4477b55e239e490a51dd348d6799e9a818029"
+    },
+    {
+      "path": "docs/rust-rewrite/f06/fragments/clinicaltrials.json",
+      "sha256": "491298760e86a0847cd85092ea0346bd30d22bc26a4b5ea5440f7f94c0d1d936",
+      "git_blob": "f6ff971b4562da27b84ac7592dba8c23e3bd8527"
+    },
+    {
+      "path": "docs/rust-rewrite/f06/fragments/pubchem.json",
+      "sha256": "5b78f4f0bd7dc74672ebca0fddbd4c046c7f3459506cc2ff4c5235e1da1f7a17",
+      "git_blob": "9d48ffb5c56dd7e31f5bf870f5b8264f8f2704ae"
+    },
+    {
+      "path": "docs/rust-rewrite/f06/fragments/uniprot.json",
+      "sha256": "49040956e6a2f66e6af2f855be624945b1e702742f7183d5c95fe3b53763b2d9",
+      "git_blob": "c597442ed629bbbb5d2a4d29c1e770c5ec047806"
+    },
+    {
+      "path": "tests/test_pubmed.py",
+      "sha256": "312ceeaa7c0bbd4802890c474af9b3c5c38c5836782b23a0295ab5663a56f7c2",
+      "git_blob": "cbaa16ba298efba77ae5ae85935e66573e4b08ac"
+    },
+    {
+      "path": "tests/test_europepmc.py",
+      "sha256": "ac73cf9a86dc97b2490cabdc5056850f40a7ee44560d5444549ec0096a0f1e3d",
+      "git_blob": "ff799d71c78066952fbe872cbad23a43afa04f97"
+    },
+    {
+      "path": "tests/test_uniprot.py",
+      "sha256": "86e4f13d71a41cca5bbfeb56a0d234665e65eb05b71eba6396af904dfa4180ec",
+      "git_blob": "9c56e830fab2c57bcf5195b7c0a9b6dde56f7619"
+    },
+    {
+      "path": "tests/test_new_engines.py",
+      "sha256": "a6df3df9b68fdc8a4b617d4059a5bd26a8cd82c5d8de1574ac9c48d2d14ad8a4",
+      "git_blob": "4e5293d694bb40332584a9541b6ad41326a01cc0"
+    },
+    {
+      "path": "tests/test_payload.py",
+      "sha256": "a7bc52b2747f0ebc440a4d7ce69671635530c7142d43eb128cb3132e297fb11a",
+      "git_blob": "4b5bc1a0940ad6c1214eb55764fb4aea57188de9"
+    },
+    {
+      "path": "tests/fixtures/europepmc/preprints.json",
+      "sha256": "2d1115ea10cfbd1a902d60501d33471a0ee800f01f27b9e7c891591e636a5ee1",
+      "git_blob": "cbebf297aa8ecdb7e391e2857d4f60cef6a2efbd"
+    },
+    {
+      "path": "tests/fixtures/europepmc/biomedical.json",
+      "sha256": "2c9a29ad299b578a8d1fc16db5ebef0ad0b66333bfb5c4878bfc209ce8e87f96",
+      "git_blob": "54a9a286ee7d5b1d8ac09e5859dd81c0d34d147e"
+    },
+    {
+      "path": "slopsearx/config.py",
+      "sha256": "1cf76b8732439782342a9d217fb2f7c423f688533f287dbf78729a1defc5236e",
+      "git_blob": "761db0521d74ec6d955aa8a84fd92a4a62533c43"
+    },
+    {
+      "path": "slopsearx/payload.py",
+      "sha256": "a44a95655566f9fadaf62da1bab8c975f71f3ead6c3cc57f48c411a9c093c40d",
+      "git_blob": "efa149d48bae401f7a0a9df6e50c8c614adecbb5"
+    },
+    {
+      "path": "crates/ssx-config/src/lib.rs",
+      "sha256": "3e567a3183d42aba5d2a715f1bcce5485cc0a65bb72111bf884bfc084628cc34",
+      "git_blob": "bb184b220b8d5ff52e617831da23c11e68117dde"
+    }
+  ],
+  "regression_mapping": [
+    {
+      "path": "tests/test_capabilities.py",
+      "test": "TestCatalogFeatureMatrix::test_representative_families_report_distinct_capabilities",
+      "line": 155,
+      "end_line": 203,
+      "engines": [
+        "pubmed",
+        "uniprot"
+      ],
+      "classification": "integration consumer / synthetic engine reference",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubmed_two_stage_success_and_complete_payload",
+        "uniprot_exact_gene_identifier_and_stable_overfetch_promotion"
+      ],
+      "mapping_status": "synthetic engine consumer; existing shared owner qualification retained",
+      "retained_consumer_reference": "tests/test_capabilities.py::TestCatalogFeatureMatrix::test_representative_families_report_distinct_capabilities",
+      "native_integration_owner": "G01 / appropriate shared surface owner; adapter fixture does not qualify this consumer"
+    },
+    {
+      "path": "tests/test_europepmc.py",
+      "test": "test_captured_lite_records",
+      "line": 19,
+      "end_line": 39,
+      "engines": [
+        "europepmc"
+      ],
+      "classification": "adapter regression",
+      "decorators": [
+        "pytest.mark.parametrize(\"fixture\", [\"biomedical\", \"preprints\"])"
+      ],
+      "live_forbidden": false,
+      "native_cases": [
+        "europepmc_lite_preserves_attribution_preprints_and_payload"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_europepmc.py",
+      "test": "test_schema_and_empty",
+      "line": 43,
+      "end_line": 49,
+      "engines": [
+        "europepmc"
+      ],
+      "classification": "adapter regression",
+      "decorators": [
+        "pytest.mark.parametrize(\"body,status\", [({}, EngineStatus.ERROR), ({\"resultList\": {\"result\": []}}, EngineStatus.OK)])"
+      ],
+      "live_forbidden": false,
+      "native_cases": [
+        "valid_empty_and_schema_failure_never_fabricate_results",
+        "actual_source_matrix_preserves_requests_and_full_normalized_results"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_europepmc.py",
+      "test": "test_classified_http_failures",
+      "line": 53,
+      "end_line": 58,
+      "engines": [
+        "europepmc"
+      ],
+      "classification": "adapter regression",
+      "decorators": [
+        "pytest.mark.parametrize(\"code,status\", [(429, EngineStatus.RATE_LIMITED), (500, EngineStatus.ERROR)])"
+      ],
+      "live_forbidden": false,
+      "native_cases": [
+        "all_engines_classify_http_failures_and_timeout",
+        "pubmed_aggregate_deadline_bounds_second_request"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_europepmc.py",
+      "test": "test_opt_in_environment_config",
+      "line": 61,
+      "end_line": 67,
+      "engines": [
+        "europepmc"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "resolved_yaml_environment_scalars_reach_engine_specific_semantics"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_europepmc.py",
+      "test": "test_timeout_classification",
+      "line": 70,
+      "end_line": 78,
+      "engines": [
+        "europepmc"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "all_engines_classify_http_failures_and_timeout",
+        "pubmed_aggregate_deadline_bounds_second_request"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_europepmc.py",
+      "test": "test_attribution_visible_in_portal",
+      "line": 81,
+      "end_line": 91,
+      "engines": [
+        "europepmc"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "europepmc_lite_preserves_attribution_preprints_and_payload"
+      ],
+      "mapping_status": "adapter fields verified; native consumer merge/HTML/MCP integration pending",
+      "retained_consumer_reference": "tests/test_europepmc.py::test_attribution_visible_in_portal",
+      "native_integration_owner": "G01 / appropriate shared surface owner; adapter fixture does not qualify this consumer"
+    },
+    {
+      "path": "tests/test_europepmc.py",
+      "test": "test_invalid_dates_and_optional_text_are_not_fabricated",
+      "line": 94,
+      "end_line": 116,
+      "engines": [
+        "europepmc"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "europepmc_skips_incomplete_records_and_parses_source_dates_without_claiming_filters"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_europepmc.py",
+      "test": "test_bounded_live_contract",
+      "line": 123,
+      "end_line": 131,
+      "engines": [
+        "europepmc"
+      ],
+      "classification": "adapter regression",
+      "decorators": [
+        "pytest.mark.skipif(\n    os.environ.get(\"SLOPSEARX_EUROPEPMC_LIVE\") != \"1\",\n    reason=\"one bounded upstream request requires explicit live opt-in\",\n)"
+      ],
+      "live_forbidden": true,
+      "native_cases": [
+        "deferred explicit live qualification; no calls authorized"
+      ],
+      "mapping_status": "deferred live qualification"
+    },
+    {
+      "path": "tests/test_europepmc.py",
+      "test": "test_pubmed_first_merge_retains_provider_attribution",
+      "line": 134,
+      "end_line": 151,
+      "engines": [
+        "pubmed",
+        "europepmc"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "crates/ssx-mcp/tests/a07_consumers.rs::actual_pubmed_first_distinct_url_merge_keeps_europepmc_attribution_in_compact_cards"
+      ],
+      "mapping_status": "actual distinct-URL native adapter/rank/compact coverage; source HTML/JSON formatter boundary still pending; no same-URL attribution claim",
+      "retained_consumer_reference": "tests/test_europepmc.py::test_pubmed_first_merge_retains_provider_attribution",
+      "native_integration_owner": "G01 / appropriate shared surface owner; adapter fixture does not qualify this consumer"
+    },
+    {
+      "path": "tests/test_europepmc.py",
+      "test": "test_compact_mcp_retains_attribution_and_preprint_notice",
+      "line": 154,
+      "end_line": 167,
+      "engines": [
+        "europepmc"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "crates/ssx-mcp/tests/a07_consumers.rs::actual_preprint_adapter_rank_and_compact_card_retain_attribution_notice_and_unicode_cap"
+      ],
+      "mapping_status": "mapped actual adapter/direct compact serializer consumer; full MCP transport remains separate",
+      "retained_consumer_reference": "tests/test_europepmc.py::test_compact_mcp_retains_attribution_and_preprint_notice",
+      "native_integration_owner": "G01 / appropriate shared surface owner; adapter fixture does not qualify this consumer"
+    },
+    {
+      "path": "tests/test_formatter.py",
+      "test": "TestPortalHtml::test_jev_specialists_are_named_without_trusting_engine_text",
+      "line": 553,
+      "end_line": 561,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "integration consumer / synthetic engine reference",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubmed_two_stage_success_and_complete_payload"
+      ],
+      "mapping_status": "synthetic engine consumer; existing shared owner qualification retained",
+      "retained_consumer_reference": "tests/test_formatter.py::TestPortalHtml::test_jev_specialists_are_named_without_trusting_engine_text",
+      "native_integration_owner": "G01 / appropriate shared surface owner; adapter fixture does not qualify this consumer"
+    },
+    {
+      "path": "tests/test_formatter.py",
+      "test": "TestPortalHtml::test_yaml_retains_jev_routing_metadata",
+      "line": 563,
+      "end_line": 572,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "integration consumer / synthetic engine reference",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubmed_two_stage_success_and_complete_payload"
+      ],
+      "mapping_status": "synthetic engine consumer; existing shared owner qualification retained",
+      "retained_consumer_reference": "tests/test_formatter.py::TestPortalHtml::test_yaml_retains_jev_routing_metadata",
+      "native_integration_owner": "G01 / appropriate shared surface owner; adapter fixture does not qualify this consumer"
+    },
+    {
+      "path": "tests/test_jev.py",
+      "test": "test_every_registered_engine_has_routing_metadata",
+      "line": 67,
+      "end_line": 73,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "integration consumer / synthetic engine reference",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "registered_specialist_cards_and_categories_reach_actual_science_selection"
+      ],
+      "mapping_status": "actual five registered specialists expose exact existing source purpose/use_when and categories through registry and science selection; all-adapter completeness retained by F06",
+      "retained_consumer_reference": "tests/test_jev.py::test_every_registered_engine_has_routing_metadata",
+      "native_integration_owner": "G01 / appropriate shared surface owner; adapter fixture does not qualify this consumer"
+    },
+    {
+      "path": "tests/test_jev.py",
+      "test": "test_ci_keyless_and_enhanced_search_paths",
+      "line": 83,
+      "end_line": 124,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "integration consumer / synthetic engine reference",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "registered_specialist_cards_and_categories_reach_actual_science_selection"
+      ],
+      "mapping_status": "actual five registered specialists expose exact existing source purpose/use_when and categories through registry and science selection; all-adapter completeness retained by F06",
+      "retained_consumer_reference": "tests/test_jev.py::test_ci_keyless_and_enhanced_search_paths",
+      "native_integration_owner": "G01 / appropriate shared surface owner; adapter fixture does not qualify this consumer"
+    },
+    {
+      "path": "tests/test_jev.py",
+      "test": "test_router_scores_specialists_in_one_request_and_applies_threshold",
+      "line": 127,
+      "end_line": 160,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "integration consumer / synthetic engine reference",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "registered_specialist_cards_and_categories_reach_actual_science_selection"
+      ],
+      "mapping_status": "actual five registered specialists expose exact existing source purpose/use_when and categories through registry and science selection; all-adapter completeness retained by F06",
+      "retained_consumer_reference": "tests/test_jev.py::test_router_scores_specialists_in_one_request_and_applies_threshold",
+      "native_integration_owner": "G01 / appropriate shared surface owner; adapter fixture does not qualify this consumer"
+    },
+    {
+      "path": "tests/test_jev.py",
+      "test": "test_jev_adds_every_selected_specialist_without_replacing_general_engines",
+      "line": 163,
+      "end_line": 195,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "integration consumer / synthetic engine reference",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "registered_specialist_cards_and_categories_reach_actual_science_selection"
+      ],
+      "mapping_status": "actual five registered specialists expose exact existing source purpose/use_when and categories through registry and science selection; all-adapter completeness retained by F06",
+      "retained_consumer_reference": "tests/test_jev.py::test_jev_adds_every_selected_specialist_without_replacing_general_engines",
+      "native_integration_owner": "G01 / appropriate shared surface owner; adapter fixture does not qualify this consumer"
+    },
+    {
+      "path": "tests/test_jev.py",
+      "test": "test_jev_failure_preserves_deterministic_scope",
+      "line": 210,
+      "end_line": 224,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "integration consumer / synthetic engine reference",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "registered_specialist_cards_and_categories_reach_actual_science_selection"
+      ],
+      "mapping_status": "actual five registered specialists expose exact existing source purpose/use_when and categories through registry and science selection; all-adapter completeness retained by F06",
+      "retained_consumer_reference": "tests/test_jev.py::test_jev_failure_preserves_deterministic_scope",
+      "native_integration_owner": "G01 / appropriate shared surface owner; adapter fixture does not qualify this consumer"
+    },
+    {
+      "path": "tests/test_jev.py",
+      "test": "test_snapshot_rehydrates_jev_scope_provenance",
+      "line": 227,
+      "end_line": 244,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "integration consumer / synthetic engine reference",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "registered_specialist_cards_and_categories_reach_actual_science_selection"
+      ],
+      "mapping_status": "actual five registered specialists expose exact existing source purpose/use_when and categories through registry and science selection; all-adapter completeness retained by F06",
+      "retained_consumer_reference": "tests/test_jev.py::test_snapshot_rehydrates_jev_scope_provenance",
+      "native_integration_owner": "G01 / appropriate shared surface owner; adapter fixture does not qualify this consumer"
+    },
+    {
+      "path": "tests/test_jev.py",
+      "test": "test_http_and_portal_search_routes_expose_jev_additions",
+      "line": 283,
+      "end_line": 303,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "integration consumer / synthetic engine reference",
+      "decorators": [
+        "pytest.mark.parametrize(\"path\", [\"/search\", \"/\"])"
+      ],
+      "live_forbidden": false,
+      "native_cases": [
+        "registered_specialist_cards_and_categories_reach_actual_science_selection"
+      ],
+      "mapping_status": "actual five registered specialists expose exact existing source purpose/use_when and categories through registry and science selection; all-adapter completeness retained by F06",
+      "retained_consumer_reference": "tests/test_jev.py::test_http_and_portal_search_routes_expose_jev_additions",
+      "native_integration_owner": "G01 / appropriate shared surface owner; adapter fixture does not qualify this consumer"
+    },
+    {
+      "path": "tests/test_mcp_gateway.py",
+      "test": "TestInputSchemaFidelity::test_complete_schema_and_nested_copy",
+      "line": 348,
+      "end_line": 378,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "integration consumer / synthetic engine reference",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "valid_empty_and_schema_failure_never_fabricate_results",
+        "actual_source_matrix_preserves_requests_and_full_normalized_results"
+      ],
+      "mapping_status": "synthetic engine consumer; existing shared owner qualification retained",
+      "retained_consumer_reference": "tests/test_mcp_gateway.py::TestInputSchemaFidelity::test_complete_schema_and_nested_copy",
+      "native_integration_owner": "G01 / appropriate shared surface owner; adapter fixture does not qualify this consumer"
+    },
+    {
+      "path": "tests/test_misc_polish.py",
+      "test": "TestScienceBiomedicalResolution::test_biomedical_resolves_to_declared_profile",
+      "line": 199,
+      "end_line": 214,
+      "engines": [
+        "pubmed",
+        "clinicaltrials"
+      ],
+      "classification": "integration consumer / synthetic engine reference",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubmed_two_stage_success_and_complete_payload",
+        "clinicaltrials_preserves_request_and_full_normalization"
+      ],
+      "mapping_status": "synthetic engine consumer; existing shared owner qualification retained",
+      "retained_consumer_reference": "tests/test_misc_polish.py::TestScienceBiomedicalResolution::test_biomedical_resolves_to_declared_profile",
+      "native_integration_owner": "G01 / appropriate shared surface owner; adapter fixture does not qualify this consumer"
+    },
+    {
+      "path": "tests/test_misc_polish.py",
+      "test": "TestScienceBiomedicalResolution::test_biomedical_profile_does_not_leak_other_source_types",
+      "line": 216,
+      "end_line": 229,
+      "engines": [
+        "pubmed",
+        "clinicaltrials"
+      ],
+      "classification": "integration consumer / synthetic engine reference",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubmed_two_stage_success_and_complete_payload",
+        "clinicaltrials_preserves_request_and_full_normalization"
+      ],
+      "mapping_status": "synthetic engine consumer; existing shared owner qualification retained",
+      "retained_consumer_reference": "tests/test_misc_polish.py::TestScienceBiomedicalResolution::test_biomedical_profile_does_not_leak_other_source_types",
+      "native_integration_owner": "G01 / appropriate shared surface owner; adapter fixture does not qualify this consumer"
+    },
+    {
+      "path": "tests/test_misc_polish.py",
+      "test": "TestTierOrderingMcp::test_tier1_precedes_tier2_with_descending_score",
+      "line": 257,
+      "end_line": 295,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "integration consumer / synthetic engine reference",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubmed_two_stage_success_and_complete_payload"
+      ],
+      "mapping_status": "synthetic engine consumer; existing shared owner qualification retained",
+      "retained_consumer_reference": "tests/test_misc_polish.py::TestTierOrderingMcp::test_tier1_precedes_tier2_with_descending_score",
+      "native_integration_owner": "G01 / appropriate shared surface owner; adapter fixture does not qualify this consumer"
+    },
+    {
+      "path": "tests/test_misc_polish.py",
+      "test": "TestTierOrderingMcp::test_generic_unscoped_all_tier2_orders_by_score",
+      "line": 297,
+      "end_line": 320,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "integration consumer / synthetic engine reference",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubmed_two_stage_success_and_complete_payload"
+      ],
+      "mapping_status": "synthetic engine consumer; existing shared owner qualification retained",
+      "retained_consumer_reference": "tests/test_misc_polish.py::TestTierOrderingMcp::test_generic_unscoped_all_tier2_orders_by_score",
+      "native_integration_owner": "G01 / appropriate shared surface owner; adapter fixture does not qualify this consumer"
+    },
+    {
+      "path": "tests/test_new_engines.py",
+      "test": "TestPubMedAdapter::test_search_returns_results",
+      "line": 453,
+      "end_line": 467,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubmed_two_stage_success_and_complete_payload"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_new_engines.py",
+      "test": "TestPubMedAdapter::test_search_no_results",
+      "line": 469,
+      "end_line": 473,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "valid_empty_and_schema_failure_never_fabricate_results",
+        "actual_source_matrix_preserves_requests_and_full_normalized_results"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_new_engines.py",
+      "test": "TestPubMedAdapter::test_adapter_registered",
+      "line": 475,
+      "end_line": 478,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "actual_factory_registration_preserves_duplicate_and_unknown_refusals"
+      ],
+      "mapping_status": "actual native factory availability and exact source categories; shared source catalog remains historical",
+      "retained_consumer_reference": "tests/test_new_engines.py::TestPubMedAdapter::test_adapter_registered",
+      "native_integration_owner": "G01 / appropriate shared surface owner; adapter fixture does not qualify this consumer"
+    },
+    {
+      "path": "tests/test_new_engines.py",
+      "test": "TestPubMedAdapter::test_adapter_categories",
+      "line": 480,
+      "end_line": 485,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "actual_factory_registration_preserves_duplicate_and_unknown_refusals"
+      ],
+      "mapping_status": "actual native factory availability and exact source categories; shared source catalog remains historical",
+      "retained_consumer_reference": "tests/test_new_engines.py::TestPubMedAdapter::test_adapter_categories",
+      "native_integration_owner": "G01 / appropriate shared surface owner; adapter fixture does not qualify this consumer"
+    },
+    {
+      "path": "tests/test_new_engines.py",
+      "test": "TestPubChemAdapter::test_search_returns_results",
+      "line": 525,
+      "end_line": 537,
+      "engines": [
+        "pubchem"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubchem_two_stage_request_count_order_and_compound_fallback"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_new_engines.py",
+      "test": "TestPubChemAdapter::test_search_404",
+      "line": 539,
+      "end_line": 543,
+      "engines": [
+        "pubchem"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubchem_two_stage_request_count_order_and_compound_fallback"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_new_engines.py",
+      "test": "TestPubChemAdapter::test_adapter_registered",
+      "line": 545,
+      "end_line": 548,
+      "engines": [
+        "pubchem"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "actual_factory_registration_preserves_duplicate_and_unknown_refusals"
+      ],
+      "mapping_status": "actual native factory availability and exact source categories; shared source catalog remains historical",
+      "retained_consumer_reference": "tests/test_new_engines.py::TestPubChemAdapter::test_adapter_registered",
+      "native_integration_owner": "G01 / appropriate shared surface owner; adapter fixture does not qualify this consumer"
+    },
+    {
+      "path": "tests/test_new_engines.py",
+      "test": "TestClinicalTrialsAdapter::test_search_returns_results",
+      "line": 580,
+      "end_line": 585,
+      "engines": [
+        "clinicaltrials"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "clinicaltrials_preserves_request_and_full_normalization"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_new_engines.py",
+      "test": "TestClinicalTrialsAdapter::test_adapter_registered",
+      "line": 587,
+      "end_line": 590,
+      "engines": [
+        "clinicaltrials"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "actual_factory_registration_preserves_duplicate_and_unknown_refusals"
+      ],
+      "mapping_status": "actual native factory availability and exact source categories; shared source catalog remains historical",
+      "retained_consumer_reference": "tests/test_new_engines.py::TestClinicalTrialsAdapter::test_adapter_registered",
+      "native_integration_owner": "G01 / appropriate shared surface owner; adapter fixture does not qualify this consumer"
+    },
+    {
+      "path": "tests/test_new_engines.py",
+      "test": "TestUniProtAdapter::test_search_returns_results",
+      "line": 832,
+      "end_line": 837,
+      "engines": [
+        "uniprot"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "uniprot_exact_gene_identifier_and_stable_overfetch_promotion"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_new_engines.py",
+      "test": "TestUniProtAdapter::test_adapter_registered",
+      "line": 839,
+      "end_line": 842,
+      "engines": [
+        "uniprot"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "actual_factory_registration_preserves_duplicate_and_unknown_refusals"
+      ],
+      "mapping_status": "actual native factory availability and exact source categories; shared source catalog remains historical",
+      "retained_consumer_reference": "tests/test_new_engines.py::TestUniProtAdapter::test_adapter_registered",
+      "native_integration_owner": "G01 / appropriate shared surface owner; adapter fixture does not qualify this consumer"
+    },
+    {
+      "path": "tests/test_payload.py",
+      "test": "TestSciencePayload::test_pubmed_payload",
+      "line": 893,
+      "end_line": 927,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubmed_two_stage_success_and_complete_payload"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_payload.py",
+      "test": "TestSciencePayload::test_pubmed_payload_carries_all_authors",
+      "line": 929,
+      "end_line": 966,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubmed_missing_first_summary_preserves_position_and_all_authors"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_portal_browser.py",
+      "test": "test_results_journey_keeps_links_and_escaped_content",
+      "line": 64,
+      "end_line": 110,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "integration consumer / synthetic engine reference",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubmed_two_stage_success_and_complete_payload"
+      ],
+      "mapping_status": "synthetic engine consumer; existing shared owner qualification retained",
+      "retained_consumer_reference": "tests/test_portal_browser.py::test_results_journey_keeps_links_and_escaped_content",
+      "native_integration_owner": "G01 / appropriate shared surface owner; adapter fixture does not qualify this consumer"
+    },
+    {
+      "path": "tests/test_pubmed.py",
+      "test": "test_fixture_measurement_shows_independent_stages_exceed_shared_budget",
+      "line": 116,
+      "end_line": 131,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubmed_aggregate_deadline_bounds_second_request"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_pubmed.py",
+      "test": "test_aggregate_deadline_fits_shared_dispatch_budget",
+      "line": 134,
+      "end_line": 151,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubmed_aggregate_deadline_bounds_second_request"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_pubmed.py",
+      "test": "test_aggregate_deadline_bounds_second_stage",
+      "line": 154,
+      "end_line": 168,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubmed_aggregate_deadline_bounds_second_request"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_pubmed.py",
+      "test": "test_aggregate_deadline_covers_response_parsing",
+      "line": 171,
+      "end_line": 187,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "actual_source_matrix_preserves_requests_and_full_normalized_results",
+        "source_decode_context_is_enforced_after_network_completion_for_all_five",
+        "actual_payload_projection_obeys_absolute_context_after_source_rows_finish"
+      ],
+      "mapping_status": "actual source-decode and payload normalization phase deadline tests observe pending work and terminal cleanup",
+      "retained_consumer_reference": "tests/test_pubmed.py::test_aggregate_deadline_covers_response_parsing"
+    },
+    {
+      "path": "tests/test_pubmed.py",
+      "test": "test_service_dispatch_deadline_is_not_the_timeout_observed_by_pubmed",
+      "line": 190,
+      "end_line": 218,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubmed_aggregate_deadline_bounds_second_request",
+        "pubchem_second_request_renewal_and_pubmed_pipeline_cannot_extend_context",
+        "real_f14_service_context_reaches_pubchem_second_request_and_keeps_synthetic_origin"
+      ],
+      "mapping_status": "actual adapter aggregate/caller-context distinction plus real F14 synthetic timeout origin tested",
+      "retained_consumer_reference": "tests/test_pubmed.py::test_service_dispatch_deadline_is_not_the_timeout_observed_by_pubmed"
+    },
+    {
+      "path": "tests/test_pubmed.py",
+      "test": "test_success_preserves_two_stage_request_semantics",
+      "line": 221,
+      "end_line": 249,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubmed_two_stage_success_and_complete_payload"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_pubmed.py",
+      "test": "test_valid_empty_id_list_is_ok_and_skips_esummary",
+      "line": 252,
+      "end_line": 259,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "valid_empty_and_schema_failure_never_fabricate_results",
+        "actual_source_matrix_preserves_requests_and_full_normalized_results"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_pubmed.py",
+      "test": "test_esearch_timeout_is_classified",
+      "line": 262,
+      "end_line": 268,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "all_engines_classify_http_failures_and_timeout",
+        "pubmed_aggregate_deadline_bounds_second_request"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_pubmed.py",
+      "test": "test_esummary_timeout_is_classified",
+      "line": 271,
+      "end_line": 282,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "all_engines_classify_http_failures_and_timeout",
+        "pubmed_aggregate_deadline_bounds_second_request"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_pubmed.py",
+      "test": "test_malformed_esearch_payload_is_error",
+      "line": 295,
+      "end_line": 301,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "adapter regression",
+      "decorators": [
+        "pytest.mark.parametrize(\n    \"payload\",\n    [\n        [],\n        {\"esearchresult\": None},\n        {\"esearchresult\": {}},\n        {\"esearchresult\": {\"idlist\": \"1\"}},\n        {\"esearchresult\": {\"idlist\": [1]}},\n    ],\n)"
+      ],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubmed_both_stage_http_and_summary_schema_regressions",
+        "actual_source_matrix_preserves_requests_and_full_normalized_results"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_pubmed.py",
+      "test": "test_malformed_esummary_payload_is_error",
+      "line": 305,
+      "end_line": 316,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "adapter regression",
+      "decorators": [
+        "pytest.mark.parametrize(\"payload\", [[], {\"result\": None}, {\"result\": []}])"
+      ],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubmed_both_stage_http_and_summary_schema_regressions",
+        "actual_source_matrix_preserves_requests_and_full_normalized_results"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_pubmed.py",
+      "test": "test_invalid_timeout_configuration_never_raises",
+      "line": 331,
+      "end_line": 339,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "adapter regression",
+      "decorators": [
+        "pytest.mark.parametrize(\n    (\"config_key\", \"value\"),\n    [\n        (\"aggregate_timeout_ms\", 0),\n        (\"aggregate_timeout_ms\", -1),\n        (\"aggregate_timeout_ms\", \"not-a-number\"),\n        (\"aggregate_timeout_ms\", float(\"nan\")),\n        (\"aggregate_timeout_ms\", 6_000),\n        (\"timeout_ms\", 0),\n        (\"timeout_ms\", \"not-a-number\"),\n    ],\n)"
+      ],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubmed_invalid_timeout_settings_dispatch_nothing",
+        "actual_source_matrix_preserves_requests_and_full_normalized_results"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_pubmed.py",
+      "test": "test_missing_summary_entry_returns_valid_partial_results",
+      "line": 342,
+      "end_line": 354,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubmed_missing_first_summary_preserves_position_and_all_authors"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_pubmed.py",
+      "test": "test_missing_first_summary_entry_preserves_upstream_position",
+      "line": 357,
+      "end_line": 369,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubmed_missing_first_summary_preserves_position_and_all_authors"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_pubmed.py",
+      "test": "test_malformed_summary_entry_is_error_not_a_blank_result",
+      "line": 372,
+      "end_line": 383,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubmed_both_stage_http_and_summary_schema_regressions",
+        "actual_source_matrix_preserves_requests_and_full_normalized_results"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_pubmed.py",
+      "test": "test_rate_limit_is_preserved_for_either_stage",
+      "line": 387,
+      "end_line": 397,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "adapter regression",
+      "decorators": [
+        "pytest.mark.parametrize(\"stage_name\", [\"esearch\", \"esummary\"])"
+      ],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubmed_both_stage_http_and_summary_schema_regressions",
+        "actual_source_matrix_preserves_requests_and_full_normalized_results"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_pubmed.py",
+      "test": "test_other_http_error_is_preserved_for_either_stage",
+      "line": 401,
+      "end_line": 411,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "adapter regression",
+      "decorators": [
+        "pytest.mark.parametrize(\"stage_name\", [\"esearch\", \"esummary\"])"
+      ],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubmed_both_stage_http_and_summary_schema_regressions",
+        "actual_source_matrix_preserves_requests_and_full_normalized_results"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "test": "test_relevance_crosses_source_tiers_and_unshortlisted_tail_stays_fixed",
+      "line": 102,
+      "end_line": 113,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "integration consumer / synthetic engine reference",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubmed_two_stage_success_and_complete_payload"
+      ],
+      "mapping_status": "synthetic engine consumer; existing shared owner qualification retained",
+      "retained_consumer_reference": "tests/test_rerank.py::test_relevance_crosses_source_tiers_and_unshortlisted_tail_stays_fixed",
+      "native_integration_owner": "G01 / appropriate shared surface owner; adapter fixture does not qualify this consumer"
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "test": "test_enabled_reranker_disables_specialist_promotion_in_every_outcome",
+      "line": 183,
+      "end_line": 216,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "integration consumer / synthetic engine reference",
+      "decorators": [
+        "pytest.mark.parametrize(\"mode\", [\"success\", \"error\", \"timeout\", \"invalid\", \"skipped\", \"keyless\"])"
+      ],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubmed_two_stage_success_and_complete_payload"
+      ],
+      "mapping_status": "synthetic engine consumer; existing shared owner qualification retained",
+      "retained_consumer_reference": "tests/test_rerank.py::test_enabled_reranker_disables_specialist_promotion_in_every_outcome",
+      "native_integration_owner": "G01 / appropriate shared surface owner; adapter fixture does not qualify this consumer"
+    },
+    {
+      "path": "tests/test_rerank.py",
+      "test": "test_same_candidates_can_gain_or_lose_between_general_and_specialist",
+      "line": 219,
+      "end_line": 239,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "integration consumer / synthetic engine reference",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubmed_two_stage_success_and_complete_payload"
+      ],
+      "mapping_status": "synthetic engine consumer; existing shared owner qualification retained",
+      "retained_consumer_reference": "tests/test_rerank.py::test_same_candidates_can_gain_or_lose_between_general_and_specialist",
+      "native_integration_owner": "G01 / appropriate shared surface owner; adapter fixture does not qualify this consumer"
+    },
+    {
+      "path": "tests/test_routing_service.py",
+      "test": "TestMcpRoutingSurface::test_jev_preview_matches_execution_and_exposes_additions",
+      "line": 808,
+      "end_line": 841,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "integration consumer / synthetic engine reference",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubmed_two_stage_success_and_complete_payload"
+      ],
+      "mapping_status": "synthetic engine consumer; existing shared owner qualification retained",
+      "retained_consumer_reference": "tests/test_routing_service.py::TestMcpRoutingSurface::test_jev_preview_matches_execution_and_exposes_additions",
+      "native_integration_owner": "G01 / appropriate shared surface owner; adapter fixture does not qualify this consumer"
+    },
+    {
+      "path": "tests/test_scholarly.py",
+      "test": "test_conflicting_known_pubmed_ids_do_not_merge_on_shared_doi",
+      "line": 153,
+      "end_line": 158,
+      "engines": [
+        "pubmed"
+      ],
+      "classification": "integration consumer / synthetic engine reference",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "pubmed_two_stage_success_and_complete_payload"
+      ],
+      "mapping_status": "synthetic engine consumer; existing shared owner qualification retained",
+      "retained_consumer_reference": "tests/test_scholarly.py::test_conflicting_known_pubmed_ids_do_not_merge_on_shared_doi",
+      "native_integration_owner": "G01 / appropriate shared surface owner; adapter fixture does not qualify this consumer"
+    },
+    {
+      "path": "tests/test_uniprot.py",
+      "test": "test_simple_gene_query_boosts_exact_genes_without_species_filter",
+      "line": 37,
+      "end_line": 56,
+      "engines": [
+        "uniprot"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "uniprot_exact_gene_identifier_and_stable_overfetch_promotion",
+        "uniprot_default_window_preserves_all_related_records_and_species_ties"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_uniprot.py",
+      "test": "test_accession_query_boosts_exact_identifier_and_keeps_related_records",
+      "line": 59,
+      "end_line": 74,
+      "engines": [
+        "uniprot"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "uniprot_exact_gene_identifier_and_stable_overfetch_promotion",
+        "uniprot_default_window_preserves_all_related_records_and_species_ties"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_uniprot.py",
+      "test": "test_exact_gene_beyond_presentation_limit_is_promoted_from_bounded_window",
+      "line": 77,
+      "end_line": 96,
+      "engines": [
+        "uniprot"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "uniprot_exact_gene_identifier_and_stable_overfetch_promotion",
+        "uniprot_default_window_preserves_all_related_records_and_species_ties"
+      ],
+      "mapping_status": "mapped engine contract"
+    },
+    {
+      "path": "tests/test_uniprot.py",
+      "test": "test_explicit_gene_query_is_preserved_and_matches_gene_fields_case_insensitively",
+      "line": 99,
+      "end_line": 112,
+      "engines": [
+        "uniprot"
+      ],
+      "classification": "adapter regression",
+      "decorators": [],
+      "live_forbidden": false,
+      "native_cases": [
+        "uniprot_exact_gene_identifier_and_stable_overfetch_promotion",
+        "uniprot_default_window_preserves_all_related_records_and_species_ties"
+      ],
+      "mapping_status": "mapped engine contract"
+    }
+  ],
+  "native_test_path": "crates/ssx-infra/tests/a07_biomedical.rs",
+  "captures": [
+    {
+      "path": "docs/rust-rewrite/a07/source_complete.json",
+      "sha256": "d8c8a3910abafe63426c9ca1c9a62640ed5d3544442b407e1adbdcbefbb34314",
+      "case_count": 127,
+      "provenance": "actual offline Python adapters with HTTPX MockTransport; synthetic regression/control cases; no network/provider calls"
+    },
+    {
+      "path": "docs/rust-rewrite/a07/source_date_grammar.json",
+      "sha256": "86d3e699b6a7fc47304d462b99bd919972453508c5516ee366fb4015b580c379",
+      "case_count": 4,
+      "provenance": "actual offline Python adapters with HTTPX MockTransport; synthetic regression/control cases; no network/provider calls"
+    },
+    {
+      "path": "docs/rust-rewrite/a07/source_digits.json",
+      "sha256": "975cc5bfcf0e5a569c77ab1d85ffe5cf673b759f329e0dba59c92aab5381b217",
+      "case_count": 5,
+      "provenance": "actual offline Python adapters with HTTPX MockTransport; synthetic regression/control cases; no network/provider calls"
+    },
+    {
+      "path": "docs/rust-rewrite/a07/source_empty_iterables.json",
+      "sha256": "b0c002ad908349a6d434f3c10c346535be563db9ba85f35f7f511c7291269abd",
+      "case_count": 28,
+      "provenance": "actual offline Python adapters with HTTPX MockTransport; synthetic regression/control cases; no network/provider calls"
+    },
+    {
+      "path": "docs/rust-rewrite/a07/source_gene_shapes.json",
+      "sha256": "b87190f00b76af47c6cb61d31a687743f28bd027f8f42a5df78c676a142b3616",
+      "case_count": 6,
+      "provenance": "actual offline Python adapters with HTTPX MockTransport; synthetic regression/control cases; no network/provider calls"
+    },
+    {
+      "path": "docs/rust-rewrite/a07/source_matrix.json",
+      "sha256": "c5963884730a7a65454bf2c430d6f405f532f9cab6913d76b0ac3e9a1bc2b927",
+      "case_count": 91,
+      "provenance": "actual offline Python adapters with HTTPX MockTransport; synthetic regression/control cases; no network/provider calls"
+    },
+    {
+      "path": "docs/rust-rewrite/a07/source_numeric.json",
+      "sha256": "9ebb40789c044dbd65305cfea9f798ca950a852382563282dd3c2f1de7ba5888",
+      "case_count": 6,
+      "provenance": "actual offline Python adapters with HTTPX MockTransport; synthetic regression/control cases; no network/provider calls"
+    },
+    {
+      "path": "docs/rust-rewrite/a07/source_sequences.json",
+      "sha256": "f69749b50a6ce6b63034721884813693ec9b48319afa491c42d8bdbc221df4f8",
+      "case_count": 7,
+      "provenance": "actual offline Python adapters with HTTPX MockTransport; synthetic regression/control cases; no network/provider calls"
+    },
+    {
+      "path": "docs/rust-rewrite/a07/source_supplement.json",
+      "sha256": "2ff2c54f04af1700cdeaac3df19927120a39a4808177470dbe41a6d27dffa8c4",
+      "case_count": 25,
+      "provenance": "actual offline Python adapters with HTTPX MockTransport; synthetic regression/control cases; no network/provider calls"
+    }
+  ],
+  "fixture_provenance": [
+    {
+      "path": "docs/rust-rewrite/a07/fixtures/clinicaltrials-success.json",
+      "sha256": "b7049fd602eed804929d7173c147e2730035db24ef0e17f0eae1cc4bb92f155e",
+      "source": "tests/test_new_engines.py::TestClinicalTrialsAdapter.sample_response",
+      "provenance": "AST literal export from existing synthetic inline mock fixture; not upstream recording"
+    },
+    {
+      "path": "docs/rust-rewrite/a07/fixtures/europepmc-biomedical.json",
+      "sha256": "2c9a29ad299b578a8d1fc16db5ebef0ad0b66333bfb5c4878bfc209ce8e87f96",
+      "source": "tests/fixtures/europepmc/biomedical.json",
+      "provenance": "exact unchanged preexisting captured fixture bytes; no new acquisition"
+    },
+    {
+      "path": "docs/rust-rewrite/a07/fixtures/europepmc-preprints.json",
+      "sha256": "2d1115ea10cfbd1a902d60501d33471a0ee800f01f27b9e7c891591e636a5ee1",
+      "source": "tests/fixtures/europepmc/preprints.json",
+      "provenance": "exact unchanged preexisting captured fixture bytes; no new acquisition"
+    },
+    {
+      "path": "docs/rust-rewrite/a07/fixtures/pubchem-detail.json",
+      "sha256": "9fa91ac2c90b51922a5e758e47a0baf62ceac4cb41bfb62f3ce58647d6665075",
+      "source": "tests/test_new_engines.py::TestPubChemAdapter.detail_response",
+      "provenance": "AST literal export from existing synthetic inline mock fixture; not upstream recording"
+    },
+    {
+      "path": "docs/rust-rewrite/a07/fixtures/pubchem-search.json",
+      "sha256": "b9822f4ee31a842d19aa9abc5b69874c97e44acee78b3d896be7e0031ef45442",
+      "source": "tests/test_new_engines.py::TestPubChemAdapter.name_response",
+      "provenance": "AST literal export from existing synthetic inline mock fixture; not upstream recording"
+    },
+    {
+      "path": "docs/rust-rewrite/a07/fixtures/pubmed-search.json",
+      "sha256": "df1cdc5ef7bb4079407e0334aecf1c48c2ad54ac12d77619b8f10fa64633ff48",
+      "source": "tests/test_new_engines.py::TestPubMedAdapter.esearch_response",
+      "provenance": "AST literal export from existing synthetic inline mock fixture; not upstream recording"
+    },
+    {
+      "path": "docs/rust-rewrite/a07/fixtures/pubmed-summary.json",
+      "sha256": "f0e7ad77d6e30b78e8eac2d74b07f0fe0981d88c6ca308eccf6ac43de095a190",
+      "source": "tests/test_new_engines.py::TestPubMedAdapter.esummary_response",
+      "provenance": "AST literal export from existing synthetic inline mock fixture; not upstream recording"
+    },
+    {
+      "path": "docs/rust-rewrite/a07/fixtures/uniprot-success.json",
+      "sha256": "8dfd341cdc78d85726bdaff3c0628dc24b282cb06f6e194fed105bdfe78f7fe0",
+      "source": "tests/test_new_engines.py::TestUniProtAdapter.sample_response",
+      "provenance": "AST literal export from existing synthetic inline mock fixture; not upstream recording"
+    }
+  ],
+  "unresolved_required_parity": [
+    "focused ready PR delivery with parent review/exact-head CI; final local source/parity/registry/inventory reports bind the documentation followup",
+    "actual HTML/portal and full MCP transport integration remain T03/G01/T06; PORTAL_IMPACT.md distinguishes unchanged current routes from future native composition",
+    "G02 global/query-input/DOM/returned-response accounting and guarded further owned-parser integration remain full-milestone boundaries; accepted F15 is already merged",
+    "G08 executable historical-source producer retirement before backend removal"
+  ],
+  "case_count": 172,
+  "capture_relation": "Complete recapture preserves original127 source inputs/requests/prior fields;45 supplemental controls close reviewed iterable/date shape findings.172 unique controls native-replayed; older captures remain immutable.",
+  "source_payload_component": {
+    "source": "crates/ssx-infra/src/adapters/source_payload.rs",
+    "sha256": "3d3dc960b8a1a50339a0669f6aab9476aad588961845a6e6c5bef80b7738e1cf",
+    "status": "accepted guarded budgeted visitor/envelope/ProducedBatch donor integrated in actual PubMed/EuropePMC runtime; same root owns first-phase scratch and projection",
+    "accepted_original_sha256": "55ffbe2fdbeeb3af21bd6fcf1a11125bdb610a8a9b2f7983cf10eb294311f2cf",
+    "accepted_r3_receipt_sha256": "288b232fbf6ff52a927e4c915a1a66c0468263d83a3ef175e466ffb9aeea1d96"
+  },
+  "source_operation_precedence": "All PubMed/EuropePMC source rows finish before deferred payload projection; actual four-control source replay preserves later authored source errors over earlier nonfinite payload refusal. Borrowed selected authors retain payload-only surrogate identities.",
+  "deadline_contract": {
+    "direct": "Only PubMed has aggregate decode/normalization deadline. Other four retain per-request network deadlines; parser None preserves accepted source codec bounds/cooperative points. Row checkpoints yield cooperatively.",
+    "context": "Accepted SearchContext integrated in all5; actual source-decode and payload/inner-loop phase tests observe pending work and cleanup; per-request and normalization lifetime remain distinct.",
+    "native_test": "adapters::clinicaltrials::deadline_tests::only_pubmed_aggregate_budget_applies_to_source_decode"
+  },
+  "validation": {
+    "source_replay": "20 tests including172 original controls; exact request/fulloutput/diagnostic ledger",
+    "context": "7 real context tests plus accepted seam/F14 tests",
+    "compact_consumer": "2 actual adapter-to-rank-to-result_card tests; not full transport/HTML",
+    "runtime_units": "71 integrated infrastructure units, including16 A07 resource cases, actual-media guard, shared payload/batch/repr controls and accepted-main F15 units; exact integrated reports govern identities",
+    "shared_controls": "35 actual Python repr controls,4 actual adapter payload/precedence controls,full existing casefold table equivalence",
+    "quality": "strict scoped all-target Clippy, workspace fmt, domain/JSON tests; immutable receipt governs exact terminal source/log identities",
+    "batch_status": "parent-reviewed runtime/main-preservation components and integrated F03 pass; subsequent prose-only head is bound by final scoped reports and PR/head CI"
+  },
+  "native_identity_sources": [
+    "Cargo.lock",
+    "Cargo.toml",
+    "crates/ssx-application/src/lib.rs",
+    "crates/ssx-application/src/text.rs",
+    "crates/ssx-domain/src/records.rs",
+    "crates/ssx-domain/src/storage.rs",
+    "crates/ssx-infra/Cargo.toml",
+    "crates/ssx-infra/src/adapters/clinicaltrials.rs",
+    "crates/ssx-infra/src/adapters/europepmc.rs",
+    "crates/ssx-infra/src/adapters/mod.rs",
+    "crates/ssx-infra/src/adapters/pubchem.rs",
+    "crates/ssx-infra/src/adapters/pubmed.rs",
+    "crates/ssx-infra/src/adapters/source_payload.rs",
+    "crates/ssx-infra/src/adapters/source_payload/batch.rs",
+    "crates/ssx-infra/src/adapters/source_repr.rs",
+    "crates/ssx-infra/src/adapters/uniprot.rs",
+    "crates/ssx-infra/tests/a07_biomedical.rs",
+    "crates/ssx-infra/tests/a07_context.rs",
+    "crates/ssx-infra/tests/support/a07_resources.rs",
+    "crates/ssx-json/src/canonical.rs",
+    "crates/ssx-json/src/lib.rs",
+    "crates/ssx-mcp/tests/a07_consumers.rs",
+    "crates/ssx-owned-budget/src/lib.rs",
+    "crates/ssx-infra/tests/a07_factories.rs",
+    "crates/xtask/src/a07.rs",
+    "crates/xtask/src/main.rs"
+  ],
+  "auxiliary_source_controls": {
+    "repr": {
+      "path": "docs/rust-rewrite/a07/source-repr-controls.json",
+      "count": 35,
+      "sha256": "8facd8f7d7814c31dec430c7ffd42034d7fb30414fdc44148afcd1ccde865f3c"
+    },
+    "payload_adapter": {
+      "path": "docs/rust-rewrite/a06/source-publication-envelope.json",
+      "count": 4,
+      "sha256": "407256b5dc7d5320389f7754a75f230212a11cac2971346d5609539330581e0a"
+    },
+    "original172_unchanged": true
+  },
+  "native_case_bindings": {
+    "queue_time_consumes_absolute_context_instead_of_original_request_timeout": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::clinicaltrials::deadline_tests::queue_time_consumes_absolute_context_instead_of_original_request_timeout"
+    },
+    "pubmed_two_stage_success_and_complete_payload": {
+      "package": "ssx-infra",
+      "target": "test:a07_biomedical",
+      "qualified_name": "pubmed_two_stage_success_and_complete_payload"
+    },
+    "uniprot_exact_gene_identifier_and_stable_overfetch_promotion": {
+      "package": "ssx-infra",
+      "target": "test:a07_biomedical",
+      "qualified_name": "uniprot_exact_gene_identifier_and_stable_overfetch_promotion"
+    },
+    "europepmc_lite_preserves_attribution_preprints_and_payload": {
+      "package": "ssx-infra",
+      "target": "test:a07_biomedical",
+      "qualified_name": "europepmc_lite_preserves_attribution_preprints_and_payload"
+    },
+    "valid_empty_and_schema_failure_never_fabricate_results": {
+      "package": "ssx-infra",
+      "target": "test:a07_biomedical",
+      "qualified_name": "valid_empty_and_schema_failure_never_fabricate_results"
+    },
+    "actual_source_matrix_preserves_requests_and_full_normalized_results": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::a07_matrix_replay::actual_source_matrix_preserves_requests_and_full_normalized_results"
+    },
+    "all_engines_classify_http_failures_and_timeout": {
+      "package": "ssx-infra",
+      "target": "test:a07_biomedical",
+      "qualified_name": "all_engines_classify_http_failures_and_timeout"
+    },
+    "pubmed_aggregate_deadline_bounds_second_request": {
+      "package": "ssx-infra",
+      "target": "test:a07_biomedical",
+      "qualified_name": "pubmed_aggregate_deadline_bounds_second_request"
+    },
+    "resolved_yaml_environment_scalars_reach_engine_specific_semantics": {
+      "package": "ssx-infra",
+      "target": "test:a07_biomedical",
+      "qualified_name": "resolved_yaml_environment_scalars_reach_engine_specific_semantics"
+    },
+    "europepmc_skips_incomplete_records_and_parses_source_dates_without_claiming_filters": {
+      "package": "ssx-infra",
+      "target": "test:a07_biomedical",
+      "qualified_name": "europepmc_skips_incomplete_records_and_parses_source_dates_without_claiming_filters"
+    },
+    "crates/ssx-mcp/tests/a07_consumers.rs::actual_pubmed_first_distinct_url_merge_keeps_europepmc_attribution_in_compact_cards": {
+      "package": "ssx-mcp",
+      "target": "test:a07_consumers",
+      "qualified_name": "actual_pubmed_first_distinct_url_merge_keeps_europepmc_attribution_in_compact_cards"
+    },
+    "crates/ssx-mcp/tests/a07_consumers.rs::actual_preprint_adapter_rank_and_compact_card_retain_attribution_notice_and_unicode_cap": {
+      "package": "ssx-mcp",
+      "target": "test:a07_consumers",
+      "qualified_name": "actual_preprint_adapter_rank_and_compact_card_retain_attribution_notice_and_unicode_cap"
+    },
+    "registered_specialist_cards_and_categories_reach_actual_science_selection": {
+      "package": "ssx-infra",
+      "target": "test:a07_factories",
+      "qualified_name": "registered_specialist_cards_and_categories_reach_actual_science_selection"
+    },
+    "clinicaltrials_preserves_request_and_full_normalization": {
+      "package": "ssx-infra",
+      "target": "test:a07_biomedical",
+      "qualified_name": "clinicaltrials_preserves_request_and_full_normalization"
+    },
+    "actual_factory_registration_preserves_duplicate_and_unknown_refusals": {
+      "package": "ssx-infra",
+      "target": "test:a07_factories",
+      "qualified_name": "actual_factory_registration_preserves_duplicate_and_unknown_refusals"
+    },
+    "pubchem_two_stage_request_count_order_and_compound_fallback": {
+      "package": "ssx-infra",
+      "target": "test:a07_biomedical",
+      "qualified_name": "pubchem_two_stage_request_count_order_and_compound_fallback"
+    },
+    "pubmed_missing_first_summary_preserves_position_and_all_authors": {
+      "package": "ssx-infra",
+      "target": "test:a07_biomedical",
+      "qualified_name": "pubmed_missing_first_summary_preserves_position_and_all_authors"
+    },
+    "source_decode_context_is_enforced_after_network_completion_for_all_five": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::clinicaltrials::resource_tests::source_decode_context_is_enforced_after_network_completion_for_all_five"
+    },
+    "actual_payload_projection_obeys_absolute_context_after_source_rows_finish": {
+      "package": "ssx-infra",
+      "target": "lib",
+      "qualified_name": "adapters::clinicaltrials::resource_tests::actual_payload_projection_obeys_absolute_context_after_source_rows_finish"
+    },
+    "pubchem_second_request_renewal_and_pubmed_pipeline_cannot_extend_context": {
+      "package": "ssx-infra",
+      "target": "test:a07_context",
+      "qualified_name": "pubchem_second_request_renewal_and_pubmed_pipeline_cannot_extend_context"
+    },
+    "real_f14_service_context_reaches_pubchem_second_request_and_keeps_synthetic_origin": {
+      "package": "ssx-infra",
+      "target": "test:a07_context",
+      "qualified_name": "real_f14_service_context_reaches_pubchem_second_request_and_keeps_synthetic_origin"
+    },
+    "pubmed_both_stage_http_and_summary_schema_regressions": {
+      "package": "ssx-infra",
+      "target": "test:a07_biomedical",
+      "qualified_name": "pubmed_both_stage_http_and_summary_schema_regressions"
+    },
+    "pubmed_invalid_timeout_settings_dispatch_nothing": {
+      "package": "ssx-infra",
+      "target": "test:a07_biomedical",
+      "qualified_name": "pubmed_invalid_timeout_settings_dispatch_nothing"
+    },
+    "uniprot_default_window_preserves_all_related_records_and_species_ties": {
+      "package": "ssx-infra",
+      "target": "test:a07_biomedical",
+      "qualified_name": "uniprot_default_window_preserves_all_related_records_and_species_ties"
+    }
+  },
+  "main_integration": {
+    "historical_baseline": "1e9dd82d62456fe6f511cc5ade88bae619fac027",
+    "accepted_main": "1bad48bbe4e25e2f60d5b86668e92bbce922fdf0",
+    "checkpoint": "d579f27b7c1a1798ed5c2243a28a1b41ea692c44",
+    "normal_merge": "8e5294a189f270295cc8e4340d7c56a21e0cdea0",
+    "derived_inventory_bindings": "bff188e33b43c2d4e82bc61fa3dfea48c1d7b56c",
+    "source_json_accepted_main_sha256": "0f42f0c200f1e84f427b03bcb5e9d8fc5251180b7d0f58e22c9e0b724370509d",
+    "source_paths": 399,
+    "historical_oracle_invocations": 40,
+    "separate_owned_parser_donor_adopted": false
+  }
+}

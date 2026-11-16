@@ -1,0 +1,18 @@
+import json,sys
+from pathlib import Path
+def require(ok,msg):
+ if not ok:raise ValueError(msg)
+p=Path(sys.argv[1]);b=[json.loads((p/f'baseline-{i}.json').read_text()) for i in range(3)];c=[json.loads((p/f'candidate-{i}.json').read_text()) for i in range(3)]
+for i in range(2):
+ before=b[i]['rows'][0];after=c[i]['rows'][0]
+ require(before['published'] and before['elapsed']>=before['delay'],'baseline defect')
+ require(not after['published'] and after['elapsed']<=0.3 and bool(after['error']),'bounded rejection')
+ require(after['tools']==[] and after['control'] is None,'premature publication')
+for data in c:
+ r=data['rows'][0]
+ require(data['provider_calls']==0 and r['state_cleared'] and r['owners_pending']==0 and r['initialize_requests']==1,'cleanup/call guards')
+healthy=c[2]['rows'][0];baseline=b[2]['rows'][0]
+require(healthy['published'] and healthy['error'] is None and healthy['elapsed']<0.3,'healthy readiness')
+require(healthy['tools']==baseline['tools'] and len(healthy['tools'])==38,'healthy catalog')
+require(healthy['control']==baseline['control'],'raw healthy control')
+print('PASS primary0/2 ->2/2; healthy metadata/raw control and cleanup guards pass; nested connection-error regression separately required')

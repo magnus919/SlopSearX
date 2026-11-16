@@ -1,0 +1,413 @@
+{
+  "status": "actual Python repr controls; isolated offline; tagged codepoints preserve scalar versus separate-surrogate identity; temporary historical evidence pending registration",
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "source_bindings": {
+    "crates/ssx-infra/src/adapters/source_json.rs": "6830b97144e7084cea8329d383a7da9baf389b4955eae804da438afec96f2d79",
+    "contracts/unicode/python-text-16.0.0.json": "9f6d9cb6e81031954d91cc03084237592e9d7bb2224f22cab5a5fba8cebefabd"
+  },
+  "cases": [
+    {
+      "id": "null",
+      "input": {
+        "type": "null"
+      },
+      "repr": "None"
+    },
+    {
+      "id": "true",
+      "input": {
+        "type": "bool",
+        "value": true
+      },
+      "repr": "True"
+    },
+    {
+      "id": "false",
+      "input": {
+        "type": "bool",
+        "value": false
+      },
+      "repr": "False"
+    },
+    {
+      "id": "bigint",
+      "input": {
+        "type": "int",
+        "value": "-90071992547409931234567890"
+      },
+      "repr": "-90071992547409931234567890"
+    },
+    {
+      "id": "float1",
+      "input": {
+        "type": "float",
+        "value": "1.0"
+      },
+      "repr": "1.0"
+    },
+    {
+      "id": "negativezero",
+      "input": {
+        "type": "float",
+        "value": "-0.0"
+      },
+      "repr": "-0.0"
+    },
+    {
+      "id": "floatcutoffsmall",
+      "input": {
+        "type": "float",
+        "value": "1e-05"
+      },
+      "repr": "1e-05"
+    },
+    {
+      "id": "floatcutofflarge",
+      "input": {
+        "type": "float",
+        "value": "1e+16"
+      },
+      "repr": "1e+16"
+    },
+    {
+      "id": "nan",
+      "input": {
+        "type": "float",
+        "value": "nan"
+      },
+      "repr": "nan"
+    },
+    {
+      "id": "infinity",
+      "input": {
+        "type": "float",
+        "value": "inf"
+      },
+      "repr": "inf"
+    },
+    {
+      "id": "negativeinfinity",
+      "input": {
+        "type": "float",
+        "value": "-inf"
+      },
+      "repr": "-inf"
+    },
+    {
+      "id": "emptylist",
+      "input": {
+        "type": "list",
+        "items": []
+      },
+      "repr": "[]"
+    },
+    {
+      "id": "emptydict",
+      "input": {
+        "type": "dict",
+        "items": []
+      },
+      "repr": "{}"
+    },
+    {
+      "id": "singlequote",
+      "input": {
+        "type": "str",
+        "codepoints": [
+          97,
+          39,
+          98
+        ]
+      },
+      "repr": "\"a'b\""
+    },
+    {
+      "id": "bothquotes",
+      "input": {
+        "type": "str",
+        "codepoints": [
+          97,
+          39,
+          34,
+          98
+        ]
+      },
+      "repr": "'a\\'\"b'"
+    },
+    {
+      "id": "backslash",
+      "input": {
+        "type": "str",
+        "codepoints": [
+          92
+        ]
+      },
+      "repr": "'\\\\'"
+    },
+    {
+      "id": "scalar",
+      "input": {
+        "type": "str",
+        "codepoints": [
+          128578
+        ]
+      },
+      "repr": "'\ud83d\ude42'"
+    },
+    {
+      "id": "separatesurrogates",
+      "input": {
+        "type": "str",
+        "codepoints": [
+          55357,
+          56898
+        ]
+      },
+      "repr": "'\\ud83d\\ude42'"
+    },
+    {
+      "id": "lonesurrogate",
+      "input": {
+        "type": "str",
+        "codepoints": [
+          55296
+        ]
+      },
+      "repr": "'\\ud800'"
+    },
+    {
+      "id": "nested",
+      "input": {
+        "type": "dict",
+        "items": [
+          [
+            {
+              "type": "str",
+              "codepoints": [
+                120
+              ]
+            },
+            {
+              "type": "list",
+              "items": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "bool",
+                  "value": true
+                },
+                {
+                  "type": "float",
+                  "value": "1.0"
+                },
+                {
+                  "type": "str",
+                  "codepoints": [
+                    97,
+                    10
+                  ]
+                },
+                {
+                  "type": "str",
+                  "codepoints": [
+                    55296
+                  ]
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "codepoints": [
+                113,
+                34,
+                39
+              ]
+            },
+            {
+              "type": "dict",
+              "items": [
+                [
+                  {
+                    "type": "str",
+                    "codepoints": [
+                      107,
+                      101,
+                      121
+                    ]
+                  },
+                  {
+                    "type": "str",
+                    "codepoints": [
+                      128578
+                    ]
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "repr": "{'x': [None, True, 1.0, 'a\\n', '\\ud800'], 'q\"\\'': {'key': '\ud83d\ude42'}}"
+    },
+    {
+      "id": "character-0x0",
+      "input": {
+        "type": "str",
+        "codepoints": [
+          0
+        ]
+      },
+      "repr": "'\\x00'"
+    },
+    {
+      "id": "character-0x9",
+      "input": {
+        "type": "str",
+        "codepoints": [
+          9
+        ]
+      },
+      "repr": "'\\t'"
+    },
+    {
+      "id": "character-0xa",
+      "input": {
+        "type": "str",
+        "codepoints": [
+          10
+        ]
+      },
+      "repr": "'\\n'"
+    },
+    {
+      "id": "character-0xd",
+      "input": {
+        "type": "str",
+        "codepoints": [
+          13
+        ]
+      },
+      "repr": "'\\r'"
+    },
+    {
+      "id": "character-0x1f",
+      "input": {
+        "type": "str",
+        "codepoints": [
+          31
+        ]
+      },
+      "repr": "'\\x1f'"
+    },
+    {
+      "id": "character-0x20",
+      "input": {
+        "type": "str",
+        "codepoints": [
+          32
+        ]
+      },
+      "repr": "' '"
+    },
+    {
+      "id": "character-0x7f",
+      "input": {
+        "type": "str",
+        "codepoints": [
+          127
+        ]
+      },
+      "repr": "'\\x7f'"
+    },
+    {
+      "id": "character-0x85",
+      "input": {
+        "type": "str",
+        "codepoints": [
+          133
+        ]
+      },
+      "repr": "'\\x85'"
+    },
+    {
+      "id": "character-0xad",
+      "input": {
+        "type": "str",
+        "codepoints": [
+          173
+        ]
+      },
+      "repr": "'\\xad'"
+    },
+    {
+      "id": "character-0x200b",
+      "input": {
+        "type": "str",
+        "codepoints": [
+          8203
+        ]
+      },
+      "repr": "'\\u200b'"
+    },
+    {
+      "id": "character-0x1d173",
+      "input": {
+        "type": "str",
+        "codepoints": [
+          119155
+        ]
+      },
+      "repr": "'\\U0001d173'"
+    },
+    {
+      "id": "character-0xe000",
+      "input": {
+        "type": "str",
+        "codepoints": [
+          57344
+        ]
+      },
+      "repr": "'\\ue000'"
+    },
+    {
+      "id": "character-0xfdd0",
+      "input": {
+        "type": "str",
+        "codepoints": [
+          64976
+        ]
+      },
+      "repr": "'\\ufdd0'"
+    },
+    {
+      "id": "character-0x10ffff",
+      "input": {
+        "type": "str",
+        "codepoints": [
+          1114111
+        ]
+      },
+      "repr": "'\\U0010ffff'"
+    },
+    {
+      "id": "depth99",
+      "input": {
+        "type": "nested_list",
+        "depth": 99,
+        "leaf": {
+          "type": "str",
+          "codepoints": [
+            108,
+            101,
+            97,
+            102
+          ]
+        }
+      },
+      "repr": "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[['leaf']]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]"
+    }
+  ]
+}

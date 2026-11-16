@@ -1,0 +1,3 @@
+# A13 source amendment notes
+
+The versioned amendment manifest preserves historical source maps and qualification containers byte-for-byte. It binds only explicitly reviewed current successor files to archived historical source bytes. These identity bindings do not claim production behavioral equivalence. The HTTP successor chain retains the 9f1a historical archive and records the previously accepted 48e9 successor archive before the reviewed 7d5dd8 successor. The ClinicalTrials successor retains its 9f1a historical archive and binds the exact current source after the focused A07 change and unused-import cleanup.

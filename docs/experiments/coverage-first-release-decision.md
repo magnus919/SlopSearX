@@ -4,6 +4,12 @@ Status: **candidate amendment approved by the maintainer on 2026-10-09**.
 Related to [#516](https://github.com/magnus919/SlopSearX/issues/516).
 This records a prospective decision, not a registered or admitted invocation.
 
+**Current study status (2026-10-15):** the original collection stopped after 26 requests, and its one permitted replacement stopped during collection after 30 more. All 30 replacement requests returned HTTP 200, but one pool remained below its required size band and one official navigation target was absent. Neither attempt reached ranking or answer evaluation; confirmation was not started. The [replacement terminal record](evidence/coverage-first-study/completed-2026-10-15-task-use-retry-collection/README.md) reports both collections separately. No quality result was measured. The replacement allowance is exhausted; issue #516 remains unqualified and production ranking is unchanged. The [input-correction plan](coverage-first-input-correction.md) permits a separately registered attempt with two revised development queries, retaining both failures and every quality threshold. It is not an execution registration.
+
+The original registration and retry plan remain as historical records. The replacement registration is terminal; the unused conditional confirmation budget does not authorize another development attempt.
+
+The remainder records the earlier candidate amendment and its original conditions. It is historical context, not the current execution registration.
+
 The maintainer approved replacing the failed complete-pool dual-Score/RRF
 candidate with the [coverage-first prototype](intent-ranking-coverage-prototype.md)
 for a new bounded study. This supersedes only the sole-candidate constraint in
@@ -44,7 +50,12 @@ confirmation tasks/pools together. Historical exposed cases may be exploratory
 diagnostics only. Freeze fresh blind independent card/source references before
 any Jev score or selector output in each stage. Freeze equal consumer and
 answerer budgets; assess references separately, never average disagreement
-into a pass. Substantive, applicable evidence must be delivered and correctly
+into a pass. The current [saved-development method](evidence/coverage-first-study/saved-development-method-materials/README.md)
+supersedes the requirement to collect the development inputs again: it uses the
+complete real development archive with new blind grades. Confirmation remains
+separate and untouched, with fresh collection and capture. The earlier runs
+remain terminal and receive no quality credit. All numerical gates remain
+unchanged. Substantive, applicable evidence must be delivered and correctly
 used for every critical check; bibliographic or topical leads alone do not
 complete factual-answer tasks.
 
@@ -78,3 +89,40 @@ result ends this fixed study and is published through a results PR; it does not
 authorize another candidate automatically. Both stages must pass before product
 implementation. Structural tests, documentation merges and transport readiness
 do not establish research usefulness or complete #516.
+
+## October 13 execution disposition
+
+The [v3 development invocation](evidence/coverage-first-study/completed-2026-10-13-v3/README.md)
+ended inconclusive during acquisition after an arXiv engine failure. All later
+scientific phases and untouched confirmation remained uninvoked. This ends
+the registered v3 study under the stop rule above. Coverage-first remains
+unqualified for product implementation; existing production ranking is retained.
+This is an availability result, not a negative ranking-quality finding.
+
+
+## Current delivery plan: frozen-input method amendment
+
+The v3 acquisition result remains terminal and unqualified. The
+[frozen-input execution amendment](coverage-frozen-input-execution-plan.md)
+defines the acquisition method: preserve provider availability separately
+from corpus eligibility, then evaluate fresh development and confirmation
+stages under the unchanged quality bar. The later schema-fixed registration
+used that method; its development outcome is recorded below.
+
+The later schema-fixed registration was invoked once for development and is
+terminal. Two grading requests were rejected because the strict output
+schema used an unsupported `propertyNames` keyword; no grades were completed,
+and the other 52 prepared packets were not started. Jev, answer, search, and
+capture phases did not run; confirmation remains uninvoked. The old run will
+not be resumed; its failure is preserved in the new
+[terminal record](evidence/coverage-first-study/completed-2026-10-15-native-schema-rejection/README.md).
+Coverage-first remains unqualified for product implementation.
+
+The [registration after the file-publication repair](evidence/coverage-first-study/atomic-handoff-registration-2026-10-15/README.md) completed 54 native reference grades and independent closure, then stopped at selector-map admission. The coordinator inventory remains in progress, so there is no finalized stage decision or quality result. Confirmation remains unstarted. See the [terminal record](evidence/coverage-first-study/completed-2026-10-15-selector-map-admission/README.md) and the [execution plan](coverage-frozen-input-execution-plan.md).
+
+A complete pass of both stages leads to the full
+[production acceptance checklist](complete-pool-production-acceptance.md),
+including SlopSearX API/MCP/portal/cache/fallback behavior and GroktoCrawl X
+propagation. An unsuccessful or inconclusive stage receives a published
+terminal decision; it does not silently extend into another study. Reviewed
+infrastructure alone is not production readiness.

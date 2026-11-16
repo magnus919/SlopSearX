@@ -1,0 +1,3454 @@
+{
+  "status": "source_notice_review_proposal_no_tables_adopted",
+  "runtime_python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "upstream_archive": {
+    "url": "https://www.python.org/ftp/python/3.14.7/Python-3.14.7.tar.xz",
+    "sha256": "3b48dac8fb59f62eaa67ac83c1eb12bda1b7a08406dd286e252c11a66be27f81",
+    "publisher_signature_verified": false
+  },
+  "observed_policy_sha256": "4951aac7dc41d9a92b1d6fdeaf6d1888307ff7fc84f878d9c0dbab216215fcf6",
+  "scope": "complete encodings package, CJK implementation/mapping headers, Unicode mapping/name generators and relevant core unicode decoder files; source review scope not runtime source inclusion",
+  "source_files": [
+    {
+      "path": "Include/internal/pycore_ucnhash.h",
+      "sha256": "4e61018a9052a35db8aa7e775d08e64a24eb7f6a9484cd32587ebd1c87c33d0d",
+      "bytes": 958,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "b0e25a78cffb43f4d92de8b61ccfa1f1f98ecbc22330b54b5251e7b6ba010231",
+      "bytes": 13804,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "Python was created in the early 1990s by Guido van Rossum at Stichting"
+        },
+        {
+          "line": 10,
+          "text": "National Research Initiatives (CNRI, see https://www.cnri.reston.va.us)"
+        },
+        {
+          "line": 15,
+          "text": "BeOpen.com to form the BeOpen PythonLabs team.  In October of the same"
+        },
+        {
+          "line": 17,
+          "text": "Zope Corporation.  In 2001, the Python Software Foundation (PSF, see"
+        },
+        {
+          "line": 31,
+          "text": "1.3 thru 1.5.2  1.2         1995-1999   CNRI        yes"
+        },
+        {
+          "line": 32,
+          "text": "1.6             1.5.2       2000        CNRI        no"
+        },
+        {
+          "line": 33,
+          "text": "2.0             1.6         2000        BeOpen.com  no"
+        },
+        {
+          "line": 34,
+          "text": "1.6.1           1.6         2001        CNRI        yes (2)"
+        },
+        {
+          "line": 45,
+          "text": "the GPL.  All Python licenses, unlike the GPL, let you distribute"
+        },
+        {
+          "line": 47,
+          "text": "GPL-compatible licenses make it possible to combine Python with"
+        },
+        {
+          "line": 51,
+          "text": "because its license has a choice of law clause.  According to"
+        },
+        {
+          "line": 52,
+          "text": "CNRI, however, Stallman's lawyer has told CNRI's lawyer that 1.6.1"
+        },
+        {
+          "line": 62,
+          "text": "Python software and documentation are licensed under the"
+        },
+        {
+          "line": 63,
+          "text": "Python Software Foundation License Version 2."
+        },
+        {
+          "line": 66,
+          "text": "the documentation are dual licensed under the PSF License Version 2"
+        },
+        {
+          "line": 67,
+          "text": "and the Zero-Clause BSD license."
+        },
+        {
+          "line": 69,
+          "text": "Some software incorporated into Python is under different licenses."
+        },
+        {
+          "line": 70,
+          "text": "The licenses are listed with code falling under that license."
+        },
+        {
+          "line": 73,
+          "text": "PYTHON SOFTWARE FOUNDATION LICENSE VERSION 2"
+        },
+        {
+          "line": 76,
+          "text": "1. This LICENSE AGREEMENT is between the Python Software Foundation"
+        },
+        {
+          "line": 77,
+          "text": "(\"PSF\"), and the Individual or Organization (\"Licensee\") accessing and"
+        },
+        {
+          "line": 81,
+          "text": "2. Subject to the terms and conditions of this License Agreement, PSF hereby"
+        },
+        {
+          "line": 82,
+          "text": "grants Licensee a nonexclusive, royalty-free, world-wide license to reproduce,"
+        },
+        {
+          "line": 85,
+          "text": "provided, however, that PSF's License Agreement and PSF's notice of copyright,"
+        },
+        {
+          "line": 86,
+          "text": "i.e., \"Copyright (c) 2001 Python Software Foundation; All Rights Reserved\""
+        },
+        {
+          "line": 87,
+          "text": "are retained in Python alone or in any derivative version prepared by Licensee."
+        },
+        {
+          "line": 89,
+          "text": "3. In the event Licensee prepares a derivative work that is based on"
+        },
+        {
+          "line": 92,
+          "text": "Licensee hereby agrees to include in any such work a brief summary of"
+        },
+        {
+          "line": 95,
+          "text": "4. PSF is making Python available to Licensee on an \"AS IS\""
+        },
+        {
+          "line": 102,
+          "text": "5. PSF SHALL NOT BE LIABLE TO LICENSEE OR ANY OTHER USERS OF PYTHON"
+        },
+        {
+          "line": 107,
+          "text": "6. This License Agreement will automatically terminate upon a material"
+        },
+        {
+          "line": 110,
+          "text": "7. Nothing in this License Agreement shall be deemed to create any"
+        },
+        {
+          "line": 112,
+          "text": "Licensee.  This License Agreement does not grant permission to use PSF"
+        },
+        {
+          "line": 114,
+          "text": "products or services of Licensee, or any third party."
+        },
+        {
+          "line": 116,
+          "text": "8. By copying, installing or otherwise using Python, Licensee"
+        },
+        {
+          "line": 117,
+          "text": "agrees to be bound by the terms and conditions of this License"
+        },
+        {
+          "line": 121,
+          "text": "BEOPEN.COM LICENSE AGREEMENT FOR PYTHON 2.0"
+        },
+        {
+          "line": 124,
+          "text": "BEOPEN PYTHON OPEN SOURCE LICENSE AGREEMENT VERSION 1"
+        },
+        {
+          "line": 126,
+          "text": "1. This LICENSE AGREEMENT is between BeOpen.com (\"BeOpen\"), having an"
+        },
+        {
+          "line": 128,
+          "text": "Individual or Organization (\"Licensee\") accessing and otherwise using"
+        },
+        {
+          "line": 132,
+          "text": "2. Subject to the terms and conditions of this BeOpen Python License"
+        },
+        {
+          "line": 133,
+          "text": "Agreement, BeOpen hereby grants Licensee a non-exclusive,"
+        },
+        {
+          "line": 134,
+          "text": "royalty-free, world-wide license to reproduce, analyze, test, perform"
+        },
+        {
+          "line": 137,
+          "text": "provided, however, that the BeOpen Python License is retained in the"
+        },
+        {
+          "line": 138,
+          "text": "Software, alone or in any derivative version prepared by Licensee."
+        },
+        {
+          "line": 140,
+          "text": "3. BeOpen is making the Software available to Licensee on an \"AS IS\""
+        },
+        {
+          "line": 141,
+          "text": "basis.  BEOPEN MAKES NO REPRESENTATIONS OR WARRANTIES, EXPRESS OR"
+        },
+        {
+          "line": 142,
+          "text": "IMPLIED.  BY WAY OF EXAMPLE, BUT NOT LIMITATION, BEOPEN MAKES NO AND"
+        },
+        {
+          "line": 147,
+          "text": "4. BEOPEN SHALL NOT BE LIABLE TO LICENSEE OR ANY OTHER USERS OF THE"
+        },
+        {
+          "line": 152,
+          "text": "5. This License Agreement will automatically terminate upon a material"
+        },
+        {
+          "line": 155,
+          "text": "6. This License Agreement shall be governed by and interpreted in all"
+        },
+        {
+          "line": 157,
+          "text": "law provisions.  Nothing in this License Agreement shall be deemed to"
+        },
+        {
+          "line": 159,
+          "text": "between BeOpen and Licensee.  This License Agreement does not grant"
+        },
+        {
+          "line": 160,
+          "text": "permission to use BeOpen trademarks or trade names in a trademark"
+        },
+        {
+          "line": 161,
+          "text": "sense to endorse or promote products or services of Licensee, or any"
+        },
+        {
+          "line": 162,
+          "text": "third party.  As an exception, the \"BeOpen Python\" logos available at"
+        },
+        {
+          "line": 166,
+          "text": "7. By copying, installing or otherwise using the software, Licensee"
+        },
+        {
+          "line": 167,
+          "text": "agrees to be bound by the terms and conditions of this License"
+        },
+        {
+          "line": 171,
+          "text": "CNRI LICENSE AGREEMENT FOR PYTHON 1.6.1"
+        },
+        {
+          "line": 174,
+          "text": "1. This LICENSE AGREEMENT is between the Corporation for National"
+        },
+        {
+          "line": 176,
+          "text": "Reston, VA 20191 (\"CNRI\"), and the Individual or Organization"
+        },
+        {
+          "line": 177,
+          "text": "(\"Licensee\") accessing and otherwise using Python 1.6.1 software in"
+        },
+        {
+          "line": 180,
+          "text": "2. Subject to the terms and conditions of this License Agreement, CNRI"
+        },
+        {
+          "line": 181,
+          "text": "hereby grants Licensee a nonexclusive, royalty-free, world-wide"
+        },
+        {
+          "line": 182,
+          "text": "license to reproduce, analyze, test, perform and/or display publicly,"
+        },
+        {
+          "line": 184,
+          "text": "alone or in any derivative version, provided, however, that CNRI's"
+        },
+        {
+          "line": 185,
+          "text": "License Agreement and CNRI's notice of copyright, i.e., \"Copyright (c)"
+        },
+        {
+          "line": 188,
+          "text": "version prepared by Licensee.  Alternately, in lieu of CNRI's License"
+        },
+        {
+          "line": 189,
+          "text": "Agreement, Licensee may substitute the following text (omitting the"
+        },
+        {
+          "line": 191,
+          "text": "conditions in CNRI's License Agreement.  This Agreement together with"
+        },
+        {
+          "line": 197,
+          "text": "3. In the event Licensee prepares a derivative work that is based on"
+        },
+        {
+          "line": 200,
+          "text": "Licensee hereby agrees to include in any such work a brief summary of"
+        },
+        {
+          "line": 203,
+          "text": "4. CNRI is making Python 1.6.1 available to Licensee on an \"AS IS\""
+        },
+        {
+          "line": 204,
+          "text": "basis.  CNRI MAKES NO REPRESENTATIONS OR WARRANTIES, EXPRESS OR"
+        },
+        {
+          "line": 205,
+          "text": "IMPLIED.  BY WAY OF EXAMPLE, BUT NOT LIMITATION, CNRI MAKES NO AND"
+        },
+        {
+          "line": 210,
+          "text": "5. CNRI SHALL NOT BE LIABLE TO LICENSEE OR ANY OTHER USERS OF PYTHON"
+        },
+        {
+          "line": 215,
+          "text": "6. This License Agreement will automatically terminate upon a material"
+        },
+        {
+          "line": 218,
+          "text": "7. This License Agreement shall be governed by the federal"
+        },
+        {
+          "line": 220,
+          "text": "limitation the federal copyright law, and, to the extent such"
+        },
+        {
+          "line": 225,
+          "text": "previously distributed under the GNU General Public License (GPL), the"
+        },
+        {
+          "line": 226,
+          "text": "law of the Commonwealth of Virginia shall govern this License"
+        },
+        {
+          "line": 228,
+          "text": "Paragraphs 4, 5, and 7 of this License Agreement.  Nothing in this"
+        },
+        {
+          "line": 229,
+          "text": "License Agreement shall be deemed to create any relationship of"
+        },
+        {
+          "line": 230,
+          "text": "agency, partnership, or joint venture between CNRI and Licensee.  This"
+        },
+        {
+          "line": 231,
+          "text": "License Agreement does not grant permission to use CNRI trademarks or"
+        },
+        {
+          "line": 233,
+          "text": "services of Licensee, or any third party."
+        },
+        {
+          "line": 236,
+          "text": "installing or otherwise using Python 1.6.1, Licensee agrees to be"
+        },
+        {
+          "line": 237,
+          "text": "bound by the terms and conditions of this License Agreement."
+        },
+        {
+          "line": 242,
+          "text": "CWI LICENSE AGREEMENT FOR PYTHON 0.9.0 THROUGH 1.2"
+        },
+        {
+          "line": 245,
+          "text": "Copyright (c) 1991 - 1995, Stichting Mathematisch Centrum Amsterdam,"
+        },
+        {
+          "line": 250,
+          "text": "provided that the above copyright notice appear in all copies and that"
+        },
+        {
+          "line": 251,
+          "text": "both that copyright notice and this permission notice appear in"
+        },
+        {
+          "line": 252,
+          "text": "supporting documentation, and that the name of Stichting Mathematisch"
+        },
+        {
+          "line": 257,
+          "text": "STICHTING MATHEMATISCH CENTRUM DISCLAIMS ALL WARRANTIES WITH REGARD TO"
+        },
+        {
+          "line": 259,
+          "text": "FITNESS, IN NO EVENT SHALL STICHTING MATHEMATISCH CENTRUM BE LIABLE"
+        },
+        {
+          "line": 265,
+          "text": "ZERO-CLAUSE BSD LICENSE FOR CODE IN THE PYTHON DOCUMENTATION"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/__init__.py",
+      "sha256": "2b708410495acf12a6fad9d2de928dd89e567537c253eaa2b51aaae578e96c59",
+      "bytes": 5945,
+      "notice_matches": [
+        {
+          "line": 27,
+          "text": "(c) Copyright CNRI, All Rights Reserved. NO WARRANTY."
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/_win_cp_codecs.py",
+      "sha256": "a10ef385d2096ff10a4ed00e7adfb7750fefcd10aa8eea1b573846145c9abad7",
+      "bytes": 1229,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/aliases.py",
+      "sha256": "1ee993f8eb4986999b6501381e53947be9a04443626cb48b4190bcff2e87d3b4",
+      "bytes": 16255,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/ascii.py",
+      "sha256": "578aa1173f7cc60dad2895071287fe6182bd14787b3fbf47a6c7983dfe3675e3",
+      "bytes": 1248,
+      "notice_matches": [
+        {
+          "line": 6,
+          "text": "(c) Copyright CNRI, All Rights Reserved. NO WARRANTY."
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/base64_codec.py",
+      "sha256": "cf9ac7a464f541492486241d1b4bf33e37b45c6499275cc4d69c5a8e564e5976",
+      "bytes": 1533,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/big5.py",
+      "sha256": "98fac6f86a20dd05da197e2058176ebfd47edee7074c3248f5f48fe0fb672d7c",
+      "bytes": 1019,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "# Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/big5hkscs.py",
+      "sha256": "21d051a00fb5c6a86ba187e0c50e811d659ce00991fd5f5b408f71ebb2ef0f16",
+      "bytes": 1039,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "# Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/bz2_codec.py",
+      "sha256": "1181a2a89102a2b1d2b2f1f4473236d5d1ececdd0be8fdaa498a3dbe21a185ab",
+      "bytes": 2249,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/charmap.py",
+      "sha256": "1b8b5fdb36ce3becc62a6115ed904a17083949ec8aaef5a80f7078cec232f43b",
+      "bytes": 2084,
+      "notice_matches": [
+        {
+          "line": 9,
+          "text": "(c) Copyright CNRI, All Rights Reserved. NO WARRANTY."
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp037.py",
+      "sha256": "fda6ca994d710e4e0c760e0204c29a4273fc0f14ebe3169306d2eb54c9953f58",
+      "bytes": 13121,
+      "notice_matches": [
+        {
+          "line": 228,
+          "text": "'\\xa9'     #  0xB4 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp1006.py",
+      "sha256": "eaded38b427841bdf280e878f1e26da506e743eaa9429075332af60cce429473",
+      "bytes": 13568,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp1026.py",
+      "sha256": "f5227237dd7ce5005b16a8e4d8342f0d193193c878e3cf35b9305d22b3b1aaf9",
+      "bytes": 13113,
+      "notice_matches": [
+        {
+          "line": 228,
+          "text": "'\\xa9'     #  0xB4 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp1125.py",
+      "sha256": "f84c7d30ce222e6a50cff1a4c9737173411da108cbd2c9bb57c854480103c470",
+      "bytes": 34597,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp1140.py",
+      "sha256": "3379d78b244aa905ffe1171a968caaf41b9a0154d1ddc76c05a2abaca2b289fd",
+      "bytes": 13105,
+      "notice_matches": [
+        {
+          "line": 228,
+          "text": "'\\xa9'     #  0xB4 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp1250.py",
+      "sha256": "ebcec1adf9167863fb0bab29708c546300c80a77ef07838c9e0437a59e265970",
+      "bytes": 13686,
+      "notice_matches": [
+        {
+          "line": 217,
+          "text": "'\\xa9'     #  0xA9 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp1251.py",
+      "sha256": "d57f8cfa34494c5acb6692ddb31f616ae2dd89a075d2af6d36b0b7ec2ffe7af1",
+      "bytes": 13361,
+      "notice_matches": [
+        {
+          "line": 217,
+          "text": "'\\xa9'     #  0xA9 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp1252.py",
+      "sha256": "19aa5bee667f5fb387924a813aec9fa1dda47769d09e8483a748bdb202be6a84",
+      "bytes": 13511,
+      "notice_matches": [
+        {
+          "line": 217,
+          "text": "'\\xa9'     #  0xA9 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp1253.py",
+      "sha256": "8c27696dcfb6894b378869bc89f113703fbd1e9b13a83934463d5999b055d1e8",
+      "bytes": 13094,
+      "notice_matches": [
+        {
+          "line": 217,
+          "text": "'\\xa9'     #  0xA9 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp1254.py",
+      "sha256": "06517ec2f74f1c6562d0a1a500c48ba43f2e6e9d0c3d28356d747f274f1a4c8d",
+      "bytes": 13502,
+      "notice_matches": [
+        {
+          "line": 217,
+          "text": "'\\xa9'     #  0xA9 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp1255.py",
+      "sha256": "54a1b5087578fa78e5bdd0afa6a9e80e8c5467c1e4226cf6e586cfe7a674a653",
+      "bytes": 12466,
+      "notice_matches": [
+        {
+          "line": 217,
+          "text": "'\\xa9'     #  0xA9 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp1256.py",
+      "sha256": "ad3768ac2fef2a646b3301c20af705f4d4a1544f22fa8a84241bada27ab84133",
+      "bytes": 12814,
+      "notice_matches": [
+        {
+          "line": 217,
+          "text": "'\\xa9'     #  0xA9 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp1257.py",
+      "sha256": "d9149d2925b3f719809ef2297e541461079f15c658af207a3e498be314ab2c6b",
+      "bytes": 13374,
+      "notice_matches": [
+        {
+          "line": 217,
+          "text": "'\\xa9'     #  0xA9 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp1258.py",
+      "sha256": "672e05b51952a82c8dbd5603769195fcedf565e457bb86c0d5bae04955d04630",
+      "bytes": 13364,
+      "notice_matches": [
+        {
+          "line": 217,
+          "text": "'\\xa9'     #  0xA9 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp273.py",
+      "sha256": "6c6aec3b213ea3aebc2c526dd4d121c95d4a25a2fc928a87cd80f8448988185f",
+      "bytes": 14132,
+      "notice_matches": [
+        {
+          "line": 228,
+          "text": "'\\xa9'      #  0xB4 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp424.py",
+      "sha256": "30414c2186ea0802bbf3db034122ddec1f8a10061b97c50871e14b74ee36d0ca",
+      "bytes": 12055,
+      "notice_matches": [
+        {
+          "line": 228,
+          "text": "'\\xa9'     #  0xB4 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp437.py",
+      "sha256": "5c2a5015cd36cf7f561269f33dec4c323093d3d88b0673969accdabdcb9ce2cb",
+      "bytes": 34564,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp500.py",
+      "sha256": "630f503f9110d98ea3e1529f2f965ebc275a2f78d3de47f8e9b69d35589d764b",
+      "bytes": 13121,
+      "notice_matches": [
+        {
+          "line": 228,
+          "text": "'\\xa9'     #  0xB4 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp720.py",
+      "sha256": "395496001271b92efe5df07fc0ae7c3410d1dd2bdfebbd3e4d8e806c8166beb0",
+      "bytes": 13686,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp737.py",
+      "sha256": "be3ca1785a3970ec62310710eaf7de82932181b04d06fe4528f8adaba9fb8c4b",
+      "bytes": 34681,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp775.py",
+      "sha256": "e0dba85b99329d7f16907e620adada06be5216abcb964406c827b569b2cf1aeb",
+      "bytes": 34476,
+      "notice_matches": [
+        {
+          "line": 87,
+          "text": "0x00a8: 0x00a9,     #  COPYRIGHT SIGN"
+        },
+        {
+          "line": 348,
+          "text": "'\\xa9'     #  0x00a8 -> COPYRIGHT SIGN"
+        },
+        {
+          "line": 575,
+          "text": "0x00a9: 0x00a8,     #  COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp850.py",
+      "sha256": "257e29f235e2a8790dd68cee45668776648bab809ce8584f893cdd8fd007993c",
+      "bytes": 34105,
+      "notice_matches": [
+        {
+          "line": 104,
+          "text": "0x00b8: 0x00a9,     #  COPYRIGHT SIGN"
+        },
+        {
+          "line": 365,
+          "text": "'\\xa9'     #  0x00b8 -> COPYRIGHT SIGN"
+        },
+        {
+          "line": 579,
+          "text": "0x00a9: 0x00b8,     #  COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp852.py",
+      "sha256": "cc6faaa9dc4a933127da0aaacd1dc7a44c09266051af56bfe3215ff228636b6b",
+      "bytes": 35002,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp855.py",
+      "sha256": "7b25c61c9e8c47b218d3fbb801541a2861926ac712843d2113fff90e2074f5ba",
+      "bytes": 33850,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp856.py",
+      "sha256": "2e52ec5cb1eafa6739b5569b0b98ee89df5f7358b84ccdc8da64e86f017d359f",
+      "bytes": 12423,
+      "notice_matches": [
+        {
+          "line": 232,
+          "text": "'\\xa9'     #  0xB8 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp857.py",
+      "sha256": "8d1b769058bfccdb3c6c70c49a104f5081a2fcc9fad68f7b5eb3e4f67f0b33da",
+      "bytes": 33908,
+      "notice_matches": [
+        {
+          "line": 104,
+          "text": "0x00b8: 0x00a9,     #  COPYRIGHT SIGN"
+        },
+        {
+          "line": 364,
+          "text": "'\\xa9'     #  0x00b8 -> COPYRIGHT SIGN"
+        },
+        {
+          "line": 578,
+          "text": "0x00a9: 0x00b8,     #  COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp858.py",
+      "sha256": "a24930c4a6ad0ff66dde9a69f2027e4b92c2c9c61dcda2992e940654c606577b",
+      "bytes": 34015,
+      "notice_matches": [
+        {
+          "line": 104,
+          "text": "0x00b8: 0x00a9,     #  COPYRIGHT SIGN"
+        },
+        {
+          "line": 365,
+          "text": "'\\xa9'     #  0x00b8 -> COPYRIGHT SIGN"
+        },
+        {
+          "line": 579,
+          "text": "0x00a9: 0x00b8,     #  COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp860.py",
+      "sha256": "2dfae7e31d3d9aa3013cff44a4d7ad842f257ac63765a9998436701b629cd86a",
+      "bytes": 34681,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp861.py",
+      "sha256": "701930d77a2177497586e99bc3fe60f2d4beffb645608f167c76874a72ff405e",
+      "bytes": 34633,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp862.py",
+      "sha256": "15a2844b6ed9544c6400cf7299b42d0c2bef93c9bee70a9e89f66b8610ad6d6d",
+      "bytes": 33370,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp863.py",
+      "sha256": "a3d57f61fce1b98fc81ea8e4ebebaf402fae40bbcdd35d4b8297b9bb49a79aa2",
+      "bytes": 34252,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp864.py",
+      "sha256": "15ad8f1fdfdd842c7522241372e7eddda7df687e815692a89157c5f256f21a08",
+      "bytes": 33663,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp865.py",
+      "sha256": "bdbaded987242ed2a8de7133ec2f61ddcc1c2e9de27816ab7cd0a4c678a3a907",
+      "bytes": 34618,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp866.py",
+      "sha256": "9efcc8e85bbd1687272a0991f6d0429a4c06679db2d114b2ac95db27a70f9d13",
+      "bytes": 34396,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp869.py",
+      "sha256": "52582d9fb769b24eac7154f18d7dae856588297d6da98f37fb5efd8da883826d",
+      "bytes": 32965,
+      "notice_matches": [
+        {
+          "line": 71,
+          "text": "0x0097: 0x00a9,     #  COPYRIGHT SIGN"
+        },
+        {
+          "line": 332,
+          "text": "'\\xa9'     #  0x0097 -> COPYRIGHT SIGN"
+        },
+        {
+          "line": 575,
+          "text": "0x00a9: 0x0097,     #  COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp874.py",
+      "sha256": "fe4752fa2e65741e08a563a31ff914fe71068942ce9c6f4070b1dfd7b25e5e7f",
+      "bytes": 12595,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp875.py",
+      "sha256": "2fe72632015db2cba2bb4367055551da6fe22051b96d170c7b96fa271c46b257",
+      "bytes": 12854,
+      "notice_matches": [
+        {
+          "line": 299,
+          "text": "'\\xa9'     #  0xFB -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp932.py",
+      "sha256": "99748e28113d2d49f5d666b49b78accd2c6e10a7852f7dd6dece9b5b71aa83c4",
+      "bytes": 1023,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "# Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp949.py",
+      "sha256": "950a7d29467ce0590b4a1137830d43d88d8f20e4035dcaaa8b2a5c3c3f1de962",
+      "bytes": 1023,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "# Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/cp950.py",
+      "sha256": "27811178b450731fc955b1247656a605d04e5ee98e0d585e4596b94b703a27f6",
+      "bytes": 1023,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "# Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/euc_jis_2004.py",
+      "sha256": "9fa426cd9f17629f6320700ed18baa94839304cf1bcabbee7edb501747dc055d",
+      "bytes": 1051,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "# Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/euc_jisx0213.py",
+      "sha256": "e28315910da20218dae8b7d5becd81de1e283dfd8b0415a4980d67065de73a0b",
+      "bytes": 1051,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "# Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/euc_jp.py",
+      "sha256": "b453a439787b0efa031e43416a7d852a6be705c985e1200693eb96d87ea79cdc",
+      "bytes": 1027,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "# Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/euc_kr.py",
+      "sha256": "633a1a5504bfad04b1ec9c96d44d4ebb3bb99066a218318e7d67d866e20887a6",
+      "bytes": 1027,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "# Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/gb18030.py",
+      "sha256": "6c10b4dc49bc63724e539137ede6936304fcca1c97c28d16d89f381e10849521",
+      "bytes": 1031,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "# Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/gb2312.py",
+      "sha256": "3d2d567d8d079b78f3f3b566ed52ad2f38af61bf832b7dc28858b0039a032d6b",
+      "bytes": 1027,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "# Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/gbk.py",
+      "sha256": "eff9b8cbc9ad2ef2e10e96afa83d3db1f775ea044aed275b7a35574ae0d8645b",
+      "bytes": 1015,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "# Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/hex_codec.py",
+      "sha256": "fc5f0a31b59efe990b86efb98936769f33dd91d912ce55b49a5a4cfc516cd047",
+      "bytes": 1508,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/hp_roman8.py",
+      "sha256": "c43cce763d12e8f71a63dbc16641bd87147eaf5f9d9054ea856864b216b2735b",
+      "bytes": 13475,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/hz.py",
+      "sha256": "025a9531e3046e52d3e039c0be04f9a5a74651d7683a13c7c7ebd4c7dfb5996a",
+      "bytes": 1011,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "# Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/idna.py",
+      "sha256": "ea8d7f01422af0ad138e4bf58d4ae63112f3ceb68833c486d6c4d18252610fd8",
+      "bytes": 13248,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/iso2022_jp.py",
+      "sha256": "461a0e7f72eccb8b29f351c4e7926cfbda58e0edd6d0770bd82e0b36c5febe77",
+      "bytes": 1053,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "# Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/iso2022_jp_1.py",
+      "sha256": "63bacad13a979a5519fcaa4f1e1e07b2c7415005167fac3a689408c7d886fabd",
+      "bytes": 1061,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "# Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/iso2022_jp_2.py",
+      "sha256": "5d4248181548b0fc89a9f5ee9cf52ebecb235708ba87d47896ad14130884ef9f",
+      "bytes": 1061,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "# Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/iso2022_jp_2004.py",
+      "sha256": "b4d1468bcd608b46f38cb0c6ef115510dcf9aa0f71e590792f407efc6e165164",
+      "bytes": 1073,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "# Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/iso2022_jp_3.py",
+      "sha256": "3aceaa5661909de14e2861d864443b8472460ce39b99cce5c6965346d47aa5ac",
+      "bytes": 1061,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "# Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/iso2022_jp_ext.py",
+      "sha256": "f4c9ed8f3031995faa224bcb10153d2b6144944477d1f27d1a6cc4a879fac34c",
+      "bytes": 1069,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "# Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/iso2022_kr.py",
+      "sha256": "1c86362e17944f0bcf68db02f4995bdeea605867795fff7ab4079073f96705e4",
+      "bytes": 1053,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "# Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/iso8859_1.py",
+      "sha256": "b5cebd515e057d670bf54e10b8a6f162ef3daa7f21b146aee3249160caf3c32d",
+      "bytes": 13176,
+      "notice_matches": [
+        {
+          "line": 217,
+          "text": "'\\xa9'     #  0xA9 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/iso8859_10.py",
+      "sha256": "54c886b41819ebb7f4fb34b8dbae1c45f4fc0864f019ecd772676ccfac5fae7b",
+      "bytes": 13589,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/iso8859_11.py",
+      "sha256": "ed5a964470a241b4da7a6cfb718e4149d09644933af38f0497602baab6e563ef",
+      "bytes": 12335,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/iso8859_13.py",
+      "sha256": "7312237e8e5d201d920b4130f057cfdf1b0be9baafaa246826e6d93204fcc206",
+      "bytes": 13271,
+      "notice_matches": [
+        {
+          "line": 217,
+          "text": "'\\xa9'     #  0xA9 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/iso8859_14.py",
+      "sha256": "82778b995a0ee87c5f1180fcc52900359eee15bd9a6e3a0e25f0d963e0b2a343",
+      "bytes": 13652,
+      "notice_matches": [
+        {
+          "line": 217,
+          "text": "'\\xa9'     #  0xA9 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/iso8859_15.py",
+      "sha256": "01976a81811873dc9a0c79db9fc00d1c30103487f3c6bc3a6d81b4043cd48e02",
+      "bytes": 13212,
+      "notice_matches": [
+        {
+          "line": 217,
+          "text": "'\\xa9'     #  0xA9 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/iso8859_16.py",
+      "sha256": "b5ac8f5a5d8f84c0f903b2b7c342184758d590d8bcf810d561f942fe5b372d66",
+      "bytes": 13557,
+      "notice_matches": [
+        {
+          "line": 217,
+          "text": "'\\xa9'     #  0xA9 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/iso8859_2.py",
+      "sha256": "2b57cab6111cae9021505e3ae1b2adbbfc344ec48165fda322f6b069fbb18adc",
+      "bytes": 13404,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/iso8859_3.py",
+      "sha256": "4ffdf89004bf0c5230caa7079f7ca3142fc112f8b923ddb2c7358369d2d3c242",
+      "bytes": 13089,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/iso8859_4.py",
+      "sha256": "87bd130daa0eaef3e4cb465e10cffb2bcd194ff74097e0c186b4b8eb7be41ac5",
+      "bytes": 13376,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/iso8859_5.py",
+      "sha256": "9961d96cc7b9fdf011ebcaaeaeca7b50b8670fadbd7b75fde66192f8c1f68f30",
+      "bytes": 13015,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/iso8859_6.py",
+      "sha256": "4840e68014346517680f593ca22f67133c39ba7e46f34b9be62c980a728448c6",
+      "bytes": 10833,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/iso8859_7.py",
+      "sha256": "b352eca3b819488f64fb3338fd93f39c1e30f32bb13f2f9c577925e58f2960e4",
+      "bytes": 12844,
+      "notice_matches": [
+        {
+          "line": 217,
+          "text": "'\\xa9'     #  0xA9 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/iso8859_8.py",
+      "sha256": "4cf9e8a8bbe04accb1c1a80853efb19ae0772d18f81e270adefc1b2386cb368e",
+      "bytes": 11036,
+      "notice_matches": [
+        {
+          "line": 217,
+          "text": "'\\xa9'     #  0xA9 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/iso8859_9.py",
+      "sha256": "84d9b15263e81685f7513c5ab45caf80b2f73c301c68e659f7162c1b1882d359",
+      "bytes": 13156,
+      "notice_matches": [
+        {
+          "line": 217,
+          "text": "'\\xa9'     #  0xA9 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/johab.py",
+      "sha256": "9586615917afd3d848c1c4328656603b2834af6115f2aec932fccc935e1a60fb",
+      "bytes": 1023,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "# Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/koi8_r.py",
+      "sha256": "4d4e353aee8039bb71e2145a6e68fe1e6833a1b4250b70ee0ac5ec70bbb8c51d",
+      "bytes": 13779,
+      "notice_matches": [
+        {
+          "line": 239,
+          "text": "'\\xa9'     #  0xBF -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/koi8_t.py",
+      "sha256": "9c9043814abdbe7dc39ff98f3857d5d110a84c978ad2304158d810a4e9eacef1",
+      "bytes": 13193,
+      "notice_matches": [
+        {
+          "line": 240,
+          "text": "'\\xa9'     #  0xBF -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/koi8_u.py",
+      "sha256": "d449f9858e357fa8c2edbd4b9fe739337e9f201cac3ded20f99bfcecd4970ff7",
+      "bytes": 13762,
+      "notice_matches": [
+        {
+          "line": 239,
+          "text": "'\\xa9'     #  0xBF -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/kz1048.py",
+      "sha256": "76beb30e98a911f72f97609a2373782573c17c88a5fb3537db338aa382979ffc",
+      "bytes": 13723,
+      "notice_matches": [
+        {
+          "line": 217,
+          "text": "'\\xa9'      #  0xA9 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/latin_1.py",
+      "sha256": "b75503e532a27c636477396c855209ff5f3036536d2a4bede0a576c89382b60c",
+      "bytes": 1264,
+      "notice_matches": [
+        {
+          "line": 6,
+          "text": "(c) Copyright CNRI, All Rights Reserved. NO WARRANTY."
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/mac_arabic.py",
+      "sha256": "5eafd9a3136abfbd8ed52df9c90203c7a283e7429ed60502a87a02511e0fb777",
+      "bytes": 36467,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/mac_croatian.py",
+      "sha256": "a880cd05c82a8d11a29c65ee86a396def3344465dd71441b0bb4a73826024953",
+      "bytes": 13633,
+      "notice_matches": [
+        {
+          "line": 265,
+          "text": "'\\xa9'     #  0xD9 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/mac_cyrillic.py",
+      "sha256": "83616786a1c6308b03a0dc82536908d24d0974b2248d67393d613fe558cea4bd",
+      "bytes": 13454,
+      "notice_matches": [
+        {
+          "line": 217,
+          "text": "'\\xa9'     #  0xA9 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/mac_farsi.py",
+      "sha256": "f5763c38fb4ab0423fafe2fdca34d6f9932ac7f1a74c0cd8109d60234c7dc624",
+      "bytes": 15170,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/mac_greek.py",
+      "sha256": "63016a323ddf98cb3aa9cfa78f3bab4768bedbfe9a5262a36a5aecb13d291f6e",
+      "bytes": 13721,
+      "notice_matches": [
+        {
+          "line": 217,
+          "text": "'\\xa9'     #  0xA9 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/mac_iceland.py",
+      "sha256": "753cc1ac635caa7e1b4630fbcebef8db8db332c098154a5b11f652912bf64f37",
+      "bytes": 13498,
+      "notice_matches": [
+        {
+          "line": 217,
+          "text": "'\\xa9'     #  0xA9 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/mac_latin2.py",
+      "sha256": "31670da18ce8b5394cd53fe6bf216268e7e8eae4c0247532e420e2e103727d50",
+      "bytes": 14118,
+      "notice_matches": [
+        {
+          "line": 5,
+          "text": "(c) Copyright CNRI, All Rights Reserved. NO WARRANTY."
+        },
+        {
+          "line": 6,
+          "text": "(c) Copyright 2000 Guido van Rossum."
+        },
+        {
+          "line": 222,
+          "text": "'\\xa9'     #  0xA9 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/mac_roman.py",
+      "sha256": "230367d96aef8e8d7f185b4acfb84923714f39ddbcbf9cf38a06bf6f5d621c22",
+      "bytes": 13480,
+      "notice_matches": [
+        {
+          "line": 217,
+          "text": "'\\xa9'     #  0xA9 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/mac_romanian.py",
+      "sha256": "49630cf035c19e896a123ed6e5fee18b5e485123daf2f15da38bf727ff387bee",
+      "bytes": 13661,
+      "notice_matches": [
+        {
+          "line": 217,
+          "text": "'\\xa9'     #  0xA9 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/mac_turkish.py",
+      "sha256": "99758a5cad2825cb3be3fa5d031e0821e4eba910a46f417fd890207b9b6be77b",
+      "bytes": 13513,
+      "notice_matches": [
+        {
+          "line": 217,
+          "text": "'\\xa9'     #  0xA9 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/mbcs.py",
+      "sha256": "f6ed445ed537c9f856d8defe8b56505727737d0dc9348d0a877abedab4bdd864",
+      "bytes": 1211,
+      "notice_matches": [
+        {
+          "line": 7,
+          "text": "(c) Copyright CNRI, All Rights Reserved. NO WARRANTY."
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/oem.py",
+      "sha256": "481656d3a35f792d0e5109e3f821e6dbfcf097163a19b0cdfcbff3b3db99292f",
+      "bytes": 1019,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/palmos.py",
+      "sha256": "79b4edcfaede8f7deb25b278d60e472217c0ff55e830ef1ccd2c408413742fa0",
+      "bytes": 13552,
+      "notice_matches": [
+        {
+          "line": 218,
+          "text": "'\\xa9'     #  0xA9 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/ptcp154.py",
+      "sha256": "0eabcb2c287d335e86b71b0abe5718bd6ddc9aaee234f0f0f2363845d2926d8d",
+      "bytes": 14015,
+      "notice_matches": [
+        {
+          "line": 5,
+          "text": "(c) Copyright CNRI, All Rights Reserved. NO WARRANTY."
+        },
+        {
+          "line": 6,
+          "text": "(c) Copyright 2000 Guido van Rossum."
+        },
+        {
+          "line": 222,
+          "text": "'\\xa9'     #  0xA9 -> COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/punycode.py",
+      "sha256": "1e8d57e06e9b527009c35f2a1486ab56b51540e817f5bd8f239dc71e3fc0b014",
+      "bytes": 7625,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/quopri_codec.py",
+      "sha256": "502a213c34c05a94ed063ee03f47680bd6efbb35036e06fb4dc809bf398cfa64",
+      "bytes": 1525,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/raw_unicode_escape.py",
+      "sha256": "fa6328486b8f5a5cbd10e377e80adb8cf94acbbe19c38b4e1bf708d831a80a3a",
+      "bytes": 1332,
+      "notice_matches": [
+        {
+          "line": 6,
+          "text": "(c) Copyright CNRI, All Rights Reserved. NO WARRANTY."
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/rot_13.py",
+      "sha256": "14767f475acdc0bf48e6272280dd15b80efaecafb93c06be21136f83dd1ee7e4",
+      "bytes": 2448,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/shift_jis.py",
+      "sha256": "ad4ac50ebf58294304e412cc0f1b12980988dd6edc414e4110029c0a1abbe966",
+      "bytes": 1039,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "# Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/shift_jis_2004.py",
+      "sha256": "d21c5930f21063ea78fea3b0f76dfb8fd92858d2a4a200064a52126a43dd1a99",
+      "bytes": 1059,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "# Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/shift_jisx0213.py",
+      "sha256": "2c8d0b93bb36edf31c1236b1b4d1c0008553868bd2fc9137570115b96b834f2e",
+      "bytes": 1059,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "# Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/tis_620.py",
+      "sha256": "647c4719e2c1a7375105e15a89b377c66f6b699977dcabbb71d923a4607b7902",
+      "bytes": 12300,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/undefined.py",
+      "sha256": "0e1e3e7c1dbc4690b71494099541e73de23c9010a54b6822f3867aec35a74a62",
+      "bytes": 1301,
+      "notice_matches": [
+        {
+          "line": 9,
+          "text": "(c) Copyright CNRI, All Rights Reserved. NO WARRANTY."
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/unicode_escape.py",
+      "sha256": "507e7ca8f18df639fd823d7cc23ce4028a3550ceefdfa40b3c76f81d1a94531d",
+      "bytes": 1304,
+      "notice_matches": [
+        {
+          "line": 6,
+          "text": "(c) Copyright CNRI, All Rights Reserved. NO WARRANTY."
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/utf_16.py",
+      "sha256": "08437559c8d255a5ba1449c1c75beaa62b0834fe4259d161ecf8699381e4c8e1",
+      "bytes": 5280,
+      "notice_matches": [
+        {
+          "line": 6,
+          "text": "(c) Copyright CNRI, All Rights Reserved. NO WARRANTY."
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/utf_16_be.py",
+      "sha256": "3357196f3fa52433326a6626880e34964e00c5570aee50e9a0a0a7c6d86f6e4f",
+      "bytes": 1037,
+      "notice_matches": [
+        {
+          "line": 6,
+          "text": "(c) Copyright CNRI, All Rights Reserved. NO WARRANTY."
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/utf_16_le.py",
+      "sha256": "3aedaf3eb49769282daef1eaedfd4fa1c31fe5eebeff67fe2307c89dc2e2fd80",
+      "bytes": 1037,
+      "notice_matches": [
+        {
+          "line": 6,
+          "text": "(c) Copyright CNRI, All Rights Reserved. NO WARRANTY."
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/utf_32.py",
+      "sha256": "6c235e377e1e277cde5f684cee6f6f8da4c73d153a21891df0cb834f17cd2b6f",
+      "bytes": 5175,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/utf_32_be.py",
+      "sha256": "cbba20e1f6d0879c7c4293446c371a9f79e7c90bf3c78a77a9b8fc72b18915dd",
+      "bytes": 930,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/utf_32_le.py",
+      "sha256": "9134b91047d85b442898d59effe23e7e0cf4167ca341ae31119a731dbf880a7b",
+      "bytes": 930,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/utf_7.py",
+      "sha256": "9ff32314f4f1fa074f206bbf7fdb851504e5313128636d73b4bf75b886e4a87d",
+      "bytes": 946,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/utf_8.py",
+      "sha256": "ba0cac060269583523ca9506473a755203037c57d466a11aa89a30a5f6756f3d",
+      "bytes": 1005,
+      "notice_matches": [
+        {
+          "line": 6,
+          "text": "(c) Copyright CNRI, All Rights Reserved. NO WARRANTY."
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/utf_8_sig.py",
+      "sha256": "1ef3da8d8aa08149e7f274dc64dbfce2155da812e5258ca8e8f832428d3b5c2d",
+      "bytes": 4133,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/uu_codec.py",
+      "sha256": "45ba92000718abf85f158563c755205e100356ce1b4ab9444b4d0a3d21f061a3",
+      "bytes": 2851,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Lib/encodings/zlib_codec.py",
+      "sha256": "6ef01e8d3a5fe1cc52f7b5ae008df12f1dbce7304111bf8d4758f1bfc0115759",
+      "bytes": 2204,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Modules/_codecsmodule.c",
+      "sha256": "62bbdaa5df416b8092a28c0ab6ca7a5c6508b0a1a13a7975b978eadc2ca1d559",
+      "bytes": 34359,
+      "notice_matches": [
+        {
+          "line": 29,
+          "text": "Copyright (c) Corporation for National Research Initiatives."
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Modules/cjkcodecs/README",
+      "sha256": "77d5bd1c550573ae9cd318f321e92a5b0f1dd70944371a1186555ea66453eb1b",
+      "bytes": 2618,
+      "notice_matches": [
+        {
+          "line": 13,
+          "text": "than conforming Unicode.org's that maps to 0xFFFD."
+        },
+        {
+          "line": 47,
+          "text": "unicode U+FF3C instead of U+005C as on unicode.org's mapping."
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Modules/cjkcodecs/_codecs_cn.c",
+      "sha256": "8b28def11821d71acb90ef3e74d7d6d597246daf4c196415107d19ebeeb73e55",
+      "bytes": 11256,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "* Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Modules/cjkcodecs/_codecs_hk.c",
+      "sha256": "2b1c4a0516cc930c58bf885baae06e7b7b676b5dc1713c0653bba1fc39c4e12d",
+      "bytes": 5103,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "* Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Modules/cjkcodecs/_codecs_iso2022.c",
+      "sha256": "1dec516ad16a9aa179770b5accdd20efa77e7265c0a2a06d8d8913e4524c4010",
+      "bytes": 35636,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "* Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Modules/cjkcodecs/_codecs_jp.c",
+      "sha256": "b2f18a31b427c3b2c454c2e903101ec08644541fb2bb33daaea130b26a72a20e",
+      "bytes": 20882,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "* Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Modules/cjkcodecs/_codecs_kr.c",
+      "sha256": "c6b24c685f64f6b7d67a0c50068cc7ba7a3ebf2ddfa2ebbb3f0a7faed90c217a",
+      "bytes": 12954,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "* Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Modules/cjkcodecs/_codecs_tw.c",
+      "sha256": "bd156987b58714a877453fcc67f81cc569e46a2c29a33caebbd6aaa71ad10ede",
+      "bytes": 2365,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "* Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Modules/cjkcodecs/alg_jisx0201.h",
+      "sha256": "e3d6b89fa67e6e05fe2b59dc9c8690dab7d0357ddef7fbb6e92cc34bebf41c7b",
+      "bytes": 3131,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Modules/cjkcodecs/cjkcodecs.h",
+      "sha256": "cd7e1e3736cfe360cf2b8c34e7d8a1c3c67664418423038a5cabe5bf0c331fe9",
+      "bytes": 17465,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "* Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Modules/cjkcodecs/clinic/multibytecodec.c.h",
+      "sha256": "8eff6780d678558dc0f3defbd480eb9bc35be990d47634c980d25561ace9c692",
+      "bytes": 24350,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Modules/cjkcodecs/emu_jisx0213_2000.h",
+      "sha256": "b8db3dce0aac8d433ea5f3ba057547c52727b9e3391971b278c9eb4cb61a7aca",
+      "bytes": 2777,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Modules/cjkcodecs/mappings_cn.h",
+      "sha256": "5c75da57e7fcbb06106a64b03a7fc1f6e76fd9668306c66f71a6485e8eb550aa",
+      "bytes": 319910,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Modules/cjkcodecs/mappings_hk.h",
+      "sha256": "80259d8dababbbacbc214158aebb1f17a53bbbfa2cac30da3ce0fe43435f344e",
+      "bytes": 183811,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Modules/cjkcodecs/mappings_jisx0213_pair.h",
+      "sha256": "b01e43c69e8edd8274ba9d6756357bea80a11507b125378927b37c7b443170e4",
+      "bytes": 3862,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Modules/cjkcodecs/mappings_jp.h",
+      "sha256": "09012ff9eb963073d42a8bce375c05484219537caa0cc2aa74baa63d5f3f1658",
+      "bytes": 365550,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Modules/cjkcodecs/mappings_kr.h",
+      "sha256": "334c6ed883d62725094114b1abd10c306d0810bbba8a055ea443bfef13147276",
+      "bytes": 253894,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Modules/cjkcodecs/mappings_tw.h",
+      "sha256": "5055cd95f8d4a80014d6f3b6650d578eb424d2f9dcc86c5e4f4252fd93cf991c",
+      "bytes": 203654,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Modules/cjkcodecs/multibytecodec.c",
+      "sha256": "8891773ee72fa47ffbdde9eeef5abf476b14b8027c2a812d180f0fefedd906e6",
+      "bytes": 64044,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "* Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Modules/cjkcodecs/multibytecodec.h",
+      "sha256": "b77227eba7c9b09ad3d2b9623e371c90676803781555166132a63138ddb98673",
+      "bytes": 5007,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "* Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Modules/unicodedata.c",
+      "sha256": "d69558ad96a38932da9e9d596bea8cd91d54d9801e56f2cea77a6ecfccb47a6c",
+      "bytes": 55226,
+      "notice_matches": [
+        {
+          "line": 11,
+          "text": "Copyright (c) Corporation for National Research Initiatives."
+        },
+        {
+          "line": 434,
+          "text": "// https://www.unicode.org/versions/latest/core-spec/chapter-3/#G56669"
+        },
+        {
+          "line": 629,
+          "text": "// https://www.unicode.org/versions/latest/core-spec/chapter-3/#G56669"
+        },
+        {
+          "line": 908,
+          "text": "*   https://www.unicode.org/reports/tr15/#Detecting_Normalization_Forms"
+        },
+        {
+          "line": 1755,
+          "text": "\" UNIDATA_VERSION \" which is publicly available from ftp://ftp.unicode.org/.\\n\\"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Modules/unicodedata_db.h",
+      "sha256": "00a5ed9e602bb55e9f080333ac8cbc360352eea9de960eec69efdb0c3d68b110",
+      "bytes": 588046,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Modules/unicodename_db.h",
+      "sha256": "b756b8c66e7b73d4e177fa75e88c466322b158c1cbef276d5a4b5dea865c72b5",
+      "bytes": 1417522,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Objects/stringlib/codecs.h",
+      "sha256": "58bdafd7f1fee9f34a846a4557efbc80b3b29ad0f11c85cdbbdccf911dfd84bb",
+      "bytes": 27959,
+      "notice_matches": [
+        {
+          "line": 157,
+          "text": "See https://www.unicode.org/versions/Unicode5.2.0/ch03.pdf"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Objects/unicodectype.c",
+      "sha256": "9d7a35ac40018ad087c5d2d15f8214d5831456947d858e5b5c0cd9d529e4ce61",
+      "bytes": 7236,
+      "notice_matches": [
+        {
+          "line": 7,
+          "text": "Copyright (c) Corporation for National Research Initiatives."
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Objects/unicodeobject.c",
+      "sha256": "dc0da0c0379a64bf3e6277d53678c5eb8181a409ceec44868150ba47f89d11a3",
+      "bytes": 496004,
+      "notice_matches": [
+        {
+          "line": 9,
+          "text": "Copyright (c) Corporation for National Research Initiatives."
+        },
+        {
+          "line": 14,
+          "text": "Copyright (c) 1999 by Secret Labs AB"
+        },
+        {
+          "line": 15,
+          "text": "Copyright (c) 1999 by Fredrik Lundh"
+        },
+        {
+          "line": 23,
+          "text": "granted, provided that the above copyright notice appears in all"
+        },
+        {
+          "line": 24,
+          "text": "copies, and that both that copyright notice and this permission notice"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Objects/unicodetype_db.h",
+      "sha256": "14ec556848551d98523554080f2d09f6d0a64c83854f43b92c51e10440af2134",
+      "bytes": 281705,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Tools/unicode/Makefile",
+      "sha256": "dccaba7226557a84afbace7c75ec229960b9897b4188f5a27267940c5a37de08",
+      "bytes": 1757,
+      "notice_matches": [
+        {
+          "line": 3,
+          "text": "# files available at ftp://ftp.unicode.org/"
+        },
+        {
+          "line": 5,
+          "text": "#(c) Copyright Marc-Andre Lemburg, 2005."
+        },
+        {
+          "line": 6,
+          "text": "#    Licensed to PSF under a Contributor Agreement."
+        },
+        {
+          "line": 23,
+          "text": "ncftpget -R ftp.unicode.org . Public/MAPPINGS"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Tools/unicode/comparecodecs.py",
+      "sha256": "5b3e5e351ce09959a93b2efb491e5bc461ebcab885353650ee01ca4ba7da1232",
+      "bytes": 1440,
+      "notice_matches": [
+        {
+          "line": 5,
+          "text": "(c) Copyright 2005, Marc-Andre Lemburg (mal@lemburg.com)."
+        },
+        {
+          "line": 7,
+          "text": "Licensed to PSF under a Contributor Agreement."
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Tools/unicode/dawg.py",
+      "sha256": "aafab3b0cbd34ded2801080d7c1c21d4de4c22c3ee5851e692e4e74ec9424c96",
+      "bytes": 20016,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Tools/unicode/gencjkcodecs.py",
+      "sha256": "10ba8256173ad4854993d8dcbd5470477cf5be2926c912f448b70e30a823f09b",
+      "bytes": 2013,
+      "notice_matches": [
+        {
+          "line": 19,
+          "text": "# Written by Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Tools/unicode/gencodec.py",
+      "sha256": "f293a6a6946c3423c0acaff5f8b9b1cc565382a59c6f1de48de9ddbb232e056e",
+      "bytes": 12323,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "site (ftp://ftp.unicode.org/Public/MAPPINGS/) and creates Python codec"
+        },
+        {
+          "line": 20,
+          "text": "(c) Copyright CNRI, All Rights Reserved. NO WARRANTY."
+        },
+        {
+          "line": 21,
+          "text": "(c) Copyright Guido van Rossum, 2000."
+        },
+        {
+          "line": 24,
+          "text": "(c) Copyright Marc-Andre Lemburg, 2005."
+        },
+        {
+          "line": 25,
+          "text": "Licensed to PSF under a Contributor Agreement."
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Tools/unicode/genmap_japanese.py",
+      "sha256": "c21ee6d96c0bf60b7965eedd54826487ee9a5be77ef2131d7fbed2293de4f28b",
+      "bytes": 10307,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "# Original Author:  Hye-Shik Chang <perky@FreeBSD.org>"
+        },
+        {
+          "line": 24,
+          "text": "MAPPINGS_JIS0208 = 'http://www.unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/JIS/JIS0208.TXT'"
+        },
+        {
+          "line": 25,
+          "text": "MAPPINGS_JIS0212 = 'http://www.unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/JIS/JIS0212.TXT'"
+        },
+        {
+          "line": 26,
+          "text": "MAPPINGS_CP932 = 'http://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP932.TXT'"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Tools/unicode/genmap_korean.py",
+      "sha256": "56a38de6c73818ea893f7cf8ee9443e54862c494d13964c3314a7748fddd5e8a",
+      "bytes": 2045,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "# Original Author:  Hye-Shik Chang <perky@FreeBSD.org>"
+        },
+        {
+          "line": 18,
+          "text": "MAPPINGS_CP949 = 'http://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP949.TXT'"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Tools/unicode/genmap_schinese.py",
+      "sha256": "15f13f4091b15f2758116f5045b7c6ceecf93b393768efed66ae7ed197863d04",
+      "bytes": 5199,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "# Original Author:  Hye-Shik Chang <perky@FreeBSD.org>"
+        },
+        {
+          "line": 31,
+          "text": "MAPPINGS_CP936 = 'http://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP936.TXT'"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Tools/unicode/genmap_support.py",
+      "sha256": "0532ed79a46f6c1d3a93903357ae9ad2fee4fb653b9dcabdb512fcde15b4f0a7",
+      "bytes": 6198,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "# Original Author:  Hye-Shik Chang <perky@FreeBSD.org>"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Tools/unicode/genmap_tchinese.py",
+      "sha256": "96706701969bafb414bf00ea74a59e7256d51c39f632a07e7ff61e98148e5ce4",
+      "bytes": 8724,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "# Original Author:  Hye-Shik Chang <perky@FreeBSD.org>"
+        },
+        {
+          "line": 17,
+          "text": "MAPPINGS_BIG5 = 'https://unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/OTHER/BIG5.TXT'"
+        },
+        {
+          "line": 18,
+          "text": "MAPPINGS_CP950 = 'https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP950.TXT'"
+        },
+        {
+          "line": 21,
+          "text": "# The files for HKSCS mappings are available under a restrictive license."
+        },
+        {
+          "line": 108,
+          "text": "# provided by unicode.org doesn't define a mapping. See notes in BIG5.txt."
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Tools/unicode/genwincodec.py",
+      "sha256": "30577b14652b800efb340d351fd40e311bb80e5f89a4fe870630213cc58195f9",
+      "bytes": 1738,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Tools/unicode/genwincodecs.bat",
+      "sha256": "7b8c38c185d8489a48c6b3bf16f7452ef9354cbf40f74c3c02bf74d8cfb99f93",
+      "bytes": 208,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Tools/unicode/listcodecs.py",
+      "sha256": "3231a1eb55ee749d3c362993729cbf2f05a94b02da63609e82a46b5b1c3b820b",
+      "bytes": 1021,
+      "notice_matches": [
+        {
+          "line": 3,
+          "text": "(c) Copyright 2005, Marc-Andre Lemburg (mal@lemburg.com)."
+        },
+        {
+          "line": 5,
+          "text": "Licensed to PSF under a Contributor Agreement."
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Tools/unicode/makeunicodedata.py",
+      "sha256": "3a83416f717bab94983baba84537dc17f4d997f82d653aa944e98a710e8c7078",
+      "bytes": 45051,
+      "notice_matches": [
+        {
+          "line": 142,
+          "text": "# see https://unicode.org/reports/tr11/#Unassigned"
+        },
+        {
+          "line": 815,
+          "text": "url = ('https://www.unicode.org/Public/3.2-Update/'+template) % ('-'+version,)"
+        },
+        {
+          "line": 817,
+          "text": "url = ('https://www.unicode.org/Public/%s/ucd/'+template) % (version, '')"
+        },
+        {
+          "line": 830,
+          "text": "https://www.unicode.org/reports/tr44/#Code_Point_Ranges"
+        },
+        {
+          "line": 844,
+          "text": "See: https://www.unicode.org/reports/tr44/#Format_Conventions"
+        },
+        {
+          "line": 875,
+          "text": "#   https://www.unicode.org/reports/tr44/#UnicodeData.txt"
+        },
+        {
+          "line": 892,
+          "text": "# https://www.unicode.org/reports/tr44/#EastAsianWidth.txt"
+        },
+        {
+          "line": 897,
+          "text": "#   https://www.unicode.org/reports/tr44/#DerivedCoreProperties.txt"
+        },
+        {
+          "line": 898,
+          "text": "#   https://www.unicode.org/reports/tr44/#LineBreak.txt"
+        },
+        {
+          "line": 902,
+          "text": "#   https://www.unicode.org/reports/tr44/#Decompositions_and_Normalization"
+        },
+        {
+          "line": 913,
+          "text": "# Copyright (c) 1999-2000 by Secret Labs AB"
+        },
+        {
+          "line": 934,
+          "text": "#   https://www.unicode.org/reports/tr44/#Code_Point_Ranges"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Tools/unicode/mkstringprep.py",
+      "sha256": "b2e81558e0d5c388932ac314e5d8b1d3f9fbfb593d1a6a9786518327c9919a59",
+      "bytes": 10184,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Tools/unicode/python-mappings/CP1140.TXT",
+      "sha256": "e96b92f57980209b6aef47fcf7ab5182bade6f57930a11bc26ebfce30d5c579a",
+      "bytes": 9829,
+      "notice_matches": [
+        {
+          "line": 12,
+          "text": "#       (c) Copyright Marc-Andre Lemburg, 2005."
+        },
+        {
+          "line": 13,
+          "text": "#           Licensed to PSF under a Contributor Agreement."
+        },
+        {
+          "line": 16,
+          "text": "#       ftp://ftp.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/EBCDIC/CP037.TXT"
+        },
+        {
+          "line": 19,
+          "text": "#\tCopyright (c) 2002 Unicode, Inc.  All Rights reserved."
+        },
+        {
+          "line": 216,
+          "text": "0xB4\t0x00A9\t#COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Tools/unicode/python-mappings/CP273.TXT",
+      "sha256": "ed1528454e20342829cce283585b9f2cf66dc265296b28ae3b0cdd675e4266cc",
+      "bytes": 9268,
+      "notice_matches": [
+        {
+          "line": 181,
+          "text": "0xB4\t0x00A9\t#COPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Tools/unicode/python-mappings/GB2312.TXT",
+      "sha256": "52335c54396c41d3e04856cb6018bd600469f210556233aa9895b1f396b257ed",
+      "bytes": 179628,
+      "notice_matches": [
+        {
+          "line": 8,
+          "text": "#\tCopyright (c) 1991-1999 Unicode, Inc.  All Rights reserved."
+        },
+        {
+          "line": 40,
+          "text": "# report any such error to errata@unicode.org."
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Tools/unicode/python-mappings/KOI8-U.TXT",
+      "sha256": "d36ca29a43ff9d397377f7a39f90991ef1d076ff831dfd4a03e3a55e068a9217",
+      "bytes": 11267,
+      "notice_matches": [
+        {
+          "line": 12,
+          "text": "#       (c) Copyright Marc-Andre Lemburg, 2005."
+        },
+        {
+          "line": 13,
+          "text": "#           Licensed to PSF under a Contributor Agreement."
+        },
+        {
+          "line": 16,
+          "text": "#       ftp://ftp.unicode.org/Public/MAPPINGS/VENDORS/MISC/KOI8-R.TXT"
+        },
+        {
+          "line": 19,
+          "text": "#\tCopyright (c) 1991-1999 Unicode, Inc.  All Rights reserved."
+        },
+        {
+          "line": 234,
+          "text": "0xBF\t0x00A9\t#\tCOPYRIGHT SIGN"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Tools/unicode/python-mappings/TIS-620.TXT",
+      "sha256": "07647d2cd06373e449a6c6b7ba64dd17a892fe1246e968449cfe6be55be148bb",
+      "bytes": 9350,
+      "notice_matches": [
+        {
+          "line": 10,
+          "text": "#       ftp://ftp.unicode.org/Public/MAPPINGS/ISO8859/8859-11.TXT the"
+        },
+        {
+          "line": 14,
+          "text": "#       (c) Copyright Marc-Andre Lemburg, 2005."
+        },
+        {
+          "line": 15,
+          "text": "#           Licensed to PSF under a Contributor Agreement."
+        },
+        {
+          "line": 18,
+          "text": "#       ftp://ftp.unicode.org/Public/MAPPINGS/ISO8859/8859-11.TXT"
+        },
+        {
+          "line": 21,
+          "text": "#\tCopyright (c) 2002 Unicode, Inc.  All Rights reserved."
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Tools/unicode/python-mappings/diff/jisx0213-2000-std.txt.diff",
+      "sha256": "6f11327d6b3c8b32c7780f38f3bd7c69bab8f29e3c8ad17135cc392225d93692",
+      "bytes": 13327,
+      "notice_matches": [],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Tools/unicode/python-mappings/diff/jisx0213-2004-std.txt.diff",
+      "sha256": "6b92b2af68964cf18f2219c2fbf647a9d80c7442d4e86dc2c4d7a887d6cc67c6",
+      "bytes": 15713,
+      "notice_matches": [
+        {
+          "line": 9,
+          "text": "## License:"
+        },
+        {
+          "line": 10,
+          "text": "## \tCopyright (C) 2001 earthian@tama.or.jp, All Rights Reserved."
+        },
+        {
+          "line": 11,
+          "text": "## \tCopyright (C) 2001 I'O, All Rights Reserved."
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Tools/unicode/python-mappings/gb-18030-2000.xml",
+      "sha256": "47350d44c6db23e0f0c9e9f4a1bf2e966369f52357fd01425bc06b9aaf83f943",
+      "bytes": 845975,
+      "notice_matches": [
+        {
+          "line": 2,
+          "text": "<!DOCTYPE characterMapping SYSTEM \"http://www.unicode.org/unicode/reports/tr22/CharacterMapping.dtd\">"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    },
+    {
+      "path": "Tools/unicode/python-mappings/jisx0213-2004-std.txt",
+      "sha256": "41c9b4c9221162a94cfa5a87016256c42321a8a4f81c852034564e67eab46446",
+      "bytes": 317121,
+      "notice_matches": [
+        {
+          "line": 4,
+          "text": "## License:"
+        },
+        {
+          "line": 5,
+          "text": "## \tCopyright (C) 2001 earthian@tama.or.jp, All Rights Reserved."
+        },
+        {
+          "line": 6,
+          "text": "## \tCopyright (C) 2001 I'O, All Rights Reserved."
+        },
+        {
+          "line": 780,
+          "text": "3-2926\tU+00A9\t# COPYRIGHT SIGN\t[2000]"
+        }
+      ],
+      "license_review": "retain root LICENSE plus file-specific notices; legal classification pending exact-file review"
+    }
+  ],
+  "codec_module_source_comparison": [
+    {
+      "canonical": "cp037",
+      "module": "encodings.cp037",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp037.py",
+      "runtime_sha256": "fda6ca994d710e4e0c760e0204c29a4273fc0f14ebe3169306d2eb54c9953f58",
+      "archive_path": "Lib/encodings/cp037.py",
+      "archive_sha256": "fda6ca994d710e4e0c760e0204c29a4273fc0f14ebe3169306d2eb54c9953f58",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp1026",
+      "module": "encodings.cp1026",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp1026.py",
+      "runtime_sha256": "f5227237dd7ce5005b16a8e4d8342f0d193193c878e3cf35b9305d22b3b1aaf9",
+      "archive_path": "Lib/encodings/cp1026.py",
+      "archive_sha256": "f5227237dd7ce5005b16a8e4d8342f0d193193c878e3cf35b9305d22b3b1aaf9",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp1125",
+      "module": "encodings.cp1125",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp1125.py",
+      "runtime_sha256": "f84c7d30ce222e6a50cff1a4c9737173411da108cbd2c9bb57c854480103c470",
+      "archive_path": "Lib/encodings/cp1125.py",
+      "archive_sha256": "f84c7d30ce222e6a50cff1a4c9737173411da108cbd2c9bb57c854480103c470",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp1140",
+      "module": "encodings.cp1140",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp1140.py",
+      "runtime_sha256": "3379d78b244aa905ffe1171a968caaf41b9a0154d1ddc76c05a2abaca2b289fd",
+      "archive_path": "Lib/encodings/cp1140.py",
+      "archive_sha256": "3379d78b244aa905ffe1171a968caaf41b9a0154d1ddc76c05a2abaca2b289fd",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp1250",
+      "module": "encodings.cp1250",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp1250.py",
+      "runtime_sha256": "ebcec1adf9167863fb0bab29708c546300c80a77ef07838c9e0437a59e265970",
+      "archive_path": "Lib/encodings/cp1250.py",
+      "archive_sha256": "ebcec1adf9167863fb0bab29708c546300c80a77ef07838c9e0437a59e265970",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp1251",
+      "module": "encodings.cp1251",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp1251.py",
+      "runtime_sha256": "d57f8cfa34494c5acb6692ddb31f616ae2dd89a075d2af6d36b0b7ec2ffe7af1",
+      "archive_path": "Lib/encodings/cp1251.py",
+      "archive_sha256": "d57f8cfa34494c5acb6692ddb31f616ae2dd89a075d2af6d36b0b7ec2ffe7af1",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp1252",
+      "module": "encodings.cp1252",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp1252.py",
+      "runtime_sha256": "19aa5bee667f5fb387924a813aec9fa1dda47769d09e8483a748bdb202be6a84",
+      "archive_path": "Lib/encodings/cp1252.py",
+      "archive_sha256": "19aa5bee667f5fb387924a813aec9fa1dda47769d09e8483a748bdb202be6a84",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp1253",
+      "module": "encodings.cp1253",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp1253.py",
+      "runtime_sha256": "8c27696dcfb6894b378869bc89f113703fbd1e9b13a83934463d5999b055d1e8",
+      "archive_path": "Lib/encodings/cp1253.py",
+      "archive_sha256": "8c27696dcfb6894b378869bc89f113703fbd1e9b13a83934463d5999b055d1e8",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp1254",
+      "module": "encodings.cp1254",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp1254.py",
+      "runtime_sha256": "06517ec2f74f1c6562d0a1a500c48ba43f2e6e9d0c3d28356d747f274f1a4c8d",
+      "archive_path": "Lib/encodings/cp1254.py",
+      "archive_sha256": "06517ec2f74f1c6562d0a1a500c48ba43f2e6e9d0c3d28356d747f274f1a4c8d",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp1255",
+      "module": "encodings.cp1255",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp1255.py",
+      "runtime_sha256": "54a1b5087578fa78e5bdd0afa6a9e80e8c5467c1e4226cf6e586cfe7a674a653",
+      "archive_path": "Lib/encodings/cp1255.py",
+      "archive_sha256": "54a1b5087578fa78e5bdd0afa6a9e80e8c5467c1e4226cf6e586cfe7a674a653",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp1256",
+      "module": "encodings.cp1256",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp1256.py",
+      "runtime_sha256": "ad3768ac2fef2a646b3301c20af705f4d4a1544f22fa8a84241bada27ab84133",
+      "archive_path": "Lib/encodings/cp1256.py",
+      "archive_sha256": "ad3768ac2fef2a646b3301c20af705f4d4a1544f22fa8a84241bada27ab84133",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp1257",
+      "module": "encodings.cp1257",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp1257.py",
+      "runtime_sha256": "d9149d2925b3f719809ef2297e541461079f15c658af207a3e498be314ab2c6b",
+      "archive_path": "Lib/encodings/cp1257.py",
+      "archive_sha256": "d9149d2925b3f719809ef2297e541461079f15c658af207a3e498be314ab2c6b",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp1258",
+      "module": "encodings.cp1258",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp1258.py",
+      "runtime_sha256": "672e05b51952a82c8dbd5603769195fcedf565e457bb86c0d5bae04955d04630",
+      "archive_path": "Lib/encodings/cp1258.py",
+      "archive_sha256": "672e05b51952a82c8dbd5603769195fcedf565e457bb86c0d5bae04955d04630",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp273",
+      "module": "encodings.cp273",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp273.py",
+      "runtime_sha256": "6c6aec3b213ea3aebc2c526dd4d121c95d4a25a2fc928a87cd80f8448988185f",
+      "archive_path": "Lib/encodings/cp273.py",
+      "archive_sha256": "6c6aec3b213ea3aebc2c526dd4d121c95d4a25a2fc928a87cd80f8448988185f",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp424",
+      "module": "encodings.cp424",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp424.py",
+      "runtime_sha256": "30414c2186ea0802bbf3db034122ddec1f8a10061b97c50871e14b74ee36d0ca",
+      "archive_path": "Lib/encodings/cp424.py",
+      "archive_sha256": "30414c2186ea0802bbf3db034122ddec1f8a10061b97c50871e14b74ee36d0ca",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp437",
+      "module": "encodings.cp437",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp437.py",
+      "runtime_sha256": "5c2a5015cd36cf7f561269f33dec4c323093d3d88b0673969accdabdcb9ce2cb",
+      "archive_path": "Lib/encodings/cp437.py",
+      "archive_sha256": "5c2a5015cd36cf7f561269f33dec4c323093d3d88b0673969accdabdcb9ce2cb",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp500",
+      "module": "encodings.cp500",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp500.py",
+      "runtime_sha256": "630f503f9110d98ea3e1529f2f965ebc275a2f78d3de47f8e9b69d35589d764b",
+      "archive_path": "Lib/encodings/cp500.py",
+      "archive_sha256": "630f503f9110d98ea3e1529f2f965ebc275a2f78d3de47f8e9b69d35589d764b",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "ascii",
+      "module": "encodings.ascii",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/ascii.py",
+      "runtime_sha256": "578aa1173f7cc60dad2895071287fe6182bd14787b3fbf47a6c7983dfe3675e3",
+      "archive_path": "Lib/encodings/ascii.py",
+      "archive_sha256": "578aa1173f7cc60dad2895071287fe6182bd14787b3fbf47a6c7983dfe3675e3",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp775",
+      "module": "encodings.cp775",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp775.py",
+      "runtime_sha256": "e0dba85b99329d7f16907e620adada06be5216abcb964406c827b569b2cf1aeb",
+      "archive_path": "Lib/encodings/cp775.py",
+      "archive_sha256": "e0dba85b99329d7f16907e620adada06be5216abcb964406c827b569b2cf1aeb",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp850",
+      "module": "encodings.cp850",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp850.py",
+      "runtime_sha256": "257e29f235e2a8790dd68cee45668776648bab809ce8584f893cdd8fd007993c",
+      "archive_path": "Lib/encodings/cp850.py",
+      "archive_sha256": "257e29f235e2a8790dd68cee45668776648bab809ce8584f893cdd8fd007993c",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp852",
+      "module": "encodings.cp852",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp852.py",
+      "runtime_sha256": "cc6faaa9dc4a933127da0aaacd1dc7a44c09266051af56bfe3215ff228636b6b",
+      "archive_path": "Lib/encodings/cp852.py",
+      "archive_sha256": "cc6faaa9dc4a933127da0aaacd1dc7a44c09266051af56bfe3215ff228636b6b",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp855",
+      "module": "encodings.cp855",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp855.py",
+      "runtime_sha256": "7b25c61c9e8c47b218d3fbb801541a2861926ac712843d2113fff90e2074f5ba",
+      "archive_path": "Lib/encodings/cp855.py",
+      "archive_sha256": "7b25c61c9e8c47b218d3fbb801541a2861926ac712843d2113fff90e2074f5ba",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp857",
+      "module": "encodings.cp857",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp857.py",
+      "runtime_sha256": "8d1b769058bfccdb3c6c70c49a104f5081a2fcc9fad68f7b5eb3e4f67f0b33da",
+      "archive_path": "Lib/encodings/cp857.py",
+      "archive_sha256": "8d1b769058bfccdb3c6c70c49a104f5081a2fcc9fad68f7b5eb3e4f67f0b33da",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp858",
+      "module": "encodings.cp858",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp858.py",
+      "runtime_sha256": "a24930c4a6ad0ff66dde9a69f2027e4b92c2c9c61dcda2992e940654c606577b",
+      "archive_path": "Lib/encodings/cp858.py",
+      "archive_sha256": "a24930c4a6ad0ff66dde9a69f2027e4b92c2c9c61dcda2992e940654c606577b",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp860",
+      "module": "encodings.cp860",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp860.py",
+      "runtime_sha256": "2dfae7e31d3d9aa3013cff44a4d7ad842f257ac63765a9998436701b629cd86a",
+      "archive_path": "Lib/encodings/cp860.py",
+      "archive_sha256": "2dfae7e31d3d9aa3013cff44a4d7ad842f257ac63765a9998436701b629cd86a",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp861",
+      "module": "encodings.cp861",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp861.py",
+      "runtime_sha256": "701930d77a2177497586e99bc3fe60f2d4beffb645608f167c76874a72ff405e",
+      "archive_path": "Lib/encodings/cp861.py",
+      "archive_sha256": "701930d77a2177497586e99bc3fe60f2d4beffb645608f167c76874a72ff405e",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp862",
+      "module": "encodings.cp862",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp862.py",
+      "runtime_sha256": "15a2844b6ed9544c6400cf7299b42d0c2bef93c9bee70a9e89f66b8610ad6d6d",
+      "archive_path": "Lib/encodings/cp862.py",
+      "archive_sha256": "15a2844b6ed9544c6400cf7299b42d0c2bef93c9bee70a9e89f66b8610ad6d6d",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp863",
+      "module": "encodings.cp863",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp863.py",
+      "runtime_sha256": "a3d57f61fce1b98fc81ea8e4ebebaf402fae40bbcdd35d4b8297b9bb49a79aa2",
+      "archive_path": "Lib/encodings/cp863.py",
+      "archive_sha256": "a3d57f61fce1b98fc81ea8e4ebebaf402fae40bbcdd35d4b8297b9bb49a79aa2",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp864",
+      "module": "encodings.cp864",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp864.py",
+      "runtime_sha256": "15ad8f1fdfdd842c7522241372e7eddda7df687e815692a89157c5f256f21a08",
+      "archive_path": "Lib/encodings/cp864.py",
+      "archive_sha256": "15ad8f1fdfdd842c7522241372e7eddda7df687e815692a89157c5f256f21a08",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp865",
+      "module": "encodings.cp865",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp865.py",
+      "runtime_sha256": "bdbaded987242ed2a8de7133ec2f61ddcc1c2e9de27816ab7cd0a4c678a3a907",
+      "archive_path": "Lib/encodings/cp865.py",
+      "archive_sha256": "bdbaded987242ed2a8de7133ec2f61ddcc1c2e9de27816ab7cd0a4c678a3a907",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp866",
+      "module": "encodings.cp866",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp866.py",
+      "runtime_sha256": "9efcc8e85bbd1687272a0991f6d0429a4c06679db2d114b2ac95db27a70f9d13",
+      "archive_path": "Lib/encodings/cp866.py",
+      "archive_sha256": "9efcc8e85bbd1687272a0991f6d0429a4c06679db2d114b2ac95db27a70f9d13",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp869",
+      "module": "encodings.cp869",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp869.py",
+      "runtime_sha256": "52582d9fb769b24eac7154f18d7dae856588297d6da98f37fb5efd8da883826d",
+      "archive_path": "Lib/encodings/cp869.py",
+      "archive_sha256": "52582d9fb769b24eac7154f18d7dae856588297d6da98f37fb5efd8da883826d",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp874",
+      "module": "encodings.cp874",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp874.py",
+      "runtime_sha256": "fe4752fa2e65741e08a563a31ff914fe71068942ce9c6f4070b1dfd7b25e5e7f",
+      "archive_path": "Lib/encodings/cp874.py",
+      "archive_sha256": "fe4752fa2e65741e08a563a31ff914fe71068942ce9c6f4070b1dfd7b25e5e7f",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "iso8859-1",
+      "module": "encodings.latin_1",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/latin_1.py",
+      "runtime_sha256": "b75503e532a27c636477396c855209ff5f3036536d2a4bede0a576c89382b60c",
+      "archive_path": "Lib/encodings/latin_1.py",
+      "archive_sha256": "b75503e532a27c636477396c855209ff5f3036536d2a4bede0a576c89382b60c",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp932",
+      "module": "encodings.cp932",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp932.py",
+      "runtime_sha256": "99748e28113d2d49f5d666b49b78accd2c6e10a7852f7dd6dece9b5b71aa83c4",
+      "archive_path": "Lib/encodings/cp932.py",
+      "archive_sha256": "99748e28113d2d49f5d666b49b78accd2c6e10a7852f7dd6dece9b5b71aa83c4",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "gbk",
+      "module": "encodings.gbk",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/gbk.py",
+      "runtime_sha256": "eff9b8cbc9ad2ef2e10e96afa83d3db1f775ea044aed275b7a35574ae0d8645b",
+      "archive_path": "Lib/encodings/gbk.py",
+      "archive_sha256": "eff9b8cbc9ad2ef2e10e96afa83d3db1f775ea044aed275b7a35574ae0d8645b",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp949",
+      "module": "encodings.cp949",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp949.py",
+      "runtime_sha256": "950a7d29467ce0590b4a1137830d43d88d8f20e4035dcaaa8b2a5c3c3f1de962",
+      "archive_path": "Lib/encodings/cp949.py",
+      "archive_sha256": "950a7d29467ce0590b4a1137830d43d88d8f20e4035dcaaa8b2a5c3c3f1de962",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp950",
+      "module": "encodings.cp950",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp950.py",
+      "runtime_sha256": "27811178b450731fc955b1247656a605d04e5ee98e0d585e4596b94b703a27f6",
+      "archive_path": "Lib/encodings/cp950.py",
+      "archive_sha256": "27811178b450731fc955b1247656a605d04e5ee98e0d585e4596b94b703a27f6",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "iso8859-6",
+      "module": "encodings.iso8859_6",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/iso8859_6.py",
+      "runtime_sha256": "4840e68014346517680f593ca22f67133c39ba7e46f34b9be62c980a728448c6",
+      "archive_path": "Lib/encodings/iso8859_6.py",
+      "archive_sha256": "4840e68014346517680f593ca22f67133c39ba7e46f34b9be62c980a728448c6",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "big5",
+      "module": "encodings.big5",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/big5.py",
+      "runtime_sha256": "98fac6f86a20dd05da197e2058176ebfd47edee7074c3248f5f48fe0fb672d7c",
+      "archive_path": "Lib/encodings/big5.py",
+      "archive_sha256": "98fac6f86a20dd05da197e2058176ebfd47edee7074c3248f5f48fe0fb672d7c",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "big5hkscs",
+      "module": "encodings.big5hkscs",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/big5hkscs.py",
+      "runtime_sha256": "21d051a00fb5c6a86ba187e0c50e811d659ce00991fd5f5b408f71ebb2ef0f16",
+      "archive_path": "Lib/encodings/big5hkscs.py",
+      "archive_sha256": "21d051a00fb5c6a86ba187e0c50e811d659ce00991fd5f5b408f71ebb2ef0f16",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "charmap",
+      "module": "encodings.charmap",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/charmap.py",
+      "runtime_sha256": "1b8b5fdb36ce3becc62a6115ed904a17083949ec8aaef5a80f7078cec232f43b",
+      "archive_path": "Lib/encodings/charmap.py",
+      "archive_sha256": "1b8b5fdb36ce3becc62a6115ed904a17083949ec8aaef5a80f7078cec232f43b",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "gb2312",
+      "module": "encodings.gb2312",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/gb2312.py",
+      "runtime_sha256": "3d2d567d8d079b78f3f3b566ed52ad2f38af61bf832b7dc28858b0039a032d6b",
+      "archive_path": "Lib/encodings/gb2312.py",
+      "archive_sha256": "3d2d567d8d079b78f3f3b566ed52ad2f38af61bf832b7dc28858b0039a032d6b",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp1006",
+      "module": "encodings.cp1006",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp1006.py",
+      "runtime_sha256": "eaded38b427841bdf280e878f1e26da506e743eaa9429075332af60cce429473",
+      "archive_path": "Lib/encodings/cp1006.py",
+      "archive_sha256": "eaded38b427841bdf280e878f1e26da506e743eaa9429075332af60cce429473",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "hp-roman8",
+      "module": "encodings.hp_roman8",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/hp_roman8.py",
+      "runtime_sha256": "c43cce763d12e8f71a63dbc16641bd87147eaf5f9d9054ea856864b216b2735b",
+      "archive_path": "Lib/encodings/hp_roman8.py",
+      "archive_sha256": "c43cce763d12e8f71a63dbc16641bd87147eaf5f9d9054ea856864b216b2735b",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "johab",
+      "module": "encodings.johab",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/johab.py",
+      "runtime_sha256": "9586615917afd3d848c1c4328656603b2834af6115f2aec932fccc935e1a60fb",
+      "archive_path": "Lib/encodings/johab.py",
+      "archive_sha256": "9586615917afd3d848c1c4328656603b2834af6115f2aec932fccc935e1a60fb",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "ptcp154",
+      "module": "encodings.ptcp154",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/ptcp154.py",
+      "runtime_sha256": "0eabcb2c287d335e86b71b0abe5718bd6ddc9aaee234f0f0f2363845d2926d8d",
+      "archive_path": "Lib/encodings/ptcp154.py",
+      "archive_sha256": "0eabcb2c287d335e86b71b0abe5718bd6ddc9aaee234f0f0f2363845d2926d8d",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "utf-8",
+      "module": "encodings.utf_8",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/utf_8.py",
+      "runtime_sha256": "ba0cac060269583523ca9506473a755203037c57d466a11aa89a30a5f6756f3d",
+      "archive_path": "Lib/encodings/utf_8.py",
+      "archive_sha256": "ba0cac060269583523ca9506473a755203037c57d466a11aa89a30a5f6756f3d",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp720",
+      "module": "encodings.cp720",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp720.py",
+      "runtime_sha256": "395496001271b92efe5df07fc0ae7c3410d1dd2bdfebbd3e4d8e806c8166beb0",
+      "archive_path": "Lib/encodings/cp720.py",
+      "archive_sha256": "395496001271b92efe5df07fc0ae7c3410d1dd2bdfebbd3e4d8e806c8166beb0",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp737",
+      "module": "encodings.cp737",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp737.py",
+      "runtime_sha256": "be3ca1785a3970ec62310710eaf7de82932181b04d06fe4528f8adaba9fb8c4b",
+      "archive_path": "Lib/encodings/cp737.py",
+      "archive_sha256": "be3ca1785a3970ec62310710eaf7de82932181b04d06fe4528f8adaba9fb8c4b",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp856",
+      "module": "encodings.cp856",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp856.py",
+      "runtime_sha256": "2e52ec5cb1eafa6739b5569b0b98ee89df5f7358b84ccdc8da64e86f017d359f",
+      "archive_path": "Lib/encodings/cp856.py",
+      "archive_sha256": "2e52ec5cb1eafa6739b5569b0b98ee89df5f7358b84ccdc8da64e86f017d359f",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "cp875",
+      "module": "encodings.cp875",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/cp875.py",
+      "runtime_sha256": "2fe72632015db2cba2bb4367055551da6fe22051b96d170c7b96fa271c46b257",
+      "archive_path": "Lib/encodings/cp875.py",
+      "archive_sha256": "2fe72632015db2cba2bb4367055551da6fe22051b96d170c7b96fa271c46b257",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "euc_kr",
+      "module": "encodings.euc_kr",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/euc_kr.py",
+      "runtime_sha256": "633a1a5504bfad04b1ec9c96d44d4ebb3bb99066a218318e7d67d866e20887a6",
+      "archive_path": "Lib/encodings/euc_kr.py",
+      "archive_sha256": "633a1a5504bfad04b1ec9c96d44d4ebb3bb99066a218318e7d67d866e20887a6",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "iso2022_jp",
+      "module": "encodings.iso2022_jp",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/iso2022_jp.py",
+      "runtime_sha256": "461a0e7f72eccb8b29f351c4e7926cfbda58e0edd6d0770bd82e0b36c5febe77",
+      "archive_path": "Lib/encodings/iso2022_jp.py",
+      "archive_sha256": "461a0e7f72eccb8b29f351c4e7926cfbda58e0edd6d0770bd82e0b36c5febe77",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "iso2022_kr",
+      "module": "encodings.iso2022_kr",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/iso2022_kr.py",
+      "runtime_sha256": "1c86362e17944f0bcf68db02f4995bdeea605867795fff7ab4079073f96705e4",
+      "archive_path": "Lib/encodings/iso2022_kr.py",
+      "archive_sha256": "1c86362e17944f0bcf68db02f4995bdeea605867795fff7ab4079073f96705e4",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "iso8859-2",
+      "module": "encodings.iso8859_2",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/iso8859_2.py",
+      "runtime_sha256": "2b57cab6111cae9021505e3ae1b2adbbfc344ec48165fda322f6b069fbb18adc",
+      "archive_path": "Lib/encodings/iso8859_2.py",
+      "archive_sha256": "2b57cab6111cae9021505e3ae1b2adbbfc344ec48165fda322f6b069fbb18adc",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "iso8859-3",
+      "module": "encodings.iso8859_3",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/iso8859_3.py",
+      "runtime_sha256": "4ffdf89004bf0c5230caa7079f7ca3142fc112f8b923ddb2c7358369d2d3c242",
+      "archive_path": "Lib/encodings/iso8859_3.py",
+      "archive_sha256": "4ffdf89004bf0c5230caa7079f7ca3142fc112f8b923ddb2c7358369d2d3c242",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "iso8859-4",
+      "module": "encodings.iso8859_4",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/iso8859_4.py",
+      "runtime_sha256": "87bd130daa0eaef3e4cb465e10cffb2bcd194ff74097e0c186b4b8eb7be41ac5",
+      "archive_path": "Lib/encodings/iso8859_4.py",
+      "archive_sha256": "87bd130daa0eaef3e4cb465e10cffb2bcd194ff74097e0c186b4b8eb7be41ac5",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "iso8859-9",
+      "module": "encodings.iso8859_9",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/iso8859_9.py",
+      "runtime_sha256": "84d9b15263e81685f7513c5ab45caf80b2f73c301c68e659f7162c1b1882d359",
+      "archive_path": "Lib/encodings/iso8859_9.py",
+      "archive_sha256": "84d9b15263e81685f7513c5ab45caf80b2f73c301c68e659f7162c1b1882d359",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "iso8859-10",
+      "module": "encodings.iso8859_10",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/iso8859_10.py",
+      "runtime_sha256": "54c886b41819ebb7f4fb34b8dbae1c45f4fc0864f019ecd772676ccfac5fae7b",
+      "archive_path": "Lib/encodings/iso8859_10.py",
+      "archive_sha256": "54c886b41819ebb7f4fb34b8dbae1c45f4fc0864f019ecd772676ccfac5fae7b",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "iso8859-5",
+      "module": "encodings.iso8859_5",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/iso8859_5.py",
+      "runtime_sha256": "9961d96cc7b9fdf011ebcaaeaeca7b50b8670fadbd7b75fde66192f8c1f68f30",
+      "archive_path": "Lib/encodings/iso8859_5.py",
+      "archive_sha256": "9961d96cc7b9fdf011ebcaaeaeca7b50b8670fadbd7b75fde66192f8c1f68f30",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "iso8859-7",
+      "module": "encodings.iso8859_7",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/iso8859_7.py",
+      "runtime_sha256": "b352eca3b819488f64fb3338fd93f39c1e30f32bb13f2f9c577925e58f2960e4",
+      "archive_path": "Lib/encodings/iso8859_7.py",
+      "archive_sha256": "b352eca3b819488f64fb3338fd93f39c1e30f32bb13f2f9c577925e58f2960e4",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "iso8859-8",
+      "module": "encodings.iso8859_8",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/iso8859_8.py",
+      "runtime_sha256": "4cf9e8a8bbe04accb1c1a80853efb19ae0772d18f81e270adefc1b2386cb368e",
+      "archive_path": "Lib/encodings/iso8859_8.py",
+      "archive_sha256": "4cf9e8a8bbe04accb1c1a80853efb19ae0772d18f81e270adefc1b2386cb368e",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "koi8-r",
+      "module": "encodings.koi8_r",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/koi8_r.py",
+      "runtime_sha256": "4d4e353aee8039bb71e2145a6e68fe1e6833a1b4250b70ee0ac5ec70bbb8c51d",
+      "archive_path": "Lib/encodings/koi8_r.py",
+      "archive_sha256": "4d4e353aee8039bb71e2145a6e68fe1e6833a1b4250b70ee0ac5ec70bbb8c51d",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "shift_jis",
+      "module": "encodings.shift_jis",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/shift_jis.py",
+      "runtime_sha256": "ad4ac50ebf58294304e412cc0f1b12980988dd6edc414e4110029c0a1abbe966",
+      "archive_path": "Lib/encodings/shift_jis.py",
+      "archive_sha256": "ad4ac50ebf58294304e412cc0f1b12980988dd6edc414e4110029c0a1abbe966",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "euc_jis_2004",
+      "module": "encodings.euc_jis_2004",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/euc_jis_2004.py",
+      "runtime_sha256": "9fa426cd9f17629f6320700ed18baa94839304cf1bcabbee7edb501747dc055d",
+      "archive_path": "Lib/encodings/euc_jis_2004.py",
+      "archive_sha256": "9fa426cd9f17629f6320700ed18baa94839304cf1bcabbee7edb501747dc055d",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "euc_jisx0213",
+      "module": "encodings.euc_jisx0213",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/euc_jisx0213.py",
+      "runtime_sha256": "e28315910da20218dae8b7d5becd81de1e283dfd8b0415a4980d67065de73a0b",
+      "archive_path": "Lib/encodings/euc_jisx0213.py",
+      "archive_sha256": "e28315910da20218dae8b7d5becd81de1e283dfd8b0415a4980d67065de73a0b",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "euc_jp",
+      "module": "encodings.euc_jp",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/euc_jp.py",
+      "runtime_sha256": "b453a439787b0efa031e43416a7d852a6be705c985e1200693eb96d87ea79cdc",
+      "archive_path": "Lib/encodings/euc_jp.py",
+      "archive_sha256": "b453a439787b0efa031e43416a7d852a6be705c985e1200693eb96d87ea79cdc",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "gb18030",
+      "module": "encodings.gb18030",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/gb18030.py",
+      "runtime_sha256": "6c10b4dc49bc63724e539137ede6936304fcca1c97c28d16d89f381e10849521",
+      "archive_path": "Lib/encodings/gb18030.py",
+      "archive_sha256": "6c10b4dc49bc63724e539137ede6936304fcca1c97c28d16d89f381e10849521",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "hz",
+      "module": "encodings.hz",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/hz.py",
+      "runtime_sha256": "025a9531e3046e52d3e039c0be04f9a5a74651d7683a13c7c7ebd4c7dfb5996a",
+      "archive_path": "Lib/encodings/hz.py",
+      "archive_sha256": "025a9531e3046e52d3e039c0be04f9a5a74651d7683a13c7c7ebd4c7dfb5996a",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "iso2022_jp_1",
+      "module": "encodings.iso2022_jp_1",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/iso2022_jp_1.py",
+      "runtime_sha256": "63bacad13a979a5519fcaa4f1e1e07b2c7415005167fac3a689408c7d886fabd",
+      "archive_path": "Lib/encodings/iso2022_jp_1.py",
+      "archive_sha256": "63bacad13a979a5519fcaa4f1e1e07b2c7415005167fac3a689408c7d886fabd",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "iso2022_jp_2",
+      "module": "encodings.iso2022_jp_2",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/iso2022_jp_2.py",
+      "runtime_sha256": "5d4248181548b0fc89a9f5ee9cf52ebecb235708ba87d47896ad14130884ef9f",
+      "archive_path": "Lib/encodings/iso2022_jp_2.py",
+      "archive_sha256": "5d4248181548b0fc89a9f5ee9cf52ebecb235708ba87d47896ad14130884ef9f",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "iso2022_jp_2004",
+      "module": "encodings.iso2022_jp_2004",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/iso2022_jp_2004.py",
+      "runtime_sha256": "b4d1468bcd608b46f38cb0c6ef115510dcf9aa0f71e590792f407efc6e165164",
+      "archive_path": "Lib/encodings/iso2022_jp_2004.py",
+      "archive_sha256": "b4d1468bcd608b46f38cb0c6ef115510dcf9aa0f71e590792f407efc6e165164",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "iso2022_jp_3",
+      "module": "encodings.iso2022_jp_3",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/iso2022_jp_3.py",
+      "runtime_sha256": "3aceaa5661909de14e2861d864443b8472460ce39b99cce5c6965346d47aa5ac",
+      "archive_path": "Lib/encodings/iso2022_jp_3.py",
+      "archive_sha256": "3aceaa5661909de14e2861d864443b8472460ce39b99cce5c6965346d47aa5ac",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "iso2022_jp_ext",
+      "module": "encodings.iso2022_jp_ext",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/iso2022_jp_ext.py",
+      "runtime_sha256": "f4c9ed8f3031995faa224bcb10153d2b6144944477d1f27d1a6cc4a879fac34c",
+      "archive_path": "Lib/encodings/iso2022_jp_ext.py",
+      "archive_sha256": "f4c9ed8f3031995faa224bcb10153d2b6144944477d1f27d1a6cc4a879fac34c",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "iso8859-11",
+      "module": "encodings.iso8859_11",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/iso8859_11.py",
+      "runtime_sha256": "ed5a964470a241b4da7a6cfb718e4149d09644933af38f0497602baab6e563ef",
+      "archive_path": "Lib/encodings/iso8859_11.py",
+      "archive_sha256": "ed5a964470a241b4da7a6cfb718e4149d09644933af38f0497602baab6e563ef",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "iso8859-13",
+      "module": "encodings.iso8859_13",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/iso8859_13.py",
+      "runtime_sha256": "7312237e8e5d201d920b4130f057cfdf1b0be9baafaa246826e6d93204fcc206",
+      "archive_path": "Lib/encodings/iso8859_13.py",
+      "archive_sha256": "7312237e8e5d201d920b4130f057cfdf1b0be9baafaa246826e6d93204fcc206",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "iso8859-14",
+      "module": "encodings.iso8859_14",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/iso8859_14.py",
+      "runtime_sha256": "82778b995a0ee87c5f1180fcc52900359eee15bd9a6e3a0e25f0d963e0b2a343",
+      "archive_path": "Lib/encodings/iso8859_14.py",
+      "archive_sha256": "82778b995a0ee87c5f1180fcc52900359eee15bd9a6e3a0e25f0d963e0b2a343",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "iso8859-15",
+      "module": "encodings.iso8859_15",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/iso8859_15.py",
+      "runtime_sha256": "01976a81811873dc9a0c79db9fc00d1c30103487f3c6bc3a6d81b4043cd48e02",
+      "archive_path": "Lib/encodings/iso8859_15.py",
+      "archive_sha256": "01976a81811873dc9a0c79db9fc00d1c30103487f3c6bc3a6d81b4043cd48e02",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "iso8859-16",
+      "module": "encodings.iso8859_16",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/iso8859_16.py",
+      "runtime_sha256": "b5ac8f5a5d8f84c0f903b2b7c342184758d590d8bcf810d561f942fe5b372d66",
+      "archive_path": "Lib/encodings/iso8859_16.py",
+      "archive_sha256": "b5ac8f5a5d8f84c0f903b2b7c342184758d590d8bcf810d561f942fe5b372d66",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "tis-620",
+      "module": "encodings.tis_620",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/tis_620.py",
+      "runtime_sha256": "647c4719e2c1a7375105e15a89b377c66f6b699977dcabbb71d923a4607b7902",
+      "archive_path": "Lib/encodings/tis_620.py",
+      "archive_sha256": "647c4719e2c1a7375105e15a89b377c66f6b699977dcabbb71d923a4607b7902",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "koi8-t",
+      "module": "encodings.koi8_t",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/koi8_t.py",
+      "runtime_sha256": "9c9043814abdbe7dc39ff98f3857d5d110a84c978ad2304158d810a4e9eacef1",
+      "archive_path": "Lib/encodings/koi8_t.py",
+      "archive_sha256": "9c9043814abdbe7dc39ff98f3857d5d110a84c978ad2304158d810a4e9eacef1",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "koi8-u",
+      "module": "encodings.koi8_u",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/koi8_u.py",
+      "runtime_sha256": "d449f9858e357fa8c2edbd4b9fe739337e9f201cac3ded20f99bfcecd4970ff7",
+      "archive_path": "Lib/encodings/koi8_u.py",
+      "archive_sha256": "d449f9858e357fa8c2edbd4b9fe739337e9f201cac3ded20f99bfcecd4970ff7",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "kz1048",
+      "module": "encodings.kz1048",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/kz1048.py",
+      "runtime_sha256": "76beb30e98a911f72f97609a2373782573c17c88a5fb3537db338aa382979ffc",
+      "archive_path": "Lib/encodings/kz1048.py",
+      "archive_sha256": "76beb30e98a911f72f97609a2373782573c17c88a5fb3537db338aa382979ffc",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "mac-arabic",
+      "module": "encodings.mac_arabic",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/mac_arabic.py",
+      "runtime_sha256": "5eafd9a3136abfbd8ed52df9c90203c7a283e7429ed60502a87a02511e0fb777",
+      "archive_path": "Lib/encodings/mac_arabic.py",
+      "archive_sha256": "5eafd9a3136abfbd8ed52df9c90203c7a283e7429ed60502a87a02511e0fb777",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "mac-latin2",
+      "module": "encodings.mac_latin2",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/mac_latin2.py",
+      "runtime_sha256": "31670da18ce8b5394cd53fe6bf216268e7e8eae4c0247532e420e2e103727d50",
+      "archive_path": "Lib/encodings/mac_latin2.py",
+      "archive_sha256": "31670da18ce8b5394cd53fe6bf216268e7e8eae4c0247532e420e2e103727d50",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "mac-croatian",
+      "module": "encodings.mac_croatian",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/mac_croatian.py",
+      "runtime_sha256": "a880cd05c82a8d11a29c65ee86a396def3344465dd71441b0bb4a73826024953",
+      "archive_path": "Lib/encodings/mac_croatian.py",
+      "archive_sha256": "a880cd05c82a8d11a29c65ee86a396def3344465dd71441b0bb4a73826024953",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "mac-cyrillic",
+      "module": "encodings.mac_cyrillic",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/mac_cyrillic.py",
+      "runtime_sha256": "83616786a1c6308b03a0dc82536908d24d0974b2248d67393d613fe558cea4bd",
+      "archive_path": "Lib/encodings/mac_cyrillic.py",
+      "archive_sha256": "83616786a1c6308b03a0dc82536908d24d0974b2248d67393d613fe558cea4bd",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "mac-farsi",
+      "module": "encodings.mac_farsi",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/mac_farsi.py",
+      "runtime_sha256": "f5763c38fb4ab0423fafe2fdca34d6f9932ac7f1a74c0cd8109d60234c7dc624",
+      "archive_path": "Lib/encodings/mac_farsi.py",
+      "archive_sha256": "f5763c38fb4ab0423fafe2fdca34d6f9932ac7f1a74c0cd8109d60234c7dc624",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "mac-greek",
+      "module": "encodings.mac_greek",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/mac_greek.py",
+      "runtime_sha256": "63016a323ddf98cb3aa9cfa78f3bab4768bedbfe9a5262a36a5aecb13d291f6e",
+      "archive_path": "Lib/encodings/mac_greek.py",
+      "archive_sha256": "63016a323ddf98cb3aa9cfa78f3bab4768bedbfe9a5262a36a5aecb13d291f6e",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "mac-iceland",
+      "module": "encodings.mac_iceland",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/mac_iceland.py",
+      "runtime_sha256": "753cc1ac635caa7e1b4630fbcebef8db8db332c098154a5b11f652912bf64f37",
+      "archive_path": "Lib/encodings/mac_iceland.py",
+      "archive_sha256": "753cc1ac635caa7e1b4630fbcebef8db8db332c098154a5b11f652912bf64f37",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "mac-roman",
+      "module": "encodings.mac_roman",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/mac_roman.py",
+      "runtime_sha256": "230367d96aef8e8d7f185b4acfb84923714f39ddbcbf9cf38a06bf6f5d621c22",
+      "archive_path": "Lib/encodings/mac_roman.py",
+      "archive_sha256": "230367d96aef8e8d7f185b4acfb84923714f39ddbcbf9cf38a06bf6f5d621c22",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "mac-romanian",
+      "module": "encodings.mac_romanian",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/mac_romanian.py",
+      "runtime_sha256": "49630cf035c19e896a123ed6e5fee18b5e485123daf2f15da38bf727ff387bee",
+      "archive_path": "Lib/encodings/mac_romanian.py",
+      "archive_sha256": "49630cf035c19e896a123ed6e5fee18b5e485123daf2f15da38bf727ff387bee",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "mac-turkish",
+      "module": "encodings.mac_turkish",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/mac_turkish.py",
+      "runtime_sha256": "99758a5cad2825cb3be3fa5d031e0821e4eba910a46f417fd890207b9b6be77b",
+      "archive_path": "Lib/encodings/mac_turkish.py",
+      "archive_sha256": "99758a5cad2825cb3be3fa5d031e0821e4eba910a46f417fd890207b9b6be77b",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "palmos",
+      "module": "encodings.palmos",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/palmos.py",
+      "runtime_sha256": "79b4edcfaede8f7deb25b278d60e472217c0ff55e830ef1ccd2c408413742fa0",
+      "archive_path": "Lib/encodings/palmos.py",
+      "archive_sha256": "79b4edcfaede8f7deb25b278d60e472217c0ff55e830ef1ccd2c408413742fa0",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "punycode",
+      "module": "encodings.punycode",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/punycode.py",
+      "runtime_sha256": "1e8d57e06e9b527009c35f2a1486ab56b51540e817f5bd8f239dc71e3fc0b014",
+      "archive_path": "Lib/encodings/punycode.py",
+      "archive_sha256": "1e8d57e06e9b527009c35f2a1486ab56b51540e817f5bd8f239dc71e3fc0b014",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "raw-unicode-escape",
+      "module": "encodings.raw_unicode_escape",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/raw_unicode_escape.py",
+      "runtime_sha256": "fa6328486b8f5a5cbd10e377e80adb8cf94acbbe19c38b4e1bf708d831a80a3a",
+      "archive_path": "Lib/encodings/raw_unicode_escape.py",
+      "archive_sha256": "fa6328486b8f5a5cbd10e377e80adb8cf94acbbe19c38b4e1bf708d831a80a3a",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "shift_jis_2004",
+      "module": "encodings.shift_jis_2004",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/shift_jis_2004.py",
+      "runtime_sha256": "d21c5930f21063ea78fea3b0f76dfb8fd92858d2a4a200064a52126a43dd1a99",
+      "archive_path": "Lib/encodings/shift_jis_2004.py",
+      "archive_sha256": "d21c5930f21063ea78fea3b0f76dfb8fd92858d2a4a200064a52126a43dd1a99",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "shift_jisx0213",
+      "module": "encodings.shift_jisx0213",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/shift_jisx0213.py",
+      "runtime_sha256": "2c8d0b93bb36edf31c1236b1b4d1c0008553868bd2fc9137570115b96b834f2e",
+      "archive_path": "Lib/encodings/shift_jisx0213.py",
+      "archive_sha256": "2c8d0b93bb36edf31c1236b1b4d1c0008553868bd2fc9137570115b96b834f2e",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "utf-16",
+      "module": "encodings.utf_16",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/utf_16.py",
+      "runtime_sha256": "08437559c8d255a5ba1449c1c75beaa62b0834fe4259d161ecf8699381e4c8e1",
+      "archive_path": "Lib/encodings/utf_16.py",
+      "archive_sha256": "08437559c8d255a5ba1449c1c75beaa62b0834fe4259d161ecf8699381e4c8e1",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "utf-32",
+      "module": "encodings.utf_32",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/utf_32.py",
+      "runtime_sha256": "6c235e377e1e277cde5f684cee6f6f8da4c73d153a21891df0cb834f17cd2b6f",
+      "archive_path": "Lib/encodings/utf_32.py",
+      "archive_sha256": "6c235e377e1e277cde5f684cee6f6f8da4c73d153a21891df0cb834f17cd2b6f",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "utf-7",
+      "module": "encodings.utf_7",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/utf_7.py",
+      "runtime_sha256": "9ff32314f4f1fa074f206bbf7fdb851504e5313128636d73b4bf75b886e4a87d",
+      "archive_path": "Lib/encodings/utf_7.py",
+      "archive_sha256": "9ff32314f4f1fa074f206bbf7fdb851504e5313128636d73b4bf75b886e4a87d",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "unicode-escape",
+      "module": "encodings.unicode_escape",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/unicode_escape.py",
+      "runtime_sha256": "507e7ca8f18df639fd823d7cc23ce4028a3550ceefdfa40b3c76f81d1a94531d",
+      "archive_path": "Lib/encodings/unicode_escape.py",
+      "archive_sha256": "507e7ca8f18df639fd823d7cc23ce4028a3550ceefdfa40b3c76f81d1a94531d",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "utf-16-be",
+      "module": "encodings.utf_16_be",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/utf_16_be.py",
+      "runtime_sha256": "3357196f3fa52433326a6626880e34964e00c5570aee50e9a0a0a7c6d86f6e4f",
+      "archive_path": "Lib/encodings/utf_16_be.py",
+      "archive_sha256": "3357196f3fa52433326a6626880e34964e00c5570aee50e9a0a0a7c6d86f6e4f",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "utf-16-le",
+      "module": "encodings.utf_16_le",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/utf_16_le.py",
+      "runtime_sha256": "3aedaf3eb49769282daef1eaedfd4fa1c31fe5eebeff67fe2307c89dc2e2fd80",
+      "archive_path": "Lib/encodings/utf_16_le.py",
+      "archive_sha256": "3aedaf3eb49769282daef1eaedfd4fa1c31fe5eebeff67fe2307c89dc2e2fd80",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "utf-32-be",
+      "module": "encodings.utf_32_be",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/utf_32_be.py",
+      "runtime_sha256": "cbba20e1f6d0879c7c4293446c371a9f79e7c90bf3c78a77a9b8fc72b18915dd",
+      "archive_path": "Lib/encodings/utf_32_be.py",
+      "archive_sha256": "cbba20e1f6d0879c7c4293446c371a9f79e7c90bf3c78a77a9b8fc72b18915dd",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "utf-32-le",
+      "module": "encodings.utf_32_le",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/utf_32_le.py",
+      "runtime_sha256": "9134b91047d85b442898d59effe23e7e0cf4167ca341ae31119a731dbf880a7b",
+      "archive_path": "Lib/encodings/utf_32_le.py",
+      "archive_sha256": "9134b91047d85b442898d59effe23e7e0cf4167ca341ae31119a731dbf880a7b",
+      "runtime_matches_archive": true
+    },
+    {
+      "canonical": "utf-8-sig",
+      "module": "encodings.utf_8_sig",
+      "runtime_path": "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/encodings/utf_8_sig.py",
+      "runtime_sha256": "1ef3da8d8aa08149e7f274dc64dbfce2155da812e5258ca8e8f832428d3b5c2d",
+      "archive_path": "Lib/encodings/utf_8_sig.py",
+      "archive_sha256": "1ef3da8d8aa08149e7f274dc64dbfce2155da812e5258ca8e8f832428d3b5c2d",
+      "runtime_matches_archive": true
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "status": "accepted_explicit_malformed_provider_boundary_difference_pending_implementation_and_gate_review",
+  "packet_sha256": "1916718c3eb3bfcd607b7c42824a525dc98126cc3366ebf5ffb4336c274f260e",
+  "case_ids": [
+    "openlibrary-title-0",
+    "openlibrary-title-1",
+    "musicbrainz-name-0",
+    "musicbrainz-name-1",
+    "tmdb-title-0",
+    "tmdb-title-1",
+    "internetarchive-date-1",
+    "internetarchive-title-0",
+    "internetarchive-title-1"
+  ],
+  "reason": "Accepted native result schema requires title:String/published_date:Option<String>; original unvalidated dataclass admits null/numeric titles or numeric dates. Do not widen schema or silently stringify these malformed values. Native must return classified Error atomically, never panic or leak partial results; this is a deliberate difference, not byte parity.",
+  "evidence_reviewed": "All9 provider object/field shapes, source constructor paths, original source result fields, exact outbound request equality, accepted domain/storage String fields. Large unchanged TMDB overview inspected through exact length/hash instead of repeated raw text.",
+  "remaining": "source provenance producer review, actual native replay/gate execution, partial output/cleanup controls and crossconsumer regression review remain required"
+}

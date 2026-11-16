@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "plan_id": "W06",
+  "status": "focused gate checks passed; full W06 gate held for parent main union",
+  "qualification_sha256": "7481ffcf349c3561b47b97c99ab158ef42abaf941dc9ad8d7cad87e613c7d034",
+  "unit_checks": {
+    "command": "cargo +1.99.0 test --locked -p xtask w06::tests:: -- --show-output",
+    "exit_code": 0,
+    "passed": 3,
+    "ignored": 0,
+    "tests": [
+      "receipts_require_actual_pass_and_exact_post_assertion_case_identity",
+      "review_reference_controls_require_explicit_roles_separate_from_parity_cases",
+      "source_identity_reader_accepts_exact_integers_beyond_float_range"
+    ],
+    "completion_tool_session": 23156
+  },
+  "commands": [
+    {
+      "command": "env PATH=/private/tmp/slopsearx-rust-tools/cargo/bin:/usr/bin:/bin:/usr/sbin:/sbin RUSTUP_HOME=/private/tmp/slopsearx-rust-tools/rustup CARGO_HOME=/private/tmp/slopsearx-rust-tools/cargo CARGO_TARGET_DIR=/Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate CARGO_INCREMENTAL=0 cargo +1.99.0 fmt --all --check",
+      "exit_code": 0,
+      "stdout": ""
+    },
+    {
+      "command": "env PATH=/private/tmp/slopsearx-rust-tools/cargo/bin:/usr/bin:/bin:/usr/sbin:/sbin RUSTUP_HOME=/private/tmp/slopsearx-rust-tools/rustup CARGO_HOME=/private/tmp/slopsearx-rust-tools/cargo CARGO_TARGET_DIR=/Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate CARGO_INCREMENTAL=0 cargo +1.99.0 clippy --locked -p xtask --all-targets -- -D warnings",
+      "exit_code": 0,
+      "stdout": "    Checking ssx-application v0.1.0 (/private/tmp/slopsearx-w06/crates/ssx-application)\n    Checking ssx-registry v0.1.0 (/private/tmp/slopsearx-w06/crates/ssx-registry)\n    Checking ssx-mcp v0.1.0 (/private/tmp/slopsearx-w06/crates/ssx-mcp)\n    Checking ssx-http v0.1.0 (/private/tmp/slopsearx-w06/crates/ssx-http)\n    Checking xtask v0.1.0 (/private/tmp/slopsearx-w06/crates/xtask)\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 5.59s\n"
+    }
+  ],
+  "full_W06_gate_run": false,
+  "production_calls": 0
+}

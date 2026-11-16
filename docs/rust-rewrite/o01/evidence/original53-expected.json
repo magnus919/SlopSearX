@@ -1,0 +1,87 @@
+{
+  "scope": "independent pinned sourcefunction map plus literal4paramgroups; not copied from pytest observation",
+  "nodes": [
+    "tests/test_audit.py::TestAuditAsyncConformance::test_record_query_is_async",
+    "tests/test_audit.py::TestAuditDisconnected::test_record_query_disconnected_cache_noop",
+    "tests/test_audit.py::TestAuditDisconnected::test_record_query_no_cache_noop",
+    "tests/test_audit.py::TestAuditDisconnected::test_record_query_no_client_noop",
+    "tests/test_audit.py::TestAuditPipeline::test_count_timeout_status_correctly",
+    "tests/test_audit.py::TestAuditPipeline::test_expire_set_on_stream",
+    "tests/test_audit.py::TestAuditPipeline::test_pipeline_error_noop",
+    "tests/test_audit.py::TestAuditPipeline::test_pipeline_execute_is_awaited",
+    "tests/test_audit.py::TestAuditPipeline::test_pipeline_fields_correct",
+    "tests/test_audit.py::TestAuditPipeline::test_stream_key_includes_date",
+    "tests/test_metrics.py::TestCounter::test_header",
+    "tests/test_metrics.py::TestCounter::test_increment",
+    "tests/test_metrics.py::TestCounter::test_multiple_labels",
+    "tests/test_metrics.py::TestGauge::test_overwrite",
+    "tests/test_metrics.py::TestGauge::test_set_and_render",
+    "tests/test_metrics.py::TestHistogram::test_bounded_retention",
+    "tests/test_metrics.py::TestHistogram::test_cumulative_buckets_and_parser",
+    "tests/test_metrics.py::TestHistogram::test_empty_no_output",
+    "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets0]",
+    "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets1]",
+    "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets2]",
+    "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets3]",
+    "tests/test_metrics.py::TestHistogram::test_nonfinite_and_negative_latency_ignored",
+    "tests/test_metrics.py::TestRenderMetrics::test_render_includes_help_and_type",
+    "tests/test_metrics.py::TestRenderMetrics::test_render_produces_valid_openmetrics",
+    "tests/test_metrics.py::test_engine_error_counter_counts_failures_not_empty",
+    "tests/test_metrics.py::test_label_escaping_roundtrips",
+    "tests/test_saved_event_metrics.py::test_publication_read_ack_gap_capacity_and_age_are_recorded",
+    "tests/test_saved_event_metrics.py::test_read_without_events_clears_stale_backlog_age[empty]",
+    "tests/test_saved_event_metrics.py::test_read_without_events_clears_stale_backlog_age[gap]",
+    "tests/test_saved_event_metrics.py::test_rendered_metrics_expose_only_closed_operational_dimensions",
+    "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_ack-event-secret]",
+    "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_capacity-query-secret]",
+    "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_publication-tenant-secret]",
+    "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_read-consumer-secret]",
+    "tests/test_stats.py::TestStatsAsyncConformance::test_record_query_is_async",
+    "tests/test_stats.py::TestStatsPipeline::test_error_and_timeout_increment_errors",
+    "tests/test_stats.py::TestStatsPipeline::test_ok_status_does_not_increment_errors",
+    "tests/test_stats.py::TestStatsPipeline::test_pipeline_error_noop",
+    "tests/test_stats.py::TestStatsPipeline::test_pipeline_execute_is_awaited",
+    "tests/test_stats.py::TestStatsPipeline::test_rate_limited_status_increments_rate_limited",
+    "tests/test_stats.py::TestStatsTrackerDisconnected::test_record_query_disconnected_cache_noop",
+    "tests/test_stats.py::TestStatsTrackerDisconnected::test_record_query_no_cache_noop",
+    "tests/test_stats.py::TestStatsTrackerDisconnected::test_record_query_no_client_noop",
+    "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[dependency_dossier]",
+    "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[research]",
+    "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[retrieval_receipt]",
+    "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[saved_search]",
+    "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[staged_search]",
+    "tests/test_workflow_metrics.py::test_interrupted_is_a_terminal_outcome_without_becoming_failure",
+    "tests/test_workflow_metrics.py::test_reconciliation_replaces_stale_gauges_after_recovery",
+    "tests/test_workflow_metrics.py::test_tenant_facing_health_has_states_without_activity_counts",
+    "tests/test_workflow_metrics.py::test_user_data_cannot_become_a_metric_label"
+  ],
+  "handoffs": [
+    "tests/test_metrics.py::TestMetricsEndpoint::test_metrics_endpoint_returns_200",
+    "tests/test_metrics.py::test_user_input_does_not_create_unbounded_metric_series"
+  ],
+  "param_groups": {
+    "test_invalid_buckets": [
+      "buckets0",
+      "buckets1",
+      "buckets2",
+      "buckets3"
+    ],
+    "test_read_without_events_clears_stale_backlog_age": [
+      "empty",
+      "gap"
+    ],
+    "test_user_or_stored_values_cannot_become_labels": [
+      "record_saved_event_publication-tenant-secret",
+      "record_saved_event_read-consumer-secret",
+      "record_saved_event_ack-event-secret",
+      "record_saved_event_capacity-query-secret"
+    ],
+    "test_every_workflow_uses_the_closed_lifecycle_vocabulary": [
+      "research",
+      "dependency_dossier",
+      "staged_search",
+      "saved_search",
+      "retrieval_receipt"
+    ]
+  }
+}

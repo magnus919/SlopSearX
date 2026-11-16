@@ -1,0 +1,3628 @@
+{
+  "schema_version": 1,
+  "plan_id": "A11",
+  "source_baseline": "8b48dc9ea0917230f31dfcc9c44ea2698b612b36",
+  "scope": [
+    "abuseipdb",
+    "greynoise",
+    "otx",
+    "urlhaus"
+  ],
+  "owned_sources": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "b3781e5d46f4b3f545664a9bfc712b99b7196ad853fdf7fcc9ede89b1497d860"
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "450d214ea7b2d41bf0693e4fad4c4265692db181f889bac2faea590b755a000f"
+    },
+    {
+      "path": "crates/ssx-config/src/lib.rs",
+      "sha256": "3e567a3183d42aba5d2a715f1bcce5485cc0a65bb72111bf884bfc084628cc34"
+    },
+    {
+      "path": "crates/ssx-domain/src/records.rs",
+      "sha256": "5e08c70c9adb8dc1f12562d560191ccf7b262edca73c6e6154057620e353d5bc"
+    },
+    {
+      "path": "crates/ssx-infra/Cargo.toml",
+      "sha256": "98ba70c193036e309e2f8f01a9bd96a75476bbb96bf53f2e2d47ebf8baeb6ac2"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/abuseipdb.rs",
+      "sha256": "f53eee2cb4c66b710e94ccb0d3892c8baf46bd9b5f353f2954a1c36d44892cee"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/clinicaltrials.rs",
+      "sha256": "f7f74938aafe9ce7560f74fbddf907baf8ead53b8b6c0f22a7435de66372c5b7"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/greynoise.rs",
+      "sha256": "78a2e22b5b354f28c415c33a49b17f15c0e1a0f0b9f7ede56fd6494a5bf24283"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/mod.rs",
+      "sha256": "6e7d83bc62eb4b6134e1c7d04f178668950c7e7c11bd835c6fc5f923454b5791"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/otx.rs",
+      "sha256": "c50ec3fbe86f531d6f9eb630faa454c6d5a589b6d1c463430eefb7baf78f406f"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/regulatory.rs",
+      "sha256": "cb1d28b4449888a1fe536dd7a722c2149a3cdbf98f46a9fc8903d420af5ddbce"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/source_json.rs",
+      "sha256": "0f42f0c200f1e84f427b03bcb5e9d8fc5251180b7d0f58e22c9e0b724370509d"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/source_payload.rs",
+      "sha256": "826006a11ef93c6c6127cdaa7f340d5f8aa1261941d388b38c2437d5ea7f89fb"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/threat_intel.rs",
+      "sha256": "dde2a34576051a820a48d1b422956443f726a600970cb5868b5318c7b74619f8"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/threat_ioc.rs",
+      "sha256": "d1d2ff16ea2b96b3648a1b5b934e87fe2a4f67430ea01742e4534fa878c7b40b"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/urlhaus.rs",
+      "sha256": "4be19120db3fc24d81b89f2f3387959322775b799ffdfeb6bec4cd6d67c732bb"
+    },
+    {
+      "path": "crates/ssx-infra/src/http.rs",
+      "sha256": "131cc1313b96f36bfbd9cf865a2e1857a6120ef3a2736ebee0b0b9565f80ac6b"
+    },
+    {
+      "path": "crates/ssx-infra/tests/a11_factories.rs",
+      "sha256": "89add53e565a9d02c37b3b148fbf659f629e528ad8d51111f0f217196b4b630f"
+    },
+    {
+      "path": "crates/ssx-infra/tests/a11_replay.rs",
+      "sha256": "bd28a553076fad86c66b2f57837beee381842fbe40976354eb905215e7fe0897"
+    },
+    {
+      "path": "crates/ssx-json/src/lib.rs",
+      "sha256": "f856e408af1eacd41dbfb57e5e34cf59f9245ee7045cf82e4edb7909c10f0ef8"
+    },
+    {
+      "path": "crates/ssx-owned-budget/src/lib.rs",
+      "sha256": "3e7990a9aceed34b62aa8e2ddd030d24d15a8f04853aa6d8a1fd9ebeb364f903"
+    },
+    {
+      "path": "crates/ssx-registry/src/lib.rs",
+      "sha256": "cac361e89182fdc7d6b0c489056b793af8551e0006da28a20e5100bc35bad8bf"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/boundary-inputs-v1.json",
+      "sha256": "7847bc10257fce3b58afc74d9416db6bd1fcaa1f7148cff7f17abdd58b0e3cbf"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/capture_boundaries.py",
+      "sha256": "a40b194073618a572307e610f9ce9092e8b947ccdcad3689ad31afec55dbdab2"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/capture_config_reachability.py",
+      "sha256": "e76ceedbd82f519fc3e974a885fe121f14ca403b3a36a0bb9f5ac17eb4c037df"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/capture_regressions.py",
+      "sha256": "f4b231dd531b705736ba388cf38393de50da16e53a45b70adc65b1cc4aecfc8a"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/capture_representation.py",
+      "sha256": "b58150d657e1d2da021a197131ef778a5916cf0331aaa11e1aab45f1a047ecb9"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/capture_supplement.py",
+      "sha256": "a26345d493374be83dc0aec8483d82a17cc710ef8eb6b2ffe527c8017b93bdc7"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/config-entry-differences-v1.json",
+      "sha256": "1c3d1875b17533cafa084615180b2d091178dd1c017aabe2565007cdcf29c140"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/config-entry-trace-v1.json",
+      "sha256": "2412475aa946ea676a317774c9d0caa7164f061ac2304f03729d072bad1bd12a"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/config-reachability-inputs-v1.json",
+      "sha256": "b5776302740cb88b97cfbd61aeab3389221caf68e2dfaf946c5a2c256fb2a7b2"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/a11-finish-producer-style-amendment-v1.py.txt",
+      "sha256": "6afbe40ae6ce47b338162838f73b293da76491eef05a0807f71ae38041d5b968"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/a11-producer-style-amendment-v1.py.txt",
+      "sha256": "2447a05471a62f859d8ef5a09c747216e7932587e3b41f9f5c05840c50b6dad2"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/boundary-capture-failure-v1.json",
+      "sha256": "900b38771f8c8b666fad04c0097ad9a1d88e43de0bccd6b06c23cfd20c11b33c"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/capture-boundaries-failed-e06c.py.txt",
+      "sha256": "e06c61136eea8159ec78d9fee6e667a40f3802fcf0db7bd796006622d431702d"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/capture-config-executed-668244.py.txt",
+      "sha256": "668244f72859a2c2c29e689c3e24cbc15708cf3607e2322e687ea22877feb0a2"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/capture_boundaries.py.final.patch.json",
+      "sha256": "d5b0076f95bb1a336fbe88bfff2f39cb0f2c8346141031374fc37bf987ff1029"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/capture_config_reachability.py.final.patch.json",
+      "sha256": "33e792e197829e327deea784519f1ca08c637cefe317688b6330c3c3067206dd"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/capture_representation.py.final.patch.json",
+      "sha256": "4c239895b5d5c47a3325487c4d400853553f926f3b1c0ee521bd0825e69a82cd"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/capture_supplement.py.final.patch.json",
+      "sha256": "c465efb3adeda06ad21d910617c164920821f06fb36c67d1b17e7c5f62149232"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/executed-capture_boundaries-542a67a3.py.txt",
+      "sha256": "542a67a3533fc6cab6e4cb43ca0f882ef0bc7049ad93cf26dd9459cedb758e7c"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/executed-capture_config_reachability-668244f7.py.txt",
+      "sha256": "668244f72859a2c2c29e689c3e24cbc15708cf3607e2322e687ea22877feb0a2"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/executed-capture_regressions-f4b231dd.py.txt",
+      "sha256": "f4b231dd531b705736ba388cf38393de50da16e53a45b70adc65b1cc4aecfc8a"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/executed-capture_representation-c648efd8.py.txt",
+      "sha256": "c648efd82a8ef107e9df0e18b69210193543173a6405c3a5eed3267653152e33"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/executed-capture_supplement-fe1117a0.py.txt",
+      "sha256": "fe1117a0d180ae60b7a588d74788222c0ce8c680359c90d9f5f39247abd6268f"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/original-boundaries-actual.log.txt",
+      "sha256": "ed801079268e129f6916dc7bd90282cabb51928d4734c0861807f8e0cf166248"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/original-boundaries-receipt-v1.json",
+      "sha256": "6beeee19a070085726160f0a3e80bf017f63cd8f1e1ce0acc8e8b04c2e75a383"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/original-config_reachability-actual.log.txt",
+      "sha256": "71d03c06869b1cd45db99e221f5fb7d233608cf13c707aeca209b01d1040967f"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/original-config_reachability-receipt-v1.json",
+      "sha256": "e96d7058cf493eb74a1b84ed980745fc5a4c97f4cd992f50e13bc6bda316942c"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/original-regressions-actual.log.txt",
+      "sha256": "e57526d54c99344e9e056e80c7be9db4c13399ebd6d35109019dcf0369e42200"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/original-regressions-receipt-v1.json",
+      "sha256": "f67eadb2387d4fd5cae5f8b6efd6ed606ed111753f7ffdbf320dfd6eb2183741"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/original-representation-actual.log.txt",
+      "sha256": "1bf3708d2b6153345d6724fbc9f95d444f7b767a9082c956c36ab8310a4e941c"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/original-representation-receipt-v1.json",
+      "sha256": "69eb64edbc61699a7744cef4e332686a196f41e23b24400a0b9179b8797856d8"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/original-supplement-actual.log.txt",
+      "sha256": "2a257175c7e7562a939b2685cd7357ac5eaa0f5be8013cebe22b5e65ca3b3615"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/original-supplement-receipt-v1.json",
+      "sha256": "d68111ce57ecd62fb8f612aa6b52c548a16b103519ad9e09611669bd3b9ce075"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/producer-format-ast-v1.json",
+      "sha256": "992beef54854ea2595fda57b7e9e6b4bf859e2afb8cdfc0ac87bd7287976cdd0"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/producer-format-ast-v2.json",
+      "sha256": "fb4a2fec86e7959614551e268ad7044f41a3d38fe965f23b9bda4e5d03522600"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/producer-style-amendment-v1.json",
+      "sha256": "0d7a7fb0134f96406d911a1583aa7a28c07227941f6bb7306ce74de5380dbb3b"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/helper-parent-bindings-v1.json",
+      "sha256": "5869cfbe87f12fa82cdf5afd65ba0358a70b01b7cb5c396cb5120a85c727d8cd"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/native-differences-v1.json",
+      "sha256": "c571d869be5d30b80b058ae50aef07da801323095ac6d3214297bb4c076098e0"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/oracle-boundaries-inventory.json",
+      "sha256": "c7f3d465291741a48008565c473c77f0bca566984e6a58b9844e60120975ceb5"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/oracle-config-inventory.json",
+      "sha256": "81db42de370de99edf9c16efada7e8794d8a5f40e6e7afdadbb4aacd386d0da7"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/oracle-inventory.json",
+      "sha256": "5184f05ad685ed71fe6cbf7bbe3c4f3f53a7969fec3b2be4fb712702b2983a56"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/oracle-representation-inventory.json",
+      "sha256": "ea0cffb74c8a541ed9c3fc490b4f61e996eb2f0d39a2d86b88fc85714a0d105d"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/oracle-runs-v1.json",
+      "sha256": "2aa0c4508454ace92df71a6ddf1bf513694467478f28c2b1e99f919c4bd383ef"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/oracle-supplement-inventory.json",
+      "sha256": "d8622dd7180c96dccac1d149c6a18d747f74868d0b7170ce2ea28615cbce0f1a"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/representation-inputs-v1.json",
+      "sha256": "6c9e0fac3a805d8047ece28d5235cb641e54e85dfc2b61566a6585d1f7c5b86e"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/source-boundaries-v1.json",
+      "sha256": "5871c2ce4e4ba208eb27357d56aa68fa34c2f0f50b9673a3184cfb63758c68ae"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/source-boundaries-v2.json",
+      "sha256": "eaa6f6f2ed23cc961be7d86f0959595eef166608be6085ecc5d7f104fef0cb2c"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/source-config-entry-v1.json",
+      "sha256": "fe6d9609bbd62261c029b87cda9b8348d7783d45c85673906e8f1b4c69fc81b3"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/source-regressions-v1.json",
+      "sha256": "5a11c0c4680c2b65acbbbf50fabf1f7ac13ccece133834846ea16693479e84fc"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/source-representation-v1.json",
+      "sha256": "d61a3d16bda2db43beb7fdbab70ea0e03a2e32f5c541cefacbf54a8f90fcb99c"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/source-supplement-v1.json",
+      "sha256": "d19a549b075d1e790bb8a5ea4f5a8733c7044e384ef5a4d701e4c60a7aa07d92"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/source-test-inventory-v1.json",
+      "sha256": "ced3831f554ba62208e5c566aae8199c82e971e7b1e0e286573cb071aa29a42b"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/supplement-inputs-v1.json",
+      "sha256": "80a2efdcc5eadcef321615cb031564fc7433b39700e3538982b5111f999929e0"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/word-ranges-v1.json",
+      "sha256": "9125580891573a576ab9729b289229871fb6501fd7f824dc7c87efaffd08c68d"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/word-ranges-v2.json",
+      "sha256": "9125580891573a576ab9729b289229871fb6501fd7f824dc7c87efaffd08c68d"
+    },
+    {
+      "path": "engines/abuseipdb.py",
+      "sha256": "2b48ec5b688a9cc6fb1aa50e5e82a655681b0a760f19e1310952ccaa04828eff"
+    },
+    {
+      "path": "engines/greynoise.py",
+      "sha256": "53c810ca4b9ea38567ca19e1494f1997381bf16120be2fce62f3a1aa977cea6a"
+    },
+    {
+      "path": "engines/otx.py",
+      "sha256": "4d2e242594689530b1e615cee83181505834e13d289cb83746ca7b7fe4129b79"
+    },
+    {
+      "path": "engines/urlhaus.py",
+      "sha256": "71fae6869a6487c3aeb0c7f9f7cc68ca9a2883ec4bce2e647499028f913f36ac"
+    },
+    {
+      "path": "slopsearx/adapter.py",
+      "sha256": "5883a35c48d0dad1077306fbda21997ee1d32116a8c03633a6b762de0c26d6f3"
+    },
+    {
+      "path": "slopsearx/config.py",
+      "sha256": "1cf76b8732439782342a9d217fb2f7c423f688533f287dbf78729a1defc5236e"
+    },
+    {
+      "path": "slopsearx/service.py",
+      "sha256": "45903193ef89987f7be83c1e593e44b7752251a54eb8719eae15a241840102ac"
+    },
+    {
+      "path": "tests/test_abuseipdb.py",
+      "sha256": "3fad36a9b2e5089e61c82c0a66ffd7c6bf84e08dd43493e42b3e754890467435"
+    },
+    {
+      "path": "tests/test_adapters.py",
+      "sha256": "0f5fdc19df84214e5a6422437686d41def5f9e9827ad8dfc8ca8ee8b2ad10454"
+    },
+    {
+      "path": "tests/test_greynoise.py",
+      "sha256": "58b934915ac86f05eecd36b57b541a3667285bf6964aa8053b28be9585c2025a"
+    },
+    {
+      "path": "tests/test_otx.py",
+      "sha256": "0d5860db9048a3c26013c310f78aa7397dd97a6de1ae627b0711c48bac6b27cd"
+    },
+    {
+      "path": "tests/test_urlhaus.py",
+      "sha256": "71ebdfaf63bcb672bf7d15ef9ca9c523d5312c4e785e1fd50ee111cb2b683a24"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/capture_credential_ascii.py",
+      "sha256": "845ff9a68d68b3a9556b7535977234635f21048e2985acaf4e5bda36db4016ad"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/credential-ascii-inputs-v1.json",
+      "sha256": "c46578b4fd31cfe7efafd9d3dcbc6f33d94d26d73e6a4dcae5ecfd4bf2456a8b"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/source-credential-ascii-v1.json",
+      "sha256": "d986fed5a2b2704ff9fe2b7448b921d485d92259a08e748d582b7e69cd951d6c"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/executed-capture_credential_ascii-845ff9a6.py.txt",
+      "sha256": "845ff9a68d68b3a9556b7535977234635f21048e2985acaf4e5bda36db4016ad"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/credential-refusal-bindings-v1.json",
+      "sha256": "89d37fbcb2ac54dee997e4d7fb66adb1a19c83f025d81d2685f4fff33db4a8e8"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/original-credential-receipt-v1.json",
+      "sha256": "3119c8491d6dd8899d53f3d7afe1f7492fc85f2a077f772d0fd907c4012c33cb"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/original-credential-actual.log.txt",
+      "sha256": "fafd0bbaefd6646144bb66e9d84e25c613ee004b15f44e0e0afe75f9a33498a5"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/credential-prefixed-observations-v1.json.archive.json",
+      "sha256": "8424ed5cf19cf6fe57bdd8fec0dd7703bfdedc66a73d3dc0015957b8dc430433"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/credential-prefixed-actual.log.txt",
+      "sha256": "2fd495dde6c4f5b0bc17d5271721e6d5cac89a28bbea69dd30f275dcc8b456b5"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/credential-fixed-observations-v1.json.archive.json",
+      "sha256": "18456e7ff8168daf315a5f5e9432e69c38067cd229ffa5a644e3f9511c4fbefb"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/credential-fixed-actual.log.txt.archive.json",
+      "sha256": "3b0202d4231e54bfdc5babc9313fc6feae56268a74c9105bd95945e6755c3ca1"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/evidence/credential-fix-evidence-v1.json",
+      "sha256": "83725bdf312eff7193866453fb2c913fb2de02789df3457af7eb1f655fa5d461"
+    },
+    {
+      "path": "crates/ssx-infra/src/http/monotonic.rs",
+      "sha256": "1a58034e2ca03360d8bb4cdf419353e3677be0528704962a66ecb4add388a24f"
+    },
+    {
+      "path": "crates/ssx-infra/tests/support/a10_http_clock.rs",
+      "sha256": "b850833e2cac860cce876858fdff32130640b07fd2192f4f74b34f8729676c72"
+    }
+  ],
+  "source_profiles": [
+    {
+      "profile": "baseline58",
+      "path": "docs/rust-rewrite/a11/source-regressions-v1.json",
+      "records": 58
+    },
+    {
+      "profile": "boundary250",
+      "path": "docs/rust-rewrite/a11/source-boundaries-v2.json",
+      "records": 250
+    },
+    {
+      "profile": "supplement3",
+      "path": "docs/rust-rewrite/a11/source-supplement-v1.json",
+      "records": 3
+    },
+    {
+      "profile": "representation10",
+      "path": "docs/rust-rewrite/a11/source-representation-v1.json",
+      "records": 10
+    }
+  ],
+  "entry_layer_profile": {
+    "path": "docs/rust-rewrite/a11/source-config-entry-v1.json",
+    "records": 4,
+    "scope_path": "docs/rust-rewrite/a11/config-entry-differences-v1.json"
+  },
+  "original_function_count": 32,
+  "actual_original_call_count": 41,
+  "original_mapping": [
+    {
+      "identity": "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_search_returns_reputation",
+      "path": "tests/test_abuseipdb.py",
+      "line": 21,
+      "actual_parameterized_calls": [
+        "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_search_returns_reputation"
+      ],
+      "source_observation_ids": [
+        "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_search_returns_reputation::abuseipdb._parse_ip::0",
+        "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_search_returns_reputation::abuseipdb.search::0"
+      ],
+      "native_cases": [
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_search_returns_reputation::abuseipdb._parse_ip::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_search_returns_reputation::abuseipdb.search::0"
+      ],
+      "kind": "actual-complete-source-search-or-nested-helper"
+    },
+    {
+      "identity": "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_missing_api_key",
+      "path": "tests/test_abuseipdb.py",
+      "line": 40,
+      "actual_parameterized_calls": [
+        "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_missing_api_key"
+      ],
+      "source_observation_ids": [
+        "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_missing_api_key::abuseipdb.search::0"
+      ],
+      "native_cases": [
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_missing_api_key::abuseipdb.search::0"
+      ],
+      "kind": "actual-complete-source-search-or-nested-helper"
+    },
+    {
+      "identity": "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_rate_limited",
+      "path": "tests/test_abuseipdb.py",
+      "line": 46,
+      "actual_parameterized_calls": [
+        "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_rate_limited"
+      ],
+      "source_observation_ids": [
+        "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_rate_limited::abuseipdb.search::0"
+      ],
+      "native_cases": [
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_rate_limited::abuseipdb.search::0"
+      ],
+      "kind": "actual-complete-source-search-or-nested-helper"
+    },
+    {
+      "identity": "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_adapter_registered",
+      "path": "tests/test_abuseipdb.py",
+      "line": 51,
+      "actual_parameterized_calls": [
+        "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_adapter_registered"
+      ],
+      "source_observation_ids": [],
+      "native_cases": [
+        "A11_SOURCE_TEST_COMPLETE:tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_adapter_registered"
+      ],
+      "kind": "actual-factory-registration-or-category"
+    },
+    {
+      "identity": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_ip_lookup",
+      "path": "tests/test_greynoise.py",
+      "line": 31,
+      "actual_parameterized_calls": [
+        "tests/test_greynoise.py::TestGreyNoiseAdapter::test_ip_lookup"
+      ],
+      "source_observation_ids": [
+        "tests/test_greynoise.py::TestGreyNoiseAdapter::test_ip_lookup::greynoise._parse_ip::0",
+        "tests/test_greynoise.py::TestGreyNoiseAdapter::test_ip_lookup::greynoise.search::0"
+      ],
+      "native_cases": [
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_ip_lookup::greynoise._parse_ip::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_ip_lookup::greynoise.search::0"
+      ],
+      "kind": "actual-complete-source-search-or-nested-helper"
+    },
+    {
+      "identity": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_no_ip_in_query",
+      "path": "tests/test_greynoise.py",
+      "line": 39,
+      "actual_parameterized_calls": [
+        "tests/test_greynoise.py::TestGreyNoiseAdapter::test_no_ip_in_query"
+      ],
+      "source_observation_ids": [
+        "tests/test_greynoise.py::TestGreyNoiseAdapter::test_no_ip_in_query::greynoise.search::0"
+      ],
+      "native_cases": [
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_no_ip_in_query::greynoise.search::0"
+      ],
+      "kind": "actual-complete-source-search-or-nested-helper"
+    },
+    {
+      "identity": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_404",
+      "path": "tests/test_greynoise.py",
+      "line": 44,
+      "actual_parameterized_calls": [
+        "tests/test_greynoise.py::TestGreyNoiseAdapter::test_404"
+      ],
+      "source_observation_ids": [
+        "tests/test_greynoise.py::TestGreyNoiseAdapter::test_404::greynoise.search::0"
+      ],
+      "native_cases": [
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_404::greynoise.search::0"
+      ],
+      "kind": "actual-complete-source-search-or-nested-helper"
+    },
+    {
+      "identity": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_mismatched_ip_response_is_error",
+      "path": "tests/test_greynoise.py",
+      "line": 50,
+      "actual_parameterized_calls": [
+        "tests/test_greynoise.py::TestGreyNoiseAdapter::test_mismatched_ip_response_is_error"
+      ],
+      "source_observation_ids": [
+        "tests/test_greynoise.py::TestGreyNoiseAdapter::test_mismatched_ip_response_is_error::greynoise._parse_ip::0",
+        "tests/test_greynoise.py::TestGreyNoiseAdapter::test_mismatched_ip_response_is_error::greynoise.search::0"
+      ],
+      "native_cases": [
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_mismatched_ip_response_is_error::greynoise._parse_ip::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_mismatched_ip_response_is_error::greynoise.search::0"
+      ],
+      "kind": "actual-complete-source-search-or-nested-helper"
+    },
+    {
+      "identity": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_malformed_response_shape_is_error",
+      "path": "tests/test_greynoise.py",
+      "line": 57,
+      "actual_parameterized_calls": [
+        "tests/test_greynoise.py::TestGreyNoiseAdapter::test_malformed_response_shape_is_error"
+      ],
+      "source_observation_ids": [
+        "tests/test_greynoise.py::TestGreyNoiseAdapter::test_malformed_response_shape_is_error::greynoise._parse_ip::0",
+        "tests/test_greynoise.py::TestGreyNoiseAdapter::test_malformed_response_shape_is_error::greynoise.search::0"
+      ],
+      "native_cases": [
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_malformed_response_shape_is_error::greynoise._parse_ip::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_malformed_response_shape_is_error::greynoise.search::0"
+      ],
+      "kind": "actual-complete-source-search-or-nested-helper"
+    },
+    {
+      "identity": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_invalid_json_response_is_error",
+      "path": "tests/test_greynoise.py",
+      "line": 64,
+      "actual_parameterized_calls": [
+        "tests/test_greynoise.py::TestGreyNoiseAdapter::test_invalid_json_response_is_error"
+      ],
+      "source_observation_ids": [
+        "tests/test_greynoise.py::TestGreyNoiseAdapter::test_invalid_json_response_is_error::greynoise.search::0"
+      ],
+      "native_cases": [
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_invalid_json_response_is_error::greynoise.search::0"
+      ],
+      "kind": "actual-complete-source-search-or-nested-helper"
+    },
+    {
+      "identity": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_rate_limited",
+      "path": "tests/test_greynoise.py",
+      "line": 70,
+      "actual_parameterized_calls": [
+        "tests/test_greynoise.py::TestGreyNoiseAdapter::test_rate_limited"
+      ],
+      "source_observation_ids": [
+        "tests/test_greynoise.py::TestGreyNoiseAdapter::test_rate_limited::greynoise.search::0"
+      ],
+      "native_cases": [
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_rate_limited::greynoise.search::0"
+      ],
+      "kind": "actual-complete-source-search-or-nested-helper"
+    },
+    {
+      "identity": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_with_api_key",
+      "path": "tests/test_greynoise.py",
+      "line": 75,
+      "actual_parameterized_calls": [
+        "tests/test_greynoise.py::TestGreyNoiseAdapter::test_with_api_key"
+      ],
+      "source_observation_ids": [
+        "tests/test_greynoise.py::TestGreyNoiseAdapter::test_with_api_key::greynoise._parse_ip::0",
+        "tests/test_greynoise.py::TestGreyNoiseAdapter::test_with_api_key::greynoise.search::0"
+      ],
+      "native_cases": [
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_with_api_key::greynoise._parse_ip::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_with_api_key::greynoise.search::0"
+      ],
+      "kind": "actual-complete-source-search-or-nested-helper"
+    },
+    {
+      "identity": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_adapter_registered",
+      "path": "tests/test_greynoise.py",
+      "line": 87,
+      "actual_parameterized_calls": [
+        "tests/test_greynoise.py::TestGreyNoiseAdapter::test_adapter_registered"
+      ],
+      "source_observation_ids": [],
+      "native_cases": [
+        "A11_SOURCE_TEST_COMPLETE:tests/test_greynoise.py::TestGreyNoiseAdapter::test_adapter_registered"
+      ],
+      "kind": "actual-factory-registration-or-category"
+    },
+    {
+      "identity": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_adapter_categories",
+      "path": "tests/test_greynoise.py",
+      "line": 92,
+      "actual_parameterized_calls": [
+        "tests/test_greynoise.py::TestGreyNoiseAdapter::test_adapter_categories"
+      ],
+      "source_observation_ids": [],
+      "native_cases": [
+        "A11_SOURCE_TEST_COMPLETE:tests/test_greynoise.py::TestGreyNoiseAdapter::test_adapter_categories"
+      ],
+      "kind": "actual-factory-registration-or-category"
+    },
+    {
+      "identity": "tests/test_otx.py::TestOTXAdapter::test_missing_api_key",
+      "path": "tests/test_otx.py",
+      "line": 21,
+      "actual_parameterized_calls": [
+        "tests/test_otx.py::TestOTXAdapter::test_missing_api_key"
+      ],
+      "source_observation_ids": [
+        "tests/test_otx.py::TestOTXAdapter::test_missing_api_key::otx.search::0"
+      ],
+      "native_cases": [
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_otx.py::TestOTXAdapter::test_missing_api_key::otx.search::0"
+      ],
+      "kind": "actual-complete-source-search-or-nested-helper"
+    },
+    {
+      "identity": "tests/test_otx.py::TestOTXAdapter::test_rate_limited",
+      "path": "tests/test_otx.py",
+      "line": 27,
+      "actual_parameterized_calls": [
+        "tests/test_otx.py::TestOTXAdapter::test_rate_limited"
+      ],
+      "source_observation_ids": [
+        "tests/test_otx.py::TestOTXAdapter::test_rate_limited::otx.search::0"
+      ],
+      "native_cases": [
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_otx.py::TestOTXAdapter::test_rate_limited::otx.search::0"
+      ],
+      "kind": "actual-complete-source-search-or-nested-helper"
+    },
+    {
+      "identity": "tests/test_otx.py::TestOTXAdapter::test_adapter_registered",
+      "path": "tests/test_otx.py",
+      "line": 32,
+      "actual_parameterized_calls": [
+        "tests/test_otx.py::TestOTXAdapter::test_adapter_registered"
+      ],
+      "source_observation_ids": [],
+      "native_cases": [
+        "A11_SOURCE_TEST_COMPLETE:tests/test_otx.py::TestOTXAdapter::test_adapter_registered"
+      ],
+      "kind": "actual-factory-registration-or-category"
+    },
+    {
+      "identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_url_search",
+      "path": "tests/test_urlhaus.py",
+      "line": 39,
+      "actual_parameterized_calls": [
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_url_search"
+      ],
+      "source_observation_ids": [
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_url_search::urlhaus._parse_single_url::0",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_url_search::urlhaus._parse_response::0",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_url_search::urlhaus.search::0"
+      ],
+      "native_cases": [
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_url_search::urlhaus._parse_single_url::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_url_search::urlhaus._parse_response::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_url_search::urlhaus.search::0"
+      ],
+      "kind": "actual-complete-source-search-or-nested-helper"
+    },
+    {
+      "identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_host_search",
+      "path": "tests/test_urlhaus.py",
+      "line": 47,
+      "actual_parameterized_calls": [
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_host_search"
+      ],
+      "source_observation_ids": [
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_host_search::urlhaus._parse_single_url::0",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_host_search::urlhaus._parse_response::0",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_host_search::urlhaus.search::0"
+      ],
+      "native_cases": [
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_host_search::urlhaus._parse_single_url::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_host_search::urlhaus._parse_response::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_host_search::urlhaus.search::0"
+      ],
+      "kind": "actual-complete-source-search-or-nested-helper"
+    },
+    {
+      "identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error",
+      "path": "tests/test_urlhaus.py",
+      "line": 61,
+      "actual_parameterized_calls": [
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[invalid-host.example-invalid_host]",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[https://example.com/not-malware-invalid_url]",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[0123456789abcdef0123456789abcdef-invalid_md5]"
+      ],
+      "source_observation_ids": [
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[invalid-host.example-invalid_host]::urlhaus._parse_response::0",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[invalid-host.example-invalid_host]::urlhaus.search::0",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[https://example.com/not-malware-invalid_url]::urlhaus._parse_response::0",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[https://example.com/not-malware-invalid_url]::urlhaus.search::0",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[0123456789abcdef0123456789abcdef-invalid_md5]::urlhaus._parse_response::0",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[0123456789abcdef0123456789abcdef-invalid_md5]::urlhaus.search::0"
+      ],
+      "native_cases": [
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[invalid-host.example-invalid_host]::urlhaus._parse_response::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[invalid-host.example-invalid_host]::urlhaus.search::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[https://example.com/not-malware-invalid_url]::urlhaus._parse_response::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[https://example.com/not-malware-invalid_url]::urlhaus.search::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[0123456789abcdef0123456789abcdef-invalid_md5]::urlhaus._parse_response::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[0123456789abcdef0123456789abcdef-invalid_md5]::urlhaus.search::0"
+      ],
+      "kind": "actual-complete-source-search-or-nested-helper"
+    },
+    {
+      "identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error",
+      "path": "tests/test_urlhaus.py",
+      "line": 76,
+      "actual_parameterized_calls": [
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[example.com-invalid_url]",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[https://example.com/not-malware-invalid_host]",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[0123456789abcdef0123456789abcdef-invalid_host]"
+      ],
+      "source_observation_ids": [
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[example.com-invalid_url]::urlhaus._parse_response::0",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[example.com-invalid_url]::urlhaus.search::0",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[https://example.com/not-malware-invalid_host]::urlhaus._parse_response::0",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[https://example.com/not-malware-invalid_host]::urlhaus.search::0",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[0123456789abcdef0123456789abcdef-invalid_host]::urlhaus._parse_response::0",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[0123456789abcdef0123456789abcdef-invalid_host]::urlhaus.search::0"
+      ],
+      "native_cases": [
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[example.com-invalid_url]::urlhaus._parse_response::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[example.com-invalid_url]::urlhaus.search::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[https://example.com/not-malware-invalid_host]::urlhaus._parse_response::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[https://example.com/not-malware-invalid_host]::urlhaus.search::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[0123456789abcdef0123456789abcdef-invalid_host]::urlhaus._parse_response::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[0123456789abcdef0123456789abcdef-invalid_host]::urlhaus.search::0"
+      ],
+      "kind": "actual-complete-source-search-or-nested-helper"
+    },
+    {
+      "identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results",
+      "path": "tests/test_urlhaus.py",
+      "line": 90,
+      "actual_parameterized_calls": [
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[https://clean.example.com/not-malware]",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[clean.example.com]",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[0123456789abcdef0123456789abcdef]"
+      ],
+      "source_observation_ids": [
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[https://clean.example.com/not-malware]::urlhaus._parse_response::0",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[https://clean.example.com/not-malware]::urlhaus.search::0",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[clean.example.com]::urlhaus._parse_response::0",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[clean.example.com]::urlhaus.search::0",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[0123456789abcdef0123456789abcdef]::urlhaus._parse_response::0",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[0123456789abcdef0123456789abcdef]::urlhaus.search::0"
+      ],
+      "native_cases": [
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[https://clean.example.com/not-malware]::urlhaus._parse_response::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[https://clean.example.com/not-malware]::urlhaus.search::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[clean.example.com]::urlhaus._parse_response::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[clean.example.com]::urlhaus.search::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[0123456789abcdef0123456789abcdef]::urlhaus._parse_response::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[0123456789abcdef0123456789abcdef]::urlhaus.search::0"
+      ],
+      "kind": "actual-complete-source-search-or-nested-helper"
+    },
+    {
+      "identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_missing_auth_is_unavailable_without_http_dispatch",
+      "path": "tests/test_urlhaus.py",
+      "line": 96,
+      "actual_parameterized_calls": [
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_missing_auth_is_unavailable_without_http_dispatch"
+      ],
+      "source_observation_ids": [
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_missing_auth_is_unavailable_without_http_dispatch::urlhaus.search::0"
+      ],
+      "native_cases": [
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_missing_auth_is_unavailable_without_http_dispatch::urlhaus.search::0"
+      ],
+      "kind": "actual-complete-source-search-or-nested-helper"
+    },
+    {
+      "identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_rate_limited",
+      "path": "tests/test_urlhaus.py",
+      "line": 103,
+      "actual_parameterized_calls": [
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_rate_limited"
+      ],
+      "source_observation_ids": [
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_rate_limited::urlhaus.search::0"
+      ],
+      "native_cases": [
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_rate_limited::urlhaus.search::0"
+      ],
+      "kind": "actual-complete-source-search-or-nested-helper"
+    },
+    {
+      "identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_request_is_error",
+      "path": "tests/test_urlhaus.py",
+      "line": 108,
+      "actual_parameterized_calls": [
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_request_is_error"
+      ],
+      "source_observation_ids": [
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_request_is_error::urlhaus.search::0"
+      ],
+      "native_cases": [
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_request_is_error::urlhaus.search::0"
+      ],
+      "kind": "actual-complete-source-search-or-nested-helper"
+    },
+    {
+      "identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_or_provider_block_is_classified",
+      "path": "tests/test_urlhaus.py",
+      "line": 116,
+      "actual_parameterized_calls": [
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_or_provider_block_is_classified[401]",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_or_provider_block_is_classified[403]"
+      ],
+      "source_observation_ids": [
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_or_provider_block_is_classified[401]::urlhaus.search::0",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_or_provider_block_is_classified[403]::urlhaus.search::0"
+      ],
+      "native_cases": [
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_auth_or_provider_block_is_classified[401]::urlhaus.search::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_auth_or_provider_block_is_classified[403]::urlhaus.search::0"
+      ],
+      "kind": "actual-complete-source-search-or-nested-helper"
+    },
+    {
+      "identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_malformed_json_is_error",
+      "path": "tests/test_urlhaus.py",
+      "line": 123,
+      "actual_parameterized_calls": [
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_malformed_json_is_error"
+      ],
+      "source_observation_ids": [
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_malformed_json_is_error::urlhaus.search::0"
+      ],
+      "native_cases": [
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_malformed_json_is_error::urlhaus.search::0"
+      ],
+      "kind": "actual-complete-source-search-or-nested-helper"
+    },
+    {
+      "identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error",
+      "path": "tests/test_urlhaus.py",
+      "line": 137,
+      "actual_parameterized_calls": [
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload0]",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload1]",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload2]"
+      ],
+      "source_observation_ids": [
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload0]::urlhaus._parse_response::0",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload0]::urlhaus.search::0",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload1]::urlhaus._parse_response::0",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload1]::urlhaus.search::0",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload2]::urlhaus._parse_response::0",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload2]::urlhaus.search::0"
+      ],
+      "native_cases": [
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload0]::urlhaus._parse_response::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload0]::urlhaus.search::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload1]::urlhaus._parse_response::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload1]::urlhaus.search::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload2]::urlhaus._parse_response::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload2]::urlhaus.search::0"
+      ],
+      "kind": "actual-complete-source-search-or-nested-helper"
+    },
+    {
+      "identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_unsupported_input_is_error_without_dispatch",
+      "path": "tests/test_urlhaus.py",
+      "line": 143,
+      "actual_parameterized_calls": [
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_unsupported_input_is_error_without_dispatch"
+      ],
+      "source_observation_ids": [
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_unsupported_input_is_error_without_dispatch::urlhaus.search::0"
+      ],
+      "native_cases": [
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_unsupported_input_is_error_without_dispatch::urlhaus.search::0"
+      ],
+      "kind": "actual-complete-source-search-or-nested-helper"
+    },
+    {
+      "identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_key_is_forwarded_as_header",
+      "path": "tests/test_urlhaus.py",
+      "line": 152,
+      "actual_parameterized_calls": [
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_key_is_forwarded_as_header"
+      ],
+      "source_observation_ids": [
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_key_is_forwarded_as_header::urlhaus._parse_single_url::0",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_key_is_forwarded_as_header::urlhaus._parse_response::0",
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_key_is_forwarded_as_header::urlhaus.search::0"
+      ],
+      "native_cases": [
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_auth_key_is_forwarded_as_header::urlhaus._parse_single_url::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_auth_key_is_forwarded_as_header::urlhaus._parse_response::0",
+        "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_auth_key_is_forwarded_as_header::urlhaus.search::0"
+      ],
+      "kind": "actual-complete-source-search-or-nested-helper"
+    },
+    {
+      "identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_adapter_registered",
+      "path": "tests/test_urlhaus.py",
+      "line": 165,
+      "actual_parameterized_calls": [
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_adapter_registered"
+      ],
+      "source_observation_ids": [],
+      "native_cases": [
+        "A11_SOURCE_TEST_COMPLETE:tests/test_urlhaus.py::TestURLhausAdapter::test_adapter_registered"
+      ],
+      "kind": "actual-factory-registration-or-category"
+    },
+    {
+      "identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_adapter_categories",
+      "path": "tests/test_urlhaus.py",
+      "line": 170,
+      "actual_parameterized_calls": [
+        "tests/test_urlhaus.py::TestURLhausAdapter::test_adapter_categories"
+      ],
+      "source_observation_ids": [],
+      "native_cases": [
+        "A11_SOURCE_TEST_COMPLETE:tests/test_urlhaus.py::TestURLhausAdapter::test_adapter_categories"
+      ],
+      "kind": "actual-factory-registration-or-category"
+    }
+  ],
+  "native_tests": [
+    {
+      "package": "ssx-infra",
+      "target": "lib",
+      "name": "adapters::threat_ioc::tests::native_unicode16_word_table_and_all_ioc_grammars_keep_source_boundaries",
+      "cases": [
+        {
+          "id": "A11_IOC_COMPLETE:unicode16-all-scalars",
+          "prefix": "A11_IOC_COMPLETE",
+          "value": "unicode16-all-scalars",
+          "kind": "native-unicode-source-grammar"
+        },
+        {
+          "id": "A11_IOC_COMPLETE:ip-hash-cve-hostname-source-grammar",
+          "prefix": "A11_IOC_COMPLETE",
+          "value": "ip-hash-cve-hostname-source-grammar",
+          "kind": "native-unicode-source-grammar"
+        },
+        {
+          "id": "A11_IOC_COMPLETE:source-ignorecase-long-s-url",
+          "prefix": "A11_IOC_COMPLETE",
+          "value": "source-ignorecase-long-s-url",
+          "kind": "native-unicode-source-grammar"
+        }
+      ]
+    },
+    {
+      "package": "ssx-infra",
+      "target": "lib",
+      "name": "adapters::threat_intel::tests::actual_four_factory_query_scans_cancel_expire_without_dispatch_and_release",
+      "cases": [
+        {
+          "id": "A11_OWNED_COMPLETE:entered-query:abuseipdb:false",
+          "prefix": "A11_OWNED_COMPLETE",
+          "value": "entered-query:abuseipdb:false",
+          "kind": "native-entered-owned-work"
+        },
+        {
+          "id": "A11_OWNED_COMPLETE:entered-query:abuseipdb:true",
+          "prefix": "A11_OWNED_COMPLETE",
+          "value": "entered-query:abuseipdb:true",
+          "kind": "native-entered-owned-work"
+        },
+        {
+          "id": "A11_OWNED_COMPLETE:entered-query:greynoise:false",
+          "prefix": "A11_OWNED_COMPLETE",
+          "value": "entered-query:greynoise:false",
+          "kind": "native-entered-owned-work"
+        },
+        {
+          "id": "A11_OWNED_COMPLETE:entered-query:greynoise:true",
+          "prefix": "A11_OWNED_COMPLETE",
+          "value": "entered-query:greynoise:true",
+          "kind": "native-entered-owned-work"
+        },
+        {
+          "id": "A11_OWNED_COMPLETE:entered-query:otx:false",
+          "prefix": "A11_OWNED_COMPLETE",
+          "value": "entered-query:otx:false",
+          "kind": "native-entered-owned-work"
+        },
+        {
+          "id": "A11_OWNED_COMPLETE:entered-query:otx:true",
+          "prefix": "A11_OWNED_COMPLETE",
+          "value": "entered-query:otx:true",
+          "kind": "native-entered-owned-work"
+        },
+        {
+          "id": "A11_OWNED_COMPLETE:entered-query:urlhaus:false",
+          "prefix": "A11_OWNED_COMPLETE",
+          "value": "entered-query:urlhaus:false",
+          "kind": "native-entered-owned-work"
+        },
+        {
+          "id": "A11_OWNED_COMPLETE:entered-query:urlhaus:true",
+          "prefix": "A11_OWNED_COMPLETE",
+          "value": "entered-query:urlhaus:true",
+          "kind": "native-entered-owned-work"
+        }
+      ]
+    },
+    {
+      "package": "ssx-infra",
+      "target": "lib",
+      "name": "adapters::threat_intel::tests::actual_four_post_source_parse_projection_cancels_expires_and_releases",
+      "cases": [
+        {
+          "id": "A11_OWNED_COMPLETE:entered-projection:abuseipdb:false",
+          "prefix": "A11_OWNED_COMPLETE",
+          "value": "entered-projection:abuseipdb:false",
+          "kind": "native-entered-owned-work"
+        },
+        {
+          "id": "A11_OWNED_COMPLETE:entered-projection:abuseipdb:true",
+          "prefix": "A11_OWNED_COMPLETE",
+          "value": "entered-projection:abuseipdb:true",
+          "kind": "native-entered-owned-work"
+        },
+        {
+          "id": "A11_OWNED_COMPLETE:entered-projection:greynoise:false",
+          "prefix": "A11_OWNED_COMPLETE",
+          "value": "entered-projection:greynoise:false",
+          "kind": "native-entered-owned-work"
+        },
+        {
+          "id": "A11_OWNED_COMPLETE:entered-projection:greynoise:true",
+          "prefix": "A11_OWNED_COMPLETE",
+          "value": "entered-projection:greynoise:true",
+          "kind": "native-entered-owned-work"
+        },
+        {
+          "id": "A11_OWNED_COMPLETE:entered-projection:otx:false",
+          "prefix": "A11_OWNED_COMPLETE",
+          "value": "entered-projection:otx:false",
+          "kind": "native-entered-owned-work"
+        },
+        {
+          "id": "A11_OWNED_COMPLETE:entered-projection:otx:true",
+          "prefix": "A11_OWNED_COMPLETE",
+          "value": "entered-projection:otx:true",
+          "kind": "native-entered-owned-work"
+        },
+        {
+          "id": "A11_OWNED_COMPLETE:entered-projection:urlhaus:false",
+          "prefix": "A11_OWNED_COMPLETE",
+          "value": "entered-projection:urlhaus:false",
+          "kind": "native-entered-owned-work"
+        },
+        {
+          "id": "A11_OWNED_COMPLETE:entered-projection:urlhaus:true",
+          "prefix": "A11_OWNED_COMPLETE",
+          "value": "entered-projection:urlhaus:true",
+          "kind": "native-entered-owned-work"
+        }
+      ]
+    },
+    {
+      "package": "ssx-infra",
+      "target": "lib",
+      "name": "adapters::threat_intel::tests::actual_four_projection_refusals_are_classified_after_parse_and_return_all_charges",
+      "cases": [
+        {
+          "id": "A11_OWNED_COMPLETE:projection-refusal:abuseipdb",
+          "prefix": "A11_OWNED_COMPLETE",
+          "value": "projection-refusal:abuseipdb",
+          "kind": "native-entered-owned-work"
+        },
+        {
+          "id": "A11_OWNED_COMPLETE:projection-refusal:greynoise",
+          "prefix": "A11_OWNED_COMPLETE",
+          "value": "projection-refusal:greynoise",
+          "kind": "native-entered-owned-work"
+        },
+        {
+          "id": "A11_OWNED_COMPLETE:projection-refusal:otx",
+          "prefix": "A11_OWNED_COMPLETE",
+          "value": "projection-refusal:otx",
+          "kind": "native-entered-owned-work"
+        },
+        {
+          "id": "A11_OWNED_COMPLETE:projection-refusal:urlhaus",
+          "prefix": "A11_OWNED_COMPLETE",
+          "value": "projection-refusal:urlhaus",
+          "kind": "native-entered-owned-work"
+        }
+      ]
+    },
+    {
+      "package": "ssx-infra",
+      "target": "a11_replay",
+      "name": "exact_difference_checker_refuses_missing_extra_duplicate_and_unbound_tuple_changes",
+      "cases": [
+        {
+          "id": "A11_CHECKER_COMPLETE:finite-positive-negative-exact-tuples",
+          "prefix": "A11_CHECKER_COMPLETE",
+          "value": "finite-positive-negative-exact-tuples",
+          "kind": "finite-identity-tuple-negative-control"
+        }
+      ]
+    },
+    {
+      "package": "ssx-infra",
+      "target": "a11_replay",
+      "name": "all_original_observations_full_boundaries_and_supplement_exact",
+      "cases": [
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_search_returns_reputation::abuseipdb.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_search_returns_reputation::abuseipdb.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_missing_api_key::abuseipdb.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_missing_api_key::abuseipdb.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_rate_limited::abuseipdb.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_rate_limited::abuseipdb.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_ip_lookup::greynoise.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_ip_lookup::greynoise.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_no_ip_in_query::greynoise.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_no_ip_in_query::greynoise.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_404::greynoise.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_404::greynoise.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_mismatched_ip_response_is_error::greynoise.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_mismatched_ip_response_is_error::greynoise.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_malformed_response_shape_is_error::greynoise.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_malformed_response_shape_is_error::greynoise.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_invalid_json_response_is_error::greynoise.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_invalid_json_response_is_error::greynoise.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_rate_limited::greynoise.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_rate_limited::greynoise.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_with_api_key::greynoise.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_with_api_key::greynoise.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_otx.py::TestOTXAdapter::test_missing_api_key::otx.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_otx.py::TestOTXAdapter::test_missing_api_key::otx.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_otx.py::TestOTXAdapter::test_rate_limited::otx.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_otx.py::TestOTXAdapter::test_rate_limited::otx.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_url_search::urlhaus.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_url_search::urlhaus.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_host_search::urlhaus.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_host_search::urlhaus.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[invalid-host.example-invalid_host]::urlhaus.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[invalid-host.example-invalid_host]::urlhaus.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[https://example.com/not-malware-invalid_url]::urlhaus.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[https://example.com/not-malware-invalid_url]::urlhaus.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[0123456789abcdef0123456789abcdef-invalid_md5]::urlhaus.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[0123456789abcdef0123456789abcdef-invalid_md5]::urlhaus.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[example.com-invalid_url]::urlhaus.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[example.com-invalid_url]::urlhaus.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[https://example.com/not-malware-invalid_host]::urlhaus.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[https://example.com/not-malware-invalid_host]::urlhaus.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[0123456789abcdef0123456789abcdef-invalid_host]::urlhaus.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[0123456789abcdef0123456789abcdef-invalid_host]::urlhaus.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[https://clean.example.com/not-malware]::urlhaus.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[https://clean.example.com/not-malware]::urlhaus.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[clean.example.com]::urlhaus.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[clean.example.com]::urlhaus.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[0123456789abcdef0123456789abcdef]::urlhaus.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[0123456789abcdef0123456789abcdef]::urlhaus.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_missing_auth_is_unavailable_without_http_dispatch::urlhaus.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_missing_auth_is_unavailable_without_http_dispatch::urlhaus.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_rate_limited::urlhaus.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_rate_limited::urlhaus.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_request_is_error::urlhaus.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_request_is_error::urlhaus.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_auth_or_provider_block_is_classified[401]::urlhaus.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_auth_or_provider_block_is_classified[401]::urlhaus.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_auth_or_provider_block_is_classified[403]::urlhaus.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_auth_or_provider_block_is_classified[403]::urlhaus.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_malformed_json_is_error::urlhaus.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_malformed_json_is_error::urlhaus.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload0]::urlhaus.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload0]::urlhaus.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload1]::urlhaus.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload1]::urlhaus.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload2]::urlhaus.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload2]::urlhaus.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_unsupported_input_is_error_without_dispatch::urlhaus.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_unsupported_input_is_error_without_dispatch::urlhaus.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_auth_key_is_forwarded_as_header::urlhaus.search::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_auth_key_is_forwarded_as_header::urlhaus.search::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_search_returns_reputation::abuseipdb._parse_ip::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_search_returns_reputation::abuseipdb._parse_ip::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_ip_lookup::greynoise._parse_ip::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_ip_lookup::greynoise._parse_ip::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_mismatched_ip_response_is_error::greynoise._parse_ip::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_mismatched_ip_response_is_error::greynoise._parse_ip::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_malformed_response_shape_is_error::greynoise._parse_ip::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_malformed_response_shape_is_error::greynoise._parse_ip::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_with_api_key::greynoise._parse_ip::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_greynoise.py::TestGreyNoiseAdapter::test_with_api_key::greynoise._parse_ip::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_url_search::urlhaus._parse_single_url::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_url_search::urlhaus._parse_single_url::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_url_search::urlhaus._parse_response::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_url_search::urlhaus._parse_response::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_host_search::urlhaus._parse_single_url::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_host_search::urlhaus._parse_single_url::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_host_search::urlhaus._parse_response::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_host_search::urlhaus._parse_response::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[invalid-host.example-invalid_host]::urlhaus._parse_response::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[invalid-host.example-invalid_host]::urlhaus._parse_response::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[https://example.com/not-malware-invalid_url]::urlhaus._parse_response::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[https://example.com/not-malware-invalid_url]::urlhaus._parse_response::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[0123456789abcdef0123456789abcdef-invalid_md5]::urlhaus._parse_response::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[0123456789abcdef0123456789abcdef-invalid_md5]::urlhaus._parse_response::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[example.com-invalid_url]::urlhaus._parse_response::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[example.com-invalid_url]::urlhaus._parse_response::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[https://example.com/not-malware-invalid_host]::urlhaus._parse_response::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[https://example.com/not-malware-invalid_host]::urlhaus._parse_response::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[0123456789abcdef0123456789abcdef-invalid_host]::urlhaus._parse_response::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[0123456789abcdef0123456789abcdef-invalid_host]::urlhaus._parse_response::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[https://clean.example.com/not-malware]::urlhaus._parse_response::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[https://clean.example.com/not-malware]::urlhaus._parse_response::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[clean.example.com]::urlhaus._parse_response::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[clean.example.com]::urlhaus._parse_response::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[0123456789abcdef0123456789abcdef]::urlhaus._parse_response::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[0123456789abcdef0123456789abcdef]::urlhaus._parse_response::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload0]::urlhaus._parse_response::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload0]::urlhaus._parse_response::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload1]::urlhaus._parse_response::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload1]::urlhaus._parse_response::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload2]::urlhaus._parse_response::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload2]::urlhaus._parse_response::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_auth_key_is_forwarded_as_header::urlhaus._parse_single_url::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_auth_key_is_forwarded_as_header::urlhaus._parse_single_url::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_auth_key_is_forwarded_as_header::urlhaus._parse_response::0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "baseline58:tests/test_urlhaus.py::TestURLhausAdapter::test_auth_key_is_forwarded_as_header::urlhaus._parse_response::0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/full-success",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/full-success",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/missing-key",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/missing-key",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/space-key",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/space-key",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/http-201",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/http-201",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/http-204",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/http-204",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/http-301",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/http-301",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/http-400",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/http-400",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/http-401",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/http-401",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/http-403",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/http-403",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/http-404",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/http-404",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/http-408",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/http-408",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/http-429",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/http-429",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/http-500",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/http-500",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/http-503",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/http-503",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/shape-empty-object",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/shape-empty-object",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/shape-empty-array",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/shape-empty-array",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/shape-null",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/shape-null",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/shape-number",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/shape-number",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/shape-text",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/shape-text",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/malformed-json",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/malformed-json",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/network-timeout",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/network-timeout",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/timeout-0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/timeout-0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/timeout--1",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/timeout--1",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/timeout-True",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/timeout-True",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/timeout-invalid",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/timeout-invalid",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/full-success",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/full-success",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/missing-key",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/missing-key",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/space-key",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/space-key",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/http-201",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/http-201",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/http-204",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/http-204",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/http-301",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/http-301",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/http-400",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/http-400",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/http-401",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/http-401",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/http-403",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/http-403",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/http-404",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/http-404",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/http-408",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/http-408",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/http-429",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/http-429",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/http-500",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/http-500",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/http-503",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/http-503",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/shape-empty-object",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/shape-empty-object",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/shape-empty-array",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/shape-empty-array",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/shape-null",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/shape-null",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/shape-number",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/shape-number",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/shape-text",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/shape-text",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/malformed-json",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/malformed-json",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/network-timeout",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/network-timeout",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/timeout-0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/timeout-0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/timeout--1",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/timeout--1",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/timeout-True",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/timeout-True",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/timeout-invalid",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/timeout-invalid",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/full-success",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/full-success",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/missing-key",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/missing-key",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/space-key",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/space-key",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/http-201",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/http-201",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/http-204",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/http-204",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/http-301",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/http-301",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/http-400",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/http-400",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/http-401",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/http-401",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/http-403",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/http-403",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/http-404",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/http-404",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/http-408",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/http-408",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/http-429",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/http-429",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/http-500",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/http-500",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/http-503",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/http-503",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/shape-empty-object",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/shape-empty-object",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/shape-empty-array",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/shape-empty-array",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/shape-null",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/shape-null",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/shape-number",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/shape-number",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/shape-text",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/shape-text",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/malformed-json",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/malformed-json",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/network-timeout",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/network-timeout",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/timeout-0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/timeout-0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/timeout--1",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/timeout--1",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/timeout-True",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/timeout-True",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/timeout-invalid",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/timeout-invalid",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/full-success",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/full-success",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/missing-key",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/missing-key",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/space-key",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/space-key",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/http-201",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/http-201",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/http-204",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/http-204",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/http-301",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/http-301",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/http-400",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/http-400",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/http-401",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/http-401",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/http-403",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/http-403",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/http-404",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/http-404",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/http-408",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/http-408",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/http-429",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/http-429",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/http-500",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/http-500",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/http-503",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/http-503",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/shape-empty-object",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/shape-empty-object",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/shape-empty-array",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/shape-empty-array",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/shape-null",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/shape-null",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/shape-number",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/shape-number",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/shape-text",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/shape-text",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/malformed-json",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/malformed-json",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/network-timeout",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/network-timeout",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/timeout-0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/timeout-0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/timeout--1",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/timeout--1",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/timeout-True",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/timeout-True",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/timeout-invalid",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/timeout-invalid",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/query-embedded",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/query-embedded",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/query-word-before",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/query-word-before",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/query-word-after",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/query-word-after",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/query-invalid-octets",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/query-invalid-octets",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/query-unicode-digits",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/query-unicode-digits",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/query-underscore-boundary",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/query-underscore-boundary",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/query-accent-boundary",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/query-accent-boundary",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/query-punctuation-boundary",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/query-punctuation-boundary",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/query-no-ioc",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/query-no-ioc",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/query-empty",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/query-empty",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/query-whitespace",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/query-whitespace",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/query-embedded",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/query-embedded",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/query-word-before",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/query-word-before",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/query-word-after",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/query-word-after",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/query-invalid-octets",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/query-invalid-octets",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/query-unicode-digits",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/query-unicode-digits",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/query-underscore-boundary",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/query-underscore-boundary",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/query-accent-boundary",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/query-accent-boundary",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/query-punctuation-boundary",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/query-punctuation-boundary",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/query-no-ioc",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/query-no-ioc",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/query-empty",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/query-empty",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/query-whitespace",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/query-whitespace",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/query-embedded",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/query-embedded",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/query-word-before",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/query-word-before",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/query-word-after",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/query-word-after",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/query-invalid-octets",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/query-invalid-octets",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/query-unicode-digits",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/query-unicode-digits",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/query-underscore-boundary",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/query-underscore-boundary",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/query-accent-boundary",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/query-accent-boundary",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/query-punctuation-boundary",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/query-punctuation-boundary",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/query-no-ioc",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/query-no-ioc",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/query-empty",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/query-empty",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/query-whitespace",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/query-whitespace",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/confidence-string",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/confidence-string",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/confidence-bool",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/confidence-bool",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/confidence-null",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/confidence-null",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/confidence-dict",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/confidence-dict",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/country-number",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/country-number",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/reports-wrong",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/reports-wrong",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/categories-null",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/categories-null",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/last-list",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/last-list",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/categories-full-str-sort-dedup",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/categories-full-str-sort-dedup",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/tags-0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/tags-0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/tags-1",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/tags-1",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/tags-2",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/tags-2",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/tags-3",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/tags-3",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/tags-4",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/tags-4",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/classification-0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/classification-0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/classification-1",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/classification-1",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/classification-2",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/classification-2",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/classification-3",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/classification-3",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/noise-0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/noise-0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/noise-1",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/noise-1",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/noise-2",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/noise-2",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/noise-3",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/noise-3",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/last_seen-0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/last_seen-0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/last_seen-1",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/last_seen-1",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/last_seen-2",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/last_seen-2",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/link-0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/link-0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/link-1",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/link-1",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/link-2",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/link-2",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/routing-hash32",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/routing-hash32",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/routing-hash40",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/routing-hash40",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/routing-hash64",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/routing-hash64",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/routing-mixed-ip-hash",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/routing-mixed-ip-hash",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/routing-mixed-hash-cve",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/routing-mixed-hash-cve",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/routing-cve",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/routing-cve",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/routing-cve-unicode",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/routing-cve-unicode",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/routing-hash-word-boundary",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/routing-hash-word-boundary",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/routing-pulses",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/routing-pulses",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/routing-domain",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/routing-domain",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/pulse-max-0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/pulse-max-0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/pulse-max-1",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/pulse-max-1",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/pulse-max--1",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/pulse-max--1",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/pulse-max-True",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/pulse-max-True",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/pulse-max-False",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/pulse-max-False",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/pulse-max-2",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/pulse-max-2",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/pulse-max-1.5",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/pulse-max-1.5",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/indicator-base_score-0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/indicator-base_score-0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/indicator-base_score-1",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/indicator-base_score-1",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/indicator-base_score-2",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/indicator-base_score-2",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/indicator-base_score-3",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/indicator-base_score-3",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/indicator-base_score-4",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/indicator-base_score-4",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/indicator-tags-0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/indicator-tags-0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/indicator-tags-1",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/indicator-tags-1",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/indicator-tags-2",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/indicator-tags-2",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/indicator-tags-3",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/indicator-tags-3",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/indicator-pulse_info-0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/indicator-pulse_info-0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/indicator-pulse_info-1",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/indicator-pulse_info-1",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/indicator-pulse_info-2",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/indicator-pulse_info-2",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/indicator-country_code-0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/indicator-country_code-0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/indicator-asn-0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/indicator-asn-0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/pulse-description-0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/pulse-description-0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/pulse-description-1",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/pulse-description-1",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/pulse-description-2",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/pulse-description-2",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/pulse-description-3",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/pulse-description-3",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/pulse-created-0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/pulse-created-0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/pulse-created-1",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/pulse-created-1",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/pulse-created-2",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/pulse-created-2",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/pulse-created-3",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/pulse-created-3",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/pulse-name-0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/pulse-name-0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/pulse-name-1",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/pulse-name-1",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/pulse-tags-0",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/pulse-tags-0",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/pulse-tags-1",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/pulse-tags-1",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/pulse-tags-2",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/pulse-tags-2",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/routing-url",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/routing-url",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/routing-md5",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/routing-md5",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/routing-md5-padding",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/routing-md5-padding",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/routing-ipv4",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/routing-ipv4",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/routing-ipv4-leading-space",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/routing-ipv4-leading-space",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/routing-hostname",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/routing-hostname",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/routing-empty",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/routing-empty",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/routing-invalid",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/routing-invalid",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/routing-sha256-not-md5",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/routing-sha256-not-md5",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/routing-url-over-hash",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/routing-url-over-hash",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/routing-url-unicode-space",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/routing-url-unicode-space",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/query-status-no_results",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/query-status-no_results",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/query-status-invalid_host",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/query-status-invalid_host",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/query-status-invalid_url",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/query-status-invalid_url",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/query-status-invalid_md5",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/query-status-invalid_md5",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/query-status-invalid_sha256",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/query-status-invalid_sha256",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/query-status-provider_error",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/query-status-provider_error",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/query-status-",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/query-status-",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/query-status-None",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/query-status-None",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/query-status-7",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/query-status-7",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/urls-empty",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/urls-empty",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/urls-null",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/urls-null",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/urls-text",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/urls-text",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/urls-bad-first",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/urls-bad-first",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/urls-bad-after-ten",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/urls-bad-after-ten",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/urls-eleven-good",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/urls-eleven-good",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/missing-id",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/missing-id",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/id-null",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/id-null",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/url-id-precedence",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/url-id-precedence",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/empty-url-host",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/empty-url-host",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/host-empty",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/host-empty",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/url-no-slashes",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/url-no-slashes",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/url-number",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/url-number",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/tags-text",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/tags-text",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/tags-late-wrong",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/tags-late-wrong",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/firstseen-list",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/firstseen-list",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/firstseen-number",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/firstseen-number",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/admission-denied-missing-key",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/admission-denied-missing-key",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/abuseipdb/admission-denied-key",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/abuseipdb/admission-denied-key",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/admission-denied-missing-key",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/admission-denied-missing-key",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/greynoise/admission-denied-key",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/greynoise/admission-denied-key",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/admission-denied-missing-key",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/admission-denied-missing-key",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/otx/admission-denied-key",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/otx/admission-denied-key",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/admission-denied-missing-key",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/admission-denied-missing-key",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:boundary250:a11-boundary/urlhaus/admission-denied-key",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "boundary250:a11-boundary/urlhaus/admission-denied-key",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:supplement3:a11-supplement/urlhaus/long-s-lower",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "supplement3:a11-supplement/urlhaus/long-s-lower",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:supplement3:a11-supplement/urlhaus/long-s-upper",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "supplement3:a11-supplement/urlhaus/long-s-upper",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:supplement3:a11-supplement/urlhaus/ascii-control",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "supplement3:a11-supplement/urlhaus/ascii-control",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:representation10:a11-representation/abuseipdb/score-nan",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "representation10:a11-representation/abuseipdb/score-nan",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:representation10:a11-representation/abuseipdb/score-positive-infinity",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "representation10:a11-representation/abuseipdb/score-positive-infinity",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:representation10:a11-representation/abuseipdb/score-negative-infinity",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "representation10:a11-representation/abuseipdb/score-negative-infinity",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:representation10:a11-representation/otx/score-nan",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "representation10:a11-representation/otx/score-nan",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:representation10:a11-representation/otx/score-positive-infinity",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "representation10:a11-representation/otx/score-positive-infinity",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:representation10:a11-representation/otx/score-negative-infinity",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "representation10:a11-representation/otx/score-negative-infinity",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:representation10:a11-representation/abuseipdb/public-surrogate",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "representation10:a11-representation/abuseipdb/public-surrogate",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:representation10:a11-representation/greynoise/public-surrogate",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "representation10:a11-representation/greynoise/public-surrogate",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:representation10:a11-representation/otx/public-surrogate",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "representation10:a11-representation/otx/public-surrogate",
+          "kind": "complete-original-source-observation"
+        },
+        {
+          "id": "A11_OBSERVATION_COMPLETE:representation10:a11-representation/urlhaus/public-surrogate",
+          "prefix": "A11_OBSERVATION_COMPLETE",
+          "value": "representation10:a11-representation/urlhaus/public-surrogate",
+          "kind": "complete-original-source-observation"
+        }
+      ]
+    },
+    {
+      "package": "ssx-infra",
+      "target": "a11_factories",
+      "name": "guards_refuse_public_proxy_and_ca_before_registration",
+      "cases": [
+        {
+          "id": "A11_FACTORY_COMPLETE:endpoint-proxy-ca-refusal",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "endpoint-proxy-ca-refusal",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        }
+      ]
+    },
+    {
+      "package": "ssx-infra",
+      "target": "a11_factories",
+      "name": "four_f06_factories_preserve_full_original_outputs_and_actual_wire_headers",
+      "cases": [
+        {
+          "id": "A11_FACTORY_COMPLETE:real-wire:abuseipdb:full-success",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "real-wire:abuseipdb:full-success",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:real-wire:greynoise:full-success",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "real-wire:greynoise:full-success",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:real-wire:otx:full-success",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "real-wire:otx:full-success",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:real-wire:urlhaus:full-success",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "real-wire:urlhaus:full-success",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:real-wire:greynoise:missing-key",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "real-wire:greynoise:missing-key",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:real-wire:otx:routing-hash32",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "real-wire:otx:routing-hash32",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:real-wire:otx:routing-cve",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "real-wire:otx:routing-cve",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:real-wire:otx:routing-pulses",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "real-wire:otx:routing-pulses",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:real-wire:urlhaus:routing-url",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "real-wire:urlhaus:routing-url",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:real-wire:urlhaus:routing-md5",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "real-wire:urlhaus:routing-md5",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:real-wire:urlhaus:long-s-lower",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "real-wire:urlhaus:long-s-lower",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:real-wire:urlhaus:long-s-upper",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "real-wire:urlhaus:long-s-upper",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:real-wire:urlhaus:ascii-control",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "real-wire:urlhaus:ascii-control",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_PRIVATE_CHILD_COMPLETE:four_f06_factories_preserve_full_original_outputs_and_actual_wire_headers",
+          "prefix": "A11_PRIVATE_CHILD_COMPLETE",
+          "value": "four_f06_factories_preserve_full_original_outputs_and_actual_wire_headers",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        }
+      ]
+    },
+    {
+      "package": "ssx-infra",
+      "target": "a11_factories",
+      "name": "four_missing_credentials_and_admission_order_have_zero_http",
+      "cases": [
+        {
+          "id": "A11_FACTORY_COMPLETE:no-key-admission:abuseipdb:allow",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "no-key-admission:abuseipdb:allow",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:no-key-admission:abuseipdb:deny",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "no-key-admission:abuseipdb:deny",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:no-key-admission:abuseipdb:unavailable",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "no-key-admission:abuseipdb:unavailable",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:no-key-admission:abuseipdb:pending",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "no-key-admission:abuseipdb:pending",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:no-key-admission:greynoise:deny",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "no-key-admission:greynoise:deny",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:no-key-admission:greynoise:unavailable",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "no-key-admission:greynoise:unavailable",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:no-key-admission:greynoise:pending",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "no-key-admission:greynoise:pending",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:no-key-admission:otx:allow",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "no-key-admission:otx:allow",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:no-key-admission:otx:deny",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "no-key-admission:otx:deny",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:no-key-admission:otx:unavailable",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "no-key-admission:otx:unavailable",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:no-key-admission:otx:pending",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "no-key-admission:otx:pending",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:no-key-admission:urlhaus:allow",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "no-key-admission:urlhaus:allow",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:no-key-admission:urlhaus:deny",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "no-key-admission:urlhaus:deny",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:no-key-admission:urlhaus:unavailable",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "no-key-admission:urlhaus:unavailable",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:no-key-admission:urlhaus:pending",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "no-key-admission:urlhaus:pending",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_PRIVATE_CHILD_COMPLETE:four_missing_credentials_and_admission_order_have_zero_http",
+          "prefix": "A11_PRIVATE_CHILD_COMPLETE",
+          "value": "four_missing_credentials_and_admission_order_have_zero_http",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        }
+      ]
+    },
+    {
+      "package": "ssx-infra",
+      "target": "a11_factories",
+      "name": "four_cancellation_shutdown_and_real_deadline_join_pending_sockets",
+      "cases": [
+        {
+          "id": "A11_FACTORY_COMPLETE:owned-socket:abuseipdb:drop",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "owned-socket:abuseipdb:drop",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:owned-socket:abuseipdb:shutdown",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "owned-socket:abuseipdb:shutdown",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:owned-socket:abuseipdb:deadline",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "owned-socket:abuseipdb:deadline",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:owned-socket:greynoise:drop",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "owned-socket:greynoise:drop",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:owned-socket:greynoise:shutdown",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "owned-socket:greynoise:shutdown",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:owned-socket:greynoise:deadline",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "owned-socket:greynoise:deadline",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:owned-socket:otx:drop",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "owned-socket:otx:drop",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:owned-socket:otx:shutdown",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "owned-socket:otx:shutdown",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:owned-socket:otx:deadline",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "owned-socket:otx:deadline",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:owned-socket:urlhaus:drop",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "owned-socket:urlhaus:drop",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:owned-socket:urlhaus:shutdown",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "owned-socket:urlhaus:shutdown",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:owned-socket:urlhaus:deadline",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "owned-socket:urlhaus:deadline",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_PRIVATE_CHILD_COMPLETE:four_cancellation_shutdown_and_real_deadline_join_pending_sockets",
+          "prefix": "A11_PRIVATE_CHILD_COMPLETE",
+          "value": "four_cancellation_shutdown_and_real_deadline_join_pending_sockets",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        }
+      ]
+    },
+    {
+      "package": "ssx-infra",
+      "target": "a11_factories",
+      "name": "four_nonpositive_and_expired_deadlines_dispatch_nothing",
+      "cases": [
+        {
+          "id": "A11_FACTORY_COMPLETE:deadline-no-dispatch:abuseipdb:0",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "deadline-no-dispatch:abuseipdb:0",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:deadline-no-dispatch:abuseipdb:-1",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "deadline-no-dispatch:abuseipdb:-1",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:expired-no-dispatch:abuseipdb",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "expired-no-dispatch:abuseipdb",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:deadline-no-dispatch:greynoise:0",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "deadline-no-dispatch:greynoise:0",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:deadline-no-dispatch:greynoise:-1",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "deadline-no-dispatch:greynoise:-1",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:expired-no-dispatch:greynoise",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "expired-no-dispatch:greynoise",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:deadline-no-dispatch:otx:0",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "deadline-no-dispatch:otx:0",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:deadline-no-dispatch:otx:-1",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "deadline-no-dispatch:otx:-1",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:expired-no-dispatch:otx",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "expired-no-dispatch:otx",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:deadline-no-dispatch:urlhaus:0",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "deadline-no-dispatch:urlhaus:0",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:deadline-no-dispatch:urlhaus:-1",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "deadline-no-dispatch:urlhaus:-1",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:expired-no-dispatch:urlhaus",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "expired-no-dispatch:urlhaus",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        },
+        {
+          "id": "A11_PRIVATE_CHILD_COMPLETE:four_nonpositive_and_expired_deadlines_dispatch_nothing",
+          "prefix": "A11_PRIVATE_CHILD_COMPLETE",
+          "value": "four_nonpositive_and_expired_deadlines_dispatch_nothing",
+          "kind": "actual-private-factory-wire-and-lifecycle"
+        }
+      ]
+    },
+    {
+      "package": "ssx-infra",
+      "target": "a11_factories",
+      "name": "actual_registration_source_metadata_and_secret_debug_contracts",
+      "cases": [
+        {
+          "id": "A11_SOURCE_TEST_COMPLETE:tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_adapter_registered",
+          "prefix": "A11_SOURCE_TEST_COMPLETE",
+          "value": "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_adapter_registered",
+          "kind": "actual-source-factory-metadata"
+        },
+        {
+          "id": "A11_SOURCE_TEST_COMPLETE:tests/test_greynoise.py::TestGreyNoiseAdapter::test_adapter_registered",
+          "prefix": "A11_SOURCE_TEST_COMPLETE",
+          "value": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_adapter_registered",
+          "kind": "actual-source-factory-metadata"
+        },
+        {
+          "id": "A11_SOURCE_TEST_COMPLETE:tests/test_otx.py::TestOTXAdapter::test_adapter_registered",
+          "prefix": "A11_SOURCE_TEST_COMPLETE",
+          "value": "tests/test_otx.py::TestOTXAdapter::test_adapter_registered",
+          "kind": "actual-source-factory-metadata"
+        },
+        {
+          "id": "A11_SOURCE_TEST_COMPLETE:tests/test_urlhaus.py::TestURLhausAdapter::test_adapter_registered",
+          "prefix": "A11_SOURCE_TEST_COMPLETE",
+          "value": "tests/test_urlhaus.py::TestURLhausAdapter::test_adapter_registered",
+          "kind": "actual-source-factory-metadata"
+        },
+        {
+          "id": "A11_SOURCE_TEST_COMPLETE:tests/test_greynoise.py::TestGreyNoiseAdapter::test_adapter_categories",
+          "prefix": "A11_SOURCE_TEST_COMPLETE",
+          "value": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_adapter_categories",
+          "kind": "actual-source-factory-metadata"
+        },
+        {
+          "id": "A11_SOURCE_TEST_COMPLETE:tests/test_urlhaus.py::TestURLhausAdapter::test_adapter_categories",
+          "prefix": "A11_SOURCE_TEST_COMPLETE",
+          "value": "tests/test_urlhaus.py::TestURLhausAdapter::test_adapter_categories",
+          "kind": "actual-source-factory-metadata"
+        },
+        {
+          "id": "A11_FACTORY_COMPLETE:config-secret-debug-redacted",
+          "prefix": "A11_FACTORY_COMPLETE",
+          "value": "config-secret-debug-redacted",
+          "kind": "actual-source-factory-metadata"
+        },
+        {
+          "id": "A11_PRIVATE_CHILD_COMPLETE:actual_registration_source_metadata_and_secret_debug_contracts",
+          "prefix": "A11_PRIVATE_CHILD_COMPLETE",
+          "value": "actual_registration_source_metadata_and_secret_debug_contracts",
+          "kind": "actual-source-factory-metadata"
+        }
+      ]
+    },
+    {
+      "package": "ssx-infra",
+      "target": "a11_factories",
+      "name": "f06_rejects_original_raw_yaml_maxima_before_a11_factory_construction",
+      "cases": [
+        {
+          "id": "A11_CONFIG_COMPLETE:original-yaml-rejected-before-factory:a11-config/otx/max-none",
+          "prefix": "A11_CONFIG_COMPLETE",
+          "value": "original-yaml-rejected-before-factory:a11-config/otx/max-none",
+          "kind": "accepted-F06-entry-validation-difference"
+        },
+        {
+          "id": "A11_CONFIG_COMPLETE:original-yaml-rejected-before-factory:a11-config/otx/max-list",
+          "prefix": "A11_CONFIG_COMPLETE",
+          "value": "original-yaml-rejected-before-factory:a11-config/otx/max-list",
+          "kind": "accepted-F06-entry-validation-difference"
+        },
+        {
+          "id": "A11_CONFIG_COMPLETE:original-yaml-rejected-before-factory:a11-config/otx/max-dict",
+          "prefix": "A11_CONFIG_COMPLETE",
+          "value": "original-yaml-rejected-before-factory:a11-config/otx/max-dict",
+          "kind": "accepted-F06-entry-validation-difference"
+        },
+        {
+          "id": "A11_CONFIG_COMPLETE:original-yaml-rejected-before-factory:a11-config/otx/max-huge-int",
+          "prefix": "A11_CONFIG_COMPLETE",
+          "value": "original-yaml-rejected-before-factory:a11-config/otx/max-huge-int",
+          "kind": "accepted-F06-entry-validation-difference"
+        }
+      ]
+    },
+    {
+      "package": "ssx-infra",
+      "target": "a11_factories",
+      "name": "four_f06_unicode_credentials_reject_before_http_with_full_source_refusal_bindings",
+      "cases": [
+        {
+          "id": "A11_CREDENTIAL_COMPLETE:a11-credential/abuseipdb/unicode-key-ascii-refusal",
+          "prefix": "A11_CREDENTIAL_COMPLETE",
+          "value": "a11-credential/abuseipdb/unicode-key-ascii-refusal",
+          "kind": "actual-F06-private-HTTP-source-credential-refusal"
+        },
+        {
+          "id": "A11_CREDENTIAL_COMPLETE:a11-credential/greynoise/unicode-key-ascii-refusal",
+          "prefix": "A11_CREDENTIAL_COMPLETE",
+          "value": "a11-credential/greynoise/unicode-key-ascii-refusal",
+          "kind": "actual-F06-private-HTTP-source-credential-refusal"
+        },
+        {
+          "id": "A11_CREDENTIAL_COMPLETE:a11-credential/otx/unicode-key-ascii-refusal",
+          "prefix": "A11_CREDENTIAL_COMPLETE",
+          "value": "a11-credential/otx/unicode-key-ascii-refusal",
+          "kind": "actual-F06-private-HTTP-source-credential-refusal"
+        },
+        {
+          "id": "A11_CREDENTIAL_COMPLETE:a11-credential/urlhaus/unicode-key-ascii-refusal",
+          "prefix": "A11_CREDENTIAL_COMPLETE",
+          "value": "a11-credential/urlhaus/unicode-key-ascii-refusal",
+          "kind": "actual-F06-private-HTTP-source-credential-refusal"
+        },
+        {
+          "id": "A11_PRIVATE_CHILD_COMPLETE:four_f06_unicode_credentials_reject_before_http_with_full_source_refusal_bindings",
+          "prefix": "A11_PRIVATE_CHILD_COMPLETE",
+          "value": "four_f06_unicode_credentials_reject_before_http_with_full_source_refusal_bindings",
+          "kind": "joined-isolated-private-fixture"
+        }
+      ]
+    }
+  ],
+  "actual_cases_total": 419,
+  "limitations": [
+    "Original tagged nonfinite/lone-surrogate outputs are internal references; exact14 F05 whole-response refusals disclosed, no blanket normalization.",
+    "Four original YAML values are deliberately rejected by accepted F06 before A11 construction, not adapter-output/wire parity.",
+    "13 named actual private wire rows qualify their complete requests/outputs; injected248+13 representation/supplement header comparisons do not imply every source case was actual wire.",
+    "Factory seam is real Registry/SearchAdmission/F06/AdapterHttp; full production composition/auth/portal remains W09.",
+    "No provider/live/scientific/production probes or Python native runtime dependency; manual original captures are G08-retired reference data.",
+    "Per-operation charged source/input/projection bounds and actual entered cancellation/resource proofs; no global RSS/performance/throughput claim (G03).",
+    "Four supported F06 Unicode credential strings reproduce source ASCII failure before transport; constant native diagnostic preserves secret redaction; no global config/header policy change."
+  ],
+  "credential_header_profile": {
+    "path": "docs/rust-rewrite/a11/source-credential-ascii-v1.json",
+    "inputs": "docs/rust-rewrite/a11/credential-ascii-inputs-v1.json",
+    "bindings": "docs/rust-rewrite/a11/credential-refusal-bindings-v1.json",
+    "records": 4,
+    "scope": "Exact source ASCII header rejection for supported F06 Unicode key; all4native0HTTP/fullError, safe constant diagnostic only"
+  }
+}

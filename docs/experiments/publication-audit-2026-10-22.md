@@ -1,0 +1,31 @@
+# Initial publication coverage inventory — #995
+
+Cycle START2026-10-22T12:59:10Z; baseline `652315253a933f7222acb94f480284991c2125f7`, freshly fetched origin/main. This is the read-only initial inventory permitted by [#995](https://github.com/magnus919/SlopSearX/issues/995), not a frozen complete-catalog matrix, mutation experiment or implemented checker. No observed detection/miss is claimed: tests were inspected, not run today. Source digests are in [the evidence packet](evidence/publication-audit-2026-10-22/source-identities.json).
+
+## Fault-to-existing-test inventory
+
+All named tests below are in `crates/ssx-mcp/tests/qualification.rs`. The baseline descriptor observation is `fixtures/python-sse.json`; it is an independent historical Python capture, not proof of today's complete native workflow catalog. Source inspection identifies intended assertions; a successful served-wire replay is still needed for observed detection.
+
+| Published surface / consequential fault | Authority and independent observation | Existing test / assertion | Observed detection or miss today |
+| --- | --- | --- | --- |
+| Tool nested type/default/nullability drift | Captured tool descriptor versus disposable modified descriptor | `descriptor_comparison_rejects_nested_schema_defaults_nullable_and_metadata_mutation`: nested item type, note default and anyOf branch mutations must fail | Unmeasured; already-covered candidate class, not new coverage |
+| Tool description, tags or output schema drift | Same captured descriptor versus modified field/removal | Same test: description, tags, outputSchema/type and removed metadata rejected | Unmeasured; cannot count as incremental value |
+| Advertised contract disagrees with actual echo call | Historical captured tool/result versus real subprocess/HTTP SDK client observation | `real_stdio_subprocess_preserves_complete_contract_and_clean_shutdown` and `real_streamable_http_bearer_and_stateless_contract` invoke shared `verify`: tools/resources/prompts and call/read/get results compared; unknown tool and malformed input rejected | Unmeasured; synthetic application state limits task-benefit claim |
+| Complete captured catalog lost by SDK/HTTP | Captured38 public tools versus gateway catalog served from injected descriptors | `complete_captured_public_catalog_roundtrips_through_pinned_sdk_and_http`:38 count and all three descriptor groups compared | Unmeasured; roundtrip of injected capture is not independent current native registry completeness |
+| Pagination or discovery bound loses entries | Existing gateway collector and real remote test transports | `discovery_limits_are_fail_closed_and_empty_cursor_is_valid`, `real_http_discovery_limits_and_startup_deadlines_leave_no_ready_gateway`, `selected_raw_gateway_real_discovery_limits_and_deadline_fail_closed` | Unmeasured; new checker must not repackage existing transport tests |
+| Schema extension/ref metadata damaged | Deliberately extended descriptor versus pinned SDK roundtrip | `unknown_schema_metadata_objects_and_refs_are_preserved_without_numeric_reinterpretation` | Unmeasured; unchanged/additive control must remain accepted |
+| Operator/agent reference docs or released artifact disagrees with current served tool | `docs/MCP_SERVER.md` and eventual release artifact versus accepted native registry plus independent wire observations | No baseline detection/miss established by this limited inventory; do not infer absence from a filename search | Open audit row, not a demonstrated gap |
+
+## Readiness and next decisive step
+
+Live #915 (complete workflow MCP registry parity), #940 (acquisition/replay) and #941 (receipt/verification) remain open. Their acceptance must be established by exact merged source, commands and wire/verification evidence, not issue status alone. This inventory does not declare their handoffs absent solely because the issues are open; it has not verified an accepted complete-catalog manifest. `docs/rust-rewrite/ISSUES.md` records #915's transport/workflow dependencies. Source-backed T01 comparisons already cover the tempting schema/default/metadata fault classes.
+
+Before any checker implementation: obtain the accepted #915 capability-to-transport manifest, enumerate actual release/reference artifacts, and independently reproduce at least one consequential publication disagreement while the existing gates pass. Freeze that fault and approved additive controls, baseline commands, primary count, useful effect, runtime overhead guardrail and stopping plan in a registration commit. If no such missed gap exists, close #995 as not-needed with a completed matrix. This partial audit neither closes #995 nor supports a new checker.
+
+## Daily selection and delivery accounting
+
+Prioritize #1034's expired-client startup correction when ready. Today its head is unchanged `3f1b9ccadb2a1f5ec072c64a2cd1dcd53d3b8dc8`, with the same failed ARM job118313385925. Its existing correction worktree retains dirty DuckDuckGo/bootstrap changes; it was preserved. No blind rerun, duplicate implementation or repeated log download. #1035 qualification prerequisite and #1014 warning correction are already merged. Third-party #1037 is outside the magnus919 standing auto-merge rule and does not supply measured benefit in its body.
+
+Latest seven completed numbered experiments reviewed: EXP123/122/121 delivered finite initialization/lifecycle/schema corrections;120 had incomplete guards and was superseded;119 metadata routing not supported;118 evaluation prerequisite only;117 did not establish uplift. Given repeated prerequisite/closeout cycles, improving selection means demanding an actual independent publication gap, not adding another redundant schema comparator. The evidence-budget and journey-cost studies retain their named handoffs; no invented trial fills today's slot.
+
+Outcome: initial audit delivered, product improvement not established. No candidate code, new runtime checks, tests, builds, CI triggers or provider calls. No production changes. Subscription/billing usage unknown. Documentation-only persistence uses signed skip-CI commit; deployment status remains unknown. Root unrelated work preserved. Storage owner, measurements and checkout cleanup recorded under `/Volumes/tank01/magnus/rust-builds/slopsearx/storage-ledger/daily-20261022.md`.

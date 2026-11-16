@@ -1,0 +1,33 @@
+{
+  "schema": "W08_READER_PAGE_SOURCE_ADMISSION_V1",
+  "parent": "8c12d02ae5e7741410e41de4795a235700fc71c2",
+  "caller": {
+    "path": "crates/xtask/src/w08/source_successor.rs",
+    "expected_sha256": "3a8699c6449e05b6b94f64ff43643af15287ad2ae4d9b5319617d8f5c38f4069"
+  },
+  "rows": [
+    {
+      "current": {
+        "path": "crates/xtask/src/w08/source_successor.rs",
+        "sha256": "489dd9ffc753eff3e9d4207cbc17eb323fd424d7237df94a2c4ceac8c06e419f",
+        "bytes": 11264,
+        "mode": "0644",
+        "git_blob": "0436da61471d80e05e6df7b3b5732eb1dab5b77b"
+      },
+      "prior": {
+        "path": "crates/xtask/src/w08/source_successor.rs",
+        "sha256": "3a8699c6449e05b6b94f64ff43643af15287ad2ae4d9b5319617d8f5c38f4069",
+        "bytes": 10822,
+        "mode": "0644",
+        "git_blob": "55311d41bc85ac30dcf2fd0e9e941e4097132937"
+      },
+      "edits": [
+        {
+          "at": 7779,
+          "remove_utf8": "",
+          "insert_utf8": "        let raw = if frozen.path == \"docs/rust-rewrite/w07/qualification-completion-v1.json\"\n            && frozen.sha256 == \"5be08978822440ec7bece674b13647c6337eaa4636cc232a1622738a90ac1b64\"\n        {\n            super::snapshot_helper_amendment::w08_frozen_registry_operand(\n                root,\n                &frozen.path,\n                &frozen.sha256,\n                &raw,\n            )?\n        } else {\n            raw\n        };\n"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1386 @@
+{
+  "arithmetic_error_observation": {
+    "captured_by": "SavedSearchRunner.run_one with no-dispatch stub store; source slot conversion",
+    "created_at": -1.7976931348623157e+308,
+    "dispatch_calls": 0,
+    "error_type": "ValueError",
+    "message": "cannot convert float NaN to integer",
+    "now": 1.7976931348623157e+308
+  },
+  "baseline": "66b29c3f8437af45a4f0d28f7c54a0f0727f7fa5",
+  "claim_observations": [
+    {
+      "caller_now": 1700000000.123456,
+      "committed": {
+        "baseline": null,
+        "created_at": 1699999940.1235,
+        "deleted": false,
+        "engines": [
+          "brave"
+        ],
+        "expires_at": 1000000000000,
+        "interval_seconds": 60,
+        "last_slot": -1,
+        "latest_run_id": null,
+        "lease_expires_at": 1700000060.1235,
+        "lease_token": "fixture-token",
+        "max_reports": 20,
+        "max_results": 10,
+        "next_due": 1700000000.1235,
+        "paused": false,
+        "policy_fingerprint": "",
+        "query": "q",
+        "retention_seconds": 600,
+        "revision": 1,
+        "search_id": "saved-precision",
+        "tenant": "a:b"
+      },
+      "input": {
+        "baseline": null,
+        "created_at": 1699999940.123456,
+        "deleted": false,
+        "engines": [
+          "brave"
+        ],
+        "expires_at": 1000000000000.0,
+        "interval_seconds": 60,
+        "last_slot": -1,
+        "latest_run_id": null,
+        "lease_expires_at": 0,
+        "lease_token": null,
+        "max_reports": 20,
+        "max_results": 10,
+        "next_due": 1700000000.123456,
+        "paused": false,
+        "policy_fingerprint": "",
+        "query": "q",
+        "retention_seconds": 600,
+        "revision": 1,
+        "search_id": "saved-precision",
+        "tenant": "a:b"
+      },
+      "lease_seconds": 60,
+      "logical_expired_at_server": false,
+      "name": "fractional",
+      "run_id_after": "run-758b3890a7a40820eb2729a5",
+      "run_id_before": "run-3f241fbbaa3507850451a0c3"
+    },
+    {
+      "caller_now": 1700000000.123456,
+      "committed": {
+        "baseline": null,
+        "created_at": -59.999999987654,
+        "deleted": false,
+        "engines": [
+          "brave"
+        ],
+        "expires_at": 1000000000000,
+        "interval_seconds": 60,
+        "last_slot": -1,
+        "latest_run_id": null,
+        "lease_expires_at": 1700000060.1235,
+        "lease_token": "fixture-token",
+        "max_reports": 20,
+        "max_results": 10,
+        "next_due": 1.2345678901235e-08,
+        "paused": false,
+        "policy_fingerprint": "",
+        "query": "q",
+        "retention_seconds": 600,
+        "revision": 1,
+        "search_id": "saved-precision",
+        "tenant": "a:b"
+      },
+      "input": {
+        "baseline": null,
+        "created_at": -59.99999998765432,
+        "deleted": false,
+        "engines": [
+          "brave"
+        ],
+        "expires_at": 1000000000000.0,
+        "interval_seconds": 60,
+        "last_slot": -1,
+        "latest_run_id": null,
+        "lease_expires_at": 0,
+        "lease_token": null,
+        "max_reports": 20,
+        "max_results": 10,
+        "next_due": 1.234567890123456e-08,
+        "paused": false,
+        "policy_fingerprint": "",
+        "query": "q",
+        "retention_seconds": 600,
+        "revision": 1,
+        "search_id": "saved-precision",
+        "tenant": "a:b"
+      },
+      "lease_seconds": 60,
+      "logical_expired_at_server": false,
+      "name": "exponent",
+      "run_id_after": "run-8acfc7800f4620aa153f4d1c",
+      "run_id_before": "run-1a82d12ca4e703693ddf2b9a"
+    },
+    {
+      "caller_now": 1700000000.123456,
+      "committed": {
+        "baseline": null,
+        "created_at": -60,
+        "deleted": false,
+        "engines": [
+          "brave"
+        ],
+        "expires_at": 1000000000000,
+        "interval_seconds": 60,
+        "last_slot": -1,
+        "latest_run_id": null,
+        "lease_expires_at": 1700000060.1235,
+        "lease_token": "fixture-token",
+        "max_reports": 20,
+        "max_results": 10,
+        "next_due": 2.2250738585072e-308,
+        "paused": false,
+        "policy_fingerprint": "",
+        "query": "q",
+        "retention_seconds": 600,
+        "revision": 1,
+        "search_id": "saved-precision",
+        "tenant": "a:b"
+      },
+      "input": {
+        "baseline": null,
+        "created_at": -60.0,
+        "deleted": false,
+        "engines": [
+          "brave"
+        ],
+        "expires_at": 1000000000000.0,
+        "interval_seconds": 60,
+        "last_slot": -1,
+        "latest_run_id": null,
+        "lease_expires_at": 0,
+        "lease_token": null,
+        "max_reports": 20,
+        "max_results": 10,
+        "next_due": 2.2250738585072014e-308,
+        "paused": false,
+        "policy_fingerprint": "",
+        "query": "q",
+        "retention_seconds": 600,
+        "revision": 1,
+        "search_id": "saved-precision",
+        "tenant": "a:b"
+      },
+      "lease_seconds": 60,
+      "logical_expired_at_server": false,
+      "name": "minimum_normal",
+      "run_id_after": "run-09c45ba9e8124f0558c893d1",
+      "run_id_before": "run-e8458221c76d2b3937d05ee3"
+    },
+    {
+      "caller_now": 1700000000.123456,
+      "committed": {
+        "baseline": null,
+        "created_at": -60,
+        "deleted": false,
+        "engines": [
+          "brave"
+        ],
+        "expires_at": 1000000000000,
+        "interval_seconds": 60,
+        "last_slot": -1,
+        "latest_run_id": null,
+        "lease_expires_at": 1700000060.1235,
+        "lease_token": "fixture-token",
+        "max_reports": 20,
+        "max_results": 10,
+        "next_due": 5e-324,
+        "paused": false,
+        "policy_fingerprint": "",
+        "query": "q",
+        "retention_seconds": 600,
+        "revision": 1,
+        "search_id": "saved-precision",
+        "tenant": "a:b"
+      },
+      "input": {
+        "baseline": null,
+        "created_at": -60.0,
+        "deleted": false,
+        "engines": [
+          "brave"
+        ],
+        "expires_at": 1000000000000.0,
+        "interval_seconds": 60,
+        "last_slot": -1,
+        "latest_run_id": null,
+        "lease_expires_at": 0,
+        "lease_token": null,
+        "max_reports": 20,
+        "max_results": 10,
+        "next_due": 5e-324,
+        "paused": false,
+        "policy_fingerprint": "",
+        "query": "q",
+        "retention_seconds": 600,
+        "revision": 1,
+        "search_id": "saved-precision",
+        "tenant": "a:b"
+      },
+      "lease_seconds": 60,
+      "logical_expired_at_server": false,
+      "name": "minimum_subnormal",
+      "run_id_after": "run-71fbd61fbcdb602bdb324ce7",
+      "run_id_before": "run-71fbd61fbcdb602bdb324ce7"
+    },
+    {
+      "caller_now": 1700000000.123456,
+      "committed": {
+        "baseline": null,
+        "created_at": -1000000000000100.0,
+        "deleted": false,
+        "engines": [
+          "brave"
+        ],
+        "expires_at": 1000000000000,
+        "interval_seconds": 60,
+        "last_slot": -1,
+        "latest_run_id": null,
+        "lease_expires_at": 1700000060.1235,
+        "lease_token": "fixture-token",
+        "max_reports": 20,
+        "max_results": 10,
+        "next_due": -1000000000000000.0,
+        "paused": false,
+        "policy_fingerprint": "",
+        "query": "q",
+        "retention_seconds": 600,
+        "revision": 1,
+        "search_id": "saved-precision",
+        "tenant": "a:b"
+      },
+      "input": {
+        "baseline": null,
+        "created_at": -1000000000000060.0,
+        "deleted": false,
+        "engines": [
+          "brave"
+        ],
+        "expires_at": 1000000000000.0,
+        "interval_seconds": 60,
+        "last_slot": -1,
+        "latest_run_id": null,
+        "lease_expires_at": 0,
+        "lease_token": null,
+        "max_reports": 20,
+        "max_results": 10,
+        "next_due": -1000000000000000.0,
+        "paused": false,
+        "policy_fingerprint": "",
+        "query": "q",
+        "retention_seconds": 600,
+        "revision": 1,
+        "search_id": "saved-precision",
+        "tenant": "a:b"
+      },
+      "lease_seconds": 60,
+      "logical_expired_at_server": false,
+      "name": "large_negative",
+      "run_id_after": "run-03cef69bda397f685ed7a20c",
+      "run_id_before": "run-03cef69bda397f685ed7a20c"
+    },
+    {
+      "caller_now": 1000.0,
+      "committed": {
+        "baseline": null,
+        "created_at": 940,
+        "deleted": false,
+        "engines": [
+          "brave"
+        ],
+        "expires_at": 1600,
+        "interval_seconds": 60,
+        "last_slot": -1,
+        "latest_run_id": null,
+        "lease_expires_at": 1060,
+        "lease_token": "fixture-token",
+        "max_reports": 20,
+        "max_results": 10,
+        "next_due": 1000,
+        "paused": false,
+        "policy_fingerprint": "",
+        "query": "q",
+        "retention_seconds": 600,
+        "revision": 1,
+        "search_id": "saved-precision",
+        "tenant": "a:b"
+      },
+      "input": {
+        "baseline": null,
+        "created_at": 940.0,
+        "deleted": false,
+        "engines": [
+          "brave"
+        ],
+        "expires_at": 1600.0,
+        "interval_seconds": 60,
+        "last_slot": -1,
+        "latest_run_id": null,
+        "lease_expires_at": 0,
+        "lease_token": null,
+        "max_reports": 20,
+        "max_results": 10,
+        "next_due": 1000.0,
+        "paused": false,
+        "policy_fingerprint": "",
+        "query": "q",
+        "retention_seconds": 600,
+        "revision": 1,
+        "search_id": "saved-precision",
+        "tenant": "a:b"
+      },
+      "lease_seconds": 60,
+      "logical_expired_at_server": true,
+      "name": "stale_clock",
+      "run_id_after": "run-d2b515d033ca9daf66cf7ddd",
+      "run_id_before": "run-d2b515d033ca9daf66cf7ddd"
+    }
+  ],
+  "constants": {
+    "lease_seconds": 60,
+    "retention_margin": 300
+  },
+  "control_observations": [
+    {
+      "created": {
+        "artifact": {
+          "contract": "slopsearx.artifact_ref",
+          "id": "saved-control",
+          "kind": "saved_search",
+          "version": 1
+        },
+        "comparison": {
+          "absence_event": "not_observed_in_latest_run",
+          "absence_is_deletion": false,
+          "identity_version": "url-source-window-v1",
+          "window": "fixed_first_page"
+        },
+        "created_at": 1000.0,
+        "engines": [
+          "brave"
+        ],
+        "expires_at": 1600.0,
+        "interval_seconds": 60,
+        "latest_run_id": null,
+        "max_reports": 20,
+        "max_results": 100,
+        "next_due": 1060.0,
+        "paused": false,
+        "query": "q",
+        "retention_seconds": 600,
+        "revision": 1,
+        "search_id": "saved-control"
+      },
+      "final": {
+        "baseline": null,
+        "created_at": 1000.0,
+        "deleted": false,
+        "engines": [
+          "brave"
+        ],
+        "expires_at": 1600.0,
+        "interval_seconds": 60,
+        "last_slot": -1,
+        "latest_run_id": null,
+        "lease_expires_at": 0.0,
+        "lease_token": null,
+        "max_reports": 20,
+        "max_results": 100,
+        "next_due": 1060.0,
+        "paused": false,
+        "policy_fingerprint": "48966f53c1e6d7e848db9d605fc240943e7288a599bad7379c82efd1d281ee41",
+        "query": "q",
+        "retention_seconds": 600,
+        "revision": 3,
+        "search_id": "saved-control",
+        "tenant": "default"
+      },
+      "name": "revoked_engine_control",
+      "outcomes": [
+        {
+          "artifact": {
+            "contract": "slopsearx.artifact_ref",
+            "id": "saved-control",
+            "kind": "saved_search",
+            "version": 1
+          },
+          "comparison": {
+            "absence_event": "not_observed_in_latest_run",
+            "absence_is_deletion": false,
+            "identity_version": "url-source-window-v1",
+            "window": "fixed_first_page"
+          },
+          "created_at": 1000.0,
+          "engines": [
+            "brave"
+          ],
+          "expires_at": 1600.0,
+          "interval_seconds": 60,
+          "latest_run_id": null,
+          "max_reports": 20,
+          "max_results": 100,
+          "next_due": 1060.0,
+          "paused": true,
+          "query": "q",
+          "retention_seconds": 600,
+          "revision": 2,
+          "search_id": "saved-control"
+        },
+        {
+          "artifact": {
+            "contract": "slopsearx.artifact_ref",
+            "id": "saved-control",
+            "kind": "saved_search",
+            "version": 1
+          },
+          "comparison": {
+            "absence_event": "not_observed_in_latest_run",
+            "absence_is_deletion": false,
+            "identity_version": "url-source-window-v1",
+            "window": "fixed_first_page"
+          },
+          "created_at": 1000.0,
+          "engines": [
+            "brave"
+          ],
+          "expires_at": 1600.0,
+          "interval_seconds": 60,
+          "latest_run_id": null,
+          "max_reports": 20,
+          "max_results": 100,
+          "next_due": 1060.0,
+          "paused": false,
+          "query": "q",
+          "retention_seconds": 600,
+          "revision": 3,
+          "search_id": "saved-control"
+        },
+        {
+          "error": {
+            "code": "tool_disabled",
+            "message": "saved-search tools require the saved-search grant (MCP_GRANT_SAVED_SEARCHES=1)"
+          }
+        }
+      ]
+    },
+    {
+      "created": {
+        "artifact": {
+          "contract": "slopsearx.artifact_ref",
+          "id": "saved-control",
+          "kind": "saved_search",
+          "version": 1
+        },
+        "comparison": {
+          "absence_event": "not_observed_in_latest_run",
+          "absence_is_deletion": false,
+          "identity_version": "url-source-window-v1",
+          "window": "fixed_first_page"
+        },
+        "created_at": 1000.0,
+        "engines": [
+          "brave"
+        ],
+        "expires_at": 1600.0,
+        "interval_seconds": 60,
+        "latest_run_id": null,
+        "max_reports": 20,
+        "max_results": 100,
+        "next_due": 1060.0,
+        "paused": false,
+        "query": "q",
+        "retention_seconds": 600,
+        "revision": 1,
+        "search_id": "saved-control"
+      },
+      "final": {
+        "baseline": null,
+        "created_at": 1000.0,
+        "deleted": false,
+        "engines": [
+          "brave"
+        ],
+        "expires_at": 1600.0,
+        "interval_seconds": 60,
+        "last_slot": -1,
+        "latest_run_id": null,
+        "lease_expires_at": 0.0,
+        "lease_token": null,
+        "max_reports": 20,
+        "max_results": 1,
+        "next_due": 1060.0,
+        "paused": false,
+        "policy_fingerprint": "2c1c383090f228186db18732506ebb777b1fb734bf18d72b747c68ee97b7cfd4",
+        "query": "changed",
+        "retention_seconds": 600,
+        "revision": 3,
+        "search_id": "saved-control",
+        "tenant": "default"
+      },
+      "name": "reduced_numeric_limits",
+      "outcomes": [
+        {
+          "artifact": {
+            "contract": "slopsearx.artifact_ref",
+            "id": "saved-control",
+            "kind": "saved_search",
+            "version": 1
+          },
+          "comparison": {
+            "absence_event": "not_observed_in_latest_run",
+            "absence_is_deletion": false,
+            "identity_version": "url-source-window-v1",
+            "window": "fixed_first_page"
+          },
+          "created_at": 1000.0,
+          "engines": [
+            "brave"
+          ],
+          "expires_at": 1600.0,
+          "interval_seconds": 60,
+          "latest_run_id": null,
+          "max_reports": 20,
+          "max_results": 100,
+          "next_due": 1060.0,
+          "paused": false,
+          "query": "changed",
+          "retention_seconds": 600,
+          "revision": 2,
+          "search_id": "saved-control"
+        },
+        {
+          "error": {
+            "code": "invalid_input",
+            "message": "max_results must be an integer between 1 and 1"
+          }
+        },
+        {
+          "artifact": {
+            "contract": "slopsearx.artifact_ref",
+            "id": "saved-control",
+            "kind": "saved_search",
+            "version": 1
+          },
+          "comparison": {
+            "absence_event": "not_observed_in_latest_run",
+            "absence_is_deletion": false,
+            "identity_version": "url-source-window-v1",
+            "window": "fixed_first_page"
+          },
+          "created_at": 1000.0,
+          "engines": [
+            "brave"
+          ],
+          "expires_at": 1600.0,
+          "interval_seconds": 60,
+          "latest_run_id": null,
+          "max_reports": 20,
+          "max_results": 1,
+          "next_due": 1060.0,
+          "paused": false,
+          "query": "changed",
+          "retention_seconds": 600,
+          "revision": 3,
+          "search_id": "saved-control"
+        }
+      ]
+    }
+  ],
+  "exporter_sha256": "6c319ddb761296ec08aca8f786820f85fb80e8fcb4038b4c2e635177273dad09",
+  "final_review_observations": [
+    {
+      "input": [],
+      "lease_exists": false,
+      "name": "baseline_shape_empty_array",
+      "outcome": {
+        "error_type": "AttributeError"
+      },
+      "stored": true
+    },
+    {
+      "input": [
+        1
+      ],
+      "lease_exists": false,
+      "name": "baseline_shape_array",
+      "outcome": {
+        "error_type": "AttributeError"
+      },
+      "stored": true
+    },
+    {
+      "input": 0,
+      "lease_exists": false,
+      "name": "baseline_shape_integer",
+      "outcome": {
+        "error_type": "AttributeError"
+      },
+      "stored": true
+    },
+    {
+      "input": true,
+      "lease_exists": false,
+      "name": "baseline_shape_boolean",
+      "outcome": {
+        "error_type": "AttributeError"
+      },
+      "stored": true
+    },
+    {
+      "input": "",
+      "lease_exists": false,
+      "name": "baseline_shape_string",
+      "outcome": {
+        "error_type": "AttributeError"
+      },
+      "stored": true
+    },
+    {
+      "input": null,
+      "lease_exists": true,
+      "name": "baseline_shape_json_null",
+      "outcome": {
+        "baseline": null,
+        "claimed": true
+      },
+      "stored": true
+    },
+    {
+      "input": {},
+      "lease_exists": true,
+      "name": "baseline_shape_object_missing_expiry",
+      "outcome": {
+        "baseline": null,
+        "claimed": true
+      },
+      "stored": true
+    },
+    {
+      "input": null,
+      "lease_exists": true,
+      "name": "baseline_shape_absent_key",
+      "outcome": {
+        "baseline": null,
+        "claimed": true
+      },
+      "stored": false
+    },
+    {
+      "deleted": true,
+      "final_count": 2,
+      "name": "maximum_revision_lifecycle",
+      "repaired": 1,
+      "subsequent_admitted": [
+        "created",
+        "created"
+      ],
+      "tombstone": "9223372036854775807",
+      "updated_revision": 9223372036854775807
+    }
+  ],
+  "format": "w00-source-v1",
+  "observations": [
+    {
+      "following_due": 1120.0,
+      "input": {
+        "baseline": null,
+        "created_at": 1000.0,
+        "deleted": false,
+        "engines": [
+          "z",
+          "a"
+        ],
+        "expires_at": 1600.5,
+        "interval_seconds": 60,
+        "last_slot": -1,
+        "latest_run_id": null,
+        "lease_expires_at": 0,
+        "lease_token": null,
+        "max_reports": 20,
+        "max_results": 10,
+        "next_due": 1060.0,
+        "paused": false,
+        "policy_fingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "query": "雪 query",
+        "retention_seconds": 600,
+        "revision": 1,
+        "search_id": "saved-é",
+        "tenant": "tenant:a[*]"
+      },
+      "missed_slots": 0,
+      "name": "first",
+      "now": 1060.0,
+      "run_id": "run-b4b1d3f5f5ee551250692f06",
+      "slot": 1,
+      "ttl": 840,
+      "window": {
+        "engines": [
+          "a",
+          "z"
+        ],
+        "identity_version": "url-source-window-v1",
+        "max_results": 10,
+        "page": 1,
+        "policy_fingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "query": "雪 query",
+        "revision": 1
+      }
+    },
+    {
+      "following_due": 1060.0,
+      "input": {
+        "baseline": null,
+        "created_at": 1000.0,
+        "deleted": false,
+        "engines": [
+          "z",
+          "a"
+        ],
+        "expires_at": 1600.5,
+        "interval_seconds": 60,
+        "last_slot": -1,
+        "latest_run_id": null,
+        "lease_expires_at": 0,
+        "lease_token": null,
+        "max_reports": 20,
+        "max_results": 10,
+        "next_due": 1000.0,
+        "paused": false,
+        "policy_fingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "query": "雪 query",
+        "retention_seconds": 600,
+        "revision": 1,
+        "search_id": "saved-é",
+        "tenant": "tenant:a[*]"
+      },
+      "missed_slots": 0,
+      "name": "immediate",
+      "now": 1000.0,
+      "run_id": "run-f71024c32e4359db8c90da82",
+      "slot": 0,
+      "ttl": 900,
+      "window": {
+        "engines": [
+          "a",
+          "z"
+        ],
+        "identity_version": "url-source-window-v1",
+        "max_results": 10,
+        "page": 1,
+        "policy_fingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "query": "雪 query",
+        "revision": 1
+      }
+    },
+    {
+      "following_due": 1360.0,
+      "input": {
+        "baseline": null,
+        "created_at": 1000.0,
+        "deleted": false,
+        "engines": [
+          "z",
+          "a"
+        ],
+        "expires_at": 1600.5,
+        "interval_seconds": 60,
+        "last_slot": -1,
+        "latest_run_id": null,
+        "lease_expires_at": 0,
+        "lease_token": null,
+        "max_reports": 20,
+        "max_results": 10,
+        "next_due": 1060.0,
+        "paused": false,
+        "policy_fingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "query": "雪 query",
+        "retention_seconds": 600,
+        "revision": 1,
+        "search_id": "saved-é",
+        "tenant": "tenant:a[*]"
+      },
+      "missed_slots": 4,
+      "name": "missed",
+      "now": 1305.5,
+      "run_id": "run-b4b1d3f5f5ee551250692f06",
+      "slot": 5,
+      "ttl": 595,
+      "window": {
+        "engines": [
+          "a",
+          "z"
+        ],
+        "identity_version": "url-source-window-v1",
+        "max_results": 10,
+        "page": 1,
+        "policy_fingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "query": "雪 query",
+        "revision": 1
+      }
+    },
+    {
+      "following_due": 1480.0,
+      "input": {
+        "baseline": null,
+        "created_at": 1000.0,
+        "deleted": false,
+        "engines": [
+          "z",
+          "a"
+        ],
+        "expires_at": 1600.5,
+        "interval_seconds": 60,
+        "last_slot": 2,
+        "latest_run_id": null,
+        "lease_expires_at": 0,
+        "lease_token": null,
+        "max_reports": 20,
+        "max_results": 10,
+        "next_due": 1060.0,
+        "paused": false,
+        "policy_fingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "query": "雪 query",
+        "retention_seconds": 600,
+        "revision": 1,
+        "search_id": "saved-é",
+        "tenant": "tenant:a[*]"
+      },
+      "missed_slots": 4,
+      "name": "recovered",
+      "now": 1421.0,
+      "run_id": "run-b4b1d3f5f5ee551250692f06",
+      "slot": 7,
+      "ttl": 479,
+      "window": {
+        "engines": [
+          "a",
+          "z"
+        ],
+        "identity_version": "url-source-window-v1",
+        "max_results": 10,
+        "page": 1,
+        "policy_fingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "query": "雪 query",
+        "revision": 1
+      }
+    },
+    {
+      "following_due": 1120.125,
+      "input": {
+        "baseline": null,
+        "created_at": 1000.125,
+        "deleted": false,
+        "engines": [
+          "z",
+          "a"
+        ],
+        "expires_at": 1600.5,
+        "interval_seconds": 60,
+        "last_slot": -1,
+        "latest_run_id": null,
+        "lease_expires_at": 0,
+        "lease_token": null,
+        "max_reports": 20,
+        "max_results": 10,
+        "next_due": 1060.125,
+        "paused": false,
+        "policy_fingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "query": "雪 query",
+        "retention_seconds": 600,
+        "revision": 1,
+        "search_id": "saved-é",
+        "tenant": "tenant:a[*]"
+      },
+      "missed_slots": 0,
+      "name": "fractional",
+      "now": 1120.124,
+      "run_id": "run-7d284fd6700e01e1648255b4",
+      "slot": 1,
+      "ttl": 780,
+      "window": {
+        "engines": [
+          "a",
+          "z"
+        ],
+        "identity_version": "url-source-window-v1",
+        "max_results": 10,
+        "page": 1,
+        "policy_fingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "query": "雪 query",
+        "revision": 1
+      }
+    },
+    {
+      "following_due": 1180.125,
+      "input": {
+        "baseline": null,
+        "created_at": 1000.125,
+        "deleted": false,
+        "engines": [
+          "z",
+          "a"
+        ],
+        "expires_at": 1600.5,
+        "interval_seconds": 60,
+        "last_slot": 0,
+        "latest_run_id": null,
+        "lease_expires_at": 0,
+        "lease_token": null,
+        "max_reports": 20,
+        "max_results": 10,
+        "next_due": 1060.125,
+        "paused": false,
+        "policy_fingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "query": "雪 query",
+        "retention_seconds": 600,
+        "revision": 1,
+        "search_id": "saved-é",
+        "tenant": "tenant:a[*]"
+      },
+      "missed_slots": 1,
+      "name": "boundary",
+      "now": 1120.125,
+      "run_id": "run-7d284fd6700e01e1648255b4",
+      "slot": 2,
+      "ttl": 780,
+      "window": {
+        "engines": [
+          "a",
+          "z"
+        ],
+        "identity_version": "url-source-window-v1",
+        "max_results": 10,
+        "page": 1,
+        "policy_fingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "query": "雪 query",
+        "revision": 1
+      }
+    },
+    {
+      "decoded": {
+        "baseline": null,
+        "created_at": 1000.0,
+        "deleted": false,
+        "engines": [
+          "z",
+          "a"
+        ],
+        "expires_at": 1600.5,
+        "interval_seconds": 60,
+        "last_slot": -1,
+        "latest_run_id": null,
+        "lease_expires_at": 0.0,
+        "lease_token": null,
+        "max_reports": 20,
+        "max_results": 10,
+        "next_due": 1060.0,
+        "paused": false,
+        "policy_fingerprint": "",
+        "query": "雪 query",
+        "retention_seconds": 600,
+        "revision": 1,
+        "search_id": "saved-é",
+        "tenant": "tenant:a[*]"
+      },
+      "input": {
+        "created_at": 1000.0,
+        "engines": [
+          "z",
+          "a"
+        ],
+        "expires_at": 1600.5,
+        "interval_seconds": 60,
+        "max_reports": 20,
+        "max_results": 10,
+        "next_due": 1060.0,
+        "query": "雪 query",
+        "retention_seconds": 600,
+        "search_id": "saved-é",
+        "tenant": "tenant:a[*]"
+      },
+      "name": "legacy_defaults",
+      "run_id": "run-b4b1d3f5f5ee551250692f06"
+    },
+    {
+      "decoded": {
+        "baseline": null,
+        "created_at": 1000.0,
+        "deleted": false,
+        "engines": [
+          "True",
+          "2"
+        ],
+        "expires_at": 1600.5,
+        "interval_seconds": 60,
+        "last_slot": -1,
+        "latest_run_id": null,
+        "lease_expires_at": 0.0,
+        "lease_token": null,
+        "max_reports": 20,
+        "max_results": 10,
+        "next_due": 1060.0,
+        "paused": true,
+        "policy_fingerprint": "",
+        "query": "123",
+        "retention_seconds": 600,
+        "revision": 1,
+        "search_id": "saved-é",
+        "tenant": "tenant:a[*]"
+      },
+      "input": {
+        "created_at": 1000.0,
+        "engines": [
+          true,
+          2
+        ],
+        "expires_at": 1600.5,
+        "interval_seconds": "60",
+        "lease_token": 0,
+        "max_reports": 20,
+        "max_results": 10,
+        "next_due": 1060.0,
+        "paused": "false",
+        "query": 123,
+        "retention_seconds": 600,
+        "search_id": "saved-é",
+        "tenant": "tenant:a[*]"
+      },
+      "name": "source_coercions",
+      "run_id": "run-b4b1d3f5f5ee551250692f06"
+    },
+    {
+      "decoded": {
+        "baseline": null,
+        "created_at": 1000.0,
+        "deleted": false,
+        "engines": [
+          "z",
+          "a"
+        ],
+        "expires_at": 1600.5,
+        "interval_seconds": 60,
+        "last_slot": -1,
+        "latest_run_id": null,
+        "lease_expires_at": 0.0,
+        "lease_token": null,
+        "max_reports": 20,
+        "max_results": 10,
+        "next_due": 1060.0,
+        "paused": false,
+        "policy_fingerprint": "",
+        "query": "雪 query",
+        "retention_seconds": 600,
+        "revision": 1,
+        "search_id": "saved-é",
+        "tenant": "tenant:a[*]"
+      },
+      "input": {
+        "created_at": 1000,
+        "engines": [
+          "z",
+          "a"
+        ],
+        "expires_at": 1600.5,
+        "interval_seconds": 60,
+        "max_reports": 20,
+        "max_results": 10,
+        "next_due": 1060,
+        "query": "雪 query",
+        "retention_seconds": 600,
+        "search_id": "saved-é",
+        "tenant": "tenant:a[*]"
+      },
+      "name": "integer_time_rehydration",
+      "run_id": "run-b4b1d3f5f5ee551250692f06"
+    }
+  ],
+  "oversized_identity_observation": {
+    "character": "x",
+    "next_due": 1060.0,
+    "repeat": 4194305,
+    "revision": 1,
+    "run_id": "run-ca5bcd015718da6b8e7331b1",
+    "source_window_query_length": 4194305
+  },
+  "oversized_policy_observation": {
+    "category_repeat": 4194305,
+    "character": "x",
+    "fingerprint": "6167fe4ef3daa3bb8d98bc4f3e5b933e1da8fd7bf98709f483888c04163d8453"
+  },
+  "plan_id": "W00",
+  "policy_observations": [
+    {
+      "fingerprint": "3135644fc118306c2cc58f9a9bdf6aed92464446267a51af94973905ac0e0004",
+      "name": "public_keyless"
+    },
+    {
+      "fingerprint": "85df4a86feae264149a71265ce1b2d48e1f49e0c74ab03efe624c081ee231c86",
+      "name": "configured_key"
+    },
+    {
+      "fingerprint": "2a6f783ecaf5e1650553d60aad6eb6d20acefb1aa8d2c8d0e05ea4872065b1a4",
+      "name": "inactive"
+    }
+  ],
+  "provenance": "actual offline source functions and private Valkey; no live provider calls; temporary developer oracle retires at G08",
+  "python": "3.14.7",
+  "review_observations": [
+    {
+      "baseline_input": {
+        "expires_at": 1300.0,
+        "records": {
+          "previous": "opaque"
+        }
+      },
+      "lease_exists": true,
+      "name": "baseline_live",
+      "outcome": {
+        "baseline": {
+          "expires_at": 1300.0,
+          "records": {
+            "previous": "opaque"
+          }
+        },
+        "revision": 1
+      }
+    },
+    {
+      "baseline_input": {
+        "expires_at": 999.0,
+        "records": {}
+      },
+      "lease_exists": true,
+      "name": "baseline_expired",
+      "outcome": {
+        "baseline": null,
+        "revision": 1
+      }
+    },
+    {
+      "baseline_input": null,
+      "lease_exists": true,
+      "name": "baseline_missing",
+      "outcome": {
+        "baseline": null,
+        "revision": 1
+      }
+    },
+    {
+      "baseline_input": {
+        "expires_at": "invalid",
+        "records": {}
+      },
+      "lease_exists": false,
+      "name": "baseline_malformed_expiry",
+      "outcome": {
+        "error_type": "ValueError"
+      }
+    },
+    {
+      "name": "revision_increment",
+      "revision": 9007199254740991,
+      "updated_revision": 9007199254740992
+    },
+    {
+      "name": "revision_increment",
+      "revision": 9007199254740992,
+      "updated_revision": 9007199254740993
+    },
+    {
+      "name": "revision_increment",
+      "revision": 9007199254740993,
+      "updated_revision": 9007199254740994
+    },
+    {
+      "name": "revision_increment",
+      "revision": 9223372036854775806,
+      "updated_revision": 9223372036854775807
+    },
+    {
+      "name": "revision_increment",
+      "revision": 9223372036854775807,
+      "updated_revision": 9223372036854775808
+    },
+    {
+      "maximum": 1000,
+      "name": "configured_query_create",
+      "outcome": {
+        "artifact": {
+          "contract": "slopsearx.artifact_ref",
+          "id": "saved-query-review",
+          "kind": "saved_search",
+          "version": 1
+        },
+        "comparison": {
+          "absence_event": "not_observed_in_latest_run",
+          "absence_is_deletion": false,
+          "identity_version": "url-source-window-v1",
+          "window": "fixed_first_page"
+        },
+        "created_at": 1000.0,
+        "engines": [
+          "brave"
+        ],
+        "expires_at": 605800.0,
+        "interval_seconds": 60,
+        "latest_run_id": null,
+        "max_reports": 20,
+        "max_results": 100,
+        "next_due": 1060.0,
+        "paused": false,
+        "query": "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+        "retention_seconds": 604800,
+        "revision": 1,
+        "search_id": "saved-query-review"
+      },
+      "raw_length": 600
+    },
+    {
+      "maximum": 1000,
+      "name": "raw_query_before_strip",
+      "outcome": {
+        "error": {
+          "code": "invalid_input",
+          "field": "query",
+          "max_length": 1000,
+          "message": "query exceeds the maximum length of 1000 characters"
+        }
+      },
+      "raw_length": 1001
+    },
+    {
+      "maximum": 10,
+      "name": "untouched_query_lowered_limit",
+      "outcome": {
+        "artifact": {
+          "contract": "slopsearx.artifact_ref",
+          "id": "saved-query-review",
+          "kind": "saved_search",
+          "version": 1
+        },
+        "comparison": {
+          "absence_event": "not_observed_in_latest_run",
+          "absence_is_deletion": false,
+          "identity_version": "url-source-window-v1",
+          "window": "fixed_first_page"
+        },
+        "created_at": 1000.0,
+        "engines": [
+          "brave"
+        ],
+        "expires_at": 605800.0,
+        "interval_seconds": 60,
+        "latest_run_id": null,
+        "max_reports": 1,
+        "max_results": 100,
+        "next_due": 1060.0,
+        "paused": false,
+        "query": "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+        "retention_seconds": 604800,
+        "revision": 2,
+        "search_id": "saved-query-review"
+      }
+    },
+    {
+      "maximum": 10,
+      "name": "supplied_query_lowered_limit",
+      "outcome": {
+        "error": {
+          "code": "invalid_input",
+          "field": "query",
+          "max_length": 10,
+          "message": "query exceeds the maximum length of 10 characters"
+        }
+      }
+    }
+  ],
+  "schema_version": 1,
+  "sources": {
+    "slopsearx/mcp/tools.py": "5622b72a762aad8081288444f4f6c366b009c007e6501927f54adf74115c38a2",
+    "slopsearx/saved_models.py": "0a9fc0864b414a0a27b29509e2da3006b44976e94716c56a837559fe553d0593",
+    "slopsearx/saved_runner.py": "07fafa028edcf156bc9d3e7c818d15bdd32acbf4cefc837375bc78c138ac4b07",
+    "slopsearx/saved_store.py": "9e3d03577d6721a5ef46e19b872b1c8744471e167e305130b48db582bd0006df",
+    "tests/test_research_retry_followup.py": "14b0657b699cb2c53919a97e15665f84ea15828eef5f9d90d15edff3a27fc7ae"
+  },
+  "strict_interval_observations": [
+    {
+      "input": true,
+      "outcome": {
+        "error_type": "ValueError",
+        "message": "interval_seconds must be an integer between 60 and 86400"
+      }
+    },
+    {
+      "input": false,
+      "outcome": {
+        "error_type": "ValueError",
+        "message": "interval_seconds must be an integer between 60 and 86400"
+      }
+    },
+    {
+      "input": 59,
+      "outcome": {
+        "error_type": "ValueError",
+        "message": "interval_seconds must be an integer between 60 and 86400"
+      }
+    },
+    {
+      "input": 60,
+      "outcome": {
+        "ok": 60
+      }
+    },
+    {
+      "input": 86400,
+      "outcome": {
+        "ok": 86400
+      }
+    },
+    {
+      "input": 86401,
+      "outcome": {
+        "error_type": "ValueError",
+        "message": "interval_seconds must be an integer between 60 and 86400"
+      }
+    },
+    {
+      "input": 60.0,
+      "outcome": {
+        "error_type": "ValueError",
+        "message": "interval_seconds must be an integer between 60 and 86400"
+      }
+    },
+    {
+      "input": "60",
+      "outcome": {
+        "error_type": "ValueError",
+        "message": "interval_seconds must be an integer between 60 and 86400"
+      }
+    },
+    {
+      "input": null,
+      "outcome": {
+        "error_type": "ValueError",
+        "message": "interval_seconds must be an integer between 60 and 86400"
+      }
+    },
+    {
+      "input": -1,
+      "outcome": {
+        "error_type": "ValueError",
+        "message": "interval_seconds must be an integer between 60 and 86400"
+      }
+    }
+  ],
+  "valkey_version": "8.1.10"
+}

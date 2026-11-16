@@ -1,0 +1,364 @@
+{
+  "plan_id": "W03",
+  "baseline": "87af8096d46359241421ac747ed6aa1ad07f38ec",
+  "methods": [
+    {
+      "method": "slopsearx_plan_research",
+      "descriptor_sha256": "84f6b6915be7fc46c52db3ea762a936e4460443762ffb77d1297dd9c336fce9b",
+      "fields": [
+        {
+          "name": "question",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "subquestions",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "intent",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "engines",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "max_queries",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "max_engines_per_query",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "max_attempts",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "max_engine_attempts",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "max_results",
+          "owner": "W03",
+          "state": "implemented"
+        }
+      ],
+      "scope": "complete_preview",
+      "full_callable_parity": true
+    },
+    {
+      "method": "slopsearx_plan_query_variants",
+      "descriptor_sha256": "83cf3a3a2f32b21a6a2295eeaecaff0956fa6b99340e405ad5eb6b4715df6097",
+      "fields": [
+        {
+          "name": "question",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "variants",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "intent",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "engines",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "max_queries",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "max_engines_per_query",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "max_attempts",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "max_engine_attempts",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "max_results",
+          "owner": "W03",
+          "state": "implemented"
+        }
+      ],
+      "scope": "complete_preview",
+      "full_callable_parity": true
+    },
+    {
+      "method": "slopsearx_plan_research_followup",
+      "descriptor_sha256": "1396136c36fce6ee445a75812cf0703f40ef54026501ca99eb7886637db73374",
+      "fields": [
+        {
+          "name": "job_id",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "query",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "parent_attempt_id",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "evidence_result_ids",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "rationale",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "subquestion_id",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "intent",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "engines",
+          "owner": "W03",
+          "state": "implemented"
+        }
+      ],
+      "scope": "complete_preview",
+      "full_callable_parity": true
+    },
+    {
+      "method": "slopsearx_start_research",
+      "descriptor_sha256": "6642945feece32ba46d4990ee362fef03e8a322266ae27694a54fa88ad64a9db",
+      "fields": [
+        {
+          "name": "question",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "strategy",
+          "owner": "W09 #915",
+          "state": "downstream_not_implemented"
+        },
+        {
+          "name": "max_queries",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "max_engines_per_query",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "deadline",
+          "owner": "W09 #915",
+          "state": "downstream_not_implemented"
+        },
+        {
+          "name": "idempotency_key",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "initial_plan",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "subquestions",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "max_attempts",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "max_engine_attempts",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "max_results",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "source",
+          "owner": "W09 #915",
+          "state": "downstream_not_implemented"
+        }
+      ],
+      "scope": "adaptive_explicit_plan_execution_binding",
+      "full_callable_parity": false
+    },
+    {
+      "method": "slopsearx_get_job",
+      "descriptor_sha256": "ba27f27693e322d2e87be87ff4e3ca7cf2152955dd048bae303ec539ed046a25",
+      "fields": [
+        {
+          "name": "job_id",
+          "owner": "W03",
+          "state": "implemented"
+        }
+      ],
+      "scope": "adaptive_explicit_plan_execution_binding",
+      "full_callable_parity": false
+    },
+    {
+      "method": "slopsearx_cancel_job",
+      "descriptor_sha256": "65d93e6be85c534f5ebd199307889a5724fa0767211328241daaebc9ccfed4fa",
+      "fields": [
+        {
+          "name": "job_id",
+          "owner": "W03",
+          "state": "implemented"
+        }
+      ],
+      "scope": "adaptive_explicit_plan_execution_binding",
+      "full_callable_parity": false
+    },
+    {
+      "method": "slopsearx_retry_research",
+      "descriptor_sha256": "4edaa8cfbfd3fe9bdaa80bba2dfabc4bb6c8e395cb747049fe532fcd4c348d2e",
+      "fields": [
+        {
+          "name": "job_id",
+          "owner": "W03",
+          "state": "implemented"
+        }
+      ],
+      "scope": "adaptive_explicit_plan_execution_binding",
+      "full_callable_parity": false
+    },
+    {
+      "method": "slopsearx_extend_research",
+      "descriptor_sha256": "661d246751a6cb4b908690bb91ac3a82de1d68f06046936977a1ad0755189eef",
+      "fields": [
+        {
+          "name": "job_id",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "query",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "intent",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "engines",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "subquestion_id",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "rationale",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "parent_attempt_id",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "continuation_key",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "planning_method",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "evidence_result_ids",
+          "owner": "W03",
+          "state": "implemented"
+        }
+      ],
+      "scope": "adaptive_explicit_plan_execution_binding",
+      "full_callable_parity": true
+    },
+    {
+      "method": "slopsearx_update_research",
+      "descriptor_sha256": "284f746b128296f48b88751390cb7a5792f2a18f453247b14775bd09081bc34e",
+      "fields": [
+        {
+          "name": "job_id",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "subquestion_states",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "complete",
+          "owner": "W03",
+          "state": "implemented"
+        },
+        {
+          "name": "rationale",
+          "owner": "W03",
+          "state": "implemented"
+        }
+      ],
+      "scope": "adaptive_explicit_plan_execution_binding",
+      "full_callable_parity": true
+    }
+  ],
+  "start_without_initial_plan": {
+    "state": "downstream_not_implemented",
+    "owner": "W09 #915",
+    "current_behavior": "invalid_input, never silently fall back"
+  },
+  "envelope_differences_pending_review": [
+    "get_job created_at and note pending",
+    "retry/cancel envelope projection pending",
+    "start source composition and ISO deadline/default strategies pending downstream disposition"
+  ],
+  "claim": "No full nine-method parity claim; W03 previews and adaptive admission are the current implementation scope."
+}

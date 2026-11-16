@@ -1,0 +1,291 @@
+{
+  "schema_version": 1,
+  "plan_id": "W06",
+  "scope": "component working-tree proof at source baseline; parent union/exact-head delivery remains required",
+  "provider_calls": 0,
+  "production_state_used": false,
+  "toolchain": "Rust1.99.0",
+  "valkey": "private Valkey8.1.10",
+  "qualification_sha256": "474b79b5c4430b743baf465450840816ddd9eb9188a46b4bf36af3c880ab8a0d",
+  "source_case_count": 98,
+  "native_case_count": 53,
+  "positive": [
+    {
+      "artifact": "/Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/W06-component-final.json",
+      "status": "passed",
+      "error": null,
+      "head": "9b7d888da1ee3f7e2ed045c2185ea16f419381e9",
+      "executed_commands": 103,
+      "markers": 151,
+      "unique_cases": 151,
+      "last_executed": {
+        "program": "cargo",
+        "args": [
+          "clippy",
+          "--locked",
+          "-p",
+          "ssx-application",
+          "-p",
+          "ssx-infra",
+          "-p",
+          "ssx-mcp",
+          "-p",
+          "xtask",
+          "--all-targets",
+          "--",
+          "-D",
+          "warnings"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "    Checking ssx-application v0.1.0 (/private/tmp/slopsearx-w06/crates/ssx-application)\n    Checking ssx-registry v0.1.0 (/private/tmp/slopsearx-w06/crates/ssx-registry)\n    Checking ssx-mcp v0.1.0 (/private/tmp/slopsearx-w06/crates/ssx-mcp)\n    Checking ssx-http v0.1.0 (/private/tmp/slopsearx-w06/crates/ssx-http)\n    Checking ssx-config v0.1.0 (/private/tmp/slopsearx-w06/crates/ssx-config)\n    Checking ssx-infra v0.1.0 (/private/tmp/slopsearx-w06/crates/ssx-infra)\n    Checking xtask v0.1.0 (/private/tmp/slopsearx-w06/crates/xtask)\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 5.16s\n"
+      },
+      "sha256": "6943db85b4c610eb6835bf9022a308114023a7f023459bca6334ca79b1ca09f8"
+    },
+    {
+      "artifact": "/Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/W06-component-post-mutations.json",
+      "status": "passed",
+      "error": null,
+      "head": "9b7d888da1ee3f7e2ed045c2185ea16f419381e9",
+      "executed_commands": 103,
+      "markers": 151,
+      "unique_cases": 151,
+      "last_executed": {
+        "program": "cargo",
+        "args": [
+          "clippy",
+          "--locked",
+          "-p",
+          "ssx-application",
+          "-p",
+          "ssx-infra",
+          "-p",
+          "ssx-mcp",
+          "-p",
+          "xtask",
+          "--all-targets",
+          "--",
+          "-D",
+          "warnings"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "    Checking ssx-application v0.1.0 (/private/tmp/slopsearx-w06/crates/ssx-application)\n    Checking ssx-infra v0.1.0 (/private/tmp/slopsearx-w06/crates/ssx-infra)\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.88s\n"
+      },
+      "sha256": "6c3ce940b3c59cedb05f468ea1ecae25b3fd135b5b1f54ab9e10246377bc4591"
+    }
+  ],
+  "actual_negative_mutations": [
+    {
+      "artifact": "/Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/W06-negative-corpus-bytes.json",
+      "status": "failed",
+      "error": "W06 frozen identity changed: docs/rust-rewrite/w06/source.json",
+      "head": "9b7d888da1ee3f7e2ed045c2185ea16f419381e9",
+      "executed_commands": 0,
+      "markers": 0,
+      "unique_cases": 0,
+      "last_executed": {
+        "program": null,
+        "args": null,
+        "exit_code": null,
+        "stdout": null,
+        "stderr": null
+      },
+      "sha256": "584d646c6b26a8324fef1fb793ef86db61fc6747423654f7de816e470b142aee"
+    },
+    {
+      "artifact": "/Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/W06-negative-original-source.json",
+      "status": "failed",
+      "error": "W06 source drift requires reviewed reconciliation: slopsearx/staged.py",
+      "head": "9b7d888da1ee3f7e2ed045c2185ea16f419381e9",
+      "executed_commands": 10,
+      "markers": 0,
+      "unique_cases": 0,
+      "last_executed": {
+        "program": "git",
+        "args": [
+          "hash-object",
+          "slopsearx/snapshot.py"
+        ],
+        "exit_code": 0,
+        "stdout": "fe0e62b9872b3d01cef6a8f843d9720f2cd50a42\n",
+        "stderr": ""
+      },
+      "sha256": "789f4551672504b8e5f71b148efc27c3cfcf3a93aeca685717b233a6b1aba00f"
+    },
+    {
+      "artifact": "/Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/W06-negative-ignored-native-test.json",
+      "status": "failed",
+      "error": "W06 required test missing, failed or ignored: source_plans_preserve_full_outcomes_and_identity_bytes",
+      "head": "9b7d888da1ee3f7e2ed045c2185ea16f419381e9",
+      "executed_commands": 71,
+      "markers": 0,
+      "unique_cases": 0,
+      "last_executed": {
+        "program": "cargo",
+        "args": [
+          "test",
+          "--locked",
+          "-p",
+          "ssx-application",
+          "--test",
+          "w06",
+          "--",
+          "--exact",
+          "source_plans_preserve_full_outcomes_and_identity_bytes",
+          "--show-output",
+          "--test-threads=1"
+        ],
+        "exit_code": 0,
+        "stdout": "\nrunning 1 test\ntest source_plans_preserve_full_outcomes_and_identity_bytes ... ignored\n\nsuccesses:\n\nsuccesses:\n\ntest result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 3 filtered out; finished in 0.00s\n\n",
+        "stderr": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s\n     Running tests/w06.rs (/Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/debug/deps/w06-d440a245422fc7de)\n"
+      },
+      "sha256": "4ad00c55aaafd7b54bf5081a3e8e45576310049bc779c8e7e0a404a58b159e3b"
+    },
+    {
+      "artifact": "/Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/W06-negative-missing-native-test.json",
+      "status": "failed",
+      "error": "W06 exact native inventory changed: ssx-application w06",
+      "head": "9b7d888da1ee3f7e2ed045c2185ea16f419381e9",
+      "executed_commands": 70,
+      "markers": 0,
+      "unique_cases": 0,
+      "last_executed": {
+        "program": "cargo",
+        "args": [
+          "test",
+          "--locked",
+          "-p",
+          "ssx-application",
+          "--test",
+          "w06",
+          "--",
+          "--list"
+        ],
+        "exit_code": 0,
+        "stdout": "source_completion_preserves_full_records_and_dispatch_requests: test\nsource_replay_equivalence_preserves_original_requested_objectives: test\nsource_retained_authority_preserves_full_policy_envelopes: test\nunexpected_renamed_semantic_test: test\n\n4 tests, 0 benchmarks\n",
+        "stderr": "   Compiling ssx-application v0.1.0 (/private/tmp/slopsearx-w06/crates/ssx-application)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.23s\n     Running tests/w06.rs (/Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/debug/deps/w06-d440a245422fc7de)\n"
+      },
+      "sha256": "e87e445071c26c120c010ec78c187287b507576d1ed09167da457a95afaf5992"
+    },
+    {
+      "artifact": "/Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/W06-negative-wrong-case-receipt.json",
+      "status": "failed",
+      "error": "W06 unexpected completion plan.valid from wrong_test_identity",
+      "head": "9b7d888da1ee3f7e2ed045c2185ea16f419381e9",
+      "executed_commands": 71,
+      "markers": 39,
+      "unique_cases": 39,
+      "last_executed": {
+        "program": "cargo",
+        "args": [
+          "test",
+          "--locked",
+          "-p",
+          "ssx-application",
+          "--test",
+          "w06",
+          "--",
+          "--exact",
+          "source_plans_preserve_full_outcomes_and_identity_bytes",
+          "--show-output",
+          "--test-threads=1"
+        ],
+        "exit_code": 0,
+        "stdout": "\nrunning 1 test\ntest source_plans_preserve_full_outcomes_and_identity_bytes ... ok\n\nsuccesses:\n\n---- source_plans_preserve_full_outcomes_and_identity_bytes stdout ----\nW06_CASE_COMPLETE {\"case_id\":\"plan.valid\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.valid_single\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.valid_filters\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.query_blank\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.query_too_long\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.objectives_extra\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.expansion_missing\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.expansion_without_scope\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.filters_unknown\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.filters_safesearch\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.filters_freshness\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.filters_time_range\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.language_nonstring_source_accepts\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.scope_empty\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.fallback_empty_dict\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.scope_both\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.scope_duplicate\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.scope_unknown\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.scope_intent_media\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.scope_overlap\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.scope_exceeds_calls\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.strict_full_scope\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.order_query_before_objectives\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.order_deadline_before_calls\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.order_expansion_before_filters\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.order_overlap_before_budget_strict\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.deadline_ms_0\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.deadline_ms_1\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.deadline_ms_2\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.deadline_ms_3\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.deadline_ms_4\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.deadline_ms_5\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.max_engine_calls_0\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.max_engine_calls_1\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.max_engine_calls_2\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.max_engine_calls_3\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.max_engine_calls_4\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.max_engine_calls_5\",\"test\":\"wrong_test_identity\"}\nW06_CASE_COMPLETE {\"case_id\":\"plan.operator_cap\",\"test\":\"wrong_test_identity\"}\n\n\nsuccesses:\n    source_plans_preserve_full_outcomes_and_identity_bytes\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.34s\n\n",
+        "stderr": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s\n     Running tests/w06.rs (/Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/debug/deps/w06-d440a245422fc7de)\n"
+      },
+      "sha256": "348910e9d47a622f401cf127c1f92cef58f7e2d87aa4dcda2f063c793d6047f8"
+    }
+  ],
+  "historical_attempts": [
+    {
+      "artifact": "/Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/W06-initial.json",
+      "status": "failed",
+      "error": "command failed: cargo test --locked -p ssx-infra --test w06 -- --exact cached_empty_never_authorizes_fallback_observed_zero --show-output --test-threads=1",
+      "head": "9b7d888da1ee3f7e2ed045c2185ea16f419381e9",
+      "executed_commands": 54,
+      "markers": 73,
+      "unique_cases": 73,
+      "last_executed": {
+        "program": "cargo",
+        "args": [
+          "test",
+          "--locked",
+          "-p",
+          "ssx-infra",
+          "--test",
+          "w06",
+          "--",
+          "--exact",
+          "cached_empty_never_authorizes_fallback_observed_zero",
+          "--show-output",
+          "--test-threads=1"
+        ],
+        "exit_code": 101,
+        "stdout": "\nrunning 1 test\ntest cached_empty_never_authorizes_fallback_observed_zero ... FAILED\n\nsuccesses:\n\nsuccesses:\n\nfailures:\n\n---- cached_empty_never_authorizes_fallback_observed_zero stdout ----\n\nthread 'cached_empty_never_authorizes_fallback_observed_zero' (31285638) panicked at crates/ssx-infra/tests/w06.rs:702:5:\nassertion `left == right` failed\n  left: \"queued\"\n right: \"failed\"\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n\n\nfailures:\n    cached_empty_never_authorizes_fallback_observed_zero\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 22 filtered out; finished in 0.09s\n\n",
+        "stderr": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.09s\n     Running tests/w06.rs (/Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/debug/deps/w06-f349b584cbad9155)\nerror: test failed, to rerun pass `-p ssx-infra --test w06`\n"
+      },
+      "sha256": "19e4b0db074da8e6d99c8d663b8a45d6c34fd87115a69dbc204e2dc6b7a8d23a"
+    },
+    {
+      "artifact": "/Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/W06-qualified.json",
+      "status": "passed",
+      "error": null,
+      "head": "9b7d888da1ee3f7e2ed045c2185ea16f419381e9",
+      "executed_commands": 75,
+      "markers": 135,
+      "unique_cases": 135,
+      "last_executed": {
+        "program": "cargo",
+        "args": [
+          "clippy",
+          "--locked",
+          "-p",
+          "ssx-application",
+          "-p",
+          "ssx-infra",
+          "-p",
+          "ssx-mcp",
+          "-p",
+          "xtask",
+          "--all-targets",
+          "--",
+          "-D",
+          "warnings"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "    Checking ssx-domain v0.1.0 (/private/tmp/slopsearx-w06/crates/ssx-domain)\n    Checking ssx-wire v0.1.0 (/private/tmp/slopsearx-w06/crates/ssx-wire)\n    Checking ssx-owned-budget v0.1.0 (/private/tmp/slopsearx-w06/crates/ssx-owned-budget)\n    Checking ssx-application v0.1.0 (/private/tmp/slopsearx-w06/crates/ssx-application)\n    Checking ssx-registry v0.1.0 (/private/tmp/slopsearx-w06/crates/ssx-registry)\n    Checking ssx-mcp v0.1.0 (/private/tmp/slopsearx-w06/crates/ssx-mcp)\n    Checking ssx-http v0.1.0 (/private/tmp/slopsearx-w06/crates/ssx-http)\n    Checking ssx-config v0.1.0 (/private/tmp/slopsearx-w06/crates/ssx-config)\n    Checking ssx-infra v0.1.0 (/private/tmp/slopsearx-w06/crates/ssx-infra)\n    Checking xtask v0.1.0 (/private/tmp/slopsearx-w06/crates/xtask)\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 5.53s\n"
+      },
+      "sha256": "6a7f9aa237f09b4f30a981e25d6fea2ca6b28e0f13a3e8561b73a1144a651606"
+    }
+  ],
+  "restoration": {
+    "backups": "/private/tmp/w06-native-gate-mutations.AFXCgC",
+    "method": "shell EXIT/signal trap; byte-for-byte cmp verified source corpus, original staged.py, and native application tests after all five actual mutations",
+    "post_restoration_full_gate": "passed",
+    "mutated_native_tests_cargo_exit_zero_but_gate_exit_nonzero": true
+  },
+  "artifact_hashes": [
+    "19e4b0db074da8e6d99c8d663b8a45d6c34fd87115a69dbc204e2dc6b7a8d23a  /Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/W06-initial.json",
+    "6a7f9aa237f09b4f30a981e25d6fea2ca6b28e0f13a3e8561b73a1144a651606  /Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/W06-qualified.json",
+    "6943db85b4c610eb6835bf9022a308114023a7f023459bca6334ca79b1ca09f8  /Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/W06-component-final.json",
+    "6c3ce940b3c59cedb05f468ea1ecae25b3fd135b5b1f54ab9e10246377bc4591  /Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/W06-component-post-mutations.json",
+    "584d646c6b26a8324fef1fb793ef86db61fc6747423654f7de816e470b142aee  /Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/W06-negative-corpus-bytes.json",
+    "789f4551672504b8e5f71b148efc27c3cfcf3a93aeca685717b233a6b1aba00f  /Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/W06-negative-original-source.json",
+    "4ad00c55aaafd7b54bf5081a3e8e45576310049bc779c8e7e0a404a58b159e3b  /Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/W06-negative-ignored-native-test.json",
+    "e87e445071c26c120c010ec78c187287b507576d1ed09167da457a95afaf5992  /Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/W06-negative-missing-native-test.json",
+    "348910e9d47a622f401cf127c1f92cef58f7e2d87aa4dcda2f063c793d6047f8  /Volumes/tank01/magnus/rust-builds/slopsearx/w06-gate/evidence/W06-negative-wrong-case-receipt.json",
+    "9dd8957daf0c34194c49b29d9187cf1459cd74212f2478800a8d433ded684711  crates/xtask/src/w06.rs",
+    "474b79b5c4430b743baf465450840816ddd9eb9188a46b4bf36af3c880ab8a0d  docs/rust-rewrite/w06/qualification.json",
+    "98116bc1010da4390d2b4e48775d6b3c8e1df63a41568a344013f4746c2fcbd3  docs/rust-rewrite/w06/source.json",
+    "6a916005fb404369294f8f3d2e0c96ade191beae2be85087640e085bb9d4d256  slopsearx/staged.py",
+    "d9d6da0a3186c708beaf348708fb0205164dbc6c21f0a06b4dbc7f99803fe4e5  crates/ssx-application/tests/w06.rs"
+  ],
+  "limitations": [
+    "Native test counts alone are not evidence; exact complete case IDs and their named actual tests were verified.",
+    "The first cache qualification failure is retained; integer fixture clock fixed cjson timeout partition rounding without changing production cache behavior.",
+    "The pre-retained-policy-delta positive is historical, not final component acceptance."
+  ]
+}

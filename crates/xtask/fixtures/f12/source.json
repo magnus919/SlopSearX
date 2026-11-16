@@ -1,0 +1,513 @@
+{
+  "baseline": "6ae5e34fed19e8e9da7c19b95eeea894512f0e6d",
+  "cases": [
+    {
+      "answer": 0.65,
+      "cache_keys": [
+        "jev-routing:v1:70a2f5f5947a95c425747816b6f2db6541868d95cb4b8cc20af368839c54730b"
+      ],
+      "cache_writes": [
+        {
+          "key": "jev-routing:v1:70a2f5f5947a95c425747816b6f2db6541868d95cb4b8cc20af368839c54730b",
+          "ttl": 3600,
+          "value": {
+            "engines": [
+              "arxiv",
+              "pubmed"
+            ],
+            "scores": {
+              "arxiv": 0.65,
+              "pubmed": 0.65
+            }
+          }
+        }
+      ],
+      "decision": {
+        "engines": [
+          "arxiv",
+          "pubmed"
+        ],
+        "scores": {
+          "arxiv": 0.65,
+          "pubmed": 0.65
+        }
+      },
+      "name": "threshold",
+      "requests": [
+        {
+          "authorization": "Bearer synthetic",
+          "body": "{\"model\":\"jev-1.13.0\",\"state\":{\"user_query\":\" café 🐙 \"},\"questions\":{\"arxiv\":{\"type\":\"noul\",\"instructions\":\"Specialist engine id: arxiv. Display name: arXiv. Purpose: research preprints. Use when: the query seeks scientific papers or preprints. Categories: science. Would this named specialist provide distinctive, directly useful evidence beyond ordinary general web search for the user query? Answer no when general search is sufficient.\"},\"pubmed\":{\"type\":\"noul\",\"instructions\":\"Specialist engine id: pubmed. Display name: PubMed. Purpose: biomedical literature. Use when: the query seeks medical or life-science publications. Categories: science. Would this named specialist provide distinctive, directly useful evidence beyond ordinary general web search for the user query? Answer no when general search is sufficient.\"}}}",
+          "method": "POST",
+          "url": "https://api.typesafe.ai/v1/systemone"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "answer": 0.649,
+      "cache_keys": [
+        "jev-routing:v1:70a2f5f5947a95c425747816b6f2db6541868d95cb4b8cc20af368839c54730b"
+      ],
+      "cache_writes": [
+        {
+          "key": "jev-routing:v1:70a2f5f5947a95c425747816b6f2db6541868d95cb4b8cc20af368839c54730b",
+          "ttl": 3600,
+          "value": {
+            "engines": [],
+            "scores": {
+              "arxiv": 0.649,
+              "pubmed": 0.649
+            }
+          }
+        }
+      ],
+      "decision": {
+        "engines": [],
+        "scores": {
+          "arxiv": 0.649,
+          "pubmed": 0.649
+        }
+      },
+      "name": "below",
+      "requests": [
+        {
+          "authorization": "Bearer synthetic",
+          "body": "{\"model\":\"jev-1.13.0\",\"state\":{\"user_query\":\" café 🐙 \"},\"questions\":{\"arxiv\":{\"type\":\"noul\",\"instructions\":\"Specialist engine id: arxiv. Display name: arXiv. Purpose: research preprints. Use when: the query seeks scientific papers or preprints. Categories: science. Would this named specialist provide distinctive, directly useful evidence beyond ordinary general web search for the user query? Answer no when general search is sufficient.\"},\"pubmed\":{\"type\":\"noul\",\"instructions\":\"Specialist engine id: pubmed. Display name: PubMed. Purpose: biomedical literature. Use when: the query seeks medical or life-science publications. Categories: science. Would this named specialist provide distinctive, directly useful evidence beyond ordinary general web search for the user query? Answer no when general search is sufficient.\"}}}",
+          "method": "POST",
+          "url": "https://api.typesafe.ai/v1/systemone"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "answer": true,
+      "cache_keys": [
+        "jev-routing:v1:70a2f5f5947a95c425747816b6f2db6541868d95cb4b8cc20af368839c54730b"
+      ],
+      "cache_writes": [
+        {
+          "key": "jev-routing:v1:70a2f5f5947a95c425747816b6f2db6541868d95cb4b8cc20af368839c54730b",
+          "ttl": 3600,
+          "value": {
+            "engines": [
+              "arxiv",
+              "pubmed"
+            ],
+            "scores": {
+              "arxiv": 1.0,
+              "pubmed": 1.0
+            }
+          }
+        }
+      ],
+      "decision": {
+        "engines": [
+          "arxiv",
+          "pubmed"
+        ],
+        "scores": {
+          "arxiv": 1.0,
+          "pubmed": 1.0
+        }
+      },
+      "name": "bool",
+      "requests": [
+        {
+          "authorization": "Bearer synthetic",
+          "body": "{\"model\":\"jev-1.13.0\",\"state\":{\"user_query\":\" café 🐙 \"},\"questions\":{\"arxiv\":{\"type\":\"noul\",\"instructions\":\"Specialist engine id: arxiv. Display name: arXiv. Purpose: research preprints. Use when: the query seeks scientific papers or preprints. Categories: science. Would this named specialist provide distinctive, directly useful evidence beyond ordinary general web search for the user query? Answer no when general search is sufficient.\"},\"pubmed\":{\"type\":\"noul\",\"instructions\":\"Specialist engine id: pubmed. Display name: PubMed. Purpose: biomedical literature. Use when: the query seeks medical or life-science publications. Categories: science. Would this named specialist provide distinctive, directly useful evidence beyond ordinary general web search for the user query? Answer no when general search is sufficient.\"}}}",
+          "method": "POST",
+          "url": "https://api.typesafe.ai/v1/systemone"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "answer": false,
+      "cache_keys": [
+        "jev-routing:v1:70a2f5f5947a95c425747816b6f2db6541868d95cb4b8cc20af368839c54730b"
+      ],
+      "cache_writes": [
+        {
+          "key": "jev-routing:v1:70a2f5f5947a95c425747816b6f2db6541868d95cb4b8cc20af368839c54730b",
+          "ttl": 3600,
+          "value": {
+            "engines": [],
+            "scores": {
+              "arxiv": 0.0,
+              "pubmed": 0.0
+            }
+          }
+        }
+      ],
+      "decision": {
+        "engines": [],
+        "scores": {
+          "arxiv": 0.0,
+          "pubmed": 0.0
+        }
+      },
+      "name": "false",
+      "requests": [
+        {
+          "authorization": "Bearer synthetic",
+          "body": "{\"model\":\"jev-1.13.0\",\"state\":{\"user_query\":\" café 🐙 \"},\"questions\":{\"arxiv\":{\"type\":\"noul\",\"instructions\":\"Specialist engine id: arxiv. Display name: arXiv. Purpose: research preprints. Use when: the query seeks scientific papers or preprints. Categories: science. Would this named specialist provide distinctive, directly useful evidence beyond ordinary general web search for the user query? Answer no when general search is sufficient.\"},\"pubmed\":{\"type\":\"noul\",\"instructions\":\"Specialist engine id: pubmed. Display name: PubMed. Purpose: biomedical literature. Use when: the query seeks medical or life-science publications. Categories: science. Would this named specialist provide distinctive, directly useful evidence beyond ordinary general web search for the user query? Answer no when general search is sufficient.\"}}}",
+          "method": "POST",
+          "url": "https://api.typesafe.ai/v1/systemone"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "answer": 1.01,
+      "cache_keys": [
+        "jev-routing:v1:70a2f5f5947a95c425747816b6f2db6541868d95cb4b8cc20af368839c54730b"
+      ],
+      "cache_writes": [],
+      "decision": null,
+      "name": "above",
+      "requests": [
+        {
+          "authorization": "Bearer synthetic",
+          "body": "{\"model\":\"jev-1.13.0\",\"state\":{\"user_query\":\" café 🐙 \"},\"questions\":{\"arxiv\":{\"type\":\"noul\",\"instructions\":\"Specialist engine id: arxiv. Display name: arXiv. Purpose: research preprints. Use when: the query seeks scientific papers or preprints. Categories: science. Would this named specialist provide distinctive, directly useful evidence beyond ordinary general web search for the user query? Answer no when general search is sufficient.\"},\"pubmed\":{\"type\":\"noul\",\"instructions\":\"Specialist engine id: pubmed. Display name: PubMed. Purpose: biomedical literature. Use when: the query seeks medical or life-science publications. Categories: science. Would this named specialist provide distinctive, directly useful evidence beyond ordinary general web search for the user query? Answer no when general search is sufficient.\"}}}",
+          "method": "POST",
+          "url": "https://api.typesafe.ai/v1/systemone"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "answer": -0.1,
+      "cache_keys": [
+        "jev-routing:v1:70a2f5f5947a95c425747816b6f2db6541868d95cb4b8cc20af368839c54730b"
+      ],
+      "cache_writes": [],
+      "decision": null,
+      "name": "negative",
+      "requests": [
+        {
+          "authorization": "Bearer synthetic",
+          "body": "{\"model\":\"jev-1.13.0\",\"state\":{\"user_query\":\" café 🐙 \"},\"questions\":{\"arxiv\":{\"type\":\"noul\",\"instructions\":\"Specialist engine id: arxiv. Display name: arXiv. Purpose: research preprints. Use when: the query seeks scientific papers or preprints. Categories: science. Would this named specialist provide distinctive, directly useful evidence beyond ordinary general web search for the user query? Answer no when general search is sufficient.\"},\"pubmed\":{\"type\":\"noul\",\"instructions\":\"Specialist engine id: pubmed. Display name: PubMed. Purpose: biomedical literature. Use when: the query seeks medical or life-science publications. Categories: science. Would this named specialist provide distinctive, directly useful evidence beyond ordinary general web search for the user query? Answer no when general search is sufficient.\"}}}",
+          "method": "POST",
+          "url": "https://api.typesafe.ai/v1/systemone"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "answer": null,
+      "cache_keys": [
+        "jev-routing:v1:70a2f5f5947a95c425747816b6f2db6541868d95cb4b8cc20af368839c54730b"
+      ],
+      "cache_writes": [],
+      "decision": null,
+      "name": "missing",
+      "requests": [
+        {
+          "authorization": "Bearer synthetic",
+          "body": "{\"model\":\"jev-1.13.0\",\"state\":{\"user_query\":\" café 🐙 \"},\"questions\":{\"arxiv\":{\"type\":\"noul\",\"instructions\":\"Specialist engine id: arxiv. Display name: arXiv. Purpose: research preprints. Use when: the query seeks scientific papers or preprints. Categories: science. Would this named specialist provide distinctive, directly useful evidence beyond ordinary general web search for the user query? Answer no when general search is sufficient.\"},\"pubmed\":{\"type\":\"noul\",\"instructions\":\"Specialist engine id: pubmed. Display name: PubMed. Purpose: biomedical literature. Use when: the query seeks medical or life-science publications. Categories: science. Would this named specialist provide distinctive, directly useful evidence beyond ordinary general web search for the user query? Answer no when general search is sufficient.\"}}}",
+          "method": "POST",
+          "url": "https://api.typesafe.ai/v1/systemone"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "answer": "0.9",
+      "cache_keys": [
+        "jev-routing:v1:70a2f5f5947a95c425747816b6f2db6541868d95cb4b8cc20af368839c54730b"
+      ],
+      "cache_writes": [],
+      "decision": null,
+      "name": "string",
+      "requests": [
+        {
+          "authorization": "Bearer synthetic",
+          "body": "{\"model\":\"jev-1.13.0\",\"state\":{\"user_query\":\" café 🐙 \"},\"questions\":{\"arxiv\":{\"type\":\"noul\",\"instructions\":\"Specialist engine id: arxiv. Display name: arXiv. Purpose: research preprints. Use when: the query seeks scientific papers or preprints. Categories: science. Would this named specialist provide distinctive, directly useful evidence beyond ordinary general web search for the user query? Answer no when general search is sufficient.\"},\"pubmed\":{\"type\":\"noul\",\"instructions\":\"Specialist engine id: pubmed. Display name: PubMed. Purpose: biomedical literature. Use when: the query seeks medical or life-science publications. Categories: science. Would this named specialist provide distinctive, directly useful evidence beyond ordinary general web search for the user query? Answer no when general search is sufficient.\"}}}",
+          "method": "POST",
+          "url": "https://api.typesafe.ai/v1/systemone"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "answer": 0.9,
+      "cache_keys": [
+        "jev-routing:v1:70a2f5f5947a95c425747816b6f2db6541868d95cb4b8cc20af368839c54730b"
+      ],
+      "cache_writes": [],
+      "decision": null,
+      "name": "wrong_model",
+      "requests": [
+        {
+          "authorization": "Bearer synthetic",
+          "body": "{\"model\":\"jev-1.13.0\",\"state\":{\"user_query\":\" café 🐙 \"},\"questions\":{\"arxiv\":{\"type\":\"noul\",\"instructions\":\"Specialist engine id: arxiv. Display name: arXiv. Purpose: research preprints. Use when: the query seeks scientific papers or preprints. Categories: science. Would this named specialist provide distinctive, directly useful evidence beyond ordinary general web search for the user query? Answer no when general search is sufficient.\"},\"pubmed\":{\"type\":\"noul\",\"instructions\":\"Specialist engine id: pubmed. Display name: PubMed. Purpose: biomedical literature. Use when: the query seeks medical or life-science publications. Categories: science. Would this named specialist provide distinctive, directly useful evidence beyond ordinary general web search for the user query? Answer no when general search is sufficient.\"}}}",
+          "method": "POST",
+          "url": "https://api.typesafe.ai/v1/systemone"
+        }
+      ],
+      "status": 200
+    },
+    {
+      "answer": 0.9,
+      "cache_keys": [
+        "jev-routing:v1:70a2f5f5947a95c425747816b6f2db6541868d95cb4b8cc20af368839c54730b"
+      ],
+      "cache_writes": [],
+      "decision": null,
+      "name": "http_error",
+      "requests": [
+        {
+          "authorization": "Bearer synthetic",
+          "body": "{\"model\":\"jev-1.13.0\",\"state\":{\"user_query\":\" café 🐙 \"},\"questions\":{\"arxiv\":{\"type\":\"noul\",\"instructions\":\"Specialist engine id: arxiv. Display name: arXiv. Purpose: research preprints. Use when: the query seeks scientific papers or preprints. Categories: science. Would this named specialist provide distinctive, directly useful evidence beyond ordinary general web search for the user query? Answer no when general search is sufficient.\"},\"pubmed\":{\"type\":\"noul\",\"instructions\":\"Specialist engine id: pubmed. Display name: PubMed. Purpose: biomedical literature. Use when: the query seeks medical or life-science publications. Categories: science. Would this named specialist provide distinctive, directly useful evidence beyond ordinary general web search for the user query? Answer no when general search is sufficient.\"}}}",
+          "method": "POST",
+          "url": "https://api.typesafe.ai/v1/systemone"
+        }
+      ],
+      "status": 503
+    },
+    {
+      "answer": 0.9,
+      "cache_keys": [
+        "jev-routing:v1:70a2f5f5947a95c425747816b6f2db6541868d95cb4b8cc20af368839c54730b"
+      ],
+      "cache_writes": [
+        {
+          "key": "jev-routing:v1:70a2f5f5947a95c425747816b6f2db6541868d95cb4b8cc20af368839c54730b",
+          "ttl": 3600,
+          "value": {
+            "engines": [
+              "arxiv",
+              "pubmed"
+            ],
+            "scores": {
+              "arxiv": 0.9,
+              "pubmed": 0.9
+            }
+          }
+        }
+      ],
+      "decision": {
+        "engines": [
+          "arxiv",
+          "pubmed"
+        ],
+        "scores": {
+          "arxiv": 0.9,
+          "pubmed": 0.9
+        }
+      },
+      "name": "tie",
+      "requests": [
+        {
+          "authorization": "Bearer synthetic",
+          "body": "{\"model\":\"jev-1.13.0\",\"state\":{\"user_query\":\" café 🐙 \"},\"questions\":{\"arxiv\":{\"type\":\"noul\",\"instructions\":\"Specialist engine id: arxiv. Display name: arXiv. Purpose: research preprints. Use when: the query seeks scientific papers or preprints. Categories: science. Would this named specialist provide distinctive, directly useful evidence beyond ordinary general web search for the user query? Answer no when general search is sufficient.\"},\"pubmed\":{\"type\":\"noul\",\"instructions\":\"Specialist engine id: pubmed. Display name: PubMed. Purpose: biomedical literature. Use when: the query seeks medical or life-science publications. Categories: science. Would this named specialist provide distinctive, directly useful evidence beyond ordinary general web search for the user query? Answer no when general search is sufficient.\"}}}",
+          "method": "POST",
+          "url": "https://api.typesafe.ai/v1/systemone"
+        }
+      ],
+      "status": 200
+    }
+  ],
+  "configs": [
+    {
+      "identity": "0a30cb9491c9f1fd",
+      "threshold": 0.65,
+      "threshold_input": "0.65",
+      "timeout": 1.0,
+      "timeout_input": "1000"
+    },
+    {
+      "identity": "d68b003054bab754",
+      "threshold": 0.0,
+      "threshold_input": "nan",
+      "timeout": 1.0,
+      "timeout_input": "1000"
+    },
+    {
+      "identity": "b70d55ae4f320b98",
+      "threshold": 1.0,
+      "threshold_input": "inf",
+      "timeout": 1.0,
+      "timeout_input": "1000"
+    },
+    {
+      "identity": "d68b003054bab754",
+      "threshold": 0.0,
+      "threshold_input": "-inf",
+      "timeout": 1.0,
+      "timeout_input": "1000"
+    },
+    {
+      "identity": "0a30cb9491c9f1fd",
+      "threshold": 0.65,
+      "threshold_input": "bad",
+      "timeout": 1.0,
+      "timeout_input": "50"
+    },
+    {
+      "identity": "b70d55ae4f320b98",
+      "threshold": 1.0,
+      "threshold_input": "1_0",
+      "timeout": 0.05,
+      "timeout_input": "5_0"
+    },
+    {
+      "identity": "0a30cb9491c9f1fd",
+      "threshold": 0.65,
+      "threshold_input": "0.3",
+      "timeout": 1.0,
+      "timeout_input": "bad"
+    },
+    {
+      "identity": "789d39d03c77b614",
+      "threshold": 0.7,
+      "threshold_input": " 0.7 ",
+      "timeout": 0.05,
+      "timeout_input": "-5"
+    }
+  ],
+  "fastmcp": "4.0.11",
+  "mcp": "2.3.0",
+  "plan_id": "F12",
+  "python": "3.14.7",
+  "schema_version": 1,
+  "scopes": [
+    {
+      "advice_calls": 0,
+      "name": "keyless",
+      "scope": {
+        "excluded_engines": [],
+        "jev_added_engines": [],
+        "jev_scores": {},
+        "matched_topic": null,
+        "resolved_categories": [],
+        "routing_budget_applied": false,
+        "routing_fallback": false,
+        "routing_rule": "tier-1 fallback",
+        "routing_tradeoffs": [],
+        "selected_engines": [
+          "brave"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "advice_calls": 1,
+      "name": "enhanced",
+      "scope": {
+        "excluded_engines": [],
+        "jev_added_engines": [
+          "arxiv",
+          "pubmed"
+        ],
+        "jev_scores": {
+          "arxiv": 0.9,
+          "pubmed": 0.9
+        },
+        "matched_topic": null,
+        "resolved_categories": [],
+        "routing_budget_applied": false,
+        "routing_fallback": false,
+        "routing_rule": "tier-1 fallback+jev specialists",
+        "routing_tradeoffs": [],
+        "selected_engines": [
+          "brave",
+          "arxiv",
+          "pubmed"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "advice_calls": 1,
+      "name": "failure",
+      "scope": {
+        "excluded_engines": [],
+        "jev_added_engines": [],
+        "jev_scores": {},
+        "matched_topic": null,
+        "resolved_categories": [],
+        "routing_budget_applied": false,
+        "routing_fallback": false,
+        "routing_rule": "tier-1 fallback",
+        "routing_tradeoffs": [],
+        "selected_engines": [
+          "brave"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "advice_calls": 0,
+      "name": "explicit",
+      "scope": {
+        "excluded_engines": [],
+        "jev_added_engines": [],
+        "jev_scores": {},
+        "matched_topic": null,
+        "resolved_categories": [],
+        "routing_budget_applied": false,
+        "routing_fallback": false,
+        "routing_rule": "explicit engine",
+        "routing_tradeoffs": [],
+        "selected_engines": [
+          "brave"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "advice_calls": 1,
+      "name": "budget_bypass",
+      "scope": {
+        "excluded_engines": [],
+        "jev_added_engines": [
+          "arxiv",
+          "pubmed"
+        ],
+        "jev_scores": {
+          "arxiv": 0.9,
+          "pubmed": 0.9
+        },
+        "matched_topic": null,
+        "resolved_categories": [],
+        "routing_budget_applied": false,
+        "routing_fallback": false,
+        "routing_rule": "tier-1 fallback+jev specialists",
+        "routing_tradeoffs": [],
+        "selected_engines": [
+          "brave",
+          "arxiv",
+          "pubmed"
+        ],
+        "warnings": []
+      }
+    }
+  ],
+  "sources": [
+    {
+      "git_blob": "2bbb5c01f20b4db16730cbe3460e625b3d27fa23",
+      "path": "slopsearx/jev.py"
+    },
+    {
+      "git_blob": "8b45ce71efc3c7cc4a72b962968e146a63e135be",
+      "path": "slopsearx/service.py"
+    },
+    {
+      "git_blob": "ffa2afc58add323cc9d321505800c3f3ed038853",
+      "path": "slopsearx/routing.py"
+    },
+    {
+      "git_blob": "ef14e463d2d49bcdb2af60dd02691649cd80a639",
+      "path": "slopsearx/router.py"
+    },
+    {
+      "git_blob": "7374e5bfc13166685b5cf5586d2020b22cabda17",
+      "path": "tests/test_jev.py"
+    },
+    {
+      "git_blob": "383945a5de7f74480b38dc93a2124b22271d882d",
+      "path": "tests/test_routing_eval.py"
+    }
+  ]
+}

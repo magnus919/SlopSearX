@@ -1,0 +1,28 @@
+{
+  "head": "ea944ec047a2f006d719571f67068bc3d0fa36df",
+  "reviewer": "Codex runner fallback",
+  "disposition": "positive",
+  "blocking_findings": [],
+  "fallback_reason": "Native Droid Auto Review/Tag jobs skipped; separate PR Review Analysis evidence still must be inspected.",
+  "scope": [
+    "gateway owner task and SDK scope ownership",
+    "ready future startup/error/cancel races",
+    "normal and abnormal cleanup and _state publication",
+    "unchanged OAuth/bearer/session discovery and calls",
+    "test failure oracle and CI transport isolation"
+  ],
+  "analysis": [
+    "The original HTTP client, stream context and ClientSession code remains in _gateway_connection. Its complete nested scope stack now enters/exits only in own_connection, eliminating the observed hosting-task scope interleaving.",
+    "Ready is published only after initialization and full discovery/registration. Exceptions set the readiness future then propagate; awaiting owner observes them. Failed initialization never yields the outer lifespan.",
+    "Cancelling startup cancels the pending ready future and owner, awaits task termination and allows the owning task to unwind its scopes. Normal/body-error/cancelled serving exits signal stop then await owner. Cleanup exceptions are not swallowed; inner finally clears global _state. Explicit owner tests cover these paths.",
+    "Session calls already occur from ASGI tool tasks separate from the former lifespan task; moving lifespan scopes into a dedicated task preserves existing session concurrency. OAuth/static HTTP client construction and all forwarded call/schema logic remain unchanged. Existing single-global-state limitation is unchanged, not expanded into concurrent multi-gateway support.",
+    "Actual authenticated replay retains full catalogs/raw control responses and eliminates observed shutdown failures. Permanent HTTP test checks uvicorn shutdown_failed, cleared state and no surviving owner; it fails baseline. Fresh-process isolation matches existing CI transport policy; combined-process failed attempts remain in ledger, not claimed as green.",
+    "No search/result/policy/auth/cache/portal wire changes. Initial147 portal/API/browser checks passed, final lifecycle coverage test and unit suite pass. Scientific primary/guard/optimization corruption verifier supports defect correction, not a population availability claim.",
+    "New test spacing CI finding fixed; final five changed paths explicitly checked. Normal exact-head CI remains necessary; earlier CI cannot qualify updated head."
+  ],
+  "limits": [
+    "First two replay arms precede startup-only future.cancel addition; ordinary replay path unchanged, final startup branches separately tested.",
+    "No real production prevalence, deployed version or operator SLO effect measured."
+  ],
+  "validation": "All applicable hosted checks passed on ea944ec047a2f006d719571f67068bc3d0fa36df. Automated current-head analysis incomplete/partial with no findings; substantive fallback positive. Local12 isolated transport modules passed; remainder2880 passed,58 skipped,46 subtests with two baseline-reproduced environment failures."
+}

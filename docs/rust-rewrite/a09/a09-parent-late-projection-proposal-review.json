@@ -1,0 +1,32 @@
+{
+  "status": "approved_exact_test_only_application_and_targeted_qualification",
+  "manifest_sha256": "69f87899b080bb3bdadcc30d02ca5fb7597d7ebe2dcfbb1db8f204c66337ea40",
+  "files": [
+    {
+      "path": "crates/ssx-infra/src/adapters/source_payload/batch.rs",
+      "before_sha256": "377177d69c570efdcf777c5ead967e248dd8d708c1fd8bbb7241eb5a0d3e4558",
+      "after_sha256": "8369dc826496b76e2a167a9c2ad0ea75a70f98b1f6dca59fd564ca63b2a0dd71",
+      "proposal": "/private/tmp/a09-late-projection-batch.patch"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/source_payload.rs",
+      "before_sha256": "3c10b2b73ac98afe9983edfe991c77c8016d47a227dc840d582e79dcbebb5db7",
+      "after_sha256": "66006c1f6ab7a61b397e3d4df8df5baebcb98a053506f2d00093df35682c7cc4",
+      "proposal": "/private/tmp/a09-late-projection-source_payload.patch"
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/catalog_media.rs",
+      "before_sha256": "1391407c6837f1bcbe41d54a1fd282255071d5d9659d1eaeaf130451cb80f3c5",
+      "after_sha256": "0e8e83ced2bdde55b84e70990d5477096c7619b4696bf2d658c378fa7ec0c535",
+      "proposal": "/private/tmp/a09-late-projection-catalog_media.patch"
+    }
+  ],
+  "review": "Full3patches read, guardedbefore/after verified; cfgtesttasklocalobserver emits only after actualscalar copies/rowpush, actualtwo-row enginefuture suspension afterfirststored and secondlargefield, samebudgetzeroondrop; thumbnailcopycausalobserver replacesfixed8polls. No productionbinary/APIbehavior edits.",
+  "required_next": [
+    "formatcompileand5actualenginecancellationtests+thumbnailseamtests",
+    "assertfirstStored(1)/absenceStored(2)/fieldcopiedbeforecancelling",
+    "fullnativegatewithupdatedreviewedsourcehashes",
+    "independentreviewerconfirmP2closure"
+  ],
+  "limits": "Observerresidesonlyincfgtest; no globalRSS/CPUtimingclaim, nofinalA09sourceacceptance"
+}
