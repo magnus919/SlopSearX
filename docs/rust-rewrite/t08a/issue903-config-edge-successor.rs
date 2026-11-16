@@ -91,6 +91,10 @@ fn git(root: &Path, args: &[&str]) -> Result<Vec<u8>> {
     need(output.status.success(), "prior Git identity command")?;
     Ok(output.stdout)
 }
+#[allow(
+    dead_code,
+    reason = "Used by source-composition gates; the standalone checker also compiles this shared module"
+)]
 pub(crate) fn owns(path: &str) -> bool {
     matches!(
         path,
@@ -189,6 +193,10 @@ fn project_row(row: &Row, current: &[u8]) -> Result<Vec<u8>> {
     Ok(prior)
 }
 /// Pure byte projection for source-frame controls; physical callers use `prior`.
+#[allow(
+    dead_code,
+    reason = "Used by source-composition gates; the standalone checker also compiles this shared module"
+)]
 pub(crate) fn project_current(path: &str, current: &[u8]) -> Result<Vec<u8>> {
     let capsule = capsule()?;
     let row = capsule
@@ -272,9 +280,9 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
             && capsule.rows[2].edits[0].remove_utf8.is_empty()
             && capsule.rows[2].edits[0].insert_utf8
                 == "\n[target.'cfg(unix)'.dev-dependencies.nix]\nversion = \"=0.31.3\"\nfeatures = [\"fs\"]\n"
-            && capsule.rows[3].edits.len() >= 1
+            && !capsule.rows[3].edits.is_empty()
             && capsule.rows[4].edits.len() >= 2
-            && capsule.rows[5].edits.len() >= 1,
+            && !capsule.rows[5].edits.is_empty(),
         "finite dependency and source successor spans",
     )?;
     Ok(())
