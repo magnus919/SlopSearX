@@ -49,14 +49,6 @@ fn digest(bytes: &[u8]) -> String {
         .map(|b| format!("{b:02x}"))
         .collect()
 }
-fn regular(root: &Path, path: &str) -> Result<Vec<u8>> {
-    let (bytes, mode) = super::bounded_read(root, path, 1048576)?;
-    #[cfg(unix)]
-    need(mode == 0o644, "opened source mode must be regular0644")?;
-    #[cfg(not(unix))]
-    let _ = mode;
-    Ok(bytes)
-}
 #[cfg(not(unix))]
 fn source_mode(root: &Path, path: &str) -> Result<&'static str> {
     // Windows does not expose Unix permission bits. Preserve the committed
@@ -448,11 +440,16 @@ fn pre_984_w07(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
     inverse(&inverse_row, physical, "0644", 3)
 }
 
-fn accepted_current(root: &Path, path: &str, physical: &[u8]) -> Result<Vec<u8>> {
-    let upstream = if path == "crates/xtask/src/main.rs" {
-        super::upstream_contracts_successor::frame(path, physical, 0o644)?
+fn accepted_current(root: &Path, path: &str, physical: &[u8], opened_mode: u32) -> Result<Vec<u8>> {
+    let issue903 = if path == "docs/rust-rewrite/a06/source-amendments/shared-successor.rs" {
+        super::issue903_config_successor::prior(root, path, physical, opened_mode)?
     } else {
         physical.to_vec()
+    };
+    let upstream = if path == "crates/xtask/src/main.rs" {
+        super::upstream_contracts_successor::frame(path, &issue903, 0o644)?
+    } else {
+        issue903
     };
     let registered = pre_t03_registration(path, &upstream)?;
     let logical = if portal_source_successor::owns(path) {
@@ -524,10 +521,11 @@ fn interpret(
     proof_root: &Path,
     path: &str,
     physical: &[u8],
+    opened_mode: u32,
     mode: &str,
     parent: Parent,
 ) -> Result<Vec<u8>> {
-    let logical = accepted_current(proof_root, path, physical)?;
+    let logical = accepted_current(proof_root, path, physical, opened_mode)?;
     let physical = logical.as_slice();
     scope(doc)?;
     let index = ROWS
@@ -579,6 +577,7 @@ pub(crate) fn project_at(
         proof_root,
         path,
         &physical,
+        opened_mode,
         mode,
         parent,
     )
@@ -587,8 +586,13 @@ pub(crate) fn project_at(
 pub(crate) fn controls(root: &Path) -> Result<()> {
     let doc = capsule(root)?;
     for (index, (path, cli_count, main_count)) in ROWS.iter().enumerate() {
-        let physical = regular(root, path)?;
-        let logical = accepted_current(root, path, &physical)?;
+        let (physical, opened_mode) = super::bounded_read(root, path, 1048576)?;
+        #[cfg(unix)]
+        need(
+            opened_mode == 0o644,
+            "opened source mode must be regular0644",
+        )?;
+        let logical = accepted_current(root, path, &physical, opened_mode)?;
         if *path == "crates/xtask/src/main.rs" {
             let upstream = super::upstream_contracts_successor::frame(path, &physical, 0o644)?;
             let registered = pre_t03_registration(path, &upstream)?;
@@ -606,7 +610,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
                 "pre-health frame substituted as physical registration",
             )?;
             need(
-                accepted_current(root, path, &logical).is_err(),
+                accepted_current(root, path, &logical, opened_mode).is_err(),
                 "pre-T08 frame substituted as physical registration",
             )?;
         }
@@ -652,7 +656,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
             )?;
             for mode in ["0600", "0755", "4644"] {
                 need(
-                    interpret(&doc, root, path, &physical, mode, parent).is_err(),
+                    interpret(&doc, root, path, &physical, opened_mode, mode, parent).is_err(),
                     "outer wrong mode",
                 )?;
             }
@@ -672,14 +676,23 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
                     _ => edits[0]["insert_utf8"] = serde_json::json!("changed"),
                 }
                 need(
-                    interpret(&bad, root, path, &physical, "0644", parent).is_err(),
+                    interpret(&bad, root, path, &physical, opened_mode, "0644", parent).is_err(),
                     "outer missing/duplicate/moved/changed span",
                 )?;
             }
             let mut unselected = doc.clone();
             unselected["rows"][index][other]["prior"]["sha256"] = serde_json::json!("changed");
             need(
-                interpret(&unselected, root, path, &physical, "0644", parent).is_err(),
+                interpret(
+                    &unselected,
+                    root,
+                    path,
+                    &physical,
+                    opened_mode,
+                    "0644",
+                    parent,
+                )
+                .is_err(),
                 "unselected endpoint must also authenticate",
             )?;
         }

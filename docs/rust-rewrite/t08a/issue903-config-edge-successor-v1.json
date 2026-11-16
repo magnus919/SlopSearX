@@ -11,8 +11,8 @@
         "git_blob": "c7fddce0c1d2f5d4bfed297056f2f81da936caf8"
       },
       "current": {
-        "bytes": 94358,
-        "sha256": "be8d91b79e48175ea1d3d523c05e5e21a9e8cac815bfb4d49db6fd188b8ca4d0",
+        "bytes": 94366,
+        "sha256": "b775c6fad235c1e60f7868aa424d13e84843d0f3c83a0af2af389bb523a24c27",
         "mode": "0644"
       },
       "edits": [
@@ -20,6 +20,11 @@
           "offset": 65746,
           "remove_utf8": "",
           "insert_utf8": "\",\n \"serde"
+        },
+        {
+          "offset": 67332,
+          "remove_utf8": "",
+          "insert_utf8": "nix\",\n \""
         },
         {
           "offset": 67878,
@@ -485,6 +490,58 @@
           "offset": 38265,
           "remove_utf8": "",
           "insert_utf8": "let (physical, mode) = bounded_source_reader::bounded_read(root, pin.path, LIMIT)?;\n            let logical = issue903_config_successor::prior(root, pin.path, &physical, mode)?;\n            (physical, logical)\n        } else {\n            let physical = regular(root, pin.path, pin.current_bytes)?;\n            (physical.clone(), physical)\n        };\n        let prior_bytes = prior(root, pin.path, &physical)?;\n        let source_row = row(&doc, pin.path)?;\n        need(\n            inverse(pin, source_row, &logical, 0o644)? == prior_bytes,\n            \"pure positive precedes controls\",\n        )?;\n        need(\n            frame(pin.path, &logical, 0o644)? == prior_bytes,\n            \"same pure frame as full custody\",\n        )?;\n        need(\n            prior(root, pin.path, &prior_bytes).is_err()\n                && frame(pin.path, &prior_bytes, 0o644).is_err(),\n            \"stale parent is not current\",\n        )?;\n        if pin.path == W07_SOURCE {\n            "
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/Cargo.toml",
+      "prior": {
+        "bytes": 1254,
+        "sha256": "349c3dc8db94a995d7eef27acbe8b5eeccb9f6cff1ccdd3e8308f638d301f51e",
+        "mode": "0644",
+        "git_blob": "ef6d4a2e8b1fde715c80e0d0c8c37ee0456ed4d9"
+      },
+      "current": {
+        "bytes": 1335,
+        "sha256": "02140eac8c7de2bff43d7cbc6638321301008266661c3e4f1549237664f94d4b",
+        "mode": "0644"
+      },
+      "edits": [
+        {
+          "offset": 1254,
+          "remove_utf8": "",
+          "insert_utf8": "\n[target.'cfg(unix)'.dev-dependencies.nix]\nversion = \"=0.31.3\"\nfeatures = [\"fs\"]\n"
+        }
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+      "prior": {
+        "bytes": 87891,
+        "sha256": "8e2347c9e17f87e1d1145c9ea247e0a30d6d5a502b15a545a7339e012686a3ac",
+        "mode": "0644",
+        "git_blob": "9471d04e831ccc01fe4a55194f42c3cdc9b56ad9"
+      },
+      "current": {
+        "bytes": 90405,
+        "sha256": "8a5a7636e1775a2ac8d40b87fc147bc862596d35e293f566ed11c8057f5bbd38",
+        "mode": "0644"
+      },
+      "edits": [
+        {
+          "offset": 21634,
+          "remove_utf8": "",
+          "insert_utf8": "const ISSUE903_INFRA_MANIFEST: &str = \"crates/ssx-infra/Cargo.toml\";\nconst ISSUE903_INFRA_MANIFEST_PRIOR_SHA: &str =\n    \"349c3dc8db94a995d7eef27acbe8b5eeccb9f6cff1ccdd3e8308f638d301f51e\";\nfn issue903_infra_manifest_prior(\n    root: &Path,\n    row: &Value,\n    physical: &[u8],\n    opened_mode: u32,\n) -> Result<Vec<u8>, String> {\n    need(\n        row[\"path\"] == ISSUE903_INFRA_MANIFEST\n            && row[\"sha256\"] == ISSUE903_INFRA_MANIFEST_PRIOR_SHA\n            && row[\"bytes\"] == 1254\n            && row[\"mode\"] == \"0644\",\n        \"exact sealed A06 ssx-infra manifest endpoint\",\n    )?;\n    let prior = w07_t02_joint::cli_source_custody::project_issue903_config(\n        root,\n        ISSUE903_INFRA_MANIFEST,\n        physical,\n        opened_mode,\n    )?;\n    material(row, &prior, \"0644\")?;\n    Ok(prior)\n}\n"
+        },
+        {
+          "offset": 21981,
+          "remove_utf8": "",
+          "insert_utf8": "    }\n    if text(row, \"path\")? == ISSUE903_INFRA_MANIFEST\n        && row[\"sha256\"] == ISSUE903_INFRA_MANIFEST_PRIOR_SHA\n    {\n        let (physical, opened_mode) = w07_t02_joint::cli_source_custody::bounded_read(\n            root,\n            ISSUE903_INFRA_MANIFEST,\n            1_048_576,\n        )?;\n        return issue903_infra_manifest_prior(root, row, &physical, opened_mode);\n"
+        },
+        {
+          "offset": 49015,
+          "remove_utf8": "",
+          "insert_utf8": "    let manifest_row = source(&doc, ISSUE903_INFRA_MANIFEST)?;\n    let (manifest_physical, manifest_mode) =\n        w07_t02_joint::cli_source_custody::bounded_read(root, ISSUE903_INFRA_MANIFEST, 1_048_576)?;\n    let manifest_prior = issue903_infra_manifest_prior(\n        root,\n        &manifest_row[\"current\"],\n        &manifest_physical,\n        manifest_mode,\n    )?;\n    need(\n        manifest_prior.len() == 1254\n            && digest(&manifest_prior) == ISSUE903_INFRA_MANIFEST_PRIOR_SHA,\n        \"A06/A13 bounded manifest projection positive\",\n    )?;\n    need(\n        issue903_infra_manifest_prior(root, &manifest_row[\"current\"], &manifest_physical, 0o600)\n            .is_err(),\n        \"A06/A13 bounded manifest wrong opened mode rejected\",\n    )?;\n    let mut changed_manifest = manifest_physical.clone();\n    changed_manifest[0] ^= 1;\n    need(\n        issue903_infra_manifest_prior(\n            root,\n            &manifest_row[\"current\"],\n            &changed_manifest,\n            manifest_mode,\n        )\n        .is_err(),\n        \"A06/A13 bounded manifest changed physical bytes rejected\",\n    )?;\n    let (_, routed_manifest) = verify_transition(root, manifest_row)?;\n    need(\n        routed_manifest == manifest_prior,\n        \"A06/A13 manifest transition consumes bounded projection\",\n    )?;\n"
         }
       ]
     }

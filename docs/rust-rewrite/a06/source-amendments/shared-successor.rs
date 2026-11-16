@@ -575,6 +575,31 @@ fn default_ca_fixture_controls(root: &Path) -> Result<(), String> {
     Ok(())
 }
 
+const ISSUE903_INFRA_MANIFEST: &str = "crates/ssx-infra/Cargo.toml";
+const ISSUE903_INFRA_MANIFEST_PRIOR_SHA: &str =
+    "349c3dc8db94a995d7eef27acbe8b5eeccb9f6cff1ccdd3e8308f638d301f51e";
+fn issue903_infra_manifest_prior(
+    root: &Path,
+    row: &Value,
+    physical: &[u8],
+    opened_mode: u32,
+) -> Result<Vec<u8>, String> {
+    need(
+        row["path"] == ISSUE903_INFRA_MANIFEST
+            && row["sha256"] == ISSUE903_INFRA_MANIFEST_PRIOR_SHA
+            && row["bytes"] == 1254
+            && row["mode"] == "0644",
+        "exact sealed A06 ssx-infra manifest endpoint",
+    )?;
+    let prior = w07_t02_joint::cli_source_custody::project_issue903_config(
+        root,
+        ISSUE903_INFRA_MANIFEST,
+        physical,
+        opened_mode,
+    )?;
+    material(row, &prior, "0644")?;
+    Ok(prior)
+}
 fn read_exact(root: &Path, row: &Value) -> Result<Vec<u8>, String> {
     if let Some(prior) = default_ca_fixture_operand(
         root,
@@ -585,6 +610,16 @@ fn read_exact(root: &Path, row: &Value) -> Result<Vec<u8>, String> {
         let prior = prior?;
         material(row, &prior, "0644")?;
         return Ok(prior);
+    }
+    if text(row, "path")? == ISSUE903_INFRA_MANIFEST
+        && row["sha256"] == ISSUE903_INFRA_MANIFEST_PRIOR_SHA
+    {
+        let (physical, opened_mode) = w07_t02_joint::cli_source_custody::bounded_read(
+            root,
+            ISSUE903_INFRA_MANIFEST,
+            1_048_576,
+        )?;
+        return issue903_infra_manifest_prior(root, row, &physical, opened_mode);
     }
     let path = root.join(text(row, "path")?);
     let stat = fs::symlink_metadata(&path).map_err(|e| e.to_string())?;
@@ -1305,6 +1340,42 @@ pub(crate) fn controls(root: &Path) -> Result<(), String> {
     let doc = load(root)?;
     frozen(root, &doc)?;
     scope(&doc)?;
+    let manifest_row = source(&doc, ISSUE903_INFRA_MANIFEST)?;
+    let (manifest_physical, manifest_mode) =
+        w07_t02_joint::cli_source_custody::bounded_read(root, ISSUE903_INFRA_MANIFEST, 1_048_576)?;
+    let manifest_prior = issue903_infra_manifest_prior(
+        root,
+        &manifest_row["current"],
+        &manifest_physical,
+        manifest_mode,
+    )?;
+    need(
+        manifest_prior.len() == 1254
+            && digest(&manifest_prior) == ISSUE903_INFRA_MANIFEST_PRIOR_SHA,
+        "A06/A13 bounded manifest projection positive",
+    )?;
+    need(
+        issue903_infra_manifest_prior(root, &manifest_row["current"], &manifest_physical, 0o600)
+            .is_err(),
+        "A06/A13 bounded manifest wrong opened mode rejected",
+    )?;
+    let mut changed_manifest = manifest_physical.clone();
+    changed_manifest[0] ^= 1;
+    need(
+        issue903_infra_manifest_prior(
+            root,
+            &manifest_row["current"],
+            &changed_manifest,
+            manifest_mode,
+        )
+        .is_err(),
+        "A06/A13 bounded manifest changed physical bytes rejected",
+    )?;
+    let (_, routed_manifest) = verify_transition(root, manifest_row)?;
+    need(
+        routed_manifest == manifest_prior,
+        "A06/A13 manifest transition consumes bounded projection",
+    )?;
     need(
         try_verify(
             Path::new("/missing-A06-control"),

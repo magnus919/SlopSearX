@@ -5,7 +5,7 @@ use std::{path::Path, process::Command};
 type Result<T> = std::result::Result<T, String>;
 const BASE: &str = "cab037909ca261d3d7157a5cab5628f1b6a8cf83";
 const CAPSULE: &[u8] = include_bytes!("issue903-config-edge-successor-v1.json");
-const CAPSULE_SHA: &str = "87c2ee787669599d7168bdc423b6455539afb05429f86f37e0ee408cf525c89b";
+const CAPSULE_SHA: &str = "75feea20b5593394b0eb7a83eb448e95746896412b610348ec814e680b43d643";
 const MAX_PHYSICAL_BYTES: u64 = 1_048_576;
 
 #[derive(Deserialize)]
@@ -64,15 +64,18 @@ fn capsule() -> Result<Capsule> {
     need(
         capsule.schema == "ISSUE903_CONFIG_EDGE_SUCCESSOR_V1"
             && capsule.baseline_commit == BASE
-            && capsule.rows.len() == 6
+            && capsule.rows.len() == 8
             && capsule.rows[0].path == "Cargo.lock"
             && capsule.rows[1].path == "crates/ssx-cli-check/Cargo.toml"
             && capsule.rows[2].path == "crates/ssx-mcp/Cargo.toml"
             && capsule.rows[3].path
                 == "docs/rust-rewrite/a06/source-amendments/native-search-reader.rs"
             && capsule.rows[4].path == "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs"
-            && capsule.rows[5].path == "docs/rust-rewrite/t03/source-successor-v1.rs",
-        "closed six-path capsule identity/order",
+            && capsule.rows[5].path == "docs/rust-rewrite/t03/source-successor-v1.rs"
+            && capsule.rows[6].path == "crates/ssx-infra/Cargo.toml"
+            && capsule.rows[7].path
+                == "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+        "closed eight-path capsule identity/order",
     )?;
     for row in &capsule.rows {
         need(
@@ -101,6 +104,7 @@ pub(crate) fn owns(path: &str) -> bool {
         "docs/rust-rewrite/a06/source-amendments/native-search-reader.rs"
             | "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs"
             | "docs/rust-rewrite/t03/source-successor-v1.rs"
+            | "docs/rust-rewrite/a06/source-amendments/shared-successor.rs"
     )
 }
 fn project_row(row: &Row, current: &[u8]) -> Result<Vec<u8>> {
@@ -269,9 +273,12 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         )?;
     }
     need(
-        capsule.rows[0].edits.len() == 2
+        capsule.rows[0].edits.len() == 3
             && capsule.rows[0].edits[0].insert_utf8 == "\",\n \"serde"
+            && capsule.rows[0].edits[1].offset == 67332
             && capsule.rows[0].edits[1].insert_utf8 == "nix\",\n \""
+            && capsule.rows[0].edits[2].offset == 67878
+            && capsule.rows[0].edits[2].insert_utf8 == "nix\",\n \""
             && capsule.rows[1].edits.len() == 2
             && capsule.rows[1].edits[0].insert_utf8 == "\nserde.workspace = true"
             && capsule.rows[1].edits[1].remove_utf8 == "]\n"
@@ -282,7 +289,12 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
                 == "\n[target.'cfg(unix)'.dev-dependencies.nix]\nversion = \"=0.31.3\"\nfeatures = [\"fs\"]\n"
             && !capsule.rows[3].edits.is_empty()
             && capsule.rows[4].edits.len() >= 2
-            && !capsule.rows[5].edits.is_empty(),
+            && !capsule.rows[5].edits.is_empty()
+            && capsule.rows[6].edits.len() == 1
+            && capsule.rows[6].edits[0].offset == capsule.rows[6].prior.bytes
+            && capsule.rows[6].edits[0].insert_utf8
+                == "\n[target.'cfg(unix)'.dev-dependencies.nix]\nversion = \"=0.31.3\"\nfeatures = [\"fs\"]\n"
+            && !capsule.rows[7].edits.is_empty(),
         "finite dependency and source successor spans",
     )?;
     Ok(())

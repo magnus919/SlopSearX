@@ -25,13 +25,14 @@ targets fail closed at read time.
 Windows canonicalizes the root, traverses from a complete drive or UNC root
 anchor, opens each directory with `OPEN_REPARSE_POINT` and read-only sharing,
 rejects reparse points, and retains those handles through the leaf read. The
-leaf handle uses the same sharing rule, which should prevent rename/delete and
-write opens while those handles remain open under Windows sharing semantics.
-The Windows-specific tests cover complete drive/UNC anchors, an attempted
-parent rename during the read, and reparse rejection when the test host permits
-symlink creation. Windows behavior is not runtime-validated in this macOS run;
-the guarantee is limited to the documented `CreateFile` sharing and reparse
-semantics represented by Rust's `OpenOptionsExt` flags.
+leaf handle uses the same sharing rule, so the open handle chain denies new write and delete sharing while its handles remain open.
+Stable pre/post metadata checks and the bounded read use that same leaf handle;
+no unstable file-index API or path-only recheck is needed. Windows controls cover
+complete drive/UNC anchors, root and parent rename denial, leaf write/delete/
+rename/replacement denial while open, and release after return. Reparse rejection
+is exercised when the test host permits symlink creation. Windows behavior is not
+runtime-validated in this macOS run; the guarantee is limited to documented
+Windows sharing and reparse semantics represented by Rust's `OpenOptionsExt` flags.
 
 The T08A compatibility overlay uses only the configured, existing
 `SLOPSEARX_TEST_TEMP_ROOT`, and requires it to resolve to the same nonsymlink
@@ -50,17 +51,24 @@ reader and paired MCP manifest reader use the bounded API too, so composition
 cannot reopen either input with unbounded `fs::read` after admission.
 
 The direct Unix `nix` dependency added for safe descriptor-relative opens is
-recorded in `issue903-config-edge-successor-v1.json`. That finite successor
-contains exact prior/current byte lengths, SHA-256 values, Unix modes, Git blobs,
-and ordered changed spans for `Cargo.lock`, the `ssx-cli-check` and `ssx-mcp`
-manifests, the native-search and W07/T02 joint readers, and the T03 admission
+recorded in `issue903-config-edge-successor-v1.json`, including the `ssx-infra`
+test-only dependency needed when its integration tests include the shared reader.
+That finite successor contains exact prior/current byte lengths, SHA-256
+values, Unix modes, Git blobs, and ordered changed spans for `Cargo.lock`
+and the `ssx-cli-check`, `ssx-mcp`, and `ssx-infra` manifests, the native-search and
+W07/T02 joint readers, and the T03 admission
 source. T08 custody reverses the new lock edge before entering the unchanged O02
 and historical custody proofs. T03 verifies the physical native-search and joint
 bytes at its owning admission seams, reverses the outer source layer, and then
-invokes the unchanged historical inverse. The capsule checks full reverse and
-forward reconstruction and rejects wrong paths, modes, bytes, and prior Git
-identities. The T08A binding inventory has been refreshed for these exact source
-and manifest changes after PR #1136 merged.
+invokes the unchanged historical inverse. The capsule also records the updated
+`shared-successor.rs` reader from its exact accepted-main predecessor. T08A's
+physical main-join admission projects that bounded reader to the existing
+accepted source before either unchanged CLI or W08 inverse runs. The A06/A13
+control path physically bounds the `ssx-infra` manifest, projects it to the
+sealed 1,254-byte endpoint, and rejects changed bytes or a wrong opened mode.
+The capsule checks full reverse and forward reconstruction and rejects wrong
+paths, modes, bytes, and prior Git identities. The T08A binding inventory has
+been refreshed for these exact source and manifest changes after PR #1136 merged.
 
 The changed T06 dependency-audit source reader has its own finite outer capsule
 inside the accepted dependency-audit current-main owner. It authenticates the

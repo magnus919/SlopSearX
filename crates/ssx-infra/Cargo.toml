@@ -43,3 +43,7 @@ ssx-wire.workspace = true
 tokio = { workspace = true, features = ["test-util"] }
 rcgen = { version = "=0.14.10", default-features = false, features = ["aws_lc_rs", "pem"] }
 time = "=0.3.55"
+
+[target.'cfg(unix)'.dev-dependencies.nix]
+version = "=0.31.3"
+features = ["fs"]

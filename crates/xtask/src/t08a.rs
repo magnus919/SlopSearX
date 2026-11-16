@@ -163,6 +163,8 @@ fn sources(root: &Path) -> Result<Value> {
                 "T08A physical Unix source mode",
             )?;
         }
+        #[cfg(not(unix))]
+        let _ = actual_mode;
         #[cfg(windows)]
         {
             let expected = if row["mode"].as_u64() == Some(0o755) {

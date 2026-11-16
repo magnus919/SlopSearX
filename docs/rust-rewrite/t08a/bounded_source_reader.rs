@@ -208,9 +208,7 @@ fn bounded_read_inner<F: FnOnce()>(
             need(
                 opened.is_file()
                     && opened.file_attributes() & REPARSE_POINT == 0
-                    && opened.len() <= limit
-                    && opened.file_index().is_some()
-                    && opened.volume_serial_number().is_some(),
+                    && opened.len() <= limit,
                 "opened source must be regular and within byte limit",
             )?;
             after_open();
@@ -224,9 +222,7 @@ fn bounded_read_inner<F: FnOnce()>(
                 bytes.len() as u64 <= limit
                     && after.is_file()
                     && after.file_attributes() & REPARSE_POINT == 0
-                    && after.len() == opened.len()
-                    && after.file_index() == opened.file_index()
-                    && after.volume_serial_number() == opened.volume_serial_number(),
+                    && after.len() == opened.len(),
                 "source identity or size changed during bounded read",
             )?;
             drop(held_directories);
@@ -259,6 +255,48 @@ mod windows_handle_tests {
     }
 
     #[test]
+    fn held_leaf_handle_blocks_write_delete_and_replacement_until_read_returns() {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let base = std::env::temp_dir().join(format!("ssx-bounded-leaf-{nonce}"));
+        let parent = base.join("parent");
+        fs::create_dir_all(&parent).unwrap();
+        let leaf = parent.join("leaf");
+        let replacement = parent.join("replacement");
+        fs::write(&leaf, b"original bytes").unwrap();
+        fs::write(&replacement, b"replacement bytes").unwrap();
+
+        let result = bounded_read_inner(&base, "parent/leaf", 64, || {
+            assert!(
+                fs::write(&leaf, b"mutated bytes").is_err(),
+                "held read handle must deny a concurrent write open"
+            );
+            assert!(
+                fs::remove_file(&leaf).is_err(),
+                "held read handle must deny leaf deletion"
+            );
+            assert!(
+                fs::rename(&leaf, parent.join("renamed-leaf")).is_err(),
+                "held read handle must deny leaf rename"
+            );
+            assert!(
+                fs::rename(&replacement, &leaf).is_err(),
+                "held read handle must deny leaf replacement"
+            );
+        })
+        .unwrap();
+        assert_eq!(result.0, b"original bytes");
+
+        fs::write(&leaf, b"released").expect("write is permitted after handle release");
+        fs::remove_file(&leaf).expect("delete is permitted after handle release");
+        fs::rename(&replacement, &leaf).expect("replacement is permitted after handle release");
+        assert_eq!(fs::read(&leaf).unwrap(), b"replacement bytes");
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
     fn parent_reparse_point_is_rejected_when_symlink_creation_is_available() {
         use std::os::windows::fs::symlink_dir;
         let nonce = SystemTime::now()
@@ -285,7 +323,12 @@ mod windows_handle_tests {
         let parent = base.join("parent");
         fs::create_dir_all(&parent).unwrap();
         fs::write(parent.join("leaf"), b"bounded windows bytes").unwrap();
+        let moved_root = base.with_extension("moved");
         let result = bounded_read_inner(&base, "parent/leaf", 64, || {
+            assert!(
+                fs::rename(&base, &moved_root).is_err(),
+                "held root handle must block root rename while leaf is open"
+            );
             assert!(
                 fs::rename(&parent, base.join("renamed-parent")).is_err(),
                 "read-only sharing handle must block parent rename while leaf is open"
