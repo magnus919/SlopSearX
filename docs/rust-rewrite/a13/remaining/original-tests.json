@@ -1,0 +1,74 @@
+[
+  {
+    "engine": "hibp",
+    "original_function": "test_search_returns_breaches",
+    "source_file": "tests/test_hibp.py",
+    "source_excerpt": "    async def test_search_returns_breaches(self, adapter):\n        data = [\n            {\n                \"Name\": \"Adobe\",\n                \"Domain\": \"adobe.com\",\n                \"BreachDate\": \"2013-10-04\",\n                \"PwnCount\": 15238235,\n                \"DataClasses\": [\"Email addresses\", \"Passwords\"],\n                \"Description\": \"In October 2013, Adobe suffered a major breach.\",\n            }\n        ]\n        async with MockHTTP(lambda r: httpx.Response(200, json=data)):\n            result = await adapter.search(\"test@example.com\")\n        assert result.status == EngineStatus.OK\n        assert len(result.results) == 1\n        assert \"Adobe\" in result.results[0].title\n        assert \"Email addresses\" in result.results[0].content\n\n",
+    "source_executed": false,
+    "native_selector": "hibp_source_success_complete_outbound",
+    "status": "PLANNED_SOURCE_DERIVATION_NOT_COMPILED"
+  },
+  {
+    "engine": "hibp",
+    "original_function": "test_no_breaches_404",
+    "source_file": "tests/test_hibp.py",
+    "source_excerpt": "    async def test_no_breaches_404(self, adapter):\n        async with MockHTTP(lambda r: httpx.Response(404)):\n            result = await adapter.search(\"nonexistent@example.com\")\n        assert result.status == EngineStatus.OK\n        assert len(result.results) == 0\n\n",
+    "source_executed": false,
+    "native_selector": "hibp_404_empty_before_json",
+    "status": "PLANNED_SOURCE_DERIVATION_NOT_COMPILED"
+  },
+  {
+    "engine": "hibp",
+    "original_function": "test_missing_api_key",
+    "source_file": "tests/test_hibp.py",
+    "source_excerpt": "    async def test_missing_api_key(self):\n        adapter = self._adapter_no_key()\n        result = await adapter.search(\"test@example.com\")\n        assert result.status == EngineStatus.ERROR\n        assert \"API key\" in (result.error_message or \"\")\n\n",
+    "source_executed": false,
+    "native_selector": "hibp_missing_key_and_admission_precedence",
+    "status": "PLANNED_SOURCE_DERIVATION_NOT_COMPILED"
+  },
+  {
+    "engine": "hibp",
+    "original_function": "test_rate_limited",
+    "source_file": "tests/test_hibp.py",
+    "source_excerpt": "    async def test_rate_limited(self, adapter):\n        async with MockHTTP(lambda r: httpx.Response(429)):\n            result = await adapter.search(\"test@example.com\")\n        assert result.status == EngineStatus.RATE_LIMITED\n\n",
+    "source_executed": false,
+    "native_selector": "hibp_http_transport_url_and_codec_failures",
+    "status": "PLANNED_SOURCE_DERIVATION_NOT_COMPILED"
+  },
+  {
+    "engine": "hibp",
+    "original_function": "test_adapter_registered",
+    "source_file": "tests/test_hibp.py",
+    "source_excerpt": "    def test_adapter_registered(self):\n        from slopsearx.adapter import list_engines\n\n        assert \"hibp\" in list_engines()\n",
+    "source_executed": false,
+    "native_selector": "hibp_auth_redaction_and_resolved_configuration",
+    "status": "PLANNED_SOURCE_DERIVATION_NOT_COMPILED"
+  },
+  {
+    "engine": "intelx",
+    "original_function": "test_missing_api_key",
+    "source_file": "tests/test_intelx.py",
+    "source_excerpt": "    async def test_missing_api_key(self):\n        adapter = self._adapter_no_key()\n        result = await adapter.search(\"test@example.com\")\n        assert result.status == EngineStatus.ERROR\n        assert \"API key\" in (result.error_message or \"\")\n\n",
+    "source_executed": false,
+    "native_selector": "intelx_header_redaction_settings_and_filters",
+    "status": "PLANNED_SOURCE_DERIVATION_NOT_COMPILED"
+  },
+  {
+    "engine": "intelx",
+    "original_function": "test_rate_limited",
+    "source_file": "tests/test_intelx.py",
+    "source_excerpt": "    async def test_rate_limited(self, adapter):\n        async with MockHTTP(lambda r: httpx.Response(429)):\n            result = await adapter.search(\"test\")\n        assert result.status == EngineStatus.RATE_LIMITED\n\n",
+    "source_executed": false,
+    "native_selector": "intelx_start_status_classification",
+    "status": "PLANNED_SOURCE_DERIVATION_NOT_COMPILED"
+  },
+  {
+    "engine": "intelx",
+    "original_function": "test_adapter_registered",
+    "source_file": "tests/test_intelx.py",
+    "source_excerpt": "    def test_adapter_registered(self):\n        from slopsearx.adapter import list_engines\n\n        assert \"intelx\" in list_engines()\n",
+    "source_executed": false,
+    "native_selector": "intelx_header_redaction_settings_and_filters",
+    "status": "PLANNED_SOURCE_DERIVATION_NOT_COMPILED"
+  }
+]

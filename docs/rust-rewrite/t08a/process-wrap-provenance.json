@@ -1,0 +1,702 @@
+{
+  "schema": 1,
+  "upstream": {
+    "name": "process-wrap",
+    "version": "10.0.1",
+    "registry": "crates.io",
+    "archive": "docs/rust-rewrite/t08a/process-wrap-10.0.1.crate",
+    "archive_bytes": 201062,
+    "archive_sha256": "1f21b97672d2dc848e7b25701ab4535618b92f4861c13cc3f7f7bed52ad3c8da",
+    "pristine_files": 94
+  },
+  "patch": {
+    "path": "docs/rust-rewrite/t08a/process-wrap.patch",
+    "bytes": 10060,
+    "sha256": "00eb7fa31ac03af48142b43f3318002e4c724cc9abafbc167fe4882fbc7b8a6c",
+    "apply": "git apply --unidiff-zero"
+  },
+  "private_root": "vendor/ssx-cli-process-wrap",
+  "fork_files": 95,
+  "unchanged_pristine_files": 90,
+  "modified": [
+    "Cargo.toml",
+    "src/tokio/job_object.rs",
+    "src/windows.rs",
+    "tests/tokio_windows/mod.rs"
+  ],
+  "added": [
+    "tests/tokio_windows/job_accounting.rs"
+  ],
+  "licenses": {
+    "LICENSE-APACHE": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+    "LICENSE-MIT": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+  },
+  "scope": "Path-scoped developer gate containment only; no ssx shipping dependency. Tokio Windows original-job completion and query; Unix implementations and std Windows implementation remain pristine.",
+  "files": [
+    {
+      "path": ".cargo_vcs_info.json",
+      "bytes": 94,
+      "sha256": "7b894a940df3598ac15e986fa775216c890452f34470adb982035d7c3786f11e",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": ".editorconfig",
+      "bytes": 236,
+      "sha256": "39758b1330b5079203eed42ee00cb453410157c848e834fac54287070d17d8f3",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 8,
+      "sha256": "44c92e3a70ad3307b7056871c2bdb096d8bfa9373f5bf06a79bb6324a20ff2fb",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": ".rustfmt.toml",
+      "bytes": 17,
+      "sha256": "bce79651b2e2ff42e1c54b9a26c5e17af5222f9f65ab51d9563a48fd159dae84",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "CHANGELOG.md",
+      "bytes": 18956,
+      "sha256": "4572aab635b5073d87e34bf6b76b1493747f21ab2e80264468656dcb2a8305a5",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "CITATION.cff",
+      "bytes": 399,
+      "sha256": "93182b47bd54f8c256813572b74fe10cfab4666f863db8d8c847b9c7eb40d966",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "COPYRIGHT",
+      "bytes": 1281,
+      "sha256": "24c5719787d9ceccf41381943e08c6a5e9b9368d543b8c2a9ce9e4d5c53c3c43",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "Cargo.lock",
+      "bytes": 24936,
+      "sha256": "9666f5b47d3eb8c1d1974360864ba7060b91e77b57fd798001ccd8b5835f9e61",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "Cargo.toml",
+      "bytes": 3399,
+      "sha256": "e76f740495f311001dac33b070136a06ed15662ffcff52b3b2e8cecb8f23bb1e",
+      "mode": "0644",
+      "pristine": false
+    },
+    {
+      "path": "Cargo.toml.orig",
+      "bytes": 2612,
+      "sha256": "9ee95bfa97f310f7004f86c3107778a68a4c02a33be6d0db8c4311b50b68a1b5",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "LICENSE-APACHE",
+      "bytes": 9723,
+      "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "LICENSE-MIT",
+      "bytes": 1023,
+      "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "README.md",
+      "bytes": 9024,
+      "sha256": "d464ab5107e8d12d959feae3e352ba9c0f35fb7c25a1d52b13eaf8aae10cb9b4",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "cliff.toml",
+      "bytes": 2901,
+      "sha256": "36c2a0d36ccd1cf4064e097ad2466f690b2f78f04278946853de9602085feb5a",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "logo.png",
+      "bytes": 144049,
+      "sha256": "8611bedcbc79c378b082675a4d725cd6bb918693265d05fee78bef65e5c6d8c9",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "logo.svg",
+      "bytes": 22830,
+      "sha256": "75a369beaec7f93cb50458b9d6d4381a0969a186628ed6f8e83353296d165a9a",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "release.toml",
+      "bytes": 720,
+      "sha256": "5c4d677498334fccba98506c902b92f85f475a3bbee131ebbd9e5c3b5b553b67",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "src/generic_wrap.rs",
+      "bytes": 13380,
+      "sha256": "b155a936ba187b1455173a9d219389139695f01c33da77ef07b29b0d6f9c1d3a",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "src/lib.rs",
+      "bytes": 17791,
+      "sha256": "51b3668533aad223e6f830c51e64a86268f828838fc233cd4c66902525726c64",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "src/std.rs",
+      "bytes": 1152,
+      "sha256": "92a2d21e9ab76988c3ebaf5e898c9d6bfa99acbc47ace684365e6c2afb772a34",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "src/std/core.rs",
+      "bytes": 13771,
+      "sha256": "e5ed0d0714bafc648f0fe497e4b2eb5682adfd8c31ba4c74a7ed2d13f6e7dfc5",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "src/std/creation_flags.rs",
+      "bytes": 1336,
+      "sha256": "6d3a657d76a529cb3628124d14ce8b0bcf3d2ec7c49989a3cc70fc78e8adaceb",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "src/std/job_object.rs",
+      "bytes": 5629,
+      "sha256": "06db35984042016079d7cb5fa2e953189b1fddc227094e1011d9b939d13c6968",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "src/std/process_group.rs",
+      "bytes": 6140,
+      "sha256": "13339fa91af3080970093c6190ed0ba77d7ef7eb7f30fc16ffd52028700eb788",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "src/std/process_session.rs",
+      "bytes": 1604,
+      "sha256": "ba437920c726f1ace8083dc0c3e109488063d63ae4c9369d8d4236bfffa08ec6",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "src/std/reset_sigmask.rs",
+      "bytes": 769,
+      "sha256": "92a90835c84ea77184cb57cb3d481ad31e827086af7de343d5dcfa9ddbe141de",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "src/tokio.rs",
+      "bytes": 1289,
+      "sha256": "1466925b5e15586fd86a8e5327094c851d311160d83b28630bbe5c7b3e9fe879",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "src/tokio/core.rs",
+      "bytes": 11867,
+      "sha256": "c23981c0da706e921492f4032181ca86fecd3531d12e2282c1180eaff8fcf932",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "src/tokio/creation_flags.rs",
+      "bytes": 1311,
+      "sha256": "18e58a2b6807bf64b95a8e1b3624dab0fde738d0bf6143274323fba8ee0c38d6",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "src/tokio/job_object.rs",
+      "bytes": 6353,
+      "sha256": "39374a0ab12a7c75dccc9d88090beafd07207bf4cb0257c13aed95b19e3af278",
+      "mode": "0644",
+      "pristine": false
+    },
+    {
+      "path": "src/tokio/kill_on_drop.rs",
+      "bytes": 595,
+      "sha256": "3dddbc3532b9c67ccdcd9da7e81ef32e2b48941df3219e6435916a0682dab824",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "src/tokio/process_group.rs",
+      "bytes": 6707,
+      "sha256": "68396841c599cb6ed4cae198597013a0de668d7ca1e01bcee892d0115e1013be",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "src/tokio/process_session.rs",
+      "bytes": 1668,
+      "sha256": "70dea3c20d5de5b02c16ad31dc57fb2361052aba640847fa5cbabf6e2666a098",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "src/tokio/reset_sigmask.rs",
+      "bytes": 747,
+      "sha256": "1bd2be8be357fd8f114bc1837fcc86e20af33c3d5cc15b37ee75ef1e9d6d5a4c",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "src/windows.rs",
+      "bytes": 8887,
+      "sha256": "2c6b727c2ff29ad948c7d2525ba680ad1f5515ce79c57c737ed1c98cabadd1af",
+      "mode": "0644",
+      "pristine": false
+    },
+    {
+      "path": "tests/child_wrapper_contract.rs",
+      "bytes": 22770,
+      "sha256": "31f37c14a06db83286deaaf194afa41127ae48d398f7e13e1c58439272a72c7c",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/multiproc_helper.rs",
+      "bytes": 791,
+      "sha256": "098198783a54588bb4ad5776bd251b297157a97d189bc1df276367ec9386f2a5",
+      "mode": "0755",
+      "pristine": true
+    },
+    {
+      "path": "tests/spawn_with_child.rs",
+      "bytes": 10312,
+      "sha256": "d185abe6f40527ddd92117826c9e657922150aaa88ae44ae0935e1ee98c8f651",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/std_unix.rs",
+      "bytes": 78,
+      "sha256": "98fb616a11ff672c6a85a940f0a7ab58695264aab60cf6e296c1ae4f4ba94b88",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/std_unix/id_same_as_inner.rs",
+      "bytes": 757,
+      "sha256": "4ff700120e972416704c5d1c5e5158bfceee4021bb586dbea79b516853d4c3d9",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/std_unix/inner_read_stdout.rs",
+      "bytes": 1159,
+      "sha256": "6e38dde38be9d260e9219d982f0b5570f60a0acb940ce2886469421b221d8d63",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/std_unix/into_inner_write_stdin.rs",
+      "bytes": 1812,
+      "sha256": "df4b82f325fef05311888f905e4563751278822f589802643e154a5fcd3af479",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/std_unix/kill_and_try_wait.rs",
+      "bytes": 1347,
+      "sha256": "7f2eb21534bdd5d5ecfac1cd2279f020be03f424934c182bc6d48be300b6358f",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/std_unix/mod.rs",
+      "bytes": 841,
+      "sha256": "8e12304ab9436d29cfa0189517c1c93b6edaaf995edc59d018c647f43a03b8e9",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/std_unix/multiproc_linux.rs",
+      "bytes": 4889,
+      "sha256": "79e941fd8422c31313b8f0af743f6c5a65e550ce946c3544563d11708e6ccc89",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/std_unix/signals.rs",
+      "bytes": 1354,
+      "sha256": "3ece378ddc6031a548c489c592a83743299509bd1517e72dc952d13f1e1a735f",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/std_unix/try_wait_after_die.rs",
+      "bytes": 979,
+      "sha256": "391cda621d60ef693dd1f933a5174ea9370e40d412bda6a202a37b8477779faf",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/std_unix/try_wait_twice_after_sigterm.rs",
+      "bytes": 1360,
+      "sha256": "72e016b673fe797b298cc06b0290f19e7b15f540679f0544fc8b5d4001fb4660",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/std_unix/wait_after_die.rs",
+      "bytes": 865,
+      "sha256": "0d5bcfa9c85027a5f82b98a49f909fdeec3ebc45e8359bcdddf3c7d98178af7b",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/std_unix/wait_twice.rs",
+      "bytes": 991,
+      "sha256": "b3757f8103f07da075f1932ad5dd0fcfed0125e15f3d2d6337bc5c6150b63a05",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/std_unix/wait_twice_after_sigterm.rs",
+      "bytes": 1543,
+      "sha256": "a7531a162a5f36ad33a75fb21fb9b98f13c68465f8147064d8dbfb885f7020ca",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/std_unix/wait_with_output.rs",
+      "bytes": 1162,
+      "sha256": "5e4d82e4c07fece98ef8793b01410ab25a8933605d2b8e35aa4456c7c339806e",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/std_windows.rs",
+      "bytes": 87,
+      "sha256": "67f1e21cf9db0bd62e5a0d66cfc4628e34aa9426141c4102e4c790187535f3f4",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/std_windows/creation_flags_job_object.rs",
+      "bytes": 2676,
+      "sha256": "cae7b226fb3af5410c1cd77261795e6b828bb5475a7fe831458183d92a3fa7cc",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/std_windows/id_same_as_inner.rs",
+      "bytes": 548,
+      "sha256": "cb0a2ec22b31e90bc45487f209afbc86b0567bdc3726244eda09fc1987a16933",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/std_windows/inner_read_stdout.rs",
+      "bytes": 794,
+      "sha256": "f3319cbc67fcc474173e4508a1a814cbea293c14997590ac145f9cb1f3d5385d",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/std_windows/into_inner_write_stdin.rs",
+      "bytes": 998,
+      "sha256": "8d9a4c7ff4d90495e7a5fe2ef6967c726da8112a619f790b6823cab46be62a00",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/std_windows/kill_and_try_wait.rs",
+      "bytes": 892,
+      "sha256": "d0b1d68db01d5c60ffa25282d6980a7fa807d12f17fa7bc9f1e6bbc9f0a76c6c",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/std_windows/mod.rs",
+      "bytes": 662,
+      "sha256": "14c0017bcd6aac955672fad6686902f86a3dacb96b0e7d30428aae8fb0f6f9b4",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/std_windows/process_handle.rs",
+      "bytes": 6619,
+      "sha256": "44b7a1d5302f7edbc0f0eae779d7cb0005d664b46296503ae0bfc62f019ee22d",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/std_windows/try_wait_after_die.rs",
+      "bytes": 920,
+      "sha256": "1a53250803dbe41bd402265863ddcfe83121c55e1f5c9e53a830e99c3e35f75e",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/std_windows/wait_after_die.rs",
+      "bytes": 620,
+      "sha256": "c50437ab7634ba96363c7d32529ac194f8ff5e4d1d20b3de70a099e2376f649d",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/std_windows/wait_twice.rs",
+      "bytes": 704,
+      "sha256": "349fa4dea22efcbd0d9ff41512ef55095ae6270a91f6916cba18b0857eb196ba",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/std_windows/wait_with_output.rs",
+      "bytes": 796,
+      "sha256": "774af2d9b3dee7c09323d6416bc724722daec8ab9db534ebb580c8413c0f63f6",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/support/windows_thread.rs",
+      "bytes": 1898,
+      "sha256": "c06595eb24117337b4d63794764036251fa0f04fb82cffc40ec4ab9764fcf948",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/tokio_unix.rs",
+      "bytes": 85,
+      "sha256": "b2874bccad0483d493bfa0221edba9541f5c0a3f88b37372ff004da6ca7988ca",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/tokio_unix/id_same_as_inner.rs",
+      "bytes": 796,
+      "sha256": "8aa03fa63f620cad0244c85efee1089d5313dda9862af102bd54678603f0e0e1",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/tokio_unix/inner_read_stdout.rs",
+      "bytes": 1216,
+      "sha256": "d12d88d212cba82a5e7f737c6ce5ba686b2934c9483566d4bb87ccb7f7856e9d",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/tokio_unix/into_inner_write_stdin.rs",
+      "bytes": 1534,
+      "sha256": "1c8c276558467a9e2a24b76a0fbf7d409145a8cd2a686da2896ea639b36994a8",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/tokio_unix/kill_and_try_wait.rs",
+      "bytes": 1489,
+      "sha256": "d6a583b374c13817e9bedd494658516c4df3d4031e2fc058cd349e60bccee99e",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/tokio_unix/mod.rs",
+      "bytes": 881,
+      "sha256": "9bd5a702a033a8c7653b34722c05afaf4d873b0a8cb623e5b0ddcd3c87aa14f1",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/tokio_unix/multiproc_linux.rs",
+      "bytes": 5311,
+      "sha256": "1a530bc4449726cebcb2843252599388e3606c66a88b7dc43271dc8487ff8a29",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/tokio_unix/signals.rs",
+      "bytes": 1429,
+      "sha256": "949534cd81507821729078a40bd144b20bf35f31d15d687abc6bd47462782b6e",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/tokio_unix/try_wait_after_die.rs",
+      "bytes": 1036,
+      "sha256": "f8bd1f3fa53a1465c3bcdf3ecf5d43ac68caf3d4c0e1fdefa4313b461d2697fa",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/tokio_unix/try_wait_twice_after_sigterm.rs",
+      "bytes": 1435,
+      "sha256": "0e34cdcd0268d55e33e1ecf6d90995895a10674c3d49dfdb8b76d0774c150378",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/tokio_unix/wait_after_die.rs",
+      "bytes": 934,
+      "sha256": "b1773b8a2704c0820c2ac61fe198405427047ad177a9402fced2cade7b27e724",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/tokio_unix/wait_twice.rs",
+      "bytes": 1054,
+      "sha256": "af053ba2ec2f9589e9be668cdf574f614bf9f6f7250cf4c7a8cfde4e562cdec7",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/tokio_unix/wait_twice_after_sigterm.rs",
+      "bytes": 1606,
+      "sha256": "bbb84ca5a4e30404136d2dbe9c2df220483c2e220361281da28a5635b2a95736",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/tokio_unix/wait_with_output.rs",
+      "bytes": 1258,
+      "sha256": "b1aeeb3f641b7d73cd2590766ff43ecffeccc41283e715664b6f9b457b34e486",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/tokio_windows.rs",
+      "bytes": 94,
+      "sha256": "32fe4849fa7fa8e52b5127e978a22f8d8e8e43b31517ef0b99924575f0dc7037",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/tokio_windows/creation_flags_job_object.rs",
+      "bytes": 2928,
+      "sha256": "b747aeb7cbb4e58668d3cb27618ad5ce42c937fe6a44da5908a3bd7835cd02ed",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/tokio_windows/id_same_as_inner.rs",
+      "bytes": 574,
+      "sha256": "ac4ce2ae66f13d0c8cf2939ed333ea22182d56464e5f286c34ff9c9c6e6ce3ad",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/tokio_windows/inner_read_stdout.rs",
+      "bytes": 832,
+      "sha256": "f6ebae90b8b656179b9eac42919e8953cc983e0b5ca97e6f33c123a79a624e02",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/tokio_windows/into_inner_write_stdin.rs",
+      "bytes": 1048,
+      "sha256": "7ed52d1b5c4553551040a77ecd29743938491f63489b41afa54889be1898012e",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/tokio_windows/job_accounting.rs",
+      "bytes": 5655,
+      "sha256": "e8ab8ab2cb49dab5c7e1620f108ffb693cc99c036e8e3b7ba24ceebba3395723",
+      "mode": "0644",
+      "pristine": false
+    },
+    {
+      "path": "tests/tokio_windows/job_object_kill_on_drop.rs",
+      "bytes": 4216,
+      "sha256": "65fab4c62f6faf7b206d6fbd956320e8fe7c24f0f3047fb322837a2944714bbe",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/tokio_windows/kill_and_try_wait.rs",
+      "bytes": 984,
+      "sha256": "bbf369b930152dc3333e0d98da8baa7ab146a8440fffc1dd806d0ad8dab1efd3",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/tokio_windows/mod.rs",
+      "bytes": 870,
+      "sha256": "eaaa58afc9fa24572cae91b79b9c954d4101f5acf2d2c1ff50d6de4ba905e8ff",
+      "mode": "0644",
+      "pristine": false
+    },
+    {
+      "path": "tests/tokio_windows/process_handle.rs",
+      "bytes": 6347,
+      "sha256": "a9a1781ea4f5d572f1dcd9bbeea3b842c1df41d4584b59059c6041df34361a01",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/tokio_windows/try_wait_after_die.rs",
+      "bytes": 980,
+      "sha256": "0e44cec29cacf8cdc0815210250176ca2614fa046739cbaf93eed9c1491f36df",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/tokio_windows/wait_after_die.rs",
+      "bytes": 666,
+      "sha256": "74c249bfbba80d92488366feaf8985ea80b1d4ac895b7c7def664740a04c98a8",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/tokio_windows/wait_twice.rs",
+      "bytes": 746,
+      "sha256": "84068eee9b003f1d533bd9eed438bc641c3e4e3aba5e485a63be6ad6d443981b",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/tokio_windows/wait_with_output.rs",
+      "bytes": 860,
+      "sha256": "0c79c28631d32fff39acc222ab58a94e2e5bb90a464d98187a7f8d94d101f31a",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/wrapper_hooks.rs",
+      "bytes": 10951,
+      "sha256": "85ba751967dbf0a84d88a8e226bec241da427e682fb6dc780abe70c1c9fdd92a",
+      "mode": "0644",
+      "pristine": true
+    },
+    {
+      "path": "tests/wrapper_lookup.rs",
+      "bytes": 2063,
+      "sha256": "86e4fe0cef097d1f8fa3aab9e6b3a900ec4c2aa28c4718bc1b997713e8261e54",
+      "mode": "0644",
+      "pristine": true
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "qualification_base": "201b7f6ac81377ea2645cb36561a0bcc6cdcb779",
+  "scope": "Qualification-only monotonic deadline scheduling and native fake-engine dispatch observations. Frozen original inputs/results and all source captures unchanged. System remains default; independent transport/store timers stay real. SDK service join does not establish arbitrary handler drain.",
+  "files": [
+    {
+      "file": "crates/ssx-mcp/src/bin/search-qualification.rs",
+      "sha256": "c78f1946dcfaec59fabfed561af5f6f1f85756e92fdabc9e8989d9631b3be150"
+    },
+    {
+      "file": "crates/ssx-mcp/tests/t06_support/fixture.rs",
+      "sha256": "9b8af82a297b4a347d2c2c320ca2a05c54048c4430739b909b6bc47b5f22a3ab"
+    },
+    {
+      "file": "crates/ssx-mcp/tests/t06_support/observer.rs",
+      "sha256": "86f7379b78cecc367bfd42e7fd12c28eff65cf2bbaeb90ed66b164b419827425"
+    },
+    {
+      "file": "crates/ssx-infra/src/search.rs",
+      "sha256": "fcac2929eb6637960d5e1086c321f0eac62fc0f8446cf73f22d6b43406137b12"
+    },
+    {
+      "file": "crates/ssx-infra/src/search_deadline_drain_tests.rs",
+      "sha256": "22ac8986deffda13569adeb1d21be601a72481fcc08e2b85f9c56eda0822bb6c"
+    },
+    {
+      "file": "crates/ssx-mcp/src/opaque.rs",
+      "sha256": "c89e508d9d4d2c86f6d0f0f8cbf8f35690e83e63da94a4ca342c28da60526d41"
+    },
+    {
+      "file": "crates/ssx-mcp/tests/t06_support/deadline_clock.rs",
+      "sha256": "14dfffd020f54430944c9d37ce6e400b282f3b805f7db2ad2778a89dab7ad626"
+    },
+    {
+      "file": "crates/ssx-mcp/tests/t06_support/wall_guard.rs",
+      "sha256": "b91e409181febf5e21b4afa2c7cf05e11abd52f57ccf05b2dbf273757921b6c3"
+    },
+    {
+      "file": "crates/ssx-mcp/tests/t06_transport.rs",
+      "sha256": "264983f5bffaba8116c7b92be99c33baa73423d99b118cc181c9729092bd4ceb"
+    },
+    {
+      "file": "crates/ssx-mcp/tests/t06_support/server.rs",
+      "sha256": "a28581ee38e14923b98218492853f11a291752ada85abbb3744e63e88bc5d567"
+    }
+  ]
+}

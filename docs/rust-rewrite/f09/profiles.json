@@ -1,0 +1,436 @@
+{
+  "intents": {
+    "code": {
+      "categories": [],
+      "description": "Source code, issues, and package registries.",
+      "engines": [
+        "github",
+        "stackexchange",
+        "pypi",
+        "npm",
+        "crates",
+        "rubygems",
+        "dockerhub"
+      ],
+      "intent": "code",
+      "media_types": [],
+      "sensitive": false
+    },
+    "finance": {
+      "categories": [
+        "finance"
+      ],
+      "description": "Economic data and SEC filings.",
+      "engines": [],
+      "intent": "finance",
+      "media_types": [],
+      "sensitive": false
+    },
+    "geography": {
+      "categories": [
+        "geography"
+      ],
+      "description": "Geocoding and place lookup.",
+      "engines": [],
+      "intent": "geography",
+      "media_types": [],
+      "sensitive": false
+    },
+    "historical": {
+      "categories": [
+        "historical"
+      ],
+      "description": "Archives and historical material.",
+      "engines": [
+        "wikipedia",
+        "internetarchive"
+      ],
+      "intent": "historical",
+      "media_types": [],
+      "sensitive": false
+    },
+    "images": {
+      "categories": [],
+      "description": "Image search across media-capable engines.",
+      "engines": [],
+      "intent": "images",
+      "media_types": [
+        "image"
+      ],
+      "sensitive": false
+    },
+    "jobs": {
+      "categories": [],
+      "description": "Job postings on ATS boards and general boards.",
+      "engines": [
+        "greenhouse",
+        "ashby",
+        "lever",
+        "brave",
+        "duckduckgo"
+      ],
+      "intent": "jobs",
+      "media_types": [],
+      "sensitive": false
+    },
+    "legal": {
+      "categories": [
+        "legal"
+      ],
+      "description": "Court cases and legal references.",
+      "engines": [],
+      "intent": "legal",
+      "media_types": [],
+      "sensitive": false
+    },
+    "media": {
+      "categories": [
+        "music",
+        "movies",
+        "entertainment",
+        "books"
+      ],
+      "description": "Music, movies, and books.",
+      "engines": [],
+      "intent": "media",
+      "media_types": [],
+      "sensitive": false
+    },
+    "medical": {
+      "categories": [],
+      "description": "Clinical trials, biomedical literature, and health data.",
+      "engines": [
+        "pubmed",
+        "clinicaltrials",
+        "openfda",
+        "pubchem",
+        "uniprot"
+      ],
+      "intent": "medical",
+      "media_types": [],
+      "sensitive": false
+    },
+    "news": {
+      "categories": [
+        "news"
+      ],
+      "description": "Recent news and headlines.",
+      "engines": [],
+      "intent": "news",
+      "media_types": [],
+      "sensitive": false
+    },
+    "packages": {
+      "categories": [
+        "packages"
+      ],
+      "description": "Software package registries.",
+      "engines": [],
+      "intent": "packages",
+      "media_types": [],
+      "sensitive": false
+    },
+    "reference": {
+      "categories": [
+        "reference"
+      ],
+      "description": "Encyclopedic and reference material.",
+      "engines": [],
+      "intent": "reference",
+      "media_types": [],
+      "sensitive": false
+    },
+    "science": {
+      "categories": [
+        "science"
+      ],
+      "description": "Papers, scholarly indexes, and scientific references.",
+      "engines": [],
+      "intent": "science",
+      "media_types": [],
+      "sensitive": false
+    },
+    "security": {
+      "categories": [],
+      "description": "Vulnerabilities, threat intelligence, and exposures.",
+      "engines": [
+        "cve",
+        "nvd",
+        "shodan",
+        "censys",
+        "crtsh",
+        "otx",
+        "abuseipdb",
+        "virustotal",
+        "urlhaus",
+        "epss",
+        "vulncheck",
+        "intelx",
+        "exploitdb",
+        "mitreattack",
+        "greynoise",
+        "hibp",
+        "dehashed"
+      ],
+      "intent": "security",
+      "media_types": [],
+      "sensitive": true
+    },
+    "social": {
+      "categories": [],
+      "description": "Discussion forums and social sources.",
+      "engines": [
+        "reddit",
+        "hackernews",
+        "brave",
+        "duckduckgo"
+      ],
+      "intent": "social",
+      "media_types": [],
+      "sensitive": false
+    },
+    "videos": {
+      "categories": [],
+      "description": "Video search across media-capable engines.",
+      "engines": [],
+      "intent": "videos",
+      "media_types": [
+        "video"
+      ],
+      "sensitive": false
+    },
+    "web": {
+      "categories": [
+        "general"
+      ],
+      "description": "General-purpose web search across broad engines.",
+      "engines": [],
+      "intent": "web",
+      "media_types": [],
+      "sensitive": false
+    }
+  },
+  "science": {
+    "biomedical": [
+      "pubmed",
+      "clinicaltrials",
+      "openfda"
+    ],
+    "chemistry": [
+      "pubchem"
+    ],
+    "datasets": [
+      "huggingface"
+    ],
+    "general_reference": [
+      "wikipedia",
+      "brave"
+    ],
+    "papers": [
+      "arxiv",
+      "semanticscholar",
+      "openalex"
+    ],
+    "scholarly_index": [
+      "semanticscholar",
+      "openalex"
+    ]
+  },
+  "security": {
+    "exploit": [
+      "exploitdb",
+      "cve",
+      "nvd"
+    ],
+    "exposure": [
+      "shodan",
+      "censys",
+      "crtsh",
+      "urlhaus",
+      "abuseipdb",
+      "intelx",
+      "dehashed"
+    ],
+    "malware": [
+      "virustotal",
+      "urlhaus",
+      "abuseipdb"
+    ],
+    "reputation": [
+      "otx",
+      "greynoise",
+      "abuseipdb",
+      "virustotal",
+      "hibp"
+    ],
+    "threat_intel": [
+      "otx",
+      "intelx",
+      "greynoise",
+      "mitreattack"
+    ],
+    "vulnerability": [
+      "cve",
+      "nvd",
+      "epss",
+      "vulncheck",
+      "exploitdb"
+    ]
+  },
+  "topics": [
+    {
+      "engines": [
+        "brave",
+        "github",
+        "stackexchange",
+        "duckduckgo",
+        "wikipedia"
+      ],
+      "keywords": [
+        "python",
+        "javascript",
+        "typescript",
+        "rust",
+        "golang",
+        "react",
+        "api",
+        "code",
+        "github",
+        "docker",
+        "kubernetes",
+        "sql",
+        "npm",
+        "pip",
+        "cargo"
+      ],
+      "name": "code"
+    },
+    {
+      "engines": [
+        "brave",
+        "arxiv",
+        "semanticscholar",
+        "openalex",
+        "duckduckgo",
+        "wikipedia"
+      ],
+      "keywords": [
+        "quantum",
+        "physics",
+        "biology",
+        "chemistry",
+        "neural network",
+        "machine learning",
+        "deep learning",
+        "paper",
+        "doi",
+        "theorem",
+        "algorithm",
+        "mathematics",
+        "statistics"
+      ],
+      "name": "science"
+    },
+    {
+      "engines": [
+        "brave",
+        "hackernews",
+        "duckduckgo"
+      ],
+      "keywords": [
+        "news",
+        "today",
+        "breaking",
+        "latest",
+        "update",
+        "announced",
+        "released",
+        "headline"
+      ],
+      "name": "news"
+    },
+    {
+      "engines": [
+        "brave",
+        "hackernews",
+        "reddit",
+        "duckduckgo"
+      ],
+      "keywords": [
+        "reddit",
+        "hacker news",
+        "show hn",
+        "ask hn",
+        "discussion",
+        "forum"
+      ],
+      "name": "social"
+    },
+    {
+      "engines": [
+        "brave",
+        "wikipedia",
+        "stackexchange",
+        "duckduckgo"
+      ],
+      "keywords": [
+        "documentation",
+        "docs",
+        "tutorial",
+        "guide",
+        "how to",
+        "reference",
+        "wiki",
+        "manual",
+        "definition"
+      ],
+      "name": "reference"
+    },
+    {
+      "engines": [
+        "brave",
+        "wikipedia",
+        "internetarchive",
+        "duckduckgo"
+      ],
+      "keywords": [
+        "archive",
+        "wayback",
+        "historical",
+        "history",
+        "old",
+        "vintage",
+        "retro"
+      ],
+      "name": "historical"
+    },
+    {
+      "engines": [
+        "brave",
+        "duckduckgo",
+        "greenhouse",
+        "ashby",
+        "lever"
+      ],
+      "keywords": [
+        "hiring",
+        "jobs at",
+        "careers",
+        "openings",
+        "senior ",
+        "staff ",
+        "principal ",
+        "site:boards.greenhouse.io",
+        "site:jobs.ashbyhq.com",
+        "site:jobs.lever.co",
+        "site:linkedin.com/jobs",
+        "apply for",
+        "recruiter",
+        "job posting",
+        "full-time",
+        "workday"
+      ],
+      "name": "jobs"
+    }
+  ]
+}

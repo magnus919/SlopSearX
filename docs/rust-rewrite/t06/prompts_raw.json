@@ -1,0 +1,52 @@
+{
+  "baseline": "6c44976444340cc8f343fef61e2e8d723b189c19",
+  "versions": {
+    "fastmcp": "4.0.11",
+    "mcp": "2.3.0"
+  },
+  "cases": [
+    {
+      "case": "infinite_required",
+      "raw_request": "{\"jsonrpc\":\"2.0\",\"id\":100,\"method\":\"prompts/get\",\"params\":{\"name\":\"research_with_source_coverage\",\"arguments\":{\"question\":1e400}}}",
+      "status": 200,
+      "body": "{\"jsonrpc\":\"2.0\",\"id\":100,\"error\":{\"code\":-32602,\"message\":\"Invalid request parameters\",\"data\":\"\"}}"
+    },
+    {
+      "case": "infinite_extra",
+      "raw_request": "{\"jsonrpc\":\"2.0\",\"id\":101,\"method\":\"prompts/get\",\"params\":{\"name\":\"research_with_source_coverage\",\"arguments\":{\"question\":\"caller\",\"extra\":1e400}}}",
+      "status": 200,
+      "body": "{\"jsonrpc\":\"2.0\",\"id\":101,\"error\":{\"code\":-32602,\"message\":\"Invalid request parameters\",\"data\":\"\"}}"
+    },
+    {
+      "case": "huge_required",
+      "raw_request": "{\"jsonrpc\":\"2.0\",\"id\":102,\"method\":\"prompts/get\",\"params\":{\"name\":\"research_with_source_coverage\",\"arguments\":{\"question\":9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999}}}",
+      "status": 200,
+      "body": "{\"jsonrpc\":\"2.0\",\"id\":102,\"error\":{\"code\":-32602,\"message\":\"Invalid request parameters\",\"data\":\"\"}}"
+    },
+    {
+      "case": "huge_extra",
+      "raw_request": "{\"jsonrpc\":\"2.0\",\"id\":103,\"method\":\"prompts/get\",\"params\":{\"name\":\"research_with_source_coverage\",\"arguments\":{\"question\":\"caller\",\"extra\":9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999}}}",
+      "status": 200,
+      "body": "{\"jsonrpc\":\"2.0\",\"id\":103,\"error\":{\"code\":-32602,\"message\":\"Invalid request parameters\",\"data\":\"\"}}"
+    },
+    {
+      "case": "arguments_null",
+      "raw_request": "{\"jsonrpc\":\"2.0\",\"id\":104,\"method\":\"prompts/get\",\"params\":{\"name\":\"research_with_source_coverage\",\"arguments\":null}}",
+      "status": 200,
+      "body": "{\"jsonrpc\":\"2.0\",\"id\":104,\"error\":{\"code\":-32603,\"message\":\"Error rendering prompt 'research_with_source_coverage': Missing required arguments: {'question'}\"}}"
+    },
+    {
+      "case": "arguments_scalar",
+      "raw_request": "{\"jsonrpc\":\"2.0\",\"id\":105,\"method\":\"prompts/get\",\"params\":{\"name\":\"research_with_source_coverage\",\"arguments\":1}}",
+      "status": 200,
+      "body": "{\"jsonrpc\":\"2.0\",\"id\":105,\"error\":{\"code\":-32602,\"message\":\"Invalid request parameters\",\"data\":\"\"}}"
+    },
+    {
+      "case": "arguments_array",
+      "raw_request": "{\"jsonrpc\":\"2.0\",\"id\":106,\"method\":\"prompts/get\",\"params\":{\"name\":\"research_with_source_coverage\",\"arguments\":[]}}",
+      "status": 200,
+      "body": "{\"jsonrpc\":\"2.0\",\"id\":106,\"error\":{\"code\":-32602,\"message\":\"Invalid request parameters\",\"data\":\"\"}}"
+    }
+  ],
+  "dispatches": 0
+}

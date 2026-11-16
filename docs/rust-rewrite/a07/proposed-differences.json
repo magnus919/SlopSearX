@@ -1,0 +1,325 @@
+{
+  "status": "individual captured HTTPX/runtime diagnostic differences accepted by parent review; no batch readiness acceptance",
+  "scope": "31 individually listed HTTPX/runtime wording differences among172 controls; source-authored validation messages remain exact",
+  "records": [
+    {
+      "id": "clinicaltrials-wrong-outer",
+      "source_error": "'list' object has no attribute 'get'",
+      "source_raised": null,
+      "native_status": "error",
+      "native_error": "expected source object",
+      "review_status": "accepted",
+      "reason": "source Python-runtime/HTTPX exception wording is replaced; source-authored domain validation messages remain exact; status, request and full result comparison holds",
+      "review_authority": "parent explicit review during A07 implementation"
+    },
+    {
+      "id": "clinicaltrials-http-404",
+      "source_error": "Client error '404 Not Found' for url 'https://clinicaltrials.gov/api/v2/studies?query.term=test&pageSize=10&format=json&sort=%40relevance'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "source_raised": null,
+      "native_status": "error",
+      "native_error": "provider HTTP 404",
+      "review_status": "accepted",
+      "reason": "source Python-runtime/HTTPX exception wording is replaced; source-authored domain validation messages remain exact; status, request and full result comparison holds",
+      "review_authority": "parent explicit review during A07 implementation"
+    },
+    {
+      "id": "clinicaltrials-http-503",
+      "source_error": "Server error '503 Service Unavailable' for url 'https://clinicaltrials.gov/api/v2/studies?query.term=test&pageSize=10&format=json&sort=%40relevance'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503",
+      "source_raised": null,
+      "native_status": "error",
+      "native_error": "provider HTTP 503",
+      "review_status": "accepted",
+      "reason": "source Python-runtime/HTTPX exception wording is replaced; source-authored domain validation messages remain exact; status, request and full result comparison holds",
+      "review_authority": "parent explicit review during A07 implementation"
+    },
+    {
+      "id": "clinicaltrials-config-max_results-float-2.0",
+      "source_error": "slice indices must be integers or None or have an __index__ method",
+      "source_raised": null,
+      "native_status": "error",
+      "native_error": "slice indices must be integers",
+      "review_status": "accepted",
+      "reason": "source Python-runtime/HTTPX exception wording is replaced; source-authored domain validation messages remain exact; status, request and full result comparison holds",
+      "review_authority": "parent explicit review during A07 implementation"
+    },
+    {
+      "id": "clinicaltrials-config-max_results-str-2",
+      "source_error": "slice indices must be integers or None or have an __index__ method",
+      "source_raised": null,
+      "native_status": "error",
+      "native_error": "slice indices must be integers",
+      "review_status": "accepted",
+      "reason": "source Python-runtime/HTTPX exception wording is replaced; source-authored domain validation messages remain exact; status, request and full result comparison holds",
+      "review_authority": "parent explicit review during A07 implementation"
+    },
+    {
+      "id": "clinicaltrials-config-timeout_ms-str-5000",
+      "source_error": "unsupported operand type(s) for /: 'str' and 'float'",
+      "source_raised": null,
+      "native_status": "error",
+      "native_error": "invalid timeout_ms",
+      "review_status": "accepted",
+      "reason": "source Python-runtime/HTTPX exception wording is replaced; source-authored domain validation messages remain exact; status, request and full result comparison holds",
+      "review_authority": "parent explicit review during A07 implementation"
+    },
+    {
+      "id": "europepmc-http-404",
+      "source_error": "Client error '404 Not Found' for url 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=test&format=json&resultType=lite&pageSize=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "source_raised": null,
+      "native_status": "error",
+      "native_error": "provider HTTP 404",
+      "review_status": "accepted",
+      "reason": "source Python-runtime/HTTPX exception wording is replaced; source-authored domain validation messages remain exact; status, request and full result comparison holds",
+      "review_authority": "parent explicit review during A07 implementation"
+    },
+    {
+      "id": "europepmc-http-429",
+      "source_error": "Client error '429 Too Many Requests' for url 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=test&format=json&resultType=lite&pageSize=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+      "source_raised": null,
+      "native_status": "rate_limited",
+      "native_error": "provider rate limited",
+      "review_status": "accepted",
+      "reason": "source Python-runtime/HTTPX exception wording is replaced; source-authored domain validation messages remain exact; status, request and full result comparison holds",
+      "review_authority": "parent explicit review during A07 implementation"
+    },
+    {
+      "id": "europepmc-http-503",
+      "source_error": "Server error '503 Service Unavailable' for url 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=test&format=json&resultType=lite&pageSize=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503",
+      "source_raised": null,
+      "native_status": "error",
+      "native_error": "provider HTTP 503",
+      "review_status": "accepted",
+      "reason": "source Python-runtime/HTTPX exception wording is replaced; source-authored domain validation messages remain exact; status, request and full result comparison holds",
+      "review_authority": "parent explicit review during A07 implementation"
+    },
+    {
+      "id": "europepmc-config-timeout_ms-str-5000",
+      "source_error": "unsupported operand type(s) for /: 'str' and 'int'",
+      "source_raised": null,
+      "native_status": "error",
+      "native_error": "invalid timeout_ms",
+      "review_status": "accepted",
+      "reason": "source Python-runtime/HTTPX exception wording is replaced; source-authored domain validation messages remain exact; status, request and full result comparison holds",
+      "review_authority": "parent explicit review during A07 implementation"
+    },
+    {
+      "id": "pubchem-wrong-outer",
+      "source_error": "'list' object has no attribute 'get'",
+      "source_raised": null,
+      "native_status": "error",
+      "native_error": "expected source object",
+      "review_status": "accepted",
+      "reason": "source Python-runtime/HTTPX exception wording is replaced; source-authored domain validation messages remain exact; status, request and full result comparison holds",
+      "review_authority": "parent explicit review during A07 implementation"
+    },
+    {
+      "id": "pubchem-http-503",
+      "source_error": "Server error '503 Service Unavailable' for url 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/test/cids/JSON'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503",
+      "source_raised": null,
+      "native_status": "error",
+      "native_error": "provider HTTP 503",
+      "review_status": "accepted",
+      "reason": "source Python-runtime/HTTPX exception wording is replaced; source-authored domain validation messages remain exact; status, request and full result comparison holds",
+      "review_authority": "parent explicit review during A07 implementation"
+    },
+    {
+      "id": "pubchem-config-timeout_ms-str-5000",
+      "source_error": "unsupported operand type(s) for /: 'str' and 'float'",
+      "source_raised": null,
+      "native_status": "error",
+      "native_error": "invalid timeout_ms",
+      "review_status": "accepted",
+      "reason": "source Python-runtime/HTTPX exception wording is replaced; source-authored domain validation messages remain exact; status, request and full result comparison holds",
+      "review_authority": "parent explicit review during A07 implementation"
+    },
+    {
+      "id": "pubmed-http-404",
+      "source_error": "Client error '404 Not Found' for url 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=test&retmax=10&retmode=json&sort=relevance'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "source_raised": null,
+      "native_status": "error",
+      "native_error": "provider HTTP 404",
+      "review_status": "accepted",
+      "reason": "source Python-runtime/HTTPX exception wording is replaced; source-authored domain validation messages remain exact; status, request and full result comparison holds",
+      "review_authority": "parent explicit review during A07 implementation"
+    },
+    {
+      "id": "pubmed-http-503",
+      "source_error": "Server error '503 Service Unavailable' for url 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=test&retmax=10&retmode=json&sort=relevance'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503",
+      "source_raised": null,
+      "native_status": "error",
+      "native_error": "provider HTTP 503",
+      "review_status": "accepted",
+      "reason": "source Python-runtime/HTTPX exception wording is replaced; source-authored domain validation messages remain exact; status, request and full result comparison holds",
+      "review_authority": "parent explicit review during A07 implementation"
+    },
+    {
+      "id": "uniprot-wrong-outer",
+      "source_error": "'list' object has no attribute 'get'",
+      "source_raised": null,
+      "native_status": "error",
+      "native_error": "expected source object",
+      "review_status": "accepted",
+      "reason": "source Python-runtime/HTTPX exception wording is replaced; source-authored domain validation messages remain exact; status, request and full result comparison holds",
+      "review_authority": "parent explicit review during A07 implementation"
+    },
+    {
+      "id": "uniprot-http-404",
+      "source_error": "Client error '404 Not Found' for url 'https://rest.uniprot.org/uniprotkb/search?query=%28test%29+OR+%28gene%3Atest%29&size=30&format=json'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "source_raised": null,
+      "native_status": "error",
+      "native_error": "provider HTTP 404",
+      "review_status": "accepted",
+      "reason": "source Python-runtime/HTTPX exception wording is replaced; source-authored domain validation messages remain exact; status, request and full result comparison holds",
+      "review_authority": "parent explicit review during A07 implementation"
+    },
+    {
+      "id": "uniprot-http-503",
+      "source_error": "Server error '503 Service Unavailable' for url 'https://rest.uniprot.org/uniprotkb/search?query=%28test%29+OR+%28gene%3Atest%29&size=30&format=json'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503",
+      "source_raised": null,
+      "native_status": "error",
+      "native_error": "provider HTTP 503",
+      "review_status": "accepted",
+      "reason": "source Python-runtime/HTTPX exception wording is replaced; source-authored domain validation messages remain exact; status, request and full result comparison holds",
+      "review_authority": "parent explicit review during A07 implementation"
+    },
+    {
+      "id": "uniprot-config-max_results-float-2.0",
+      "source_error": "slice indices must be integers or None or have an __index__ method",
+      "source_raised": null,
+      "native_status": "error",
+      "native_error": "slice indices must be integers",
+      "review_status": "accepted",
+      "reason": "source Python-runtime/HTTPX exception wording is replaced; source-authored domain validation messages remain exact; status, request and full result comparison holds",
+      "review_authority": "parent explicit review during A07 implementation"
+    },
+    {
+      "id": "uniprot-config-max_results-str-2",
+      "source_error": "'<' not supported between instances of 'int' and 'str'",
+      "source_raised": "TypeError",
+      "native_status": "error",
+      "native_error": "candidate size arithmetic requires number",
+      "review_status": "accepted",
+      "reason": "correct previously unhandled source TypeError to classified Error under adapters-never-raise invariant; zero dispatch preserved",
+      "review_authority": "parent explicit review during A07 implementation"
+    },
+    {
+      "id": "uniprot-config-timeout_ms-str-5000",
+      "source_error": "unsupported operand type(s) for /: 'str' and 'float'",
+      "source_raised": null,
+      "native_status": "error",
+      "native_error": "invalid timeout_ms",
+      "review_status": "accepted",
+      "reason": "source Python-runtime/HTTPX exception wording is replaced; source-authored domain validation messages remain exact; status, request and full result comparison holds",
+      "review_authority": "parent explicit review during A07 implementation"
+    },
+    {
+      "id": "clinicaltrials-nonempty-max-float-2.0",
+      "source_error": "slice indices must be integers or None or have an __index__ method",
+      "source_raised": null,
+      "native_status": "error",
+      "native_error": "slice indices must be integers",
+      "review_status": "accepted",
+      "reason": "source Python-runtime/HTTPX exception wording is replaced; source-authored domain validation messages remain exact; status, request and full result comparison holds",
+      "review_authority": "parent explicit review during A07 implementation"
+    },
+    {
+      "id": "clinicaltrials-nonempty-max-str-2",
+      "source_error": "slice indices must be integers or None or have an __index__ method",
+      "source_raised": null,
+      "native_status": "error",
+      "native_error": "slice indices must be integers",
+      "review_status": "accepted",
+      "reason": "source Python-runtime/HTTPX exception wording is replaced; source-authored domain validation messages remain exact; status, request and full result comparison holds",
+      "review_authority": "parent explicit review during A07 implementation"
+    },
+    {
+      "id": "pubchem-nonempty-max-float-2.0",
+      "source_error": "slice indices must be integers or None or have an __index__ method",
+      "source_raised": null,
+      "native_status": "error",
+      "native_error": "slice indices must be integers",
+      "review_status": "accepted",
+      "reason": "source Python-runtime/HTTPX exception wording is replaced; source-authored domain validation messages remain exact; status, request and full result comparison holds",
+      "review_authority": "parent explicit review during A07 implementation"
+    },
+    {
+      "id": "pubchem-nonempty-max-str-2",
+      "source_error": "slice indices must be integers or None or have an __index__ method",
+      "source_raised": null,
+      "native_status": "error",
+      "native_error": "slice indices must be integers",
+      "review_status": "accepted",
+      "reason": "source Python-runtime/HTTPX exception wording is replaced; source-authored domain validation messages remain exact; status, request and full result comparison holds",
+      "review_authority": "parent explicit review during A07 implementation"
+    },
+    {
+      "id": "uniprot-nonempty-max-float-2.0",
+      "source_error": "slice indices must be integers or None or have an __index__ method",
+      "source_raised": null,
+      "native_status": "error",
+      "native_error": "slice indices must be integers",
+      "review_status": "accepted",
+      "reason": "source Python-runtime/HTTPX exception wording is replaced; source-authored domain validation messages remain exact; status, request and full result comparison holds",
+      "review_authority": "parent explicit review during A07 implementation"
+    },
+    {
+      "id": "uniprot-nonempty-max-str-2",
+      "source_error": "'<' not supported between instances of 'int' and 'str'",
+      "source_raised": "TypeError",
+      "native_status": "error",
+      "native_error": "candidate size arithmetic requires number",
+      "review_status": "accepted",
+      "reason": "correct previously unhandled source TypeError to classified Error under adapters-never-raise invariant; zero dispatch preserved",
+      "review_authority": "parent explicit review during A07 implementation"
+    },
+    {
+      "id": "uniprot-combined-invalid-config",
+      "source_error": "'<' not supported between instances of 'int' and 'str'",
+      "source_raised": "TypeError",
+      "native_status": "error",
+      "native_error": "candidate size arithmetic requires number",
+      "review_status": "accepted",
+      "review_authority": "parent UniProt classified-error supersession review, including requested precedence control",
+      "reason": "source max_results arithmetic raises before timeout division; native classifies this same failure with zero provider requests"
+    },
+    {
+      "id": "empty-iterable-clinicaltrials-studies-map",
+      "source_error": "slice(None, 10, None)",
+      "source_raised": null,
+      "native_status": "error",
+      "native_error": "source result collection does not support slicing",
+      "review_status": "accepted",
+      "review_authority": "parent runtime diagnostic wording review; requested empty-iterable source control",
+      "reason": "Python caught map-slicing KeyError wording differs; map still fails atomically with identical request count, status and no results"
+    },
+    {
+      "id": "empty-iterable-pubchem-PC_Compounds-map",
+      "source_error": "slice(None, 10, None)",
+      "source_raised": null,
+      "native_status": "error",
+      "native_error": "source result collection does not support slicing",
+      "review_status": "accepted",
+      "review_authority": "parent runtime diagnostic wording review; requested empty-iterable source control",
+      "reason": "Python caught map-slicing KeyError wording differs; map still fails atomically with identical request count, status and no results"
+    },
+    {
+      "id": "empty-iterable-uniprot-results-map",
+      "source_error": "slice(None, 30, None)",
+      "source_raised": null,
+      "native_status": "error",
+      "native_error": "source result collection does not support slicing",
+      "review_status": "accepted",
+      "review_authority": "parent runtime diagnostic wording review; requested empty-iterable source control",
+      "reason": "Python caught map-slicing KeyError wording differs; map still fails atomically with identical request count, status and no results"
+    }
+  ],
+  "transport_owned_header_exclusions": [
+    {
+      "header": "user-agent",
+      "source_value": "python-httpx/0.28.1",
+      "native": "F08 transport identity; the Python library User-Agent is not carried into native implementation",
+      "scope": "only the default python-httpx user agent is excluded; configured PubMed/UniProt UA is exact"
+    }
+  ],
+  "adapter_headers": "Accept is now exact for all controls (*/* or UniProt application/json); PubMed/UniProt User-Agent and all authorization headers are exact. Host/Connection/Accept-Encoding are transport-owned, not adapter-injected request fields."
+}

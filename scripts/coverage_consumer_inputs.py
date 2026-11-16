@@ -81,8 +81,23 @@ def task_capture_contexts(
         inventory = _strict_json(capture_inventory_bytes, "capture-inventory")
     except StudyError as exc:
         raise ConsumerInputError("capture-inventory-json") from exc
-    if type(inventory) is not dict or inventory.get("schema") != "coverage-source-capture-inventory/1":
+    if type(inventory) is not dict or inventory.get("schema") not in {
+        "coverage-source-capture-inventory/1",
+        "coverage-saved-source-capture-inventory/1",
+    }:
         raise ConsumerInputError("capture-inventory-schema")
+    if inventory["schema"] == "coverage-saved-source-capture-inventory/1":
+        if (
+            inventory.get("capture_origin") != "saved-corpus-import/1"
+            or inventory.get("origin_stage_uuid") == stage_uuid
+            or not all(
+                type(inventory.get(key)) is str and re.fullmatch(r"[0-9a-f]{64}", inventory[key]) is not None
+                for key in ("origin_inventory_sha256", "import_receipt_sha256")
+            )
+            or any(inventory.get(key) != 0 for key in ("owned_http_calls", "health_calls", "scrape_calls"))
+            or inventory.get("quality_credit") is not False
+        ):
+            raise ConsumerInputError("saved-capture-provenance-invalid")
     if inventory.get("stage_uuid") != stage_uuid:
         raise ConsumerInputError("capture-stage-mismatch")
     if inventory.get("status") not in {"complete", "complete-with-source-failures"}:

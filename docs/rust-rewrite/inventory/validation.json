@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "plan_id": "F01",
+  "baseline_sha": "20109f9083babd014971951e8c02565ae51c2326",
+  "kind": "source_inventory_acceptance_evidence_not_native_parity",
+  "checks": {
+    "python_source_set": {
+      "expected": 363,
+      "actual": 363,
+      "exact_name_match": true
+    },
+    "active_dynamic_python_sources": {
+      "count": 1,
+      "disposition_required": true
+    },
+    "adapter_set": {
+      "expected": 51,
+      "exact_name_match": true,
+      "all_batch_owners_match_plan": true
+    },
+    "mcp_tool_set": {
+      "expected": 38,
+      "exact_name_and_contract_grant_state_mutation_gate_match": true
+    },
+    "direct_runtime_environment_read_locations": {
+      "expected": 68,
+      "actual": 68,
+      "exact_file_line_match": true
+    },
+    "application_http_path_method_pairs": {
+      "expected": 16,
+      "exact_decorator_coverage": true
+    },
+    "core_contract_counts": {
+      "adapters": 51,
+      "config": 124,
+      "direct_environment_reads": 68,
+      "state": 33,
+      "core": 12,
+      "records": 288
+    },
+    "route_counts": {
+      "application_http_route_declarations": 14,
+      "streamable_http_endpoint_records": 1,
+      "conditional_oauth_streamable_http_routes": 6,
+      "legacy_sse_endpoint_records": 2,
+      "distinct_paths_across_listed_modes": 22,
+      "total_route_records": 23
+    },
+    "references": "All manifest plan IDs and named regression test paths checked against current source",
+    "sdk_http_routes": "Constructed locked FastMCP apps without lifespan: matched OAuth metadata/authorize/register/token/revoke/protected-resource routes, stateless /mcp methods, SSE GET/HEAD and normalized /messages mount"
+  },
+  "reference_environment": {
+    "python": "3.12.11",
+    "fastmcp": "4.0.11",
+    "mcp": "2.3.0",
+    "setup": "UV_PROJECT_ENVIRONMENT=/private/tmp/slopsearx-f01-locked-venv uv sync --locked --extra dev"
+  },
+  "regression_command": "PYTHONPATH=. /private/tmp/slopsearx-f01-locked-venv/bin/python -m pytest --no-cov -q tests/test_mcp_tool_registry.py tests/test_jev.py",
+  "regression_result": {
+    "passed": 15,
+    "skipped": 1,
+    "skip_reason": "Deployment-mode contract is run by the dedicated CI matrix; JEV_CI_EXPECT_ENABLED unset locally"
+  },
+  "review_corrections": [
+    "Added missing extensionless ssx and corrected subsystem owners",
+    "Added SDK-owned OAuth and legacy SSE route inventories",
+    "Expanded runtime config and OAuth/portal/shared state families",
+    "Separated active SHA-pinned dynamic .py.txt replay from retained historical data",
+    "Verified locked dependency versions separately from older shared development environment",
+    "Corrected gateway OAuth and staged-store owners after independent Sol review",
+    "Corrected token-file absent/malformed collapse and delegated expiry behavior from actual implementation",
+    "Verified SDK implicit HEAD/OPTIONS methods and normalized SSE Mount path through local construction"
+  ],
+  "native_parity": "pending for every capability; F01 is inventory only",
+  "precommit": {
+    "full_run": "All hooks passed except intentional Markdown trailing whitespace fixed in F01, and pre-existing formatter change to tests/test_coverage_saved_method_materials.py; unrelated generated test change restored",
+    "scoped_run": "All applicable F01 documentation hooks passed after whitespace cleanup"
+  }
+}

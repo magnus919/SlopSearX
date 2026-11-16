@@ -1,0 +1,72 @@
+{
+  "status": "parent-approved implementation; final qualification pending",
+  "files": [
+    {
+      "path": "Modules/unicodedata.c",
+      "sha256": "d69558ad96a38932da9e9d596bea8cd91d54d9801e56f2cea77a6ecfccb47a6c",
+      "license": "PSF-2.0 (root LICENSE historical terms retained); generated Unicode data also attributed to Unicode notice",
+      "role": "native lookup algorithm/source baseline; approved native derivation with complete package notices"
+    },
+    {
+      "path": "Modules/unicodename_db.h",
+      "sha256": "b756b8c66e7b73d4e177fa75e88c466322b158c1cbef276d5a4b5dea865c72b5",
+      "license": "PSF-2.0 (root LICENSE historical terms retained); generated Unicode data also attributed to Unicode notice",
+      "role": "native lookup algorithm/source baseline; approved native derivation with complete package notices"
+    },
+    {
+      "path": "Tools/unicode/makeunicodedata.py",
+      "sha256": "3a83416f717bab94983baba84537dc17f4d997f82d653aa944e98a710e8c7078",
+      "license": "PSF-2.0 (root LICENSE historical terms retained); generated Unicode data also attributed to Unicode notice",
+      "role": "native lookup algorithm/source baseline; approved native derivation with complete package notices"
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "b0e25a78cffb43f4d92de8b61ccfa1f1f98ecbc22330b54b5251e7b6ba010231",
+      "license": "PSF-2.0 (root LICENSE historical terms retained); generated Unicode data also attributed to Unicode notice",
+      "role": "native lookup algorithm/source baseline; approved native derivation with complete package notices"
+    },
+    {
+      "path": "LICENSE-UNICODE",
+      "url": "https://www.unicode.org/license.txt",
+      "sha256": "e7a93b009565cfce55919a381437ac4db883e9da2126fa28b91d12732bc53d96",
+      "license": "Unicode-3.0; full official notice retained separately; UCD16 headers copyright 2024Unicode Inc",
+      "role": "official data provenance/notice; approved native derivation with complete package notices"
+    },
+    {
+      "path": "NameAliases.txt",
+      "url": "https://www.unicode.org/Public/16.0.0/ucd/NameAliases.txt",
+      "sha256": "9953f0fcebf5ea8091c5c581e4df0e43f20d2533c84ccca7987a9bb819a896a8",
+      "license": "Unicode-3.0; full official notice retained separately; UCD16 headers copyright 2024Unicode Inc",
+      "role": "official data provenance/notice; approved native derivation with complete package notices"
+    },
+    {
+      "path": "NamedSequences.txt",
+      "url": "https://www.unicode.org/Public/16.0.0/ucd/NamedSequences.txt",
+      "sha256": "4ff660cb922480cd5aab9a689b1a6905d0a54575baf9967d0f1e00ac866f04dd",
+      "license": "Unicode-3.0; full official notice retained separately; UCD16 headers copyright 2024Unicode Inc",
+      "role": "official data provenance/notice; approved native derivation with complete package notices"
+    },
+    {
+      "path": "ReadMe.txt",
+      "url": "https://www.unicode.org/Public/16.0.0/ucd/ReadMe.txt",
+      "sha256": "14cafa23788d3a20dd21d6b0cdcb8d6dab520781fcd9ad9392f3b88ea607e633",
+      "license": "Unicode-3.0; full official notice retained separately; UCD16 headers copyright 2024Unicode Inc",
+      "role": "official data provenance/notice; approved native derivation with complete package notices"
+    },
+    {
+      "path": "UnicodeData.txt",
+      "url": "https://www.unicode.org/Public/16.0.0/ucd/UnicodeData.txt",
+      "sha256": "ff58e5823bd095166564a006e47d111130813dcf8bf234ef79fa51a870edb48f",
+      "license": "Unicode-3.0; full official notice retained separately; UCD16 headers copyright 2024Unicode Inc",
+      "role": "official data provenance/notice; approved native derivation with complete package notices"
+    }
+  ],
+  "proposed_package_license": "MIT AND PSF-2.0 AND Unicode-3.0",
+  "exception_scope": "ssx-source-codecs =0.1.0 only, only if existing policy does not already allow Unicode-3.0",
+  "semantics": "ASCII case-insensitive exact name/alias lookup, no normalization of spaces or NUL; source CAPI disables named sequences; CPython3.14.7 with Unicode16 data Hangul/CJK/Tangut algorithmic acceptance with exact ranges/hex formatting qualification required",
+  "proposed_outputs": [
+    "src/unicode_names.rs: sorted UnicodeData ordinary-name and NameAliases single-codepoint mappings",
+    "src/unicode_name_algorithm.rs: source-compatible Hangul, CJK and Tangut algorithms/ranges"
+  ],
+  "data_copy_status": "51662 name/alias/Hangul entries and13 pinned ranges generated; final qualification pending"
+}

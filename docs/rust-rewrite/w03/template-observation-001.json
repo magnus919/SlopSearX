@@ -1,0 +1,987 @@
+{
+  "contract": "slopsearx.rust.w03.templates",
+  "baseline": "87af8096d46359241421ac747ed6aa1ad07f38ec",
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "catalog": [
+    {
+      "name": "wikipedia",
+      "categories": [
+        "general",
+        "reference"
+      ]
+    },
+    {
+      "name": "arxiv",
+      "categories": [
+        "science"
+      ]
+    },
+    {
+      "name": "brave",
+      "categories": [
+        "general",
+        "news"
+      ]
+    },
+    {
+      "name": "reddit",
+      "categories": [
+        "social"
+      ]
+    },
+    {
+      "name": "hibp",
+      "categories": [
+        "general"
+      ]
+    }
+  ],
+  "observations": [
+    {
+      "strategy": "triangulate",
+      "max_queries": 4,
+      "max_engines_per_query": 3,
+      "sensitive_allowed": false,
+      "queries": [
+        {
+          "index": 0,
+          "query": "Question CVE-2026-12345",
+          "intent": "web",
+          "engines": [
+            "wikipedia",
+            "brave"
+          ],
+          "time_range": null,
+          "state": "pending",
+          "query_id": null,
+          "result_count": 0,
+          "cursor": null,
+          "error": null,
+          "engine_coverage": [],
+          "attempts": [],
+          "enforcement": {},
+          "subquestion_id": null,
+          "rationale": null,
+          "parent_attempt_id": null,
+          "continuation_key": null,
+          "continuation_digest": null,
+          "requires_intent_grant": false,
+          "planning_method": null,
+          "evidence_result_ids": [],
+          "evidence_engines": [],
+          "evidence_intent": null
+        },
+        {
+          "index": 1,
+          "query": "Question CVE-2026-12345",
+          "intent": "science",
+          "engines": [
+            "arxiv"
+          ],
+          "time_range": null,
+          "state": "pending",
+          "query_id": null,
+          "result_count": 0,
+          "cursor": null,
+          "error": null,
+          "engine_coverage": [],
+          "attempts": [],
+          "enforcement": {},
+          "subquestion_id": null,
+          "rationale": null,
+          "parent_attempt_id": null,
+          "continuation_key": null,
+          "continuation_digest": null,
+          "requires_intent_grant": false,
+          "planning_method": null,
+          "evidence_result_ids": [],
+          "evidence_engines": [],
+          "evidence_intent": null
+        },
+        {
+          "index": 2,
+          "query": "Question CVE-2026-12345",
+          "intent": "reference",
+          "engines": [
+            "wikipedia"
+          ],
+          "time_range": null,
+          "state": "pending",
+          "query_id": null,
+          "result_count": 0,
+          "cursor": null,
+          "error": null,
+          "engine_coverage": [],
+          "attempts": [],
+          "enforcement": {},
+          "subquestion_id": null,
+          "rationale": null,
+          "parent_attempt_id": null,
+          "continuation_key": null,
+          "continuation_digest": null,
+          "requires_intent_grant": false,
+          "planning_method": null,
+          "evidence_result_ids": [],
+          "evidence_engines": [],
+          "evidence_intent": null
+        }
+      ],
+      "warnings": [
+        "sensitive engines excluded by policy (no MCP_TARGETED_SENSITIVE_ALLOWED grant): hibp"
+      ]
+    },
+    {
+      "strategy": "triangulate",
+      "max_queries": 1,
+      "max_engines_per_query": 1,
+      "sensitive_allowed": false,
+      "queries": [
+        {
+          "index": 0,
+          "query": "Question CVE-2026-12345",
+          "intent": "web",
+          "engines": [
+            "wikipedia"
+          ],
+          "time_range": null,
+          "state": "pending",
+          "query_id": null,
+          "result_count": 0,
+          "cursor": null,
+          "error": null,
+          "engine_coverage": [],
+          "attempts": [],
+          "enforcement": {},
+          "subquestion_id": null,
+          "rationale": null,
+          "parent_attempt_id": null,
+          "continuation_key": null,
+          "continuation_digest": null,
+          "requires_intent_grant": false,
+          "planning_method": null,
+          "evidence_result_ids": [],
+          "evidence_engines": [],
+          "evidence_intent": null
+        }
+      ],
+      "warnings": [
+        "sensitive engines excluded by policy (no MCP_TARGETED_SENSITIVE_ALLOWED grant): hibp"
+      ]
+    },
+    {
+      "strategy": "triangulate",
+      "max_queries": 4,
+      "max_engines_per_query": 3,
+      "sensitive_allowed": true,
+      "queries": [
+        {
+          "index": 0,
+          "query": "Question CVE-2026-12345",
+          "intent": "web",
+          "engines": [
+            "wikipedia",
+            "brave",
+            "hibp"
+          ],
+          "time_range": null,
+          "state": "pending",
+          "query_id": null,
+          "result_count": 0,
+          "cursor": null,
+          "error": null,
+          "engine_coverage": [],
+          "attempts": [],
+          "enforcement": {},
+          "subquestion_id": null,
+          "rationale": null,
+          "parent_attempt_id": null,
+          "continuation_key": null,
+          "continuation_digest": null,
+          "requires_intent_grant": false,
+          "planning_method": null,
+          "evidence_result_ids": [],
+          "evidence_engines": [],
+          "evidence_intent": null
+        },
+        {
+          "index": 1,
+          "query": "Question CVE-2026-12345",
+          "intent": "science",
+          "engines": [
+            "arxiv"
+          ],
+          "time_range": null,
+          "state": "pending",
+          "query_id": null,
+          "result_count": 0,
+          "cursor": null,
+          "error": null,
+          "engine_coverage": [],
+          "attempts": [],
+          "enforcement": {},
+          "subquestion_id": null,
+          "rationale": null,
+          "parent_attempt_id": null,
+          "continuation_key": null,
+          "continuation_digest": null,
+          "requires_intent_grant": false,
+          "planning_method": null,
+          "evidence_result_ids": [],
+          "evidence_engines": [],
+          "evidence_intent": null
+        },
+        {
+          "index": 2,
+          "query": "Question CVE-2026-12345",
+          "intent": "reference",
+          "engines": [
+            "wikipedia"
+          ],
+          "time_range": null,
+          "state": "pending",
+          "query_id": null,
+          "result_count": 0,
+          "cursor": null,
+          "error": null,
+          "engine_coverage": [],
+          "attempts": [],
+          "enforcement": {},
+          "subquestion_id": null,
+          "rationale": null,
+          "parent_attempt_id": null,
+          "continuation_key": null,
+          "continuation_digest": null,
+          "requires_intent_grant": false,
+          "planning_method": null,
+          "evidence_result_ids": [],
+          "evidence_engines": [],
+          "evidence_intent": null
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "strategy": "broad",
+      "max_queries": 4,
+      "max_engines_per_query": 3,
+      "sensitive_allowed": false,
+      "queries": [
+        {
+          "index": 0,
+          "query": "Question CVE-2026-12345",
+          "intent": "web",
+          "engines": [
+            "wikipedia",
+            "brave"
+          ],
+          "time_range": null,
+          "state": "pending",
+          "query_id": null,
+          "result_count": 0,
+          "cursor": null,
+          "error": null,
+          "engine_coverage": [],
+          "attempts": [],
+          "enforcement": {},
+          "subquestion_id": null,
+          "rationale": null,
+          "parent_attempt_id": null,
+          "continuation_key": null,
+          "continuation_digest": null,
+          "requires_intent_grant": false,
+          "planning_method": null,
+          "evidence_result_ids": [],
+          "evidence_engines": [],
+          "evidence_intent": null
+        },
+        {
+          "index": 1,
+          "query": "Question CVE-2026-12345",
+          "intent": "news",
+          "engines": [
+            "brave"
+          ],
+          "time_range": null,
+          "state": "pending",
+          "query_id": null,
+          "result_count": 0,
+          "cursor": null,
+          "error": null,
+          "engine_coverage": [],
+          "attempts": [],
+          "enforcement": {},
+          "subquestion_id": null,
+          "rationale": null,
+          "parent_attempt_id": null,
+          "continuation_key": null,
+          "continuation_digest": null,
+          "requires_intent_grant": false,
+          "planning_method": null,
+          "evidence_result_ids": [],
+          "evidence_engines": [],
+          "evidence_intent": null
+        },
+        {
+          "index": 2,
+          "query": "Question CVE-2026-12345",
+          "intent": "reference",
+          "engines": [
+            "wikipedia"
+          ],
+          "time_range": null,
+          "state": "pending",
+          "query_id": null,
+          "result_count": 0,
+          "cursor": null,
+          "error": null,
+          "engine_coverage": [],
+          "attempts": [],
+          "enforcement": {},
+          "subquestion_id": null,
+          "rationale": null,
+          "parent_attempt_id": null,
+          "continuation_key": null,
+          "continuation_digest": null,
+          "requires_intent_grant": false,
+          "planning_method": null,
+          "evidence_result_ids": [],
+          "evidence_engines": [],
+          "evidence_intent": null
+        },
+        {
+          "index": 3,
+          "query": "Question CVE-2026-12345",
+          "intent": "social",
+          "engines": [
+            "reddit",
+            "brave"
+          ],
+          "time_range": null,
+          "state": "pending",
+          "query_id": null,
+          "result_count": 0,
+          "cursor": null,
+          "error": null,
+          "engine_coverage": [],
+          "attempts": [],
+          "enforcement": {},
+          "subquestion_id": null,
+          "rationale": null,
+          "parent_attempt_id": null,
+          "continuation_key": null,
+          "continuation_digest": null,
+          "requires_intent_grant": false,
+          "planning_method": null,
+          "evidence_result_ids": [],
+          "evidence_engines": [],
+          "evidence_intent": null
+        }
+      ],
+      "warnings": [
+        "sensitive engines excluded by policy (no MCP_TARGETED_SENSITIVE_ALLOWED grant): hibp",
+        "intent 'social' references unknown engines: duckduckgo, hackernews"
+      ]
+    },
+    {
+      "strategy": "broad",
+      "max_queries": 1,
+      "max_engines_per_query": 1,
+      "sensitive_allowed": false,
+      "queries": [
+        {
+          "index": 0,
+          "query": "Question CVE-2026-12345",
+          "intent": "web",
+          "engines": [
+            "wikipedia"
+          ],
+          "time_range": null,
+          "state": "pending",
+          "query_id": null,
+          "result_count": 0,
+          "cursor": null,
+          "error": null,
+          "engine_coverage": [],
+          "attempts": [],
+          "enforcement": {},
+          "subquestion_id": null,
+          "rationale": null,
+          "parent_attempt_id": null,
+          "continuation_key": null,
+          "continuation_digest": null,
+          "requires_intent_grant": false,
+          "planning_method": null,
+          "evidence_result_ids": [],
+          "evidence_engines": [],
+          "evidence_intent": null
+        }
+      ],
+      "warnings": [
+        "sensitive engines excluded by policy (no MCP_TARGETED_SENSITIVE_ALLOWED grant): hibp"
+      ]
+    },
+    {
+      "strategy": "broad",
+      "max_queries": 4,
+      "max_engines_per_query": 3,
+      "sensitive_allowed": true,
+      "queries": [
+        {
+          "index": 0,
+          "query": "Question CVE-2026-12345",
+          "intent": "web",
+          "engines": [
+            "wikipedia",
+            "brave",
+            "hibp"
+          ],
+          "time_range": null,
+          "state": "pending",
+          "query_id": null,
+          "result_count": 0,
+          "cursor": null,
+          "error": null,
+          "engine_coverage": [],
+          "attempts": [],
+          "enforcement": {},
+          "subquestion_id": null,
+          "rationale": null,
+          "parent_attempt_id": null,
+          "continuation_key": null,
+          "continuation_digest": null,
+          "requires_intent_grant": false,
+          "planning_method": null,
+          "evidence_result_ids": [],
+          "evidence_engines": [],
+          "evidence_intent": null
+        },
+        {
+          "index": 1,
+          "query": "Question CVE-2026-12345",
+          "intent": "news",
+          "engines": [
+            "brave"
+          ],
+          "time_range": null,
+          "state": "pending",
+          "query_id": null,
+          "result_count": 0,
+          "cursor": null,
+          "error": null,
+          "engine_coverage": [],
+          "attempts": [],
+          "enforcement": {},
+          "subquestion_id": null,
+          "rationale": null,
+          "parent_attempt_id": null,
+          "continuation_key": null,
+          "continuation_digest": null,
+          "requires_intent_grant": false,
+          "planning_method": null,
+          "evidence_result_ids": [],
+          "evidence_engines": [],
+          "evidence_intent": null
+        },
+        {
+          "index": 2,
+          "query": "Question CVE-2026-12345",
+          "intent": "reference",
+          "engines": [
+            "wikipedia"
+          ],
+          "time_range": null,
+          "state": "pending",
+          "query_id": null,
+          "result_count": 0,
+          "cursor": null,
+          "error": null,
+          "engine_coverage": [],
+          "attempts": [],
+          "enforcement": {},
+          "subquestion_id": null,
+          "rationale": null,
+          "parent_attempt_id": null,
+          "continuation_key": null,
+          "continuation_digest": null,
+          "requires_intent_grant": false,
+          "planning_method": null,
+          "evidence_result_ids": [],
+          "evidence_engines": [],
+          "evidence_intent": null
+        },
+        {
+          "index": 3,
+          "query": "Question CVE-2026-12345",
+          "intent": "social",
+          "engines": [
+            "reddit",
+            "brave"
+          ],
+          "time_range": null,
+          "state": "pending",
+          "query_id": null,
+          "result_count": 0,
+          "cursor": null,
+          "error": null,
+          "engine_coverage": [],
+          "attempts": [],
+          "enforcement": {},
+          "subquestion_id": null,
+          "rationale": null,
+          "parent_attempt_id": null,
+          "continuation_key": null,
+          "continuation_digest": null,
+          "requires_intent_grant": false,
+          "planning_method": null,
+          "evidence_result_ids": [],
+          "evidence_engines": [],
+          "evidence_intent": null
+        }
+      ],
+      "warnings": [
+        "intent 'social' references unknown engines: duckduckgo, hackernews"
+      ]
+    },
+    {
+      "strategy": "fresh",
+      "max_queries": 4,
+      "max_engines_per_query": 3,
+      "sensitive_allowed": false,
+      "queries": [
+        {
+          "index": 0,
+          "query": "Question CVE-2026-12345",
+          "intent": "web",
+          "engines": [
+            "wikipedia",
+            "brave"
+          ],
+          "time_range": "month",
+          "state": "pending",
+          "query_id": null,
+          "result_count": 0,
+          "cursor": null,
+          "error": null,
+          "engine_coverage": [],
+          "attempts": [],
+          "enforcement": {},
+          "subquestion_id": null,
+          "rationale": null,
+          "parent_attempt_id": null,
+          "continuation_key": null,
+          "continuation_digest": null,
+          "requires_intent_grant": false,
+          "planning_method": null,
+          "evidence_result_ids": [],
+          "evidence_engines": [],
+          "evidence_intent": null
+        },
+        {
+          "index": 1,
+          "query": "Question CVE-2026-12345",
+          "intent": "news",
+          "engines": [
+            "brave"
+          ],
+          "time_range": "day",
+          "state": "pending",
+          "query_id": null,
+          "result_count": 0,
+          "cursor": null,
+          "error": null,
+          "engine_coverage": [],
+          "attempts": [],
+          "enforcement": {},
+          "subquestion_id": null,
+          "rationale": null,
+          "parent_attempt_id": null,
+          "continuation_key": null,
+          "continuation_digest": null,
+          "requires_intent_grant": false,
+          "planning_method": null,
+          "evidence_result_ids": [],
+          "evidence_engines": [],
+          "evidence_intent": null
+        }
+      ],
+      "warnings": [
+        "sensitive engines excluded by policy (no MCP_TARGETED_SENSITIVE_ALLOWED grant): hibp"
+      ]
+    },
+    {
+      "strategy": "fresh",
+      "max_queries": 1,
+      "max_engines_per_query": 1,
+      "sensitive_allowed": false,
+      "queries": [
+        {
+          "index": 0,
+          "query": "Question CVE-2026-12345",
+          "intent": "web",
+          "engines": [
+            "wikipedia"
+          ],
+          "time_range": "month",
+          "state": "pending",
+          "query_id": null,
+          "result_count": 0,
+          "cursor": null,
+          "error": null,
+          "engine_coverage": [],
+          "attempts": [],
+          "enforcement": {},
+          "subquestion_id": null,
+          "rationale": null,
+          "parent_attempt_id": null,
+          "continuation_key": null,
+          "continuation_digest": null,
+          "requires_intent_grant": false,
+          "planning_method": null,
+          "evidence_result_ids": [],
+          "evidence_engines": [],
+          "evidence_intent": null
+        }
+      ],
+      "warnings": [
+        "sensitive engines excluded by policy (no MCP_TARGETED_SENSITIVE_ALLOWED grant): hibp"
+      ]
+    },
+    {
+      "strategy": "fresh",
+      "max_queries": 4,
+      "max_engines_per_query": 3,
+      "sensitive_allowed": true,
+      "queries": [
+        {
+          "index": 0,
+          "query": "Question CVE-2026-12345",
+          "intent": "web",
+          "engines": [
+            "wikipedia",
+            "brave",
+            "hibp"
+          ],
+          "time_range": "month",
+          "state": "pending",
+          "query_id": null,
+          "result_count": 0,
+          "cursor": null,
+          "error": null,
+          "engine_coverage": [],
+          "attempts": [],
+          "enforcement": {},
+          "subquestion_id": null,
+          "rationale": null,
+          "parent_attempt_id": null,
+          "continuation_key": null,
+          "continuation_digest": null,
+          "requires_intent_grant": false,
+          "planning_method": null,
+          "evidence_result_ids": [],
+          "evidence_engines": [],
+          "evidence_intent": null
+        },
+        {
+          "index": 1,
+          "query": "Question CVE-2026-12345",
+          "intent": "news",
+          "engines": [
+            "brave"
+          ],
+          "time_range": "day",
+          "state": "pending",
+          "query_id": null,
+          "result_count": 0,
+          "cursor": null,
+          "error": null,
+          "engine_coverage": [],
+          "attempts": [],
+          "enforcement": {},
+          "subquestion_id": null,
+          "rationale": null,
+          "parent_attempt_id": null,
+          "continuation_key": null,
+          "continuation_digest": null,
+          "requires_intent_grant": false,
+          "planning_method": null,
+          "evidence_result_ids": [],
+          "evidence_engines": [],
+          "evidence_intent": null
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "strategy": "counterevidence",
+      "max_queries": 4,
+      "max_engines_per_query": 3,
+      "sensitive_allowed": false,
+      "queries": [
+        {
+          "index": 0,
+          "query": "Question CVE-2026-12345",
+          "intent": "reference",
+          "engines": [
+            "wikipedia"
+          ],
+          "time_range": null,
+          "state": "pending",
+          "query_id": null,
+          "result_count": 0,
+          "cursor": null,
+          "error": null,
+          "engine_coverage": [],
+          "attempts": [],
+          "enforcement": {},
+          "subquestion_id": null,
+          "rationale": null,
+          "parent_attempt_id": null,
+          "continuation_key": null,
+          "continuation_digest": null,
+          "requires_intent_grant": false,
+          "planning_method": null,
+          "evidence_result_ids": [],
+          "evidence_engines": [],
+          "evidence_intent": null
+        },
+        {
+          "index": 1,
+          "query": "Question CVE-2026-12345 limitations",
+          "intent": "science",
+          "engines": [
+            "arxiv"
+          ],
+          "time_range": null,
+          "state": "pending",
+          "query_id": null,
+          "result_count": 0,
+          "cursor": null,
+          "error": null,
+          "engine_coverage": [],
+          "attempts": [],
+          "enforcement": {},
+          "subquestion_id": null,
+          "rationale": null,
+          "parent_attempt_id": null,
+          "continuation_key": null,
+          "continuation_digest": null,
+          "requires_intent_grant": false,
+          "planning_method": null,
+          "evidence_result_ids": [],
+          "evidence_engines": [],
+          "evidence_intent": null
+        },
+        {
+          "index": 2,
+          "query": "Question CVE-2026-12345 criticism",
+          "intent": "reference",
+          "engines": [
+            "wikipedia"
+          ],
+          "time_range": null,
+          "state": "pending",
+          "query_id": null,
+          "result_count": 0,
+          "cursor": null,
+          "error": null,
+          "engine_coverage": [],
+          "attempts": [],
+          "enforcement": {},
+          "subquestion_id": null,
+          "rationale": null,
+          "parent_attempt_id": null,
+          "continuation_key": null,
+          "continuation_digest": null,
+          "requires_intent_grant": false,
+          "planning_method": null,
+          "evidence_result_ids": [],
+          "evidence_engines": [],
+          "evidence_intent": null
+        },
+        {
+          "index": 3,
+          "query": "Question CVE-2026-12345 counterexample",
+          "intent": "science",
+          "engines": [
+            "arxiv"
+          ],
+          "time_range": null,
+          "state": "pending",
+          "query_id": null,
+          "result_count": 0,
+          "cursor": null,
+          "error": null,
+          "engine_coverage": [],
+          "attempts": [],
+          "enforcement": {},
+          "subquestion_id": null,
+          "rationale": null,
+          "parent_attempt_id": null,
+          "continuation_key": null,
+          "continuation_digest": null,
+          "requires_intent_grant": false,
+          "planning_method": null,
+          "evidence_result_ids": [],
+          "evidence_engines": [],
+          "evidence_intent": null
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "strategy": "counterevidence",
+      "max_queries": 1,
+      "max_engines_per_query": 1,
+      "sensitive_allowed": false,
+      "queries": [
+        {
+          "index": 0,
+          "query": "Question CVE-2026-12345",
+          "intent": "reference",
+          "engines": [
+            "wikipedia"
+          ],
+          "time_range": null,
+          "state": "pending",
+          "query_id": null,
+          "result_count": 0,
+          "cursor": null,
+          "error": null,
+          "engine_coverage": [],
+          "attempts": [],
+          "enforcement": {},
+          "subquestion_id": null,
+          "rationale": null,
+          "parent_attempt_id": null,
+          "continuation_key": null,
+          "continuation_digest": null,
+          "requires_intent_grant": false,
+          "planning_method": null,
+          "evidence_result_ids": [],
+          "evidence_engines": [],
+          "evidence_intent": null
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "strategy": "counterevidence",
+      "max_queries": 4,
+      "max_engines_per_query": 3,
+      "sensitive_allowed": true,
+      "queries": [
+        {
+          "index": 0,
+          "query": "Question CVE-2026-12345",
+          "intent": "reference",
+          "engines": [
+            "wikipedia"
+          ],
+          "time_range": null,
+          "state": "pending",
+          "query_id": null,
+          "result_count": 0,
+          "cursor": null,
+          "error": null,
+          "engine_coverage": [],
+          "attempts": [],
+          "enforcement": {},
+          "subquestion_id": null,
+          "rationale": null,
+          "parent_attempt_id": null,
+          "continuation_key": null,
+          "continuation_digest": null,
+          "requires_intent_grant": false,
+          "planning_method": null,
+          "evidence_result_ids": [],
+          "evidence_engines": [],
+          "evidence_intent": null
+        },
+        {
+          "index": 1,
+          "query": "Question CVE-2026-12345 limitations",
+          "intent": "science",
+          "engines": [
+            "arxiv"
+          ],
+          "time_range": null,
+          "state": "pending",
+          "query_id": null,
+          "result_count": 0,
+          "cursor": null,
+          "error": null,
+          "engine_coverage": [],
+          "attempts": [],
+          "enforcement": {},
+          "subquestion_id": null,
+          "rationale": null,
+          "parent_attempt_id": null,
+          "continuation_key": null,
+          "continuation_digest": null,
+          "requires_intent_grant": false,
+          "planning_method": null,
+          "evidence_result_ids": [],
+          "evidence_engines": [],
+          "evidence_intent": null
+        },
+        {
+          "index": 2,
+          "query": "Question CVE-2026-12345 criticism",
+          "intent": "reference",
+          "engines": [
+            "wikipedia"
+          ],
+          "time_range": null,
+          "state": "pending",
+          "query_id": null,
+          "result_count": 0,
+          "cursor": null,
+          "error": null,
+          "engine_coverage": [],
+          "attempts": [],
+          "enforcement": {},
+          "subquestion_id": null,
+          "rationale": null,
+          "parent_attempt_id": null,
+          "continuation_key": null,
+          "continuation_digest": null,
+          "requires_intent_grant": false,
+          "planning_method": null,
+          "evidence_result_ids": [],
+          "evidence_engines": [],
+          "evidence_intent": null
+        },
+        {
+          "index": 3,
+          "query": "Question CVE-2026-12345 counterexample",
+          "intent": "science",
+          "engines": [
+            "arxiv"
+          ],
+          "time_range": null,
+          "state": "pending",
+          "query_id": null,
+          "result_count": 0,
+          "cursor": null,
+          "error": null,
+          "engine_coverage": [],
+          "attempts": [],
+          "enforcement": {},
+          "subquestion_id": null,
+          "rationale": null,
+          "parent_attempt_id": null,
+          "continuation_key": null,
+          "continuation_digest": null,
+          "requires_intent_grant": false,
+          "planning_method": null,
+          "evidence_result_ids": [],
+          "evidence_engines": [],
+          "evidence_intent": null
+        }
+      ],
+      "warnings": []
+    }
+  ],
+  "provider_calls": 0,
+  "writes": 0
+}

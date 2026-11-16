@@ -1,0 +1,493 @@
+{
+  "source_function_count": 44,
+  "owned_function_count": 42,
+  "owned_parameter_count": 53,
+  "downstream_http_count": 2,
+  "functions": [
+    {
+      "source_function": "tests/test_audit.py::TestAuditAsyncConformance::test_record_query_is_async",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_audit.py::TestAuditAsyncConformance::test_record_query_is_async"
+      ],
+      "native_consumers": [
+        "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes"
+      ]
+    },
+    {
+      "source_function": "tests/test_audit.py::TestAuditDisconnected::test_record_query_disconnected_cache_noop",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_audit.py::TestAuditDisconnected::test_record_query_disconnected_cache_noop"
+      ],
+      "native_consumers": [
+        "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection"
+      ]
+    },
+    {
+      "source_function": "tests/test_audit.py::TestAuditDisconnected::test_record_query_no_cache_noop",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_audit.py::TestAuditDisconnected::test_record_query_no_cache_noop"
+      ],
+      "native_consumers": [
+        "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection"
+      ]
+    },
+    {
+      "source_function": "tests/test_audit.py::TestAuditDisconnected::test_record_query_no_client_noop",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_audit.py::TestAuditDisconnected::test_record_query_no_client_noop"
+      ],
+      "native_consumers": [
+        "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection"
+      ]
+    },
+    {
+      "source_function": "tests/test_audit.py::TestAuditPipeline::test_count_timeout_status_correctly",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_audit.py::TestAuditPipeline::test_count_timeout_status_correctly"
+      ],
+      "native_consumers": [
+        "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes"
+      ]
+    },
+    {
+      "source_function": "tests/test_audit.py::TestAuditPipeline::test_expire_set_on_stream",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_audit.py::TestAuditPipeline::test_expire_set_on_stream"
+      ],
+      "native_consumers": [
+        "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes"
+      ]
+    },
+    {
+      "source_function": "tests/test_audit.py::TestAuditPipeline::test_pipeline_error_noop",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_audit.py::TestAuditPipeline::test_pipeline_error_noop"
+      ],
+      "native_consumers": [
+        "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection"
+      ]
+    },
+    {
+      "source_function": "tests/test_audit.py::TestAuditPipeline::test_pipeline_execute_is_awaited",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_audit.py::TestAuditPipeline::test_pipeline_execute_is_awaited"
+      ],
+      "native_consumers": [
+        "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes"
+      ]
+    },
+    {
+      "source_function": "tests/test_audit.py::TestAuditPipeline::test_pipeline_fields_correct",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_audit.py::TestAuditPipeline::test_pipeline_fields_correct"
+      ],
+      "native_consumers": [
+        "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes"
+      ]
+    },
+    {
+      "source_function": "tests/test_audit.py::TestAuditPipeline::test_stream_key_includes_date",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_audit.py::TestAuditPipeline::test_stream_key_includes_date"
+      ],
+      "native_consumers": [
+        "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes"
+      ]
+    },
+    {
+      "source_function": "tests/test_metrics.py::TestCounter::test_header",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_metrics.py::TestCounter::test_header"
+      ],
+      "native_consumers": [
+        "ssx_infra::observability::metrics::original_metrics_tests::original_counter_and_gauge_assertions"
+      ]
+    },
+    {
+      "source_function": "tests/test_metrics.py::TestCounter::test_increment",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_metrics.py::TestCounter::test_increment"
+      ],
+      "native_consumers": [
+        "ssx_infra::observability::metrics::original_metrics_tests::original_counter_and_gauge_assertions"
+      ]
+    },
+    {
+      "source_function": "tests/test_metrics.py::TestCounter::test_multiple_labels",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_metrics.py::TestCounter::test_multiple_labels"
+      ],
+      "native_consumers": [
+        "ssx_infra::observability::metrics::original_metrics_tests::original_counter_and_gauge_assertions"
+      ]
+    },
+    {
+      "source_function": "tests/test_metrics.py::TestGauge::test_overwrite",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_metrics.py::TestGauge::test_overwrite"
+      ],
+      "native_consumers": [
+        "ssx_infra::observability::metrics::original_metrics_tests::original_counter_and_gauge_assertions"
+      ]
+    },
+    {
+      "source_function": "tests/test_metrics.py::TestGauge::test_set_and_render",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_metrics.py::TestGauge::test_set_and_render"
+      ],
+      "native_consumers": [
+        "ssx_infra::observability::metrics::original_metrics_tests::original_counter_and_gauge_assertions"
+      ]
+    },
+    {
+      "source_function": "tests/test_metrics.py::TestHistogram::test_bounded_retention",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_metrics.py::TestHistogram::test_bounded_retention"
+      ],
+      "native_consumers": [
+        "ssx_infra::observability::metrics::original_metrics_tests::original_histogram_assertions"
+      ]
+    },
+    {
+      "source_function": "tests/test_metrics.py::TestHistogram::test_cumulative_buckets_and_parser",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_metrics.py::TestHistogram::test_cumulative_buckets_and_parser"
+      ],
+      "native_consumers": [
+        "ssx_infra::observability::metrics::original_metrics_tests::original_histogram_assertions"
+      ]
+    },
+    {
+      "source_function": "tests/test_metrics.py::TestHistogram::test_empty_no_output",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_metrics.py::TestHistogram::test_empty_no_output"
+      ],
+      "native_consumers": [
+        "ssx_infra::observability::metrics::original_metrics_tests::original_histogram_assertions"
+      ]
+    },
+    {
+      "source_function": "tests/test_metrics.py::TestHistogram::test_invalid_buckets",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets0]",
+        "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets1]",
+        "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets2]",
+        "tests/test_metrics.py::TestHistogram::test_invalid_buckets[buckets3]"
+      ],
+      "native_consumers": [
+        "ssx_infra::observability::metrics::original_metrics_tests::original_histogram_assertions"
+      ]
+    },
+    {
+      "source_function": "tests/test_metrics.py::TestHistogram::test_nonfinite_and_negative_latency_ignored",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_metrics.py::TestHistogram::test_nonfinite_and_negative_latency_ignored"
+      ],
+      "native_consumers": [
+        "ssx_infra::observability::metrics::original_metrics_tests::original_histogram_assertions"
+      ]
+    },
+    {
+      "source_function": "tests/test_metrics.py::TestMetricsEndpoint::test_metrics_endpoint_returns_200",
+      "ownership": "T02",
+      "status": "source-bound downstream HTTP route obligation; not executed O01 completion",
+      "reason": "O01 supplies render/callback APIs; actual /metrics HTTP200 and request normalization require T02 server composition"
+    },
+    {
+      "source_function": "tests/test_metrics.py::TestRenderMetrics::test_render_includes_help_and_type",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_metrics.py::TestRenderMetrics::test_render_includes_help_and_type"
+      ],
+      "native_consumers": [
+        "ssx_infra::observability::metrics::original_metrics_tests::original_render_escape_and_error_assertions"
+      ]
+    },
+    {
+      "source_function": "tests/test_metrics.py::TestRenderMetrics::test_render_produces_valid_openmetrics",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_metrics.py::TestRenderMetrics::test_render_produces_valid_openmetrics"
+      ],
+      "native_consumers": [
+        "ssx_infra::observability::metrics::original_metrics_tests::original_render_escape_and_error_assertions"
+      ]
+    },
+    {
+      "source_function": "tests/test_metrics.py::test_engine_error_counter_counts_failures_not_empty",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_metrics.py::test_engine_error_counter_counts_failures_not_empty"
+      ],
+      "native_consumers": [
+        "ssx_infra::observability::metrics::original_metrics_tests::original_render_escape_and_error_assertions"
+      ]
+    },
+    {
+      "source_function": "tests/test_metrics.py::test_label_escaping_roundtrips",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_metrics.py::test_label_escaping_roundtrips"
+      ],
+      "native_consumers": [
+        "ssx_infra::observability::metrics::original_metrics_tests::original_render_escape_and_error_assertions"
+      ]
+    },
+    {
+      "source_function": "tests/test_metrics.py::test_user_input_does_not_create_unbounded_metric_series",
+      "ownership": "T02",
+      "status": "source-bound downstream HTTP route obligation; not executed O01 completion",
+      "reason": "O01 supplies render/callback APIs; actual /metrics HTTP200 and request normalization require T02 server composition"
+    },
+    {
+      "source_function": "tests/test_saved_event_metrics.py::test_publication_read_ack_gap_capacity_and_age_are_recorded",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_saved_event_metrics.py::test_publication_read_ack_gap_capacity_and_age_are_recorded"
+      ],
+      "native_consumers": [
+        "ssx_infra::observability::metrics::original_metrics_tests::original_saved_event_metric_assertions"
+      ]
+    },
+    {
+      "source_function": "tests/test_saved_event_metrics.py::test_read_without_events_clears_stale_backlog_age",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_saved_event_metrics.py::test_read_without_events_clears_stale_backlog_age[empty]",
+        "tests/test_saved_event_metrics.py::test_read_without_events_clears_stale_backlog_age[gap]"
+      ],
+      "native_consumers": [
+        "ssx_infra::observability::metrics::original_metrics_tests::original_saved_event_metric_assertions"
+      ]
+    },
+    {
+      "source_function": "tests/test_saved_event_metrics.py::test_rendered_metrics_expose_only_closed_operational_dimensions",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_saved_event_metrics.py::test_rendered_metrics_expose_only_closed_operational_dimensions"
+      ],
+      "native_consumers": [
+        "ssx_infra::observability::metrics::original_metrics_tests::original_saved_event_metric_assertions"
+      ]
+    },
+    {
+      "source_function": "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_ack-event-secret]",
+        "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_capacity-query-secret]",
+        "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_publication-tenant-secret]",
+        "tests/test_saved_event_metrics.py::test_user_or_stored_values_cannot_become_labels[record_saved_event_read-consumer-secret]"
+      ],
+      "native_consumers": [
+        "ssx_infra::observability::metrics::original_metrics_tests::original_saved_event_metric_assertions"
+      ]
+    },
+    {
+      "source_function": "tests/test_stats.py::TestStatsAsyncConformance::test_record_query_is_async",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_stats.py::TestStatsAsyncConformance::test_record_query_is_async"
+      ],
+      "native_consumers": [
+        "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes"
+      ]
+    },
+    {
+      "source_function": "tests/test_stats.py::TestStatsPipeline::test_error_and_timeout_increment_errors",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_stats.py::TestStatsPipeline::test_error_and_timeout_increment_errors"
+      ],
+      "native_consumers": [
+        "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes"
+      ]
+    },
+    {
+      "source_function": "tests/test_stats.py::TestStatsPipeline::test_ok_status_does_not_increment_errors",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_stats.py::TestStatsPipeline::test_ok_status_does_not_increment_errors"
+      ],
+      "native_consumers": [
+        "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes"
+      ]
+    },
+    {
+      "source_function": "tests/test_stats.py::TestStatsPipeline::test_pipeline_error_noop",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_stats.py::TestStatsPipeline::test_pipeline_error_noop"
+      ],
+      "native_consumers": [
+        "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection"
+      ]
+    },
+    {
+      "source_function": "tests/test_stats.py::TestStatsPipeline::test_pipeline_execute_is_awaited",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_stats.py::TestStatsPipeline::test_pipeline_execute_is_awaited"
+      ],
+      "native_consumers": [
+        "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes"
+      ]
+    },
+    {
+      "source_function": "tests/test_stats.py::TestStatsPipeline::test_rate_limited_status_increments_rate_limited",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_stats.py::TestStatsPipeline::test_rate_limited_status_increments_rate_limited"
+      ],
+      "native_consumers": [
+        "original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joined_private_writes"
+      ]
+    },
+    {
+      "source_function": "tests/test_stats.py::TestStatsTrackerDisconnected::test_record_query_disconnected_cache_noop",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_stats.py::TestStatsTrackerDisconnected::test_record_query_disconnected_cache_noop"
+      ],
+      "native_consumers": [
+        "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection"
+      ]
+    },
+    {
+      "source_function": "tests/test_stats.py::TestStatsTrackerDisconnected::test_record_query_no_cache_noop",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_stats.py::TestStatsTrackerDisconnected::test_record_query_no_cache_noop"
+      ],
+      "native_consumers": [
+        "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection"
+      ]
+    },
+    {
+      "source_function": "tests/test_stats.py::TestStatsTrackerDisconnected::test_record_query_no_client_noop",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_stats.py::TestStatsTrackerDisconnected::test_record_query_no_client_noop"
+      ],
+      "native_consumers": [
+        "original_eight_availability_rows_preserve_noop_and_nonfatal_failure_with_explicit_native_projection"
+      ]
+    },
+    {
+      "source_function": "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[dependency_dossier]",
+        "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[research]",
+        "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[retrieval_receipt]",
+        "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[saved_search]",
+        "tests/test_workflow_metrics.py::test_every_workflow_uses_the_closed_lifecycle_vocabulary[staged_search]"
+      ],
+      "native_consumers": [
+        "ssx_infra::observability::metrics::original_metrics_tests::original_workflow_metric_assertions"
+      ]
+    },
+    {
+      "source_function": "tests/test_workflow_metrics.py::test_interrupted_is_a_terminal_outcome_without_becoming_failure",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_workflow_metrics.py::test_interrupted_is_a_terminal_outcome_without_becoming_failure"
+      ],
+      "native_consumers": [
+        "ssx_infra::observability::metrics::original_metrics_tests::original_workflow_metric_assertions"
+      ]
+    },
+    {
+      "source_function": "tests/test_workflow_metrics.py::test_reconciliation_replaces_stale_gauges_after_recovery",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_workflow_metrics.py::test_reconciliation_replaces_stale_gauges_after_recovery"
+      ],
+      "native_consumers": [
+        "ssx_infra::observability::metrics::original_metrics_tests::original_workflow_metric_assertions"
+      ]
+    },
+    {
+      "source_function": "tests/test_workflow_metrics.py::test_tenant_facing_health_has_states_without_activity_counts",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_workflow_metrics.py::test_tenant_facing_health_has_states_without_activity_counts"
+      ],
+      "native_consumers": [
+        "ssx_infra::observability::metrics::original_metrics_tests::original_workflow_metric_assertions"
+      ]
+    },
+    {
+      "source_function": "tests/test_workflow_metrics.py::test_user_data_cannot_become_a_metric_label",
+      "ownership": "O01",
+      "status": "native API/private-backend assertions with explicit reviewed differences",
+      "parameter_nodes": [
+        "tests/test_workflow_metrics.py::test_user_data_cannot_become_a_metric_label"
+      ],
+      "native_consumers": [
+        "ssx_infra::observability::metrics::original_metrics_tests::original_workflow_metric_assertions"
+      ]
+    }
+  ]
+}

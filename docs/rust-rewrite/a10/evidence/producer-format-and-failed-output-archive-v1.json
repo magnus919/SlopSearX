@@ -1,0 +1,39 @@
+{
+  "purpose": "Current-producer format-only AST amendment and exact archive of failed zero-byte original output; completed source captures untouched",
+  "producer_format_manifest_sha256": "0c94fafb88ce36425c35f1d676e477d0b73f0a4aca3b6a663b9084dfc04d0d03",
+  "files": [
+    {
+      "path": "docs/rust-rewrite/a10/capture_regressions.py",
+      "before_sha256": "0845f8b68a05999315f12d37e3b37b8059601f5bc8fb3b137840eaacf843ed92",
+      "after_sha256": "0845f8b68a05999315f12d37e3b37b8059601f5bc8fb3b137840eaacf843ed92",
+      "semantic_ast_sha256": "31137443baf00032132e1b4c4985e5a6d7351b223daaec4b81e4633b8d968fe2",
+      "ast_equal": true,
+      "ruff_check_exit": 0,
+      "before": "/private/tmp/a10-producer-format-proposal-v1/capture_regressions.py.before",
+      "after": "/private/tmp/a10-producer-format-proposal-v1/capture_regressions.py.after"
+    },
+    {
+      "path": "docs/rust-rewrite/a10/capture_boundaries.py",
+      "before_sha256": "76eeca33481a704c54421c26cd1217097810c643433fe78e7a830246c099bcb1",
+      "after_sha256": "5b7c7ef8db04c273856573d1c197ca58bccc7fb4bd7e4b6120f61ddf1ad73240",
+      "semantic_ast_sha256": "cf80cd2c3d00fcc381c4bdf3ad0bab032ac913c6d54a69918fb448534ac2c5e5",
+      "ast_equal": true,
+      "ruff_check_exit": 0,
+      "before": "/private/tmp/a10-producer-format-proposal-v1/capture_boundaries.py.before",
+      "after": "/private/tmp/a10-producer-format-proposal-v1/capture_boundaries.py.after"
+    }
+  ],
+  "failed_zero_archive": {
+    "observed_path": "docs/rust-rewrite/a10/source-boundaries-v1.json",
+    "retained_path": "docs/rust-rewrite/a10/evidence/failed-boundaries-v1.empty",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0,
+    "failure_receipt": "/private/tmp/a10-original-boundary-capture-v1/receipt.json",
+    "failure_receipt_sha256": "a96edda6cb5c0abd5690766e5c92f1a08ab93af5dd1dbf50c3f96ed5f87cfec8"
+  },
+  "original_captures": {
+    "source-regressions-v1.json": "d3a54d23dd3f22c22ef910e91c1f71f72b0b0284975c9cd0f7ece944b10ce1b3",
+    "source-boundaries-v2.json": "dad7065badf627e9feddf3e66d9ddb62e9b94a87cba3d7f0d356894a1dfe406d",
+    "source-supplement-v1.json": "9d75f2b5dc508a15c557027be8c70ec9fe8ec660d6ac613086e39561c9965353"
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "plan_id": "W01",
+  "issue": 905,
+  "baseline": "cfd7a0af61a22cfd040a7fcd41ad950f82005959",
+  "status": "implemented_pending_delivery_acceptance",
+  "parity": [
+    "complete source job query attempt and coverage records with legacy defaults and lossless opaque provenance",
+    "source monotone ceilings, legacy usage reconstruction, reserve-before-dispatch, interrupted unknown attempts and one-time settlement",
+    "every admitted result charged while new lead identities alone deduplicate",
+    "typed tenant ownership, prepared authoritative reload, cancellation signals and absolute deadline equality",
+    "source F07 job/lease/cancel keys and exact ready/recent assets with bounded derived index repair; legacy idempotency helper unchanged with additive W01 v2 admission",
+    "actual lead-v1 SHA256 over accepted F11 normalized URL UTF-8 bytes; application response settlement, duplicate charges, truthy cursor and result caps"
+  ],
+  "intentional_differences": [
+    {
+      "contract": "authoritative immutable history and semantic conservation",
+      "before": "source token-only fenced save trusts caller-supplied record",
+      "after": "validate historical evidence, planning provenance and charged work deltas, then atomically compare token and exact previous raw bytes",
+      "reason": "prevent lost updates and uncharged work through concurrent same-token or arbitrary mutation callers"
+    },
+    {
+      "contract": "admission collision",
+      "before": "new idempotency key or ordinary save can overwrite a supplied existing job ID",
+      "after": "create-only atomic admission guards existing record identity",
+      "reason": "completed evidence cannot be replaced by a later admission"
+    },
+    {
+      "contract": "malformed records and failures",
+      "before": "source reads coerce some malformed shapes and collapse some unavailable errors into missing or booleans",
+      "after": "typed malformed unavailable closed unknown-completion and ownership/conflict outcomes; negative or overflowing counts, invalid states and ambiguous colon job IDs fail closed",
+      "reason": "F05/F07 authority and W01 exact tenant/ID/history requirements; literal colon tenants remain supported"
+    },
+    {
+      "contract": "settlement state",
+      "before": "finish_attempt copies arbitrary current query state if active attempt is running",
+      "after": "settlement requires done failed or cancelled query outcome",
+      "reason": "prevent finalizing an attempt back into running and settling it twice"
+    },
+    {
+      "contract": "implicit legacy completed evidence and charges",
+      "before": "source prepared retry may reset a pre-ledger failed or empty query to pending before initialization, erasing its implicit attempt count; reserve clears its only current snapshot fields",
+      "after": "explicit native normalization materializes completed legacy evidence before prepared mutation; authoritative writes require preserved history and implicit charges, including combined initialization and new work",
+      "reason": "prevent legacy retries from refunding previous work or losing cursor/query provenance; source oracle remains unchanged"
+    },
+    {
+      "contract": "terminal intent and origin",
+      "before": "source generic owned save trusts supplied state, caller-completion, cancellation and deadline fields",
+      "after": "cancelled/expired lifecycle and caller completion/cancellation cannot be revoked; original question/strategy/creation/deadline are fixed",
+      "reason": "arbitrary owned mutations cannot resurrect terminal execution or extend original execution authority"
+    },
+    {
+      "contract": "fresh attempt identity and lead evidence conservation",
+      "before": "source generic fenced save trusts empty fresh attempt IDs and independently mutable new-lead/seen lists",
+      "after": "new attempts require valid unique IDs except faithful legacy snapshot materialization; newly seen leads must be unique canonical IDs backed by same-attempt result admissions and conserved result charges, and exactly match the global seen-history extension",
+      "reason": "independent real-store review reproduced fresh empty-ID and two-leads/zero-admissions mutations; authoritative validation now rejects both while preserving existing legacy evidence"
+    },
+    {
+      "contract": "cancellation commit linearization",
+      "before": "source owned save and prior W01 CAS could commit after a side-key signal changed following the cancellation read; pure source reserve helper trusts caller cancellation checks",
+      "after": "atomic exact cancellation snapshot and raw job/token CAS; observed/proposed cancellation rejects new charged attempts while completed settlement and conservative recovery remain allowed",
+      "reason": "deterministic real-Valkey request_cancel interleaving reproduced mutation/claim race; later cancellation remains W02 dispatch-boundary responsibility"
+    },
+    {
+      "contract": "unambiguous native idempotency admission and quiesced cutover",
+      "before": "legacy tenant:idempotency concatenation aliases colon-containing components",
+      "after": "disjoint length-framed mcp:idem-v2 keys; exact tenant/original-key/job-ID legacy verification, positive remaining-TTL adoption, malformed v2 fails closed; legacy F07 helpers/bytes unchanged",
+      "reason": "two distinct colon-containing tenants/keys must admit independently; old and new writers require quiesced cutover and are not coordinated online"
+    },
+    {
+      "contract": "scoped ready time precision",
+      "before": "prior native lookup truncated Valkey time to milliseconds while accepted source ready scores retain microseconds",
+      "after": "atomic Valkey TIME plus bounded ZRANGEBYSCORE with full microsecond fraction; no future-score rounding",
+      "reason": "retained W01 gate failure reproduced newly due job omission; deterministic actual-Valkey clock seam proves inclusion, future exclusion and limit16"
+    },
+    {
+      "contract": "active attempt admission and completion identity",
+      "before": "Python raw reserve helper interrupts an active attempt or reopens terminal query; finish helper settles latest running attempt without caller identity",
+      "after": "reservation requires pending query and no active last attempt; reservation performs no implicit recovery; authoritative claim/cancellation recovery retains charges, claim resets pending and cancellation remains terminal; domain/application settlement requires expected AttemptId captured before dispatch and rejects mismatches before authoritative CAS",
+      "reason": "real Valkey same-lease overlap and stale completion after legitimate recovery reproduced replacement and successor misattribution; strict admission and carried identity preserve durable evidence and charges",
+      "source_cases": [
+        "reserve-interrupts-before-budget-rejection",
+        "result-exhaustion"
+      ],
+      "evidence": "unchanged source oracles; exact path-only payload differences plus summary/roundtrip; real same-lease overlap, recovery, stale token/identity rejection and successful successor settlement"
+    }
+  ],
+  "remaining": [
+    "independent review and exact-head delivery acceptance",
+    "W02 runner and later service/portal runtime integration"
+  ],
+  "identity_evidence": {
+    "artifact": "crates/xtask/fixtures/w01/identity.json",
+    "exporter": "docs/rust-rewrite/w01/oracle/identity.py",
+    "identities": 382,
+    "settlements": 9,
+    "source_baseline": "cfd7a0af61a22cfd040a7fcd41ad950f82005959",
+    "normalization_dependency": "accepted F11 PR963/main fd80e36e; no duplicated normalization",
+    "old_oracles": "unchanged"
+  }
+}

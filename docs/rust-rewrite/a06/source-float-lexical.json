@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "scope": "actual CPython float lexical conversion bits/errors; operation controls, not complete adapter outputs",
+  "python_version": "3.14.7",
+  "records": [
+    {
+      "text": "+1",
+      "bits": "3ff0000000000000"
+    },
+    {
+      "text": "0001",
+      "bits": "3ff0000000000000"
+    },
+    {
+      "text": "-0000",
+      "bits": "8000000000000000"
+    },
+    {
+      "text": "+.5",
+      "bits": "3fe0000000000000"
+    },
+    {
+      "text": "1.",
+      "bits": "3ff0000000000000"
+    },
+    {
+      "text": "1.e+2",
+      "bits": "4059000000000000"
+    },
+    {
+      "text": ".5",
+      "bits": "3fe0000000000000"
+    },
+    {
+      "text": "-.5",
+      "bits": "bfe0000000000000"
+    },
+    {
+      "text": "+inf",
+      "bits": "7ff0000000000000"
+    },
+    {
+      "text": "-Infinity",
+      "bits": "fff0000000000000"
+    },
+    {
+      "text": "NaN",
+      "bits": "7ff8000000000000"
+    },
+    {
+      "text": "1_2.3_4e+0_1",
+      "bits": "405ed9999999999a"
+    },
+    {
+      "text": "١٢.٣",
+      "bits": "402899999999999a"
+    },
+    {
+      "text": "１２.５",
+      "bits": "4029000000000000"
+    },
+    {
+      "text": " +١.٢ ",
+      "bits": "3ff3333333333333"
+    },
+    {
+      "text": "",
+      "error": "could not convert string to float: ''"
+    },
+    {
+      "text": " ",
+      "error": "could not convert string to float: ' '"
+    },
+    {
+      "text": "+",
+      "error": "could not convert string to float: '+'"
+    },
+    {
+      "text": "-",
+      "error": "could not convert string to float: '-'"
+    },
+    {
+      "text": ".",
+      "error": "could not convert string to float: '.'"
+    },
+    {
+      "text": "+.",
+      "error": "could not convert string to float: '+.'"
+    },
+    {
+      "text": "1__2",
+      "error": "could not convert string to float: '1__2'"
+    },
+    {
+      "text": "_1",
+      "error": "could not convert string to float: '_1'"
+    },
+    {
+      "text": "1_",
+      "error": "could not convert string to float: '1_'"
+    },
+    {
+      "text": "1_.0",
+      "error": "could not convert string to float: '1_.0'"
+    },
+    {
+      "text": "1._0",
+      "error": "could not convert string to float: '1._0'"
+    },
+    {
+      "text": "1e_2",
+      "error": "could not convert string to float: '1e_2'"
+    },
+    {
+      "text": "1e+_2",
+      "error": "could not convert string to float: '1e+_2'"
+    },
+    {
+      "text": "0x1",
+      "error": "could not convert string to float: '0x1'"
+    },
+    {
+      "text": "in_f",
+      "error": "could not convert string to float: 'in_f'"
+    },
+    {
+      "text": "nan(payload)",
+      "error": "could not convert string to float: 'nan(payload)'"
+    },
+    {
+      "text": "1\u001c",
+      "error": "could not convert string to float: '1\\x1c'"
+    },
+    {
+      "text": "1\u0000",
+      "error": "could not convert string to float: '1\\x00'"
+    },
+    {
+      "text": "1e999999",
+      "bits": "7ff0000000000000"
+    },
+    {
+      "text": "-0.0",
+      "bits": "8000000000000000"
+    }
+  ]
+}

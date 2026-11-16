@@ -1,0 +1,33 @@
+{
+  "source_read": [
+    {
+      "now": 3699.0,
+      "record_found": true,
+      "expired": false,
+      "unavailable": false
+    },
+    {
+      "now": 3700.0,
+      "record_found": true,
+      "expired": false,
+      "unavailable": false
+    },
+    {
+      "now": 3700.001,
+      "record_found": false,
+      "expired": true,
+      "unavailable": false
+    }
+  ],
+  "source_real_valkey_retry_at_equality": {
+    "status": "expired",
+    "record_found": false
+  },
+  "schema_version": 1,
+  "plan_id": "W11",
+  "evidence_kind": "actual_source_methods_and_private_valkey",
+  "baseline": "1e9dd82d62456fe6f511cc5ade88bae619fac027",
+  "python": "3.14.7",
+  "source_sha256": "6a916005fb404369294f8f3d2e0c96ade191beae2be85087640e085bb9d4d256",
+  "exporter_sha256": "4f7e3bf96331c12c10f7faf1cfdff3cf370832d410492be59886682f60e43ac3"
+}

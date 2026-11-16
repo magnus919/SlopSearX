@@ -1,0 +1,19 @@
+{
+  "diagnostic_only": true,
+  "helper_pins": {
+    "external-controller.py.txt": "6f0c7ad8ee3fa6e58c4c1b914e58cf6de9a41e7721d647affcc862795ff6dcad",
+    "external-invocation.py.txt": "69d75fa08f0ff75a331e9b5ecb326f344a9f214957b842b13dc2ff07b427f168",
+    "external-issuer.py.txt": "384ffaf6604ba1a72fe1ffd3cac5fc840bae95de3e4161169215847781a85f0f"
+  },
+  "interpretation": "Working directory alone is insufficient for the external file entrypoint. Isolated mode excludes the external script directory from the import path while the source launcher inserts only the reviewed checkout.",
+  "isolated_interpreter_exit": 0,
+  "isolated_interpreter_status": "issuer-static-preflight-passed",
+  "ordinary_interpreter_exit": 1,
+  "ordinary_interpreter_status": "issuer-refused",
+  "receipts_issued": 0,
+  "schema": "coverage-actual-issuer-environment-diagnostic/1",
+  "scientific_calls": 0,
+  "source_revision": "d1d4cd35cb1e5653404d605345377e4447938704",
+  "source_working_directory": true,
+  "study_restarted": false
+}

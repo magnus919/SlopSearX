@@ -1,0 +1,136 @@
+ReadMe.txt
+# Unicode Character Database
+# Date: 2024-08-25
+# © 2024 Unicode®, Inc.
+# Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+# For terms of use and license, see https://www.unicode.org/terms_of_use.html
+#
+# For documentation, see the following:
+# NamesList.html
+# UAX #38, "Unicode Han Database (Unihan)"
+# UAX #44, "Unicode Character Database"
+# UTS #51, "Unicode Emoji"
+# UAX #57, "Unicode Egyptian Hieroglyph Database"
+#
+# The UAXes and UTS #51 can be accessed at https://www.unicode.org/versions/Unicode16.0.0/
+
+
+NameAliases.txt
+# NameAliases-16.0.0.txt
+# Date: 2024-04-24
+# © 2024 Unicode®, Inc.
+# Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+# For terms of use and license, see https://www.unicode.org/terms_of_use.html
+#
+# Unicode Character Database
+# For documentation, see https://www.unicode.org/reports/tr44/
+#
+# This file is a normative contributory data file in the
+# Unicode Character Database.
+#
+# This file defines the formal name aliases for Unicode characters.
+#
+# For informative aliases, see NamesList.txt
+#
+# The formal name aliases are divided into five types, each with a distinct label.
+#
+# Type Labels:
+#
+# 1. correction
+#      Corrections for serious problems in the character names
+# 2. control
+#      ISO 6429 names for C0 and C1 control functions, and other
+#      commonly occurring names for control codes
+# 3. alternate
+#      A few widely used alternate names for format characters
+# 4. figment
+#      Several documented labels for C1 control code points which
+#      were never actually approved in any standard
+# 5. abbreviation
+#      Commonly occurring abbreviations (or acronyms) for control codes,
+#      format characters, spaces, and variation selectors
+#
+# The formal name aliases are part of the Unicode character namespace, which
+# includes the character names and the names of named character sequences.
+# The inclusion of ISO 6429 names and other commonly occurring names and
+# abbreviations for control codes and format characters as formal name aliases
+# is to help avoid name collisions between Unicode character names and the
+# labels which commonly appear in text and/or in implementations such as regex, for
+# control codes (which for historical reasons have no Unicode character name)
+# or for format characters.
+#
+# For documentation, see NamesList.html and https://www.unicode.org/reports/tr44/
+#
+# FORMAT
+#
+# Each line has three fields, as described here:
+#
+# First field:  Code point
+# Second field: Alias
+# Third field:  Type
+#
+# The type labels used are defined above. As for property values, comparisons
+# of type labels should ignore case.
+#
+# The type labels can be mapped to other strings for display, if desired.
+#
+# In case multiple aliases are assigned, additional aliases
+# are provided on separate lines. Parsers of this data file should
+# take note that the same code point can (and does) occur more than once.
+#
+# Note that currently the only instances of multiple aliases of the same
+# type for a single code point are either of type "control" or "abbreviation".
+# An alias of type "abbreviation" can, in principle, be added for any code
+# point, although currently aliases of type "correction" do not have
+# any additional aliases of type "abbreviation". Such relationships
+# are not enforced by stability policies.
+#
+#-----------------------------------------------------------------
+
+
+NamedSequences.txt
+# NamedSequences-16.0.0.txt
+# Date: 2024-02-02
+# © 2024 Unicode®, Inc.
+# Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+# For terms of use and license, see https://www.unicode.org/terms_of_use.html
+#
+# Unicode Character Database
+# For documentation, see https://www.unicode.org/reports/tr44/
+#
+# Unicode Named Character Sequences
+#
+# This file is a normative contributory data file in the Unicode
+# Character Database.
+#
+# Format:
+# Name of Sequence; Code Point Sequence for USI
+#
+# Code point sequences in the Unicode Character Database
+# use spaces as delimiters. The corresponding format for a
+# UCS Sequence Identifier (USI) in ISO/IEC 10646 uses
+# comma delimitation and angle brackets. Thus, a Unicode
+# named character sequence of the form:
+#
+# EXAMPLE NAME;1000 1001 1002
+#
+# in this data file, would correspond to an ISO/IEC 10646 USI
+# as follows:
+#
+# <1000, 1001, 1002>
+#
+# For more information, see UAX #34: Unicode Named Character
+# Sequences, at https://www.unicode.org/reports/tr34/
+#
+# Note: The order of entries in this file is not significant.
+# However, entries are generally in script order corresponding
+# to block order in the Unicode Standard, to make it easier
+# to find entries in the list.
+
+# ================================================
+
+# Named keycap sequences for telephone keypad (used for emoji)
+# Provisional, 2015-05-05
+# FE0F added to the sequences, 2016-05-11
+# Approved 2017-05-12
+

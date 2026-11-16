@@ -1,0 +1,64 @@
+[
+  {
+    "test": "valid",
+    "optimized": false,
+    "exit": 0,
+    "output": "PASS: 38 exact schemas; every non-input-schema metadata field and full control responses unchanged\n"
+  },
+  {
+    "test": "description",
+    "optimized": false,
+    "exit": 1
+  },
+  {
+    "test": "name",
+    "optimized": false,
+    "exit": 1
+  },
+  {
+    "test": "outputSchema",
+    "optimized": false,
+    "exit": 1
+  },
+  {
+    "test": "primary",
+    "optimized": false,
+    "exit": 1
+  },
+  {
+    "test": "control",
+    "optimized": false,
+    "exit": 1
+  },
+  {
+    "test": "valid",
+    "optimized": true,
+    "exit": 0,
+    "output": "PASS: 38 exact schemas; every non-input-schema metadata field and full control responses unchanged\n"
+  },
+  {
+    "test": "description",
+    "optimized": true,
+    "exit": 1
+  },
+  {
+    "test": "name",
+    "optimized": true,
+    "exit": 1
+  },
+  {
+    "test": "outputSchema",
+    "optimized": true,
+    "exit": 1
+  },
+  {
+    "test": "primary",
+    "optimized": true,
+    "exit": 1
+  },
+  {
+    "test": "control",
+    "optimized": true,
+    "exit": 1
+  }
+]

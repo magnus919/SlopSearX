@@ -1,0 +1,28 @@
+{
+  "plan_id": "F07",
+  "baseline": "7cc420f7ffb61127750e77bf6130e225925f9186",
+  "status": "implemented_pending_independent_acceptance",
+  "parity": [
+    "24 source-exact atomic Lua scripts with distinct typed return contracts",
+    "literal research/snapshot/saved tenant bytes and SHA256 staged encoding",
+    "saved/staged physical TTL margin distinct from logical expiry",
+    "token checked acquire renew release and fenced writes",
+    "Valkey authority with no local fallback",
+    "independent cancellation marker and retained charged unknown observations"
+  ],
+  "intentional_differences": [
+    {
+      "contract": "storage failure visibility",
+      "before": "some Python cache paths collapse unavailable or malformed into None and suppress writes",
+      "after": "native API explicitly reports missing unavailable malformed closed and ambiguous completion",
+      "reason": "F07 explicitly requires failure types and fail-closed authoritative writes"
+    },
+    {
+      "contract": "connection retry scheduling",
+      "before": "SearchCache suppresses reconnect for five seconds following connection failure",
+      "after": "each separately requested native operation may reconnect within its operation budget; no internal retry",
+      "reason": "shared substrate is not the cache facade; F13 must preserve the five-second cache caller suppression unless separately reviewed and accepted; no cache-policy parity claim"
+    }
+  ],
+  "remaining": ["full workflow model validation and runtime wiring in later owners", "final release and portal parity gates"]
+}

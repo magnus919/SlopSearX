@@ -1,0 +1,213 @@
+{
+  "schema_version": 1,
+  "verified_date_utc": "2026-11-13",
+  "source_revision": "64e3c47f315d480507a03f7e2761c49f9ce06384",
+  "source_tree": "870a754f0852994239c0ba5288f40006f80e72ae",
+  "audit_method": "Downloaded each selected Actions ZIP through gh CLI, matched its SHA-256 to the GitHub artifact API digest, then verified embedded report/receipt hashes and source identity.",
+  "t08a": {
+    "workflow_run": {
+      "id": 43314567926,
+      "url": "https://github.com/magnus919/SlopSearX/actions/runs/43314567926",
+      "workflow": "Native CLI component",
+      "conclusion": "success",
+      "head_sha": "64e3c47f315d480507a03f7e2761c49f9ce06384"
+    },
+    "gate_status": "passed",
+    "receipt_rule": "Per target: 296 default receipts, 295 installed receipts, 295 shared case IDs; default also has the negative-mutated-native-response admission control. Together: 591 receipts per target.",
+    "source_audit": "Embedded source-file identities matched this commit tree on all five targets (Git blob IDs on Unix, file SHA-256 and byte counts on Windows).",
+    "explicit_command_exit_rule": "Every top-level gate command entry with an explicit exit_code has exit_code 0. Entries missing exit_code are absent values, not failures. Individual expected-failure case results are covered by the passing gate.",
+    "targets": [
+      {
+        "target": "aarch64-apple-darwin",
+        "artifact_id": 13987384930,
+        "artifact_url": "https://github.com/magnus919/SlopSearX/actions/runs/43314567926/artifacts/13987384930",
+        "archive_bytes": 8224841,
+        "archive_sha256": "652d3c25a3390d12333f836d42b75d886844c4d3f1ef567ee0a9a6b075c59de8",
+        "report_sha256": "4ebea8c1be13fa7cd122404a765f8d507df3593fb916e8240cdc1ef3a02bbc84",
+        "source_file_count": 2423,
+        "default_receipts": 296,
+        "installed_receipts": 295,
+        "shared_cases": 295,
+        "default_only_cases": [
+          "negative-mutated-native-response"
+        ],
+        "default_cli_sha256": "ce99f785ea415635dac23e59e958a5180379f131e5fe971a36bc217055b02313",
+        "installed_cli_sha256": "ce99f785ea415635dac23e59e958a5180379f131e5fe971a36bc217055b02313",
+        "default_and_installed_hash_equal": true
+      },
+      {
+        "target": "aarch64-unknown-linux-gnu",
+        "artifact_id": 13989185753,
+        "artifact_url": "https://github.com/magnus919/SlopSearX/actions/runs/43314567926/artifacts/13989185753",
+        "archive_bytes": 8509139,
+        "archive_sha256": "fa2ced5f049ae0b57a3e3dacedfada5939de50db7a2fe3268d58a02ec34b2813",
+        "report_sha256": "610f6afec2697cfb2a9e38a203f27b8f9abfdcad9abf24446687e2a73b3f8107",
+        "source_file_count": 2423,
+        "default_receipts": 296,
+        "installed_receipts": 295,
+        "shared_cases": 295,
+        "default_only_cases": [
+          "negative-mutated-native-response"
+        ],
+        "default_cli_sha256": "4a52622852701f52bf0eb6ed52182c004d6c85d49d7998c3913b376559745b38",
+        "installed_cli_sha256": "4a52622852701f52bf0eb6ed52182c004d6c85d49d7998c3913b376559745b38",
+        "default_and_installed_hash_equal": true
+      },
+      {
+        "target": "x86_64-apple-darwin",
+        "artifact_id": 13989912892,
+        "artifact_url": "https://github.com/magnus919/SlopSearX/actions/runs/43314567926/artifacts/13989912892",
+        "archive_bytes": 7705380,
+        "archive_sha256": "1c76287bc3e9cd52969abb6c194805a011e1ba36295afa4f6334d97e493abada",
+        "report_sha256": "c5d0f663adf2c404950f857d0d7f0610990d05b32e05745ebc736829a43ad21e",
+        "source_file_count": 2423,
+        "default_receipts": 296,
+        "installed_receipts": 295,
+        "shared_cases": 295,
+        "default_only_cases": [
+          "negative-mutated-native-response"
+        ],
+        "default_cli_sha256": "11cebf6ff8d8fdda30494024e631a43ecfce60a17c1d69c22ddf2b168bda00ec",
+        "installed_cli_sha256": "11cebf6ff8d8fdda30494024e631a43ecfce60a17c1d69c22ddf2b168bda00ec",
+        "default_and_installed_hash_equal": true
+      },
+      {
+        "target": "x86_64-pc-windows-msvc",
+        "artifact_id": 13989636531,
+        "artifact_url": "https://github.com/magnus919/SlopSearX/actions/runs/43314567926/artifacts/13989636531",
+        "archive_bytes": 7121248,
+        "archive_sha256": "83618f4c2f56460e2f79e7a2cfaec6eff0c36557e471953242381b1f40d98150",
+        "report_sha256": "f1817db9235cddb66988c7998f55733797ad730891d8b49e5aae34d7e7019c85",
+        "source_file_count": 8704,
+        "default_receipts": 296,
+        "installed_receipts": 295,
+        "shared_cases": 295,
+        "default_only_cases": [
+          "negative-mutated-native-response"
+        ],
+        "default_cli_sha256": "c2be41b0a786a0d6abc9eddb757a97c9bd8007f8d979a12d29ef4bfd1378c570",
+        "installed_cli_sha256": "c2be41b0a786a0d6abc9eddb757a97c9bd8007f8d979a12d29ef4bfd1378c570",
+        "default_and_installed_hash_equal": true
+      },
+      {
+        "target": "x86_64-unknown-linux-gnu",
+        "artifact_id": 13987897375,
+        "artifact_url": "https://github.com/magnus919/SlopSearX/actions/runs/43314567926/artifacts/13987897375",
+        "archive_bytes": 7901060,
+        "archive_sha256": "19c3c62a519897a99e74e5b92db00de4b7ea8699a413f5ce2dd5ad119ca80bd6",
+        "report_sha256": "83a94f2a56c348914751178985e935da6d3da847d7f981123689bf1f46a2aeb5",
+        "source_file_count": 2423,
+        "default_receipts": 296,
+        "installed_receipts": 295,
+        "shared_cases": 295,
+        "default_only_cases": [
+          "negative-mutated-native-response"
+        ],
+        "default_cli_sha256": "8559ec96ef747f26e7b6a708e096bf00842991b48aac041c5c453873b0f54cee",
+        "installed_cli_sha256": "8559ec96ef747f26e7b6a708e096bf00842991b48aac041c5c453873b0f54cee",
+        "default_and_installed_hash_equal": true
+      }
+    ]
+  },
+  "t08": {
+    "workflow_run": {
+      "id": 43314567883,
+      "url": "https://github.com/magnus919/SlopSearX/actions/runs/43314567883",
+      "workflow": "Rust foundation",
+      "conclusion": "success",
+      "head_sha": "64e3c47f315d480507a03f7e2761c49f9ce06384"
+    },
+    "gate_status": "passed",
+    "case_count_per_cli": 17,
+    "cases": [
+      "health-text",
+      "health-json",
+      "config-text",
+      "config-json",
+      "engines-text",
+      "engines-json",
+      "search-yaml",
+      "search-json",
+      "page-0-0",
+      "page-0-1",
+      "page-1-0",
+      "page-1-1",
+      "unknown-engine",
+      "negative-page",
+      "upstream-error",
+      "upstream-malformed",
+      "unavailable-server"
+    ],
+    "targets": [
+      {
+        "target": "aarch64-unknown-linux-gnu",
+        "artifact_id": 13990368059,
+        "artifact_url": "https://github.com/magnus919/SlopSearX/actions/runs/43314567883/artifacts/13990368059",
+        "archive_bytes": 39245038,
+        "archive_sha256": "e9801c99b6a1211c66fd07a70d2834a2ef0ee67f017cc939db1754a43b74d8b7",
+        "report_sha256": "6588dcb6991034b8cea9df6f20cbf967ae06ed4f8893f5820e1e4dd1bf514560",
+        "handoff_sha256": "dc09524b2b1f55d934f2e484e4a758a87f4df1c3e1dd3d217d98598e98fc435e",
+        "source_revision": "64e3c47f315d480507a03f7e2761c49f9ce06384",
+        "default_cli_sha256": "cae478f62ff37b20abc887cf2810459ef8b4027cdfd171fdf817d8dd693aae09",
+        "installed_cli_sha256": "cae478f62ff37b20abc887cf2810459ef8b4027cdfd171fdf817d8dd693aae09",
+        "production_activation": false,
+        "receipts": [
+          {
+            "side": "default",
+            "receipt_sha256": "6a0fcf6e94a0398b4f73434f458fbe284f760a0e8ea2eea794a2e69b2085eb96",
+            "record_count": 17,
+            "private_socket_retired": true,
+            "server_and_valkey_waited": true,
+            "upstream_joined": true
+          },
+          {
+            "side": "installed",
+            "receipt_sha256": "1bf244b2f94f3570c8da20850aae3779c6c1137c67882d906548315f1aee02c6",
+            "record_count": 17,
+            "private_socket_retired": true,
+            "server_and_valkey_waited": true,
+            "upstream_joined": true
+          }
+        ],
+        "case_count_per_cli": 17
+      },
+      {
+        "target": "x86_64-unknown-linux-gnu",
+        "artifact_id": 13990872339,
+        "artifact_url": "https://github.com/magnus919/SlopSearX/actions/runs/43314567883/artifacts/13990872339",
+        "archive_bytes": 41351161,
+        "archive_sha256": "0ebe7697a9ca3d2d605e0aba620c9d427fc1fb367350d6a549c6ef4b77b045ae",
+        "report_sha256": "de7b912ce460fde4ec502fdf97a0ea16a19b83356596204591fc4c1c956f376d",
+        "handoff_sha256": "6da6b51294fb5a509f14ccdf06c70e2ad880322eca32f57a0378cefa35dddca7",
+        "source_revision": "64e3c47f315d480507a03f7e2761c49f9ce06384",
+        "default_cli_sha256": "24ce0cdf3a6c3238a40bd33de64c5581c774a9eb1f1a14051804231a2b4a56b8",
+        "installed_cli_sha256": "24ce0cdf3a6c3238a40bd33de64c5581c774a9eb1f1a14051804231a2b4a56b8",
+        "production_activation": false,
+        "receipts": [
+          {
+            "side": "default",
+            "receipt_sha256": "e74d3627dc0e0b782351e81ca6de929e4ad392d7d8af6ae5343f8bba55204365",
+            "record_count": 17,
+            "private_socket_retired": true,
+            "server_and_valkey_waited": true,
+            "upstream_joined": true
+          },
+          {
+            "side": "installed",
+            "receipt_sha256": "cdf841f8db251b11706e11672658ec3f86b7bba7869ab3b1b22445270e64eb18",
+            "record_count": 17,
+            "private_socket_retired": true,
+            "server_and_valkey_waited": true,
+            "upstream_joined": true
+          }
+        ],
+        "case_count_per_cli": 17
+      }
+    ]
+  },
+  "acceptance_boundary": [
+    "Hosted source-bound compatibility and integration evidence only.",
+    "No production startup, release packaging/signing, install/upgrade/uninstall, deployment or cutover is established here.",
+    "Every T08 handoff has production_activation=false; O04/#921 retains release and deployment ownership."
+  ]
+}

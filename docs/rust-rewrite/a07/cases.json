@@ -1,0 +1,1384 @@
+{
+  "schema_version": 1,
+  "plan_id": "A07",
+  "case_count": 172,
+  "native_case": "actual_source_matrix_preserves_requests_and_full_normalized_results",
+  "cases": [
+    {
+      "id": "ct-success",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pc-success",
+      "engine": "pubchem",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 2,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pm-success",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 2,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "epmc-med",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "epmc-ppr",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "up-success",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "clinicaltrials-empty",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "clinicaltrials-wrong-outer",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "clinicaltrials-missing",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "clinicaltrials-http-404",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "clinicaltrials-http-429",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "rate_limited",
+      "source_raised": null
+    },
+    {
+      "id": "clinicaltrials-http-503",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "clinicaltrials-config-max_results-int-0",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "clinicaltrials-config-max_results-int--1",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "clinicaltrials-config-max_results-bool-True",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "clinicaltrials-config-max_results-float-2.0",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "clinicaltrials-config-max_results-str-2",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "clinicaltrials-config-timeout_ms-bool-True",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "clinicaltrials-config-timeout_ms-str-5000",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 0,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "europepmc-empty",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "europepmc-wrong-outer",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "europepmc-missing",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "europepmc-http-404",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "europepmc-http-429",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "rate_limited",
+      "source_raised": null
+    },
+    {
+      "id": "europepmc-http-503",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "europepmc-config-max_results-int-0",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "europepmc-config-max_results-int--1",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "europepmc-config-max_results-bool-True",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "europepmc-config-max_results-float-2.0",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "europepmc-config-max_results-str-2",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "europepmc-config-timeout_ms-bool-True",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "europepmc-config-timeout_ms-str-5000",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 0,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "pubchem-empty",
+      "engine": "pubchem",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pubchem-wrong-outer",
+      "engine": "pubchem",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "pubchem-missing",
+      "engine": "pubchem",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pubchem-http-404",
+      "engine": "pubchem",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pubchem-http-429",
+      "engine": "pubchem",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "rate_limited",
+      "source_raised": null
+    },
+    {
+      "id": "pubchem-http-503",
+      "engine": "pubchem",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "pubchem-config-max_results-int-0",
+      "engine": "pubchem",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pubchem-config-max_results-int--1",
+      "engine": "pubchem",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pubchem-config-max_results-bool-True",
+      "engine": "pubchem",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pubchem-config-max_results-float-2.0",
+      "engine": "pubchem",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pubchem-config-max_results-str-2",
+      "engine": "pubchem",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pubchem-config-timeout_ms-bool-True",
+      "engine": "pubchem",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pubchem-config-timeout_ms-str-5000",
+      "engine": "pubchem",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 0,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "pubmed-empty",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pubmed-wrong-outer",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "pubmed-missing",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "pubmed-http-404",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "pubmed-http-429",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "rate_limited",
+      "source_raised": null
+    },
+    {
+      "id": "pubmed-http-503",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "pubmed-config-max_results-int-0",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pubmed-config-max_results-int--1",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pubmed-config-max_results-bool-True",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pubmed-config-max_results-float-2.0",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pubmed-config-max_results-str-2",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pubmed-config-timeout_ms-bool-True",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 0,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "pubmed-config-timeout_ms-str-5000",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "uniprot-empty",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "uniprot-wrong-outer",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "uniprot-missing",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "uniprot-http-404",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "uniprot-http-429",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "rate_limited",
+      "source_raised": null
+    },
+    {
+      "id": "uniprot-http-503",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "uniprot-config-max_results-int-0",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "uniprot-config-max_results-int--1",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "uniprot-config-max_results-bool-True",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "uniprot-config-max_results-float-2.0",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "uniprot-config-max_results-str-2",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 0,
+      "source_status": null,
+      "source_raised": "TypeError"
+    },
+    {
+      "id": "uniprot-config-timeout_ms-bool-True",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "uniprot-config-timeout_ms-str-5000",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 0,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "up-query-VIM",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "up-query-P08670",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "up-query-gene:VIM",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "up-query-id:P08670_TEST",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "up-query-accession:p08670",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "up-query- (gene:VIM) AND organism_id:9606 ",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "up-query-v",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "up-query- VIM ",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "up-query-\u212a12345",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "up-query-gene:V\u0130M",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pm-ids-[]",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pm-ids-[1]",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "pm-ids-['']",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "pm-ids-['1', '2']",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 2,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pm-authors",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 2,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "epmc-date-2026-99-99",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "epmc-date-20260102",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "epmc-date-2026-W01-1",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "epmc-date-2026-W01",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "epmc-date-0000-01-01",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "clinicaltrials-nonempty-max-int-0",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "clinicaltrials-nonempty-max-int--1",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "clinicaltrials-nonempty-max-bool-True",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "clinicaltrials-nonempty-max-float-2.0",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "clinicaltrials-nonempty-max-str-2",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "europepmc-nonempty-max-int-0",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "europepmc-nonempty-max-int--1",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "europepmc-nonempty-max-bool-True",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "europepmc-nonempty-max-float-2.0",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "europepmc-nonempty-max-str-2",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pubchem-nonempty-max-int-0",
+      "engine": "pubchem",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 2,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pubchem-nonempty-max-int--1",
+      "engine": "pubchem",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 2,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pubchem-nonempty-max-bool-True",
+      "engine": "pubchem",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 2,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pubchem-nonempty-max-float-2.0",
+      "engine": "pubchem",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "pubchem-nonempty-max-str-2",
+      "engine": "pubchem",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "pubmed-nonempty-max-int-0",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 2,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pubmed-nonempty-max-int--1",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 2,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pubmed-nonempty-max-bool-True",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 2,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pubmed-nonempty-max-float-2.0",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 2,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pubmed-nonempty-max-str-2",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 2,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "uniprot-nonempty-max-int-0",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "uniprot-nonempty-max-int--1",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "uniprot-nonempty-max-bool-True",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "uniprot-nonempty-max-float-2.0",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "uniprot-nonempty-max-str-2",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 0,
+      "source_status": null,
+      "source_raised": "TypeError"
+    },
+    {
+      "id": "pubmed-numeric-timeout_ms-str-5_000",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pubmed-numeric-timeout_ms-str-\u0665\u0660\u0660\u0660",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pubmed-numeric-aggregate_timeout_ms-str-4_000",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pubmed-numeric-aggregate_timeout_ms-str-\u0664\u0660\u0660\u0660",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pubmed-numeric-aggregate_timeout_ms-int-0",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 0,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "pubmed-numeric-aggregate_timeout_ms-bool-True",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 0,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "europepmc-isdigit-\u00b2",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "europepmc-isdigit-\u2460",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "europepmc-isdigit-\ud835\udfd9",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "europepmc-isdigit-a",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "europepmc-isdigit-",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_complete.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "uniprot-genes-string",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_gene_shapes.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "uniprot-genes-object",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_gene_shapes.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "uniprot-genes-synonyms_string",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_gene_shapes.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "uniprot-genes-synonyms_object",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_gene_shapes.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "uniprot-genes-heterogeneous",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_gene_shapes.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "uniprot-combined-invalid-config",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_gene_shapes.json",
+      "source_requests": 0,
+      "source_status": null,
+      "source_raised": "TypeError"
+    },
+    {
+      "id": "europepmc-date-grammar-10000-1-01",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_date_grammar.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "europepmc-date-grammar-2026- 1-01",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_date_grammar.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "europepmc-date-grammar-2020-W53-7",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_date_grammar.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "europepmc-date-grammar-9999-W52-7",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_date_grammar.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "clinicaltrials-sequence-null",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_sequences.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "clinicaltrials-sequence-zero",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_sequences.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "clinicaltrials-sequence-false",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_sequences.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "clinicaltrials-sequence-string",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_sequences.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "clinicaltrials-sequence-conditions_object",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_sequences.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "clinicaltrials-sequence-phase_empty_element",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_sequences.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "pubchem-string-cids",
+      "engine": "pubchem",
+      "capture": "docs/rust-rewrite/a07/source_sequences.json",
+      "source_requests": 2,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "empty-iterable-clinicaltrials-studies-string",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_empty_iterables.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "empty-iterable-clinicaltrials-phases-string",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_empty_iterables.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "empty-iterable-clinicaltrials-conditions-string",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_empty_iterables.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "empty-iterable-pubchem-CID-string",
+      "engine": "pubchem",
+      "capture": "docs/rust-rewrite/a07/source_empty_iterables.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "empty-iterable-pubchem-PC_Compounds-string",
+      "engine": "pubchem",
+      "capture": "docs/rust-rewrite/a07/source_empty_iterables.json",
+      "source_requests": 2,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "empty-iterable-pubchem-props-string",
+      "engine": "pubchem",
+      "capture": "docs/rust-rewrite/a07/source_empty_iterables.json",
+      "source_requests": 2,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "empty-iterable-pubmed-idlist-string",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_empty_iterables.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "empty-iterable-pubmed-authors-string",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_empty_iterables.json",
+      "source_requests": 2,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "empty-iterable-pubmed-articleids-string",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_empty_iterables.json",
+      "source_requests": 2,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "empty-iterable-pubmed-pubtype-string",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_empty_iterables.json",
+      "source_requests": 2,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "empty-iterable-europepmc-result-string",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_empty_iterables.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "empty-iterable-uniprot-results-string",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_empty_iterables.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "empty-iterable-uniprot-genes-string",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_empty_iterables.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "empty-iterable-uniprot-synonyms-string",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_empty_iterables.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "empty-iterable-clinicaltrials-studies-map",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_empty_iterables.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "empty-iterable-clinicaltrials-phases-map",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_empty_iterables.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "empty-iterable-clinicaltrials-conditions-map",
+      "engine": "clinicaltrials",
+      "capture": "docs/rust-rewrite/a07/source_empty_iterables.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "empty-iterable-pubchem-CID-map",
+      "engine": "pubchem",
+      "capture": "docs/rust-rewrite/a07/source_empty_iterables.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "empty-iterable-pubchem-PC_Compounds-map",
+      "engine": "pubchem",
+      "capture": "docs/rust-rewrite/a07/source_empty_iterables.json",
+      "source_requests": 2,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "empty-iterable-pubchem-props-map",
+      "engine": "pubchem",
+      "capture": "docs/rust-rewrite/a07/source_empty_iterables.json",
+      "source_requests": 2,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "empty-iterable-pubmed-idlist-map",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_empty_iterables.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "empty-iterable-pubmed-authors-map",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_empty_iterables.json",
+      "source_requests": 2,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "empty-iterable-pubmed-articleids-map",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_empty_iterables.json",
+      "source_requests": 2,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "empty-iterable-pubmed-pubtype-map",
+      "engine": "pubmed",
+      "capture": "docs/rust-rewrite/a07/source_empty_iterables.json",
+      "source_requests": 2,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "empty-iterable-europepmc-result-map",
+      "engine": "europepmc",
+      "capture": "docs/rust-rewrite/a07/source_empty_iterables.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "empty-iterable-uniprot-results-map",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_empty_iterables.json",
+      "source_requests": 1,
+      "source_status": "error",
+      "source_raised": null
+    },
+    {
+      "id": "empty-iterable-uniprot-genes-map",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_empty_iterables.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    },
+    {
+      "id": "empty-iterable-uniprot-synonyms-map",
+      "engine": "uniprot",
+      "capture": "docs/rust-rewrite/a07/source_empty_iterables.json",
+      "source_requests": 1,
+      "source_status": "ok",
+      "source_raised": null
+    }
+  ]
+}

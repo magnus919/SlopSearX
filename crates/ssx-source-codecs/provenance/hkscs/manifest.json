@@ -1,0 +1,58 @@
+{
+  "status": "parent approved alternate implementation; final provenance review pending",
+  "source_files": [
+    {
+      "path": "provenance/hkscs/whatwg-index-big5.txt",
+      "source": "https://raw.githubusercontent.com/whatwg/encoding/a985b62a9b45c17da3e17a9f0a0b4e30c34c4a8a/index-big5.txt",
+      "sha256": "08e24270c8e95d998c994c03f907e972480dc01f58743e078654cc466203c8ff",
+      "license": "BSD-3-Clause for source incorporation; full LICENSE-WHATWG retained"
+    },
+    {
+      "path": "provenance/hkscs/icu-java-Big5-1.3_P.xml",
+      "source": "https://raw.githubusercontent.com/unicode-org/icu-data/bae5ca647fa41703393dbf00240ec1b807a9c353/charset/data/xml/java-Big5-1.3_P.xml",
+      "sha256": "6cdaa4f545baf91372ce0a063b5751fc222a9dde2d3bcc87bffd08f7e5a85de6",
+      "license": "Unicode-3.0; full exact repository LICENSE-ICU-DATA retained; XML has generated2001history and no contrary notice"
+    },
+    {
+      "path": "LICENSE-WHATWG",
+      "source": "https://raw.githubusercontent.com/whatwg/encoding/a985b62a9b45c17da3e17a9f0a0b4e30c34c4a8a/LICENSE",
+      "sha256": "85dc6f5ccb57a6fe8c33d158f9fc8fc7ee5655a5d3db2cdd131c6a3d0f48a864",
+      "license": "complete official source-incorporation BSD3/CCBY notice"
+    },
+    {
+      "path": "LICENSE-ICU-DATA",
+      "source": "https://raw.githubusercontent.com/unicode-org/icu-data/bae5ca647fa41703393dbf00240ec1b807a9c353/LICENSE",
+      "sha256": "f72db45707e93c90c4bf400edfa5d38ce44fe692789e385548e627459c1bf6c9",
+      "license": "complete official Unicode3 notice"
+    },
+    {
+      "path": "provenance/hkscs/source-validity-only.bin",
+      "source": "actual pinned CPython3.14.7 strict codec boolean-success-only oracle",
+      "sha256": "9109699c47243cbcd085314c5e7c2bb81646f2d3397375a35a52fcc62533381b",
+      "license": "compatibility behavior observation; no Unicode mapping values retained; parent final provenance review pending"
+    }
+  ],
+  "output": "src/cjk/big5hkscs.pairs.bin",
+  "output_sha256": "fc9461564284bac32fca61da4fb07b5b8a144b6943092425f0ac51876d1b344a",
+  "records": 18402,
+  "derivation": "WHATWG index plus four normative decomposed-pointer rules;11explicit legacy values read from independent ICU java-Big5 XML; scope selected by boolean validity mask. Generator accepts only3pinned inputs and cannot read CPython/native HKSCS mapping values.",
+  "legacy_core_byte_positions": [
+    "a145",
+    "a14e",
+    "a1c2",
+    "a1e3",
+    "a1f2",
+    "a1f3",
+    "a241",
+    "a242",
+    "a244",
+    "a246",
+    "a247"
+  ],
+  "change_summary": "Native fixed-width mapping records; source2004validity excludes192WHATWGextra validpairs;11ICUlegacycompatibility records. Full source/malformed comparisons retained without normalizing outputs.",
+  "private_evidence": "Original contested mapping-generation/comparison receipts remain in /private/tmp only; no original HK mapping document downloaded or relicensed.",
+  "single_output": "src/cjk/big5hkscs.single.bin",
+  "single_output_sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8",
+  "generator": "docs/rust-rewrite/a05/oracle/hkscs_independent.py",
+  "validity_oracle": "docs/rust-rewrite/a05/oracle/hkscs_validity.py"
+}

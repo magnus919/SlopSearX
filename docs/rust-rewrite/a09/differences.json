@@ -1,0 +1,2821 @@
+{
+  "schema_version": 1,
+  "review_status": "explicit categories accepted by parent; source/gate/implementation acceptance pending",
+  "records": [
+    {
+      "id": "openlibrary-null",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "'NoneType' object has no attribute 'get'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "expected source object",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "openlibrary-scalar",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "'int' object has no attribute 'get'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "expected source object",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "openlibrary-malformed-row",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "'NoneType' object has no attribute 'get'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "expected source object",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "openlibrary-http-301",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Redirect response '301 Moved Permanently' for url 'https://openlibrary.org/search.json?q=test&limit=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/301",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "Open Library returned HTTP 301",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "openlibrary-http-401",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Client error '401 Unauthorized' for url 'https://openlibrary.org/search.json?q=test&limit=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/401",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "Open Library returned HTTP 401",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "openlibrary-http-403",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Client error '403 Forbidden' for url 'https://openlibrary.org/search.json?q=test&limit=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "Open Library returned HTTP 403",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "openlibrary-http-404",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Client error '404 Not Found' for url 'https://openlibrary.org/search.json?q=test&limit=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "Open Library returned HTTP 404",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "openlibrary-http-408",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Client error '408 Request Timeout' for url 'https://openlibrary.org/search.json?q=test&limit=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/408",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "Open Library returned HTTP 408",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "openlibrary-http-503",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Server error '503 Service Unavailable' for url 'https://openlibrary.org/search.json?q=test&limit=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "Open Library returned HTTP 503",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "openlibrary-bad-json",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Expecting property name enclosed in double quotes: line 1 column 2 (char 1)",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "invalid source JSON: Syntax { position: 1, message: \"Expecting property name enclosed in double quotes\" }",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "openlibrary-network",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "synthetic network failure",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "Open Library request failed",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "openlibrary-max-2.0",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "slice indices must be integers or None or have an __index__ method",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "slice indices must be integers",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "openlibrary-max-'2'",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "slice indices must be integers or None or have an __index__ method",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "slice indices must be integers",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "openlibrary-timeoutcfg-'5000'",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "unsupported operand type(s) for /: 'str' and 'float'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "invalid timeout_ms",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "openlibrary-collection-None",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "'NoneType' object is not subscriptable",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "source result collection does not support slicing",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "openlibrary-collection-{}",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "slice(None, 10, None)",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "source result collection does not support slicing",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "openlibrary-collection-[None]",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "'NoneType' object has no attribute 'get'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "expected source object",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "openlibrary-collection-42",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "'int' object is not subscriptable",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "source result collection does not support slicing",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "musicbrainz-null",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "'NoneType' object has no attribute 'get'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "expected source object",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "musicbrainz-scalar",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "'int' object has no attribute 'get'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "expected source object",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "musicbrainz-malformed-row",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "'NoneType' object has no attribute 'get'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "expected source object",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "musicbrainz-http-301",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Redirect response '301 Moved Permanently' for url 'https://musicbrainz.org/ws/2/artist/?query=test&limit=10&fmt=json'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/301",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "MusicBrainz returned HTTP 301",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "musicbrainz-http-401",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Client error '401 Unauthorized' for url 'https://musicbrainz.org/ws/2/artist/?query=test&limit=10&fmt=json'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/401",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "MusicBrainz returned HTTP 401",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "musicbrainz-http-403",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Client error '403 Forbidden' for url 'https://musicbrainz.org/ws/2/artist/?query=test&limit=10&fmt=json'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "MusicBrainz returned HTTP 403",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "musicbrainz-http-404",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Client error '404 Not Found' for url 'https://musicbrainz.org/ws/2/artist/?query=test&limit=10&fmt=json'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "MusicBrainz returned HTTP 404",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "musicbrainz-http-408",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Client error '408 Request Timeout' for url 'https://musicbrainz.org/ws/2/artist/?query=test&limit=10&fmt=json'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/408",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "MusicBrainz returned HTTP 408",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "musicbrainz-http-503",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Server error '503 Service Unavailable' for url 'https://musicbrainz.org/ws/2/artist/?query=test&limit=10&fmt=json'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "MusicBrainz returned HTTP 503",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "musicbrainz-bad-json",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Expecting property name enclosed in double quotes: line 1 column 2 (char 1)",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "invalid source JSON: Syntax { position: 1, message: \"Expecting property name enclosed in double quotes\" }",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "musicbrainz-network",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "synthetic network failure",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "MusicBrainz request failed",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "musicbrainz-max-2.0",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "slice indices must be integers or None or have an __index__ method",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "slice indices must be integers",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "musicbrainz-max-'2'",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "slice indices must be integers or None or have an __index__ method",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "slice indices must be integers",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "musicbrainz-timeoutcfg-'5000'",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "unsupported operand type(s) for /: 'str' and 'float'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "invalid timeout_ms",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "musicbrainz-collection-None",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "'NoneType' object is not subscriptable",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "source result collection does not support slicing",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "musicbrainz-collection-{}",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "slice(None, 10, None)",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "source result collection does not support slicing",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "musicbrainz-collection-[None]",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "'NoneType' object has no attribute 'get'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "expected source object",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "musicbrainz-collection-42",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "'int' object is not subscriptable",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "source result collection does not support slicing",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tmdb-null",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "'NoneType' object has no attribute 'get'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "expected source object",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tmdb-scalar",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "'int' object has no attribute 'get'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "expected source object",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tmdb-malformed-row",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "'NoneType' object has no attribute 'get'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "expected source object",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tmdb-http-301",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Redirect response '301 Moved Permanently' for url 'https://api.themoviedb.org/3/search/multi?query=test&page=1%27For+more+information+check%3A+https%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FHTTP%2FStatus%2F301",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "TMDB returned HTTP 301",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tmdb-http-401",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Client error '401 Unauthorized' for url 'https://api.themoviedb.org/3/search/multi?query=test&page=1%27For+more+information+check%3A+https%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FHTTP%2FStatus%2F401",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "TMDB returned HTTP 401",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tmdb-http-403",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Client error '403 Forbidden' for url 'https://api.themoviedb.org/3/search/multi?query=test&page=1%27For+more+information+check%3A+https%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FHTTP%2FStatus%2F403",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "TMDB returned HTTP 403",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tmdb-http-404",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Client error '404 Not Found' for url 'https://api.themoviedb.org/3/search/multi?query=test&page=1%27For+more+information+check%3A+https%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FHTTP%2FStatus%2F404",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "TMDB returned HTTP 404",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tmdb-http-408",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Client error '408 Request Timeout' for url 'https://api.themoviedb.org/3/search/multi?query=test&page=1%27For+more+information+check%3A+https%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FHTTP%2FStatus%2F408",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "TMDB returned HTTP 408",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tmdb-http-503",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Server error '503 Service Unavailable' for url 'https://api.themoviedb.org/3/search/multi?query=test&page=1%27For+more+information+check%3A+https%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FHTTP%2FStatus%2F503",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "TMDB returned HTTP 503",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tmdb-bad-json",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Expecting property name enclosed in double quotes: line 1 column 2 (char 1)",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "invalid source JSON: Syntax { position: 1, message: \"Expecting property name enclosed in double quotes\" }",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tmdb-network",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "synthetic network failure",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "TMDB request failed",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tmdb-max-2.0",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "slice indices must be integers or None or have an __index__ method",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "slice indices must be integers",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tmdb-max-'2'",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "slice indices must be integers or None or have an __index__ method",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "slice indices must be integers",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tmdb-timeoutcfg-'5000'",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "unsupported operand type(s) for /: 'str' and 'float'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "invalid timeout_ms",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tmdb-collection-None",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "'NoneType' object is not subscriptable",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "source result collection does not support slicing",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tmdb-collection-{}",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "slice(None, 10, None)",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "source result collection does not support slicing",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tmdb-collection-[None]",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "'NoneType' object has no attribute 'get'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "expected source object",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tmdb-collection-42",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "'int' object is not subscriptable",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "source result collection does not support slicing",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "nominatim-missing",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "slice(None, 10, None)",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "source result collection does not support slicing",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "nominatim-null",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "'NoneType' object is not subscriptable",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "source result collection does not support slicing",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "nominatim-scalar",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "'int' object is not subscriptable",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "source result collection does not support slicing",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "nominatim-malformed-row",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "'NoneType' object has no attribute 'get'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "expected source object",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "nominatim-http-301",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Redirect response '301 Moved Permanently' for url 'https://nominatim.openstreetmap.org/search?q=test&format=json&limit=10&addressdetails=1'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/301",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "Nominatim returned HTTP 301",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "nominatim-http-401",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Client error '401 Unauthorized' for url 'https://nominatim.openstreetmap.org/search?q=test&format=json&limit=10&addressdetails=1'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/401",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "Nominatim returned HTTP 401",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "nominatim-http-403",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Client error '403 Forbidden' for url 'https://nominatim.openstreetmap.org/search?q=test&format=json&limit=10&addressdetails=1'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "Nominatim returned HTTP 403",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "nominatim-http-404",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Client error '404 Not Found' for url 'https://nominatim.openstreetmap.org/search?q=test&format=json&limit=10&addressdetails=1'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "Nominatim returned HTTP 404",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "nominatim-http-408",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Client error '408 Request Timeout' for url 'https://nominatim.openstreetmap.org/search?q=test&format=json&limit=10&addressdetails=1'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/408",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "Nominatim returned HTTP 408",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "nominatim-http-503",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Server error '503 Service Unavailable' for url 'https://nominatim.openstreetmap.org/search?q=test&format=json&limit=10&addressdetails=1'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "Nominatim returned HTTP 503",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "nominatim-bad-json",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Expecting property name enclosed in double quotes: line 1 column 2 (char 1)",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "invalid source JSON: Syntax { position: 1, message: \"Expecting property name enclosed in double quotes\" }",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "nominatim-network",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "synthetic network failure",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "Nominatim request failed",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "nominatim-max-2.0",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "slice indices must be integers or None or have an __index__ method",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "slice indices must be integers",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "nominatim-max-'2'",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "slice indices must be integers or None or have an __index__ method",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "slice indices must be integers",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "nominatim-timeoutcfg-'5000'",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "unsupported operand type(s) for /: 'str' and 'float'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "invalid timeout_ms",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "nominatim-collection-None",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "'NoneType' object is not subscriptable",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "source result collection does not support slicing",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "nominatim-collection-{}",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "slice(None, 10, None)",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "source result collection does not support slicing",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "nominatim-collection-[None]",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "'NoneType' object has no attribute 'get'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "expected source object",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "nominatim-collection-42",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "'int' object is not subscriptable",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "source result collection does not support slicing",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "internetarchive-null",
+      "category": "never-raise-malformed-source-projection",
+      "reason": "Original Internet Archive catalog projection escaped the adapter try block. Native adapter returns classified Error with no partial results, satisfying the accepted never-raises contract.",
+      "source_output": {
+        "raised": "AttributeError",
+        "error_message": "'NoneType' object has no attribute 'get'"
+      },
+      "native_output": {
+        "error_message": "expected source object",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "internetarchive-scalar",
+      "category": "never-raise-malformed-source-projection",
+      "reason": "Original Internet Archive catalog projection escaped the adapter try block. Native adapter returns classified Error with no partial results, satisfying the accepted never-raises contract.",
+      "source_output": {
+        "raised": "AttributeError",
+        "error_message": "'int' object has no attribute 'get'"
+      },
+      "native_output": {
+        "error_message": "expected source object",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "internetarchive-malformed-row",
+      "category": "never-raise-malformed-source-projection",
+      "reason": "Original Internet Archive catalog projection escaped the adapter try block. Native adapter returns classified Error with no partial results, satisfying the accepted never-raises contract.",
+      "source_output": {
+        "raised": "AttributeError",
+        "error_message": "'NoneType' object has no attribute 'get'"
+      },
+      "native_output": {
+        "error_message": "expected source object",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "internetarchive-http-301",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Redirect response '301 Moved Permanently' for url 'https://archive.org/advancedsearch.php?q=test&output=json&rows=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/301",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "Internet Archive returned HTTP 301",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "internetarchive-http-401",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Client error '401 Unauthorized' for url 'https://archive.org/advancedsearch.php?q=test&output=json&rows=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/401",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "Internet Archive returned HTTP 401",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "internetarchive-http-403",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Client error '403 Forbidden' for url 'https://archive.org/advancedsearch.php?q=test&output=json&rows=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "Internet Archive returned HTTP 403",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "internetarchive-http-404",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Client error '404 Not Found' for url 'https://archive.org/advancedsearch.php?q=test&output=json&rows=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "Internet Archive returned HTTP 404",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "internetarchive-http-408",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Client error '408 Request Timeout' for url 'https://archive.org/advancedsearch.php?q=test&output=json&rows=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/408",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "Internet Archive returned HTTP 408",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "internetarchive-http-429",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Client error '429 Too Many Requests' for url 'https://archive.org/advancedsearch.php?q=test&output=json&rows=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "Internet Archive returned HTTP 429",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "internetarchive-http-503",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Server error '503 Service Unavailable' for url 'https://archive.org/advancedsearch.php?q=test&output=json&rows=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "Internet Archive returned HTTP 503",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "internetarchive-bad-json",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Expecting property name enclosed in double quotes: line 1 column 2 (char 1)",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "invalid source JSON: Syntax { position: 1, message: \"Expecting property name enclosed in double quotes\" }",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "internetarchive-timeout",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "synthetic timeout",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "Internet Archive request timed out",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "internetarchive-network",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "synthetic network failure",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "Internet Archive request failed",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "internetarchive-max-2.0",
+      "category": "never-raise-malformed-source-projection",
+      "reason": "Original Internet Archive catalog projection escaped the adapter try block. Native adapter returns classified Error with no partial results, satisfying the accepted never-raises contract.",
+      "source_output": {
+        "raised": "TypeError",
+        "error_message": "slice indices must be integers or None or have an __index__ method"
+      },
+      "native_output": {
+        "error_message": "slice indices must be integers",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "internetarchive-max-'2'",
+      "category": "never-raise-malformed-source-projection",
+      "reason": "Original Internet Archive catalog projection escaped the adapter try block. Native adapter returns classified Error with no partial results, satisfying the accepted never-raises contract.",
+      "source_output": {
+        "raised": "TypeError",
+        "error_message": "slice indices must be integers or None or have an __index__ method"
+      },
+      "native_output": {
+        "error_message": "slice indices must be integers",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "internetarchive-timeoutcfg-'5000'",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "unsupported operand type(s) for /: 'str' and 'int'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "invalid timeout_ms",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "internetarchive-collection-None",
+      "category": "never-raise-malformed-source-projection",
+      "reason": "Original Internet Archive catalog projection escaped the adapter try block. Native adapter returns classified Error with no partial results, satisfying the accepted never-raises contract.",
+      "source_output": {
+        "raised": "TypeError",
+        "error_message": "'NoneType' object is not subscriptable"
+      },
+      "native_output": {
+        "error_message": "source result collection does not support slicing",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "internetarchive-collection-{}",
+      "category": "never-raise-malformed-source-projection",
+      "reason": "Original Internet Archive catalog projection escaped the adapter try block. Native adapter returns classified Error with no partial results, satisfying the accepted never-raises contract.",
+      "source_output": {
+        "raised": "KeyError",
+        "error_message": "slice(None, 10, None)"
+      },
+      "native_output": {
+        "error_message": "source result collection does not support slicing",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "internetarchive-collection-[None]",
+      "category": "never-raise-malformed-source-projection",
+      "reason": "Original Internet Archive catalog projection escaped the adapter try block. Native adapter returns classified Error with no partial results, satisfying the accepted never-raises contract.",
+      "source_output": {
+        "raised": "AttributeError",
+        "error_message": "'NoneType' object has no attribute 'get'"
+      },
+      "native_output": {
+        "error_message": "expected source object",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "internetarchive-collection-42",
+      "category": "never-raise-malformed-source-projection",
+      "reason": "Original Internet Archive catalog projection escaped the adapter try block. Native adapter returns classified Error with no partial results, satisfying the accepted never-raises contract.",
+      "source_output": {
+        "raised": "TypeError",
+        "error_message": "'int' object is not subscriptable"
+      },
+      "native_output": {
+        "error_message": "source result collection does not support slicing",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "openlibrary-ratings_count-4",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "could not convert string to float: 'bad'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "invalid source float",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "openlibrary-title-0",
+      "category": "typed-result-field-refusal",
+      "reason": "Original dataclass admits non-text title/date. Native public result schema requires text (optional date permits null only); reject atomically instead of stringify or silently change the field.",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://openlibrary.org/works/OL166894W",
+            "title": null,
+            "content": "By Frank Herbert (1965) \u2014 8 editions",
+            "engine": "openlibrary",
+            "position": 1,
+            "score": 7.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": "https://covers.openlibrary.org/b/id/123-M.jpg",
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "openlibrary-title-1",
+      "category": "typed-result-field-refusal",
+      "reason": "Original dataclass admits non-text title/date. Native public result schema requires text (optional date permits null only); reject atomically instead of stringify or silently change the field.",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://openlibrary.org/works/OL166894W",
+            "title": 42,
+            "content": "By Frank Herbert (1965) \u2014 8 editions",
+            "engine": "openlibrary",
+            "position": 1,
+            "score": 7.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": "https://covers.openlibrary.org/b/id/123-M.jpg",
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "musicbrainz-life-span-4",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "'str' object has no attribute 'get'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "expected source object",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "musicbrainz-type-0",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "sequence item 0: expected str instance, int found",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "musicbrainz-country-0",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "sequence item 1: expected str instance, int found",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "musicbrainz-name-0",
+      "category": "typed-result-field-refusal",
+      "reason": "Original dataclass admits non-text title/date. Native public result schema requires text (optional date permits null only); reject atomically instead of stringify or silently change the field.",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://musicbrainz.org/artist/artist-1",
+            "title": null,
+            "content": "Group \u2014 GB \u2014 Active since 1985",
+            "engine": "musicbrainz",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "musicbrainz-name-1",
+      "category": "typed-result-field-refusal",
+      "reason": "Original dataclass admits non-text title/date. Native public result schema requires text (optional date permits null only); reject atomically instead of stringify or silently change the field.",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://musicbrainz.org/artist/artist-1",
+            "title": 42,
+            "content": "Group \u2014 GB \u2014 Active since 1985",
+            "engine": "musicbrainz",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tmdb-media_type-5",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "'int' object has no attribute 'capitalize'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tmdb-vote_average-5",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "could not convert string to float: ''",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "invalid source float",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tmdb-vote_average-6",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "float() argument must be a string or a real number, not 'list'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "source score must be numeric",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tmdb-vote_average-7",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "could not convert string to float: 'bad'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "invalid source float",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tmdb-overview-2",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "'int' object is not subscriptable",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "TMDB overview must support text slicing",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tmdb-release_date-1",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "'int' object is not subscriptable",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tmdb-title-0",
+      "category": "typed-result-field-refusal",
+      "reason": "Original dataclass admits non-text title/date. Native public result schema requires text (optional date permits null only); reject atomically instead of stringify or silently change the field.",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.themoviedb.org/movie/42",
+            "title": null,
+            "content": "[Movie] (2024) OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+            "engine": "tmdb",
+            "position": 1,
+            "score": 7.5,
+            "category": "general",
+            "published_date": "2024-02-03",
+            "thumbnail": "https://image.tmdb.org/t/p/w200/poster.jpg",
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "media",
+              "type": "media_item",
+              "schema_version": 1,
+              "data": {
+                "media_type": "movie",
+                "release_date": "2024-02-03",
+                "overview": "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+                "vote_average": 7.5
+              },
+              "provenance": {
+                "engine": "tmdb",
+                "adapter_fields": [
+                  "media_type",
+                  "release_date",
+                  "overview",
+                  "vote_average"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tmdb-title-1",
+      "category": "typed-result-field-refusal",
+      "reason": "Original dataclass admits non-text title/date. Native public result schema requires text (optional date permits null only); reject atomically instead of stringify or silently change the field.",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.themoviedb.org/movie/42",
+            "title": 42,
+            "content": "[Movie] (2024) OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+            "engine": "tmdb",
+            "position": 1,
+            "score": 7.5,
+            "category": "general",
+            "published_date": "2024-02-03",
+            "thumbnail": "https://image.tmdb.org/t/p/w200/poster.jpg",
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "media",
+              "type": "media_item",
+              "schema_version": 1,
+              "data": {
+                "media_type": "movie",
+                "title": 42,
+                "release_date": "2024-02-03",
+                "overview": "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+                "vote_average": 7.5
+              },
+              "provenance": {
+                "engine": "tmdb",
+                "adapter_fields": [
+                  "media_type",
+                  "title",
+                  "release_date",
+                  "overview",
+                  "vote_average"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "nominatim-importance-5",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "could not convert string to float: 'bad'",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "invalid source float",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "nominatim-display_name-1",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "sequence item 0: expected str instance, NoneType found",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "nominatim-display_name-2",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "sequence item 0: expected str instance, int found",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "internetarchive-downloads-0",
+      "category": "never-raise-malformed-source-projection",
+      "reason": "Original Internet Archive catalog projection escaped the adapter try block. Native adapter returns classified Error with no partial results, satisfying the accepted never-raises contract.",
+      "source_output": {
+        "raised": "TypeError",
+        "error_message": "float() argument must be a string or a real number, not 'NoneType'"
+      },
+      "native_output": {
+        "error_message": "source score must be numeric",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "internetarchive-downloads-3",
+      "category": "never-raise-malformed-source-projection",
+      "reason": "Original Internet Archive catalog projection escaped the adapter try block. Native adapter returns classified Error with no partial results, satisfying the accepted never-raises contract.",
+      "source_output": {
+        "raised": "ValueError",
+        "error_message": "could not convert string to float: 'bad'"
+      },
+      "native_output": {
+        "error_message": "invalid source float",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "internetarchive-date-1",
+      "category": "typed-result-field-refusal",
+      "reason": "Original dataclass admits non-text title/date. Native public result schema requires text (optional date permits null only); reject atomically instead of stringify or silently change the field.",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://archive.org/details/book-1",
+            "title": "Book",
+            "content": "Description",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.5,
+            "category": "general",
+            "published_date": 42,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "internetarchive-description-2",
+      "category": "never-raise-malformed-source-projection",
+      "reason": "Original Internet Archive catalog projection escaped the adapter try block. Native adapter returns classified Error with no partial results, satisfying the accepted never-raises contract.",
+      "source_output": {
+        "raised": "TypeError",
+        "error_message": "'int' object is not subscriptable"
+      },
+      "native_output": {
+        "error_message": "Internet Archive description must be text",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "internetarchive-title-0",
+      "category": "typed-result-field-refusal",
+      "reason": "Original dataclass admits non-text title/date. Native public result schema requires text (optional date permits null only); reject atomically instead of stringify or silently change the field.",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://archive.org/details/book-1",
+            "title": null,
+            "content": "Description",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.5,
+            "category": "general",
+            "published_date": "2024-01-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "internetarchive-title-1",
+      "category": "typed-result-field-refusal",
+      "reason": "Original dataclass admits non-text title/date. Native public result schema requires text (optional date permits null only); reject atomically instead of stringify or silently change the field.",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://archive.org/details/book-1",
+            "title": 42,
+            "content": "Description",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.5,
+            "category": "general",
+            "published_date": "2024-01-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "availability-bad-json",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Availability API failed: Expecting value: line 1 column 1 (char 0)",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "invalid source JSON: Syntax { position: 0, message: \"Expecting value\" }",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "availability-timeout",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "timeout",
+        "error_message": "Availability API timed out: synthetic timeout",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "Availability API request timed out",
+        "results": [],
+        "status": "timeout"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_general_error#0",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Server error '500 Internal Server Error' for url 'https://archive.org/advancedsearch.php?q=books&output=json&rows=10'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "Internet Archive returned HTTP 500",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "regressions.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_timeout#0",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "timeout",
+        "error_message": "Availability API timed out: timeout",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "Availability API request timed out",
+        "results": [],
+        "status": "timeout"
+      },
+      "source_case_path": "regressions.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_malformed_json_is_error#0",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Availability API failed: Expecting value: line 1 column 1 (char 0)",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "invalid source JSON: Syntax { position: 0, message: \"Expecting value\" }",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "regressions.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tests/test_internetarchive_adapter.py::TestInternetArchiveErrors::test_availability_timeout_is_preserved#0",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "timeout",
+        "error_message": "Availability API timed out: timeout",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "Availability API request timed out",
+        "results": [],
+        "status": "timeout"
+      },
+      "source_case_path": "regressions.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_http_status_error_sanitized#0",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "Server error '500 Internal Server Error' for url 'https://api.themoviedb.org/3/search/multi?query=test&page=1%27For+more+information+check%3A+https%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FHTTP%2FStatus%2F500",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "TMDB returned HTTP 500",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "regressions.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tests/test_tmdb.py::TestTMDBAdapterSearch::test_broad_exception_sanitized#0",
+      "category": "native-library-diagnostic-wording",
+      "reason": "Status, results, and every outbound request match. Native parser/HTTP/typed-setting diagnostic wording replaces Python/httpx exception text; no error payload or credential is copied.",
+      "source_output": {
+        "status": "error",
+        "error_message": "https://api.themoviedb.org/3/search/multi?query=test&page=1",
+        "results": []
+      },
+      "native_output": {
+        "error_message": "TMDB request failed",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "regressions.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "openlibrary-atomic-title-0",
+      "category": "typed-result-field-refusal",
+      "reason": "Approved malformed-field boundary, exercised after one valid row: atomic Error discards the earlier produced row; no coercion of original JSON null/numeric title/date.",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://openlibrary.org/works/OL166894W",
+            "title": "Dune",
+            "content": "By Frank Herbert (1965) \u2014 8 editions",
+            "engine": "openlibrary",
+            "position": 1,
+            "score": 7.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": "https://covers.openlibrary.org/b/id/123-M.jpg",
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://openlibrary.org/works/OL166894W",
+            "title": null,
+            "content": "By Frank Herbert (1965) \u2014 8 editions",
+            "engine": "openlibrary",
+            "position": 2,
+            "score": 7.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": "https://covers.openlibrary.org/b/id/123-M.jpg",
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "openlibrary-atomic-title-1",
+      "category": "typed-result-field-refusal",
+      "reason": "Approved malformed-field boundary, exercised after one valid row: atomic Error discards the earlier produced row; no coercion of original JSON null/numeric title/date.",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://openlibrary.org/works/OL166894W",
+            "title": "Dune",
+            "content": "By Frank Herbert (1965) \u2014 8 editions",
+            "engine": "openlibrary",
+            "position": 1,
+            "score": 7.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": "https://covers.openlibrary.org/b/id/123-M.jpg",
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://openlibrary.org/works/OL166894W",
+            "title": 42,
+            "content": "By Frank Herbert (1965) \u2014 8 editions",
+            "engine": "openlibrary",
+            "position": 2,
+            "score": 7.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": "https://covers.openlibrary.org/b/id/123-M.jpg",
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "musicbrainz-atomic-name-0",
+      "category": "typed-result-field-refusal",
+      "reason": "Approved malformed-field boundary, exercised after one valid row: atomic Error discards the earlier produced row; no coercion of original JSON null/numeric title/date.",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://musicbrainz.org/artist/artist-1",
+            "title": "Artist",
+            "content": "Group \u2014 GB \u2014 Active since 1985",
+            "engine": "musicbrainz",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://musicbrainz.org/artist/artist-1",
+            "title": null,
+            "content": "Group \u2014 GB \u2014 Active since 1985",
+            "engine": "musicbrainz",
+            "position": 2,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "musicbrainz-atomic-name-1",
+      "category": "typed-result-field-refusal",
+      "reason": "Approved malformed-field boundary, exercised after one valid row: atomic Error discards the earlier produced row; no coercion of original JSON null/numeric title/date.",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://musicbrainz.org/artist/artist-1",
+            "title": "Artist",
+            "content": "Group \u2014 GB \u2014 Active since 1985",
+            "engine": "musicbrainz",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://musicbrainz.org/artist/artist-1",
+            "title": 42,
+            "content": "Group \u2014 GB \u2014 Active since 1985",
+            "engine": "musicbrainz",
+            "position": 2,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tmdb-atomic-title-0",
+      "category": "typed-result-field-refusal",
+      "reason": "Approved malformed-field boundary, exercised after one valid row: atomic Error discards the earlier produced row; no coercion of original JSON null/numeric title/date.",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.themoviedb.org/movie/42",
+            "title": "Movie",
+            "content": "[Movie] (2024) OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+            "engine": "tmdb",
+            "position": 1,
+            "score": 7.5,
+            "category": "general",
+            "published_date": "2024-02-03",
+            "thumbnail": "https://image.tmdb.org/t/p/w200/poster.jpg",
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "media",
+              "type": "media_item",
+              "schema_version": 1,
+              "data": {
+                "media_type": "movie",
+                "title": "Movie",
+                "release_date": "2024-02-03",
+                "overview": "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+                "vote_average": 7.5
+              },
+              "provenance": {
+                "engine": "tmdb",
+                "adapter_fields": [
+                  "media_type",
+                  "title",
+                  "release_date",
+                  "overview",
+                  "vote_average"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          },
+          {
+            "url": "https://www.themoviedb.org/movie/42",
+            "title": null,
+            "content": "[Movie] (2024) OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+            "engine": "tmdb",
+            "position": 2,
+            "score": 7.5,
+            "category": "general",
+            "published_date": "2024-02-03",
+            "thumbnail": "https://image.tmdb.org/t/p/w200/poster.jpg",
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "media",
+              "type": "media_item",
+              "schema_version": 1,
+              "data": {
+                "media_type": "movie",
+                "release_date": "2024-02-03",
+                "overview": "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+                "vote_average": 7.5
+              },
+              "provenance": {
+                "engine": "tmdb",
+                "adapter_fields": [
+                  "media_type",
+                  "release_date",
+                  "overview",
+                  "vote_average"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "tmdb-atomic-title-1",
+      "category": "typed-result-field-refusal",
+      "reason": "Approved malformed-field boundary, exercised after one valid row: atomic Error discards the earlier produced row; no coercion of original JSON null/numeric title/date.",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.themoviedb.org/movie/42",
+            "title": "Movie",
+            "content": "[Movie] (2024) OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+            "engine": "tmdb",
+            "position": 1,
+            "score": 7.5,
+            "category": "general",
+            "published_date": "2024-02-03",
+            "thumbnail": "https://image.tmdb.org/t/p/w200/poster.jpg",
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "media",
+              "type": "media_item",
+              "schema_version": 1,
+              "data": {
+                "media_type": "movie",
+                "title": "Movie",
+                "release_date": "2024-02-03",
+                "overview": "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+                "vote_average": 7.5
+              },
+              "provenance": {
+                "engine": "tmdb",
+                "adapter_fields": [
+                  "media_type",
+                  "title",
+                  "release_date",
+                  "overview",
+                  "vote_average"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          },
+          {
+            "url": "https://www.themoviedb.org/movie/42",
+            "title": 42,
+            "content": "[Movie] (2024) OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+            "engine": "tmdb",
+            "position": 2,
+            "score": 7.5,
+            "category": "general",
+            "published_date": "2024-02-03",
+            "thumbnail": "https://image.tmdb.org/t/p/w200/poster.jpg",
+            "img_src": null,
+            "media": null,
+            "payload": {
+              "domain": "media",
+              "type": "media_item",
+              "schema_version": 1,
+              "data": {
+                "media_type": "movie",
+                "title": 42,
+                "release_date": "2024-02-03",
+                "overview": "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+                "vote_average": 7.5
+              },
+              "provenance": {
+                "engine": "tmdb",
+                "adapter_fields": [
+                  "media_type",
+                  "title",
+                  "release_date",
+                  "overview",
+                  "vote_average"
+                ],
+                "normalized_fields": [],
+                "inferred_fields": []
+              }
+            }
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "internetarchive-atomic-title-0",
+      "category": "typed-result-field-refusal",
+      "reason": "Approved malformed-field boundary, exercised after one valid row: atomic Error discards the earlier produced row; no coercion of original JSON null/numeric title/date.",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://archive.org/details/book-1",
+            "title": "Book",
+            "content": "Description",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.5,
+            "category": "general",
+            "published_date": "2024-01-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://archive.org/details/book-1",
+            "title": null,
+            "content": "Description",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.5,
+            "category": "general",
+            "published_date": "2024-01-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "internetarchive-atomic-title-1",
+      "category": "typed-result-field-refusal",
+      "reason": "Approved malformed-field boundary, exercised after one valid row: atomic Error discards the earlier produced row; no coercion of original JSON null/numeric title/date.",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://archive.org/details/book-1",
+            "title": "Book",
+            "content": "Description",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.5,
+            "category": "general",
+            "published_date": "2024-01-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://archive.org/details/book-1",
+            "title": 42,
+            "content": "Description",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.5,
+            "category": "general",
+            "published_date": "2024-01-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    },
+    {
+      "id": "internetarchive-atomic-date-0",
+      "category": "typed-result-field-refusal",
+      "reason": "Approved malformed-field boundary, exercised after one valid row: atomic Error discards the earlier produced row; no coercion of original JSON null/numeric title/date.",
+      "source_output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://archive.org/details/book-1",
+            "title": "Book",
+            "content": "Description",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.5,
+            "category": "general",
+            "published_date": "2024-01-01",
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          },
+          {
+            "url": "https://archive.org/details/book-1",
+            "title": "Book",
+            "content": "Description",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.5,
+            "category": "general",
+            "published_date": 42,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      },
+      "native_output": {
+        "error_message": "expected source string",
+        "results": [],
+        "status": "error"
+      },
+      "source_case_path": "source.json",
+      "review_status": "parent accepted explicit difference; complete implementation qualification pending"
+    }
+  ],
+  "typed_boundary_review_receipt": "a09-parent-nontext-boundary-review.json",
+  "diagnostic_review_receipt": "a09-parent-diagnostic-exception-differences-review.json"
+}

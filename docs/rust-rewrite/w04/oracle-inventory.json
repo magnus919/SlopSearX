@@ -1,0 +1,16 @@
+{
+  "plan_id": "W04",
+  "temporary_migration_oracles": [
+    {
+      "path": "docs/rust-rewrite/w04/capture_source.py",
+      "interpreter": "isolated CPython 3.14.7",
+      "purpose": "offline synthetic saved observation/report comparison export only",
+      "output": "docs/rust-rewrite/w04/source.json",
+      "native_runtime_dependency": false,
+      "mandatory_gate_dependency": false,
+      "provider_calls": 0,
+      "retirement_owner": "G08",
+      "retirement_action": "remove executable exporter; retain immutable non-executable source corpus and provenance"
+    }
+  ]
+}

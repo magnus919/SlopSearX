@@ -1,0 +1,52 @@
+........................F.....                                           [100%]
+=================================== FAILURES ===================================
+_____________ TestGatewaySessionOwner.test_http_shutdown_is_clean ______________
+
+self = <tests.test_mcp_gateway.TestGatewaySessionOwner object at 0x10b7d6de0>
+offline_remote_server = 53922
+caplog = <_pytest.logging.LogCaptureFixture object at 0x10b7d6390>
+
+    async def test_http_shutdown_is_clean(self, offline_remote_server: Any, caplog: Any) -> None:
+        from slopsearx.mcp import gateway
+    
+        url = f"http://127.0.0.1:{offline_remote_server}/mcp"
+        controls = [
+            ("slopsearx_list_capabilities", {"include_auth_requirements": False}),
+            ("slopsearx_search", {"query": "offline", "intent": "not-real"}),
+        ]
+        async with Client(url, auth=TOKEN) as direct:
+            assert len(await direct.list_tools()) == 38
+            expected = [await direct.call_tool_mcp(name, args) for name, args in controls]
+        async with _gateway_client(create_gateway(url, token=TOKEN), check_shutdown=True) as client:
+            assert len(await client.list_tools()) == 38
+            actual = [await client.call_tool_mcp(name, args) for name, args in controls]
+>           assert actual == expected
+E           assert [CallToolResu...sError=False)] == [CallToolResu...sError=False)]
+E             
+E             At index 0 diff: CallToolResult(meta=None, content=[TextContent(type='text', text='{"engines":[{"name":"abuseipdb","display_name":"AbuseIPDB","type":"api","categories":["security","threat-intel"],"subcategories":[],"enabled":true,"sensitive":false,"supported_filters":{"language":false,"time_range":false,"safesearch":false,"pagination":false,"date_from":false,"date_to":false},"enforced_filters":{"language":null,"time_range":null,"safesearch":null,"pagination":null,"date_from":null,"date_to":null},"supported_result_types":["text"],"supported_media_types":[],"failure_class...
+E             
+E             ...Full output truncated (2 lines hidden), use '-vv' to show
+
+tests/test_mcp_gateway.py:457: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  slopsearx.mcp.server:server.py:144 MCP startup problem: intent 'images' has media types matching no enabled engines: ['image']
+WARNING  slopsearx.mcp.server:server.py:144 MCP startup problem: intent 'videos' has media types matching no enabled engines: ['video']
+WARNING  slopsearx.mcp.server:server.py:144 MCP startup problem: intent 'images' has media types matching no enabled engines: ['image']
+WARNING  slopsearx.mcp.server:server.py:144 MCP startup problem: intent 'videos' has media types matching no enabled engines: ['video']
+=============================== warnings summary ===============================
+tests/test_mcp_gateway.py::TestGateway::test_gateway_proxies_tools_and_resources
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pydantic_settings/sources/utils.py:47: IncompleteFieldDefinitionWarning: Field 'lifespan' has an incomplete definition: its annotation contains an unresolved forward reference, so settings sources may fail to correctly resolve its value. Call `model_rebuild()` on the model where the field is defined, once all the referenced types are defined.
+    warnings.warn(
+
+tests/test_mcp_gateway.py::TestGateway::test_gateway_proxies_tools_and_resources
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/websockets/legacy/__init__.py:6: DeprecationWarning: websockets.legacy is deprecated; see https://websockets.readthedocs.io/en/stable/howto/upgrade.html for upgrade instructions
+    warnings.warn(  # deprecated in 14.0 - 2024-11-09
+
+tests/test_mcp_gateway.py::TestGateway::test_gateway_proxies_tools_and_resources
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/uvicorn/protocols/websockets/websockets_impl.py:17: DeprecationWarning: websockets.server.WebSocketServerProtocol is deprecated
+    from websockets.server import WebSocketServerProtocol
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_mcp_gateway.py::TestGatewaySessionOwner::test_http_shutdown_is_clean
+1 failed, 29 passed, 3 warnings in 2.76s

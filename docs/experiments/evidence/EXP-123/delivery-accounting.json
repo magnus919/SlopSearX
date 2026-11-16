@@ -1,0 +1,32 @@
+{
+  "started_at": "2026-10-15T12:57:48Z",
+  "readout_at": "2026-10-15T13:27:16.690697+00:00",
+  "scientific_provider_requests": 0,
+  "scientific_provider_cost": 0,
+  "frozen_probe_processes": {
+    "baseline": 3,
+    "candidate": 3
+  },
+  "automated_review_attempts": [
+    {
+      "head": "ab8a241541ee2bc748e43443628bc6db76aaf1e8",
+      "status": "INCOMPLETE",
+      "requests_attempted": 9,
+      "reported_tokens": 121077,
+      "calls_without_usage": 1,
+      "billed_cost": "UNKNOWN"
+    },
+    {
+      "head": "3b27897f89fa642105b5f4c14df590c4d541892a",
+      "status": "INCOMPLETE",
+      "requests_attempted": 9,
+      "reported_tokens": 125548,
+      "calls_without_usage": 1,
+      "billed_cost": "UNKNOWN"
+    }
+  ],
+  "subscription_usage": "unknown",
+  "production_deployment": "not performed",
+  "elapsed_seconds_to_readout": 1768.690697,
+  "fresh_environment_check": "Fresh environment set up during slow CI; no extra test run after hosted implementation CI completed successfully."
+}

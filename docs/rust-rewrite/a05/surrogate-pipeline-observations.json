@@ -1,0 +1,6532 @@
+{
+  "source": "actual pinned whole adapters plus HTTPX decode and lxml wrapper",
+  "source_commit": "01876639fb8d87123f12293c02821981cff3f8b9",
+  "source_files": [
+    {
+      "path": "engines/duckduckgo.py",
+      "sha256": "e3203f5d4a39546df743a415609d45ec15a92eb2ebfb3f62b19324861cb74bd0",
+      "git_blob": "21b7eb2300920c58e9c363ddf6f7276d923a5460"
+    },
+    {
+      "path": "engines/google.py",
+      "sha256": "8fea6f735ecb1d3ee6e6e19b694869ac67337a9a88e0cc2631502f281587c272",
+      "git_blob": "079a10cd582ce73b45f3dc707671edcead74bffa"
+    },
+    {
+      "path": "slopsearx/adapter.py",
+      "sha256": "5883a35c48d0dad1077306fbda21997ee1d32116a8c03633a6b762de0c26d6f3",
+      "git_blob": "664e853d9ab1330596d01899ebe015701de09e88"
+    },
+    {
+      "path": "slopsearx/proxypool.py",
+      "sha256": "b46d95ed0e1f084c35e2198655a55e4999f314de7a13e37316891d78cf1e58b7",
+      "git_blob": "006aab63744e626c307717faf3e26a202ee252db"
+    },
+    {
+      "path": "tests/test_duckduckgo_resilience.py",
+      "sha256": "9ec9d8202d8f68afe833bc6ef97dc1db42115e00d19c56df21b6a5cc972b3831",
+      "git_blob": "03379c9d34a7437a875e0713a326ffd48b921efa"
+    },
+    {
+      "path": "tests/test_google_adapter.py",
+      "sha256": "de8e30a9e27dd381ce32e9b93e176167ba0c1c2a7068a4e6493ddcff28d4dc3f",
+      "git_blob": "8f75c72fe63469f4d01202aa356eb7a002dc3581"
+    },
+    {
+      "path": "tests/test_http_pooling.py",
+      "sha256": "2e20b673cb1f6c94b02fd6508e8832a7db05dec916603d99eb384c14e055460b",
+      "git_blob": "5f6a0cd70a4c7200d528c74acd7c8e24c8b4c692"
+    },
+    {
+      "path": "tests/test_adapters.py",
+      "sha256": "0f5fdc19df84214e5a6422437686d41def5f9e9827ad8dfc8ca8ee8b2ad10454",
+      "git_blob": "788f5747f84438f96bacbec5c6d813dea44ef4cd"
+    },
+    {
+      "path": "tests/test_media_contract.py",
+      "sha256": "6a0a7301d8c76373f9ba018514511b13f0f3020e427320d1d6925bc9eb96585d",
+      "git_blob": "37dd3e6e1cca7e648d7fe3f8604f697bed0481ed"
+    },
+    {
+      "path": "tests/test_adapter.py",
+      "sha256": "f5fa8bca52c08cd289be2728992b9fb31da0dfa54396a0f6ce4a3aed7abc3d6c",
+      "git_blob": "c127212cc12e71643963e0699234a64e72b180b7"
+    }
+  ],
+  "cases": [
+    {
+      "id": "surrogate_utf-7_isolated_high",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=utf-7"
+          },
+          "body_hex": "2b3241412d"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [],
+        "status": "error",
+        "error_message": "Document is empty",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        55296
+      ],
+      "result_string_codepoints": [],
+      "direct_lxml": {
+        "exception_type": "ParserError",
+        "message": "Document is empty"
+      }
+    },
+    {
+      "id": "surrogate_utf-7_isolated_low",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=utf-7"
+          },
+          "body_hex": "2b3341412d"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [],
+        "status": "error",
+        "error_message": "Document is empty",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        56320
+      ],
+      "result_string_codepoints": [],
+      "direct_lxml": {
+        "exception_type": "ParserError",
+        "message": "Document is empty"
+      }
+    },
+    {
+      "id": "surrogate_utf-7_isolated_pair",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=utf-7"
+          },
+          "body_hex": "2b3241446341412d"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        65536
+      ],
+      "result_string_codepoints": [],
+      "direct_lxml": {
+        "root": "span",
+        "text": "\ud800\udc00",
+        "text_codepoints": [
+          65536
+        ]
+      }
+    },
+    {
+      "id": "surrogate_utf-7_title_high",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=utf-7"
+          },
+          "body_hex": "3c64697620636c6173733d2267223e3c6120687265663d2268747470733a2f2f78223e3c68333e412b3241412d423c2f68333e3c2f613e3c7370616e20636c6173733d227374223e433c2f7370616e3e3c2f6469763e"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [
+          {
+            "url": "https://x",
+            "title": "A",
+            "content": "",
+            "engine": "google",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        100,
+        105,
+        118,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        103,
+        34,
+        62,
+        60,
+        97,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        34,
+        62,
+        60,
+        104,
+        51,
+        62,
+        65,
+        55296,
+        66,
+        60,
+        47,
+        104,
+        51,
+        62,
+        60,
+        47,
+        97,
+        62,
+        60,
+        115,
+        112,
+        97,
+        110,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        115,
+        116,
+        34,
+        62,
+        67,
+        60,
+        47,
+        115,
+        112,
+        97,
+        110,
+        62,
+        60,
+        47,
+        100,
+        105,
+        118,
+        62
+      ],
+      "result_string_codepoints": [
+        {
+          "url": [
+            104,
+            116,
+            116,
+            112,
+            115,
+            58,
+            47,
+            47,
+            120
+          ],
+          "title": [
+            65
+          ],
+          "content": [],
+          "engine": [
+            103,
+            111,
+            111,
+            103,
+            108,
+            101
+          ],
+          "category": [
+            103,
+            101,
+            110,
+            101,
+            114,
+            97,
+            108
+          ]
+        }
+      ],
+      "direct_lxml": {
+        "root": "div",
+        "text": "A",
+        "text_codepoints": [
+          65
+        ]
+      }
+    },
+    {
+      "id": "surrogate_utf-7_title_low",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=utf-7"
+          },
+          "body_hex": "3c64697620636c6173733d2267223e3c6120687265663d2268747470733a2f2f78223e3c68333e412b3341412d423c2f68333e3c2f613e3c7370616e20636c6173733d227374223e433c2f7370616e3e3c2f6469763e"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [
+          {
+            "url": "https://x",
+            "title": "A",
+            "content": "",
+            "engine": "google",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        100,
+        105,
+        118,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        103,
+        34,
+        62,
+        60,
+        97,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        34,
+        62,
+        60,
+        104,
+        51,
+        62,
+        65,
+        56320,
+        66,
+        60,
+        47,
+        104,
+        51,
+        62,
+        60,
+        47,
+        97,
+        62,
+        60,
+        115,
+        112,
+        97,
+        110,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        115,
+        116,
+        34,
+        62,
+        67,
+        60,
+        47,
+        115,
+        112,
+        97,
+        110,
+        62,
+        60,
+        47,
+        100,
+        105,
+        118,
+        62
+      ],
+      "result_string_codepoints": [
+        {
+          "url": [
+            104,
+            116,
+            116,
+            112,
+            115,
+            58,
+            47,
+            47,
+            120
+          ],
+          "title": [
+            65
+          ],
+          "content": [],
+          "engine": [
+            103,
+            111,
+            111,
+            103,
+            108,
+            101
+          ],
+          "category": [
+            103,
+            101,
+            110,
+            101,
+            114,
+            97,
+            108
+          ]
+        }
+      ],
+      "direct_lxml": {
+        "root": "div",
+        "text": "A",
+        "text_codepoints": [
+          65
+        ]
+      }
+    },
+    {
+      "id": "surrogate_utf-7_title_pair",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=utf-7"
+          },
+          "body_hex": "3c64697620636c6173733d2267223e3c6120687265663d2268747470733a2f2f78223e3c68333e412b3241446341412d423c2f68333e3c2f613e3c2f6469763e"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [
+          {
+            "url": "https://x",
+            "title": "A\ud800\udc00B",
+            "content": "",
+            "engine": "google",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        100,
+        105,
+        118,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        103,
+        34,
+        62,
+        60,
+        97,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        34,
+        62,
+        60,
+        104,
+        51,
+        62,
+        65,
+        65536,
+        66,
+        60,
+        47,
+        104,
+        51,
+        62,
+        60,
+        47,
+        97,
+        62,
+        60,
+        47,
+        100,
+        105,
+        118,
+        62
+      ],
+      "result_string_codepoints": [
+        {
+          "url": [
+            104,
+            116,
+            116,
+            112,
+            115,
+            58,
+            47,
+            47,
+            120
+          ],
+          "title": [
+            65,
+            65536,
+            66
+          ],
+          "content": [],
+          "engine": [
+            103,
+            111,
+            111,
+            103,
+            108,
+            101
+          ],
+          "category": [
+            103,
+            101,
+            110,
+            101,
+            114,
+            97,
+            108
+          ]
+        }
+      ],
+      "direct_lxml": {
+        "root": "div",
+        "text": "A\ud800\udc00B",
+        "text_codepoints": [
+          65,
+          65536,
+          66
+        ]
+      }
+    },
+    {
+      "id": "surrogate_utf-7_title_high_bmp",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=utf-7"
+          },
+          "body_hex": "3c64697620636c6173733d2267223e3c6120687265663d2268747470733a2f2f78223e3c68333e2b414f6b2d412b3241412d423c2f68333e3c2f613e3c2f6469763e"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [
+          {
+            "url": "https://x",
+            "title": "\u00e9A",
+            "content": "",
+            "engine": "google",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        100,
+        105,
+        118,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        103,
+        34,
+        62,
+        60,
+        97,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        34,
+        62,
+        60,
+        104,
+        51,
+        62,
+        233,
+        65,
+        55296,
+        66,
+        60,
+        47,
+        104,
+        51,
+        62,
+        60,
+        47,
+        97,
+        62,
+        60,
+        47,
+        100,
+        105,
+        118,
+        62
+      ],
+      "result_string_codepoints": [
+        {
+          "url": [
+            104,
+            116,
+            116,
+            112,
+            115,
+            58,
+            47,
+            47,
+            120
+          ],
+          "title": [
+            233,
+            65
+          ],
+          "content": [],
+          "engine": [
+            103,
+            111,
+            111,
+            103,
+            108,
+            101
+          ],
+          "category": [
+            103,
+            101,
+            110,
+            101,
+            114,
+            97,
+            108
+          ]
+        }
+      ],
+      "direct_lxml": {
+        "root": "div",
+        "text": "\u00e9A",
+        "text_codepoints": [
+          233,
+          65
+        ]
+      }
+    },
+    {
+      "id": "surrogate_utf-7_title_high_astral",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=utf-7"
+          },
+          "body_hex": "3c64697620636c6173733d2267223e3c6120687265663d2268747470733a2f2f78223e3c68333e2b3244336541412d412b3241412d423c2f68333e3c2f613e3c2f6469763e"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [
+          {
+            "url": "https://x",
+            "title": "\ud83d\ude00A",
+            "content": "",
+            "engine": "google",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        100,
+        105,
+        118,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        103,
+        34,
+        62,
+        60,
+        97,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        34,
+        62,
+        60,
+        104,
+        51,
+        62,
+        128512,
+        65,
+        55296,
+        66,
+        60,
+        47,
+        104,
+        51,
+        62,
+        60,
+        47,
+        97,
+        62,
+        60,
+        47,
+        100,
+        105,
+        118,
+        62
+      ],
+      "result_string_codepoints": [
+        {
+          "url": [
+            104,
+            116,
+            116,
+            112,
+            115,
+            58,
+            47,
+            47,
+            120
+          ],
+          "title": [
+            128512,
+            65
+          ],
+          "content": [],
+          "engine": [
+            103,
+            111,
+            111,
+            103,
+            108,
+            101
+          ],
+          "category": [
+            103,
+            101,
+            110,
+            101,
+            114,
+            97,
+            108
+          ]
+        }
+      ],
+      "direct_lxml": {
+        "root": "div",
+        "text": "\ud83d\ude00A",
+        "text_codepoints": [
+          128512,
+          65
+        ]
+      }
+    },
+    {
+      "id": "surrogate_utf-7_url_high",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=utf-7"
+          },
+          "body_hex": "3c64697620636c6173733d2267223e3c6120687265663d2268747470733a2f2f782f2b324141223e3c68333e583c2f68333e3c2f613e3c2f6469763e"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        100,
+        105,
+        118,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        103,
+        34,
+        62,
+        60,
+        97,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        47,
+        55296,
+        34,
+        62,
+        60,
+        104,
+        51,
+        62,
+        88,
+        60,
+        47,
+        104,
+        51,
+        62,
+        60,
+        47,
+        97,
+        62,
+        60,
+        47,
+        100,
+        105,
+        118,
+        62
+      ],
+      "result_string_codepoints": [],
+      "direct_lxml": {
+        "root": "div",
+        "text": "",
+        "text_codepoints": []
+      }
+    },
+    {
+      "id": "surrogate_utf-7_image_alt_high",
+      "engine": "duckduckgo",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body_hex": "3c68746d6c2f3e",
+          "headers": {}
+        },
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=utf-7"
+          },
+          "body_hex": "3c6120636c6173733d2274696c652220687265663d2268747470733a2f2f78223e3c696d67207372633d2268747470733a2f2f692220616c743d22412b3241412d42223e3c2f613e"
+        }
+      ],
+      "categories": [
+        "images"
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://duckduckgo.com/",
+          "headers": {
+            "host": "duckduckgo.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9",
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "none",
+            "upgrade-insecure-requests": "1"
+          },
+          "body_hex": ""
+        },
+        {
+          "method": "POST",
+          "url": "https://html.duckduckgo.com/html/",
+          "headers": {
+            "host": "html.duckduckgo.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9",
+            "referer": "https://duckduckgo.com/",
+            "origin": "https://duckduckgo.com",
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "same-site",
+            "upgrade-insecure-requests": "1",
+            "content-length": "18",
+            "content-type": "application/x-www-form-urlencoded"
+          },
+          "body_hex": "713d712532417e266961723d696d61676573"
+        }
+      ],
+      "consumed_exchanges": [
+        0,
+        1
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [
+          {
+            "url": "https://x",
+            "title": "q*~",
+            "content": "",
+            "engine": "duckduckgo",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "images",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        97,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        116,
+        105,
+        108,
+        101,
+        34,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        34,
+        62,
+        60,
+        105,
+        109,
+        103,
+        32,
+        115,
+        114,
+        99,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        105,
+        34,
+        32,
+        97,
+        108,
+        116,
+        61,
+        34,
+        65,
+        55296,
+        66,
+        34,
+        62,
+        60,
+        47,
+        97,
+        62
+      ],
+      "result_string_codepoints": [
+        {
+          "url": [
+            104,
+            116,
+            116,
+            112,
+            115,
+            58,
+            47,
+            47,
+            120
+          ],
+          "title": [
+            113,
+            42,
+            126
+          ],
+          "content": [],
+          "engine": [
+            100,
+            117,
+            99,
+            107,
+            100,
+            117,
+            99,
+            107,
+            103,
+            111
+          ],
+          "category": [
+            105,
+            109,
+            97,
+            103,
+            101,
+            115
+          ]
+        }
+      ],
+      "direct_lxml": {
+        "root": "a",
+        "text": "",
+        "text_codepoints": []
+      }
+    },
+    {
+      "id": "surrogate_utf-7_image_alt_high_astral",
+      "engine": "duckduckgo",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body_hex": "3c68746d6c2f3e",
+          "headers": {}
+        },
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=utf-7"
+          },
+          "body_hex": "3c6120636c6173733d2274696c652220687265663d2268747470733a2f2f78223e3c696d67207372633d2268747470733a2f2f692220616c743d222b3244336541412d412b3241412d42223e3c2f613e"
+        }
+      ],
+      "categories": [
+        "images"
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://duckduckgo.com/",
+          "headers": {
+            "host": "duckduckgo.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9",
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "none",
+            "upgrade-insecure-requests": "1"
+          },
+          "body_hex": ""
+        },
+        {
+          "method": "POST",
+          "url": "https://html.duckduckgo.com/html/",
+          "headers": {
+            "host": "html.duckduckgo.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9",
+            "referer": "https://duckduckgo.com/",
+            "origin": "https://duckduckgo.com",
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "same-site",
+            "upgrade-insecure-requests": "1",
+            "content-length": "18",
+            "content-type": "application/x-www-form-urlencoded"
+          },
+          "body_hex": "713d712532417e266961723d696d61676573"
+        }
+      ],
+      "consumed_exchanges": [
+        0,
+        1
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [
+          {
+            "url": "https://x",
+            "title": "q*~",
+            "content": "",
+            "engine": "duckduckgo",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "images",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        97,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        116,
+        105,
+        108,
+        101,
+        34,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        34,
+        62,
+        60,
+        105,
+        109,
+        103,
+        32,
+        115,
+        114,
+        99,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        105,
+        34,
+        32,
+        97,
+        108,
+        116,
+        61,
+        34,
+        128512,
+        65,
+        55296,
+        66,
+        34,
+        62,
+        60,
+        47,
+        97,
+        62
+      ],
+      "result_string_codepoints": [
+        {
+          "url": [
+            104,
+            116,
+            116,
+            112,
+            115,
+            58,
+            47,
+            47,
+            120
+          ],
+          "title": [
+            113,
+            42,
+            126
+          ],
+          "content": [],
+          "engine": [
+            100,
+            117,
+            99,
+            107,
+            100,
+            117,
+            99,
+            107,
+            103,
+            111
+          ],
+          "category": [
+            105,
+            109,
+            97,
+            103,
+            101,
+            115
+          ]
+        }
+      ],
+      "direct_lxml": {
+        "root": "a",
+        "text": "",
+        "text_codepoints": []
+      }
+    },
+    {
+      "id": "surrogate_raw_unicode_escape_isolated_high",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=raw_unicode_escape"
+          },
+          "body_hex": "5c7564383030"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [],
+        "status": "error",
+        "error_message": "Document is empty",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        55296
+      ],
+      "result_string_codepoints": [],
+      "direct_lxml": {
+        "exception_type": "ParserError",
+        "message": "Document is empty"
+      }
+    },
+    {
+      "id": "surrogate_raw_unicode_escape_isolated_low",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=raw_unicode_escape"
+          },
+          "body_hex": "5c7564633030"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [],
+        "status": "error",
+        "error_message": "Document is empty",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        56320
+      ],
+      "result_string_codepoints": [],
+      "direct_lxml": {
+        "exception_type": "ParserError",
+        "message": "Document is empty"
+      }
+    },
+    {
+      "id": "surrogate_raw_unicode_escape_isolated_pair",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=raw_unicode_escape"
+          },
+          "body_hex": "5c75643830305c7564633030"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        55296,
+        56320
+      ],
+      "result_string_codepoints": [],
+      "direct_lxml": {
+        "root": "span",
+        "text": "\ud800\udc00",
+        "text_codepoints": [
+          65536
+        ]
+      }
+    },
+    {
+      "id": "surrogate_raw_unicode_escape_title_high",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=raw_unicode_escape"
+          },
+          "body_hex": "3c64697620636c6173733d2267223e3c6120687265663d2268747470733a2f2f78223e3c68333e415c7564383030423c2f68333e3c2f613e3c7370616e20636c6173733d227374223e433c2f7370616e3e3c2f6469763e"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [
+          {
+            "url": "https://x",
+            "title": "A",
+            "content": "",
+            "engine": "google",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        100,
+        105,
+        118,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        103,
+        34,
+        62,
+        60,
+        97,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        34,
+        62,
+        60,
+        104,
+        51,
+        62,
+        65,
+        55296,
+        66,
+        60,
+        47,
+        104,
+        51,
+        62,
+        60,
+        47,
+        97,
+        62,
+        60,
+        115,
+        112,
+        97,
+        110,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        115,
+        116,
+        34,
+        62,
+        67,
+        60,
+        47,
+        115,
+        112,
+        97,
+        110,
+        62,
+        60,
+        47,
+        100,
+        105,
+        118,
+        62
+      ],
+      "result_string_codepoints": [
+        {
+          "url": [
+            104,
+            116,
+            116,
+            112,
+            115,
+            58,
+            47,
+            47,
+            120
+          ],
+          "title": [
+            65
+          ],
+          "content": [],
+          "engine": [
+            103,
+            111,
+            111,
+            103,
+            108,
+            101
+          ],
+          "category": [
+            103,
+            101,
+            110,
+            101,
+            114,
+            97,
+            108
+          ]
+        }
+      ],
+      "direct_lxml": {
+        "root": "div",
+        "text": "A",
+        "text_codepoints": [
+          65
+        ]
+      }
+    },
+    {
+      "id": "surrogate_raw_unicode_escape_title_low",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=raw_unicode_escape"
+          },
+          "body_hex": "3c64697620636c6173733d2267223e3c6120687265663d2268747470733a2f2f78223e3c68333e415c7564633030423c2f68333e3c2f613e3c7370616e20636c6173733d227374223e433c2f7370616e3e3c2f6469763e"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [
+          {
+            "url": "https://x",
+            "title": "A",
+            "content": "",
+            "engine": "google",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        100,
+        105,
+        118,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        103,
+        34,
+        62,
+        60,
+        97,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        34,
+        62,
+        60,
+        104,
+        51,
+        62,
+        65,
+        56320,
+        66,
+        60,
+        47,
+        104,
+        51,
+        62,
+        60,
+        47,
+        97,
+        62,
+        60,
+        115,
+        112,
+        97,
+        110,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        115,
+        116,
+        34,
+        62,
+        67,
+        60,
+        47,
+        115,
+        112,
+        97,
+        110,
+        62,
+        60,
+        47,
+        100,
+        105,
+        118,
+        62
+      ],
+      "result_string_codepoints": [
+        {
+          "url": [
+            104,
+            116,
+            116,
+            112,
+            115,
+            58,
+            47,
+            47,
+            120
+          ],
+          "title": [
+            65
+          ],
+          "content": [],
+          "engine": [
+            103,
+            111,
+            111,
+            103,
+            108,
+            101
+          ],
+          "category": [
+            103,
+            101,
+            110,
+            101,
+            114,
+            97,
+            108
+          ]
+        }
+      ],
+      "direct_lxml": {
+        "root": "div",
+        "text": "A",
+        "text_codepoints": [
+          65
+        ]
+      }
+    },
+    {
+      "id": "surrogate_raw_unicode_escape_title_pair",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=raw_unicode_escape"
+          },
+          "body_hex": "3c64697620636c6173733d2267223e3c6120687265663d2268747470733a2f2f78223e3c68333e415c75643830305c7564633030423c2f68333e3c2f613e3c2f6469763e"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [
+          {
+            "url": "https://x",
+            "title": "A\ud800\udc00B",
+            "content": "",
+            "engine": "google",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        100,
+        105,
+        118,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        103,
+        34,
+        62,
+        60,
+        97,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        34,
+        62,
+        60,
+        104,
+        51,
+        62,
+        65,
+        55296,
+        56320,
+        66,
+        60,
+        47,
+        104,
+        51,
+        62,
+        60,
+        47,
+        97,
+        62,
+        60,
+        47,
+        100,
+        105,
+        118,
+        62
+      ],
+      "result_string_codepoints": [
+        {
+          "url": [
+            104,
+            116,
+            116,
+            112,
+            115,
+            58,
+            47,
+            47,
+            120
+          ],
+          "title": [
+            65,
+            65536,
+            66
+          ],
+          "content": [],
+          "engine": [
+            103,
+            111,
+            111,
+            103,
+            108,
+            101
+          ],
+          "category": [
+            103,
+            101,
+            110,
+            101,
+            114,
+            97,
+            108
+          ]
+        }
+      ],
+      "direct_lxml": {
+        "root": "div",
+        "text": "A\ud800\udc00B",
+        "text_codepoints": [
+          65,
+          65536,
+          66
+        ]
+      }
+    },
+    {
+      "id": "surrogate_raw_unicode_escape_title_high_bmp",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=raw_unicode_escape"
+          },
+          "body_hex": "3c64697620636c6173733d2267223e3c6120687265663d2268747470733a2f2f78223e3c68333ee9415c7564383030423c2f68333e3c2f613e3c2f6469763e"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [
+          {
+            "url": "https://x",
+            "title": "\u00e9A",
+            "content": "",
+            "engine": "google",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        100,
+        105,
+        118,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        103,
+        34,
+        62,
+        60,
+        97,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        34,
+        62,
+        60,
+        104,
+        51,
+        62,
+        233,
+        65,
+        55296,
+        66,
+        60,
+        47,
+        104,
+        51,
+        62,
+        60,
+        47,
+        97,
+        62,
+        60,
+        47,
+        100,
+        105,
+        118,
+        62
+      ],
+      "result_string_codepoints": [
+        {
+          "url": [
+            104,
+            116,
+            116,
+            112,
+            115,
+            58,
+            47,
+            47,
+            120
+          ],
+          "title": [
+            233,
+            65
+          ],
+          "content": [],
+          "engine": [
+            103,
+            111,
+            111,
+            103,
+            108,
+            101
+          ],
+          "category": [
+            103,
+            101,
+            110,
+            101,
+            114,
+            97,
+            108
+          ]
+        }
+      ],
+      "direct_lxml": {
+        "root": "div",
+        "text": "\u00e9A",
+        "text_codepoints": [
+          233,
+          65
+        ]
+      }
+    },
+    {
+      "id": "surrogate_raw_unicode_escape_title_high_astral",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=raw_unicode_escape"
+          },
+          "body_hex": "3c64697620636c6173733d2267223e3c6120687265663d2268747470733a2f2f78223e3c68333e5c553030303166363030415c7564383030423c2f68333e3c2f613e3c2f6469763e"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [
+          {
+            "url": "https://x",
+            "title": "\ud83d\ude00A",
+            "content": "",
+            "engine": "google",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        100,
+        105,
+        118,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        103,
+        34,
+        62,
+        60,
+        97,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        34,
+        62,
+        60,
+        104,
+        51,
+        62,
+        128512,
+        65,
+        55296,
+        66,
+        60,
+        47,
+        104,
+        51,
+        62,
+        60,
+        47,
+        97,
+        62,
+        60,
+        47,
+        100,
+        105,
+        118,
+        62
+      ],
+      "result_string_codepoints": [
+        {
+          "url": [
+            104,
+            116,
+            116,
+            112,
+            115,
+            58,
+            47,
+            47,
+            120
+          ],
+          "title": [
+            128512,
+            65
+          ],
+          "content": [],
+          "engine": [
+            103,
+            111,
+            111,
+            103,
+            108,
+            101
+          ],
+          "category": [
+            103,
+            101,
+            110,
+            101,
+            114,
+            97,
+            108
+          ]
+        }
+      ],
+      "direct_lxml": {
+        "root": "div",
+        "text": "\ud83d\ude00A",
+        "text_codepoints": [
+          128512,
+          65
+        ]
+      }
+    },
+    {
+      "id": "surrogate_raw_unicode_escape_url_high",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=raw_unicode_escape"
+          },
+          "body_hex": "3c64697620636c6173733d2267223e3c6120687265663d2268747470733a2f2f782f5c7564383030223e3c68333e583c2f68333e3c2f613e3c2f6469763e"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        100,
+        105,
+        118,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        103,
+        34,
+        62,
+        60,
+        97,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        47,
+        55296,
+        34,
+        62,
+        60,
+        104,
+        51,
+        62,
+        88,
+        60,
+        47,
+        104,
+        51,
+        62,
+        60,
+        47,
+        97,
+        62,
+        60,
+        47,
+        100,
+        105,
+        118,
+        62
+      ],
+      "result_string_codepoints": [],
+      "direct_lxml": {
+        "root": "div",
+        "text": "",
+        "text_codepoints": []
+      }
+    },
+    {
+      "id": "surrogate_raw_unicode_escape_image_alt_high",
+      "engine": "duckduckgo",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body_hex": "3c68746d6c2f3e",
+          "headers": {}
+        },
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=raw_unicode_escape"
+          },
+          "body_hex": "3c6120636c6173733d2274696c652220687265663d2268747470733a2f2f78223e3c696d67207372633d2268747470733a2f2f692220616c743d22415c756438303042223e3c2f613e"
+        }
+      ],
+      "categories": [
+        "images"
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://duckduckgo.com/",
+          "headers": {
+            "host": "duckduckgo.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9",
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "none",
+            "upgrade-insecure-requests": "1"
+          },
+          "body_hex": ""
+        },
+        {
+          "method": "POST",
+          "url": "https://html.duckduckgo.com/html/",
+          "headers": {
+            "host": "html.duckduckgo.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9",
+            "referer": "https://duckduckgo.com/",
+            "origin": "https://duckduckgo.com",
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "same-site",
+            "upgrade-insecure-requests": "1",
+            "content-length": "18",
+            "content-type": "application/x-www-form-urlencoded"
+          },
+          "body_hex": "713d712532417e266961723d696d61676573"
+        }
+      ],
+      "consumed_exchanges": [
+        0,
+        1
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [
+          {
+            "url": "https://x",
+            "title": "q*~",
+            "content": "",
+            "engine": "duckduckgo",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "images",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        97,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        116,
+        105,
+        108,
+        101,
+        34,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        34,
+        62,
+        60,
+        105,
+        109,
+        103,
+        32,
+        115,
+        114,
+        99,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        105,
+        34,
+        32,
+        97,
+        108,
+        116,
+        61,
+        34,
+        65,
+        55296,
+        66,
+        34,
+        62,
+        60,
+        47,
+        97,
+        62
+      ],
+      "result_string_codepoints": [
+        {
+          "url": [
+            104,
+            116,
+            116,
+            112,
+            115,
+            58,
+            47,
+            47,
+            120
+          ],
+          "title": [
+            113,
+            42,
+            126
+          ],
+          "content": [],
+          "engine": [
+            100,
+            117,
+            99,
+            107,
+            100,
+            117,
+            99,
+            107,
+            103,
+            111
+          ],
+          "category": [
+            105,
+            109,
+            97,
+            103,
+            101,
+            115
+          ]
+        }
+      ],
+      "direct_lxml": {
+        "root": "a",
+        "text": "",
+        "text_codepoints": []
+      }
+    },
+    {
+      "id": "surrogate_raw_unicode_escape_image_alt_high_astral",
+      "engine": "duckduckgo",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body_hex": "3c68746d6c2f3e",
+          "headers": {}
+        },
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=raw_unicode_escape"
+          },
+          "body_hex": "3c6120636c6173733d2274696c652220687265663d2268747470733a2f2f78223e3c696d67207372633d2268747470733a2f2f692220616c743d225c553030303166363030415c756438303042223e3c2f613e"
+        }
+      ],
+      "categories": [
+        "images"
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://duckduckgo.com/",
+          "headers": {
+            "host": "duckduckgo.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9",
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "none",
+            "upgrade-insecure-requests": "1"
+          },
+          "body_hex": ""
+        },
+        {
+          "method": "POST",
+          "url": "https://html.duckduckgo.com/html/",
+          "headers": {
+            "host": "html.duckduckgo.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9",
+            "referer": "https://duckduckgo.com/",
+            "origin": "https://duckduckgo.com",
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "same-site",
+            "upgrade-insecure-requests": "1",
+            "content-length": "18",
+            "content-type": "application/x-www-form-urlencoded"
+          },
+          "body_hex": "713d712532417e266961723d696d61676573"
+        }
+      ],
+      "consumed_exchanges": [
+        0,
+        1
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [
+          {
+            "url": "https://x",
+            "title": "q*~",
+            "content": "",
+            "engine": "duckduckgo",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "images",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        97,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        116,
+        105,
+        108,
+        101,
+        34,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        34,
+        62,
+        60,
+        105,
+        109,
+        103,
+        32,
+        115,
+        114,
+        99,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        105,
+        34,
+        32,
+        97,
+        108,
+        116,
+        61,
+        34,
+        128512,
+        65,
+        55296,
+        66,
+        34,
+        62,
+        60,
+        47,
+        97,
+        62
+      ],
+      "result_string_codepoints": [
+        {
+          "url": [
+            104,
+            116,
+            116,
+            112,
+            115,
+            58,
+            47,
+            47,
+            120
+          ],
+          "title": [
+            113,
+            42,
+            126
+          ],
+          "content": [],
+          "engine": [
+            100,
+            117,
+            99,
+            107,
+            100,
+            117,
+            99,
+            107,
+            103,
+            111
+          ],
+          "category": [
+            105,
+            109,
+            97,
+            103,
+            101,
+            115
+          ]
+        }
+      ],
+      "direct_lxml": {
+        "root": "a",
+        "text": "",
+        "text_codepoints": []
+      }
+    },
+    {
+      "id": "surrogate_unicode_escape_isolated_high",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=unicode_escape"
+          },
+          "body_hex": "5c7564383030"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [],
+        "status": "error",
+        "error_message": "Document is empty",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        55296
+      ],
+      "result_string_codepoints": [],
+      "direct_lxml": {
+        "exception_type": "ParserError",
+        "message": "Document is empty"
+      }
+    },
+    {
+      "id": "surrogate_unicode_escape_isolated_low",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=unicode_escape"
+          },
+          "body_hex": "5c7564633030"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [],
+        "status": "error",
+        "error_message": "Document is empty",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        56320
+      ],
+      "result_string_codepoints": [],
+      "direct_lxml": {
+        "exception_type": "ParserError",
+        "message": "Document is empty"
+      }
+    },
+    {
+      "id": "surrogate_unicode_escape_isolated_pair",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=unicode_escape"
+          },
+          "body_hex": "5c75643830305c7564633030"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        55296,
+        56320
+      ],
+      "result_string_codepoints": [],
+      "direct_lxml": {
+        "root": "span",
+        "text": "\ud800\udc00",
+        "text_codepoints": [
+          65536
+        ]
+      }
+    },
+    {
+      "id": "surrogate_unicode_escape_title_high",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=unicode_escape"
+          },
+          "body_hex": "3c64697620636c6173733d2267223e3c6120687265663d2268747470733a2f2f78223e3c68333e415c7564383030423c2f68333e3c2f613e3c7370616e20636c6173733d227374223e433c2f7370616e3e3c2f6469763e"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [
+          {
+            "url": "https://x",
+            "title": "A",
+            "content": "",
+            "engine": "google",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        100,
+        105,
+        118,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        103,
+        34,
+        62,
+        60,
+        97,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        34,
+        62,
+        60,
+        104,
+        51,
+        62,
+        65,
+        55296,
+        66,
+        60,
+        47,
+        104,
+        51,
+        62,
+        60,
+        47,
+        97,
+        62,
+        60,
+        115,
+        112,
+        97,
+        110,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        115,
+        116,
+        34,
+        62,
+        67,
+        60,
+        47,
+        115,
+        112,
+        97,
+        110,
+        62,
+        60,
+        47,
+        100,
+        105,
+        118,
+        62
+      ],
+      "result_string_codepoints": [
+        {
+          "url": [
+            104,
+            116,
+            116,
+            112,
+            115,
+            58,
+            47,
+            47,
+            120
+          ],
+          "title": [
+            65
+          ],
+          "content": [],
+          "engine": [
+            103,
+            111,
+            111,
+            103,
+            108,
+            101
+          ],
+          "category": [
+            103,
+            101,
+            110,
+            101,
+            114,
+            97,
+            108
+          ]
+        }
+      ],
+      "direct_lxml": {
+        "root": "div",
+        "text": "A",
+        "text_codepoints": [
+          65
+        ]
+      }
+    },
+    {
+      "id": "surrogate_unicode_escape_title_low",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=unicode_escape"
+          },
+          "body_hex": "3c64697620636c6173733d2267223e3c6120687265663d2268747470733a2f2f78223e3c68333e415c7564633030423c2f68333e3c2f613e3c7370616e20636c6173733d227374223e433c2f7370616e3e3c2f6469763e"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [
+          {
+            "url": "https://x",
+            "title": "A",
+            "content": "",
+            "engine": "google",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        100,
+        105,
+        118,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        103,
+        34,
+        62,
+        60,
+        97,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        34,
+        62,
+        60,
+        104,
+        51,
+        62,
+        65,
+        56320,
+        66,
+        60,
+        47,
+        104,
+        51,
+        62,
+        60,
+        47,
+        97,
+        62,
+        60,
+        115,
+        112,
+        97,
+        110,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        115,
+        116,
+        34,
+        62,
+        67,
+        60,
+        47,
+        115,
+        112,
+        97,
+        110,
+        62,
+        60,
+        47,
+        100,
+        105,
+        118,
+        62
+      ],
+      "result_string_codepoints": [
+        {
+          "url": [
+            104,
+            116,
+            116,
+            112,
+            115,
+            58,
+            47,
+            47,
+            120
+          ],
+          "title": [
+            65
+          ],
+          "content": [],
+          "engine": [
+            103,
+            111,
+            111,
+            103,
+            108,
+            101
+          ],
+          "category": [
+            103,
+            101,
+            110,
+            101,
+            114,
+            97,
+            108
+          ]
+        }
+      ],
+      "direct_lxml": {
+        "root": "div",
+        "text": "A",
+        "text_codepoints": [
+          65
+        ]
+      }
+    },
+    {
+      "id": "surrogate_unicode_escape_title_pair",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=unicode_escape"
+          },
+          "body_hex": "3c64697620636c6173733d2267223e3c6120687265663d2268747470733a2f2f78223e3c68333e415c75643830305c7564633030423c2f68333e3c2f613e3c2f6469763e"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [
+          {
+            "url": "https://x",
+            "title": "A\ud800\udc00B",
+            "content": "",
+            "engine": "google",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        100,
+        105,
+        118,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        103,
+        34,
+        62,
+        60,
+        97,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        34,
+        62,
+        60,
+        104,
+        51,
+        62,
+        65,
+        55296,
+        56320,
+        66,
+        60,
+        47,
+        104,
+        51,
+        62,
+        60,
+        47,
+        97,
+        62,
+        60,
+        47,
+        100,
+        105,
+        118,
+        62
+      ],
+      "result_string_codepoints": [
+        {
+          "url": [
+            104,
+            116,
+            116,
+            112,
+            115,
+            58,
+            47,
+            47,
+            120
+          ],
+          "title": [
+            65,
+            65536,
+            66
+          ],
+          "content": [],
+          "engine": [
+            103,
+            111,
+            111,
+            103,
+            108,
+            101
+          ],
+          "category": [
+            103,
+            101,
+            110,
+            101,
+            114,
+            97,
+            108
+          ]
+        }
+      ],
+      "direct_lxml": {
+        "root": "div",
+        "text": "A\ud800\udc00B",
+        "text_codepoints": [
+          65,
+          65536,
+          66
+        ]
+      }
+    },
+    {
+      "id": "surrogate_unicode_escape_title_high_bmp",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=unicode_escape"
+          },
+          "body_hex": "3c64697620636c6173733d2267223e3c6120687265663d2268747470733a2f2f78223e3c68333e5c786539415c7564383030423c2f68333e3c2f613e3c2f6469763e"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [
+          {
+            "url": "https://x",
+            "title": "\u00e9A",
+            "content": "",
+            "engine": "google",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        100,
+        105,
+        118,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        103,
+        34,
+        62,
+        60,
+        97,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        34,
+        62,
+        60,
+        104,
+        51,
+        62,
+        233,
+        65,
+        55296,
+        66,
+        60,
+        47,
+        104,
+        51,
+        62,
+        60,
+        47,
+        97,
+        62,
+        60,
+        47,
+        100,
+        105,
+        118,
+        62
+      ],
+      "result_string_codepoints": [
+        {
+          "url": [
+            104,
+            116,
+            116,
+            112,
+            115,
+            58,
+            47,
+            47,
+            120
+          ],
+          "title": [
+            233,
+            65
+          ],
+          "content": [],
+          "engine": [
+            103,
+            111,
+            111,
+            103,
+            108,
+            101
+          ],
+          "category": [
+            103,
+            101,
+            110,
+            101,
+            114,
+            97,
+            108
+          ]
+        }
+      ],
+      "direct_lxml": {
+        "root": "div",
+        "text": "\u00e9A",
+        "text_codepoints": [
+          233,
+          65
+        ]
+      }
+    },
+    {
+      "id": "surrogate_unicode_escape_title_high_astral",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=unicode_escape"
+          },
+          "body_hex": "3c64697620636c6173733d2267223e3c6120687265663d2268747470733a2f2f78223e3c68333e5c553030303166363030415c7564383030423c2f68333e3c2f613e3c2f6469763e"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [
+          {
+            "url": "https://x",
+            "title": "\ud83d\ude00A",
+            "content": "",
+            "engine": "google",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        100,
+        105,
+        118,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        103,
+        34,
+        62,
+        60,
+        97,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        34,
+        62,
+        60,
+        104,
+        51,
+        62,
+        128512,
+        65,
+        55296,
+        66,
+        60,
+        47,
+        104,
+        51,
+        62,
+        60,
+        47,
+        97,
+        62,
+        60,
+        47,
+        100,
+        105,
+        118,
+        62
+      ],
+      "result_string_codepoints": [
+        {
+          "url": [
+            104,
+            116,
+            116,
+            112,
+            115,
+            58,
+            47,
+            47,
+            120
+          ],
+          "title": [
+            128512,
+            65
+          ],
+          "content": [],
+          "engine": [
+            103,
+            111,
+            111,
+            103,
+            108,
+            101
+          ],
+          "category": [
+            103,
+            101,
+            110,
+            101,
+            114,
+            97,
+            108
+          ]
+        }
+      ],
+      "direct_lxml": {
+        "root": "div",
+        "text": "\ud83d\ude00A",
+        "text_codepoints": [
+          128512,
+          65
+        ]
+      }
+    },
+    {
+      "id": "surrogate_unicode_escape_url_high",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=unicode_escape"
+          },
+          "body_hex": "3c64697620636c6173733d2267223e3c6120687265663d2268747470733a2f2f782f5c7564383030223e3c68333e583c2f68333e3c2f613e3c2f6469763e"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        100,
+        105,
+        118,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        103,
+        34,
+        62,
+        60,
+        97,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        47,
+        55296,
+        34,
+        62,
+        60,
+        104,
+        51,
+        62,
+        88,
+        60,
+        47,
+        104,
+        51,
+        62,
+        60,
+        47,
+        97,
+        62,
+        60,
+        47,
+        100,
+        105,
+        118,
+        62
+      ],
+      "result_string_codepoints": [],
+      "direct_lxml": {
+        "root": "div",
+        "text": "",
+        "text_codepoints": []
+      }
+    },
+    {
+      "id": "surrogate_unicode_escape_image_alt_high",
+      "engine": "duckduckgo",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body_hex": "3c68746d6c2f3e",
+          "headers": {}
+        },
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=unicode_escape"
+          },
+          "body_hex": "3c6120636c6173733d2274696c652220687265663d2268747470733a2f2f78223e3c696d67207372633d2268747470733a2f2f692220616c743d22415c756438303042223e3c2f613e"
+        }
+      ],
+      "categories": [
+        "images"
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://duckduckgo.com/",
+          "headers": {
+            "host": "duckduckgo.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9",
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "none",
+            "upgrade-insecure-requests": "1"
+          },
+          "body_hex": ""
+        },
+        {
+          "method": "POST",
+          "url": "https://html.duckduckgo.com/html/",
+          "headers": {
+            "host": "html.duckduckgo.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9",
+            "referer": "https://duckduckgo.com/",
+            "origin": "https://duckduckgo.com",
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "same-site",
+            "upgrade-insecure-requests": "1",
+            "content-length": "18",
+            "content-type": "application/x-www-form-urlencoded"
+          },
+          "body_hex": "713d712532417e266961723d696d61676573"
+        }
+      ],
+      "consumed_exchanges": [
+        0,
+        1
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [
+          {
+            "url": "https://x",
+            "title": "q*~",
+            "content": "",
+            "engine": "duckduckgo",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "images",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        97,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        116,
+        105,
+        108,
+        101,
+        34,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        34,
+        62,
+        60,
+        105,
+        109,
+        103,
+        32,
+        115,
+        114,
+        99,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        105,
+        34,
+        32,
+        97,
+        108,
+        116,
+        61,
+        34,
+        65,
+        55296,
+        66,
+        34,
+        62,
+        60,
+        47,
+        97,
+        62
+      ],
+      "result_string_codepoints": [
+        {
+          "url": [
+            104,
+            116,
+            116,
+            112,
+            115,
+            58,
+            47,
+            47,
+            120
+          ],
+          "title": [
+            113,
+            42,
+            126
+          ],
+          "content": [],
+          "engine": [
+            100,
+            117,
+            99,
+            107,
+            100,
+            117,
+            99,
+            107,
+            103,
+            111
+          ],
+          "category": [
+            105,
+            109,
+            97,
+            103,
+            101,
+            115
+          ]
+        }
+      ],
+      "direct_lxml": {
+        "root": "a",
+        "text": "",
+        "text_codepoints": []
+      }
+    },
+    {
+      "id": "surrogate_unicode_escape_image_alt_high_astral",
+      "engine": "duckduckgo",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body_hex": "3c68746d6c2f3e",
+          "headers": {}
+        },
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=unicode_escape"
+          },
+          "body_hex": "3c6120636c6173733d2274696c652220687265663d2268747470733a2f2f78223e3c696d67207372633d2268747470733a2f2f692220616c743d225c553030303166363030415c756438303042223e3c2f613e"
+        }
+      ],
+      "categories": [
+        "images"
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://duckduckgo.com/",
+          "headers": {
+            "host": "duckduckgo.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9",
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "none",
+            "upgrade-insecure-requests": "1"
+          },
+          "body_hex": ""
+        },
+        {
+          "method": "POST",
+          "url": "https://html.duckduckgo.com/html/",
+          "headers": {
+            "host": "html.duckduckgo.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9",
+            "referer": "https://duckduckgo.com/",
+            "origin": "https://duckduckgo.com",
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "same-site",
+            "upgrade-insecure-requests": "1",
+            "content-length": "18",
+            "content-type": "application/x-www-form-urlencoded"
+          },
+          "body_hex": "713d712532417e266961723d696d61676573"
+        }
+      ],
+      "consumed_exchanges": [
+        0,
+        1
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [
+          {
+            "url": "https://x",
+            "title": "q*~",
+            "content": "",
+            "engine": "duckduckgo",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "images",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        97,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        116,
+        105,
+        108,
+        101,
+        34,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        34,
+        62,
+        60,
+        105,
+        109,
+        103,
+        32,
+        115,
+        114,
+        99,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        105,
+        34,
+        32,
+        97,
+        108,
+        116,
+        61,
+        34,
+        128512,
+        65,
+        55296,
+        66,
+        34,
+        62,
+        60,
+        47,
+        97,
+        62
+      ],
+      "result_string_codepoints": [
+        {
+          "url": [
+            104,
+            116,
+            116,
+            112,
+            115,
+            58,
+            47,
+            47,
+            120
+          ],
+          "title": [
+            113,
+            42,
+            126
+          ],
+          "content": [],
+          "engine": [
+            100,
+            117,
+            99,
+            107,
+            100,
+            117,
+            99,
+            107,
+            103,
+            111
+          ],
+          "category": [
+            105,
+            109,
+            97,
+            103,
+            101,
+            115
+          ]
+        }
+      ],
+      "direct_lxml": {
+        "root": "a",
+        "text": "",
+        "text_codepoints": []
+      }
+    },
+    {
+      "id": "surrogate_punycode_isolated_high",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=punycode"
+          },
+          "body_hex": "69623962"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [],
+        "status": "error",
+        "error_message": "Document is empty",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        55296
+      ],
+      "result_string_codepoints": [],
+      "direct_lxml": {
+        "exception_type": "ParserError",
+        "message": "Document is empty"
+      }
+    },
+    {
+      "id": "surrogate_punycode_isolated_low",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=punycode"
+          },
+          "body_hex": "72343962"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [],
+        "status": "error",
+        "error_message": "Document is empty",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        56320
+      ],
+      "result_string_codepoints": [],
+      "direct_lxml": {
+        "exception_type": "ParserError",
+        "message": "Document is empty"
+      }
+    },
+    {
+      "id": "surrogate_punycode_isolated_pair",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=punycode"
+          },
+          "body_hex": "69623962363665"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        55296,
+        56320
+      ],
+      "result_string_codepoints": [],
+      "direct_lxml": {
+        "root": "span",
+        "text": "\ud800\udc00",
+        "text_codepoints": [
+          65536
+        ]
+      }
+    },
+    {
+      "id": "surrogate_punycode_title_high",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=punycode"
+          },
+          "body_hex": "3c64697620636c6173733d2267223e3c6120687265663d2268747470733a2f2f78223e3c68333e41423c2f68333e3c2f613e3c7370616e20636c6173733d227374223e433c2f7370616e3e3c2f6469763e2d353536303861"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [
+          {
+            "url": "https://x",
+            "title": "A",
+            "content": "",
+            "engine": "google",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        100,
+        105,
+        118,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        103,
+        34,
+        62,
+        60,
+        97,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        34,
+        62,
+        60,
+        104,
+        51,
+        62,
+        65,
+        55296,
+        66,
+        60,
+        47,
+        104,
+        51,
+        62,
+        60,
+        47,
+        97,
+        62,
+        60,
+        115,
+        112,
+        97,
+        110,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        115,
+        116,
+        34,
+        62,
+        67,
+        60,
+        47,
+        115,
+        112,
+        97,
+        110,
+        62,
+        60,
+        47,
+        100,
+        105,
+        118,
+        62
+      ],
+      "result_string_codepoints": [
+        {
+          "url": [
+            104,
+            116,
+            116,
+            112,
+            115,
+            58,
+            47,
+            47,
+            120
+          ],
+          "title": [
+            65
+          ],
+          "content": [],
+          "engine": [
+            103,
+            111,
+            111,
+            103,
+            108,
+            101
+          ],
+          "category": [
+            103,
+            101,
+            110,
+            101,
+            114,
+            97,
+            108
+          ]
+        }
+      ],
+      "direct_lxml": {
+        "root": "div",
+        "text": "A",
+        "text_codepoints": [
+          65
+        ]
+      }
+    },
+    {
+      "id": "surrogate_punycode_title_low",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=punycode"
+          },
+          "body_hex": "3c64697620636c6173733d2267223e3c6120687265663d2268747470733a2f2f78223e3c68333e41423c2f68333e3c2f613e3c7370616e20636c6173733d227374223e433c2f7370616e3e3c2f6469763e2d387035373861"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [
+          {
+            "url": "https://x",
+            "title": "A",
+            "content": "",
+            "engine": "google",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        100,
+        105,
+        118,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        103,
+        34,
+        62,
+        60,
+        97,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        34,
+        62,
+        60,
+        104,
+        51,
+        62,
+        65,
+        56320,
+        66,
+        60,
+        47,
+        104,
+        51,
+        62,
+        60,
+        47,
+        97,
+        62,
+        60,
+        115,
+        112,
+        97,
+        110,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        115,
+        116,
+        34,
+        62,
+        67,
+        60,
+        47,
+        115,
+        112,
+        97,
+        110,
+        62,
+        60,
+        47,
+        100,
+        105,
+        118,
+        62
+      ],
+      "result_string_codepoints": [
+        {
+          "url": [
+            104,
+            116,
+            116,
+            112,
+            115,
+            58,
+            47,
+            47,
+            120
+          ],
+          "title": [
+            65
+          ],
+          "content": [],
+          "engine": [
+            103,
+            111,
+            111,
+            103,
+            108,
+            101
+          ],
+          "category": [
+            103,
+            101,
+            110,
+            101,
+            114,
+            97,
+            108
+          ]
+        }
+      ],
+      "direct_lxml": {
+        "root": "div",
+        "text": "A",
+        "text_codepoints": [
+          65
+        ]
+      }
+    },
+    {
+      "id": "surrogate_punycode_title_pair",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=punycode"
+          },
+          "body_hex": "3c64697620636c6173733d2267223e3c6120687265663d2268747470733a2f2f78223e3c68333e41423c2f68333e3c2f613e3c2f6469763e2d676231387736773664"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [
+          {
+            "url": "https://x",
+            "title": "A\ud800\udc00B",
+            "content": "",
+            "engine": "google",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        100,
+        105,
+        118,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        103,
+        34,
+        62,
+        60,
+        97,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        34,
+        62,
+        60,
+        104,
+        51,
+        62,
+        65,
+        55296,
+        56320,
+        66,
+        60,
+        47,
+        104,
+        51,
+        62,
+        60,
+        47,
+        97,
+        62,
+        60,
+        47,
+        100,
+        105,
+        118,
+        62
+      ],
+      "result_string_codepoints": [
+        {
+          "url": [
+            104,
+            116,
+            116,
+            112,
+            115,
+            58,
+            47,
+            47,
+            120
+          ],
+          "title": [
+            65,
+            65536,
+            66
+          ],
+          "content": [],
+          "engine": [
+            103,
+            111,
+            111,
+            103,
+            108,
+            101
+          ],
+          "category": [
+            103,
+            101,
+            110,
+            101,
+            114,
+            97,
+            108
+          ]
+        }
+      ],
+      "direct_lxml": {
+        "root": "div",
+        "text": "A\ud800\udc00B",
+        "text_codepoints": [
+          65,
+          65536,
+          66
+        ]
+      }
+    },
+    {
+      "id": "surrogate_punycode_title_high_bmp",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=punycode"
+          },
+          "body_hex": "3c64697620636c6173733d2267223e3c6120687265663d2268747470733a2f2f78223e3c68333e41423c2f68333e3c2f613e3c2f6469763e2d65366539363734303361"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [
+          {
+            "url": "https://x",
+            "title": "\u00e9A",
+            "content": "",
+            "engine": "google",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        100,
+        105,
+        118,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        103,
+        34,
+        62,
+        60,
+        97,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        34,
+        62,
+        60,
+        104,
+        51,
+        62,
+        233,
+        65,
+        55296,
+        66,
+        60,
+        47,
+        104,
+        51,
+        62,
+        60,
+        47,
+        97,
+        62,
+        60,
+        47,
+        100,
+        105,
+        118,
+        62
+      ],
+      "result_string_codepoints": [
+        {
+          "url": [
+            104,
+            116,
+            116,
+            112,
+            115,
+            58,
+            47,
+            47,
+            120
+          ],
+          "title": [
+            233,
+            65
+          ],
+          "content": [],
+          "engine": [
+            103,
+            111,
+            111,
+            103,
+            108,
+            101
+          ],
+          "category": [
+            103,
+            101,
+            110,
+            101,
+            114,
+            97,
+            108
+          ]
+        }
+      ],
+      "direct_lxml": {
+        "root": "div",
+        "text": "\u00e9A",
+        "text_codepoints": [
+          233,
+          65
+        ]
+      }
+    },
+    {
+      "id": "surrogate_punycode_title_high_astral",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=punycode"
+          },
+          "body_hex": "3c64697620636c6173733d2267223e3c6120687265663d2268747470733a2f2f78223e3c68333e41423c2f68333e3c2f613e3c2f6469763e2d67623138776c7337303662"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [
+          {
+            "url": "https://x",
+            "title": "\ud83d\ude00A",
+            "content": "",
+            "engine": "google",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        100,
+        105,
+        118,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        103,
+        34,
+        62,
+        60,
+        97,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        34,
+        62,
+        60,
+        104,
+        51,
+        62,
+        128512,
+        65,
+        55296,
+        66,
+        60,
+        47,
+        104,
+        51,
+        62,
+        60,
+        47,
+        97,
+        62,
+        60,
+        47,
+        100,
+        105,
+        118,
+        62
+      ],
+      "result_string_codepoints": [
+        {
+          "url": [
+            104,
+            116,
+            116,
+            112,
+            115,
+            58,
+            47,
+            47,
+            120
+          ],
+          "title": [
+            128512,
+            65
+          ],
+          "content": [],
+          "engine": [
+            103,
+            111,
+            111,
+            103,
+            108,
+            101
+          ],
+          "category": [
+            103,
+            101,
+            110,
+            101,
+            114,
+            97,
+            108
+          ]
+        }
+      ],
+      "direct_lxml": {
+        "root": "div",
+        "text": "\ud83d\ude00A",
+        "text_codepoints": [
+          128512,
+          65
+        ]
+      }
+    },
+    {
+      "id": "surrogate_punycode_url_high",
+      "engine": "google",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=punycode"
+          },
+          "body_hex": "3c64697620636c6173733d2267223e3c6120687265663d2268747470733a2f2f782f223e3c68333e583c2f68333e3c2f613e3c2f6469763e2d3939303877"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://www.google.com/search?q=q%2A~&hl=en&num=10",
+          "headers": {
+            "host": "www.google.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "body_hex": ""
+        }
+      ],
+      "consumed_exchanges": [
+        0
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        100,
+        105,
+        118,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        103,
+        34,
+        62,
+        60,
+        97,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        47,
+        55296,
+        34,
+        62,
+        60,
+        104,
+        51,
+        62,
+        88,
+        60,
+        47,
+        104,
+        51,
+        62,
+        60,
+        47,
+        97,
+        62,
+        60,
+        47,
+        100,
+        105,
+        118,
+        62
+      ],
+      "result_string_codepoints": [],
+      "direct_lxml": {
+        "root": "div",
+        "text": "",
+        "text_codepoints": []
+      }
+    },
+    {
+      "id": "surrogate_punycode_image_alt_high",
+      "engine": "duckduckgo",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body_hex": "3c68746d6c2f3e",
+          "headers": {}
+        },
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=punycode"
+          },
+          "body_hex": "3c6120636c6173733d2274696c652220687265663d2268747470733a2f2f78223e3c696d67207372633d2268747470733a2f2f692220616c743d224142223e3c2f613e2d6a7036373161"
+        }
+      ],
+      "categories": [
+        "images"
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://duckduckgo.com/",
+          "headers": {
+            "host": "duckduckgo.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9",
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "none",
+            "upgrade-insecure-requests": "1"
+          },
+          "body_hex": ""
+        },
+        {
+          "method": "POST",
+          "url": "https://html.duckduckgo.com/html/",
+          "headers": {
+            "host": "html.duckduckgo.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9",
+            "referer": "https://duckduckgo.com/",
+            "origin": "https://duckduckgo.com",
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "same-site",
+            "upgrade-insecure-requests": "1",
+            "content-length": "18",
+            "content-type": "application/x-www-form-urlencoded"
+          },
+          "body_hex": "713d712532417e266961723d696d61676573"
+        }
+      ],
+      "consumed_exchanges": [
+        0,
+        1
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [
+          {
+            "url": "https://x",
+            "title": "q*~",
+            "content": "",
+            "engine": "duckduckgo",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "images",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        97,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        116,
+        105,
+        108,
+        101,
+        34,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        34,
+        62,
+        60,
+        105,
+        109,
+        103,
+        32,
+        115,
+        114,
+        99,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        105,
+        34,
+        32,
+        97,
+        108,
+        116,
+        61,
+        34,
+        65,
+        55296,
+        66,
+        34,
+        62,
+        60,
+        47,
+        97,
+        62
+      ],
+      "result_string_codepoints": [
+        {
+          "url": [
+            104,
+            116,
+            116,
+            112,
+            115,
+            58,
+            47,
+            47,
+            120
+          ],
+          "title": [
+            113,
+            42,
+            126
+          ],
+          "content": [],
+          "engine": [
+            100,
+            117,
+            99,
+            107,
+            100,
+            117,
+            99,
+            107,
+            103,
+            111
+          ],
+          "category": [
+            105,
+            109,
+            97,
+            103,
+            101,
+            115
+          ]
+        }
+      ],
+      "direct_lxml": {
+        "root": "a",
+        "text": "",
+        "text_codepoints": []
+      }
+    },
+    {
+      "id": "surrogate_punycode_image_alt_high_astral",
+      "engine": "duckduckgo",
+      "query": "q*~",
+      "max_results": 10,
+      "exchanges": [
+        {
+          "status": 200,
+          "body_hex": "3c68746d6c2f3e",
+          "headers": {}
+        },
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "text/html; charset=punycode"
+          },
+          "body_hex": "3c6120636c6173733d2274696c652220687265663d2268747470733a2f2f78223e3c696d67207372633d2268747470733a2f2f692220616c743d224142223e3c2f613e2d6a7036373161633238363263"
+        }
+      ],
+      "categories": [
+        "images"
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://duckduckgo.com/",
+          "headers": {
+            "host": "duckduckgo.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9",
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "none",
+            "upgrade-insecure-requests": "1"
+          },
+          "body_hex": ""
+        },
+        {
+          "method": "POST",
+          "url": "https://html.duckduckgo.com/html/",
+          "headers": {
+            "host": "html.duckduckgo.com",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.9",
+            "referer": "https://duckduckgo.com/",
+            "origin": "https://duckduckgo.com",
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "same-site",
+            "upgrade-insecure-requests": "1",
+            "content-length": "18",
+            "content-type": "application/x-www-form-urlencoded"
+          },
+          "body_hex": "713d712532417e266961723d696d61676573"
+        }
+      ],
+      "consumed_exchanges": [
+        0,
+        1
+      ],
+      "resolved_config": {
+        "enabled": true,
+        "max_results": 10,
+        "timeout_ms": 5000
+      },
+      "exception_metadata": [],
+      "expected": {
+        "results": [
+          {
+            "url": "https://x",
+            "title": "q*~",
+            "content": "",
+            "engine": "duckduckgo",
+            "engines": [],
+            "score": 0.0,
+            "position": 1,
+            "category": "images",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "tier": 1,
+            "media": null,
+            "payload": null,
+            "work_group": null
+          }
+        ],
+        "status": "ok",
+        "error_message": null,
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      },
+      "decoded_codepoints": [
+        60,
+        97,
+        32,
+        99,
+        108,
+        97,
+        115,
+        115,
+        61,
+        34,
+        116,
+        105,
+        108,
+        101,
+        34,
+        32,
+        104,
+        114,
+        101,
+        102,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        120,
+        34,
+        62,
+        60,
+        105,
+        109,
+        103,
+        32,
+        115,
+        114,
+        99,
+        61,
+        34,
+        104,
+        116,
+        116,
+        112,
+        115,
+        58,
+        47,
+        47,
+        105,
+        34,
+        32,
+        97,
+        108,
+        116,
+        61,
+        34,
+        128512,
+        65,
+        55296,
+        66,
+        34,
+        62,
+        60,
+        47,
+        97,
+        62
+      ],
+      "result_string_codepoints": [
+        {
+          "url": [
+            104,
+            116,
+            116,
+            112,
+            115,
+            58,
+            47,
+            47,
+            120
+          ],
+          "title": [
+            113,
+            42,
+            126
+          ],
+          "content": [],
+          "engine": [
+            100,
+            117,
+            99,
+            107,
+            100,
+            117,
+            99,
+            107,
+            103,
+            111
+          ],
+          "category": [
+            105,
+            109,
+            97,
+            103,
+            101,
+            115
+          ]
+        }
+      ],
+      "direct_lxml": {
+        "root": "a",
+        "text": "",
+        "text_codepoints": []
+      }
+    }
+  ]
+}

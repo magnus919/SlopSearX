@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "kind": "actual manual offline source executions in optimized mode; stdout bytes JSON-wrapped; never invoked by native gate",
+  "python": "3.14.7",
+  "unicode": "16.0.0",
+  "records": [
+    {
+      "producer_path": "docs/rust-rewrite/a09/oracle/export_source.py",
+      "producer_sha256": "eef0d23f5ad62e7cbf04dae25628b44ae89e8d9d25ea4e0414ca400aa508eb7e",
+      "command": [
+        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+        "-O",
+        "/Users/magnus/.codex/worktrees/rust-a09-media-adapters/SlopSearX/docs/rust-rewrite/a09/oracle/export_source.py"
+      ],
+      "start_utc": "2026-10-17T01:50:14.228725+00:00",
+      "end_utc": "2026-10-17T01:50:14.509266+00:00",
+      "exit_code": 0,
+      "wall_time_seconds": 0.27966950001427904,
+      "stdout_path": "docs/rust-rewrite/a09/evidence/export_source.py.optimized-output.json",
+      "stdout_sha256": "fc14ac6ad3e8547cda2a9b7df7ab0c60d2e7cdc72133ace92257f023b1a5a964",
+      "raw_stdout_sha256": "89fcc63008a6770747da52d6855d841e08229542e18737bb81175b60c63754a3",
+      "outputs": [
+        {
+          "path": "docs/rust-rewrite/a09/source.json",
+          "sha256": "9a7c1e17ac900e9afef00dd4ef98402977bad42fd3b3d7e53ff26fa828fcbb87"
+        }
+      ]
+    },
+    {
+      "producer_path": "docs/rust-rewrite/a09/oracle/export_regressions.py",
+      "producer_sha256": "181891f1a87dbe9d8d6ef148d7e7349800a0001b349b2e9d8e5260bdcbf117b2",
+      "command": [
+        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+        "-O",
+        "/Users/magnus/.codex/worktrees/rust-a09-media-adapters/SlopSearX/docs/rust-rewrite/a09/oracle/export_regressions.py"
+      ],
+      "start_utc": "2026-10-17T01:50:14.509557+00:00",
+      "end_utc": "2026-10-17T01:50:15.695302+00:00",
+      "exit_code": 0,
+      "wall_time_seconds": 1.1853919169516303,
+      "stdout_path": "docs/rust-rewrite/a09/evidence/export_regressions.py.optimized-output.json",
+      "stdout_sha256": "5d7d7ec77cd987442050ae2ca17ef7359cc6dcf61fc2c67ea215b538270e8db6",
+      "raw_stdout_sha256": "44dd947e731818f59f0c9eac98d439fca7b2fd5bf5841e25aa57e246be727583",
+      "outputs": [
+        {
+          "path": "docs/rust-rewrite/a09/regressions.json",
+          "sha256": "db6e77d08a31556c76a4386bdaaf9e994fff94bdf3c1275eb23724efe02b6839"
+        }
+      ]
+    },
+    {
+      "producer_path": "docs/rust-rewrite/a09/oracle/export_word.py",
+      "producer_sha256": "ab2975e01f5e8480a59b90efc3d45cca82be593828f0d6cca659b8e4b832035b",
+      "command": [
+        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+        "-O",
+        "/Users/magnus/.codex/worktrees/rust-a09-media-adapters/SlopSearX/docs/rust-rewrite/a09/oracle/export_word.py"
+      ],
+      "start_utc": "2026-10-17T01:50:15.695453+00:00",
+      "end_utc": "2026-10-17T01:50:15.956311+00:00",
+      "exit_code": 0,
+      "wall_time_seconds": 0.26059929199982435,
+      "stdout_path": "docs/rust-rewrite/a09/evidence/export_word.py.optimized-output.json",
+      "stdout_sha256": "75aadcf7917ebe985c68246874cfd4934594a75dfb7c0d73d075d317264352d0",
+      "raw_stdout_sha256": "3d87e7cf5bee98c77640fcd6fa1b10ce7b89230266b881c0f881f064b1c1fbd5",
+      "outputs": [
+        {
+          "path": "docs/rust-rewrite/a09/word16.json",
+          "sha256": "6acf4940b68d7342baea613bb8857c570c7da4b3c9ff825c82ea69147ceffbb3"
+        }
+      ]
+    },
+    {
+      "producer_path": "docs/rust-rewrite/a09/oracle/export_timeouts.py",
+      "producer_sha256": "82e43ccfc759d769f9909a6267f06b675c8087d4e210765c46c18d177345c3ad",
+      "command": [
+        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+        "-O",
+        "/Users/magnus/.codex/worktrees/rust-a09-media-adapters/SlopSearX/docs/rust-rewrite/a09/oracle/export_timeouts.py"
+      ],
+      "start_utc": "2026-10-17T01:50:15.956412+00:00",
+      "end_utc": "2026-10-17T01:50:16.870708+00:00",
+      "exit_code": 0,
+      "wall_time_seconds": 0.9136050419765525,
+      "stdout_path": "docs/rust-rewrite/a09/evidence/export_timeouts.py.optimized-output.json",
+      "stdout_sha256": "6096c52822d03aa35c7d588cd1fb1d4719fb85d37adac65612d97064dcb5b725",
+      "raw_stdout_sha256": "b8465ad76b1da6be6ef0fc6157e7d4e39f3b17d1d50703f39f6c3a64bc5b522e",
+      "outputs": [
+        {
+          "path": "docs/rust-rewrite/a09/timeouts.json",
+          "sha256": "e7946ece1707b5cde64bb1274a76b846ab2b413d4a9614659e468b6ed22f3aa3"
+        }
+      ]
+    }
+  ]
+}

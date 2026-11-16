@@ -219,6 +219,7 @@ class SearchResponse:
     cached_error: bool = False
     ranking_explanation: str = "tier_then_cross_engine_presence"
     dispatched_engine_count: int = 0
+    date_filter: dict[str, Any] | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -756,10 +757,22 @@ class SearchService:
         except DateFilterError as exc:
             raise QueryValidationError(str(exc), exc.field) from exc
 
+        bounded = request.date_from is not None or request.date_to is not None
+        if bounded and request.time_range is not None:
+            raise QueryValidationError("absolute dates cannot be combined with time_range", "time_range")
+        if bounded and (request.engines != ["openalex"] or request.media_type is not None):
+            raise QueryValidationError("absolute dates require explicit engines=['openalex']", "engines")
+
         # MCP may have resolved this exact request already for fail-closed
         # filter checks. Reuse its decision so one search cannot make two
         # billable Jev calls or dispatch a scope different from its gate.
         scope = resolved_scope if resolved_scope is not None else await self.resolve_scope(request)
+        if bounded:
+            if scope.selected_engines != ["openalex"]:
+                raise QueryValidationError("audited date scope is unavailable", "engines")
+            for name in ("date_from", "date_to"):
+                if engine_filter_layer(self._ctx.active_engines.get("openalex"), name) != "upstream":
+                    raise QueryValidationError("selected adapter does not enforce publication dates", "engines")
         if request.safesearch == 2:
             safe_report = resolve_filter_enforcement(
                 scope.selected_engines,
@@ -1136,6 +1149,7 @@ class SearchService:
             empty_engines=empty_engines,
             ranking_explanation=effective_ranking,
             dispatched_engine_count=len(started_engines),
+            date_filter=publication_date_proof(request, scope),
         )
 
         if not deadline_exceeded and rerank_status != "fallback":
@@ -1218,6 +1232,9 @@ class SearchService:
 
         try:
             response = search_response_from_payload(payload)
+            if request.date_from is not None or request.date_to is not None:
+                if response.date_filter != publication_date_proof(request, response.scope):
+                    return None  # Pre-contract cache entries cannot establish date enforcement.
             response.cached = True
             # The stored entry is canonical; derive the current caller's view.
             response = self._view_for_request(request, response)
@@ -1591,6 +1608,21 @@ def _scope_cache_key(request: SearchRequest, routing_digest: str) -> str:
     return f"{base}:{routing_digest}{budget}{suggestions}"
 
 
+def publication_date_proof(request: SearchRequest, scope: ScopeDecision) -> dict[str, Any] | None:
+    """Proof for the absolute-date scope admitted by the shared pre-dispatch gate."""
+    if request.date_from is None and request.date_to is None:
+        return None
+    return {
+        "requested": {"date_from": request.date_from, "date_to": request.date_to, "time_range": None},
+        "applied": {"date_from": request.date_from, "date_to": request.date_to},
+        "status": "enforced",
+        "reason": "Publication dates enforced by the audited OpenAlex adapter.",
+        "enforced_by": ["upstream:openalex"],
+        "engines": list(scope.selected_engines),
+        "warnings": [],
+    }
+
+
 def build_response_meta(response: SearchResponse) -> dict[str, Any]:
     """Build the SearXNG-compatible ``meta.*`` extension dict from a response."""
     meta: dict[str, Any] = {
@@ -1606,6 +1638,8 @@ def build_response_meta(response: SearchResponse) -> dict[str, Any]:
             for outcome in response.engine_outcomes
         },
     }
+    if response.date_filter is not None:
+        meta["date_filter"] = response.date_filter
     meta["partial"] = response.partial
     meta["deadline_exceeded"] = response.deadline_exceeded
     if response.scope.jev_added_engines:
@@ -1703,6 +1737,7 @@ def search_response_to_payload(response: SearchResponse) -> dict[str, Any]:
         "corrections": list(response.corrections),
         "infoboxes": _json_safe(response.infoboxes),
         "query_id": response.query_id,
+        "date_filter": response.date_filter,
         "cached": False,
         "ranking_explanation": response.ranking_explanation,
         "response_time_ms": response.response_time_ms,
@@ -1760,6 +1795,7 @@ def search_response_from_payload(payload: dict[str, Any]) -> SearchResponse:
         cached_error=bool(payload.get("cached_error", False)),
         ranking_explanation=str(payload.get("ranking_explanation", "tier_then_cross_engine_presence")),
         dispatched_engine_count=int(payload.get("dispatched_engine_count", 0)),
+        date_filter=payload.get("date_filter"),
     )
 
 

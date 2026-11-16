@@ -1,0 +1,153 @@
+"""Optional original-only A11 YAML entry reachability oracle; never native runtime."""
+
+from __future__ import annotations
+
+# ruff: noqa: E402 -- explicit grant/network/source guards precede backend imports
+import argparse
+import sys
+import unicodedata
+from pathlib import Path
+
+p = argparse.ArgumentParser()
+p.add_argument("--allow-original-oracle", action="store_true")
+p.add_argument("--repo", required=True)
+p.add_argument("--inputs", required=True)
+p.add_argument("--output", required=True)
+a = p.parse_args()
+if not a.allow_original_oracle:
+    raise RuntimeError("explicit original-oracle grant required before backend imports")
+if sys.version_info[:3] != (3, 14, 7) or unicodedata.unidata_version != "16.0.0":
+    raise RuntimeError("Python3.14.7/Unicode16 required before backend imports")
+output = Path(a.output)
+if output.exists():
+    raise FileExistsError("exclusive original output already exists before backend imports")
+root = Path(a.repo).resolve()
+if root != Path("/Volumes/tank01/magnus/git/slopsearx-a11"):
+    raise RuntimeError("isolated A11 worktree required before backend imports")
+import socket
+
+network_attempts = []
+
+
+def denied(*args, **kwargs):
+    network_attempts.append("denied")
+    raise RuntimeError("A11 config oracle denies all real network/DNS")
+
+
+socket.socket.connect = denied
+socket.socket.connect_ex = denied
+socket.socket.sendto = denied
+socket.create_connection = denied
+socket.getaddrinfo = denied
+import os
+
+os.environ.clear()
+os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
+sys.dont_write_bytecode = True
+import asyncio
+import dataclasses
+import hashlib
+import json
+import tempfile
+
+
+def sha(data):
+    return hashlib.sha256(data).hexdigest()
+
+
+expected_source = {
+    "engines/abuseipdb.py": "2b48ec5b688a9cc6fb1aa50e5e82a655681b0a760f19e1310952ccaa04828eff",
+    "tests/test_abuseipdb.py": "3fad36a9b2e5089e61c82c0a66ffd7c6bf84e08dd43493e42b3e754890467435",
+    "engines/greynoise.py": "53c810ca4b9ea38567ca19e1494f1997381bf16120be2fce62f3a1aa977cea6a",
+    "tests/test_greynoise.py": "58b934915ac86f05eecd36b57b541a3667285bf6964aa8053b28be9585c2025a",
+    "engines/otx.py": "4d2e242594689530b1e615cee83181505834e13d289cb83746ca7b7fe4129b79",
+    "tests/test_otx.py": "0d5860db9048a3c26013c310f78aa7397dd97a6de1ae627b0711c48bac6b27cd",
+    "engines/urlhaus.py": "71fae6869a6487c3aeb0c7f9f7cc68ca9a2883ec4bce2e647499028f913f36ac",
+    "tests/test_urlhaus.py": "71ebdfaf63bcb672bf7d15ef9ca9c523d5312c4e785e1fd50ee111cb2b683a24",
+    "slopsearx/adapter.py": "5883a35c48d0dad1077306fbda21997ee1d32116a8c03633a6b762de0c26d6f3",
+    "tests/test_adapters.py": "0f5fdc19df84214e5a6422437686d41def5f9e9827ad8dfc8ca8ee8b2ad10454",
+    "slopsearx/config.py": "1cf76b8732439782342a9d217fb2f7c423f688533f287dbf78729a1defc5236e",
+    "slopsearx/service.py": "45903193ef89987f7be83c1e593e44b7752251a54eb8719eae15a241840102ac",
+}
+input_path = Path(a.inputs).resolve()
+if sha(input_path.read_bytes()) != "b5776302740cb88b97cfbd61aeab3389221caf68e2dfaf946c5a2c256fb2a7b2":
+    raise RuntimeError("frozen synthetic inputs changed")
+inputs = json.loads(input_path.read_text())
+before = {name: sha((root / name).read_bytes()) for name in expected_source}
+if before != expected_source:
+    raise RuntimeError("frozen original source changed before backend imports")
+stream = output.open("x", encoding="utf-8")
+sys.path.insert(0, str(root))
+# Retain audited backend import order after all guards.
+# isort: off
+from slopsearx.config import load_config
+from slopsearx.service import _normalize_engine_configs
+from engines.otx import OTXAdapter
+
+# isort: on
+
+
+async def main():
+    records = []
+    with tempfile.TemporaryDirectory(prefix="a11-synthetic-yaml-", dir="/private/tmp") as directory:
+        for case in inputs["cases"]:
+            path = Path(directory) / "config.yaml"
+            path.write_text(case["yaml"], encoding="utf-8")
+            config = load_config(path)
+            loaded = config.engines["otx"].max_results
+            as_dict = {name: dataclasses.asdict(entry) for name, entry in config.engines.items()}
+            normalized = _normalize_engine_configs(as_dict)
+            adapter = OTXAdapter(normalized["otx"])
+            try:
+                values = [
+                    loaded,
+                    as_dict["otx"]["max_results"],
+                    normalized["otx"]["max_results"],
+                    adapter.config["max_results"],
+                ]
+                if any(
+                    type(value) is not type(case["expected_value"]) or value != case["expected_value"]
+                    for value in values
+                ):
+                    raise RuntimeError("actual load/asdict/normalizer/OTX configuration changed raw value")
+                record = {
+                    "id": case["id"],
+                    "yaml": case["yaml"],
+                    "loaded_type": type(loaded).__name__,
+                    "loaded_max_results": loaded,
+                    "asdict_max_results": as_dict["otx"]["max_results"],
+                    "normalized_max_results": normalized["otx"]["max_results"],
+                    "otx_object_config": adapter.config,
+                    "search_performed": False,
+                }
+            finally:
+                await adapter.shutdown()
+            record["adapter_shutdown_joined"] = True
+            records.append(record)
+    return records
+
+
+try:
+    records = asyncio.run(main())
+    after = {name: sha((root / name).read_bytes()) for name in expected_source}
+    if before != after or network_attempts:
+        raise RuntimeError("source changed or actual network/DNS was attempted")
+    result = {
+        "schema_version": 1,
+        "purpose": "Original YAML entry reachability only; not request/slicing/native parity",
+        "python": sys.version,
+        "unicode": unicodedata.unidata_version,
+        "producer_sha256": sha(Path(__file__).read_bytes()),
+        "source_sha256": before,
+        "source_inputs_unchanged": True,
+        "input_sha256": sha(input_path.read_bytes()),
+        "operator_environment_isolated": True,
+        "real_network_allowed": False,
+        "network_attempts": network_attempts,
+        "records": records,
+    }
+    json.dump(result, stream, ensure_ascii=True, allow_nan=False, indent=2)
+    stream.write("\n")
+finally:
+    stream.close()
+print(json.dumps({"records": len(records), "output_sha256": sha(output.read_bytes())}))

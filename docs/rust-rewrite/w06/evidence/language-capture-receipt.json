@@ -1,0 +1,19 @@
+{
+  "plan_id": "W06",
+  "command": [
+    "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+    "-O",
+    "/private/tmp/w06-language-source-capture.py"
+  ],
+  "exit_code": 0,
+  "stdout": "[\n  {\n    \"id\": \"language.null\",\n    \"plan_accepted\": true,\n    \"admission_error\": null,\n    \"record_state\": \"completed\",\n    \"exception\": null,\n    \"fixture_calls\": 1\n  },\n  {\n    \"id\": \"language.bool\",\n    \"plan_accepted\": true,\n    \"admission_error\": null,\n    \"record_state\": \"completed\",\n    \"exception\": null,\n    \"fixture_calls\": 1\n  },\n  {\n    \"id\": \"language.integer\",\n    \"plan_accepted\": true,\n    \"admission_error\": null,\n    \"record_state\": \"completed\",\n    \"exception\": null,\n    \"fixture_calls\": 1\n  },\n  {\n    \"id\": \"language.list\",\n    \"plan_accepted\": true,\n    \"admission_error\": null,\n    \"record_state\": \"completed\",\n    \"exception\": null,\n    \"fixture_calls\": 1\n  },\n  {\n    \"id\": \"language.map\",\n    \"plan_accepted\": true,\n    \"admission_error\": null,\n    \"record_state\": \"completed\",\n    \"exception\": null,\n    \"fixture_calls\": 1\n  }\n]\n",
+  "stderr": "",
+  "producer_sha256": "46cf840c30c1d36b0a69bcd20d71b96b693a54069cd721ef86f06ca59f179722",
+  "producer_copy": "docs/rust-rewrite/w06/evidence/language-source-producer.source.txt",
+  "source_sha256": "0f4931fb02c53f706b56bdcd6c4d9d76e28b72da63ecad9c42980aa001e3ccd4",
+  "repeated_capture_identical": true,
+  "provider_calls": 0,
+  "retirement_owner": "G08",
+  "native_runtime_dependency": false,
+  "mandatory_gate_dependency": false
+}

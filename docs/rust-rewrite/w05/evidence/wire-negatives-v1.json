@@ -1,0 +1,58 @@
+{
+  "controls": [
+    {
+      "name": "whole-batch-parser-reversion",
+      "path": "crates/ssx-infra/src/saved_events/mod.rs",
+      "before_sha256": "31634472ea798937dc2c112bac6d7e66795da7afaf676da4123ebb2099f78a9d",
+      "mutant_sha256": "5b0fb1507d8fa2d830e1ded6919c0fdb3c9cddd0942cc0e99418b7eea45dd95f",
+      "watchdog_seconds": 75,
+      "watchdog_fired": false,
+      "cargo_pid": 52963,
+      "exit_code": 101,
+      "log_sha256": "6b52ebf28145f21af12cf3a93c9674e28bcfc2de6e3e5ce2ae2e0f23375cc071",
+      "observed_parser_panic": true,
+      "observed_request_failure": true,
+      "rejection": "observed causal semantic assertion; watchdog alone is not proof",
+      "restored_sha256": "31634472ea798937dc2c112bac6d7e66795da7afaf676da4123ebb2099f78a9d",
+      "exact_restoration": true,
+      "remaining_new_fixture_dirs": [],
+      "archived_log": "wire-negative-whole-batch-parser-reversion-v1.log.json"
+    },
+    {
+      "name": "default-4m-output-profile-reversion",
+      "path": "crates/ssx-mcp/src/saved_events.rs",
+      "before_sha256": "0f7be6d305d142ac21f029590c738b8f94c29cfc3aff5a54aecc2df675f6185d",
+      "mutant_sha256": "24822d5f3d594175ca1f178625fab14a61ec53c8aa709a07febcca1895336d87",
+      "watchdog_seconds": 75,
+      "watchdog_fired": false,
+      "cargo_pid": 53764,
+      "exit_code": 101,
+      "log_sha256": "34c02acfe06afd55d56e54c1926461de5de51bf9b327b54ee208c25bd6ee6c26",
+      "observed_assertion": true,
+      "rejection": "observed causal semantic assertion; watchdog alone is not proof",
+      "restored_sha256": "0f7be6d305d142ac21f029590c738b8f94c29cfc3aff5a54aecc2df675f6185d",
+      "exact_restoration": true,
+      "remaining_new_fixture_dirs": [],
+      "archived_log": "wire-negative-default-4m-output-profile-reversion-v1.log.json"
+    },
+    {
+      "name": "lossy-unmarked-sdk-structured-value-reversion",
+      "path": "crates/ssx-mcp/src/saved_events.rs",
+      "before_sha256": "0f7be6d305d142ac21f029590c738b8f94c29cfc3aff5a54aecc2df675f6185d",
+      "mutant_sha256": "c5b2fcb375ae1745cc0cb5f9d2f0f9ea0271966f851c00ec5187075b0553d0b0",
+      "watchdog_seconds": 75,
+      "watchdog_fired": false,
+      "cargo_pid": 53940,
+      "exit_code": 101,
+      "log_sha256": "efccfda8e6dc73c208f7deb2bc86c321c9be1741c3ad242da434c91fdc601af8",
+      "observed_assertion": true,
+      "rejection": "observed causal semantic assertion; watchdog alone is not proof",
+      "restored_sha256": "0f7be6d305d142ac21f029590c738b8f94c29cfc3aff5a54aecc2df675f6185d",
+      "exact_restoration": true,
+      "remaining_new_fixture_dirs": [],
+      "archived_log": "wire-negative-lossy-unmarked-sdk-structured-value-reversion-v1.log.json"
+    }
+  ],
+  "provider_calls": 0,
+  "current_sources_restored": true
+}

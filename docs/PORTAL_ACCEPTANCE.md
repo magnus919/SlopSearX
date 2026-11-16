@@ -43,6 +43,15 @@ separately in `meta.response_time_ms`.
 | Input response | ≤ 100 ms p95 for theme, focus, and disclosure interactions |
 | Search handoff | Browser overhead ≤ 150 ms p95 after the response is available |
 
+T03 measures input response inside the browser, from the trusted input event's
+timestamp until the expected theme, disclosure, or focus state is present and has
+had a rendering opportunity across two animation-frame callbacks. This is a
+browser-frame response proxy, not precise INP or physical-paint measurement.
+Playwright actionability waits and driver round trips are retained as diagnostics,
+not included in the portal response budget. All four samples are retained; with
+four samples nearest-rank p95 is the maximum. Each run verifies fast and deliberately
+slow handlers and rejects absent input, absent state changes, and untrusted input.
+
 These are budgets for the portal layer, not a promise about third-party engine
 latency. A budget exception requires a measured reason and a follow-up issue.
 

@@ -1,0 +1,70 @@
+{
+  "schema": "slopsearx.a07.explicit-pubchem-budget-control.v1",
+  "original_source_path": "crates/ssx-infra/tests/a07_biomedical.rs",
+  "original_source_git_blob": "07bb139b52c3e52ca8be08013157688eb933459f",
+  "original_source_sha256": "2b719303be43fbd6d2a15836888f617de57757b227d913d97ccddadb81079811",
+  "original_archive_path": "docs/rust-rewrite/a07/source-amendments/pubchem-independent-budget-original-v1.json",
+  "original_archive_sha256": "25418d4e67381955d14275e37f9c52b2eafde81c3ee372ca2473017d73f52f96",
+  "source_snapshot_sha256": "9b5d53ac758a746439337693e4742197485ae96c7cfad7fab2f35a56b58bf180",
+  "integration_obligation": "Original19names retained. Edited first case now immediate functional200/200 with unchanged500ms config and unchangedOk/two-results/two-requests assertions; second-stage404Error/empty/two-requests case unchanged.",
+  "owner_clock_obligation": "Mandatory private real-pool same-Manual-owner control: first actual headers0; release first at300; second actual headers300; hold at500Pending; release second at600; Ok/two-results/two ordered actual requests.500ms budget unchanged.",
+  "original_integration19": [
+    "clinicaltrials_preserves_request_and_full_normalization",
+    "europepmc_lite_preserves_attribution_preprints_and_payload",
+    "pubchem_two_stage_request_count_order_and_compound_fallback",
+    "pubmed_two_stage_success_and_complete_payload",
+    "uniprot_simple_gene_overfetch_and_content",
+    "valid_empty_and_schema_failure_never_fabricate_results",
+    "all_engines_classify_http_failures_and_timeout",
+    "admission_denial_precedes_invalid_configuration_and_dispatch",
+    "pubmed_aggregate_deadline_bounds_second_request",
+    "pubmed_missing_first_summary_preserves_position_and_all_authors",
+    "dropping_each_adapter_search_closes_the_active_socket",
+    "pubchem_second_stage_has_independent_timeout_and_404_is_error",
+    "pubmed_invalid_timeout_settings_dispatch_nothing",
+    "uniprot_exact_gene_identifier_and_stable_overfetch_promotion",
+    "europepmc_skips_incomplete_records_and_parses_source_dates_without_claiming_filters",
+    "resolved_yaml_environment_scalars_reach_engine_specific_semantics",
+    "pubmed_both_stage_http_and_summary_schema_regressions",
+    "local_denial_has_source_diagnostic_and_zero_transport_exchanges",
+    "uniprot_default_window_preserves_all_related_records_and_species_ties"
+  ],
+  "original_resource17": [
+    "adapters::clinicaltrials::resource_tests::actual_adapter_payload_controls_preserve_full_results_and_later_source_error_precedence",
+    "adapters::clinicaltrials::resource_tests::all_eight_prepared_bodies_fit_candidate_quota_and_transfer_without_cloning",
+    "adapters::clinicaltrials::resource_tests::tiny_quota_is_terminal_error_and_never_partial_success",
+    "adapters::clinicaltrials::resource_tests::same_root_quota_is_not_reset_per_row_or_payload_field",
+    "adapters::clinicaltrials::resource_tests::dropping_real_large_inner_loop_futures_releases_all_scratch_and_batch_charges",
+    "adapters::clinicaltrials::resource_tests::dropping_actual_payload_projection_after_live_allocation_releases_ownership",
+    "adapters::clinicaltrials::resource_tests::actual_payload_projection_obeys_absolute_context_after_source_rows_finish",
+    "adapters::clinicaltrials::resource_tests::source_decode_context_is_enforced_after_network_completion_for_all_five",
+    "adapters::clinicaltrials::resource_tests::byte_resource_bound_remains_independent_of_generous_row_budget",
+    "adapters::clinicaltrials::resource_tests::source_repr_profiles_match_legacy_with_charged_cooperative_output",
+    "adapters::clinicaltrials::resource_tests::legacy_direct_normalization_does_not_reuse_expired_network_timer",
+    "adapters::clinicaltrials::resource_tests::five_concurrent_realistic_operation_owners_have_explicit_aggregate_envelope",
+    "adapters::clinicaltrials::resource_tests::first_phase_row_scratch_quota_failure_precedes_any_payload_projection",
+    "adapters::clinicaltrials::resource_tests::source_sized_pubmed_error_text_keeps_charge_until_response_handoff",
+    "adapters::clinicaltrials::resource_tests::actual_pubchem_cid_reference_parts_yield_and_release_before_second_dispatch",
+    "adapters::clinicaltrials::resource_tests::provider_sized_med_digit_scan_and_uniprot_partition_observe_deadline_and_drop",
+    "adapters::clinicaltrials::resource_tests::complete_result_normalizer_exposes_actual_nonempty_media"
+  ],
+  "private_control": {
+    "package": "ssx-infra",
+    "target": "lib",
+    "qualified_name": "adapters::clinicaltrials::resource_tests::pubchem_second_request_renews_500ms_budget_on_the_same_manual_owner"
+  },
+  "candidate_sources": [
+    {
+      "path": "crates/ssx-infra/tests/a07_biomedical.rs",
+      "sha256": "6197dc61021719257105ce255b981ccbb95a2ed5fe60cbff67e891f3b2d0cf9a",
+      "bytes": 30369
+    },
+    {
+      "path": "crates/ssx-infra/tests/support/a07_resources.rs",
+      "sha256": "4c4fb9750de167dc458837cbddf3212aa9d60580c4265180f65d10e497b5faa7",
+      "bytes": 37892
+    }
+  ],
+  "frozen_source_captures": "All original A07 ARTIFACTS/cases/coverage/provider capture bytes remain unchanged. Only explicit new native-test source archive/amendment is added.",
+  "runtime_status": "UNAPPLIED_UNCOMPILED_UNRUN; milestones are intended assertions, not actual measurements."
+}

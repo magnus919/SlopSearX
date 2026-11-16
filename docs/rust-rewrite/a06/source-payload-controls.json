@@ -1,0 +1,398 @@
+{
+  "source_artifact_sha256": "fe7593e1c308f1c64f3b1ac261d256058a6cabc77f63fa5ae378b2648ae50ebc",
+  "scope": "Derived actual CPython payload helper controls; not whole adapter observations. Tagged codepoints preserve raw surrogate identity.",
+  "sources": [
+    {
+      "path": "slopsearx/payload.py",
+      "sha256": "a44a95655566f9fadaf62da1bab8c975f71f3ead6c3cc57f48c411a9c093c40d",
+      "git_blob": "efa149d48bae401f7a0a9df6e50c8c614adecbb5"
+    },
+    {
+      "path": "engines/europepmc.py",
+      "sha256": "c8811e83b2117eb53011e96a8e9462a30462da43bebb6a8cea6cb7a8dc702dbf",
+      "git_blob": "f1c026cca5fab094e77e7658ef69edebbe3ea7e3"
+    }
+  ],
+  "toolchain": {
+    "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+    "executable": "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+    "platform": "macOS-27.0-arm64-arm-64bit-Mach-O"
+  },
+  "records": [
+    {
+      "id": "doi_lone_surrogate",
+      "expected_data_json": "{\"publication_id\":\"1\",\"source\":\"MED\",\"doi\":\"\ufffd\"}",
+      "expected_adapter_fields": [
+        "publication_id",
+        "source",
+        "doi"
+      ],
+      "tagged_input": {
+        "type": "dict",
+        "items": [
+          [
+            {
+              "type": "str",
+              "codepoints": [
+                112,
+                117,
+                98,
+                108,
+                105,
+                99,
+                97,
+                116,
+                105,
+                111,
+                110,
+                95,
+                105,
+                100
+              ]
+            },
+            {
+              "type": "str",
+              "codepoints": [
+                49
+              ]
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "codepoints": [
+                115,
+                111,
+                117,
+                114,
+                99,
+                101
+              ]
+            },
+            {
+              "type": "str",
+              "codepoints": [
+                77,
+                69,
+                68
+              ]
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "codepoints": [
+                100,
+                111,
+                105
+              ]
+            },
+            {
+              "type": "str",
+              "codepoints": [
+                55296
+              ]
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "nested_keys_null_false_zero",
+      "expected_data_json": "{\"publication_id\":\"1\",\"doi\":{\"x\ufffd\":[\"\ufffd\",null,false,0]}}",
+      "expected_adapter_fields": [
+        "publication_id",
+        "doi"
+      ],
+      "tagged_input": {
+        "type": "dict",
+        "items": [
+          [
+            {
+              "type": "str",
+              "codepoints": [
+                112,
+                117,
+                98,
+                108,
+                105,
+                99,
+                97,
+                116,
+                105,
+                111,
+                110,
+                95,
+                105,
+                100
+              ]
+            },
+            {
+              "type": "str",
+              "codepoints": [
+                49
+              ]
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "codepoints": [
+                100,
+                111,
+                105
+              ]
+            },
+            {
+              "type": "dict",
+              "items": [
+                [
+                  {
+                    "type": "str",
+                    "codepoints": [
+                      120,
+                      55296
+                    ]
+                  },
+                  {
+                    "type": "list",
+                    "items": [
+                      {
+                        "type": "str",
+                        "codepoints": [
+                          57343
+                        ]
+                      },
+                      {
+                        "type": "NoneType",
+                        "value": null
+                      },
+                      {
+                        "type": "bool",
+                        "value": false
+                      },
+                      {
+                        "type": "int",
+                        "value": 0
+                      }
+                    ]
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "sanitized_key_collision_order",
+      "expected_data_json": "{\"doi\":{\"x\ufffd\":\"last\",\"middle\":null},\"empty\":[],\"false\":false,\"zero\":0}",
+      "expected_adapter_fields": [
+        "doi",
+        "empty",
+        "false",
+        "zero"
+      ],
+      "tagged_input": {
+        "type": "dict",
+        "items": [
+          [
+            {
+              "type": "str",
+              "codepoints": [
+                100,
+                111,
+                105
+              ]
+            },
+            {
+              "type": "dict",
+              "items": [
+                [
+                  {
+                    "type": "str",
+                    "codepoints": [
+                      120,
+                      55296
+                    ]
+                  },
+                  {
+                    "type": "str",
+                    "codepoints": [
+                      102,
+                      105,
+                      114,
+                      115,
+                      116
+                    ]
+                  }
+                ],
+                [
+                  {
+                    "type": "str",
+                    "codepoints": [
+                      109,
+                      105,
+                      100,
+                      100,
+                      108,
+                      101
+                    ]
+                  },
+                  {
+                    "type": "NoneType",
+                    "value": null
+                  }
+                ],
+                [
+                  {
+                    "type": "str",
+                    "codepoints": [
+                      120,
+                      65533
+                    ]
+                  },
+                  {
+                    "type": "str",
+                    "codepoints": [
+                      108,
+                      97,
+                      115,
+                      116
+                    ]
+                  }
+                ]
+              ]
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "codepoints": [
+                101,
+                109,
+                112,
+                116,
+                121
+              ]
+            },
+            {
+              "type": "list",
+              "items": []
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "codepoints": [
+                102,
+                97,
+                108,
+                115,
+                101
+              ]
+            },
+            {
+              "type": "bool",
+              "value": false
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "codepoints": [
+                122,
+                101,
+                114,
+                111
+              ]
+            },
+            {
+              "type": "int",
+              "value": 0
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "codepoints": [
+                100,
+                114,
+                111,
+                112
+              ]
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "paired_scalar_vs_separate_surrogates",
+      "expected_data_json": "{\"doi\":[\"\ud83d\ude42\",\"\ufffd\ufffd\"]}",
+      "expected_adapter_fields": [
+        "doi"
+      ],
+      "tagged_input": {
+        "type": "dict",
+        "items": [
+          [
+            {
+              "type": "str",
+              "codepoints": [
+                100,
+                111,
+                105
+              ]
+            },
+            {
+              "type": "list",
+              "items": [
+                {
+                  "type": "str",
+                  "codepoints": [
+                    128578
+                  ]
+                },
+                {
+                  "type": "str",
+                  "codepoints": [
+                    55357,
+                    56898
+                  ]
+                }
+              ]
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "depth-99",
+      "expected_data_json": "{\"doi\":[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[\"leaf\"]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}",
+      "expected_adapter_fields": [
+        "doi"
+      ],
+      "list_depth": 98
+    },
+    {
+      "id": "depth-100",
+      "expected_data_json": "{\"doi\":[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[\"leaf\"]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}",
+      "expected_adapter_fields": [
+        "doi"
+      ],
+      "list_depth": 99
+    },
+    {
+      "id": "depth-101",
+      "expected_data_json": "{\"doi\":[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[\"<max depth exceeded>\"]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}",
+      "expected_adapter_fields": [
+        "doi"
+      ],
+      "list_depth": 100
+    }
+  ]
+}

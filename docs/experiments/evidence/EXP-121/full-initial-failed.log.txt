@@ -1,0 +1,143 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.11, pytest-9.0.3, pluggy-1.6.0 -- /Volumes/tank01/magnus/git/SlopSearX/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /private/tmp/slopsearx-daily-20261013
+configfile: pyproject.toml
+plugins: cov-7.1.0, asyncio-1.4.0, anyio-4.13.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 3 items
+
+tests/test_adaptive_transport.py::test_adaptive_research_journey PASSED  [ 33%]
+tests/test_adaptive_transport.py::test_budget_exhaustion_completion_replays_over_mcp_transport PASSED [ 66%]
+tests/test_adaptive_transport.py::test_exact_query_cap_completion_over_mcp_transport PASSED [100%]
+
+=============================== warnings summary ===============================
+tests/test_adaptive_transport.py::test_adaptive_research_journey
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pydantic_settings/sources/utils.py:47: IncompleteFieldDefinitionWarning: Field 'lifespan' has an incomplete definition: its annotation contains an unresolved forward reference, so settings sources may fail to correctly resolve its value. Call `model_rebuild()` on the model where the field is defined, once all the referenced types are defined.
+    warnings.warn(
+
+tests/test_adaptive_transport.py::test_adaptive_research_journey
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/websockets/legacy/__init__.py:6: DeprecationWarning: websockets.legacy is deprecated; see https://websockets.readthedocs.io/en/stable/howto/upgrade.html for upgrade instructions
+    warnings.warn(  # deprecated in 14.0 - 2024-11-09
+
+tests/test_adaptive_transport.py::test_adaptive_research_journey
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/uvicorn/protocols/websockets/websockets_impl.py:17: DeprecationWarning: websockets.server.WebSocketServerProtocol is deprecated
+    from websockets.server import WebSocketServerProtocol
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 3 passed, 3 warnings in 4.98s =========================
+============================= test session starts ==============================
+platform darwin -- Python 3.12.11, pytest-9.0.3, pluggy-1.6.0 -- /Volumes/tank01/magnus/git/SlopSearX/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /private/tmp/slopsearx-daily-20261013
+configfile: pyproject.toml
+plugins: cov-7.1.0, asyncio-1.4.0, anyio-4.13.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+tests/test_entity_transport.py::test_entity_view_preserves_cached_flat_results PASSED [100%]
+
+=============================== warnings summary ===============================
+tests/test_entity_transport.py::test_entity_view_preserves_cached_flat_results
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pydantic_settings/sources/utils.py:47: IncompleteFieldDefinitionWarning: Field 'lifespan' has an incomplete definition: its annotation contains an unresolved forward reference, so settings sources may fail to correctly resolve its value. Call `model_rebuild()` on the model where the field is defined, once all the referenced types are defined.
+    warnings.warn(
+
+tests/test_entity_transport.py::test_entity_view_preserves_cached_flat_results
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/websockets/legacy/__init__.py:6: DeprecationWarning: websockets.legacy is deprecated; see https://websockets.readthedocs.io/en/stable/howto/upgrade.html for upgrade instructions
+    warnings.warn(  # deprecated in 14.0 - 2024-11-09
+
+tests/test_entity_transport.py::test_entity_view_preserves_cached_flat_results
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/uvicorn/protocols/websockets/websockets_impl.py:17: DeprecationWarning: websockets.server.WebSocketServerProtocol is deprecated
+    from websockets.server import WebSocketServerProtocol
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 1 passed, 3 warnings in 1.40s =========================
+============================= test session starts ==============================
+platform darwin -- Python 3.12.11, pytest-9.0.3, pluggy-1.6.0 -- /Volumes/tank01/magnus/git/SlopSearX/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /private/tmp/slopsearx-daily-20261013
+configfile: pyproject.toml
+plugins: cov-7.1.0, asyncio-1.4.0, anyio-4.13.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 8 items
+
+tests/test_http_pooling.py::test_connection_reuse_probe 
+TCP accepts={'ephemeral': 20, 'pooled': 1}; local milliseconds (p50,p95)={'ephemeral': (9.228187500411877, 10.735500000009779), 'pooled': (0.7507500013161916, 2.0181250001769513)}
+PASSED           [ 12%]
+tests/test_http_pooling.py::test_sessions_isolate_cookies_and_injected_transport_ownership PASSED [ 25%]
+tests/test_http_pooling.py::test_proxy_pools_separate_bounded_and_closed PASSED [ 37%]
+tests/test_http_pooling.py::test_environment_proxy_fallback_preserves_httpx_resolution PASSED [ 50%]
+tests/test_http_pooling.py::test_no_proxy_alone_does_not_disable_pooling PASSED [ 62%]
+tests/test_http_pooling.py::test_explicit_tls_options_are_not_silently_ignored[options0] PASSED [ 75%]
+tests/test_http_pooling.py::test_explicit_tls_options_are_not_silently_ignored[options1] PASSED [ 87%]
+tests/test_http_pooling.py::test_explicit_pool_limits_are_forwarded PASSED [100%]
+
+============================== 8 passed in 0.46s ===============================
+============================= test session starts ==============================
+platform darwin -- Python 3.12.11, pytest-9.0.3, pluggy-1.6.0 -- /Volumes/tank01/magnus/git/SlopSearX/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /private/tmp/slopsearx-daily-20261013
+configfile: pyproject.toml
+plugins: cov-7.1.0, asyncio-1.4.0, anyio-4.13.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 24 items
+
+tests/test_mcp_gateway.py::TestGateway::test_dynamic_proxy_registration_preserves_remote_schema PASSED [  4%]
+tests/test_mcp_gateway.py::TestGateway::test_gateway_proxies_tools_and_resources FAILED [  8%]
+tests/test_mcp_gateway.py::TestGateway::test_gateway_rejects_wrong_token PASSED [ 12%]
+tests/test_mcp_gateway.py::test_gateway_structured_results_and_legacy_precedence[structured0-One reading lead.-False-expected0] PASSED [ 16%]
+tests/test_mcp_gateway.py::test_gateway_structured_results_and_legacy_precedence[structured1-{"display": "summary"}-False-expected1] PASSED [ 20%]
+tests/test_mcp_gateway.py::test_gateway_structured_results_and_legacy_precedence[structured2-None-False-expected2] PASSED [ 25%]
+tests/test_mcp_gateway.py::test_gateway_structured_results_and_legacy_precedence[structured3-No reading leads.-False-expected3] PASSED [ 29%]
+tests/test_mcp_gateway.py::test_gateway_structured_results_and_legacy_precedence[None-{"count": 1}-False-expected4] PASSED [ 33%]
+tests/test_mcp_gateway.py::test_gateway_structured_results_and_legacy_precedence[None-Unstructured note.-False-expected5] PASSED [ 37%]
+tests/test_mcp_gateway.py::test_gateway_structured_results_and_legacy_precedence[None-None-False-expected6] PASSED [ 41%]
+tests/test_mcp_gateway.py::test_gateway_structured_results_and_legacy_precedence[structured7-Remote rejected request.-True-expected7] PASSED [ 45%]
+tests/test_mcp_gateway.py::TestCatalogPagination::test_follows_pages_including_empty_cursor[nextCursor] PASSED [ 50%]
+tests/test_mcp_gateway.py::TestCatalogPagination::test_follows_pages_including_empty_cursor[next_cursor] PASSED [ 54%]
+tests/test_mcp_gateway.py::TestCatalogPagination::test_broken_catalog_rejected[cursor] PASSED [ 58%]
+tests/test_mcp_gateway.py::TestCatalogPagination::test_broken_catalog_rejected[duplicate] PASSED [ 62%]
+tests/test_mcp_gateway.py::TestCatalogPagination::test_broken_catalog_rejected[pages] PASSED [ 66%]
+tests/test_mcp_gateway.py::TestCatalogPagination::test_broken_catalog_rejected[tools] PASSED [ 70%]
+tests/test_mcp_gateway.py::TestCatalogPagination::test_broken_catalog_rejected[error] PASSED [ 75%]
+tests/test_mcp_gateway.py::TestCatalogPagination::test_empty_catalog PASSED [ 79%]
+tests/test_mcp_gateway.py::TestCatalogPagination::test_discovery_timeout_leaves_no_session_or_proxies PASSED [ 83%]
+tests/test_mcp_gateway.py::TestCatalogPagination::test_native_sdk_sends_followup_cursor PASSED [ 87%]
+tests/test_mcp_gateway.py::TestInputSchemaFidelity::test_complete_schema_and_nested_copy PASSED [ 91%]
+tests/test_mcp_gateway.py::TestInputSchemaFidelity::test_optional_schema_keeps_direct_registration_compatible PASSED [ 95%]
+tests/test_mcp_gateway.py::TestInputSchemaFidelity::test_nested_values_forwarded_unchanged PASSED [100%]
+
+=================================== FAILURES ===================================
+_____________ TestGateway.test_gateway_proxies_tools_and_resources _____________
+
+self = <tests.test_mcp_gateway.TestGateway object at 0x10a3a0080>
+remote_server = 61750
+
+    async def test_gateway_proxies_tools_and_resources(self, remote_server: Any) -> None:
+        url = f"http://127.0.0.1:{remote_server}/mcp"
+        gateway = create_gateway(url, token=TOKEN)
+        async with Client(url, auth=TOKEN) as direct:
+            remote_tools = {
+>               tool.name: _field(tool, "input_schema", "inputSchema") for tool in await direct.list_tools()
+                           ^^^^^^
+            }
+E           NameError: name '_field' is not defined
+
+tests/test_mcp_gateway.py:124: NameError
+=============================== warnings summary ===============================
+tests/test_mcp_gateway.py::TestGateway::test_gateway_proxies_tools_and_resources
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/pydantic_settings/sources/utils.py:47: IncompleteFieldDefinitionWarning: Field 'lifespan' has an incomplete definition: its annotation contains an unresolved forward reference, so settings sources may fail to correctly resolve its value. Call `model_rebuild()` on the model where the field is defined, once all the referenced types are defined.
+    warnings.warn(
+
+tests/test_mcp_gateway.py::TestGateway::test_gateway_proxies_tools_and_resources
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/websockets/legacy/__init__.py:6: DeprecationWarning: websockets.legacy is deprecated; see https://websockets.readthedocs.io/en/stable/howto/upgrade.html for upgrade instructions
+    warnings.warn(  # deprecated in 14.0 - 2024-11-09
+
+tests/test_mcp_gateway.py::TestGateway::test_gateway_proxies_tools_and_resources
+  /Volumes/tank01/magnus/git/SlopSearX/.venv/lib/python3.12/site-packages/uvicorn/protocols/websockets/websockets_impl.py:17: DeprecationWarning: websockets.server.WebSocketServerProtocol is deprecated
+    from websockets.server import WebSocketServerProtocol
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_mcp_gateway.py::TestGateway::test_gateway_proxies_tools_and_resources
+=================== 1 failed, 23 passed, 3 warnings in 2.18s ===================

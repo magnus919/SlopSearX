@@ -1,0 +1,170 @@
+# ruff: noqa: E402 -- source imports follow isolated checkout path binding
+"""Temporary offline migration oracle. F01 inventory; retire with G08.
+Executes pinned Python source only; imports no server and sends no network traffic.
+"""
+
+import importlib.util
+import json
+import sys
+from pathlib import Path
+
+root = Path(__file__).resolve().parents[3]
+spec = importlib.util.spec_from_file_location("source_metrics", root / "slopsearx/metrics.py")
+m = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = m
+spec.loader.exec_module(m)
+metrics = []
+for value in vars(m).values():
+    if isinstance(value, m._Metric):
+        metrics.append({"name": value.name, "help": value.help_text, "kind": value.type_name})
+cases = []
+h = m.Histogram("latency", "latency")
+for value in [0, 0.02, 0.5, 2, 90, float("nan"), float("inf"), -1]:
+    h.observe({"engine": "fixture"}, value)
+cases.append({"kind": "histogram", "render": h.render()})
+for workflow in m.WORKFLOW_KINDS:
+    m.record_workflow_accepted(workflow, "durable_leased")
+    m.record_workflow_terminal(workflow, "interrupted", 0.5)
+    m.record_workflow_rejection(workflow, "policy")
+for event in sorted(m.SAVED_EVENT_TYPES):
+    m.record_saved_event_publication(event)
+for outcome in sorted(m.SAVED_EVENT_READ_OUTCOMES):
+    m.record_saved_event_read(outcome, oldest_age_seconds=3)
+for outcome in sorted(m.SAVED_EVENT_ACK_OUTCOMES):
+    m.record_saved_event_ack(outcome)
+for resource in sorted(m.SAVED_EVENT_CAPACITY_RESOURCES):
+    m.record_saved_event_capacity(resource)
+for value in [
+    0.0,
+    -0.0,
+    1 / 3,
+    1.23456789,
+    1e-7,
+    1e-5,
+    1e-4,
+    999999.1,
+    1e20,
+    -0.000000123456789,
+    float("inf"),
+    float("-inf"),
+    float("nan"),
+]:
+    cases.append({"kind": "format_value", "input": repr(value), "render": m._format_val(value)})
+for cls in [m.Counter, m.Gauge, m.Histogram]:
+    metric = cls("ordered", "ordered")
+    for category in [chr(34), "A", chr(92), "B", chr(10)]:
+        getattr(metric, "inc" if cls is m.Counter else "set" if cls is m.Gauge else "observe")(
+            {"category": category}, 1 / 3
+        )
+    cases.append({"kind": "ordering", "metric_kind": metric.type_name, "render": metric.render()})
+import asyncio
+
+sys.path.insert(0, str(root))
+from types import SimpleNamespace
+
+import slopsearx.service as source_service
+from slopsearx.adapter import AdapterResponse, EngineStatus, SearchResult
+from slopsearx.audit import QueryAuditLogger
+from slopsearx.stats import EngineStatsTracker
+
+for status in EngineStatus:
+    instrument = SimpleNamespace(
+        engine_queries=m.Counter("slopsearx_engine_queries_total", "Total queries dispatched per engine"),
+        engine_errors=m.Counter(
+            "slopsearx_engine_errors_total", "Failed engine outcomes, excluding successful empty results"
+        ),
+        engine_latency=m.Histogram("slopsearx_engine_latency_seconds", "Query latency per engine in seconds"),
+        engine_status=m.Gauge("slopsearx_engine_status", "Engine status (0=ok, 1=degraded, 2=down)"),
+    )
+    source_service.m = instrument
+    source_service.SearchService._record_engine_metrics(
+        None, "fixture", AdapterResponse(results=[], status=status, latency_ms=12.7)
+    )
+    cases.append(
+        {
+            "kind": "engine_status",
+            "status": status.value,
+            "render": "".join(
+                getattr(instrument, name).render()
+                for name in ["engine_queries", "engine_errors", "engine_latency", "engine_status"]
+            ),
+        }
+    )
+
+
+class Pipeline:
+    def __init__(self, fail=False):
+        self.calls = []
+        self.fail = fail
+
+    def __getattr__(self, name):
+        def command(*args):
+            self.calls.append([name, *args])
+            return self
+
+        return command
+
+    async def execute(self):
+        if self.fail:
+            raise RuntimeError("secret failure must not escape")
+
+
+class Cache:
+    is_connected = True
+
+    def __init__(self, fail=False):
+        self._client = self
+        self.pipe = Pipeline(fail)
+
+    def pipeline(self):
+        return self.pipe
+
+
+async def capture():
+    cache = Cache()
+    audit = QueryAuditLogger(cache)
+    audit._stream_key = lambda: "query_audit:2026-10-16"
+    import slopsearx.audit as audit_module
+
+    audit_module._iso_timestamp = lambda: "2026-10-16T12:00:00.000Z"
+    await audit.record_query(
+        "raw query credential-looking text",
+        "192.0.2.12",
+        {
+            "fixture": AdapterResponse(
+                results=[
+                    SearchResult(url="https://example.invalid/", title="fixture", content="fixture", engine="fixture")
+                    for _ in range(4)
+                ],
+                status=EngineStatus.OK,
+            )
+        },
+        123.4,
+    )
+    cases.append({"kind": "audit_raw", "commands": cache.pipe.calls})
+    stats_cache = Cache()
+    stats = EngineStatsTracker(stats_cache)
+    stats._daily_key = lambda engine: f"engine_stats:{engine}:2026-10-16"
+    await stats.record_query("fixture", 4, 12.7, EngineStatus.OK, 0.75)
+    cases.append({"kind": "stats", "commands": stats_cache.pipe.calls})
+    await QueryAuditLogger(None).record_query("disabled", "none", {}, 0)
+    await QueryAuditLogger(Cache(True)).record_query("failed", "none", {}, 0)
+    cases.append({"kind": "audit_disabled_failed", "returned": True})
+
+
+asyncio.run(capture())
+print(
+    json.dumps(
+        {
+            "schema_version": 1,
+            "plan_id": "O01",
+            "source_commit": "1e9dd82d62456fe6f511cc5ade88bae619fac027",
+            "python": sys.version.split()[0],
+            "metrics": metrics,
+            "cases": cases,
+            "rendered": m.render_metrics(),
+        },
+        indent=2,
+        sort_keys=True,
+    )
+)

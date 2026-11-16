@@ -1,0 +1,1659 @@
+{
+  "baseline": "1f3f5bc85083f4fd24bd9a2b07f161626e6bfef5",
+  "dates": [
+    {
+      "end": null,
+      "expected": {
+        "contains": [
+          false,
+          true,
+          true,
+          false,
+          false
+        ]
+      },
+      "start": null
+    },
+    {
+      "end": "2024-03-01",
+      "expected": {
+        "contains": [
+          false,
+          true,
+          true,
+          false,
+          false
+        ]
+      },
+      "start": "2024-02-29"
+    },
+    {
+      "end": null,
+      "expected": {
+        "error": "date_from must be a valid YYYY-MM-DD calendar date",
+        "field": "date_from"
+      },
+      "start": "2023-02-29"
+    },
+    {
+      "end": null,
+      "expected": {
+        "error": "date_from must be a valid YYYY-MM-DD calendar date",
+        "field": "date_from"
+      },
+      "start": "20240101"
+    },
+    {
+      "end": "2026-01-01",
+      "expected": {
+        "error": "date_from must be on or before date_to",
+        "field": "date_from"
+      },
+      "start": "2026-02-02"
+    }
+  ],
+  "engines": [
+    {
+      "active": true,
+      "auth_ready": true,
+      "available": true,
+      "categories": [
+        "general"
+      ],
+      "circuit_open": false,
+      "cost_class": "free",
+      "enabled": true,
+      "enforced_filters": {
+        "language": "local",
+        "pagination": "upstream",
+        "time_range": "local"
+      },
+      "health_stale": false,
+      "health_status": "unknown",
+      "media_types": [
+        "image"
+      ],
+      "name": "alpha"
+    },
+    {
+      "active": true,
+      "auth_ready": true,
+      "available": true,
+      "categories": [
+        "science"
+      ],
+      "circuit_open": false,
+      "cost_class": "free",
+      "enabled": true,
+      "enforced_filters": {
+        "date_from": "upstream",
+        "date_to": "upstream",
+        "safesearch": "upstream",
+        "time_range": "upstream"
+      },
+      "health_stale": false,
+      "health_status": "unknown",
+      "media_types": [],
+      "name": "beta"
+    },
+    {
+      "active": true,
+      "auth_ready": true,
+      "available": true,
+      "categories": [
+        "general"
+      ],
+      "circuit_open": false,
+      "cost_class": "paid",
+      "enabled": true,
+      "enforced_filters": {},
+      "health_stale": false,
+      "health_status": "unknown",
+      "media_types": [],
+      "name": "paid"
+    },
+    {
+      "active": true,
+      "auth_ready": false,
+      "available": true,
+      "categories": [
+        "general"
+      ],
+      "circuit_open": false,
+      "cost_class": "free",
+      "enabled": true,
+      "enforced_filters": {},
+      "health_stale": false,
+      "health_status": "unknown",
+      "media_types": [],
+      "name": "auth"
+    },
+    {
+      "active": true,
+      "auth_ready": true,
+      "available": true,
+      "categories": [
+        "general"
+      ],
+      "circuit_open": true,
+      "cost_class": "free",
+      "enabled": true,
+      "enforced_filters": {},
+      "health_stale": false,
+      "health_status": "unknown",
+      "media_types": [],
+      "name": "open"
+    },
+    {
+      "active": true,
+      "auth_ready": true,
+      "available": true,
+      "categories": [
+        "general",
+        "security"
+      ],
+      "circuit_open": false,
+      "cost_class": "free",
+      "enabled": true,
+      "enforced_filters": {},
+      "health_stale": false,
+      "health_status": "unknown",
+      "media_types": [],
+      "name": "hibp"
+    },
+    {
+      "active": false,
+      "auth_ready": true,
+      "available": true,
+      "categories": [
+        "general"
+      ],
+      "circuit_open": false,
+      "cost_class": "free",
+      "enabled": false,
+      "enforced_filters": {},
+      "health_stale": false,
+      "health_status": "unknown",
+      "media_types": [],
+      "name": "disabled"
+    }
+  ],
+  "filters": [
+    {
+      "expected": {
+        "enforced_by": [],
+        "reason": "no selected adapter enforces the language filter",
+        "requested": "en",
+        "status": "unsupported"
+      },
+      "field": "language",
+      "requested": "en",
+      "selected": []
+    },
+    {
+      "expected": {
+        "enforced_by": [],
+        "reason": "no selected adapter enforces the time_range filter",
+        "requested": "week",
+        "status": "unsupported"
+      },
+      "field": "time_range",
+      "requested": "week",
+      "selected": []
+    },
+    {
+      "expected": {
+        "enforced_by": [],
+        "reason": "no selected adapter enforces the time_range filter",
+        "requested": "all",
+        "status": "unsupported"
+      },
+      "field": "time_range",
+      "requested": "all",
+      "selected": []
+    },
+    {
+      "expected": {
+        "enforced_by": [],
+        "reason": "no selected adapter enforces the safesearch filter",
+        "requested": "strict",
+        "status": "unsupported"
+      },
+      "field": "safesearch",
+      "requested": "strict",
+      "selected": []
+    },
+    {
+      "expected": {
+        "enforced_by": [],
+        "reason": "no selected adapter enforces the pagination filter",
+        "requested": 2,
+        "status": "unsupported"
+      },
+      "field": "pagination",
+      "requested": 2,
+      "selected": []
+    },
+    {
+      "expected": {
+        "enforced_by": [],
+        "reason": "no selected adapter enforces the date_from filter",
+        "requested": "2026-01-01",
+        "status": "unsupported"
+      },
+      "field": "date_from",
+      "requested": "2026-01-01",
+      "selected": []
+    },
+    {
+      "expected": {
+        "enforced_by": [],
+        "reason": "no selected adapter enforces the language filter",
+        "requested": "en",
+        "status": "unsupported"
+      },
+      "field": "language",
+      "requested": "en",
+      "selected": [
+        "alpha"
+      ]
+    },
+    {
+      "expected": {
+        "enforced_by": [
+          "local:alpha"
+        ],
+        "reason": "time_range is enforced locally by the service for every selected adapter",
+        "requested": "week",
+        "status": "enforced"
+      },
+      "field": "time_range",
+      "requested": "week",
+      "selected": [
+        "alpha"
+      ]
+    },
+    {
+      "expected": {
+        "enforced_by": [],
+        "reason": "no selected adapter enforces the time_range filter",
+        "requested": "all",
+        "status": "unsupported"
+      },
+      "field": "time_range",
+      "requested": "all",
+      "selected": [
+        "alpha"
+      ]
+    },
+    {
+      "expected": {
+        "enforced_by": [],
+        "reason": "no selected adapter enforces the safesearch filter",
+        "requested": "strict",
+        "status": "unsupported"
+      },
+      "field": "safesearch",
+      "requested": "strict",
+      "selected": [
+        "alpha"
+      ]
+    },
+    {
+      "expected": {
+        "enforced_by": [
+          "upstream:alpha"
+        ],
+        "reason": "pagination is enforced upstream by every selected adapter",
+        "requested": 2,
+        "status": "enforced"
+      },
+      "field": "pagination",
+      "requested": 2,
+      "selected": [
+        "alpha"
+      ]
+    },
+    {
+      "expected": {
+        "enforced_by": [],
+        "reason": "no selected adapter enforces the date_from filter",
+        "requested": "2026-01-01",
+        "status": "unsupported"
+      },
+      "field": "date_from",
+      "requested": "2026-01-01",
+      "selected": [
+        "alpha"
+      ]
+    },
+    {
+      "expected": {
+        "enforced_by": [],
+        "reason": "no selected adapter enforces the language filter",
+        "requested": "en",
+        "status": "unsupported"
+      },
+      "field": "language",
+      "requested": "en",
+      "selected": [
+        "beta"
+      ]
+    },
+    {
+      "expected": {
+        "enforced_by": [
+          "upstream:beta"
+        ],
+        "reason": "time_range is enforced upstream by every selected adapter",
+        "requested": "week",
+        "status": "enforced"
+      },
+      "field": "time_range",
+      "requested": "week",
+      "selected": [
+        "beta"
+      ]
+    },
+    {
+      "expected": {
+        "enforced_by": [
+          "upstream:beta"
+        ],
+        "reason": "time_range is enforced upstream by every selected adapter",
+        "requested": "all",
+        "status": "enforced"
+      },
+      "field": "time_range",
+      "requested": "all",
+      "selected": [
+        "beta"
+      ]
+    },
+    {
+      "expected": {
+        "enforced_by": [
+          "upstream:beta"
+        ],
+        "reason": "safesearch is enforced upstream by every selected adapter",
+        "requested": "strict",
+        "status": "enforced"
+      },
+      "field": "safesearch",
+      "requested": "strict",
+      "selected": [
+        "beta"
+      ]
+    },
+    {
+      "expected": {
+        "enforced_by": [],
+        "reason": "no selected adapter enforces the pagination filter",
+        "requested": 2,
+        "status": "unsupported"
+      },
+      "field": "pagination",
+      "requested": 2,
+      "selected": [
+        "beta"
+      ]
+    },
+    {
+      "expected": {
+        "enforced_by": [
+          "upstream:beta"
+        ],
+        "reason": "date_from is enforced upstream by every selected adapter",
+        "requested": "2026-01-01",
+        "status": "enforced"
+      },
+      "field": "date_from",
+      "requested": "2026-01-01",
+      "selected": [
+        "beta"
+      ]
+    },
+    {
+      "expected": {
+        "enforced_by": [],
+        "reason": "no selected adapter enforces the language filter",
+        "requested": "en",
+        "status": "unsupported"
+      },
+      "field": "language",
+      "requested": "en",
+      "selected": [
+        "alpha",
+        "beta"
+      ]
+    },
+    {
+      "expected": {
+        "enforced_by": [
+          "local:alpha",
+          "upstream:beta"
+        ],
+        "reason": "time_range is enforced across every selected adapter (upstream and local)",
+        "requested": "week",
+        "status": "enforced"
+      },
+      "field": "time_range",
+      "requested": "week",
+      "selected": [
+        "alpha",
+        "beta"
+      ]
+    },
+    {
+      "expected": {
+        "enforced_by": [
+          "upstream:beta"
+        ],
+        "reason": "time_range is enforced only for a subset of selected adapters (upstream by beta)",
+        "requested": "all",
+        "status": "partially_enforced"
+      },
+      "field": "time_range",
+      "requested": "all",
+      "selected": [
+        "alpha",
+        "beta"
+      ]
+    },
+    {
+      "expected": {
+        "enforced_by": [
+          "upstream:beta"
+        ],
+        "reason": "safesearch is enforced only for a subset of selected adapters (upstream by beta)",
+        "requested": "strict",
+        "status": "partially_enforced"
+      },
+      "field": "safesearch",
+      "requested": "strict",
+      "selected": [
+        "alpha",
+        "beta"
+      ]
+    },
+    {
+      "expected": {
+        "enforced_by": [
+          "upstream:alpha"
+        ],
+        "reason": "pagination is enforced only for a subset of selected adapters (upstream by alpha)",
+        "requested": 2,
+        "status": "partially_enforced"
+      },
+      "field": "pagination",
+      "requested": 2,
+      "selected": [
+        "alpha",
+        "beta"
+      ]
+    },
+    {
+      "expected": {
+        "enforced_by": [
+          "upstream:beta"
+        ],
+        "reason": "date_from is enforced only for a subset of selected adapters (upstream by beta)",
+        "requested": "2026-01-01",
+        "status": "partially_enforced"
+      },
+      "field": "date_from",
+      "requested": "2026-01-01",
+      "selected": [
+        "alpha",
+        "beta"
+      ]
+    },
+    {
+      "expected": {
+        "enforced_by": [],
+        "reason": "no selected adapter enforces the language filter",
+        "requested": "en",
+        "status": "unsupported"
+      },
+      "field": "language",
+      "requested": "en",
+      "selected": [
+        "alpha",
+        "alpha",
+        "beta"
+      ]
+    },
+    {
+      "expected": {
+        "enforced_by": [
+          "local:alpha",
+          "upstream:beta"
+        ],
+        "reason": "time_range is enforced across every selected adapter (upstream and local)",
+        "requested": "week",
+        "status": "enforced"
+      },
+      "field": "time_range",
+      "requested": "week",
+      "selected": [
+        "alpha",
+        "alpha",
+        "beta"
+      ]
+    },
+    {
+      "expected": {
+        "enforced_by": [
+          "upstream:beta"
+        ],
+        "reason": "time_range is enforced only for a subset of selected adapters (upstream by beta)",
+        "requested": "all",
+        "status": "partially_enforced"
+      },
+      "field": "time_range",
+      "requested": "all",
+      "selected": [
+        "alpha",
+        "alpha",
+        "beta"
+      ]
+    },
+    {
+      "expected": {
+        "enforced_by": [
+          "upstream:beta"
+        ],
+        "reason": "safesearch is enforced only for a subset of selected adapters (upstream by beta)",
+        "requested": "strict",
+        "status": "partially_enforced"
+      },
+      "field": "safesearch",
+      "requested": "strict",
+      "selected": [
+        "alpha",
+        "alpha",
+        "beta"
+      ]
+    },
+    {
+      "expected": {
+        "enforced_by": [
+          "upstream:alpha"
+        ],
+        "reason": "pagination is enforced only for a subset of selected adapters (upstream by alpha, alpha)",
+        "requested": 2,
+        "status": "partially_enforced"
+      },
+      "field": "pagination",
+      "requested": 2,
+      "selected": [
+        "alpha",
+        "alpha",
+        "beta"
+      ]
+    },
+    {
+      "expected": {
+        "enforced_by": [
+          "upstream:beta"
+        ],
+        "reason": "date_from is enforced only for a subset of selected adapters (upstream by beta)",
+        "requested": "2026-01-01",
+        "status": "partially_enforced"
+      },
+      "field": "date_from",
+      "requested": "2026-01-01",
+      "selected": [
+        "alpha",
+        "alpha",
+        "beta"
+      ]
+    },
+    {
+      "expected": {
+        "enforced_by": [],
+        "reason": "no selected adapter enforces the language filter",
+        "requested": "en",
+        "status": "unsupported"
+      },
+      "field": "language",
+      "requested": "en",
+      "selected": [
+        "missing"
+      ]
+    },
+    {
+      "expected": {
+        "enforced_by": [],
+        "reason": "no selected adapter enforces the time_range filter",
+        "requested": "week",
+        "status": "unsupported"
+      },
+      "field": "time_range",
+      "requested": "week",
+      "selected": [
+        "missing"
+      ]
+    },
+    {
+      "expected": {
+        "enforced_by": [],
+        "reason": "no selected adapter enforces the time_range filter",
+        "requested": "all",
+        "status": "unsupported"
+      },
+      "field": "time_range",
+      "requested": "all",
+      "selected": [
+        "missing"
+      ]
+    },
+    {
+      "expected": {
+        "enforced_by": [],
+        "reason": "no selected adapter enforces the safesearch filter",
+        "requested": "strict",
+        "status": "unsupported"
+      },
+      "field": "safesearch",
+      "requested": "strict",
+      "selected": [
+        "missing"
+      ]
+    },
+    {
+      "expected": {
+        "enforced_by": [],
+        "reason": "no selected adapter enforces the pagination filter",
+        "requested": 2,
+        "status": "unsupported"
+      },
+      "field": "pagination",
+      "requested": 2,
+      "selected": [
+        "missing"
+      ]
+    },
+    {
+      "expected": {
+        "enforced_by": [],
+        "reason": "no selected adapter enforces the date_from filter",
+        "requested": "2026-01-01",
+        "status": "unsupported"
+      },
+      "field": "date_from",
+      "requested": "2026-01-01",
+      "selected": [
+        "missing"
+      ]
+    }
+  ],
+  "plan_id": "F09",
+  "policy": [
+    {
+      "allowed": false,
+      "expected": null,
+      "names": [
+        "alpha"
+      ]
+    },
+    {
+      "allowed": true,
+      "expected": null,
+      "names": [
+        "alpha"
+      ]
+    },
+    {
+      "allowed": false,
+      "expected": {
+        "code": "invalid_scope",
+        "message": "unknown or inactive engines: unknown (unknown), disabled (inactive)",
+        "valid_alternatives": [
+          "alpha",
+          "auth",
+          "beta",
+          "hibp",
+          "open",
+          "paid"
+        ]
+      },
+      "names": [
+        "unknown",
+        "disabled",
+        "hibp"
+      ]
+    },
+    {
+      "allowed": true,
+      "expected": {
+        "code": "invalid_scope",
+        "message": "unknown or inactive engines: unknown (unknown), disabled (inactive)",
+        "valid_alternatives": [
+          "alpha",
+          "auth",
+          "beta",
+          "hibp",
+          "open",
+          "paid"
+        ]
+      },
+      "names": [
+        "unknown",
+        "disabled",
+        "hibp"
+      ]
+    },
+    {
+      "allowed": false,
+      "expected": {
+        "code": "tool_disabled",
+        "engines": [
+          "hibp"
+        ],
+        "grant": "MCP_TARGETED_SENSITIVE_ALLOWED",
+        "message": "sensitive engines are unreachable without the sensitive-engine grant (MCP_TARGETED_SENSITIVE_ALLOWED=1): hibp"
+      },
+      "names": [
+        "alpha",
+        "hibp"
+      ]
+    },
+    {
+      "allowed": true,
+      "expected": null,
+      "names": [
+        "alpha",
+        "hibp"
+      ]
+    },
+    {
+      "allowed": false,
+      "expected": {
+        "code": "tool_disabled",
+        "engines": [
+          "hibp"
+        ],
+        "grant": "MCP_TARGETED_SENSITIVE_ALLOWED",
+        "message": "sensitive engines are unreachable without the sensitive-engine grant (MCP_TARGETED_SENSITIVE_ALLOWED=1): hibp"
+      },
+      "names": [
+        "hibp",
+        "hibp"
+      ]
+    },
+    {
+      "allowed": true,
+      "expected": null,
+      "names": [
+        "hibp",
+        "hibp"
+      ]
+    },
+    {
+      "allowed": false,
+      "expected": null,
+      "names": []
+    },
+    {
+      "allowed": true,
+      "expected": null,
+      "names": []
+    },
+    {
+      "allowed": false,
+      "expected": {
+        "code": "invalid_scope",
+        "message": "unknown or inactive engines: disabled (inactive)",
+        "valid_alternatives": [
+          "alpha",
+          "auth",
+          "beta",
+          "hibp",
+          "open",
+          "paid"
+        ]
+      },
+      "names": [
+        "disabled"
+      ]
+    },
+    {
+      "allowed": true,
+      "expected": {
+        "code": "invalid_scope",
+        "message": "unknown or inactive engines: disabled (inactive)",
+        "valid_alternatives": [
+          "alpha",
+          "auth",
+          "beta",
+          "hibp",
+          "open",
+          "paid"
+        ]
+      },
+      "names": [
+        "disabled"
+      ]
+    }
+  ],
+  "relative": [
+    {
+      "expected": null,
+      "range": "week",
+      "today": "2024-03-01",
+      "value": null
+    },
+    {
+      "expected": true,
+      "range": "week",
+      "today": "2024-03-01",
+      "value": "2024-03-01T12:00:00Z"
+    },
+    {
+      "expected": true,
+      "range": "week",
+      "today": "2024-03-01",
+      "value": "20240229"
+    },
+    {
+      "expected": true,
+      "range": "week",
+      "today": "2024-03-01",
+      "value": "2024-W09-4"
+    },
+    {
+      "expected": true,
+      "range": "week",
+      "today": "2024-03-01",
+      "value": "2024W094"
+    },
+    {
+      "expected": true,
+      "range": "week",
+      "today": "2024-03-01",
+      "value": "2024-W09"
+    },
+    {
+      "expected": false,
+      "range": "week",
+      "today": "2024-03-01",
+      "value": "2024-02-22"
+    },
+    {
+      "expected": false,
+      "range": "week",
+      "today": "2024-03-01",
+      "value": "2024-02-21"
+    },
+    {
+      "expected": null,
+      "range": "week",
+      "today": "2024-03-01",
+      "value": "bad"
+    }
+  ],
+  "schema_version": 1,
+  "scopes": [
+    {
+      "budget": null,
+      "catalog_routing": true,
+      "expected": {
+        "excluded_engines": [
+          {
+            "engine": "hibp",
+            "reason": "sensitive engine excluded by policy",
+            "stage": "policy"
+          },
+          {
+            "engine": "auth",
+            "reason": "engine requires credentials that are not configured",
+            "stage": "auth"
+          },
+          {
+            "engine": "open",
+            "reason": "engine circuit is open; dispatch is skipped until it recovers",
+            "stage": "health"
+          }
+        ],
+        "jev_added_engines": [],
+        "jev_scores": {},
+        "matched_topic": null,
+        "resolved_categories": [],
+        "routing_budget_applied": false,
+        "routing_fallback": false,
+        "routing_rule": "all active engines",
+        "routing_tradeoffs": [
+          {
+            "detail": "coverage reflects only healthy engines; degraded engines were excluded",
+            "kind": "availability"
+          }
+        ],
+        "selected_engines": [
+          "alpha",
+          "beta",
+          "paid"
+        ],
+        "warnings": [
+          "sensitive engine 'hibp' requires an explicit engines list or a policy grant",
+          "routing trade-off: availability — coverage reflects only healthy engines; degraded engines were excluded"
+        ]
+      },
+      "name": "all",
+      "request": {
+        "query": "query"
+      },
+      "topics": null
+    },
+    {
+      "budget": null,
+      "catalog_routing": true,
+      "expected": {
+        "excluded_engines": [
+          {
+            "engine": "unknown",
+            "reason": "not an active engine",
+            "stage": "policy"
+          }
+        ],
+        "jev_added_engines": [],
+        "jev_scores": {},
+        "matched_topic": null,
+        "resolved_categories": [],
+        "routing_budget_applied": false,
+        "routing_fallback": false,
+        "routing_rule": "explicit engine",
+        "routing_tradeoffs": [],
+        "selected_engines": [
+          "paid",
+          "auth",
+          "open",
+          "hibp",
+          "alpha",
+          "alpha"
+        ],
+        "warnings": [
+          "unknown engines ignored: unknown"
+        ]
+      },
+      "name": "explicit",
+      "request": {
+        "engines": [
+          "paid",
+          "auth",
+          "open",
+          "hibp",
+          "unknown",
+          "alpha",
+          "alpha"
+        ],
+        "query": "query"
+      },
+      "topics": null
+    },
+    {
+      "budget": null,
+      "catalog_routing": true,
+      "expected": {
+        "excluded_engines": [
+          {
+            "engine": "unknown",
+            "reason": "not an active engine",
+            "stage": "policy"
+          }
+        ],
+        "jev_added_engines": [],
+        "jev_scores": {},
+        "matched_topic": null,
+        "resolved_categories": [],
+        "routing_budget_applied": false,
+        "routing_fallback": false,
+        "routing_rule": "explicit engine",
+        "routing_tradeoffs": [],
+        "selected_engines": [
+          "alpha"
+        ],
+        "warnings": [
+          "unknown engines ignored: unknown"
+        ]
+      },
+      "name": "explicit-whitespace",
+      "request": {
+        "engines": [
+          "\u001calpha\u001f",
+          " ",
+          "unknown"
+        ],
+        "query": "query"
+      },
+      "topics": null
+    },
+    {
+      "budget": null,
+      "catalog_routing": true,
+      "expected": {
+        "excluded_engines": [
+          {
+            "engine": "hibp",
+            "reason": "sensitive engine excluded by policy",
+            "stage": "policy"
+          },
+          {
+            "engine": "auth",
+            "reason": "engine requires credentials that are not configured",
+            "stage": "auth"
+          },
+          {
+            "engine": "open",
+            "reason": "engine circuit is open; dispatch is skipped until it recovers",
+            "stage": "health"
+          }
+        ],
+        "jev_added_engines": [],
+        "jev_scores": {},
+        "matched_topic": null,
+        "resolved_categories": [
+          "general",
+          "science"
+        ],
+        "routing_budget_applied": false,
+        "routing_fallback": false,
+        "routing_rule": "explicit category",
+        "routing_tradeoffs": [
+          {
+            "detail": "coverage reflects only healthy engines; degraded engines were excluded",
+            "kind": "availability"
+          }
+        ],
+        "selected_engines": [
+          "alpha",
+          "beta",
+          "paid"
+        ],
+        "warnings": [
+          "sensitive engine 'hibp' requires an explicit engines list or a policy grant",
+          "routing trade-off: availability — coverage reflects only healthy engines; degraded engines were excluded"
+        ]
+      },
+      "name": "categories-or",
+      "request": {
+        "categories": [
+          "general",
+          "science"
+        ],
+        "query": "query"
+      },
+      "topics": null
+    },
+    {
+      "budget": null,
+      "catalog_routing": true,
+      "expected": {
+        "excluded_engines": [],
+        "jev_added_engines": [],
+        "jev_scores": {},
+        "matched_topic": null,
+        "resolved_categories": [
+          "science"
+        ],
+        "routing_budget_applied": false,
+        "routing_fallback": false,
+        "routing_rule": "explicit category",
+        "routing_tradeoffs": [],
+        "selected_engines": [
+          "beta"
+        ],
+        "warnings": []
+      },
+      "name": "category-whitespace",
+      "request": {
+        "categories": [
+          "\u001cscience\u001f",
+          " "
+        ],
+        "query": "query"
+      },
+      "topics": null
+    },
+    {
+      "budget": null,
+      "catalog_routing": true,
+      "expected": {
+        "excluded_engines": [
+          {
+            "engine": "hibp",
+            "reason": "sensitive engine excluded by policy",
+            "stage": "policy"
+          },
+          {
+            "engine": "auth",
+            "reason": "engine requires credentials that are not configured",
+            "stage": "auth"
+          },
+          {
+            "engine": "open",
+            "reason": "engine circuit is open; dispatch is skipped until it recovers",
+            "stage": "health"
+          }
+        ],
+        "jev_added_engines": [],
+        "jev_scores": {},
+        "matched_topic": null,
+        "resolved_categories": [],
+        "routing_budget_applied": false,
+        "routing_fallback": false,
+        "routing_rule": "all active engines",
+        "routing_tradeoffs": [
+          {
+            "detail": "coverage reflects only healthy engines; degraded engines were excluded",
+            "kind": "availability"
+          }
+        ],
+        "selected_engines": [
+          "alpha",
+          "beta",
+          "paid"
+        ],
+        "warnings": [
+          "sensitive engine 'hibp' requires an explicit engines list or a policy grant",
+          "routing trade-off: availability — coverage reflects only healthy engines; degraded engines were excluded"
+        ]
+      },
+      "name": "category-empty",
+      "request": {
+        "categories": [
+          " "
+        ],
+        "query": "query"
+      },
+      "topics": null
+    },
+    {
+      "budget": null,
+      "catalog_routing": true,
+      "expected": {
+        "excluded_engines": [
+          {
+            "engine": "beta",
+            "reason": "does not advertise media type 'image'",
+            "stage": "policy"
+          },
+          {
+            "engine": "paid",
+            "reason": "does not advertise media type 'image'",
+            "stage": "policy"
+          },
+          {
+            "engine": "auth",
+            "reason": "does not advertise media type 'image'",
+            "stage": "policy"
+          },
+          {
+            "engine": "open",
+            "reason": "does not advertise media type 'image'",
+            "stage": "policy"
+          },
+          {
+            "engine": "hibp",
+            "reason": "does not advertise media type 'image'",
+            "stage": "policy"
+          }
+        ],
+        "jev_added_engines": [],
+        "jev_scores": {},
+        "matched_topic": null,
+        "resolved_categories": [],
+        "routing_budget_applied": false,
+        "routing_fallback": false,
+        "routing_rule": "media type",
+        "routing_tradeoffs": [],
+        "selected_engines": [
+          "alpha"
+        ],
+        "warnings": []
+      },
+      "name": "media",
+      "request": {
+        "media_type": "image",
+        "query": "query"
+      },
+      "topics": null
+    },
+    {
+      "budget": null,
+      "catalog_routing": true,
+      "expected": {
+        "excluded_engines": [
+          {
+            "engine": "hibp",
+            "reason": "sensitive engine excluded by policy",
+            "stage": "policy"
+          },
+          {
+            "engine": "auth",
+            "reason": "engine requires credentials that are not configured",
+            "stage": "auth"
+          },
+          {
+            "engine": "open",
+            "reason": "engine circuit is open; dispatch is skipped until it recovers",
+            "stage": "health"
+          }
+        ],
+        "jev_added_engines": [],
+        "jev_scores": {},
+        "matched_topic": null,
+        "resolved_categories": [],
+        "routing_budget_applied": false,
+        "routing_fallback": false,
+        "routing_rule": "all active engines",
+        "routing_tradeoffs": [
+          {
+            "detail": "coverage reflects only healthy engines; degraded engines were excluded",
+            "kind": "availability"
+          }
+        ],
+        "selected_engines": [],
+        "warnings": [
+          "sensitive engine 'hibp' requires an explicit engines list or a policy grant",
+          "routing trade-off: availability — coverage reflects only healthy engines; degraded engines were excluded",
+          "unknown media type 'audio'"
+        ]
+      },
+      "name": "media-unknown",
+      "request": {
+        "media_type": "audio",
+        "query": "query"
+      },
+      "topics": null
+    },
+    {
+      "budget": null,
+      "catalog_routing": true,
+      "expected": {
+        "excluded_engines": [
+          {
+            "engine": "beta",
+            "reason": "does not advertise media type 'image'",
+            "stage": "policy"
+          }
+        ],
+        "jev_added_engines": [],
+        "jev_scores": {},
+        "matched_topic": null,
+        "resolved_categories": [],
+        "routing_budget_applied": false,
+        "routing_fallback": false,
+        "routing_rule": "explicit engine",
+        "routing_tradeoffs": [],
+        "selected_engines": [],
+        "warnings": [
+          "no selected engine advertises media type 'image'"
+        ]
+      },
+      "name": "media-conflict",
+      "request": {
+        "engines": [
+          "beta"
+        ],
+        "media_type": "image",
+        "query": "query"
+      },
+      "topics": null
+    },
+    {
+      "budget": null,
+      "catalog_routing": true,
+      "expected": {
+        "excluded_engines": [],
+        "jev_added_engines": [],
+        "jev_scores": {},
+        "matched_topic": null,
+        "resolved_categories": [
+          "absent"
+        ],
+        "routing_budget_applied": false,
+        "routing_fallback": false,
+        "routing_rule": "explicit category",
+        "routing_tradeoffs": [],
+        "selected_engines": [],
+        "warnings": []
+      },
+      "name": "empty-category",
+      "request": {
+        "categories": [
+          "absent"
+        ],
+        "query": "query"
+      },
+      "topics": null
+    },
+    {
+      "budget": null,
+      "catalog_routing": true,
+      "expected": {
+        "excluded_engines": [],
+        "jev_added_engines": [],
+        "jev_scores": {},
+        "matched_topic": null,
+        "resolved_categories": [],
+        "routing_budget_applied": false,
+        "routing_fallback": false,
+        "routing_rule": "tier-1 fallback",
+        "routing_tradeoffs": [],
+        "selected_engines": [
+          "alpha",
+          "beta"
+        ],
+        "warnings": []
+      },
+      "name": "router-disabled",
+      "request": {
+        "query": "query"
+      },
+      "topics": []
+    },
+    {
+      "budget": null,
+      "catalog_routing": true,
+      "expected": {
+        "excluded_engines": [],
+        "jev_added_engines": [],
+        "jev_scores": {},
+        "matched_topic": "first",
+        "resolved_categories": [],
+        "routing_budget_applied": false,
+        "routing_fallback": false,
+        "routing_rule": "topic match",
+        "routing_tradeoffs": [],
+        "selected_engines": [
+          "beta",
+          "alpha"
+        ],
+        "warnings": []
+      },
+      "name": "topic-'BETA topic'",
+      "request": {
+        "query": "BETA topic"
+      },
+      "topics": [
+        {
+          "engines": [
+            "beta",
+            "alpha",
+            "missing"
+          ],
+          "keywords": [
+            "beta",
+            "i̇σ",
+            "strasse",
+            "abc"
+          ],
+          "name": "first"
+        },
+        {
+          "engines": [
+            "paid"
+          ],
+          "keywords": [
+            "beta"
+          ],
+          "name": "second"
+        }
+      ]
+    },
+    {
+      "budget": null,
+      "catalog_routing": true,
+      "expected": {
+        "excluded_engines": [],
+        "jev_added_engines": [],
+        "jev_scores": {},
+        "matched_topic": null,
+        "resolved_categories": [],
+        "routing_budget_applied": false,
+        "routing_fallback": false,
+        "routing_rule": "tier-1 fallback",
+        "routing_tradeoffs": [],
+        "selected_engines": [
+          "alpha",
+          "beta"
+        ],
+        "warnings": []
+      },
+      "name": "topic-'İΣ\\x1c'",
+      "request": {
+        "query": "İΣ\u001c"
+      },
+      "topics": [
+        {
+          "engines": [
+            "beta",
+            "alpha",
+            "missing"
+          ],
+          "keywords": [
+            "beta",
+            "i̇σ",
+            "strasse",
+            "abc"
+          ],
+          "name": "first"
+        },
+        {
+          "engines": [
+            "paid"
+          ],
+          "keywords": [
+            "beta"
+          ],
+          "name": "second"
+        }
+      ]
+    },
+    {
+      "budget": null,
+      "catalog_routing": true,
+      "expected": {
+        "excluded_engines": [],
+        "jev_added_engines": [],
+        "jev_scores": {},
+        "matched_topic": "first",
+        "resolved_categories": [],
+        "routing_budget_applied": false,
+        "routing_fallback": false,
+        "routing_rule": "topic match",
+        "routing_tradeoffs": [],
+        "selected_engines": [
+          "beta",
+          "alpha"
+        ],
+        "warnings": []
+      },
+      "name": "topic-'\\x1fSTRASSE\\x1c'",
+      "request": {
+        "query": "\u001fSTRASSE\u001c"
+      },
+      "topics": [
+        {
+          "engines": [
+            "beta",
+            "alpha",
+            "missing"
+          ],
+          "keywords": [
+            "beta",
+            "i̇σ",
+            "strasse",
+            "abc"
+          ],
+          "name": "first"
+        },
+        {
+          "engines": [
+            "paid"
+          ],
+          "keywords": [
+            "beta"
+          ],
+          "name": "second"
+        }
+      ]
+    },
+    {
+      "budget": null,
+      "catalog_routing": true,
+      "expected": {
+        "excluded_engines": [],
+        "jev_added_engines": [],
+        "jev_scores": {},
+        "matched_topic": "first",
+        "resolved_categories": [],
+        "routing_budget_applied": false,
+        "routing_fallback": false,
+        "routing_rule": "topic match",
+        "routing_tradeoffs": [],
+        "selected_engines": [
+          "beta",
+          "alpha"
+        ],
+        "warnings": []
+      },
+      "name": "topic-'ABC'",
+      "request": {
+        "query": "ABC"
+      },
+      "topics": [
+        {
+          "engines": [
+            "beta",
+            "alpha",
+            "missing"
+          ],
+          "keywords": [
+            "beta",
+            "i̇σ",
+            "strasse",
+            "abc"
+          ],
+          "name": "first"
+        },
+        {
+          "engines": [
+            "paid"
+          ],
+          "keywords": [
+            "beta"
+          ],
+          "name": "second"
+        }
+      ]
+    },
+    {
+      "budget": {
+        "coverage_target": 2,
+        "max_cost_class": "free",
+        "max_engines": 1
+      },
+      "catalog_routing": true,
+      "expected": {
+        "excluded_engines": [
+          {
+            "engine": "hibp",
+            "reason": "sensitive engine excluded by policy",
+            "stage": "policy"
+          },
+          {
+            "engine": "auth",
+            "reason": "engine requires credentials that are not configured",
+            "stage": "auth"
+          },
+          {
+            "engine": "open",
+            "reason": "engine circuit is open; dispatch is skipped until it recovers",
+            "stage": "health"
+          },
+          {
+            "engine": "paid",
+            "reason": "cost_class 'paid' exceeds the configured budget max 'free'",
+            "stage": "budget"
+          },
+          {
+            "engine": "beta",
+            "reason": "scope exceeds the configured per-intent engine budget (1)",
+            "stage": "budget"
+          }
+        ],
+        "jev_added_engines": [],
+        "jev_scores": {},
+        "matched_topic": null,
+        "resolved_categories": [],
+        "routing_budget_applied": true,
+        "routing_fallback": false,
+        "routing_rule": "all active engines",
+        "routing_tradeoffs": [
+          {
+            "detail": "coverage is bounded by the configured routing budget; engines were excluded for cost or count",
+            "kind": "cost"
+          },
+          {
+            "detail": "coverage reflects only healthy engines; degraded engines were excluded",
+            "kind": "availability"
+          },
+          {
+            "detail": "selected 1 engines below the coverage target of 2",
+            "kind": "coverage"
+          }
+        ],
+        "selected_engines": [
+          "alpha"
+        ],
+        "warnings": [
+          "sensitive engine 'hibp' requires an explicit engines list or a policy grant",
+          "routing trade-off: cost — coverage is bounded by the configured routing budget; engines were excluded for cost or count; availability — coverage reflects only healthy engines; degraded engines were excluded; coverage — selected 1 engines below the coverage target of 2"
+        ]
+      },
+      "name": "budget",
+      "request": {
+        "query": "query"
+      },
+      "topics": null
+    },
+    {
+      "budget": null,
+      "catalog_routing": false,
+      "expected": {
+        "excluded_engines": [
+          {
+            "engine": "hibp",
+            "reason": "sensitive engine excluded by policy",
+            "stage": "policy"
+          }
+        ],
+        "jev_added_engines": [],
+        "jev_scores": {},
+        "matched_topic": null,
+        "resolved_categories": [],
+        "routing_budget_applied": false,
+        "routing_fallback": true,
+        "routing_rule": "all active engines",
+        "routing_tradeoffs": [],
+        "selected_engines": [
+          "alpha",
+          "beta",
+          "paid",
+          "auth",
+          "open"
+        ],
+        "warnings": [
+          "sensitive engine 'hibp' requires an explicit engines list or a policy grant"
+        ]
+      },
+      "name": "no-catalog",
+      "request": {
+        "query": "query"
+      },
+      "topics": null
+    }
+  ]
+}

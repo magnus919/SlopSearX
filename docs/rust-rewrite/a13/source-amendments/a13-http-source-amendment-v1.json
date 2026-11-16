@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "kind": "A13_CURRENT_SOURCE_AMENDMENT_V1",
+  "baseline_commit": "9f1a3fa196c6dcdb966a1fe47b117ad81ebf8010",
+  "amended_source_paths": [
+    "crates/ssx-infra/src/http.rs",
+    "crates/ssx-infra/tests/a13_dehashed.rs",
+    "crates/ssx-infra/tests/a13_remaining_fixture/mod.rs",
+    "crates/xtask/src/a11.rs"
+  ],
+  "amendments": [
+    {
+      "source_path": "crates/ssx-infra/src/http.rs",
+      "historical_pins": [
+        {
+          "container_path": "docs/rust-rewrite/a10/qualification.json",
+          "container_sha256": "85a7121b09c7963326e0bb17b9fc30172649e349fb591a8a3494228af711ce14",
+          "source_sha256": "131cc1313b96f36bfbd9cf865a2e1857a6120ef3a2736ebee0b0b9565f80ac6b",
+          "source_bytes": 41754,
+          "source_mode": "0644"
+        },
+        {
+          "container_path": "docs/rust-rewrite/a11/qualification.json",
+          "container_sha256": "69b18d8f2ecb57639972c89bf57b105b83098ea38350bca00695182eda098ff4",
+          "source_sha256": "131cc1313b96f36bfbd9cf865a2e1857a6120ef3a2736ebee0b0b9565f80ac6b",
+          "source_bytes": 41754,
+          "source_mode": "0644"
+        },
+        {
+          "container_path": "docs/rust-rewrite/a12/qualification-v1.json",
+          "container_sha256": "37bdd69e0c26437f902e9aad3acb60908fbae920dcc10e42aeefaadbb0a40320",
+          "source_sha256": "131cc1313b96f36bfbd9cf865a2e1857a6120ef3a2736ebee0b0b9565f80ac6b",
+          "source_bytes": 41754,
+          "source_mode": "0644"
+        },
+        {
+          "container_path": "docs/rust-rewrite/a13/dehashed-source-map-v1.json",
+          "container_sha256": "226174da4be26ff9e902e73dc79a6d5344e5405abfae3a051ed19339a51a4b2d",
+          "source_sha256": "131cc1313b96f36bfbd9cf865a2e1857a6120ef3a2736ebee0b0b9565f80ac6b",
+          "source_bytes": 41754,
+          "source_mode": "0644"
+        },
+        {
+          "container_path": "docs/rust-rewrite/a13/remaining/source-map.json",
+          "container_sha256": "af359782abc772c727a885e66a87d519aea5393bcec31e0e105b2de46a8c5d22",
+          "source_sha256": "131cc1313b96f36bfbd9cf865a2e1857a6120ef3a2736ebee0b0b9565f80ac6b",
+          "source_bytes": 41754,
+          "source_mode": "0644"
+        },
+        {
+          "container_path": "docs/rust-rewrite/a13/qualification-v1.json",
+          "container_sha256": "e2d9249fbadd0eca06a10215f796defc5845722c63fcf9f409ab9eac8a85f74e",
+          "source_sha256": "131cc1313b96f36bfbd9cf865a2e1857a6120ef3a2736ebee0b0b9565f80ac6b",
+          "source_bytes": 41754,
+          "source_mode": "0644"
+        }
+      ],
+      "archive": {
+        "path": "docs/rust-rewrite/a13/source-amendments/http.rs.9f1a.frozen",
+        "sha256": "131cc1313b96f36bfbd9cf865a2e1857a6120ef3a2736ebee0b0b9565f80ac6b",
+        "bytes": 41754,
+        "mode": "0644",
+        "git_blob": "392a01333fb5e3bb529dae13ca88cfde6a08f1e0"
+      },
+      "successor": {
+        "path": "crates/ssx-infra/src/http.rs",
+        "sha256": "48e9a18590cc2fac1aaecde81f49de56ab1adaa9447e65ae5d3c14d8236dc07e",
+        "bytes": 46637,
+        "mode": "0644",
+        "origin_commit": "2b5fc62550e8fadf4a38eb7e17f9e144910e1ca5"
+      }
+    },
+    {
+      "source_path": "crates/ssx-infra/tests/a13_dehashed.rs",
+      "historical_pins": [
+        {
+          "container_path": "docs/rust-rewrite/a13/qualification-v1.json",
+          "container_sha256": "e2d9249fbadd0eca06a10215f796defc5845722c63fcf9f409ab9eac8a85f74e",
+          "source_sha256": "49a7857775c07e6d89cdd26d72e25a47a63f84e7694e3d569c3edca3b8a3b1a2",
+          "source_bytes": 61928,
+          "source_mode": "0644"
+        }
+      ],
+      "archive": {
+        "path": "docs/rust-rewrite/a13/source-amendments/a13_dehashed.rs.9f1a.frozen",
+        "sha256": "49a7857775c07e6d89cdd26d72e25a47a63f84e7694e3d569c3edca3b8a3b1a2",
+        "bytes": 61928,
+        "mode": "0644",
+        "git_blob": "d2a99b060f750f6d51e402e922289d4f708775b4"
+      },
+      "successor": {
+        "path": "crates/ssx-infra/tests/a13_dehashed.rs",
+        "sha256": "dd21f09aceb24b0d7c9e751a6295079ffffb01c42299bfde365673c26b8e7487",
+        "bytes": 63871,
+        "mode": "0644"
+      }
+    },
+    {
+      "source_path": "crates/ssx-infra/tests/a13_remaining_fixture/mod.rs",
+      "historical_pins": [
+        {
+          "container_path": "docs/rust-rewrite/a13/qualification-v1.json",
+          "container_sha256": "e2d9249fbadd0eca06a10215f796defc5845722c63fcf9f409ab9eac8a85f74e",
+          "source_sha256": "f79ab11ded4e6d214c16b9f9bedc75b8d57b00f7cfd3e60386ae575ae10f12fc",
+          "source_bytes": 40406,
+          "source_mode": "0644"
+        }
+      ],
+      "archive": {
+        "path": "docs/rust-rewrite/a13/source-amendments/a13_remaining_fixture_mod.rs.9f1a.frozen",
+        "sha256": "f79ab11ded4e6d214c16b9f9bedc75b8d57b00f7cfd3e60386ae575ae10f12fc",
+        "bytes": 40406,
+        "mode": "0644",
+        "git_blob": "bc9090f100298962b59fa1b9ccf6ed91221ad05f"
+      },
+      "successor": {
+        "path": "crates/ssx-infra/tests/a13_remaining_fixture/mod.rs",
+        "sha256": "8ffd08e73a6f0b27d510470e8af0ee6d294693384402532d7b9442871d0004ab",
+        "bytes": 40795,
+        "mode": "0644"
+      }
+    },
+    {
+      "source_path": "crates/xtask/src/a11.rs",
+      "historical_pins": [
+        {
+          "container_path": "docs/rust-rewrite/a13/remaining/source-map.json",
+          "container_sha256": "af359782abc772c727a885e66a87d519aea5393bcec31e0e105b2de46a8c5d22",
+          "source_sha256": "c4b4593ca7cc073137e6618462261fc954959d2069fab7b18e973b2646e9bcb0",
+          "source_bytes": 19879,
+          "source_mode": "0644"
+        }
+      ],
+      "archive": {
+        "path": "docs/rust-rewrite/a13/source-amendments/xtask_a11.rs.9f1a.frozen",
+        "sha256": "c4b4593ca7cc073137e6618462261fc954959d2069fab7b18e973b2646e9bcb0",
+        "bytes": 19879,
+        "mode": "0644",
+        "git_blob": "dc5c8639a1e8b88b7159096e2758ae1827bca2be"
+      },
+      "successor": {
+        "path": "crates/xtask/src/a11.rs",
+        "sha256": "fdd0ad7593e02154b1f5204eb6e5be2ebb898b30e4039bada83b621553eb9eb7",
+        "bytes": 20045,
+        "mode": "0644"
+      }
+    }
+  ],
+  "reason": "This record preserves frozen historical maps and qualifications while binding four exact current successors. It records source identity only and makes no production-equivalence claim."
+}

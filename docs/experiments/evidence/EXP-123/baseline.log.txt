@@ -1,0 +1,72 @@
+/private/tmp/slopsearx-daily-20261015/.venv/lib/python3.12/site-packages/pydantic_settings/sources/utils.py:47: IncompleteFieldDefinitionWarning: Field 'lifespan' has an incomplete definition: its annotation contains an unresolved forward reference, so settings sources may fail to correctly resolve its value. Call `model_rebuild()` on the model where the field is defined, once all the referenced types are defined.
+  warnings.warn(
+[10/15/26 08:59:03] INFO     StreamableHTTP       streamable_http_manager.py:143
+                             session manager                                    
+                             started                                            
+[10/15/26 08:59:04] INFO     HTTP Request: GET                   _client.py:1740
+                             http://127.0.0.1:60457/mcp                         
+                             "HTTP/1.1 401 Unauthorized"                        
+                    INFO     Created new          streamable_http_manager.py:301
+                             transport with                                     
+                             session ID:                                        
+                             71105d52e11242e18f77                               
+                             3844d5cf3be5                                       
+                    WARNING  MCP startup problem: intent 'images'  server.py:144
+                             has media types matching no enabled                
+                             engines: ['image']                                 
+                    WARNING  MCP startup problem: intent 'videos'  server.py:144
+                             has media types matching no enabled                
+                             engines: ['video']                                 
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:60457/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Received session ID:         streamable_http.py:181
+                             71105d52e11242e18f773844d5cf                       
+                             3be5                                               
+                    INFO     Negotiated protocol version: streamable_http.py:193
+                             2025-11-25                                         
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:60457/mcp                         
+                             "HTTP/1.1 202 Accepted"                            
+                    INFO     HTTP Request: GET                   _client.py:1740
+                             http://127.0.0.1:60457/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:60457/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Processing request of type            server.py:733
+                             ListToolsRequest                                   
+                    INFO     Remote gateway connected to          gateway.py:497
+                             http://127.0.0.1:60457/mcp (38 tools               
+                             registered)                                        
+                    INFO     Terminating session:         streamable_http.py:788
+                             71105d52e11242e18f773844d5cf                       
+                             3be5                                               
+                    INFO     HTTP Request: DELETE                _client.py:1740
+                             http://127.0.0.1:60457/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     StreamableHTTP       streamable_http_manager.py:147
+                             session manager                                    
+                             shutting down                                      
+Traceback (most recent call last):
+  File "/private/tmp/exp123-worker.py", line 43, in <module>
+    asyncio.run(main())
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/private/tmp/exp123-worker.py", line 41, in main
+    for delay,timeout in [(0.4,0.05),(0.8,0.05),(0,1)]:rows.append(await case(delay,timeout))
+                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/exp123-worker.py", line 37, in case
+    return {'delay':delay,'timeout':timeout,'elapsed':elapsed,'published':published,'error':error,'tools':[t.model_dump(mode='json',by_alias=True) for t in tools],'state_cleared':gateway._state is None,'owners_pending':sum(t.get_name()=='slopsearx-gateway-upstream' for t in asyncio.all_tasks()),'initialize_requests':app.initializes}
+                                                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/slopsearx-daily-20261015/.venv/lib/python3.12/site-packages/pydantic/main.py", line 475, in model_dump
+    return self.__pydantic_serializer__.to_python(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pydantic_core._pydantic_core.PydanticSerializationError: Unable to serialize unknown type: <class 'function'>

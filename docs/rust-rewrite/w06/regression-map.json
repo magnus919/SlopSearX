@@ -1,0 +1,1049 @@
+{
+  "schema_version": 1,
+  "plan_id": "W06",
+  "baseline": "9b7d888da1ee3f7e2ed045c2185ea16f419381e9",
+  "status": "mapping is navigational; only qualification.json plus actual gate receipts establish executed coverage",
+  "functions": [
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "plan_digest",
+      "line": 161,
+      "signature": "plan: dict[str, Any]",
+      "decorators": [],
+      "body_sha256": "8ad43168962364e1972a07f0b618033e8338016bb573423a855b534ca7a6d77e",
+      "disposition": "implementation",
+      "native_binding": "StagedSearchRunner / application::staged",
+      "assertion_obligation": "W11 source binding remains authoritative; W06 consumes acknowledged APIs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "_normalize_record",
+      "line": 167,
+      "signature": "record: dict[str, Any]",
+      "decorators": [],
+      "body_sha256": "e597e1182fad16cc3bf9160c38bc6ea43dfd446ab31a6d1f7df226f95d3c001b",
+      "disposition": "implementation",
+      "native_binding": "accepted W11 staged store",
+      "assertion_obligation": "W11 source binding remains authoritative; W06 consumes acknowledged APIs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchStore.__init__",
+      "line": 210,
+      "signature": "self, store: Any",
+      "decorators": [],
+      "body_sha256": "5edae1d13daa7c071f848c951a2cc85f7a21a9fd083273bcf225c02592ce0638",
+      "disposition": "implementation",
+      "native_binding": "accepted W11 staged store",
+      "assertion_obligation": "W11 source binding remains authoritative; W06 consumes acknowledged APIs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchStore.available",
+      "line": 216,
+      "signature": "self",
+      "decorators": [
+        "property"
+      ],
+      "body_sha256": "e00c083475eb52372a153aff107f56419fb5695a1fd475fb8dcc1384c5eb34e1",
+      "disposition": "implementation",
+      "native_binding": "accepted W11 staged store",
+      "assertion_obligation": "W11 source binding remains authoritative; W06 consumes acknowledged APIs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchStore._tenant_hash",
+      "line": 220,
+      "signature": "tenant: str",
+      "decorators": [
+        "staticmethod"
+      ],
+      "body_sha256": "2a1e14be8a5e43cecc8cad36073b2755db95a92b3908eb3fb47e9f42e2a0d7fb",
+      "disposition": "implementation",
+      "native_binding": "accepted W11 staged store",
+      "assertion_obligation": "W11 source binding remains authoritative; W06 consumes acknowledged APIs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchStore._key",
+      "line": 223,
+      "signature": "self, tenant: str, operation_id: str",
+      "decorators": [],
+      "body_sha256": "c749ef9106bef2ef08babb5d7f069e03855cc31cb21f00aeb580f4b59d933e31",
+      "disposition": "implementation",
+      "native_binding": "accepted W11 staged store",
+      "assertion_obligation": "W11 source binding remains authoritative; W06 consumes acknowledged APIs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchStore._index_key",
+      "line": 226,
+      "signature": "self, tenant: str",
+      "decorators": [],
+      "body_sha256": "c99373f7072c874e2576479665f56597a4bbadb2afa4f0e58a328cf65561a29d",
+      "disposition": "implementation",
+      "native_binding": "accepted W11 staged store",
+      "assertion_obligation": "W11 source binding remains authoritative; W06 consumes acknowledged APIs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchStore._idem_key",
+      "line": 229,
+      "signature": "self, tenant: str, idempotency_key: str",
+      "decorators": [],
+      "body_sha256": "d0030364d14903328d9451b3a0cd1883cf85c2524ed7da0bbe53a2fe0a3c695b",
+      "disposition": "implementation",
+      "native_binding": "accepted W11 staged store",
+      "assertion_obligation": "W11 source binding remains authoritative; W06 consumes acknowledged APIs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchStore._ready_key",
+      "line": 234,
+      "signature": "",
+      "decorators": [
+        "staticmethod"
+      ],
+      "body_sha256": "2286f8c850271afbd8676e5cfa42a74b6a0b38ac7b93683b7c46f69e7f0db68b",
+      "disposition": "implementation",
+      "native_binding": "accepted W11 staged store",
+      "assertion_obligation": "W11 source binding remains authoritative; W06 consumes acknowledged APIs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchStore._running_key",
+      "line": 238,
+      "signature": "",
+      "decorators": [
+        "staticmethod"
+      ],
+      "body_sha256": "7621471b822dd9be2ffd757e73c9af4e8cbe3e3914422377a10ffcb2f5b0919a",
+      "disposition": "implementation",
+      "native_binding": "accepted W11 staged store",
+      "assertion_obligation": "W11 source binding remains authoritative; W06 consumes acknowledged APIs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchStore._lease_key",
+      "line": 241,
+      "signature": "self, tenant: str, operation_id: str",
+      "decorators": [],
+      "body_sha256": "ce7dda5aac1ee547adbc234805dba45e1fb5f1deb81d7c35d3ac4395a03389c3",
+      "disposition": "implementation",
+      "native_binding": "accepted W11 staged store",
+      "assertion_obligation": "W11 source binding remains authoritative; W06 consumes acknowledged APIs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchStore._marker_key",
+      "line": 244,
+      "signature": "self, tenant: str",
+      "decorators": [],
+      "body_sha256": "41c29de62811b7c4bed00fe2aa04bfd4f1455cfa63876101a7b03aac4a5e9120",
+      "disposition": "implementation",
+      "native_binding": "accepted W11 staged store",
+      "assertion_obligation": "W11 source binding remains authoritative; W06 consumes acknowledged APIs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchStore._record_pattern",
+      "line": 247,
+      "signature": "self, tenant: str",
+      "decorators": [],
+      "body_sha256": "c493c9b14ce185c4797fa3bc526792fa7117231dc6990ac134ec4ea6b5f69809",
+      "disposition": "implementation",
+      "native_binding": "accepted W11 staged store",
+      "assertion_obligation": "W11 source binding remains authoritative; W06 consumes acknowledged APIs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchStore._client",
+      "line": 250,
+      "signature": "self",
+      "decorators": [],
+      "body_sha256": "c01d40deb8ba37770d551c285ef9b871f400c3b5a968fee3eb9e7f1ae5e7547a",
+      "disposition": "implementation",
+      "native_binding": "accepted W11 staged store",
+      "assertion_obligation": "W11 source binding remains authoritative; W06 consumes acknowledged APIs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchStore._decode",
+      "line": 254,
+      "signature": "value: Any",
+      "decorators": [
+        "staticmethod"
+      ],
+      "body_sha256": "3c2f9236196235e9a8ab967a791bc0cc47fd5bf778d45759a74e2477146cf7a9",
+      "disposition": "implementation",
+      "native_binding": "accepted W11 staged store",
+      "assertion_obligation": "W11 source binding remains authoritative; W06 consumes acknowledged APIs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchStore._read_index",
+      "line": 257,
+      "signature": "self, tenant: str",
+      "decorators": [],
+      "body_sha256": "54d877924c05d9ec84e9ab96de97fb40f0efc810634c4751faa764191785f731",
+      "disposition": "implementation",
+      "native_binding": "accepted W11 staged store",
+      "assertion_obligation": "W11 source binding remains authoritative; W06 consumes acknowledged APIs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchStore._write_index",
+      "line": 261,
+      "signature": "self, tenant: str, index: dict[str, float]",
+      "decorators": [],
+      "body_sha256": "3ad6bdd5b384aa6acfe909cb4a00d11d42980baccd6e7b0a49acb5fd9507c386",
+      "disposition": "implementation",
+      "native_binding": "accepted W11 staged store",
+      "assertion_obligation": "W11 source binding remains authoritative; W06 consumes acknowledged APIs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchStore.find_by_idempotency",
+      "line": 264,
+      "signature": "self, tenant: str, idempotency_key: str",
+      "decorators": [],
+      "body_sha256": "6ead12801f970f3a7894fbe1fac2a43b894248a09b956081080816fe0d499cb8",
+      "disposition": "implementation",
+      "native_binding": "accepted W11 staged store",
+      "assertion_obligation": "W11 source binding remains authoritative; W06 consumes acknowledged APIs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchStore.admit",
+      "line": 283,
+      "signature": "self, tenant: str, idempotency_key: str, digest: str, record: dict[str, Any]",
+      "decorators": [],
+      "body_sha256": "f6b6be6e73a0b24d1bb0aac5598b2f30ddd325ef0fd147ae0a3f794d15e28b22",
+      "disposition": "implementation",
+      "native_binding": "accepted W11 staged store",
+      "assertion_obligation": "W11 source binding remains authoritative; W06 consumes acknowledged APIs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchStore.claim",
+      "line": 344,
+      "signature": "self, tenant: str, operation_id: str",
+      "decorators": [],
+      "body_sha256": "56e9674b2d8b50cbdae219ffdebe12715725dc2eb9a62505ca431859d12578ea",
+      "disposition": "implementation",
+      "native_binding": "accepted W11 staged store",
+      "assertion_obligation": "W11 source binding remains authoritative; W06 consumes acknowledged APIs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchStore.claim_next",
+      "line": 438,
+      "signature": "self",
+      "decorators": [],
+      "body_sha256": "4189eba0c4cde06252223ae02400c7c7fd8a3c51af7abbbdf93601eca8a092c3",
+      "disposition": "implementation",
+      "native_binding": "accepted W11 staged store",
+      "assertion_obligation": "W11 source binding remains authoritative; W06 consumes acknowledged APIs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchStore.save_owned",
+      "line": 459,
+      "signature": "self, tenant: str, record: dict[str, Any], token: str",
+      "decorators": [],
+      "body_sha256": "c80548e395a9eecbcbf7c2f8e4dff0266fd2231a15728435751327822aeee158",
+      "disposition": "implementation",
+      "native_binding": "accepted W11 staged store",
+      "assertion_obligation": "W11 source binding remains authoritative; W06 consumes acknowledged APIs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchStore.renew",
+      "line": 483,
+      "signature": "self, tenant: str, operation_id: str, token: str",
+      "decorators": [],
+      "body_sha256": "d73c110c2dbffbe4c6372de3f749f27144618dcb8dbaaafc048faf2d945858f3",
+      "disposition": "implementation",
+      "native_binding": "accepted W11 staged store",
+      "assertion_obligation": "W11 source binding remains authoritative; W06 consumes acknowledged APIs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchStore.recover_orphans",
+      "line": 499,
+      "signature": "self",
+      "decorators": [],
+      "body_sha256": "e8ee04c9ef51f67259e67d6758774bdbc347f05af1ab878118be0a734a886658",
+      "disposition": "implementation",
+      "native_binding": "accepted W11 staged store",
+      "assertion_obligation": "W11 source binding remains authoritative; W06 consumes acknowledged APIs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchStore.reconcile_indexes",
+      "line": 531,
+      "signature": "self",
+      "decorators": [],
+      "body_sha256": "c59839a7834aa35485d0ef0f50fc10a709973620bf1e608e30e911715686a547",
+      "disposition": "implementation",
+      "native_binding": "accepted W11 staged store",
+      "assertion_obligation": "W11 source binding remains authoritative; W06 consumes acknowledged APIs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchStore.read",
+      "line": 565,
+      "signature": "self, tenant: str, operation_id: str",
+      "decorators": [],
+      "body_sha256": "563b63d5d1d5393c04e937d1c015c16f2aaa3ee7304c59dcc4540d03b2319d0c",
+      "disposition": "implementation",
+      "native_binding": "accepted W11 staged store",
+      "assertion_obligation": "W11 source binding remains authoritative; W06 consumes acknowledged APIs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchStore.list_recent",
+      "line": 577,
+      "signature": "self, tenant: str, *, before: tuple[float, str] | None=None, limit: int=20",
+      "decorators": [],
+      "body_sha256": "2a296628a02957dcb8152bc0d23044e59554ae9253674861068692703dd377c2",
+      "disposition": "implementation",
+      "native_binding": "accepted W11 staged store",
+      "assertion_obligation": "W11 source binding remains authoritative; W06 consumes acknowledged APIs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchStore.save",
+      "line": 609,
+      "signature": "self, tenant: str, record: dict[str, Any]",
+      "decorators": [],
+      "body_sha256": "5400f91927bd01ba1ac85c2302d7dc735cc93d5cb37555b3238c3e6149f2f728",
+      "disposition": "implementation",
+      "native_binding": "accepted W11 staged store",
+      "assertion_obligation": "W11 source binding remains authoritative; W06 consumes acknowledged APIs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchStore.request_retry",
+      "line": 619,
+      "signature": "self, tenant: str, operation_id: str, retry_key: str",
+      "decorators": [],
+      "body_sha256": "a07f82ea81f000a8ce1d2fdbc6d425f9bc017903894d707800af5536f4c02c80",
+      "disposition": "implementation",
+      "native_binding": "accepted W11 staged store",
+      "assertion_obligation": "W11 source binding remains authoritative; W06 consumes acknowledged APIs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchRunner.__init__",
+      "line": 680,
+      "signature": "self, service: SearchService, store: StagedSearchStore, snapshots: SnapshotStore, policy_check: PolicyCheck",
+      "decorators": [],
+      "body_sha256": "d6caa22295ac61b8683d7d0fabf5402d552b07383ab7df5bdadfadf082dff81c",
+      "disposition": "implementation",
+      "native_binding": "StagedSearchRunner / application::staged",
+      "assertion_obligation": "full capture plus real runner acquisitions and ownership proofs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchRunner.enqueue",
+      "line": 693,
+      "signature": "self, tenant: str, operation_id: str",
+      "decorators": [],
+      "body_sha256": "7dd82c119d5e8a875996a6484b661b1097d775892daad38da29c81594d48bf67",
+      "disposition": "implementation",
+      "native_binding": "StagedSearchRunner / application::staged",
+      "assertion_obligation": "full capture plus real runner acquisitions and ownership proofs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchRunner.run_forever",
+      "line": 696,
+      "signature": "self",
+      "decorators": [],
+      "body_sha256": "bbaafec54feba392c3e1621b76d5c3f67c69c62a24ef724bf26213192f81cbf8",
+      "disposition": "implementation",
+      "native_binding": "StagedSearchRunner / application::staged",
+      "assertion_obligation": "full capture plus real runner acquisitions and ownership proofs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchRunner.run_one",
+      "line": 720,
+      "signature": "self, tenant: str, operation_id: str",
+      "decorators": [],
+      "body_sha256": "972b258362126e02812b5226450aafdd314bc32e84a5730301243c04c7ede24a",
+      "disposition": "implementation",
+      "native_binding": "StagedSearchRunner / application::staged",
+      "assertion_obligation": "full capture plus real runner acquisitions and ownership proofs"
+    },
+    {
+      "path": "slopsearx/staged.py",
+      "symbol": "StagedSearchRunner.run_one.keep_alive",
+      "line": 768,
+      "signature": "",
+      "decorators": [],
+      "body_sha256": "4ab3ac5e26b90192f2ad427f6ddf3832742192d8dc0a84d3740e53eb31e4e464",
+      "disposition": "implementation",
+      "native_binding": "StagedSearchRunner / application::staged",
+      "assertion_obligation": "full capture plus real runner acquisitions and ownership proofs"
+    },
+    {
+      "path": "slopsearx/mcp/staged_tools.py",
+      "symbol": "_error",
+      "line": 26,
+      "signature": "code: str, message: str, *, field: str | None=None, **extra: Any",
+      "decorators": [],
+      "body_sha256": "226466bf6da0b5b6409a40ee5036dd5c27ea87235763ea33b81d8d5a84af18f6",
+      "disposition": "implementation",
+      "native_binding": "application::staged::Error::value",
+      "assertion_obligation": "W06 transport-neutral semantic parity; wire schema/registration/grants composition remains W09"
+    },
+    {
+      "path": "slopsearx/mcp/staged_tools.py",
+      "symbol": "_scope_decision",
+      "line": 30,
+      "signature": "state: Any, query: str, requested: dict[str, Any]",
+      "decorators": [],
+      "body_sha256": "0abccc07213da30c54cead53fa695ebd4e98f5e674eb2ccb4f369966f66e61d5",
+      "disposition": "implementation",
+      "native_binding": "application::staged::{resolve_scope,authorize}",
+      "assertion_obligation": "W06 transport-neutral semantic parity; wire schema/registration/grants composition remains W09"
+    },
+    {
+      "path": "slopsearx/mcp/staged_tools.py",
+      "symbol": "_build_plan",
+      "line": 85,
+      "signature": "query: str, objectives: dict[str, Any], initial_scope: dict[str, Any], fallback_scope: dict[str, Any] | None, allow_scope_expansion: bool, filters: dict[str, Any] | None",
+      "decorators": [],
+      "body_sha256": "11063fe3b06f04649ef95837619905c03b95268d8722188ef387719e07746f39",
+      "disposition": "implementation",
+      "native_binding": "application::staged::Plan::build",
+      "assertion_obligation": "W06 transport-neutral semantic parity; wire schema/registration/grants composition remains W09"
+    },
+    {
+      "path": "slopsearx/mcp/staged_tools.py",
+      "symbol": "_policy_check",
+      "line": 185,
+      "signature": "record: dict[str, Any]",
+      "decorators": [],
+      "body_sha256": "e6068a7ab7073d250502085089a759ec49b4512166527694abd5da6818733b8d",
+      "disposition": "implementation",
+      "native_binding": "application::staged::revalidate",
+      "assertion_obligation": "W06 transport-neutral semantic parity; wire schema/registration/grants composition remains W09"
+    },
+    {
+      "path": "slopsearx/mcp/staged_tools.py",
+      "symbol": "_validate_view",
+      "line": 212,
+      "signature": "include: list[str] | None, max_results: int | None",
+      "decorators": [],
+      "body_sha256": "da96de946b06ed630eaab66f9a2950bd4e77f05978bbf7d206c6226bb8967eb1",
+      "disposition": "implementation",
+      "native_binding": "staged_service::View::parse",
+      "assertion_obligation": "W06 transport-neutral semantic parity; wire schema/registration/grants composition remains W09"
+    },
+    {
+      "path": "slopsearx/mcp/staged_tools.py",
+      "symbol": "_replay_equivalent",
+      "line": 223,
+      "signature": "record: dict[str, Any], query: str, objectives: dict[str, Any], initial_scope: dict[str, Any], fallback_scope: dict[str, Any] | None, allow_scope_expansion: bool, filters: dict[str, Any] | None",
+      "decorators": [],
+      "body_sha256": "7ec8007c8f69bf28764f353dcb611e2b4bd5f033d00394f27f488cec41dc4498",
+      "disposition": "implementation",
+      "native_binding": "application::staged::replay_equivalent",
+      "assertion_obligation": "W06 transport-neutral semantic parity; wire schema/registration/grants composition remains W09"
+    },
+    {
+      "path": "slopsearx/mcp/staged_tools.py",
+      "symbol": "_render",
+      "line": 246,
+      "signature": "record: dict[str, Any], include: list[str] | None, max_results: int | None",
+      "decorators": [],
+      "body_sha256": "290443ffb5fdf7b98780da3205ddf5510c78575502e57811232cf95d7997c44f",
+      "disposition": "implementation",
+      "native_binding": "staged_service::Service::render + shared ssx-mcp projection",
+      "assertion_obligation": "W06 transport-neutral semantic parity; wire schema/registration/grants composition remains W09"
+    },
+    {
+      "path": "slopsearx/mcp/staged_tools.py",
+      "symbol": "slopsearx_preview_staged_search",
+      "line": 317,
+      "signature": "query: str, objectives: dict[str, Any], initial_scope: dict[str, Any], fallback_scope: dict[str, Any] | None=None, allow_scope_expansion: bool=False, filters: dict[str, Any] | None=None",
+      "decorators": [],
+      "body_sha256": "31ae30eaf6939f80cf314fe753af5fcb882a0c363b9ebc1123463f77c80456be",
+      "disposition": "implementation",
+      "native_binding": "staged_service::Service::preview",
+      "assertion_obligation": "W06 transport-neutral semantic parity; wire schema/registration/grants composition remains W09"
+    },
+    {
+      "path": "slopsearx/mcp/staged_tools.py",
+      "symbol": "slopsearx_search_staged",
+      "line": 343,
+      "signature": "query: str | None=None, objectives: dict[str, Any] | None=None, initial_scope: dict[str, Any] | None=None, idempotency_key: str | None=None, fallback_scope: dict[str, Any] | None=None, allow_scope_expansion: bool=False, filters: dict[str, Any] | None=None, include: list[str] | None=None, max_results: int | None=None, source: dict[str, Any] | None=None",
+      "decorators": [],
+      "body_sha256": "a84516d4933afa97f97b8a667e4ad690329866083ada1972b1068971445fb254",
+      "disposition": "implementation",
+      "native_binding": "staged_service::Service::submit",
+      "assertion_obligation": "W06 transport-neutral semantic parity; wire schema/registration/grants composition remains W09"
+    },
+    {
+      "path": "slopsearx/mcp/staged_tools.py",
+      "symbol": "slopsearx_get_staged_search",
+      "line": 482,
+      "signature": "operation_id: str, include: list[str] | None=None, max_results: int | None=None",
+      "decorators": [],
+      "body_sha256": "a787d5434c584b1df027a6b5095969c06d539ae76171b944c8a7358b6e5b2c42",
+      "disposition": "implementation",
+      "native_binding": "staged_service::Service::get",
+      "assertion_obligation": "W06 transport-neutral semantic parity; wire schema/registration/grants composition remains W09"
+    },
+    {
+      "path": "slopsearx/mcp/staged_tools.py",
+      "symbol": "slopsearx_retry_staged_search",
+      "line": 504,
+      "signature": "operation_id: str, retry_key: str",
+      "decorators": [],
+      "body_sha256": "2a4547860181856f9229042636cf380a376565bdabe5400b7053dadf1a76a908",
+      "disposition": "implementation",
+      "native_binding": "staged_service::Service::retry",
+      "assertion_obligation": "W06 transport-neutral semantic parity; wire schema/registration/grants composition remains W09"
+    },
+    {
+      "path": "slopsearx/mcp/composition.py",
+      "symbol": "ResolvedSource.stored",
+      "line": 33,
+      "signature": "self",
+      "decorators": [],
+      "body_sha256": "9122c0da985003cf5e66004167c1ee56eae1eb4317bf377cffdc3187c3b0fe0e",
+      "disposition": "implementation",
+      "native_binding": "staged_service::SavedReportSources",
+      "assertion_obligation": "saved_report -> staged_search only in W06; other transitions are downstream obligations"
+    },
+    {
+      "path": "slopsearx/mcp/composition.py",
+      "symbol": "_error",
+      "line": 44,
+      "signature": "code: str, message: str, **extra: Any",
+      "decorators": [],
+      "body_sha256": "6dfd1920983d2e555eb05a815a5a1c56d0bb2fe553ff4ca750490835aaf8706b",
+      "disposition": "implementation",
+      "native_binding": "staged_service::SavedReportSources",
+      "assertion_obligation": "saved_report -> staged_search only in W06; other transitions are downstream obligations"
+    },
+    {
+      "path": "slopsearx/mcp/composition.py",
+      "symbol": "_policy_error",
+      "line": 48,
+      "signature": "engines: list[str]",
+      "decorators": [],
+      "body_sha256": "938eaaa8c6a2c439432adef780defaeb9fbea8f46e098e61c799fc988de8e0a7",
+      "disposition": "implementation",
+      "native_binding": "staged_service::SavedReportSources",
+      "assertion_obligation": "saved_report -> staged_search only in W06; other transitions are downstream obligations"
+    },
+    {
+      "path": "slopsearx/mcp/composition.py",
+      "symbol": "_source_error",
+      "line": 57,
+      "signature": "read: Any, *, missing: str='source artifact was not found'",
+      "decorators": [],
+      "body_sha256": "bc445fc722c69a40f5854c5394b1e4d74f022afe04ea9335ca349a5125b94ddb",
+      "disposition": "downstream_only",
+      "native_binding": "W08/W09 composition consumers",
+      "assertion_obligation": "saved_report -> staged_search only in W06; other transitions are downstream obligations"
+    },
+    {
+      "path": "slopsearx/mcp/composition.py",
+      "symbol": "_snapshot",
+      "line": 67,
+      "signature": "ref: dict[str, Any]",
+      "decorators": [],
+      "body_sha256": "c43ee81caa09966cf275aff74ecfe8f249c558683791179a2d26d9cca850af1b",
+      "disposition": "downstream_only",
+      "native_binding": "W08/W09 composition consumers",
+      "assertion_obligation": "saved_report -> staged_search only in W06; other transitions are downstream obligations"
+    },
+    {
+      "path": "slopsearx/mcp/composition.py",
+      "symbol": "_result",
+      "line": 87,
+      "signature": "ref: dict[str, Any]",
+      "decorators": [],
+      "body_sha256": "65a26d8fdae79d3fa3504768f2cf30d59891c48d1c7ece760f1af88b68fb2020",
+      "disposition": "downstream_only",
+      "native_binding": "W08/W09 composition consumers",
+      "assertion_obligation": "saved_report -> staged_search only in W06; other transitions are downstream obligations"
+    },
+    {
+      "path": "slopsearx/mcp/composition.py",
+      "symbol": "_entity_group",
+      "line": 111,
+      "signature": "ref: dict[str, Any]",
+      "decorators": [],
+      "body_sha256": "e3f6fbbe4b1b81995715ee5a47d41f0cc1f2e65d9f08856b980de609fdd8ac17",
+      "disposition": "downstream_only",
+      "native_binding": "W08/W09 composition consumers",
+      "assertion_obligation": "saved_report -> staged_search only in W06; other transitions are downstream obligations"
+    },
+    {
+      "path": "slopsearx/mcp/composition.py",
+      "symbol": "_saved_report",
+      "line": 138,
+      "signature": "ref: dict[str, Any]",
+      "decorators": [],
+      "body_sha256": "40796b31fc12ce8fe1667b7f957b4a275944c7a9b7098151423ad6b50de7f2eb",
+      "disposition": "implementation",
+      "native_binding": "staged_service::SavedReportSources",
+      "assertion_obligation": "saved_report -> staged_search only in W06; other transitions are downstream obligations"
+    },
+    {
+      "path": "slopsearx/mcp/composition.py",
+      "symbol": "_staged",
+      "line": 189,
+      "signature": "ref: dict[str, Any]",
+      "decorators": [],
+      "body_sha256": "b56a0cd2711298b075f9f8b1fa8cedd99c44e1464fdbe524f931b86f323beb6a",
+      "disposition": "downstream_only",
+      "native_binding": "W08/W09 composition consumers",
+      "assertion_obligation": "saved_report -> staged_search only in W06; other transitions are downstream obligations"
+    },
+    {
+      "path": "slopsearx/mcp/composition.py",
+      "symbol": "_research",
+      "line": 235,
+      "signature": "ref: dict[str, Any], *, attempt_only: bool",
+      "decorators": [],
+      "body_sha256": "c51379f48533b60e39cd11545f270b2df8e1f7eee996a3467cb9b7284dbe9ea9",
+      "disposition": "downstream_only",
+      "native_binding": "W08/W09 composition consumers",
+      "assertion_obligation": "saved_report -> staged_search only in W06; other transitions are downstream obligations"
+    },
+    {
+      "path": "slopsearx/mcp/composition.py",
+      "symbol": "resolve_source",
+      "line": 282,
+      "signature": "source: Any, destination: str",
+      "decorators": [],
+      "body_sha256": "daff3d214b6fd8a06ff26ddad43d9b3ead09012e18e90a88d857f4444600f53e",
+      "disposition": "implementation",
+      "native_binding": "staged_service::SavedReportSources",
+      "assertion_obligation": "saved_report -> staged_search only in W06; other transitions are downstream obligations"
+    },
+    {
+      "path": "tests/test_staged_search.py",
+      "symbol": "staged_state",
+      "line": 21,
+      "signature": "",
+      "decorators": [
+        "pytest.fixture"
+      ],
+      "body_sha256": "6ba3876787ad7972bc3d7885525247c72cc9b555c78becede0328f289ce8fcb9",
+      "disposition": "helper",
+      "native_binding": "fixtures only",
+      "assertion_obligation": "fixture/helper supports source capture; no standalone semantic parity claim"
+    },
+    {
+      "path": "tests/test_staged_search.py",
+      "symbol": "test_preview_has_no_dispatch_and_stable_digest",
+      "line": 37,
+      "signature": "staged_state",
+      "decorators": [],
+      "body_sha256": "21c3262b18f70bba6637437b8d5998eda775dc3d0fef155f52f505e44ef09fc1",
+      "disposition": "semantic_regression",
+      "native_binding": "preview_strict_integer_scope_filters_and_replay_identity",
+      "assertion_obligation": "preview dispatch count zero; digest stable"
+    },
+    {
+      "path": "tests/test_staged_search.py",
+      "symbol": "test_nonempty_initial_stage_skips_fallback_and_replays",
+      "line": 50,
+      "signature": "staged_state",
+      "decorators": [],
+      "body_sha256": "587052c112eae58aceb2a7f9be49f1c5b603dfb41ea4aecaed4ff2daa44d2ad7",
+      "disposition": "semantic_regression",
+      "native_binding": "nonempty_initial_real_acquisition_snapshot_fence_replay",
+      "assertion_obligation": "completed state; skip reason; durable and snapshot artifacts; reserved1; replay same operation; one dispatch"
+    },
+    {
+      "path": "tests/test_staged_search.py",
+      "symbol": "test_clean_empty_runs_disjoint_fallback",
+      "line": 75,
+      "signature": "staged_state",
+      "decorators": [],
+      "body_sha256": "9f9e83947fbc1c0859c00788ea2c367b7b9568be2fc3e523dedd54391b31755a",
+      "disposition": "semantic_regression",
+      "native_binding": "clean_empty_runs_disjoint_fallback_with_owned_histories",
+      "assertion_obligation": "two actual acquisitions; distinct attempt histories; reserved2; initialempty/fallbacknonempty"
+    },
+    {
+      "path": "tests/test_staged_search.py",
+      "symbol": "test_partial_empty_initial_stage_does_not_dispatch_fallback",
+      "line": 95,
+      "signature": "staged_state",
+      "decorators": [],
+      "body_sha256": "8a421b6609308738065ca1f58aec785a0511994eb59e960fbc72daaf8ad269e6",
+      "disposition": "semantic_regression",
+      "native_binding": "failed_empty_initial_never_authorizes_fallback",
+      "assertion_obligation": "mixed timeout/OK empty outcomes; observed/reserved2; pending fallback; unmet initial_stage_failed; zero fallback dispatch"
+    },
+    {
+      "path": "tests/test_staged_search.py",
+      "symbol": "test_cached_empty_initial_stage_does_not_authorize_fallback",
+      "line": 129,
+      "signature": "staged_state",
+      "decorators": [],
+      "body_sha256": "0bc9d11c5c704618491fc66c1f57abdbd90a59943404155996ae23dd2f04e15a",
+      "disposition": "semantic_regression",
+      "native_binding": "cached_empty_never_authorizes_fallback_observed_zero",
+      "assertion_obligation": "actual warm cache; cachedempty failed; pending fallback; initial_stage_not_clean; observed0"
+    },
+    {
+      "path": "tests/test_staged_search.py",
+      "symbol": "test_validation_rejects_overlap_and_strict_safesearch",
+      "line": 159,
+      "signature": "staged_state",
+      "decorators": [],
+      "body_sha256": "f722a148b0344eb332f22dc3531ea90dc236c310788a9c59d975956aab85ce3f",
+      "disposition": "semantic_regression",
+      "native_binding": "preview_strict_integer_scope_filters_and_replay_identity",
+      "assertion_obligation": "overlap objective_conflict; full-scope strict SafeSearch failclosed before dispatch"
+    },
+    {
+      "path": "tests/test_staged_search.py",
+      "symbol": "test_background_queue_executes_once",
+      "line": 177,
+      "signature": "staged_state",
+      "decorators": [],
+      "body_sha256": "ea8fa85c11c020e82b6269274b40415165e919f099994afe0801ca8f787fbc3d",
+      "disposition": "semantic_regression",
+      "native_binding": "background_discovery_rebuilds_ready_index_and_joins_shutdown",
+      "assertion_obligation": "actual run_due/run task scheduling must supplement run_one proof; joined shutdown; one acquisition"
+    },
+    {
+      "path": "tests/test_staged_search.py",
+      "symbol": "test_retry_preserves_unknown_aggregate_accounting",
+      "line": 196,
+      "signature": "staged_state",
+      "decorators": [],
+      "body_sha256": "5ebb7429855c0ec514bd28c6afa22d270700a4218e0ad44fb6bc5b94792a3dc8",
+      "disposition": "semantic_regression",
+      "native_binding": "duplicate_owners_and_index_loss_conserve_unknown_retry_budgets",
+      "assertion_obligation": "interrupted attempt unknown; idempotent retry; aggregate remains null after successful stages; conserved reserved spend"
+    },
+    {
+      "path": "tests/test_staged_search.py",
+      "symbol": "test_orphan_recovery_records_interrupted_outcome",
+      "line": 221,
+      "signature": "staged_state, monkeypatch: pytest.MonkeyPatch",
+      "decorators": [],
+      "body_sha256": "eb1dc8c755ef501b9cf60854ebab1eb1cf0e0e8012076e8d4c5cd2fd77afb7ac",
+      "disposition": "semantic_regression",
+      "native_binding": "recovery_acknowledgments_are_exact_single_owner_and_unknown_reply_is_not_an_event",
+      "assertion_obligation": "acknowledged running->interrupted once; no event from unknown write; concrete exporter remains W09"
+    },
+    {
+      "path": "tests/test_staged_search.py",
+      "symbol": "test_orphan_recovery_records_interrupted_outcome.ExpiredLeaseClient.__init__",
+      "line": 226,
+      "signature": "self, record_key: str",
+      "decorators": [],
+      "body_sha256": "d7720d3d8e24ee6aa211b99cd4b45579a50874fe9df28857c54e4898fed0ac8e",
+      "disposition": "helper",
+      "native_binding": "acknowledged_deadline_budget_claims_and_recovery_are_not_inferred",
+      "assertion_obligation": "Nested injected fixture for its original parent regression; no standalone semantic coverage is claimed."
+    },
+    {
+      "path": "tests/test_staged_search.py",
+      "symbol": "test_orphan_recovery_records_interrupted_outcome.ExpiredLeaseClient.zrangebyscore",
+      "line": 229,
+      "signature": "self, *_args, **_kwargs",
+      "decorators": [],
+      "body_sha256": "48801f41de4e37af7dd06f08daae4de7d4d08bc984d6446a092389445135ef6d",
+      "disposition": "helper",
+      "native_binding": "acknowledged_deadline_budget_claims_and_recovery_are_not_inferred",
+      "assertion_obligation": "Nested injected fixture for its original parent regression; no standalone semantic coverage is claimed."
+    },
+    {
+      "path": "tests/test_staged_search.py",
+      "symbol": "test_orphan_recovery_records_interrupted_outcome.ExpiredLeaseClient.eval",
+      "line": 232,
+      "signature": "self, *_args",
+      "decorators": [],
+      "body_sha256": "b94b1e9b5388bc92a6d80fa6103ffcf3bc04ee6998bdd877f4a925af5c6ea412",
+      "disposition": "helper",
+      "native_binding": "acknowledged_deadline_budget_claims_and_recovery_are_not_inferred",
+      "assertion_obligation": "Nested injected fixture for its original parent regression; no standalone semantic coverage is claimed."
+    },
+    {
+      "path": "tests/test_staged_search.py",
+      "symbol": "test_orphan_recovery_records_interrupted_outcome.ExpiredLeaseClient.zrem",
+      "line": 235,
+      "signature": "self, *_args",
+      "decorators": [],
+      "body_sha256": "5112f289ea2ecffebde156e218b06e7c21782f2b5059f3d7e70e487725d6d6f3",
+      "disposition": "helper",
+      "native_binding": "acknowledged_deadline_budget_claims_and_recovery_are_not_inferred",
+      "assertion_obligation": "Nested injected fixture for its original parent regression; no standalone semantic coverage is claimed."
+    },
+    {
+      "path": "tests/test_staged_search.py",
+      "symbol": "test_valkey_claim_terminal_status_balances_queued_metrics",
+      "line": 263,
+      "signature": "staged_state, monkeypatch: pytest.MonkeyPatch, status: str",
+      "decorators": [
+        "pytest.mark.parametrize('status', ['deadline', 'budget'])"
+      ],
+      "body_sha256": "8695a0f44f37b6e3aca3c49745ea6eba23ee87df8c4efe8523d19ccba49d649e",
+      "disposition": "semantic_regression",
+      "native_binding": "acknowledged_deadline_budget_claims_and_recovery_are_not_inferred",
+      "assertion_obligation": "PARAMETERS deadline,budget separately; definite queued->failed once; deadline expiry vs budget rejection disposition; concrete exporter W09"
+    },
+    {
+      "path": "tests/test_staged_search.py",
+      "symbol": "test_valkey_claim_terminal_status_balances_queued_metrics.TerminalClaimClient.eval",
+      "line": 280,
+      "signature": "self, *_args",
+      "decorators": [],
+      "body_sha256": "3d481eb77d9ac6b4364e672830f7e7bde48a7bff3e702638870e6395c7367dca",
+      "disposition": "helper",
+      "native_binding": "acknowledged_deadline_budget_claims_and_recovery_are_not_inferred",
+      "assertion_obligation": "Nested injected fixture for its original parent regression; no standalone semantic coverage is claimed."
+    },
+    {
+      "path": "tests/test_staged_search.py",
+      "symbol": "test_absolute_deadline_terminalizes_claimed_attempt",
+      "line": 316,
+      "signature": "staged_state",
+      "decorators": [],
+      "body_sha256": "0fdb626f088c050289f530e6e39f2749ba02ac62f43ce74310648b0fae65814c",
+      "disposition": "semantic_regression",
+      "native_binding": "acknowledged_deadline_budget_claims_and_recovery_are_not_inferred",
+      "assertion_obligation": "source failed attempt observed0 and unmetdeadline; W11 deadline-claim terminal difference explicitly recorded"
+    },
+    {
+      "path": "tests/test_staged_search.py",
+      "symbol": "test_deadline_after_renewal_records_terminal_metrics",
+      "line": 333,
+      "signature": "staged_state, monkeypatch: pytest.MonkeyPatch",
+      "decorators": [],
+      "body_sha256": "91b81a6a3ededa299aa5a5c92629bf3597135f3e1818b0755c56c075cef6cd31",
+      "disposition": "semantic_regression",
+      "native_binding": "deadline_after_acknowledged_renewal_is_rechecked_without_dispatch",
+      "assertion_obligation": "captured runner.deadline_after_renewal full record; actual runner deadline after acknowledged renewal and event assertion still mandatory"
+    },
+    {
+      "path": "tests/test_staged_search.py",
+      "symbol": "test_deadline_after_renewal_records_terminal_metrics.renew_then_expire",
+      "line": 346,
+      "signature": "*args",
+      "decorators": [],
+      "body_sha256": "89f2aab0ade9795a6269320ccb5faa492248c0c9499a3d0742caaed67a0e524a",
+      "disposition": "helper",
+      "native_binding": "source_completion_preserves_full_records_and_dispatch_requests",
+      "assertion_obligation": "Nested injected fixture for its original parent regression; no standalone semantic coverage is claimed."
+    },
+    {
+      "path": "tests/test_staged_search.py",
+      "symbol": "test_policy_revocation_hides_retained_results_and_replay",
+      "line": 364,
+      "signature": "staged_state",
+      "decorators": [],
+      "body_sha256": "0a2d3cc7b81f8c7b79b64dcef3a0301364202c9fc55b455b961b43ab2abc6788",
+      "disposition": "semantic_regression",
+      "native_binding": "nonempty_initial_real_acquisition_snapshot_fence_replay",
+      "assertion_obligation": "completed results denied by read and replay after capturedscope revocation; zero redispatch"
+    },
+    {
+      "path": "tests/test_staged_valkey_integration.py",
+      "symbol": "Store.__init__",
+      "line": 23,
+      "signature": "self, client: Any",
+      "decorators": [],
+      "body_sha256": "997fc770b2f92107013f4c7ec11552bdc34eaf1054558420c90d6589503fc4e4",
+      "disposition": "helper",
+      "native_binding": "fixtures only",
+      "assertion_obligation": "fixture/helper supports source capture; no standalone semantic parity claim"
+    },
+    {
+      "path": "tests/test_staged_valkey_integration.py",
+      "symbol": "Store.get",
+      "line": 26,
+      "signature": "self, key: str",
+      "decorators": [],
+      "body_sha256": "73dbf609e18205493e57bd63ba880eff7c8907a6648aca900e859243b9d7a45e",
+      "disposition": "helper",
+      "native_binding": "fixtures only",
+      "assertion_obligation": "fixture/helper supports source capture; no standalone semantic parity claim"
+    },
+    {
+      "path": "tests/test_staged_valkey_integration.py",
+      "symbol": "Store.set",
+      "line": 30,
+      "signature": "self, key: str, value: dict[str, Any], ttl: int=300",
+      "decorators": [],
+      "body_sha256": "d734f3ffdfcf5b0090aaae14480d40738e103ee9c2a9be6cc1362b08b9a87dfe",
+      "disposition": "helper",
+      "native_binding": "fixtures only",
+      "assertion_obligation": "fixture/helper supports source capture; no standalone semantic parity claim"
+    },
+    {
+      "path": "tests/test_staged_valkey_integration.py",
+      "symbol": "stores",
+      "line": 35,
+      "signature": "monkeypatch: pytest.MonkeyPatch",
+      "decorators": [
+        "pytest.fixture"
+      ],
+      "body_sha256": "075fbb004e2510d489aaaea99b7a147436fafd1020385585b2685fddf6b9c40a",
+      "disposition": "helper",
+      "native_binding": "fixtures only",
+      "assertion_obligation": "fixture/helper supports source capture; no standalone semantic parity claim"
+    },
+    {
+      "path": "tests/test_staged_valkey_integration.py",
+      "symbol": "operation",
+      "line": 50,
+      "signature": "operation_id: str",
+      "decorators": [],
+      "body_sha256": "83b18fc4cfc239173646da59204729ceaa32acc0ac5cee0f7959ef08100c0724",
+      "disposition": "helper",
+      "native_binding": "fixtures only",
+      "assertion_obligation": "fixture/helper supports source capture; no standalone semantic parity claim"
+    },
+    {
+      "path": "tests/test_staged_valkey_integration.py",
+      "symbol": "test_atomic_admission_claim_fencing_and_retry",
+      "line": 79,
+      "signature": "stores",
+      "decorators": [],
+      "body_sha256": "6e5f78f88c1ffcaf53c5e1db15af04b317e67a8477d42d7247c4f5e1eedd4ef7",
+      "disposition": "semantic_regression",
+      "native_binding": "duplicate_owners_and_index_loss_conserve_unknown_retry_budgets",
+      "assertion_obligation": "accepted W11 supplements W06; duplicate admit/claim; stale save; retries consume fullstage budgets"
+    },
+    {
+      "path": "tests/test_staged_valkey_integration.py",
+      "symbol": "test_reconcile_orphan_preserves_unknown_accounting_and_array_shapes",
+      "line": 120,
+      "signature": "stores",
+      "decorators": [],
+      "body_sha256": "df2dfc7b06a6fe3044910499cdb49a7e2a1494b299c37a403e0e52d3e33bf71a",
+      "disposition": "semantic_regression",
+      "native_binding": "killed_native_owner_restart_preserves_identity_and_unknown_spend",
+      "assertion_obligation": "accepted W11 complements killed native owner; original IDs; cjson map->emptyarray; unknown aggregate; index repair"
+    },
+    {
+      "path": "tests/test_workflow_composition.py",
+      "symbol": "state",
+      "line": 25,
+      "signature": "",
+      "decorators": [
+        "pytest.fixture"
+      ],
+      "body_sha256": "a7467c5fe7d28ddf9ba5a160079192d2e5adbadbe516db72ddc4bab72b1c16fc",
+      "disposition": "helper",
+      "native_binding": "fixtures only",
+      "assertion_obligation": "fixture/helper supports source capture; no standalone semantic parity claim"
+    },
+    {
+      "path": "tests/test_workflow_composition.py",
+      "symbol": "_snapshot_source",
+      "line": 57,
+      "signature": "",
+      "decorators": [],
+      "body_sha256": "093e58a71a5433cb4a3dac041efd26fcd0956739fec250283f6b82027b2be34f",
+      "disposition": "helper",
+      "native_binding": "fixtures only",
+      "assertion_obligation": "fixture/helper supports source capture; no standalone semantic parity claim"
+    },
+    {
+      "path": "tests/test_workflow_composition.py",
+      "symbol": "_saved_report_source",
+      "line": 63,
+      "signature": "state",
+      "decorators": [],
+      "body_sha256": "b15ba24b2a33b0d0503599185454724c1cc6afbda4bd05d6b61574a2b5c1c5e8",
+      "disposition": "helper",
+      "native_binding": "fixtures only",
+      "assertion_obligation": "fixture/helper supports source capture; no standalone semantic parity claim"
+    },
+    {
+      "path": "tests/test_workflow_composition.py",
+      "symbol": "test_snapshot_to_research_is_idempotent_and_traversable",
+      "line": 77,
+      "signature": "state",
+      "decorators": [],
+      "body_sha256": "32bd2b76ab97863d7d50f535028ebdfbfaee34004c6df71f5891df92eb870d92",
+      "disposition": "downstream_only",
+      "native_binding": "W08/W09",
+      "assertion_obligation": "unrelated research composition regression; not claimed W06"
+    },
+    {
+      "path": "tests/test_workflow_composition.py",
+      "symbol": "test_saved_report_composes_into_research_and_explicit_staged_plan",
+      "line": 101,
+      "signature": "state",
+      "decorators": [],
+      "body_sha256": "411271e4bef6c5279f4361676336125c5406717e91c57451cb34771ed9179c16",
+      "disposition": "semantic_regression",
+      "native_binding": "saved_source_membership_lineage_replay_and_error_precedence",
+      "assertion_obligation": "W06 saved->staged historicalquery/provenance/lineage and replay; research half W08/W09"
+    },
+    {
+      "path": "tests/test_workflow_composition.py",
+      "symbol": "test_snapshot_result_and_entity_group_seed_dossiers_without_dispatch",
+      "line": 133,
+      "signature": "state",
+      "decorators": [],
+      "body_sha256": "3629c37c37e2720a587b7cfc6e2fbd587f0ed1916b84b47fcd7585f9c806a380",
+      "disposition": "downstream_only",
+      "native_binding": "W08/W09",
+      "assertion_obligation": "unrelated dossier composition regression; not claimed W06"
+    },
+    {
+      "path": "tests/test_workflow_composition.py",
+      "symbol": "test_staged_and_research_sources_export_bounded_manifests",
+      "line": 171,
+      "signature": "state",
+      "decorators": [],
+      "body_sha256": "ad5db85f8fbae4045e49b562eaa6f95ffd6ac9403c662492df6757170a339bfb",
+      "disposition": "downstream_only",
+      "native_binding": "W08/W09",
+      "assertion_obligation": "downstream staged-source manifest exporter is not W06 runtime parity"
+    },
+    {
+      "path": "tests/test_workflow_composition.py",
+      "symbol": "test_source_lifecycle_policy_and_contract_fail_closed_before_dispatch",
+      "line": 200,
+      "signature": "state",
+      "decorators": [],
+      "body_sha256": "f57e9ed25ee2a2cdc5bcb6a4ebecb12184d05f5da9d6efb31587776643f343a7",
+      "disposition": "semantic_regression",
+      "native_binding": "saved_source_membership_lineage_replay_and_error_precedence",
+      "assertion_obligation": "W06 saved source tenant/policy/membership/no provider behavior; snapshot/research paths remain W08/W09"
+    },
+    {
+      "path": "tests/test_workflow_composition.py",
+      "symbol": "test_partial_incomparable_truncated_and_conflicting_sources_are_explicit",
+      "line": 242,
+      "signature": "state",
+      "decorators": [],
+      "body_sha256": "fd86dbf350277c139a4cb2d238439db3d9cc02e70966fe7494b0349d72ec3056",
+      "disposition": "semantic_regression",
+      "native_binding": "saved_source_membership_lineage_replay_and_error_precedence",
+      "assertion_obligation": "W06 saved truncated reasons precedence/incomparable and source+query conflict; unrelated manifest paths W08/W09"
+    },
+    {
+      "path": "tests/test_workflow_composition.py",
+      "symbol": "test_research_rejects_truncated_snapshot_and_staged_snapshot_sources",
+      "line": 281,
+      "signature": "state",
+      "decorators": [],
+      "body_sha256": "699481e466a490c37512a39b618b39f55095258aff7c9bc69fdd9d75d51171f9",
+      "disposition": "downstream_only",
+      "native_binding": "W08/W09",
+      "assertion_obligation": "research source truncation guard belongs composition consumer; not claimed W06"
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "status": "source derivation/local qualification; final package acceptance pending",
+  "data_license": "Unicode-3.0",
+  "source_version": "Unicode16 via pinned CPython3.14.7",
+  "files": [
+    {
+      "path": "contracts/unicode/python-text-16.0.0.json",
+      "sha256": "9f6d9cb6e81031954d91cc03084237592e9d7bb2224f22cab5a5fba8cebefabd",
+      "bytes": 10731
+    },
+    {
+      "path": "contracts/unicode/LICENSE.txt",
+      "sha256": "e7a93b009565cfce55919a381437ac4db883e9da2126fa28b91d12732bc53d96",
+      "bytes": 1995
+    },
+    {
+      "path": "contracts/unicode/provenance.json",
+      "sha256": "a172091a650fdb27f5e753fe65705c68aa7445a440d6ca354144757922256c40",
+      "bytes": 1050
+    },
+    {
+      "path": "crates/ssx-domain/src/media_nfkc.rs",
+      "sha256": "661c23597cc0a9f6d49dcc1b27361d9afe5e02a8ed5040212dd69dc27b2cb426",
+      "bytes": 444
+    },
+    {
+      "path": "docs/rust-rewrite/a05/provenance/media_nfkc.py",
+      "sha256": "7a6e620a642432e5409469203fc0446c92ffaca7297a7c427896c9a52cde8f89",
+      "bytes": 1453
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/media_nfkc_membership.py",
+      "sha256": "8d88145aa7a761ace4d1ceafe1f23a26873e86a8bbe2b21b0fd4fb0aaeca5405",
+      "bytes": 2036
+    },
+    {
+      "path": "docs/rust-rewrite/a05/media-nfkc-source.json",
+      "sha256": "1167bed50c192398a1b4c29224dcb3e70490c8a4593e3533c59a325a455e523e",
+      "bytes": 282538
+    }
+  ],
+  "derived_output": "crates/ssx-domain/src/media_nfkc.rs",
+  "source_field": "nfkc_url_delimiters",
+  "point_count": 19,
+  "independent_source_domain_count": 1114112,
+  "independent_source_bitmap_sha256": "229631a5b17466c73d932900626142e7b37ecf13d05fed06919daa81d8362ab3",
+  "runtime_python_dependency": false,
+  "distribution_retention_required": [
+    "contracts/unicode/LICENSE.txt",
+    "contracts/unicode/provenance.json"
+  ],
+  "python_classification": [
+    {
+      "path": "docs/rust-rewrite/a05/provenance/media_nfkc.py",
+      "class": "developer_tool",
+      "invocation": "manual offline pinned3.14.7 python -O generator approved JSON output.rs; positive/negative receipt retained",
+      "g08": "may remain developer-only; exclude from native runtime/helper tree"
+    },
+    {
+      "path": "docs/rust-rewrite/a05/oracle/media_nfkc_membership.py",
+      "class": "temporary_source_oracle",
+      "invocation": "manual offline pinned3.14.7 python -O oracle output.json; actual urllib allpoint recaptured byteexact",
+      "g08": "retire runnable oracle from final native backend/helper; retain captured data/notices/provenance"
+    }
+  ]
+}

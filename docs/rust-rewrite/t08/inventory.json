@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "plan_id": "T08",
+  "status": "executable-owner-added-pending-final-native-and-hosted-qualification",
+  "scope": "native production-component integration, not production executable/deployment",
+  "cases": [
+    "health-text",
+    "health-json",
+    "config-text",
+    "config-json",
+    "engines-text",
+    "engines-json",
+    "search-yaml",
+    "search-json",
+    "page-0-0",
+    "page-0-1",
+    "page-1-0",
+    "page-1-1",
+    "unknown-engine",
+    "negative-page",
+    "upstream-error",
+    "upstream-malformed",
+    "unavailable-server"
+  ],
+  "page_values": [
+    "18446744073709551616",
+    "18446744073709551617"
+  ],
+  "assertions": [
+    "exact adapter-port page text",
+    "distinct high-page first misses",
+    "repeat adapter/upstream count unchanged with real Valkey",
+    "production npm normalized result",
+    "unavailable unknown scope/invalid page never dispatch",
+    "all owned processes waited and upstream joined"
+  ],
+  "pending": [
+    "actual final T08 gate execution on default and installed images",
+    "original531 and separate30 final compatibility regression",
+    "hosted T08 required CI and reviewed O04 handoff"
+  ]
+}

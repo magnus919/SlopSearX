@@ -1,0 +1,397 @@
+{
+  "baseline": "1e9dd82d62456fe6f511cc5ade88bae619fac027",
+  "provenance": "actual offline Python adapters with HTTPX MockTransport; synthetic regression/control cases; no network/provider calls",
+  "toolchain": {
+    "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+    "httpx": "0.28.1",
+    "platform": "macOS-27.0-arm64-arm-64bit-Mach-O"
+  },
+  "source_inventory": [
+    {
+      "path": "engines/clinicaltrials.py",
+      "sha256": "28d1981607b05988a264c0950bd3b151608c7992d7fa0d543421a8577a2295c7",
+      "git_blob": "23c8ab6ba1e1510cc7b9a5ec5e3a7365bf13fb03"
+    },
+    {
+      "path": "engines/europepmc.py",
+      "sha256": "c8811e83b2117eb53011e96a8e9462a30462da43bebb6a8cea6cb7a8dc702dbf",
+      "git_blob": "f1c026cca5fab094e77e7658ef69edebbe3ea7e3"
+    },
+    {
+      "path": "engines/pubchem.py",
+      "sha256": "aa57ea70db504d260ef3d295fafc344e8d911341bbb1bbe3bee5f1880aa2b0c1",
+      "git_blob": "e027508d33240f1fb6eb63d41c7ccceb252eafd7"
+    },
+    {
+      "path": "engines/pubmed.py",
+      "sha256": "ac7b78c12f890ac5bcb9360cfc0c7059377b680b77902e016181ba70ae0f688c",
+      "git_blob": "8425948f5a115d0d46afce3a625bce49ee0b0fcd"
+    },
+    {
+      "path": "engines/uniprot.py",
+      "sha256": "03887fe7af9da041cb2185e7c21d85d57adc8acd343629af613191b36e55944c",
+      "git_blob": "2a1564c948e4f2220dd970e564da0ba865348bea"
+    },
+    {
+      "path": "slopsearx/adapter.py",
+      "sha256": "5883a35c48d0dad1077306fbda21997ee1d32116a8c03633a6b762de0c26d6f3",
+      "git_blob": "664e853d9ab1330596d01899ebe015701de09e88"
+    },
+    {
+      "path": "slopsearx/payload.py",
+      "sha256": "a44a95655566f9fadaf62da1bab8c975f71f3ead6c3cc57f48c411a9c093c40d",
+      "git_blob": "efa149d48bae401f7a0a9df6e50c8c614adecbb5"
+    },
+    {
+      "path": "slopsearx/config.py",
+      "sha256": "1cf76b8732439782342a9d217fb2f7c423f688533f287dbf78729a1defc5236e",
+      "git_blob": "761db0521d74ec6d955aa8a84fd92a4a62533c43"
+    }
+  ],
+  "records": [
+    {
+      "id": "uniprot-genes-string",
+      "engine": "uniprot",
+      "query": "VIM",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": [
+              {
+                "primaryAccession": "P08670",
+                "uniProtkbId": "VIM_HUMAN",
+                "genes": "abc"
+              }
+            ]
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=%28VIM%29+OR+%28gene%3AVIM%29&size=30&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.uniprot.org/uniprotkb/P08670/entry",
+            "title": "VIM_HUMAN",
+            "content": "Protein",
+            "engine": "uniprot",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null,
+            "tier": 1,
+            "work_group": null,
+            "engines": []
+          }
+        ],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "uniprot-genes-object",
+      "engine": "uniprot",
+      "query": "VIM",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": [
+              {
+                "primaryAccession": "P08670",
+                "uniProtkbId": "VIM_HUMAN",
+                "genes": {
+                  "x": {}
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=%28VIM%29+OR+%28gene%3AVIM%29&size=30&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.uniprot.org/uniprotkb/P08670/entry",
+            "title": "VIM_HUMAN",
+            "content": "Protein",
+            "engine": "uniprot",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null,
+            "tier": 1,
+            "work_group": null,
+            "engines": []
+          }
+        ],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "uniprot-genes-synonyms_string",
+      "engine": "uniprot",
+      "query": "VIM",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": [
+              {
+                "primaryAccession": "P08670",
+                "uniProtkbId": "VIM_HUMAN",
+                "genes": [
+                  {
+                    "synonyms": "abc"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=%28VIM%29+OR+%28gene%3AVIM%29&size=30&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.uniprot.org/uniprotkb/P08670/entry",
+            "title": "VIM_HUMAN",
+            "content": "Protein",
+            "engine": "uniprot",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null,
+            "tier": 1,
+            "work_group": null,
+            "engines": []
+          }
+        ],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "uniprot-genes-synonyms_object",
+      "engine": "uniprot",
+      "query": "VIM",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": [
+              {
+                "primaryAccession": "P08670",
+                "uniProtkbId": "VIM_HUMAN",
+                "genes": [
+                  {
+                    "synonyms": {
+                      "x": {}
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=%28VIM%29+OR+%28gene%3AVIM%29&size=30&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.uniprot.org/uniprotkb/P08670/entry",
+            "title": "VIM_HUMAN",
+            "content": "Protein",
+            "engine": "uniprot",
+            "position": 1,
+            "score": 1.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null,
+            "tier": 1,
+            "work_group": null,
+            "engines": []
+          }
+        ],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "uniprot-genes-heterogeneous",
+      "engine": "uniprot",
+      "query": "VIM",
+      "config": {},
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": [
+              {
+                "primaryAccession": "P08670",
+                "uniProtkbId": "VIM_HUMAN",
+                "genes": [
+                  null,
+                  "x",
+                  1,
+                  {},
+                  {
+                    "geneName": {
+                      "value": "VIM"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://rest.uniprot.org/uniprotkb/search?query=%28VIM%29+OR+%28gene%3AVIM%29&size=30&format=json",
+          "headers": {
+            "host": "rest.uniprot.org",
+            "accept-encoding": "gzip, deflate",
+            "connection": "keep-alive",
+            "user-agent": "SlopSearX/0.1.0 (meta search engine; agent-native)",
+            "accept": "application/json"
+          }
+        }
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://www.uniprot.org/uniprotkb/P08670/entry",
+            "title": "VIM_HUMAN",
+            "content": "Gene: VIM",
+            "engine": "uniprot",
+            "position": 1,
+            "score": 2.0,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null,
+            "tier": 1,
+            "work_group": null,
+            "engines": []
+          }
+        ],
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    },
+    {
+      "id": "uniprot-combined-invalid-config",
+      "engine": "uniprot",
+      "query": "test",
+      "config": {
+        "max_results": "2",
+        "timeout_ms": "bad"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "results": []
+          }
+        }
+      ],
+      "requests": [],
+      "output": {
+        "raised": "TypeError",
+        "error_message": "'<' not supported between instances of 'int' and 'str'"
+      }
+    }
+  ]
+}

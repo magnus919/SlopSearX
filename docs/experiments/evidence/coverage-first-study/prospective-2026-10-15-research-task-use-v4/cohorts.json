@@ -1,0 +1,1095 @@
+{
+  "decision_context": "Prospective task-use-primary protocol v4 cohort proposal for fresh exposed D27 development and untouched C27 confirmation; all registration, identity, source-closure, acquisition, and admission requirements remain pending.",
+  "global_contract": {
+    "allowed_engines": [
+      "arxiv",
+      "openalex",
+      "github",
+      "wikipedia"
+    ],
+    "brave": "excluded",
+    "freshness": "All task definitions are newly authored. Pools, physical source captures, and independent references must be newly acquired for this registered study; no prior pool, capture, source artifact, or grade may be carried forward. A URL may naturally recur in a fresh acquisition: preserve the card under the frozen production dedup rules and report URL overlap as metadata; do not drop it or claim the stage is untouched from an earlier measurement on that basis alone.",
+    "intent_balance": "Each stage contains four evidence_seeking and four source_discovery tasks; each pool-size band contains exactly two of each intent.",
+    "intent_definitions": {
+      "evidence_seeking": "Find candidate sources that provide evidence relevant to the task requirements; ranking assesses visible relevance, not truth or sufficiency.",
+      "source_discovery": "Locate and compare public documentation or research resources relevant to the declared topic and facets. Candidate metadata supports finding sources; it does not justify factual implementation claims about those sources."
+    },
+    "metadata_overlap_audit": {
+      "c27_exact_normalized_overlaps": {
+        "search_query": 0,
+        "target_url": 0,
+        "task_question": 0
+      },
+      "comparison_scope": "all repository cohort manifests plus EXP-077; D27 may reuse C26 definitions by explicit reassignment; C27 may not overlap any prior normalized field value",
+      "d27_reassignment_source": "Previously uninvoked C26 research/navigation definitions in the supplied template; identifiers consistently changed to D27.",
+      "fields_compared": [
+        "research.task_question",
+        "research.search_query",
+        "navigation.search_query",
+        "navigation.target_url"
+      ],
+      "status": "offline_proposal_check_pending_parent_review"
+    },
+    "natural_count_definition": "Number of eligible cards naturally present after the frozen production acquisition, grouping, and deduplication path, before ranking or presentation slicing.",
+    "navigation_target_contract": "Navigation targets are exact official GitHub repository landing pages, not vendor documentation pages. Each target has an explicit GitHub-only reference-category pool plan and a 2-4 keyword repository-search query. Root confirmed this target kind matches the prior approved EXP-077 development navigation targets and preserves the exact-target rank-1 gate. Each target URL remains subject to source qualification during the separately authorized registration process.",
+    "paired_query_contract": "Each research case has three distinct fields. search_query is a predeclared concise topical retrieval query of one to four terms and is sent unchanged to every selected engine and to both W0 and coverage candidate ranking. The coverage candidate additionally receives the full purpose and critical facets. task_question is the bounded task-use question for answer assessment; it is not substituted into the search API query.",
+    "per_engine_limit_per_pool": 20,
+    "physical_request_budget": {
+      "maximum_per_stage": 53,
+      "note": "The registered acquisition contract caps physical HTTP dispatches per stage, not across the independent stages. Each stage's worst-case reservation is 41, below 53; no calls are made by this proposal.",
+      "planned_worst_case_per_stage": {
+        "C27": 41,
+        "D27": 41
+      },
+      "request_count_basis": "Sum of registered per-engine maximum physical attempts across each operation; arxiv and wikipedia reserve up to two, github and openalex one.",
+      "verified_stage_counts": {
+        "C27": 41,
+        "D27": 40
+      }
+    },
+    "pool_band_rules": {
+      "research_41_80": "Four predeclared engines, each capped at 20; expected natural eligible count is 41-80. Counts 0-40 or above 80 are inconclusive; no rescue or truncation.",
+      "research_le_40": "Two predeclared engines, each capped at 20; expected natural eligible count is 1-40. Zero is inconclusive."
+    },
+    "pool_rules": "Acquire the complete natural eligible pool. Do not trim, pad, split, concatenate, substitute engines, rescue, or issue replacement queries. Record actual post-grouping/deduplication count. Empty, failed, overflow, or wrong-band pools remain in the record and are inconclusive; do not replace them.",
+    "scope_limit": "Proposal only: no stage UUID, source/runtime/protocol hash freeze, pool acquisition, source capture, grade, provider call, or admission is created.",
+    "search_policy": "Evidence-seeking/source-discovery only; no answer synthesis or answer claims are inputs to ranking.",
+    "search_surface": "Research and navigation queries use only the declared SearXNG category reference. This is supported by the declared arxiv/openalex/github/wikipedia engine set; GitHub reference searches the repository endpoint and returns repository landing URLs.",
+    "separation": "Research facets are caller-declared evidence requirements, not evaluator labels, source grades, answer keys, or expected conclusions. Keep source/reference artifacts and evaluator judgments out of candidate inputs."
+  },
+  "schema": "coverage-first-study-cohorts/1",
+  "stages": [
+    {
+      "navigation_targets": [
+        {
+          "navigation_pool_plan": {
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github"
+            ],
+            "expected_result_url_kind": "github_repository_landing_page",
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "navigation_query_id": "D27-N01-Q",
+          "purpose": "Find the official public repository landing page for the named project.",
+          "search_query": "flux gitops",
+          "target_id": "D27-N01",
+          "target_type": "official_github_repository_landing_page",
+          "target_url": "https://github.com/fluxcd/flux2"
+        },
+        {
+          "navigation_pool_plan": {
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github"
+            ],
+            "expected_result_url_kind": "github_repository_landing_page",
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "navigation_query_id": "D27-N02-Q",
+          "purpose": "Find the official public repository landing page for the named project.",
+          "search_query": "argo cd",
+          "target_id": "D27-N02",
+          "target_type": "official_github_repository_landing_page",
+          "target_url": "https://github.com/argoproj/argo-cd"
+        },
+        {
+          "navigation_pool_plan": {
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github"
+            ],
+            "expected_result_url_kind": "github_repository_landing_page",
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "navigation_query_id": "D27-N03-Q",
+          "purpose": "Find the official public repository landing page for the named project.",
+          "search_query": "backstage platform",
+          "target_id": "D27-N03",
+          "target_type": "official_github_repository_landing_page",
+          "target_url": "https://github.com/backstage/backstage"
+        },
+        {
+          "navigation_pool_plan": {
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github"
+            ],
+            "expected_result_url_kind": "github_repository_landing_page",
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "navigation_query_id": "D27-N04-Q",
+          "purpose": "Find the official public repository landing page for the named project.",
+          "search_query": "knative serving",
+          "target_id": "D27-N04",
+          "target_type": "official_github_repository_landing_page",
+          "target_url": "https://github.com/knative/serving"
+        },
+        {
+          "navigation_pool_plan": {
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github"
+            ],
+            "expected_result_url_kind": "github_repository_landing_page",
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "navigation_query_id": "D27-N05-Q",
+          "purpose": "Find the official public repository landing page for the named project.",
+          "search_query": "helm package manager",
+          "target_id": "D27-N05",
+          "target_type": "official_github_repository_landing_page",
+          "target_url": "https://github.com/helm/helm"
+        }
+      ],
+      "research_cases": [
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "What inventory or usage evidence is collected?",
+                "How are unknown or inactive consumers treated?"
+              ],
+              "definition": "Consumer discovery and readiness: Identify how providers find affected consumers and assess migration readiness.",
+              "facet_id": "D27-Q01-F1"
+            },
+            {
+              "critical_checks": [
+                "What notice or coexistence period is described?",
+                "How is service impact checked before removal?"
+              ],
+              "definition": "Deprecation and migration controls: Identify notice, compatibility, and removal sequencing practices.",
+              "facet_id": "D27-Q01-F2"
+            }
+          ],
+          "intent": "evidence_seeking",
+          "pool_plan": {
+            "band": "research_le_40",
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github",
+              "openalex"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Find evidence on communicating API lifecycle changes, measuring consumer readiness, and reducing disruption during deprecation. Use applicable evidence to answer the task; source presence alone does not establish the required point.",
+          "purpose_id": "D27-P01",
+          "query_id": "D27-Q01",
+          "search_query": "API deprecation strategy",
+          "task_id": "D27-R01",
+          "task_question": "How should an internal platform retire a service API when downstream teams cannot migrate at the same time?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "What events trigger cleanup or extension?",
+                "How is policy applied to abandoned environments?"
+              ],
+              "definition": "Retention and cleanup policy: Identify lifecycle triggers, retention periods, and exceptions for active investigations.",
+              "facet_id": "D27-Q02-F1"
+            },
+            {
+              "critical_checks": [
+                "What information supports a repeatable diagnosis?",
+                "What privacy, storage, or cost limits are stated?"
+              ],
+              "definition": "Reproducibility and diagnostics: Identify which configuration or logs are retained to reconstruct a failed run.",
+              "facet_id": "D27-Q02-F2"
+            }
+          ],
+          "intent": "evidence_seeking",
+          "pool_plan": {
+            "band": "research_le_40",
+            "engine_configs": {
+              "openalex": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "wikipedia",
+              "openalex"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Find evidence on temporary environment lifecycle policies that balance cost, reproducibility, and debugging needs. Use applicable evidence to answer the task; source presence alone does not establish the required point.",
+          "purpose_id": "D27-P02",
+          "query_id": "D27-Q02",
+          "search_query": "test environment lifecycle",
+          "task_id": "D27-R02",
+          "task_question": "How can an engineering platform clean up temporary test environments without discarding evidence needed to diagnose failures?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "What user outcome is measured rather than merely tool availability?",
+                "How are task complexity and prior experience handled?"
+              ],
+              "definition": "Onboarding outcome measures: Identify measures tied to a developer reaching a useful first contribution or service operation.",
+              "facet_id": "D27-Q03-F1"
+            },
+            {
+              "critical_checks": [
+                "What limits on causal interpretation are stated?",
+                "How are teams with different stacks compared fairly?"
+              ],
+              "definition": "Interpretation and bias: Identify confounders, sampling limits, or support costs in onboarding studies.",
+              "facet_id": "D27-Q03-F2"
+            }
+          ],
+          "intent": "source_discovery",
+          "pool_plan": {
+            "band": "research_le_40",
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Locate and compare evidence about measuring developer onboarding experience and interpreting platform adoption signals. Use discovered sources to support a substantive response; a bibliography alone does not complete the task.",
+          "purpose_id": "D27-P03",
+          "query_id": "D27-Q03",
+          "search_query": "developer onboarding metrics",
+          "task_id": "D27-R03",
+          "task_question": "How can teams assess onboarding friction across services with different technology stacks without mistaking adoption metrics for causal impact?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "How are fixed and variable costs represented?",
+                "What gaps remain when usage does not map cleanly to a team?"
+              ],
+              "definition": "Cost attribution model: Identify which shared costs are allocated and which usage signals drive allocation.",
+              "facet_id": "D27-Q04-F1"
+            },
+            {
+              "critical_checks": [
+                "How are cost signals used without discouraging valuable shared services?",
+                "What governance or appeal path is described?"
+              ],
+              "definition": "Incentives and governance: Identify how allocation affects capacity choices, budgets, and platform stewardship.",
+              "facet_id": "D27-Q04-F2"
+            }
+          ],
+          "intent": "source_discovery",
+          "pool_plan": {
+            "band": "research_le_40",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "arxiv",
+              "openalex"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Find and compare approaches to attributing shared platform costs and communicating consumption constraints to product teams. Use discovered sources to support a substantive response; a bibliography alone does not complete the task.",
+          "purpose_id": "D27-P04",
+          "query_id": "D27-Q04",
+          "search_query": "platform cost allocation",
+          "task_id": "D27-R04",
+          "task_question": "How should an enterprise allocate shared engineering platform costs across teams while keeping fixed costs and adoption incentives visible?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "What consistency guarantees or delays are documented?",
+                "How are missing or stale replicas detected?"
+              ],
+              "definition": "Replication and consistency: Identify replication behavior and how clients discover or select replicas.",
+              "facet_id": "D27-Q05-F1"
+            },
+            {
+              "critical_checks": [
+                "What verifies artifact identity across replicas?",
+                "What recovery behavior and operational limits are described?"
+              ],
+              "definition": "Integrity and recovery: Identify verification and recovery procedures when replicas disagree or become unavailable.",
+              "facet_id": "D27-Q05-F2"
+            }
+          ],
+          "intent": "evidence_seeking",
+          "pool_plan": {
+            "band": "research_41_80",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "arxiv",
+              "openalex",
+              "github",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Find evidence about registry replication, consistency, and integrity checks needed for reliable artifact distribution. Use applicable evidence to answer the task; source presence alone does not establish the required point.",
+          "purpose_id": "D27-P05",
+          "query_id": "D27-Q05",
+          "search_query": "artifact registry",
+          "task_id": "D27-R05",
+          "task_question": "How should a software factory validate artifact availability and integrity when its registry uses replicas or regional mirrors?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "How are per-team usage and shared contention represented?",
+                "What happens when a quota is exhausted?"
+              ],
+              "definition": "Quota and usage visibility: Identify allocation units and user-facing signals for approaching or exceeding limits.",
+              "facet_id": "D27-Q06-F1"
+            },
+            {
+              "critical_checks": [
+                "What fairness or priority tradeoffs are described?",
+                "How are service-level effects monitored?"
+              ],
+              "definition": "Policy and service impact: Identify how capacity policies balance interactive and batch workloads.",
+              "facet_id": "D27-Q06-F2"
+            }
+          ],
+          "intent": "evidence_seeking",
+          "pool_plan": {
+            "band": "research_41_80",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "arxiv",
+              "openalex",
+              "github",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Find evidence on communicating and enforcing shared platform quotas without obscuring contention or service-level impact. Use applicable evidence to answer the task; source presence alone does not establish the required point.",
+          "purpose_id": "D27-P06",
+          "query_id": "D27-Q06",
+          "search_query": "resource quotas",
+          "task_id": "D27-R06",
+          "task_question": "How can platform teams make capacity limits visible and predictable for teams running a mix of interactive agent jobs and scheduled builds?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "Which host or toolchain assumptions are explicit?",
+                "How are platform-specific requirements represented?"
+              ],
+              "definition": "Portability contract: Identify which environment inputs must be declared or controlled for a build to run elsewhere.",
+              "facet_id": "D27-Q07-F1"
+            },
+            {
+              "critical_checks": [
+                "What output or provenance comparisons are used?",
+                "What reproducibility limits remain?"
+              ],
+              "definition": "Verification and diagnostics: Identify how equivalence or divergence across execution environments is detected.",
+              "facet_id": "D27-Q07-F2"
+            }
+          ],
+          "intent": "source_discovery",
+          "pool_plan": {
+            "band": "research_41_80",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "arxiv",
+              "openalex",
+              "github",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Locate sources describing portable build definitions, environment dependencies, and practical limits of reproducibility across execution backends. Use discovered sources to support a substantive response; a bibliography alone does not complete the task.",
+          "purpose_id": "D27-P07",
+          "query_id": "D27-Q07",
+          "search_query": "build automation",
+          "task_id": "D27-R07",
+          "task_question": "How can engineering teams make build pipelines portable across execution environments while preserving useful failure diagnostics?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "What ordering or delivery guarantees are specified?",
+                "How are duplicates or out-of-order events handled?"
+              ],
+              "definition": "Delivery and ordering semantics: Identify delivery guarantees, ordering scope, and duplicate handling.",
+              "facet_id": "D27-Q08-F1"
+            },
+            {
+              "critical_checks": [
+                "How can a consumer resume from a known point?",
+                "What data-loss or retention limits are disclosed?"
+              ],
+              "definition": "Replay and consumer recovery: Identify retention, offset, and replay behavior after consumer interruption.",
+              "facet_id": "D27-Q08-F2"
+            }
+          ],
+          "intent": "source_discovery",
+          "pool_plan": {
+            "band": "research_41_80",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "arxiv",
+              "openalex",
+              "github",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Locate sources that explain event-stream delivery guarantees and consumer recovery relevant to platform workflow integrations. Use discovered sources to support a substantive response; a bibliography alone does not complete the task.",
+          "purpose_id": "D27-P08",
+          "query_id": "D27-Q08",
+          "search_query": "event streaming",
+          "task_id": "D27-R08",
+          "task_question": "How should platform teams reason about event ordering, delivery, and replay when connecting internal event streams to automation?"
+        }
+      ],
+      "stage": "development",
+      "stage_state": "proposed_unregistered_unadmitted_uninvoked"
+    },
+    {
+      "confirmation_precondition": "Fresh C27 confirmation must remain untouched until the D27 development decision, all registered gates, and stage finalization are independently verified. This proposal grants no stage identity or live-call authorization.",
+      "navigation_targets": [
+        {
+          "navigation_pool_plan": {
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github"
+            ],
+            "expected_result_url_kind": "github_repository_landing_page",
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "navigation_query_id": "C27-N01-Q",
+          "purpose": "Find the official public repository landing page for the named project.",
+          "search_query": "langfuse tracing platform",
+          "target_id": "C27-N01",
+          "target_type": "official_github_repository_landing_page",
+          "target_url": "https://github.com/langfuse/langfuse"
+        },
+        {
+          "navigation_pool_plan": {
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github"
+            ],
+            "expected_result_url_kind": "github_repository_landing_page",
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "navigation_query_id": "C27-N02-Q",
+          "purpose": "Find the official public repository landing page for the named project.",
+          "search_query": "open telemetry collector contrib",
+          "target_id": "C27-N02",
+          "target_type": "official_github_repository_landing_page",
+          "target_url": "https://github.com/open-telemetry/opentelemetry-collector-contrib"
+        },
+        {
+          "navigation_pool_plan": {
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github"
+            ],
+            "expected_result_url_kind": "github_repository_landing_page",
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "navigation_query_id": "C27-N03-Q",
+          "purpose": "Find the official public repository landing page for the named project.",
+          "search_query": "dagster workflow system",
+          "target_id": "C27-N03",
+          "target_type": "official_github_repository_landing_page",
+          "target_url": "https://github.com/dagster-io/dagster"
+        },
+        {
+          "navigation_pool_plan": {
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github"
+            ],
+            "expected_result_url_kind": "github_repository_landing_page",
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "navigation_query_id": "C27-N04-Q",
+          "purpose": "Find the official public repository landing page for the named project.",
+          "search_query": "prefect orchestration",
+          "target_id": "C27-N04",
+          "target_type": "official_github_repository_landing_page",
+          "target_url": "https://github.com/PrefectHQ/prefect"
+        },
+        {
+          "navigation_pool_plan": {
+            "engine_configs": {
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "github"
+            ],
+            "expected_result_url_kind": "github_repository_landing_page",
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "navigation_query_id": "C27-N05-Q",
+          "purpose": "Find the official public repository landing page for the named project.",
+          "search_query": "crewAI framework",
+          "target_id": "C27-N05",
+          "target_type": "official_github_repository_landing_page",
+          "target_url": "https://github.com/crewAIInc/crewAI"
+        }
+      ],
+      "research_cases": [
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "Identify which code and processes are untrusted, where credentials are withheld, and what boundary prevents exfiltration."
+              ],
+              "definition": "Execution isolation and credential separation",
+              "facet_id": "C27-Q01-F1"
+            },
+            {
+              "critical_checks": [
+                "Describe validation before outputs cross into trusted systems and state what sandboxing does not prove."
+              ],
+              "definition": "Promotion checks and residual risk",
+              "facet_id": "C27-Q01-F2"
+            }
+          ],
+          "intent": "evidence_seeking",
+          "pool_plan": {
+            "band": "research_le_40",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "arxiv",
+              "github"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "What isolation boundaries prevent untrusted repository code or agent-generated changes from accessing build credentials, and what verification should happen before promotion? Use public technical evidence to answer the task; source presence alone does not establish the required point.",
+          "purpose_id": "C27-P01",
+          "query_id": "C27-Q01",
+          "search_query": "repository build sandbox",
+          "task_id": "C27-R01",
+          "task_question": "How should an enterprise isolate automated code changes from trusted build credentials when agents execute repository tasks?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "Identify documented scanning or review controls and their limits for generated or copied code."
+              ],
+              "definition": "License and attribution checks",
+              "facet_id": "C27-Q02-F1"
+            },
+            {
+              "critical_checks": [
+                "Distinguish source attribution/provenance evidence from a model’s claim about where code came from."
+              ],
+              "definition": "Provenance evidence",
+              "facet_id": "C27-Q02-F2"
+            }
+          ],
+          "intent": "evidence_seeking",
+          "pool_plan": {
+            "band": "research_le_40",
+            "engine_configs": {
+              "openalex": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "openalex",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "How should an enterprise review AI-assisted code changes for license and attribution obligations, and what evidence is insufficient to establish provenance? Use public technical evidence to answer the task; source presence alone does not establish the required point.",
+          "purpose_id": "C27-P02",
+          "query_id": "C27-Q02",
+          "search_query": "AI code license review",
+          "task_id": "C27-R02",
+          "task_question": "How can engineering organizations review AI-assisted patches for third-party code and license obligations without treating model output as provenance?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "Identify benchmark task sources and whether they represent repository maintenance rather than isolated coding exercises."
+              ],
+              "definition": "Task realism and coverage",
+              "facet_id": "C27-Q03-F1"
+            },
+            {
+              "critical_checks": [
+                "Identify contamination controls, repeatability measures, and stated limits on generalizing benchmark results."
+              ],
+              "definition": "Leakage and reproducibility",
+              "facet_id": "C27-Q03-F2"
+            }
+          ],
+          "intent": "source_discovery",
+          "pool_plan": {
+            "band": "research_le_40",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "github": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "arxiv",
+              "github"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Which public benchmark designs test coding agents on repository-level maintenance, and how do they address task validity, leakage, and reproducibility? Use public technical evidence to answer the task; source presence alone does not establish the required point.",
+          "purpose_id": "C27-P03",
+          "query_id": "C27-Q03",
+          "search_query": "coding agent benchmarks",
+          "task_id": "C27-R03",
+          "task_question": "Compare public benchmark designs for measuring coding-agent performance on realistic repository maintenance tasks."
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "Find measurements of reviewer time, iteration, or queue burden rather than submission volume alone."
+              ],
+              "definition": "Review workload measures",
+              "facet_id": "C27-Q04-F1"
+            },
+            {
+              "critical_checks": [
+                "Identify how correctness or maintainability is assessed and what study-design limits affect conclusions."
+              ],
+              "definition": "Quality and study limits",
+              "facet_id": "C27-Q04-F2"
+            }
+          ],
+          "intent": "source_discovery",
+          "pool_plan": {
+            "band": "research_le_40",
+            "engine_configs": {
+              "openalex": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "openalex",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "What public studies or engineering reports measure maintainer effort and review quality for AI-assisted pull requests? Use public technical evidence to answer the task; source presence alone does not establish the required point.",
+          "purpose_id": "C27-P04",
+          "query_id": "C27-Q04",
+          "search_query": "AI pull request review",
+          "task_id": "C27-R04",
+          "task_question": "Find evidence on how AI-assisted pull requests affect maintainer review effort and change acceptance quality."
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "Identify how repository access, branch writes, and release actions are separately constrained."
+              ],
+              "definition": "Repository and action scope",
+              "facet_id": "C27-Q05-F1"
+            },
+            {
+              "critical_checks": [
+                "Describe human authorization points and records of actions, including residual risks of broad permissions."
+              ],
+              "definition": "Approval and audit trail",
+              "facet_id": "C27-Q05-F2"
+            }
+          ],
+          "intent": "evidence_seeking",
+          "pool_plan": {
+            "band": "research_41_80",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "arxiv",
+              "openalex",
+              "github",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "What permission boundaries and human checkpoints are documented for agents that propose coordinated changes across multiple repositories? Use public technical evidence to answer the task; source presence alone does not establish the required point.",
+          "purpose_id": "C27-P05",
+          "query_id": "C27-Q05",
+          "search_query": "capability security",
+          "task_id": "C27-R05",
+          "task_question": "How should a software factory constrain an agent that can edit several repositories and propose a coordinated release?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "Identify independent checks that protect test intent and detect removed or diluted assertions."
+              ],
+              "definition": "Test integrity controls",
+              "facet_id": "C27-Q06-F1"
+            },
+            {
+              "critical_checks": [
+                "Describe evidence that a fix addresses the underlying defect and limits of passing tests as proof."
+              ],
+              "definition": "Repair validation",
+              "facet_id": "C27-Q06-F2"
+            }
+          ],
+          "intent": "evidence_seeking",
+          "pool_plan": {
+            "band": "research_41_80",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "arxiv",
+              "openalex",
+              "github",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "How can an enterprise detect or prevent an automated code agent from weakening tests while attempting to make a change pass? Use public technical evidence to answer the task; source presence alone does not establish the required point.",
+          "purpose_id": "C27-P06",
+          "query_id": "C27-Q06",
+          "search_query": "automated testing",
+          "task_id": "C27-R06",
+          "task_question": "What controls reduce the risk that an automated code agent repeatedly changes tests to hide a defect rather than repair it?"
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "Identify how repository context or retained task state is represented and compared."
+              ],
+              "definition": "Context and memory methods",
+              "facet_id": "C27-Q07-F1"
+            },
+            {
+              "critical_checks": [
+                "Find task-level outcomes, baselines, and limits on transferring results to enterprise repositories."
+              ],
+              "definition": "Evaluation validity",
+              "facet_id": "C27-Q07-F2"
+            }
+          ],
+          "intent": "source_discovery",
+          "pool_plan": {
+            "band": "research_41_80",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "arxiv",
+              "openalex",
+              "github",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "Which public evaluations compare repository context or task memory strategies for coding assistants on maintenance work? Use public technical evidence to answer the task; source presence alone does not establish the required point.",
+          "purpose_id": "C27-P07",
+          "query_id": "C27-Q07",
+          "search_query": "program comprehension",
+          "task_id": "C27-R07",
+          "task_question": "Locate evaluations of repository context and long-term task memory for coding assistants working on maintenance issues."
+        },
+        {
+          "critical_facets": [
+            {
+              "critical_checks": [
+                "Identify process, filesystem, network, or identity restrictions applied to extensions."
+              ],
+              "definition": "Extension execution boundary",
+              "facet_id": "C27-Q08-F1"
+            },
+            {
+              "critical_checks": [
+                "Find documented effects on compatibility, performance, and incident diagnosis without assuming isolation is complete."
+              ],
+              "definition": "Tradeoffs and observability",
+              "facet_id": "C27-Q08-F2"
+            }
+          ],
+          "intent": "source_discovery",
+          "pool_plan": {
+            "band": "research_41_80",
+            "engine_configs": {
+              "arxiv": {
+                "max_results": 20
+              },
+              "github": {
+                "max_results": 20
+              },
+              "openalex": {
+                "max_results": 20
+              },
+              "wikipedia": {
+                "max_results": 20
+              }
+            },
+            "engines": [
+              "arxiv",
+              "openalex",
+              "github",
+              "wikipedia"
+            ],
+            "per_engine_limit": 20,
+            "searx_categories": [
+              "reference"
+            ]
+          },
+          "purpose": "What approaches isolate third-party build extensions in enterprise software factories, and what operational tradeoffs are reported? Use public technical evidence to answer the task; source presence alone does not establish the required point.",
+          "purpose_id": "C27-P08",
+          "query_id": "C27-Q08",
+          "search_query": "software isolation",
+          "task_id": "C27-R08",
+          "task_question": "Compare documented approaches for running third-party build extensions safely inside enterprise software factories."
+        }
+      ],
+      "stage": "confirmation",
+      "stage_state": "proposed_unregistered_unadmitted_uninvoked"
+    }
+  ],
+  "status": "proposed_unregistered_unadmitted_uninvoked"
+}

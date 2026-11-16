@@ -1,0 +1,322 @@
+https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP932.TXT
+#
+#    Name:     cp932 to Unicode table
+#    Unicode version: 2.0
+#    Table version: 2.01
+#    Table format:  Format A
+#    Date:          04/15/98
+#
+#    Contact:       Shawn.Steele@microsoft.com
+#
+#    General notes: none
+#
+#    Format: Three tab-separated columns
+#        Column #1 is the cp932 code (in hex)
+#        Column #2 is the Unicode (in hex as 0xXXXX)
+#        Column #3 is the Unicode name (follows a comment sign, '#')
+#
+#    The entries are in cp932 order
+#
+
+
+https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP936.TXT
+#
+#    Name:     cp936 to Unicode table
+#    Unicode version: 2.0
+#    Table version: 2.01
+#    Table format:  Format A
+#    Date:          1/7/2000
+#
+#    Contact:       Shawn.Steele@microsoft.com
+#
+#    General notes: none
+#
+#    Format: Three tab-separated columns
+#        Column #1 is the cp936 code (in hex)
+#        Column #2 is the Unicode (in hex as 0xXXXX)
+#        Column #3 is the Unicode name (follows a comment sign, '#')
+#
+#    The entries are in cp936 order
+#
+
+
+https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP949.TXT
+#
+#    Name:     cp949 to Unicode table
+#    Unicode version: 2.0
+#    Table version: 2.01
+#    Table format:  Format A
+#    Date:          1/7/2000
+#
+#    Contact:       Shawn.Steele@microsoft.com
+#
+#    General notes: none
+#
+#    Format: Three tab-separated columns
+#        Column #1 is the cp949 code (in hex)
+#        Column #2 is the Unicode (in hex as 0xXXXX)
+#        Column #3 is the Unicode name (follows a comment sign, '#')
+#
+#    The entries are in cp949 order
+#
+
+
+https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP950.TXT
+#
+#    Name:     cp950 to Unicode table
+#    Unicode version: 2.0
+#    Table version: 2.01
+#    Table format:  Format A
+#    Date:          1/7/2000
+#
+#    Contact:       Shawn.Steele@microsoft.com
+#
+#    General notes: none
+#
+#    Format: Three tab-separated columns
+#        Column #1 is the cp950 code (in hex)
+#        Column #2 is the Unicode (in hex as 0xXXXX)
+#        Column #3 is the Unicode name (follows a comment sign, '#')
+#
+#    The entries are in cp950 order
+#
+
+
+https://www.unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/OTHER/BIG5.TXT
+# BIG5.TXT
+# Date: 2015-12-02 23:52:00 GMT [KW]
+# © 2015 Unicode®, Inc.
+# For terms of use, see http://www.unicode.org/terms_of_use.html
+#
+#	Name:             BIG5 to Unicode table (complete)
+#	Unicode version:  1.1
+#	Table version:    2.0
+#	Table format:     Format A
+#	Date:             2011 October 14 (header updated: 2015 December 02)
+#
+#	General notes:
+#
+#
+# This table contains one set of mappings from BIG5 into Unicode.
+# Note that these data are *possible* mappings only and may not be the
+# same as those used by actual products, nor may they be the best suited
+# for all uses.  For more information on the mappings between various code
+# pages incorporating the repertoire of BIG5 and Unicode, consult the
+# VENDORS mapping data.
+#
+#	WARNING!  It is currently impossible to provide round-trip compatibility
+#		between BIG5 and Unicode.  
+#
+#	A number of characters are not currently mapped because
+#		of conflicts with other mappings.  They are as follows:
+#
+#       BIG5        Description                    Comments
+#
+#       0xA15A      SPACING UNDERSCORE             duplicates A1C4
+#       0xA1C3      SPACING HEAVY OVERSCORE        not in Unicode
+#       0xA1C5      SPACING HEAVY UNDERSCORE       not in Unicode
+#       0xA1FE      LT DIAG UP RIGHT TO LOW LEFT   duplicates A2AC
+#       0xA240      LT DIAG UP LEFT TO LOW RIGHT   duplicates A2AD
+#       0xA2CC      HANGZHOU NUMERAL TEN           conflicts with A451 mapping
+#       0xA2CE      HANGZHOU NUMERAL THIRTY        conflicts with A4CA mapping
+#
+#	We currently map all of these characters to U+FFFD REPLACEMENT CHARACTER.
+#		It is also possible to map these characters to their duplicates, or to
+#		the user zone.  
+#	
+#	Notes:
+#
+#	1. In addition to the above, there is some uncertainty about the
+#       mappings in the range C6A1 - C8FE, and F9DD - F9FE.  The ETEN
+#	version of BIG5 organizes the former range differently, and adds
+#	additional characters in the latter range.  The correct mappings
+#	these ranges need to be determined.
+#
+#	2.  There is an uncertainty in the mapping of the Big Five character
+#	0xA3BC.  This character occurs within the Big Five block of tone marks
+#	for bopomofo and is intended to be the tone mark for the first tone in
+#	Mandarin Chinese.  We have selected the mapping U+02C9 MODIFIER LETTER
+#	MACRON (Mandarin Chinese first tone) to reflect this semantic.  
+#	However, because bopomofo uses the absense of a tone mark to indicate
+#	the first Mandarin tone, most implementations of Big Five represent
+#	this character with a blank space, and so a mapping such as U+2003 EM
+#	SPACE might be preferred.  
+#
+#	Format:  Three tab-separated columns
+#		 Column #1 is the BIG5 code (in hex as 0xXXXX)
+#		 Column #2 is the Unicode (in hex as 0xXXXX)
+#		 Column #3  is the Unicode name (follows a comment sign, '#')
+#			The official names for Unicode characters U+4E00
+#			to U+9FA5, inclusive, is "CJK UNIFIED IDEOGRAPH-XXXX",
+#			where XXXX is the code point.  Including all these
+#			names in this file increases its size substantially
+#			and needlessly.  The token "<CJK>" is used for the
+#			name of these characters.  If necessary, it can be
+#			expanded algorithmically by a parser or editor.
+#
+#	The entries are in BIG5 order
+#
+#  Revision History:
+#
+#    [v2.0, 2015 December 02]
+#    updates to copyright notice and terms of use
+#    no changes to character mappings
+#
+#    [v1.0, 2011 October 14]
+#    Updated terms of use to current wording.
+#    Updated contact information.
+#    No changes to the mapping data.
+#
+#    [v0.0d3, 11 February 1994]
+#    First release.
+#
+#  Use the Unicode reporting form <http://www.unicode.org/reporting.html>
+#    for any questions or comments or to report errors in the data.
+#
+
+
+https://www.unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/JIS/JIS0208.TXT
+# JIS0208.TXT
+# Date: 2015-12-02 23:50:00 GMT [KW]
+# © 2015 Unicode®, Inc.
+# For terms of use, see http://www.unicode.org/terms_of_use.html
+#
+#	Name:             JIS X 0208 (1990) to Unicode
+#	Unicode version:  1.1
+#	Table version:    2.0
+#	Table format:     Format A
+#	Date:             2011 October 14 (header updated: 2015 December 02)
+#
+#	General notes:
+#
+#
+# This table contains one set of mappings from JIS X 0208 (1990) into Unicode.
+# Note that these data are *possible* mappings only and may not be the
+# same as those used by actual products, nor may they be the best suited
+# for all uses.  For more information on the mappings between various code
+# pages incorporating the repertoire of JIS X 0208 (1990) and Unicode, consult the
+# VENDORS mapping data.
+#
+#
+#	Format:  Four tab-separated columns
+#		 Column #1 is the shift-JIS code (in hex)
+#		 Column #2 is the JIS X 0208 code (in hex as 0xXXXX)
+#		 Column #3 is the Unicode (in hex as 0xXXXX)
+#		 Column #4 the Unicode name (follows a comment sign, '#')
+#			The official names for Unicode characters U+4E00
+#			to U+9FA5, inclusive, is "CJK UNIFIED IDEOGRAPH-XXXX",
+#			where XXXX is the code point.  Including all these
+#			names in this file increases its size substantially
+#			and needlessly.  The token "<CJK>" is used for the
+#			name of these characters.  If necessary, it can be
+#			expanded algorithmically by a parser or editor.
+#
+#	The entries are in JIS X 0208 order
+#
+#	The following algorithms can be used to change the hex form
+#		of JIS 0208 to other standard forms:
+#
+#		To change hex to EUC form, add 0x8080
+#		To change hex to kuten form, first subtract 0x2020.  Then
+#			the high and low bytes correspond to the ku and ten of
+#			the kuten form.  For example, 0x2121 -> 0x0101 -> 0101;
+#			0x7426 -> 0x5406 -> 8406
+#
+#  Revision History:
+#
+#    [v2.0, 2015 December 02]
+#    updates to copyright notice and terms of use
+#    no changes to character mappings
+#
+#    [v1.0, 2011 October 14]
+#    Updated terms of use to current wording.
+#    Updated contact information.
+#    No changes to the mapping data.
+#
+#    [v0.9, 8 March 1994]
+#    First release.
+#
+#  Use the Unicode reporting form <http://www.unicode.org/reporting.html>
+#    for any questions or comments or to report errors in the data.
+#
+
+
+https://www.unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/JIS/JIS0212.TXT
+# JIS0212.TXT
+# Date: 2015-12-02 23:51:00 GMT [KW]
+# © 2015 Unicode®, Inc.
+# For terms of use, see http://www.unicode.org/terms_of_use.html
+#
+#	Name:             JIS X 0212 (1990) to Unicode
+#	Unicode version:  1.1
+#	Table version:    2.0
+#	Table format:     Format A
+#	Date:             2011 October 14 (header updated: 2015 December 02)
+#
+#	General notes:
+#
+#
+# This table contains one set of mappings from JIS X 0212 into Unicode.
+# Note that these data are *possible* mappings only and may not be the
+# same as those used by actual products, nor may they be the best suited
+# for all uses.  For more information on the mappings between various code
+# pages incorporating the repertoire of JIS X 0212 and Unicode, consult the
+# VENDORS mapping data.
+#
+#
+#	Format:  Three tab-separated columns
+#		 Column #1 is the JIS X 0212 code (in hex as 0xXXXX)
+#		 Column #2 is the Unicode (in hex as 0xXXXX)
+#		 Column #3 the Unicode name (follows a comment sign, '#')
+#			The official names for Unicode characters U+4E00
+#			to U+9FA5, inclusive, is "CJK UNIFIED IDEOGRAPH-XXXX",
+#			where XXXX is the code point.  Including all these
+#			names in this file increases its size substantially
+#			and needlessly.  The token "<CJK>" is used for the
+#			name of these characters.  If necessary, it can be
+#			expanded algorithmically by a parser or editor.
+#
+#	The entries are in JIS X 0212 order
+#
+#	The following algorithms can be used to change the hex form
+#		of JIS 0212 to other standard forms:
+#
+#		To change hex to EUC form, add 0x8080
+#		To change hex to kuten form, first subtract 0x2020.  Then
+#			the high and low bytes correspond to the ku and ten of
+#			the kuten form.  For example, 0x2121 -> 0x0101 -> 0101;
+#			0x6D63 -> 0x4D43 -> 7767
+#
+#	Notes:
+#
+#	1. JIS X 0212 apparently unified the following two symbols
+#	   into a single character at 0x2922:
+#	
+#	   LATIN CAPITAL LETTER D WITH STROKE
+#	   LATIN CAPITAL LETTER ETH
+#
+#	   However, JIS X 0212 maintains the distinction between
+#	   the lowercase forms of these two elements at 0x2942 and 0x2943.
+#	   Given the structre of these JIS encodings, it is clear that
+#	   0x2922 and 0x2942 are intended to be a capital/small pair.
+#	   Consequently, in the Unicode mapping, 0x2922 is treated as
+#	   LATIN CAPITAL LETTER D WITH STROKE.
+#
+#  Revision History:
+#
+#    [v2.0, 2015 December 02]
+#    updates to copyright notice and terms of use
+#    no changes to character mappings
+#
+#    [v1.0, 2011 October 14]
+#    Updated terms of use to current wording.
+#    Updated contact information.
+#    No changes to the mapping data.
+#
+#    [v0.9, 8 March 1994]
+#    First release.
+#
+#  Use the Unicode reporting form <http://www.unicode.org/reporting.html>
+#    for any questions or comments or to report errors in the data.
+#
+

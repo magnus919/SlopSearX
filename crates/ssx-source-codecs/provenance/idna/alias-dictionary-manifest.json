@@ -1,0 +1,26 @@
+{
+  "source": "inputs/aliases.py",
+  "sha256": "1ee993f8eb4986999b6501381e53947be9a04443626cb48b4190bcff2e87d3b4",
+  "license": "PSF-2.0; complete LICENSE-PYTHON retained",
+  "generator": "docs/rust-rewrite/a05/oracle/alias_only_generate.py",
+  "registry_metadata": "provenance/singlebyte-native-input.json",
+  "registry_metadata_sha256": "634dac6dfb1034ba03bf26d437a03315c4b4d38333081ef446c655b393666bde",
+  "output": "src/alias_only.rs",
+  "aliases": 339,
+  "unavailable_platform_aliases": [
+    [
+      "ansi",
+      "mbcs"
+    ],
+    [
+      "dbcs",
+      "mbcs"
+    ]
+  ],
+  "precedence": "original actual dictionary alias, then actual dictionary alias after dot-to-underscore, then only nondotted module name",
+  "source_control_path": "tests/label-dotted-source.json",
+  "source_control_sha256": "ba177129c2fc75f575c95e4e08e7d72213f09e484abc757c16a9b093104f186e",
+  "case_count": 1451,
+  "whole_httpx_form_count": 2902,
+  "status": "narrow parent-authorized implementation; complete package qualification pending"
+}

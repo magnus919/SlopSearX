@@ -756,24 +756,29 @@ async def test_v2_rate_limit_is_terminal_and_later_operations_remain_uninvoked(t
 
 @pytest.mark.asyncio
 async def test_v2_logical_deadline_seals_timeout_then_invokes_remaining_operations(tmp_path, monkeypatch):
-    # Keep the production control flow and owned transport, shortening only
-    # the pinned profile in this hermetic test so cancellation is deterministic.
+    # Keep the production control flow and owned transport. Block only the
+    # first request until cancellation; allow the successful later operations
+    # enough time for coverage instrumentation on a loaded CI runner.
     profile = offline.AcquisitionExecutionProfile(
         identifier=offline.CONTINUE_ACQUISITION_PROFILE.identifier,
         manifest_schema=offline.CONTINUE_ACQUISITION_PROFILE.manifest_schema,
-        request_timeout_seconds=0.3,
-        logical_query_timeout_seconds=0.05,
+        request_timeout_seconds=1.5,
+        logical_query_timeout_seconds=0.5,
         continue_after_ordinary_failure=True,
     )
     monkeypatch.setattr(offline, "CONTINUE_ACQUISITION_PROFILE", profile)
     monkeypatch.setitem(offline._ACQUISITION_PROFILES, profile.identifier, profile)
     manifest, plan = make_manifest(profile=profile.identifier)
     seen = []
+    first_cancelled = asyncio.Event()
 
     async def handler(request):
         seen.append(request)
         if request.url.params.get("q") == "synthetic query 1":
-            await asyncio.sleep(0.3)
+            try:
+                await asyncio.Event().wait()
+            finally:
+                first_cancelled.set()
         return _mock_handler()(request)
 
     receipt = b"sealed v2 logical-timeout fixture"
@@ -795,6 +800,7 @@ async def test_v2_logical_deadline_seals_timeout_then_invokes_remaining_operatio
     assert first.status == "inconclusive"
     assert first.exception_type == "TimeoutError"
     assert "logical_query_timeout" in first.failure_reasons
+    assert first_cancelled.is_set()
     assert len(first.exchanges) == 2
     assert all(
         exchange.failure_code in {None, "request_timeout", "request_deadline_before_dispatch"}

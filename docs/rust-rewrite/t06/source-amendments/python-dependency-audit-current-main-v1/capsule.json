@@ -1,0 +1,641 @@
+{
+  "schema": "PYTHON_DEPENDENCY_AUDIT_SOURCE_SUCCESSOR_V1",
+  "baseline": "6cd400c2af9ec77613caf9ecab27a7264acac79f",
+  "scope": "Issue #1129 runtime/dev dependency security floors and reproducible audit from accepted main 6cd400c2 only; historical qualification evidence remains unchanged and does not certify successor behavior.",
+  "rows": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "current": {
+        "bytes": 21764,
+        "sha256": "9a861241b353c3123087609946db5ed870a939a1af1b00128c7fccc839278292",
+        "mode": "0644"
+      },
+      "current_git_blob": "23ee72eaa88bc8a6267caf52a2967e0e29c1fc40",
+      "prior": {
+        "bytes": 16840,
+        "sha256": "5c1ad02869e6dfb15c2e612cca3a41c12f2efc2d81db0c09613137102f8c517d",
+        "mode": "0644"
+      },
+      "prior_git_blob": "4c32a4b46fedde236aae51ccb0b9c80d7d4794ff",
+      "prior_path": ".github/workflows/ci.yml",
+      "edits": [
+        {
+          "at": 1462,
+          "remove_utf8": "      - name: Install locked runtime and development dependencies\n",
+          "insert_utf8": "      - name: Install dependencies\n"
+        },
+        {
+          "at": 1543,
+          "remove_utf8": "          python -m pip install \"uv==0.11.18\"\n          echo \"UV_PROJECT_ENVIRONMENT=$RUNNER_TEMP/python-dependency-audit-venv\" >> \"$GITHUB_ENV\"\n          UV_PROJECT_ENVIRONMENT=\"$RUNNER_TEMP/python-dependency-audit-venv\" uv sync --locked --extra dev --python \"$(command -v python)\"\n          echo \"$RUNNER_TEMP/python-dependency-audit-venv/bin\" >> \"$GITHUB_PATH\"\n\n      - name: Audit locked runtime and development dependencies\n        run: |\n          set -euo pipefail\n          audit_dir=\"$RUNNER_TEMP/python-dependency-audit\"\n          mkdir -p \"$audit_dir\"\n          uv --version | tee \"$audit_dir/uv-version.txt\"\n          python --version | tee \"$audit_dir/python-version.txt\"\n          python -m pip_audit --version | tee \"$audit_dir/pip-audit-version.txt\"\n          printf 'PyPI JSON vulnerability service: https://pypi.org/pypi/<package>/<version>/json\\n' > \"$audit_dir/vulnerability-service.txt\"\n          uv lock --check\n          python -m pip check\n          python -m pip list --format=json > \"$audit_dir/installed-packages.json\"\n          python -m pip_audit --local --skip-editable --vulnerability-service pypi --format json --output \"$audit_dir/installed.json\"\n          uv export --locked --no-dev --no-emit-project --format requirements-txt --output-file \"$audit_dir/runtime-requirements.txt\"\n          python -m pip_audit --requirement \"$audit_dir/runtime-requirements.txt\" --no-deps --disable-pip --strict --vulnerability-service pypi --format json --output \"$audit_dir/runtime.json\"\n          python - \"$audit_dir/installed-packages.json\" \"$audit_dir/installed.json\" \"$audit_dir/runtime.json\" <<'PY'\n          import json\n          import re\n          import sys\n          from pathlib import Path\n\n          def fail(message):\n              raise SystemExit(message)\n\n          def read_json(path):\n              with Path(path).open(encoding=\"utf-8\") as stream:\n                  return json.load(stream)\n\n          def package_name(record, label):\n              if not isinstance(record, dict):\n                  fail(f\"{label}: package record is not an object\")\n              name = record.get(\"name\")\n              if not isinstance(name, str) or not name:\n                  fail(f\"{label}: package name is missing\")\n              return re.sub(r\"[-_.]+\", \"-\", name).lower()\n\n          inventory = read_json(sys.argv[1])\n          if not isinstance(inventory, list) or not inventory:\n              fail(\"installed package inventory is empty or malformed\")\n          inventory_names = [package_name(record, \"pip list\") for record in inventory]\n          if len(inventory_names) != len(set(inventory_names)):\n              fail(\"pip list contains duplicate normalized package names\")\n\n          def validate_report(path, label, allowed_skips, expected_names=None):\n              report = read_json(path)\n              if not isinstance(report, dict) or not isinstance(report.get(\"dependencies\"), list):\n                  fail(f\"{label}: malformed pip-audit report\")\n              dependencies = report[\"dependencies\"]\n              if not dependencies:\n                  fail(f\"{label}: pip-audit reported no dependencies\")\n              names = []\n              skipped = []\n              for record in dependencies:\n                  name = package_name(record, label)\n                  names.append(name)\n                  if \"skip_reason\" in record:\n                      if set(record) != {\"name\", \"skip_reason\"} or not isinstance(record[\"skip_reason\"], str):\n                          fail(f\"{label}: malformed skipped dependency record\")\n                      skipped.append((name, record[\"skip_reason\"]))\n                  else:\n                      if not isinstance(record.get(\"version\"), str) or not record[\"version\"] or not isinstance(record.get(\"vulns\"), list):\n                          fail(f\"{label}: incomplete audited dependency record for {name}\")\n                      if record[\"vulns\"]:\n                          fail(f\"{label}: vulnerability findings for {name}\")\n              if len(names) != len(set(names)):\n                  fail(f\"{label}: duplicate normalized package names\")\n              if expected_names is not None and set(names) != expected_names:\n                  fail(f\"{label}: package inventory mismatch; missing={sorted(expected_names - set(names))}, extra={sorted(set(names) - expected_names)}\")\n              if sorted(skipped) != sorted(allowed_skips):\n                  fail(f\"{label}: unexpected skipped dependencies: {skipped!r}\")\n              print(f\"{label}: {len(names) - len(skipped)} audited, {len(skipped)} allowed skips, zero findings\")\n\n          validate_report(\n              sys.argv[2],\n              \"installed audit\",\n              {(\"slopsearx\", \"distribution marked as editable\")},\n              set(inventory_names),\n          )\n          validate_report(sys.argv[3], \"runtime audit\", set())\n          PY\n\n      - name: Retain dependency audit reports\n        if: always()\n        uses: actions/upload-artifact@v7\n        with:\n          name: python-dependency-audit\n          path: ${{ runner.temp }}/python-dependency-audit/\n          if-no-files-found: error\n          retention-days: 14\n",
+          "insert_utf8": "          python -m pip install --upgrade pip\n          pip install -e \".[dev]\"\n"
+        },
+        {
+          "at": 7268,
+          "remove_utf8": "        run: deptry .\n",
+          "insert_utf8": "        run: deptry . --per-rule-ignores \"DEP002=lxml|uvicorn|pytest|pytest-asyncio|ruff|cssselect|mypy|pytest-cov|pip-tools|pre-commit|radon|vulture|import-linter|deptry|pip-audit|fastmcp|prometheus-client|dnspython,DEP003=starlette\"\n"
+        }
+      ]
+    },
+    {
+      "path": ".github/workflows/nightly.yml",
+      "current": {
+        "bytes": 3042,
+        "sha256": "cee5366b669ee688ac16f0732517fa0a8dcde9e984ddaada5a5ca778bd51bb30",
+        "mode": "0644"
+      },
+      "current_git_blob": "dc4c3442527852ec8e85aba8bfd165eff7342b7f",
+      "prior": {
+        "bytes": 3229,
+        "sha256": "87874379f14e781c543bc1a413cf03b59e470ee541536de27182b2f292ade8e3",
+        "mode": "0644"
+      },
+      "prior_git_blob": "faa442bea0eb274d09ccf9fa2de49295b4a1ed12",
+      "prior_path": ".github/workflows/nightly.yml",
+      "edits": [
+        {
+          "at": 2175,
+          "remove_utf8": "        run: deptry .\n",
+          "insert_utf8": "        run: deptry . --per-rule-ignores \"DEP002=lxml|uvicorn|pytest|pytest-asyncio|ruff|cssselect|mypy|pytest-cov|pip-tools|pre-commit|radon|vulture|import-linter|deptry|pip-audit|dnspython,DEP003=starlette\"\n"
+        }
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/ci/gates.json",
+      "current": {
+        "bytes": 181677,
+        "sha256": "9bf6b0a3ac823b90fae1f545417cb0f130a567130d0ed32ba41bfb06b9d6bdea",
+        "mode": "0644"
+      },
+      "current_git_blob": "831469bebbf241aa22cc72f946d2466daa209181",
+      "prior": {
+        "bytes": 177321,
+        "sha256": "4fe646332b6291b68f9423dffd4cfb5939c07cbf5988895c0577c20170fe6708",
+        "mode": "0644"
+      },
+      "prior_git_blob": "fd095045cb5a776165936f68e4f93ad3255a965a",
+      "prior_path": "docs/rust-rewrite/ci/gates.json",
+      "edits": [
+        {
+          "at": 9581,
+          "remove_utf8": "                \"python-version\": \"3.12\",\n                \"cache\": \"pip\"\n",
+          "insert_utf8": "                \"cache\": \"pip\",\n                \"python-version\": \"3.12\"\n"
+        },
+        {
+          "at": 9699,
+          "remove_utf8": "              \"name\": \"Install locked runtime and development dependencies\",\n              \"run\": \"python -m pip install \\\"uv==0.11.18\\\"\\necho \\\"UV_PROJECT_ENVIRONMENT=$RUNNER_TEMP/python-dependency-audit-venv\\\" >> \\\"$GITHUB_ENV\\\"\\nUV_PROJECT_ENVIRONMENT=\\\"$RUNNER_TEMP/python-dependency-audit-venv\\\" uv sync --locked --extra dev --python \\\"$(command -v python)\\\"\\necho \\\"$RUNNER_TEMP/python-dependency-audit-venv/bin\\\" >> \\\"$GITHUB_PATH\\\"\\n\"\n            },\n            {\n              \"name\": \"Audit locked runtime and development dependencies\",\n              \"run\": \"set -euo pipefail\\naudit_dir=\\\"$RUNNER_TEMP/python-dependency-audit\\\"\\nmkdir -p \\\"$audit_dir\\\"\\nuv --version | tee \\\"$audit_dir/uv-version.txt\\\"\\npython --version | tee \\\"$audit_dir/python-version.txt\\\"\\npython -m pip_audit --version | tee \\\"$audit_dir/pip-audit-version.txt\\\"\\nprintf 'PyPI JSON vulnerability service: https://pypi.org/pypi/<package>/<version>/json\\\\n' > \\\"$audit_dir/vulnerability-service.txt\\\"\\nuv lock --check\\npython -m pip check\\npython -m pip list --format=json > \\\"$audit_dir/installed-packages.json\\\"\\npython -m pip_audit --local --skip-editable --vulnerability-service pypi --format json --output \\\"$audit_dir/installed.json\\\"\\nuv export --locked --no-dev --no-emit-project --format requirements-txt --output-file \\\"$audit_dir/runtime-requirements.txt\\\"\\npython -m pip_audit --requirement \\\"$audit_dir/runtime-requirements.txt\\\" --no-deps --disable-pip --strict --vulnerability-service pypi --format json --output \\\"$audit_dir/runtime.json\\\"\\npython - \\\"$audit_dir/installed-packages.json\\\" \\\"$audit_dir/installed.json\\\" \\\"$audit_dir/runtime.json\\\" <<'PY'\\nimport json\\nimport re\\nimport sys\\nfrom pathlib import Path\\n\\ndef fail(message):\\n    raise SystemExit(message)\\n\\ndef read_json(path):\\n    with Path(path).open(encoding=\\\"utf-8\\\") as stream:\\n        return json.load(stream)\\n\\ndef package_name(record, label):\\n    if not isinstance(record, dict):\\n        fail(f\\\"{label}: package record is not an object\\\")\\n    name = record.get(\\\"name\\\")\\n    if not isinstance(name, str) or not name:\\n        fail(f\\\"{label}: package name is missing\\\")\\n    return re.sub(r\\\"[-_.]+\\\", \\\"-\\\", name).lower()\\n\\ninventory = read_json(sys.argv[1])\\nif not isinstance(inventory, list) or not inventory:\\n    fail(\\\"installed package inventory is empty or malformed\\\")\\ninventory_names = [package_name(record, \\\"pip list\\\") for record in inventory]\\nif len(inventory_names) != len(set(inventory_names)):\\n    fail(\\\"pip list contains duplicate normalized package names\\\")\\n\\ndef validate_report(path, label, allowed_skips, expected_names=None):\\n    report = read_json(path)\\n    if not isinstance(report, dict) or not isinstance(report.get(\\\"dependencies\\\"), list):\\n        fail(f\\\"{label}: malformed pip-audit report\\\")\\n    dependencies = report[\\\"dependencies\\\"]\\n    if not dependencies:\\n        fail(f\\\"{label}: pip-audit reported no dependencies\\\")\\n    names = []\\n    skipped = []\\n    for record in dependencies:\\n        name = package_name(record, label)\\n        names.append(name)\\n        if \\\"skip_reason\\\" in record:\\n            if set(record) != {\\\"name\\\", \\\"skip_reason\\\"} or not isinstance(record[\\\"skip_reason\\\"], str):\\n                fail(f\\\"{label}: malformed skipped dependency record\\\")\\n            skipped.append((name, record[\\\"skip_reason\\\"]))\\n        else:\\n            if not isinstance(record.get(\\\"version\\\"), str) or not record[\\\"version\\\"] or not isinstance(record.get(\\\"vulns\\\"), list):\\n                fail(f\\\"{label}: incomplete audited dependency record for {name}\\\")\\n            if record[\\\"vulns\\\"]:\\n                fail(f\\\"{label}: vulnerability findings for {name}\\\")\\n    if len(names) != len(set(names)):\\n        fail(f\\\"{label}: duplicate normalized package names\\\")\\n    if expected_names is not None and set(names) != expected_names:\\n        fail(f\\\"{label}: package inventory mismatch; missing={sorted(expected_names - set(names))}, extra={sorted(set(names) - expected_names)}\\\")\\n    if sorted(skipped) != sorted(allowed_skips):\\n        fail(f\\\"{label}: unexpected skipped dependencies: {skipped!r}\\\")\\n    print(f\\\"{label}: {len(names) - len(skipped)} audited, {len(skipped)} allowed skips, zero findings\\\")\\n\\nvalidate_report(\\n    sys.argv[2],\\n    \\\"installed audit\\\",\\n    {(\\\"slopsearx\\\", \\\"distribution marked as editable\\\")},\\n    set(inventory_names),\\n)\\nvalidate_report(sys.argv[3], \\\"runtime audit\\\", set())\\nPY\\n\"\n            },\n            {\n              \"name\": \"Retain dependency audit reports\",\n              \"if\": \"always()\",\n              \"uses\": \"actions/upload-artifact@v7\",\n              \"with\": {\n                \"name\": \"python-dependency-audit\",\n                \"path\": \"${{ runner.temp }}/python-dependency-audit/\",\n                \"if-no-files-found\": \"error\",\n                \"retention-days\": 14\n              }\n",
+          "insert_utf8": "              \"name\": \"Install dependencies\",\n              \"run\": \"python -m pip install --upgrade pip\\npip install -e \\\".[dev]\\\"\\n\"\n"
+        },
+        {
+          "at": 15465,
+          "remove_utf8": "              \"run\": \"deptry .\"\n",
+          "insert_utf8": "              \"run\": \"deptry . --per-rule-ignores \\\"DEP002=lxml|uvicorn|pytest|pytest-asyncio|ruff|cssselect|mypy|pytest-cov|pip-tools|pre-commit|radon|vulture|import-linter|deptry|pip-audit|fastmcp|prometheus-client|dnspython,DEP003=starlette\\\"\"\n"
+        },
+        {
+          "at": 15598,
+          "remove_utf8": "            \"push\": {\n",
+          "insert_utf8": "            \"pull_request\": {\n"
+        },
+        {
+          "at": 15702,
+          "remove_utf8": "            \"pull_request\": {\n",
+          "insert_utf8": "            \"push\": {\n"
+        },
+        {
+          "at": 47561,
+          "remove_utf8": "                \"python-version\": \"3.12\",\n                \"cache\": \"pip\"\n",
+          "insert_utf8": "                \"cache\": \"pip\",\n                \"python-version\": \"3.12\"\n"
+        },
+        {
+          "at": 48685,
+          "remove_utf8": "              \"run\": \"deptry .\"\n",
+          "insert_utf8": "              \"run\": \"deptry . --per-rule-ignores \\\"DEP002=lxml|uvicorn|pytest|pytest-asyncio|ruff|cssselect|mypy|pytest-cov|pip-tools|pre-commit|radon|vulture|import-linter|deptry|pip-audit|dnspython,DEP003=starlette\\\"\"\n"
+        }
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/o02/python-dependency-audit-gates-reader-v1.rs",
+      "current": {
+        "bytes": 36381,
+        "sha256": "2b0c484ab152f55f48122f02d7944226cd9c67e1e2d7fb3d9cb2c78d3dad45d4",
+        "mode": "0644"
+      },
+      "current_git_blob": "6f232fe976ce4ee6605d380e4d7ee6903d9f3fd5",
+      "prior": {
+        "bytes": 35756,
+        "sha256": "d9c7774d7016031bd520fc84191b1f2dfb5b0bf366be16f15fe2bcdf4ea1d5b0",
+        "mode": "0644"
+      },
+      "prior_git_blob": "257cefcfb6179de701535e39fb951ed2a4056541",
+      "prior_path": "docs/rust-rewrite/o02/upstream-contracts-source-successor-v1.rs",
+      "edits": [
+        {
+          "at": 158,
+          "remove_utf8": "#[allow(\n    dead_code,\n    clippy::duplicate_mod,\n    reason = \"Independent active audit reader composes the stateless outer proof\"\n)]\n#[path = \"../t06/source-amendments/python-dependency-audit-current-main-v1.rs\"]\nmod dependency_audit_outer;\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 25651,
+          "remove_utf8": "    let accepted = dependency_audit_outer::frame(GATES_PATH, current, mode)?;\n    gates_inverse(&doc[\"row\"], &accepted, mode)\n",
+          "insert_utf8": "    gates_inverse(&doc[\"row\"], current, mode)\n"
+        },
+        {
+          "at": 25992,
+          "remove_utf8": "    let current = dependency_audit_outer::current_at(physical_root, proof_root, GATES_PATH)?\n        .ok_or(\"current dependency audit catalog missing\")?;\n    let accepted = dependency_audit_outer::frame(GATES_PATH, &current, 0o644)?;\n    let prior = gates_inverse(&doc[\"row\"], &accepted, 0o644)?;\n",
+          "insert_utf8": "    let current = physical(physical_root, GATES_PATH, GATES_PIN.current_bytes)?;\n    let prior = gates_inverse(&doc[\"row\"], &current, 0o644)?;\n"
+        },
+        {
+          "at": 27184,
+          "remove_utf8": "    let accepted = dependency_audit_outer::frame(GATES_PATH, &current, 0o644)?;\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 29365,
+          "remove_utf8": "            gates_inverse(&bad, &accepted, 0o644).is_err(),\n",
+          "insert_utf8": "            gates_inverse(&bad, &current, 0o644).is_err(),\n"
+        },
+        {
+          "at": 29682,
+          "remove_utf8": "            gates_inverse(&bad, &accepted, 0o644).is_err(),\n",
+          "insert_utf8": "            gates_inverse(&bad, &current, 0o644).is_err(),\n"
+        },
+        {
+          "at": 32480,
+          "remove_utf8": "        dependency_audit_outer::seed_control_capsule(&owned.0)?;\n",
+          "insert_utf8": ""
+        }
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/t06/source-amendments/lock_amendment.rs",
+      "current": {
+        "bytes": 20896,
+        "sha256": "4fcd684b1de8ff0ad2d9f6743c00e626c75489cfb0f1a9ff2df40e66083d2c3e",
+        "mode": "0644"
+      },
+      "current_git_blob": "6baa89b7ed8d3b8acc9dbbe7902337d2ea10bb48",
+      "prior": {
+        "bytes": 20890,
+        "sha256": "ab59c665b7b681ce1db4f329357392bae493711974979309aadaa1029ef43a69",
+        "mode": "0644"
+      },
+      "prior_git_blob": "a222e2296b53c54194f4fcaee1f95c9a1b5123fe",
+      "prior_path": "docs/rust-rewrite/t06/source-amendments/lock_amendment.rs",
+      "edits": [
+        {
+          "at": 79,
+          "remove_utf8": "#[path = \"python-dependency-audit-source-reader-v1.rs\"]\n",
+          "insert_utf8": "#[path = \"dnspython-security-current-main-v1.rs\"]\n"
+        }
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/t06/source-amendments/python-dependency-audit-source-reader-v1.rs",
+      "current": {
+        "bytes": 31817,
+        "sha256": "e66d91525c9b50a26d1fabd1eb2bf137d83e2fc9ed8c7cbe5a6e71dda8edfca9",
+        "mode": "0644"
+      },
+      "current_git_blob": "40f336a08289b7324b464c4f65436ab09200488a",
+      "prior": {
+        "bytes": 30095,
+        "sha256": "8b93ed8debbd14b1c45b7b6c80b211e9b0ac1b84d8a7ee7401e1ab124191e387",
+        "mode": "0644"
+      },
+      "prior_git_blob": "29fb2f1dab1f63495a8aa8baaac690396c4afbe2",
+      "prior_path": "docs/rust-rewrite/t06/source-amendments/dnspython-security-current-main-v1.rs",
+      "edits": [
+        {
+          "at": 0,
+          "remove_utf8": "//! Active #1129 reader successor over the unchanged accepted #1128 source.\n",
+          "insert_utf8": "//! Exact #1128 dependency and CI source successor. Historical evidence stays fixed.\n"
+        },
+        {
+          "at": 160,
+          "remove_utf8": "#[allow(\n    dead_code,\n    clippy::duplicate_mod,\n    reason = \"Independent qualification roots share this stateless dependency audit proof\"\n)]\n#[path = \"python-dependency-audit-current-main-v1.rs\"]\npub(crate) mod dependency_audit_outer;\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 575,
+          "remove_utf8": "#[path = \"../../o02/python-dependency-audit-gates-reader-v1.rs\"]\n",
+          "insert_utf8": "#[path = \"../../o02/upstream-contracts-source-successor-v1.rs\"]\n"
+        },
+        {
+          "at": 2764,
+          "remove_utf8": "    if let Some(current) = dependency_audit_outer::current_at(physical_root, proof_root, path)? {\n        Ok(current)\n    } else if path == o02_upstream_outer::GATES_PATH {\n",
+          "insert_utf8": "    if path == o02_upstream_outer::GATES_PATH {\n"
+        },
+        {
+          "at": 3152,
+          "remove_utf8": "    let accepted = if dependency_audit_outer::owns(path) {\n        dependency_audit_outer::frame(path, physical, 0o644)?\n    } else {\n        physical.to_vec()\n    };\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 3437,
+          "remove_utf8": "        Ok(accepted)\n",
+          "insert_utf8": "        Ok(physical.to_vec())\n"
+        },
+        {
+          "at": 4682,
+          "remove_utf8": "    if dependency_audit_outer::owns(path) {\n        return dependency_audit_outer::current_git_blob(path);\n    }\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 13241,
+          "remove_utf8": "    let logical = logical_operand(path, physical)?;\n    inverse(&pin, row(&doc, path)?, &logical, mode)\n",
+          "insert_utf8": "    if path == o02_upstream_outer::GATES_PATH {\n        let logical = o02_upstream_outer::gates_frame(physical, mode)?;\n        inverse(&pin, row(&doc, path)?, &logical, mode)\n    } else {\n        inverse(&pin, row(&doc, path)?, physical, mode)\n    }\n"
+        },
+        {
+          "at": 14811,
+          "remove_utf8": "fn same_source(before: &fs::Metadata, after: &fs::Metadata) -> bool {\n    if !before.is_file() || !after.is_file() || before.len() != after.len() {\n        return false;\n    }\n    #[cfg(unix)]\n    {\n        use std::os::unix::fs::MetadataExt;\n        before.mode() & 0o7777 == 0o644\n            && after.mode() & 0o7777 == 0o644\n            && before.dev() == after.dev()\n            && before.ino() == after.ino()\n            && before.mtime() == after.mtime()\n            && before.mtime_nsec() == after.mtime_nsec()\n            && before.ctime() == after.ctime()\n            && before.ctime_nsec() == after.ctime_nsec()\n    }\n    #[cfg(windows)]\n    {\n        use std::os::windows::fs::MetadataExt;\n        before.file_attributes() & 0x400 == 0\n            && after.file_attributes() & 0x400 == 0\n            && before.file_attributes() == after.file_attributes()\n            && before.creation_time() == after.creation_time()\n            && before.last_write_time() == after.last_write_time()\n    }\n    #[cfg(not(any(unix, windows)))]\n    false\n}\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 15942,
+          "remove_utf8": "    regular_observed(root, path, expected_bytes, || Ok(()))\n}\nfn regular_observed(\n    root: &Path,\n    path: &str,\n    expected_bytes: usize,\n    after_read: impl FnOnce() -> Result<()>,\n) -> Result<Vec<u8>> {\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 16401,
+          "remove_utf8": "            && before.len() <= 1_048_576,\n        \"regular exact-size bounded physical source\",\n",
+          "insert_utf8": "            && before.len() <= LIMIT,\n        \"bounded exact-size regular source\",\n"
+        },
+        {
+          "at": 16660,
+          "remove_utf8": "        need(before.mode() & 0o7777 == 0o644, \"physical source mode0644\")?;\n",
+          "insert_utf8": "        need(before.mode() & 0o7777 == 0o644, \"physical Unix0644\")?;\n"
+        },
+        {
+          "at": 17509,
+          "remove_utf8": "            \"Python dependency audit no-follow source open is not implemented for this Unix\".into(),\n",
+          "insert_utf8": "            \"dnspython security no-follow source open is not implemented for this Unix\".into(),\n"
+        },
+        {
+          "at": 17653,
+          "remove_utf8": "        use std::os::windows::fs::OpenOptionsExt;\n        // Open the leaf itself and deny concurrent writers/deletion while held.\n        options.custom_flags(0x00200000).share_mode(0x00000001); // OPEN_REPARSE_POINT, FILE_SHARE_READ\n        let out = Command::new(\"git\")\n            .args([\"ls-files\", \"--stage\", \"--\", path])\n            .current_dir(root)\n            .output()\n            .map_err(|e| e.to_string())?;\n        let text = String::from_utf8_lossy(&out.stdout);\n",
+          "insert_utf8": "        let index = git(root, &[\"ls-files\", \"--stage\", \"--\", path])?;\n        let index = std::str::from_utf8(&index).map_err(|e| e.to_string())?;\n        let lines = index.lines().collect::<Vec<_>>();\n"
+        },
+        {
+          "at": 18147,
+          "remove_utf8": "            out.status.success()\n                && text.lines().count() == 1\n                && text.starts_with(\"100644 \")\n                && text.ends_with(&format!(\" 0\\t{path}\\n\")),\n            \"Windows exact current stage-zero Git mode/path\",\n",
+          "insert_utf8": "            lines.len() == 1\n                && lines[0].starts_with(\"100644 \")\n                && lines[0].ends_with(&format!(\" 0\\t{path}\")),\n            \"Windows current stage-zero index100644\",\n"
+        },
+        {
+          "at": 18449,
+          "remove_utf8": "    return Err(\"Python dependency audit source admission requires Unix or Windows\".into());\n    let file = options.open(&full).map_err(|e| e.to_string())?;\n    let opened = file.metadata().map_err(|e| e.to_string())?;\n",
+          "insert_utf8": "    return Err(\"dnspython security source-mode proof requires Unix or Windows\".into());\n    let opened = options.open(&full).map_err(|e| e.to_string())?;\n    let after = opened.metadata().map_err(|e| e.to_string())?;\n"
+        },
+        {
+          "at": 18677,
+          "remove_utf8": "        same_source(&before, &opened),\n        \"same opened regular source identity/mode\",\n",
+          "insert_utf8": "        after.is_file() && after.len() == before.len(),\n        \"opened regular exact-size descriptor\",\n"
+        },
+        {
+          "at": 18776,
+          "remove_utf8": "",
+          "insert_utf8": "    #[cfg(unix)]\n    {\n        use std::os::unix::fs::MetadataExt;\n        need(\n            after.mode() & 0o7777 == 0o644\n                && before.dev() == after.dev()\n                && before.ino() == after.ino(),\n            \"same opened Unix source identity/mode\",\n        )?;\n    }\n"
+        },
+        {
+          "at": 18832,
+          "remove_utf8": "    (&file)\n        .take(expected_bytes as u64 + 1)\n",
+          "insert_utf8": "    opened\n        .take(LIMIT + 1)\n"
+        },
+        {
+          "at": 18956,
+          "remove_utf8": "    after_read()?;\n    let after = file.metadata().map_err(|e| e.to_string())?;\n",
+          "insert_utf8": "    need(\n        bytes.len() == expected_bytes && bytes.len() as u64 <= LIMIT,\n        \"finite opened exact byte count\",\n    )?;\n"
+        },
+        {
+          "at": 19174,
+          "remove_utf8": "        bytes.len() == expected_bytes\n            && same_source(&opened, &after)\n            && same_source(&after, &current)\n            && !current.file_type().is_symlink(),\n        \"descriptor/path identity unchanged after size-plus-one read\",\n",
+          "insert_utf8": "        current.is_file() && !current.file_type().is_symlink() && current.len() == after.len(),\n        \"physical source remains regular exact-size\",\n"
+        },
+        {
+          "at": 19430,
+          "remove_utf8": "",
+          "insert_utf8": "    #[cfg(unix)]\n    {\n        use std::os::unix::fs::MetadataExt;\n        need(\n            current.dev() == after.dev()\n                && current.ino() == after.ino()\n                && current.mode() & 0o7777 == 0o644,\n            \"physical path retains opened Unix identity/mode\",\n        )?;\n    }\n"
+        },
+        {
+          "at": 21081,
+          "remove_utf8": "    dependency_audit_outer::controls(root)?;\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 25773,
+          "remove_utf8": "        let physical = physical_operand(root, root, path, selected.current_bytes)?;\n",
+          "insert_utf8": "        let physical = regular(root, path, selected.current_bytes)?;\n"
+        },
+        {
+          "at": 27436,
+          "remove_utf8": "        dependency_audit_outer::seed_control_capsule(&owned.0)?;\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 27615,
+          "remove_utf8": "        let physical = physical_operand(proof_root, proof_root, path, selected.current_bytes)?;\n",
+          "insert_utf8": "        let physical = regular(proof_root, path, selected.current_bytes)?;\n"
+        },
+        {
+          "at": 31130,
+          "remove_utf8": "        let ci = physical_operand(proof_root, proof_root, ci_path, selected.current_bytes)?;\n",
+          "insert_utf8": "        let ci = regular(proof_root, ci_path, selected.current_bytes)?;\n"
+        }
+      ]
+    },
+    {
+      "path": "pyproject.toml",
+      "current": {
+        "bytes": 5828,
+        "sha256": "da2a8787b2a186f914b77f24f646415d99049e50bced9a2c7fdd1117a8c64316",
+        "mode": "0644"
+      },
+      "current_git_blob": "fbdcd7f06874798ff20e77d1fe36ef37907cd29c",
+      "prior": {
+        "bytes": 5425,
+        "sha256": "d8b7a42dfcaf4963bc22e072f044bafe676cd90cba6f0194fbc8b87c32a187a0",
+        "mode": "0644"
+      },
+      "prior_git_blob": "6395a16d8b21aeaa681748eb6550d1748ff50125",
+      "prior_path": "pyproject.toml",
+      "edits": [
+        {
+          "at": 15,
+          "remove_utf8": "requires = [\"setuptools>=84.1.0\"]\n",
+          "insert_utf8": "requires = [\"setuptools>=68.0\"]\n"
+        },
+        {
+          "at": 592,
+          "remove_utf8": "    \"fastmcp>=4.1.2,<5\",\n",
+          "insert_utf8": "    \"fastmcp>=2.0,<5\",\n"
+        },
+        {
+          "at": 663,
+          "remove_utf8": "    # Patched runtime floors also apply to fresh installs outside the uv lock.\n    \"anyio>=4.14.2\",\n    \"authlib>=1.9.1\",\n    \"certifi>=2026.10.18\",\n    \"joserfc>=1.7.6\",\n    \"opentelemetry-api>=1.45.2\",\n    \"starlette>=1.3.1\",\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 1146,
+          "remove_utf8": "    \"pip>=26.2\",\n    \"setuptools>=84.1.0\",\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 3959,
+          "remove_utf8": "# These direct security floors protect transitively consumed runtime packages;\n# pip/setuptools are development and build tools rather than application imports.\nper_rule_ignores = {DEP002 = [\"lxml\", \"uvicorn\", \"pytest\", \"pytest-asyncio\", \"ruff\", \"cssselect\", \"mypy\", \"pytest-cov\", \"pip-tools\", \"pre-commit\", \"radon\", \"vulture\", \"import-linter\", \"deptry\", \"pip-audit\", \"fastmcp\", \"prometheus-client\", \"dnspython\", \"anyio\", \"authlib\", \"certifi\", \"joserfc\", \"opentelemetry-api\", \"pip\", \"setuptools\"]}\n",
+          "insert_utf8": "# dnspython is a direct security floor for FastMCP's transitive email-validation dependency.\nper_rule_ignores = {DEP002 = [\"lxml\", \"uvicorn\", \"pytest\", \"pytest-asyncio\", \"ruff\", \"cssselect\", \"mypy\", \"pytest-cov\", \"pip-tools\", \"pre-commit\", \"radon\", \"vulture\", \"import-linter\", \"deptry\", \"pip-audit\", \"fastmcp\", \"prometheus-client\", \"dnspython\"], DEP003 = [\"starlette\"]}\n"
+        }
+      ]
+    },
+    {
+      "path": "uv.lock",
+      "current": {
+        "bytes": 471652,
+        "sha256": "5b305fbd0fe7cd339dd6c638006d0fe10138208cebfd33e2256956ac679e5ee8",
+        "mode": "0644"
+      },
+      "current_git_blob": "7d5addc2e0f0f2e81bfac6c895b247b087e8671b",
+      "prior": {
+        "bytes": 470840,
+        "sha256": "b56c01276cfe649d85f40827388b43789672854f3fb5af3c408650748abc01a6",
+        "mode": "0644"
+      },
+      "prior_git_blob": "f381a1daf48ef6463e7bbb1a637a6a1e6e954bfe",
+      "prior_path": "uv.lock",
+      "edits": [
+        {
+          "at": 2370,
+          "remove_utf8": "version = \"4.14.2\"\n",
+          "insert_utf8": "version = \"4.13.0\"\n"
+        },
+        {
+          "at": 2558,
+          "remove_utf8": "sdist = { url = \"https://files.pythonhosted.org/packages/61/cc/a381afa6efea9f496eff839d4a6a1aed3bfafc7b3ab4b0d1b243a12573dd/anyio-4.14.2.tar.gz\", hash = \"sha256:cfa139f3ed1a23ee8f88a145ddb5ac7605b8bbfd8592baacd7ce3d8bb4313c7f\", size = 260176, upload-time = \"2026-07-12T20:29:07.082Z\" }\n",
+          "insert_utf8": "sdist = { url = \"https://files.pythonhosted.org/packages/19/14/2c5dd9f512b66549ae92767a9c7b330ae88e1932ca57876909410251fe13/anyio-4.13.0.tar.gz\", hash = \"sha256:334b70e641fd2221c1505b3890c69882fe4a2df910cba14d97019b90b24439dc\", size = 231622, upload-time = \"2026-03-24T12:59:09.671Z\" }\n"
+        },
+        {
+          "at": 2855,
+          "remove_utf8": "    { url = \"https://files.pythonhosted.org/packages/da/35/f2287558c17e29fafc8ef3daf819bb9834061cfa43bff8014f7df7f63bdc/anyio-4.14.2-py3-none-any.whl\", hash = \"sha256:9f505dda5ac9f0c8309b5e8bd445a8c2bf7246f3ce950121e45ea15bc41d1494\", size = 125813, upload-time = \"2026-07-12T20:29:05.763Z\" },\n",
+          "insert_utf8": "    { url = \"https://files.pythonhosted.org/packages/da/42/e921fccf5015463e32a3cf6ee7f980a6ed0f395ceeaa45060b61d86486c2/anyio-4.13.0-py3-none-any.whl\", hash = \"sha256:08b310f9e24a9594186fd75b4f73f4a4152069e3853f1ed8bfbf58369f4ad708\", size = 114353, upload-time = \"2026-03-24T12:59:08.246Z\" },\n"
+        },
+        {
+          "at": 14702,
+          "remove_utf8": "version = \"1.9.1\"\n",
+          "insert_utf8": "version = \"1.8.0\"\n"
+        },
+        {
+          "at": 14846,
+          "remove_utf8": "sdist = { url = \"https://files.pythonhosted.org/packages/c9/dc/087c08741a98d234c9b98beef8a28d3c309f814d14b6156422c5815bf6d6/authlib-1.9.1.tar.gz\", hash = \"sha256:5c7d9848f47cac340f060f76ae0bc09b59f5c8e89cc1bb032d4370a0c55b5974\", size = 182700, upload-time = \"2026-10-14T14:17:52.307Z\" }\n",
+          "insert_utf8": "sdist = { url = \"https://files.pythonhosted.org/packages/f1/51/bc1729d3cfdc214b4935f4e886e4dd443c3065fd8e1e66423fe84b490f81/authlib-1.8.0.tar.gz\", hash = \"sha256:f3ecd5f1da737262fb53bf1a4d95c4ea1ad9dd509316587a255c99ab1838a4f0\", size = 177759, upload-time = \"2026-08-30T12:12:34.833Z\" }\n"
+        },
+        {
+          "at": 15144,
+          "remove_utf8": "    { url = \"https://files.pythonhosted.org/packages/39/44/a46089266de32a0d809023b6bf31b80a1f26a46954446a7ce695a565cbea/authlib-1.9.1-py2.py3-none-any.whl\", hash = \"sha256:8b9be8b1e5174dcbf5520e984f1a22dc2edae5b6e40a61d4cedbf86b97e9e69b\", size = 266042, upload-time = \"2026-10-14T14:17:50.695Z\" },\n",
+          "insert_utf8": "    { url = \"https://files.pythonhosted.org/packages/b8/c6/6f124bcfbbfb20fba22c939b4e43a06dccfc0e1ca20e5634ca573cb1e271/authlib-1.8.0-py2.py3-none-any.whl\", hash = \"sha256:88aebbd9af6757e14e912d5dc007ae1dc1f3e27e3b2152ce7c552ee2c3b3c121\", size = 260804, upload-time = \"2026-08-30T12:12:33.162Z\" },\n"
+        },
+        {
+          "at": 15475,
+          "remove_utf8": "version = \"0.23.1\"\n",
+          "insert_utf8": "version = \"0.22.9\"\n"
+        },
+        {
+          "at": 15544,
+          "remove_utf8": "sdist = { url = \"https://files.pythonhosted.org/packages/79/34/c0cfdaee9c796c8381439fed0fcab62810753b8b0adb1ec88fa7f41eaa5d/beartype-0.23.1.tar.gz\", hash = \"sha256:8b805f246b32931c74f2b321ea0939fe5bb2ff43c12a3eff19cc4c854b832e1d\", size = 1993714, upload-time = \"2026-10-11T05:36:55.251Z\" }\n",
+          "insert_utf8": "sdist = { url = \"https://files.pythonhosted.org/packages/c7/94/1009e248bbfbab11397abca7193bea6626806be9a327d399810d523a07cb/beartype-0.22.9.tar.gz\", hash = \"sha256:8f82b54aa723a2848a56008d18875f91c1db02c32ef6a62319a002e3e25a975f\", size = 1608866, upload-time = \"2025-12-13T06:50:30.72Z\" }\n"
+        },
+        {
+          "at": 15845,
+          "remove_utf8": "    { url = \"https://files.pythonhosted.org/packages/1c/cb/2f6aa982e2860c1156830db3da7f823b71784ed7d533ca289ea9b6c6347a/beartype-0.23.1-py3-none-any.whl\", hash = \"sha256:4461b4dc57e3fdd6c8a8464b22cf118002eea107c33e9fef651c69068ab3cce3\", size = 1582101, upload-time = \"2026-10-11T05:36:52.431Z\" },\n",
+          "insert_utf8": "    { url = \"https://files.pythonhosted.org/packages/71/cc/18245721fa7747065ab478316c7fea7c74777d07f37ae60db2e84f8172e8/beartype-0.22.9-py3-none-any.whl\", hash = \"sha256:d16c9bbc61ea14637596c5f6fbff2ee99cbe3573e46a716401734ef50c3060c2\", size = 1333658, upload-time = \"2025-12-13T06:50:28.266Z\" },\n"
+        },
+        {
+          "at": 29608,
+          "remove_utf8": "version = \"2026.10.18\"\n",
+          "insert_utf8": "version = \"2026.5.20\"\n"
+        },
+        {
+          "at": 29681,
+          "remove_utf8": "sdist = { url = \"https://files.pythonhosted.org/packages/7e/eb/a2aa1ac3ea30dd3f30ca57f40232138b6b0040719316ecb85daf61167771/certifi-2026.10.18.tar.gz\", hash = \"sha256:b9995d97b64d0431a5af837d8ca8cd6238104d1f319f04bd93ea43124d6c861e\", size = 135227, upload-time = \"2026-10-18T16:21:07.655Z\" }\n",
+          "insert_utf8": "sdist = { url = \"https://files.pythonhosted.org/packages/f3/ce/ee2ecad540810a79593028e88299baeae54d346cc7a0d94b6199988b89b1/certifi-2026.5.20.tar.gz\", hash = \"sha256:69dea482ab64caa7b9f6aba1c6bf48bb6a5448d1c0f1b17ab42ad8c763a5344d\", size = 135422, upload-time = \"2026-05-20T11:46:50.073Z\" }\n"
+        },
+        {
+          "at": 29984,
+          "remove_utf8": "    { url = \"https://files.pythonhosted.org/packages/08/ba/95dd616042484f7c83a06974388b37b837732740ee70bc5dc715b5fcd55a/certifi-2026.10.18-py3-none-any.whl\", hash = \"sha256:73191c47aaa79da394e8fee2dbc2ec827432cab56311122c9e47abf79e390f62\", size = 134093, upload-time = \"2026-10-18T16:21:06.276Z\" },\n",
+          "insert_utf8": "    { url = \"https://files.pythonhosted.org/packages/59/8c/57e832b7af6d7c5abe66eb3fbe3a3a32f4d11ea23a1aa7131371035be991/certifi-2026.5.20-py3-none-any.whl\", hash = \"sha256:3c52e209ba0a4ad7aebe60436a4ab349c39e1e602e8c134221e546902ad25897\", size = 134134, upload-time = \"2026-05-20T11:46:48.578Z\" },\n"
+        },
+        {
+          "at": 151854,
+          "remove_utf8": "version = \"4.1.2\"\n",
+          "insert_utf8": "version = \"4.0.11\"\n"
+        },
+        {
+          "at": 152002,
+          "remove_utf8": "sdist = { url = \"https://files.pythonhosted.org/packages/00/4d/06d37a333c3764ab300ad7ff84a30be33c9effffba624ea91f3944123656/fastmcp-4.1.2.tar.gz\", hash = \"sha256:1b70a8467ac4dd6416c7c101cd54562f089b55e6636a196b4a20bdac3ccb0284\", size = 42736167, upload-time = \"2026-10-20T14:01:37.982Z\" }\n",
+          "insert_utf8": "sdist = { url = \"https://files.pythonhosted.org/packages/e4/ca/e76fde836e6e443f49b1a16ad91fa71715ec220141261a290c9241024857/fastmcp-4.0.11.tar.gz\", hash = \"sha256:55fc7b8e25d4f8365818ba93f7008d1b6e646ce7fe8ae49342687243ccbef9f2\", size = 42606797, upload-time = \"2026-10-04T16:58:10.598Z\" }\n"
+        },
+        {
+          "at": 152302,
+          "remove_utf8": "    { url = \"https://files.pythonhosted.org/packages/4d/64/0e708271721e001979ab5d91fc5e86bf4e74bff34dfb6c94ff83565945a3/fastmcp-4.1.2-py3-none-any.whl\", hash = \"sha256:3d5eddfe624b002ebcf202d5a55ff13bdce6925ce58bfcaeb28bc2e3bbee1830\", size = 8151, upload-time = \"2026-10-20T14:01:33.947Z\" },\n",
+          "insert_utf8": "    { url = \"https://files.pythonhosted.org/packages/49/0c/6c97f76e4ca6cd26fe056d6668ec4a550b2368d3699e6a50789aed226849/fastmcp-4.0.11-py3-none-any.whl\", hash = \"sha256:defbc5f2566a702f45817d1acead120dfa8127d60b1c1512b3200232ead13a44\", size = 8161, upload-time = \"2026-10-04T16:58:08.278Z\" },\n"
+        },
+        {
+          "at": 152631,
+          "remove_utf8": "version = \"4.1.2\"\n",
+          "insert_utf8": "version = \"4.0.11\"\n"
+        },
+        {
+          "at": 152950,
+          "remove_utf8": "sdist = { url = \"https://files.pythonhosted.org/packages/30/c9/f4d0a0a39c64f7647e61c591377468a3afee7a6786a354a405c7c44db2fb/fastmcp_slim-4.1.2.tar.gz\", hash = \"sha256:4b703ddbd35165ebf03b2cc560688f458f3fe4db11e635074fcc303496734154\", size = 748928, upload-time = \"2026-10-20T14:01:10.582Z\" }\n",
+          "insert_utf8": "sdist = { url = \"https://files.pythonhosted.org/packages/02/d3/8d247edc9120c3be157315acd6df17c9790358c39ea45d0f9dfcec6a094b/fastmcp_slim-4.0.11.tar.gz\", hash = \"sha256:9152aac74d8837bc37576f5f3d83f17567250a9dfcd8187133c43faaaa9dd06f\", size = 722160, upload-time = \"2026-10-04T16:56:07.286Z\" }\n"
+        },
+        {
+          "at": 153253,
+          "remove_utf8": "    { url = \"https://files.pythonhosted.org/packages/66/a1/12e7d2ac4d76ee82c4b5606bbe0732162e3c4367b4aba6884a6f4d183eb3/fastmcp_slim-4.1.2-py3-none-any.whl\", hash = \"sha256:58a4e547a0f85cfee2d2219677ed31c0f1c4911741a5c91a1ee5fbf69dde35fa\", size = 930447, upload-time = \"2026-10-20T14:01:08.667Z\" },\n",
+          "insert_utf8": "    { url = \"https://files.pythonhosted.org/packages/47/69/0b4fbe30298c9c6cc123ba8ac63e78583b3567ac04f7d125f3c2309a6e9e/fastmcp_slim-4.0.11-py3-none-any.whl\", hash = \"sha256:524905197e318d934908594f16fedea559d44dd682bd763d40f3556233a2b1d9\", size = 898247, upload-time = \"2026-10-04T16:56:05.97Z\" },\n"
+        },
+        {
+          "at": 153624,
+          "remove_utf8": "    { name = \"beartype\", marker = \"python_full_version >= '3.15'\" },\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 153954,
+          "remove_utf8": "    { name = \"beartype\", marker = \"python_full_version >= '3.15'\" },\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 199511,
+          "remove_utf8": "version = \"1.7.6\"\n",
+          "insert_utf8": "version = \"1.7.5\"\n"
+        },
+        {
+          "at": 199629,
+          "remove_utf8": "sdist = { url = \"https://files.pythonhosted.org/packages/cd/db/ec5b5fe07a7bda62cd2c2d619daf160eb7442b979c7cd61bbe0262108de9/joserfc-1.7.6.tar.gz\", hash = \"sha256:fb1cf6d2977318bef976c2ed2ef2167cc5f8ade8fc96f034e38f7abd656907c4\", size = 236091, upload-time = \"2026-10-18T23:12:18.43Z\" }\n",
+          "insert_utf8": "sdist = { url = \"https://files.pythonhosted.org/packages/19/94/80fea1514b7c6d7d37804d3fe9ca81455f633347fc98731bd71ffe1faa17/joserfc-1.7.5.tar.gz\", hash = \"sha256:d5ff536e658e17664f8c1b1ab60dc4aa62aa973fcef1edd33cc44bda45d6f5ea\", size = 234990, upload-time = \"2026-08-29T13:05:42.057Z\" }\n"
+        },
+        {
+          "at": 199926,
+          "remove_utf8": "    { url = \"https://files.pythonhosted.org/packages/98/40/63886ba742c6fd9e6dd222e20b8d54012fbc933465350c7747c4ed5b31e4/joserfc-1.7.6-py3-none-any.whl\", hash = \"sha256:e2d72e3fa937ed8ddd42ad8c1cc337a43e7ffd02efa572a2aa15e2764a05b506\", size = 71588, upload-time = \"2026-10-18T23:12:17.085Z\" },\n",
+          "insert_utf8": "    { url = \"https://files.pythonhosted.org/packages/67/c5/82addfd375e5ee6520644e0553e4aadde92d668c4fc99cc716d337fe7bb3/joserfc-1.7.5-py3-none-any.whl\", hash = \"sha256:add2c2c84e8373b084d526a8b53daba5d7a513a118cd2dcd9fc9f979d0922159\", size = 71269, upload-time = \"2026-08-29T13:05:40.718Z\" },\n"
+        },
+        {
+          "at": 285178,
+          "remove_utf8": "version = \"1.45.2\"\n",
+          "insert_utf8": "version = \"1.45.1\"\n"
+        },
+        {
+          "at": 285302,
+          "remove_utf8": "sdist = { url = \"https://files.pythonhosted.org/packages/19/14/cf3a6b6448849656e1e5f4e2101f3988dc6789724050096aba1bc5ccf592/opentelemetry_api-1.45.2.tar.gz\", hash = \"sha256:d7b0008e21e5fd61cbe7a7f34ca3b6905a78ab677d9bc395e299359c75cda6b4\", size = 73277, upload-time = \"2026-10-29T17:29:37.888Z\" }\n",
+          "insert_utf8": "sdist = { url = \"https://files.pythonhosted.org/packages/2e/02/6e0ae9cc61bd3169d401077b507b3ebc344745171e1051ab430be012dcd9/opentelemetry_api-1.45.1.tar.gz\", hash = \"sha256:aa38ed19bcc084ba42782a73255b3582283eced7ad6dddbd6695189e69adfb75\", size = 72804, upload-time = \"2026-10-06T17:32:58.133Z\" }\n"
+        },
+        {
+          "at": 285610,
+          "remove_utf8": "    { url = \"https://files.pythonhosted.org/packages/a9/2d/610db864d7513158cebb8f36cc88e67e73bd6c7aa1905ef18d89e1281c81/opentelemetry_api-1.45.2-py3-none-any.whl\", hash = \"sha256:2cbd737377e710ee740d261c94e93fa0f08e6d037c18f17513cc0a2d94479a34\", size = 60335, upload-time = \"2026-10-29T17:29:06.955Z\" },\n",
+          "insert_utf8": "    { url = \"https://files.pythonhosted.org/packages/1e/41/f7dcf80b81ee8e71c1a2b59f14208bc723edbd89ed027a73b175abf6348e/opentelemetry_api-1.45.1-py3-none-any.whl\", hash = \"sha256:b31553efa588ae44bc306f863c785c5333a9ecc091248c6ee68b4b6c87fdedfb\", size = 60256, upload-time = \"2026-10-06T17:32:33.506Z\" },\n"
+        },
+        {
+          "at": 288746,
+          "remove_utf8": "version = \"26.2\"\n",
+          "insert_utf8": "version = \"26.1.2\"\n"
+        },
+        {
+          "at": 288813,
+          "remove_utf8": "sdist = { url = \"https://files.pythonhosted.org/packages/db/96/e6f8e9d9d7b9cc4457092712a7e919c3186aa2c2fa9ffed2c5d29cc947e8/pip-26.2.tar.gz\", hash = \"sha256:2d8542afcc84cdd8e846c2b36b2861fad1da376dd98f8e7113e9108a3c331690\", size = 1848845, upload-time = \"2026-07-29T21:57:56.407Z\" }\n",
+          "insert_utf8": "sdist = { url = \"https://files.pythonhosted.org/packages/01/91/47e7d486260f618783899587af63ccf7980fb60245c3e63dd4571c6b57ad/pip-26.1.2.tar.gz\", hash = \"sha256:f49cd134c61cf2fd75e0ce2676db03e4054504a5a4986d00f8299ae632dc4605\", size = 1840799, upload-time = \"2026-05-31T17:33:58.56Z\" }\n"
+        },
+        {
+          "at": 289107,
+          "remove_utf8": "    { url = \"https://files.pythonhosted.org/packages/62/36/a3aed958d60531cb442b7ab4596cda7b3621cfb916f8ae1d6769795c7dc1/pip-26.2-py3-none-any.whl\", hash = \"sha256:931c303696af6fa3417112103b1cad26890e5a07eccb5b99783700e33f2b8aad\", size = 1816475, upload-time = \"2026-07-29T21:57:54.763Z\" },\n",
+          "insert_utf8": "    { url = \"https://files.pythonhosted.org/packages/5d/95/6b5cb3461ea5673ba0995989746db58eb18b91b54dbf331e72f569540946/pip-26.1.2-py3-none-any.whl\", hash = \"sha256:382ff9f685ee3bc25864f820aa50505825f10f5458ffff07e30a6d96e5715cab\", size = 1813144, upload-time = \"2026-05-31T17:33:56.772Z\" },\n"
+        },
+        {
+          "at": 391973,
+          "remove_utf8": "version = \"84.1.0\"\n",
+          "insert_utf8": "version = \"82.0.1\"\n"
+        },
+        {
+          "at": 392042,
+          "remove_utf8": "sdist = { url = \"https://files.pythonhosted.org/packages/73/eb/7e5f628ee2eb168fecbf8026de7856b2543d6d609cc85f086b9a91ac93d6/setuptools-84.1.0.tar.gz\", hash = \"sha256:23657205b63d4d31395ab917815247f694aafad28cd21316bf5fd45a51048ea0\", size = 1171783, upload-time = \"2026-10-19T20:11:43.489Z\" }\n",
+          "insert_utf8": "sdist = { url = \"https://files.pythonhosted.org/packages/4f/db/cfac1baf10650ab4d1c111714410d2fbb77ac5a616db26775db562c8fab2/setuptools-82.0.1.tar.gz\", hash = \"sha256:7d872682c5d01cfde07da7bccc7b65469d3dca203318515ada1de5eda35efbf9\", size = 1152316, upload-time = \"2026-03-09T12:47:17.221Z\" }\n"
+        },
+        {
+          "at": 392345,
+          "remove_utf8": "    { url = \"https://files.pythonhosted.org/packages/18/02/b4bbb90f8f29e334898ff45c6d9b1fffaa6f378017052b3023a06262b5f7/setuptools-84.1.0-py3-none-any.whl\", hash = \"sha256:5231689c6ac8156cd155cfb98c3fd6fb252c3e7e9bd3d78b64d3c55f132624c9\", size = 819380, upload-time = \"2026-10-19T20:11:41.684Z\" },\n",
+          "insert_utf8": "    { url = \"https://files.pythonhosted.org/packages/9d/76/f789f7a86709c6b087c5a2f52f911838cad707cc613162401badc665acfe/setuptools-82.0.1-py3-none-any.whl\", hash = \"sha256:a59e362652f08dcd477c78bb6e7bd9d80a7995bc73ce773050228a348ce2e5bb\", size = 1006223, upload-time = \"2026-03-09T12:47:15.026Z\" },\n"
+        },
+        {
+          "at": 393425,
+          "remove_utf8": "    { name = \"anyio\" },\n    { name = \"authlib\" },\n    { name = \"certifi\" },\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 393633,
+          "remove_utf8": "    { name = \"joserfc\" },\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 393704,
+          "remove_utf8": "    { name = \"opentelemetry-api\" },\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 393821,
+          "remove_utf8": "    { name = \"starlette\" },\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 394130,
+          "remove_utf8": "    { name = \"pip\" },\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 394407,
+          "remove_utf8": "    { name = \"setuptools\" },\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 394502,
+          "remove_utf8": "    { name = \"anyio\", specifier = \">=4.14.2\" },\n    { name = \"authlib\", specifier = \">=1.9.1\" },\n    { name = \"certifi\", specifier = \">=2026.10.18\" },\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 394881,
+          "remove_utf8": "    { name = \"fastmcp\", specifier = \">=4.1.2,<5\" },\n",
+          "insert_utf8": "    { name = \"fastmcp\", specifier = \">=2.0,<5\" },\n"
+        },
+        {
+          "at": 395061,
+          "remove_utf8": "    { name = \"joserfc\", specifier = \">=1.7.6\" },\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 395355,
+          "remove_utf8": "    { name = \"opentelemetry-api\", specifier = \">=1.45.2\" },\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 395492,
+          "remove_utf8": "    { name = \"pip\", marker = \"extra == 'dev'\", specifier = \">=26.2\" },\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 396403,
+          "remove_utf8": "    { name = \"setuptools\", marker = \"extra == 'dev'\", specifier = \">=84.1.0\" },\n    { name = \"starlette\", specifier = \">=1.3.1\" },\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 398338,
+          "remove_utf8": "version = \"1.3.1\"\n",
+          "insert_utf8": "version = \"1.2.1\"\n"
+        },
+        {
+          "at": 398526,
+          "remove_utf8": "sdist = { url = \"https://files.pythonhosted.org/packages/eb/e3/7c1dc7381d9f8ab7d854328ebfa884e62cb3f3d8549ddfd37c7814f42afa/starlette-1.3.1.tar.gz\", hash = \"sha256:05d0213193f2fbaae60e2ecb593b4add4262ad4e46536b54abe36f11a71724e0\", size = 2703240, upload-time = \"2026-06-12T09:23:11.602Z\" }\n",
+          "insert_utf8": "sdist = { url = \"https://files.pythonhosted.org/packages/25/44/ec35f1b6e83094b997da438a02c8c9b0ade2b1e84cfc48bd4656780760a6/starlette-1.2.1.tar.gz\", hash = \"sha256:9b9b5ebb992e67d6093741e63c2f59e4f6fff986f81163c087867bd7b924b3f6\", size = 2701854, upload-time = \"2026-05-31T01:07:51.847Z\" }\n"
+        },
+        {
+          "at": 398827,
+          "remove_utf8": "    { url = \"https://files.pythonhosted.org/packages/ec/bb/2799cc2ede3ed41131f8975621e7213dfc7ef4acbbaadfa440f32500c370/starlette-1.3.1-py3-none-any.whl\", hash = \"sha256:c7372aae11c3c3f26a42df7bd626cec2f47d03483d261d369516a615a53714c6\", size = 73632, upload-time = \"2026-06-12T09:23:10.017Z\" },\n",
+          "insert_utf8": "    { url = \"https://files.pythonhosted.org/packages/1c/54/196d0c1db10af76baa4f64894448505d60d3cdf70ef92cbb35f46a4e4c71/starlette-1.2.1-py3-none-any.whl\", hash = \"sha256:4de0082d08c8f6764a85a54cf1120d6939507a19905c7768acad2a9f875d2b89\", size = 73350, upload-time = \"2026-05-31T01:07:50.09Z\" },\n"
+        }
+      ]
+    }
+  ]
+}

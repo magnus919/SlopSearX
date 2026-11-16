@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "plan_id": "F08",
+  "baseline": "7cc420f7ffb61127750e77bf6130e225925f9186",
+  "provenance": "Synthetic native regressions derived from the named source contracts. No upstream captures or provider calls.",
+  "sources": [
+    {
+      "path": "slopsearx/adapter.py",
+      "git_blob": "664e853d9ab1330596d01899ebe015701de09e88"
+    },
+    {
+      "path": "slopsearx/proxypool.py",
+      "git_blob": "006aab63744e626c307717faf3e26a202ee252db"
+    },
+    {
+      "path": "tests/test_http_pooling.py",
+      "git_blob": "5f6a0cd70a4c7200d528c74acd7c8e24c8b4c692"
+    },
+    {
+      "path": "tests/test_duckduckgo_resilience.py",
+      "git_blob": "03379c9d34a7437a875e0713a326ffd48b921efa"
+    },
+    {
+      "path": "engines/pubmed.py",
+      "git_blob": "8425948f5a115d0d46afce3a625bce49ee0b0fcd"
+    },
+    {
+      "path": "engines/internetarchive.py",
+      "git_blob": "28773026ab0e12e0e3ef00204323de8aeedab2f3"
+    }
+  ],
+  "tests": [
+    "adapter_admission_spans_routes_and_ephemeral_sessions",
+    "adapter_idle_budget_spans_routes_and_ephemeral_sessions",
+    "chunked_compression_expansion_and_false_length",
+    "deadline_cancel_shutdown_and_429_never_retry",
+    "empty_roots_only_rejected_before_pool_reuse",
+    "env_proxy_child",
+    "environment_ca_override_explicit_ignore_and_no_proxy_only",
+    "environment_proxy_and_no_proxy_use_real_subprocesses",
+    "expired_idle_routes_release_adapter_retention_before_checkout_and_return",
+    "gzip_expansion_and_request_bounds",
+    "idle_expiry_reconnects",
+    "proxy_churn_bounded_overflow_ephemeral",
+    "proxy_rotation_cooldown_failopen_and_dynamic_override",
+    "queue_time_counts_toward_aggregate_deadline",
+    "redirect_rules_strip_credentials_and_preserve_307_body",
+    "repeated_content_encoding_headers_decode_in_wire_order",
+    "replay_denies_request_method_url_header_body_mutations",
+    "replay_malformed_bodies_and_caller_ownership",
+    "request_count_and_redirect_limits",
+    "socket_redirect_method_and_body_matrix",
+    "tcp_reuse_and_search_identity_isolation",
+    "tls_verification_default_override_and_custom_ca",
+    "truncated_and_wire_limit_no_retry",
+    "twenty_active_ten_idle_and_shutdown_closes_sockets"
+  ],
+  "unit_tests": [
+    "http::decode_tests::decoder_budget_remains_charged_after_waiter_abort_and_drain_joins_workers",
+    "http::decode_tests::decoding_observes_cancel_shutdown_and_expired_budget",
+    "http::decode_tests::drop_closes_decode_admission_without_claiming_thread_join",
+    "http::decode_tests::decoding_raw_zlib_stacked_and_unknown_encodings"
+  ]
+}

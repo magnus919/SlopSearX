@@ -1,0 +1,36 @@
+{
+  "test": "legacy_retry_public_preserves_unknown_attempt_and_known_artifact",
+  "actual_exit": 101,
+  "stdout_sha256": "6d3be7e75805719496face696544c433319a7fd1ae1fdeb53fd41c8dbadac98d",
+  "stderr_sha256": "336da70d3ad963e00ce5b59e16cba6b517557517728f9e0ec6e88bad72b0a616",
+  "executed_binary_sha256": "106c361c0e840e6290192a65b47f7adeac76daf929c11de6e1c95e7b40e81944",
+  "archive_immediate_before_next_build": true,
+  "reproduction_argv": [
+    "cargo",
+    "test",
+    "--locked",
+    "--offline",
+    "-p",
+    "ssx-infra",
+    "--test",
+    "w03",
+    "legacy_retry_public_preserves_unknown_attempt_and_known_artifact",
+    "--",
+    "--exact",
+    "--nocapture",
+    "--test-threads=1"
+  ],
+  "qualification_source": "baseline73a0 + same corrected regression; candidate additionally empty-ID null serializer and reviewed inventory metadata",
+  "stdout_representation": {
+    "file": "old-selected.stdout.base64.txt",
+    "encoding": "RFC4648 Base64; 80 columns; final newline",
+    "encoded_file_sha256": "9d1e129fabf1edcf6c675c1364ebe16d1f62e7759e8c4267f8124313f05b6fed",
+    "decoded_raw_sha256": "6d3be7e75805719496face696544c433319a7fd1ae1fdeb53fd41c8dbadac98d",
+    "decoded_exact_original": true
+  },
+  "stderr_representation": {
+    "file": "old-selected.stderr.txt",
+    "encoding": "byte-identical plaintext",
+    "raw_sha256": "336da70d3ad963e00ce5b59e16cba6b517557517728f9e0ec6e88bad72b0a616"
+  }
+}

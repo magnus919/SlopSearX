@@ -1,0 +1,31 @@
+{
+  "scope": "temporary offline invocation of inventoried export_source.capture; retire executable oracle G08",
+  "oracle_sha256": "fac50ade3842d15169ea76ecb626f2f5a55d0aa8c7454f910c0c262f3175a65c",
+  "records": [
+    {
+      "id": "arxiv.invalid_base_ipv6",
+      "engine": "arxiv",
+      "query": "test",
+      "config": {
+        "base_url": "https://[invalid]/api/query"
+      },
+      "responses": [],
+      "requests": [],
+      "client_options": [
+        {
+          "timeout": 10.0,
+          "follow_redirects": false
+        }
+      ],
+      "output": {
+        "results": [],
+        "status": "error",
+        "error_message": "Invalid IPv6 address: '[invalid]'",
+        "answers": [],
+        "corrections": [],
+        "infoboxes": [],
+        "synthetic": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "capture_head": "3dd43bef8c71ff89bd3dbce6b72bf8a3aada586b",
+  "interpreter_sha256": "87d4df53fd91304be5bac391fb204643c36b7df2023c04a0953bcbc7d4fdf634",
+  "scope": "actual completed offline/owned-loopback source evidence runs; native runtime/gate never executes producers; all four retire G08",
+  "records": [
+    {
+      "argv": [
+        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+        "docs/rust-rewrite/a08/oracle/export_source.py"
+      ],
+      "cwd": "/Users/magnus/.codex/worktrees/rust-a08-regulatory-adapters/SlopSearX",
+      "started_unix_ns": 1792194496565172000,
+      "finished_unix_ns": 1792194496911872000,
+      "exit_code": 0,
+      "producer_path": "docs/rust-rewrite/a08/oracle/export_source.py",
+      "producer_sha256": "330be8e766e51dbed6482ff85c9a7a65fae10493784cd0603f80fa5eaacbd53a",
+      "log_path": "/Volumes/tank01/magnus/rust-builds/slopsearx/a08/export_source.py.log",
+      "log_sha256": "9af73ef671dae1e7cbf87390de5e60ae3c8d5d55a71a7ca257f4db12ef264fe9",
+      "outputs": [
+        {
+          "path": "docs/rust-rewrite/a08/source.json",
+          "sha256": "a16bcf6bde89876645cb76f4a7a68c7d0cd96795ead4e77f971190184f6b8539"
+        }
+      ]
+    },
+    {
+      "argv": [
+        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+        "docs/rust-rewrite/a08/oracle/export_case.py"
+      ],
+      "cwd": "/Users/magnus/.codex/worktrees/rust-a08-regulatory-adapters/SlopSearX",
+      "started_unix_ns": 1792194496912425000,
+      "finished_unix_ns": 1792194497420911000,
+      "exit_code": 0,
+      "producer_path": "docs/rust-rewrite/a08/oracle/export_case.py",
+      "producer_sha256": "89e92611745664efea00c50a55287c71521c7bb3d9f204061d7e257b6b5c259d",
+      "log_path": "/Volumes/tank01/magnus/rust-builds/slopsearx/a08/export_case.py.log",
+      "log_sha256": "4a6d8ccc40661cd4904c64cd33e629f263ca74b0bdeb649e7780bd1eaa920113",
+      "outputs": [
+        {
+          "path": "docs/rust-rewrite/a08/case16-data.json",
+          "sha256": "84045d610bd4b76d1af112b4fcd960835ebb877cfc13fa61fc7c7d5689c4bddc"
+        },
+        {
+          "path": "docs/rust-rewrite/a08/case16.json",
+          "sha256": "3cd99d8115b97e14d433b1aa39d1571f2b9974ee2c34d71fbe3afdc4dbbeaf6a"
+        }
+      ]
+    },
+    {
+      "argv": [
+        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+        "docs/rust-rewrite/a08/oracle/export_regressions.py"
+      ],
+      "cwd": "/Users/magnus/.codex/worktrees/rust-a08-regulatory-adapters/SlopSearX",
+      "started_unix_ns": 1792195238282183000,
+      "finished_unix_ns": 1792195239530854000,
+      "exit_code": 0,
+      "producer_path": "docs/rust-rewrite/a08/oracle/export_regressions.py",
+      "producer_sha256": "0a4467e3ed93d6fec08e00d36435d0328dd5e366c6e1044d47d2b6e321edbabe",
+      "log_path": "/Volumes/tank01/magnus/rust-builds/slopsearx/a08/export_regressions-correction.py.log",
+      "log_sha256": "c9d26b6654bae58b9841d8d4190de45b8924247280f0eee1cbc03f4aba7edb26",
+      "outputs": [
+        {
+          "path": "docs/rust-rewrite/a08/regressions.json",
+          "sha256": "d4fc84fd63b856a3a7f8559a8a8a6565e171383a79294788f72c660aa7fe2d15"
+        }
+      ],
+      "capture_head": "9e1b445321e23d176bc8e4d34294ef1634425c08"
+    },
+    {
+      "argv": [
+        "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+        "docs/rust-rewrite/a08/oracle/export_timeout.py"
+      ],
+      "cwd": "/Users/magnus/.codex/worktrees/rust-a08-regulatory-adapters/SlopSearX",
+      "started_unix_ns": 1792194498526030000,
+      "finished_unix_ns": 1792194499633273000,
+      "exit_code": 0,
+      "producer_path": "docs/rust-rewrite/a08/oracle/export_timeout.py",
+      "producer_sha256": "8fb0ab865e80aeeece54a145e62d8d082f7dc7542103aba2c046530779d6e7e6",
+      "log_path": "/Volumes/tank01/magnus/rust-builds/slopsearx/a08/export_timeout.py.log",
+      "log_sha256": "237ff0cf31f1e8d9a24ced16e6dffe98fbf38f066b4a3e2838dffed5fd3e5ea7",
+      "outputs": [
+        {
+          "path": "docs/rust-rewrite/a08/timeout-loopback.json",
+          "sha256": "9a838fec55fe744dade1e6c7422265d8b580da5740759ac7bb05ad1d7ae4017f"
+        }
+      ]
+    }
+  ],
+  "capture_head_scope": "initial capture batch; later correction records carry an explicit capture_head"
+}

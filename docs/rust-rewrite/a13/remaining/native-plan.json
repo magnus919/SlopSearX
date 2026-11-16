@@ -1,0 +1,70 @@
+{
+  "status": "PLANNED_SOURCE_IDENTITIES_NOT_COMPILED_OR_EXECUTED",
+  "hibp": [
+    "hibp_source_success_complete_outbound",
+    "hibp_404_empty_before_json",
+    "hibp_missing_key_and_admission_precedence",
+    "hibp_auth_redaction_and_resolved_configuration",
+    "hibp_email_first_match_word_boundaries_and_case",
+    "hibp_fallback_strip_unicode16_lowercase",
+    "hibp_description_prefix_and_source_type_errors",
+    "hibp_grouped_count_numeric_and_error_order",
+    "hibp_data_classes_slice_and_text_join",
+    "hibp_source_operations_before_typed_projection",
+    "hibp_dates_unsliced_and_positions",
+    "hibp_wrong_shapes_and_late_atomicity",
+    "hibp_configured_max_and_request_filters_ignored",
+    "hibp_http_transport_url_and_codec_failures",
+    "hibp_entered_cancel_and_http_reuse",
+    "hibp_entered_shutdown_rejects_reuse",
+    "hibp_caller_and_configured_deadlines",
+    "hibp_real_policy_and_mixed_intelx_atomicity",
+    "hibp_private_literal_http_contract",
+    "hibp_static_source_inventory_closed"
+  ],
+  "intelx": [
+    "intelx_success_two_requests_exact_delay",
+    "intelx_falsey_ids_stop_before_delay",
+    "intelx_start_status_classification",
+    "intelx_result_statuses_are_generic_errors",
+    "intelx_start_shape_and_json_errors",
+    "intelx_id_parameter_source_type_semantics",
+    "intelx_post_json_scalar_order_and_nonfinite_refusal",
+    "intelx_configured_slices_and_invalid_indices",
+    "intelx_result_shape_normalization_before_slice",
+    "intelx_wrapped_skipped_rows_preserve_positions",
+    "intelx_type_label_key_semantics_and_precedence",
+    "intelx_preview_bucket_and_title_operation_order",
+    "intelx_id_url_fallback_and_dates",
+    "intelx_late_failure_and_quota_atomicity",
+    "intelx_header_redaction_settings_and_filters",
+    "intelx_one_session_cookie_continuity",
+    "intelx_fresh_phase_timeout_excludes_source_delay",
+    "intelx_caller_context_bounds_each_phase_and_delay",
+    "intelx_cancel_post_delay_and_get",
+    "intelx_shutdown_entered_and_delayed_no_dispatch",
+    "intelx_private_literal_two_phase_http",
+    "intelx_static_source_inventory_closed"
+  ],
+  "counts": {
+    "hibp": 20,
+    "intelx": 22,
+    "originals": 8
+  },
+  "requirements": "Exact compiled inventory and case markers must later be closed after full source images are reviewed; no passing-count/scaffold acceptance.",
+  "private_infra_units": [
+    "adapters::hibp::tests::projection_drop_releases_backing_after_an_actual_stored_row",
+    "adapters::hibp::tests::late_failure_and_tiny_quota_leave_no_retained_partial_rows",
+    "adapters::intelx::tests::projection_drop_releases_backing_after_an_actual_stored_row",
+    "adapters::intelx::tests::late_failure_and_tiny_quota_leave_no_retained_partial_rows",
+    "adapters::intelx::delay_tests::actual_source_sleep_pending_cancellation_never_dispatches_get"
+  ],
+  "f05_units": [
+    "python_text::tests::unicode16_versions_and_static_table_structure_are_closed",
+    "python_text::tests::every_scalar_matches_frozen_c_word_case_and_full_lower_data",
+    "python_text::tests::full_lower_expansions_and_final_sigma_use_original_context",
+    "python_text::tests::word_uses_unicode16_alnum_without_wordbreak_or_casefold_substitution",
+    "python_text::tests::sigma_lookahead_exposes_bounded_progress_and_keeps_constant_state"
+  ],
+  "total_new_identities": 52
+}

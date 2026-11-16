@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "plan_id": "W06",
+  "accepted_main": "6c44976444340cc8f343fef61e2e8d723b189c19",
+  "normal_merge": "0b35624dad1f6276b37d675091b45e170e64efbc",
+  "gate_pin_checkpoint": "ba671ae2952d33b5dfb3f6ec6d8d97fb3e8900e9",
+  "completed_cases": {
+    "source": 248,
+    "native": 55,
+    "total_unique": 303
+  },
+  "gates": [
+    {
+      "plan": "W06",
+      "source_commit": "0b35624dad1f6276b37d675091b45e170e64efbc",
+      "sha256": "29f30248440a0924a5e98181603703b24654e2343fc12e8ccb1dc812adfcfb04",
+      "command_records": 72,
+      "source_bindings": 1233
+    },
+    {
+      "plan": "W04",
+      "source_commit": "0b35624dad1f6276b37d675091b45e170e64efbc",
+      "sha256": "6c04b0459ce00a2504dbcfed80413689a95294b7ae45992305ed7f093e426573",
+      "command_records": 18,
+      "source_bindings": 1233
+    },
+    {
+      "plan": "W11",
+      "source_commit": "0b35624dad1f6276b37d675091b45e170e64efbc",
+      "sha256": "745336365d6242be301e6fd0cc0fbfe43bc1a31b55181c6e9f5c7e27bcb451c7",
+      "command_records": 39,
+      "source_bindings": 1233
+    },
+    {
+      "plan": "W02",
+      "source_commit": "0b35624dad1f6276b37d675091b45e170e64efbc",
+      "sha256": "356255e6f352c6e7cf6f94e15e69fb9c98fc246a7e6cd1b0306baccf1451816d",
+      "command_records": 20,
+      "source_bindings": 1233
+    },
+    {
+      "plan": "A05",
+      "source_commit": "0b35624dad1f6276b37d675091b45e170e64efbc",
+      "sha256": "adf18891e0024b32939b7bf3128e620d0bb094110ed5a7f280d62e2cf52940cb",
+      "command_records": 23,
+      "source_bindings": 1233
+    },
+    {
+      "plan": "A08",
+      "source_commit": "0b35624dad1f6276b37d675091b45e170e64efbc",
+      "sha256": "7dc6ccdaa1f2f524b791ce4e2d240f42ea26557b43193475f697190b655a14a3",
+      "command_records": 51,
+      "source_bindings": 1233
+    },
+    {
+      "plan": "A09",
+      "source_commit": "ba671ae2952d33b5dfb3f6ec6d8d97fb3e8900e9",
+      "sha256": "c4bd5fbebc8dd2af5f31ab6cd8665267edb9cd10f32f4c6124a08467f999f018",
+      "command_records": 35,
+      "source_bindings": 1233
+    },
+    {
+      "plan": "F01",
+      "source_commit": "ba671ae2952d33b5dfb3f6ec6d8d97fb3e8900e9",
+      "sha256": "b1f17ff2cf1fab2bef10214be06b48561be880dbf12bac1a28d32b73f74a75cd",
+      "command_records": 479,
+      "source_bindings": 1233
+    },
+    {
+      "plan": "O06",
+      "source_commit": "ba671ae2952d33b5dfb3f6ec6d8d97fb3e8900e9",
+      "sha256": "57133dc3e572461780ca705c5cdc155c94dd71122e706cb0fcefe54df96c337d",
+      "command_records": 1,
+      "source_bindings": 1233
+    }
+  ],
+  "integration_changes": "full-record inventory union and additive A09/W06 registration/dependency exports; only reviewed source artifact hashes refreshed; no runtime assertion or capture changes",
+  "checks": {
+    "strict_workspace_clippy": "passed",
+    "workspace_fmt": "passed",
+    "precommit_all": "all hooks passed except known unrelated Ruff formatter edit; inspected and exact HEAD restored; no all-files-green claim",
+    "scoped_hooks": "passed all64 delivery paths",
+    "graphify": "AST-only update passed;31677nodes66501edges"
+  },
+  "limitations": "local composed qualification; exact published-head hosted CI/review still required; no production/performance/full portal/global RSS/exactly-once remote/Python retirement claim"
+}

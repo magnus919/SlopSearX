@@ -1,0 +1,206 @@
+# HELP slopsearx_engine_queries_total Total queries dispatched per engine
+# TYPE slopsearx_engine_queries_total counter
+slopsearx_engine_queries_total{engine="fixture"} 3
+# HELP slopsearx_engine_errors_total Failed engine outcomes, excluding successful empty results
+# TYPE slopsearx_engine_errors_total counter
+slopsearx_engine_errors_total{engine="fixture"} 3
+# HELP slopsearx_engine_latency_seconds Query latency per engine in seconds
+# TYPE slopsearx_engine_latency_seconds histogram
+slopsearx_engine_latency_seconds_bucket{engine="fixture",le="0.005"} 0
+slopsearx_engine_latency_seconds_bucket{engine="fixture",le="0.01"} 0
+slopsearx_engine_latency_seconds_bucket{engine="fixture",le="0.025"} 0
+slopsearx_engine_latency_seconds_bucket{engine="fixture",le="0.05"} 0
+slopsearx_engine_latency_seconds_bucket{engine="fixture",le="0.1"} 0
+slopsearx_engine_latency_seconds_bucket{engine="fixture",le="0.25"} 1
+slopsearx_engine_latency_seconds_bucket{engine="fixture",le="0.5"} 1
+slopsearx_engine_latency_seconds_bucket{engine="fixture",le="1"} 1
+slopsearx_engine_latency_seconds_bucket{engine="fixture",le="2.5"} 1
+slopsearx_engine_latency_seconds_bucket{engine="fixture",le="5"} 1
+slopsearx_engine_latency_seconds_bucket{engine="fixture",le="10"} 1
+slopsearx_engine_latency_seconds_bucket{engine="fixture",le="30"} 1
+slopsearx_engine_latency_seconds_bucket{engine="fixture",le="60"} 1
+slopsearx_engine_latency_seconds_bucket{engine="fixture",le="+Inf"} 1
+slopsearx_engine_latency_seconds_sum{engine="fixture"} 0.25
+slopsearx_engine_latency_seconds_count{engine="fixture"} 1
+# HELP slopsearx_engine_status Engine status (0=ok, 1=degraded, 2=down)
+# TYPE slopsearx_engine_status gauge
+slopsearx_engine_status{engine="fixture"} 2
+# HELP slopsearx_cache_hit_total Cache hit/miss counters
+# TYPE slopsearx_cache_hit_total counter
+slopsearx_cache_hit_total{type="hit"} 3
+# HELP slopsearx_server_requests_total Total search requests handled
+# TYPE slopsearx_server_requests_total counter
+slopsearx_server_requests_total{} 3
+# HELP slopsearx_http_search_completed_total Completed HTTP searches by outcome (success, rejected, failure)
+# TYPE slopsearx_http_search_completed_total counter
+slopsearx_http_search_completed_total{outcome="success"} 3
+# HELP slopsearx_http_search_duration_seconds HTTP search application duration including response rendering, by outcome
+# TYPE slopsearx_http_search_duration_seconds histogram
+slopsearx_http_search_duration_seconds_bucket{outcome="success",le="0.005"} 0
+slopsearx_http_search_duration_seconds_bucket{outcome="success",le="0.01"} 0
+slopsearx_http_search_duration_seconds_bucket{outcome="success",le="0.025"} 0
+slopsearx_http_search_duration_seconds_bucket{outcome="success",le="0.05"} 0
+slopsearx_http_search_duration_seconds_bucket{outcome="success",le="0.1"} 0
+slopsearx_http_search_duration_seconds_bucket{outcome="success",le="0.25"} 1
+slopsearx_http_search_duration_seconds_bucket{outcome="success",le="0.5"} 1
+slopsearx_http_search_duration_seconds_bucket{outcome="success",le="1"} 1
+slopsearx_http_search_duration_seconds_bucket{outcome="success",le="2.5"} 1
+slopsearx_http_search_duration_seconds_bucket{outcome="success",le="5"} 1
+slopsearx_http_search_duration_seconds_bucket{outcome="success",le="10"} 1
+slopsearx_http_search_duration_seconds_bucket{outcome="success",le="30"} 1
+slopsearx_http_search_duration_seconds_bucket{outcome="success",le="60"} 1
+slopsearx_http_search_duration_seconds_bucket{outcome="success",le="+Inf"} 1
+slopsearx_http_search_duration_seconds_sum{outcome="success"} 0.25
+slopsearx_http_search_duration_seconds_count{outcome="success"} 1
+# HELP slopsearx_server_requests_by_category_total Search requests per category
+# TYPE slopsearx_server_requests_by_category_total counter
+slopsearx_server_requests_by_category_total{category="general"} 3
+# HELP slopsearx_server_requests_by_format_total Search requests per output format
+# TYPE slopsearx_server_requests_by_format_total counter
+slopsearx_server_requests_by_format_total{format="json"} 3
+# HELP slopsearx_server_errors_total Server errors by type (timeout, circuit_open, rate_limited, internal)
+# TYPE slopsearx_server_errors_total counter
+slopsearx_server_errors_total{type="timeout"} 3
+# HELP slopsearx_mcp_tool_calls_total MCP tool invocations per tool
+# TYPE slopsearx_mcp_tool_calls_total counter
+slopsearx_mcp_tool_calls_total{tool="slopsearx_search"} 3
+# HELP slopsearx_mcp_tool_errors_total MCP tool errors per tool and error code
+# TYPE slopsearx_mcp_tool_errors_total counter
+slopsearx_mcp_tool_errors_total{code="internal_error",tool="slopsearx_search"} 3
+# HELP slopsearx_mcp_tool_latency_seconds MCP tool latency per tool in seconds
+# TYPE slopsearx_mcp_tool_latency_seconds histogram
+slopsearx_mcp_tool_latency_seconds_bucket{tool="slopsearx_search",le="0.005"} 0
+slopsearx_mcp_tool_latency_seconds_bucket{tool="slopsearx_search",le="0.01"} 0
+slopsearx_mcp_tool_latency_seconds_bucket{tool="slopsearx_search",le="0.025"} 0
+slopsearx_mcp_tool_latency_seconds_bucket{tool="slopsearx_search",le="0.05"} 0
+slopsearx_mcp_tool_latency_seconds_bucket{tool="slopsearx_search",le="0.1"} 0
+slopsearx_mcp_tool_latency_seconds_bucket{tool="slopsearx_search",le="0.25"} 1
+slopsearx_mcp_tool_latency_seconds_bucket{tool="slopsearx_search",le="0.5"} 1
+slopsearx_mcp_tool_latency_seconds_bucket{tool="slopsearx_search",le="1"} 1
+slopsearx_mcp_tool_latency_seconds_bucket{tool="slopsearx_search",le="2.5"} 1
+slopsearx_mcp_tool_latency_seconds_bucket{tool="slopsearx_search",le="5"} 1
+slopsearx_mcp_tool_latency_seconds_bucket{tool="slopsearx_search",le="10"} 1
+slopsearx_mcp_tool_latency_seconds_bucket{tool="slopsearx_search",le="30"} 1
+slopsearx_mcp_tool_latency_seconds_bucket{tool="slopsearx_search",le="60"} 1
+slopsearx_mcp_tool_latency_seconds_bucket{tool="slopsearx_search",le="+Inf"} 1
+slopsearx_mcp_tool_latency_seconds_sum{tool="slopsearx_search"} 0.25
+slopsearx_mcp_tool_latency_seconds_count{tool="slopsearx_search"} 1
+# HELP slopsearx_workflow_accepted_total Accepted durable workflow operations
+# TYPE slopsearx_workflow_accepted_total counter
+slopsearx_workflow_accepted_total{mode="immediate",workflow="saved_search"} 3
+# HELP slopsearx_workflow_terminal_total Durable workflow terminal outcomes
+# TYPE slopsearx_workflow_terminal_total counter
+slopsearx_workflow_terminal_total{outcome="succeeded",workflow="saved_search"} 3
+# HELP slopsearx_workflow_retries_total Durable workflow retry attempts
+# TYPE slopsearx_workflow_retries_total counter
+slopsearx_workflow_retries_total{reason="policy",workflow="saved_search"} 3
+# HELP slopsearx_workflow_lease_recoveries_total Expired workflow leases recovered by a worker
+# TYPE slopsearx_workflow_lease_recoveries_total counter
+slopsearx_workflow_lease_recoveries_total{workflow="saved_search"} 3
+# HELP slopsearx_workflow_rejections_total Rejected workflow operations by reason class
+# TYPE slopsearx_workflow_rejections_total counter
+slopsearx_workflow_rejections_total{reason="policy",workflow="saved_search"} 3
+# HELP slopsearx_workflow_expired_total Observed durable workflow artifact expirations
+# TYPE slopsearx_workflow_expired_total counter
+slopsearx_workflow_expired_total{artifact="job",workflow="saved_search"} 3
+# HELP slopsearx_workflow_queued Queued workflow operations visible to this replica
+# TYPE slopsearx_workflow_queued gauge
+slopsearx_workflow_queued{workflow="saved_search"} 2
+# HELP slopsearx_workflow_running Running workflow operations visible to this replica
+# TYPE slopsearx_workflow_running gauge
+slopsearx_workflow_running{workflow="saved_search"} 2
+# HELP slopsearx_workflow_active_leases Active workflow leases held by this replica
+# TYPE slopsearx_workflow_active_leases gauge
+slopsearx_workflow_active_leases{workflow="saved_search"} 2
+# HELP slopsearx_workflow_oldest_claimable_age_seconds Age of the oldest claimable workflow operation
+# TYPE slopsearx_workflow_oldest_claimable_age_seconds gauge
+slopsearx_workflow_oldest_claimable_age_seconds{workflow="saved_search"} 2
+# HELP slopsearx_workflow_store_items Bounded workflow store or index cardinality
+# TYPE slopsearx_workflow_store_items gauge
+slopsearx_workflow_store_items{workflow="saved_search"} 2
+# HELP slopsearx_workflow_queue_wait_seconds Workflow queue wait before claim
+# TYPE slopsearx_workflow_queue_wait_seconds histogram
+slopsearx_workflow_queue_wait_seconds_bucket{workflow="saved_search",le="0.005"} 0
+slopsearx_workflow_queue_wait_seconds_bucket{workflow="saved_search",le="0.01"} 0
+slopsearx_workflow_queue_wait_seconds_bucket{workflow="saved_search",le="0.025"} 0
+slopsearx_workflow_queue_wait_seconds_bucket{workflow="saved_search",le="0.05"} 0
+slopsearx_workflow_queue_wait_seconds_bucket{workflow="saved_search",le="0.1"} 0
+slopsearx_workflow_queue_wait_seconds_bucket{workflow="saved_search",le="0.25"} 1
+slopsearx_workflow_queue_wait_seconds_bucket{workflow="saved_search",le="0.5"} 1
+slopsearx_workflow_queue_wait_seconds_bucket{workflow="saved_search",le="1"} 1
+slopsearx_workflow_queue_wait_seconds_bucket{workflow="saved_search",le="2.5"} 1
+slopsearx_workflow_queue_wait_seconds_bucket{workflow="saved_search",le="5"} 1
+slopsearx_workflow_queue_wait_seconds_bucket{workflow="saved_search",le="10"} 1
+slopsearx_workflow_queue_wait_seconds_bucket{workflow="saved_search",le="30"} 1
+slopsearx_workflow_queue_wait_seconds_bucket{workflow="saved_search",le="60"} 1
+slopsearx_workflow_queue_wait_seconds_bucket{workflow="saved_search",le="+Inf"} 1
+slopsearx_workflow_queue_wait_seconds_sum{workflow="saved_search"} 0.25
+slopsearx_workflow_queue_wait_seconds_count{workflow="saved_search"} 1
+# HELP slopsearx_workflow_execution_seconds Workflow execution duration
+# TYPE slopsearx_workflow_execution_seconds histogram
+slopsearx_workflow_execution_seconds_bucket{outcome="succeeded",workflow="saved_search",le="0.005"} 0
+slopsearx_workflow_execution_seconds_bucket{outcome="succeeded",workflow="saved_search",le="0.01"} 0
+slopsearx_workflow_execution_seconds_bucket{outcome="succeeded",workflow="saved_search",le="0.025"} 0
+slopsearx_workflow_execution_seconds_bucket{outcome="succeeded",workflow="saved_search",le="0.05"} 0
+slopsearx_workflow_execution_seconds_bucket{outcome="succeeded",workflow="saved_search",le="0.1"} 0
+slopsearx_workflow_execution_seconds_bucket{outcome="succeeded",workflow="saved_search",le="0.25"} 1
+slopsearx_workflow_execution_seconds_bucket{outcome="succeeded",workflow="saved_search",le="0.5"} 1
+slopsearx_workflow_execution_seconds_bucket{outcome="succeeded",workflow="saved_search",le="1"} 1
+slopsearx_workflow_execution_seconds_bucket{outcome="succeeded",workflow="saved_search",le="2.5"} 1
+slopsearx_workflow_execution_seconds_bucket{outcome="succeeded",workflow="saved_search",le="5"} 1
+slopsearx_workflow_execution_seconds_bucket{outcome="succeeded",workflow="saved_search",le="10"} 1
+slopsearx_workflow_execution_seconds_bucket{outcome="succeeded",workflow="saved_search",le="30"} 1
+slopsearx_workflow_execution_seconds_bucket{outcome="succeeded",workflow="saved_search",le="60"} 1
+slopsearx_workflow_execution_seconds_bucket{outcome="succeeded",workflow="saved_search",le="+Inf"} 1
+slopsearx_workflow_execution_seconds_sum{outcome="succeeded",workflow="saved_search"} 0.25
+slopsearx_workflow_execution_seconds_count{outcome="succeeded",workflow="saved_search"} 1
+# HELP slopsearx_workflow_report_generation_seconds Saved-search report generation duration
+# TYPE slopsearx_workflow_report_generation_seconds histogram
+slopsearx_workflow_report_generation_seconds_bucket{workflow="saved_search",le="0.005"} 0
+slopsearx_workflow_report_generation_seconds_bucket{workflow="saved_search",le="0.01"} 0
+slopsearx_workflow_report_generation_seconds_bucket{workflow="saved_search",le="0.025"} 0
+slopsearx_workflow_report_generation_seconds_bucket{workflow="saved_search",le="0.05"} 0
+slopsearx_workflow_report_generation_seconds_bucket{workflow="saved_search",le="0.1"} 0
+slopsearx_workflow_report_generation_seconds_bucket{workflow="saved_search",le="0.25"} 1
+slopsearx_workflow_report_generation_seconds_bucket{workflow="saved_search",le="0.5"} 1
+slopsearx_workflow_report_generation_seconds_bucket{workflow="saved_search",le="1"} 1
+slopsearx_workflow_report_generation_seconds_bucket{workflow="saved_search",le="2.5"} 1
+slopsearx_workflow_report_generation_seconds_bucket{workflow="saved_search",le="5"} 1
+slopsearx_workflow_report_generation_seconds_bucket{workflow="saved_search",le="10"} 1
+slopsearx_workflow_report_generation_seconds_bucket{workflow="saved_search",le="30"} 1
+slopsearx_workflow_report_generation_seconds_bucket{workflow="saved_search",le="60"} 1
+slopsearx_workflow_report_generation_seconds_bucket{workflow="saved_search",le="+Inf"} 1
+slopsearx_workflow_report_generation_seconds_sum{workflow="saved_search"} 0.25
+slopsearx_workflow_report_generation_seconds_count{workflow="saved_search"} 1
+# HELP slopsearx_workflow_admitted_results Results admitted to one durable workflow artifact
+# TYPE slopsearx_workflow_admitted_results histogram
+slopsearx_workflow_admitted_results_bucket{workflow="saved_search",le="0"} 0
+slopsearx_workflow_admitted_results_bucket{workflow="saved_search",le="1"} 1
+slopsearx_workflow_admitted_results_bucket{workflow="saved_search",le="5"} 1
+slopsearx_workflow_admitted_results_bucket{workflow="saved_search",le="10"} 1
+slopsearx_workflow_admitted_results_bucket{workflow="saved_search",le="25"} 1
+slopsearx_workflow_admitted_results_bucket{workflow="saved_search",le="50"} 1
+slopsearx_workflow_admitted_results_bucket{workflow="saved_search",le="100"} 1
+slopsearx_workflow_admitted_results_bucket{workflow="saved_search",le="250"} 1
+slopsearx_workflow_admitted_results_bucket{workflow="saved_search",le="500"} 1
+slopsearx_workflow_admitted_results_bucket{workflow="saved_search",le="+Inf"} 1
+slopsearx_workflow_admitted_results_sum{workflow="saved_search"} 0.25
+slopsearx_workflow_admitted_results_count{workflow="saved_search"} 1
+# HELP slopsearx_saved_search_event_publications_total Saved-search outbox events published by event type
+# TYPE slopsearx_saved_search_event_publications_total counter
+slopsearx_saved_search_event_publications_total{event_type="report_created"} 3
+# HELP slopsearx_saved_search_event_reads_total Saved-search outbox read operations by closed outcome
+# TYPE slopsearx_saved_search_event_reads_total counter
+slopsearx_saved_search_event_reads_total{outcome="delivered"} 3
+# HELP slopsearx_saved_search_event_acknowledgements_total Saved-search outbox acknowledgement operations by closed outcome
+# TYPE slopsearx_saved_search_event_acknowledgements_total counter
+slopsearx_saved_search_event_acknowledgements_total{outcome="advanced"} 3
+# HELP slopsearx_saved_search_event_retention_gaps_total Saved-search outbox reads that observed a retention gap
+# TYPE slopsearx_saved_search_event_retention_gaps_total counter
+slopsearx_saved_search_event_retention_gaps_total{} 3
+# HELP slopsearx_saved_search_event_capacity_rejections_total Saved-search outbox operations rejected by bounded resource
+# TYPE slopsearx_saved_search_event_capacity_rejections_total counter
+slopsearx_saved_search_event_capacity_rejections_total{resource="stream"} 3
+# HELP slopsearx_saved_search_event_backlog_age_seconds Age of the oldest event returned by the most recent local consumer read
+# TYPE slopsearx_saved_search_event_backlog_age_seconds gauge
+slopsearx_saved_search_event_backlog_age_seconds{} 2

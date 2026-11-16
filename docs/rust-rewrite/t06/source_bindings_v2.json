@@ -1,0 +1,194 @@
+{
+  "baseline": "6c44976444340cc8f343fef61e2e8d723b189c19",
+  "protocol": "2025-11-25",
+  "manual_oracle_python": "3.14.7",
+  "source_sdk": {
+    "fastmcp": "4.0.11",
+    "mcp": "2.3.0"
+  },
+  "unicode": "16.0.0",
+  "sources": [
+    {
+      "file": "slopsearx/service.py",
+      "sha256": "45903193ef89987f7be83c1e593e44b7752251a54eb8719eae15a241840102ac"
+    },
+    {
+      "file": "slopsearx/snapshot.py",
+      "sha256": "85c88b483635003a4a395f40cf48eb83a564b8dd3965ed8a139ba65c1ea88377"
+    },
+    {
+      "file": "slopsearx/capabilities.py",
+      "sha256": "ed4e332a4df1de32d83b9dd2b62dddb622082ab4c236c0c9cef8d8d23336fd6f"
+    },
+    {
+      "file": "slopsearx/filters.py",
+      "sha256": "f0edd2f633cc9a42c49660ca74b225732cbc82937a15ad58a5b0dbeb76e103a9"
+    },
+    {
+      "file": "slopsearx/payload.py",
+      "sha256": "a44a95655566f9fadaf62da1bab8c975f71f3ead6c3cc57f48c411a9c093c40d"
+    },
+    {
+      "file": "slopsearx/mcp/tools.py",
+      "sha256": "6bbbdb270f14fda7d90ae8dbe1983aae33526df430f76a960f0c7483417eb35a"
+    },
+    {
+      "file": "slopsearx/mcp/tool_registry.py",
+      "sha256": "86042fb94dd05f7176ec154e00745ea3ecdc560790e8e137987c985b1dcd58b7"
+    },
+    {
+      "file": "slopsearx/mcp/result_serialization.py",
+      "sha256": "170d358b3d0b7da2b5aa61c18736ca424b3764f82c8d81d8e0d54329066fe669"
+    },
+    {
+      "file": "slopsearx/mcp/entity_projection.py",
+      "sha256": "59dc870546bd649b398162318341315babe56f703f573aab1ee250128c137cb0"
+    },
+    {
+      "file": "slopsearx/mcp/resources.py",
+      "sha256": "9c02739130998aa854e4228e6d67fe86484145d2b9185e4b12f7dac9bab99bb2"
+    },
+    {
+      "file": "slopsearx/mcp/prompts.py",
+      "sha256": "6cceed16aa11a9cab7d61b47c20ad4c73ae55a68211e01756abb807bc9d01eb1"
+    },
+    {
+      "file": "slopsearx/mcp/state.py",
+      "sha256": "da669575916757a4d83ee4707ae6105fd9a676b6bfd0c2c72f5db9983c694f48"
+    },
+    {
+      "file": "slopsearx/mcp/server.py",
+      "sha256": "94f9fc7cff17550b26458e52c8e053462518ece02d260eed396eaec695fef10a"
+    },
+    {
+      "file": "slopsearx/mcp/harness.py",
+      "sha256": "c340320d16cfaf13b799980b7dcacfe1a4412ce4fde3f616cc866810ff75b801"
+    },
+    {
+      "file": "slopsearx/mcp/security.py",
+      "sha256": "23df13b10ca34efe884090cfcb5a9c6e7930425d103608fca87b31b8e64638eb"
+    },
+    {
+      "file": "slopsearx/mcp/oauth.py",
+      "sha256": "06655262a05ddb21af60b1622d53c87001ca79ff31d487cbb76f3f6c4e4e1059"
+    },
+    {
+      "file": "slopsearx/research.py",
+      "sha256": "f19757296ab9b7878b05c61df904dea201faa2af6b13167949bb9706a41c63bb"
+    },
+    {
+      "file": "slopsearx/jev.py",
+      "sha256": "abdf250eda6018155b700b2cc4d22fe57ec1ae39c148c1f942082540d34cfe03"
+    },
+    {
+      "file": "uv.lock",
+      "sha256": "8ecfcd029d2461631d44a2910ef5cfaa23a436da9cbc9a96ed0302e1d96861d0"
+    }
+  ],
+  "artifacts": [
+    {
+      "file": "docs/rust-rewrite/t06/boundaries.json",
+      "sha256": "d77a6e39d470001030830c8deafe7809e96230d9ee97e5d0f3a929cf07087a91"
+    },
+    {
+      "file": "docs/rust-rewrite/t06/boundaries_capture.py",
+      "sha256": "09414ee82366e52b1525133dbde0de1b108725dc2368943a2ad10a90e7c9300c"
+    },
+    {
+      "file": "docs/rust-rewrite/t06/bounds.json",
+      "sha256": "fad82f60aeac611e41ab0a465ae9668409f87d23e878113a4910cdc6754728ba"
+    },
+    {
+      "file": "docs/rust-rewrite/t06/bounds_capture.py",
+      "sha256": "bfaa57d91f57334e28f60983e0e98554361060e7380037cff7dc76b1c09d2e10"
+    },
+    {
+      "file": "docs/rust-rewrite/t06/capture.py",
+      "sha256": "d4b23e9b9d591b49b9ac5d7407f618ddc5cf75765a44a27994e8753c49af61f6"
+    },
+    {
+      "file": "docs/rust-rewrite/t06/capture_guarded.py",
+      "sha256": "71b2550dc438b9fe75120fe60d8d5137f9e8e00eb159e2bad713502a61f01c79"
+    },
+    {
+      "file": "docs/rust-rewrite/t06/entities.json",
+      "sha256": "e519664f9a3b0d026d0de469c429cea7e0a146e2ecc3ed934339a62e47626232"
+    },
+    {
+      "file": "docs/rust-rewrite/t06/entities_capture.py",
+      "sha256": "5036e392946241b66e405e934c086eda05f635a4be248aa25b4c5fdbaa965d6b"
+    },
+    {
+      "file": "docs/rust-rewrite/t06/framework-differences.json",
+      "sha256": "c2ff078acebdc690a8e71f30b40fe8ea7f87168d6a13c8f77e770774905daeca"
+    },
+    {
+      "file": "docs/rust-rewrite/t06/legacy-source.json",
+      "sha256": "7cf157492dbe8d9d9cd756c94ea2dd3c48a842f29effb8531696354b3c77ec4c"
+    },
+    {
+      "file": "docs/rust-rewrite/t06/legacy_capture.py",
+      "sha256": "53cc8b5531552b541060a3426743e61a2a5407c4ae0533a1bc8760bfb8f4a6df"
+    },
+    {
+      "file": "docs/rust-rewrite/t06/policy_capture.py",
+      "sha256": "8d4fdf72a30faa97e005b78503e0b64cbdf0d9878eef866850b53b9ea0f7df86"
+    },
+    {
+      "file": "docs/rust-rewrite/t06/prompts.json",
+      "sha256": "788ec3a0683a6d40f241d50b3282ac0de70e46ed644077d52ce30d8d6599d9f1"
+    },
+    {
+      "file": "docs/rust-rewrite/t06/prompts_capture.py",
+      "sha256": "95ea3db7abb919ec79f345080ce1ec071371dff6df286e6345cb67ecbb3a4ef2"
+    },
+    {
+      "file": "docs/rust-rewrite/t06/prompts_envelope.json",
+      "sha256": "55d72ad80336eaedc161d670c89301d7bd04d01221086fe9b25414d2fce4300c"
+    },
+    {
+      "file": "docs/rust-rewrite/t06/prompts_envelope_capture.py",
+      "sha256": "9605100a887ea512253c739079ec5d082dd9131413805d7566b980cece980518"
+    },
+    {
+      "file": "docs/rust-rewrite/t06/prompts_raw.json",
+      "sha256": "5aa4ed456eb301a0e9dc34e5c7e9d6efcf5b0a7decc096b163bc779da6940447"
+    },
+    {
+      "file": "docs/rust-rewrite/t06/prompts_raw_capture.py",
+      "sha256": "af8c4bd71f1dda2fec34f47f798d692bcb5ba6f979e794b2979ea8aeaef0b0bc"
+    },
+    {
+      "file": "docs/rust-rewrite/t06/prompts_unknown.json",
+      "sha256": "80b014dd5bd4a588cbc60bca42dedcc244f2203e4fa94da4da47024001704c24"
+    },
+    {
+      "file": "docs/rust-rewrite/t06/prompts_unknown_capture.py",
+      "sha256": "8227d0b5a5906260c034b54564e118741a4e55d253387a60b311e9b552005447"
+    },
+    {
+      "file": "docs/rust-rewrite/t06/snapshots.json",
+      "sha256": "d58702bc64eab24135bc811335d58e38d2f26288a7d8ef714e49769b0a2585e3"
+    },
+    {
+      "file": "docs/rust-rewrite/t06/snapshots_capture.py",
+      "sha256": "9a27e69c91c2a8208be12b95f02eec03517f2e9187cfe0ac153e9e8137d82751"
+    },
+    {
+      "file": "docs/rust-rewrite/t06/source.json",
+      "sha256": "acb320cc5134d94849909a5eaeb2f76c880391b9d2cc49aee53135d7a3484f83"
+    },
+    {
+      "file": "docs/rust-rewrite/t06/validation.json",
+      "sha256": "b8145f5329db8bd428f72bd2cceb9cde2ffa309575a4f7a7c8901bca44457891"
+    }
+  ],
+  "producer_policy": "capture_guarded.py is the only current manual producer entrypoint; eleven finite producers are temporary G08 evidence, never backend/native gate dependencies; original eight remain byte-frozen.",
+  "reference_environment_current_characterization": {
+    "python": "3.14.7",
+    "fastmcp": "4.0.11",
+    "mcp": "2.3.0",
+    "pydantic": "2.13.4",
+    "scope": "Verified installed pinned oracle environment for current prompt boundary captures; original frozen capture version fields unchanged."
+  }
+}

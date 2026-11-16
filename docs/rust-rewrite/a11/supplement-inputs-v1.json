@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "purpose": "Only Python IGNORECASE optional s Unicode long-s URL routing counterexample and ASCII control; original250unchanged",
+  "cases": [
+    {
+      "id": "a11-supplement/urlhaus/long-s-lower",
+      "engine": "urlhaus",
+      "query": "httpſ://evil.example.org/a",
+      "config": {
+        "enabled": true,
+        "api_key": "fixture-only-key"
+      },
+      "params": {
+        "page": 7,
+        "language": "sv",
+        "safesearch": 2,
+        "time_range": "month"
+      },
+      "response": {
+        "status": 200,
+        "json": {
+          "query_status": "ok",
+          "id": "12",
+          "url": "https://evil.example.org/malware",
+          "host": "evil.example.org",
+          "threat": "malware_download",
+          "tags": [
+            "elf",
+            "bot"
+          ],
+          "file_type": "exe",
+          "firstseen": "2026-01-02",
+          "lastseen": "2026-01-03",
+          "url_status": "online"
+        }
+      }
+    },
+    {
+      "id": "a11-supplement/urlhaus/long-s-upper",
+      "engine": "urlhaus",
+      "query": "HTTPſ://evil.example.org/a?q=1&b=2#frag",
+      "config": {
+        "enabled": true,
+        "api_key": "fixture-only-key"
+      },
+      "params": {
+        "page": 7,
+        "language": "sv",
+        "safesearch": 2,
+        "time_range": "month"
+      },
+      "response": {
+        "status": 200,
+        "json": {
+          "query_status": "ok",
+          "id": "12",
+          "url": "https://evil.example.org/malware",
+          "host": "evil.example.org",
+          "threat": "malware_download",
+          "tags": [
+            "elf",
+            "bot"
+          ],
+          "file_type": "exe",
+          "firstseen": "2026-01-02",
+          "lastseen": "2026-01-03",
+          "url_status": "online"
+        }
+      }
+    },
+    {
+      "id": "a11-supplement/urlhaus/ascii-control",
+      "engine": "urlhaus",
+      "query": "https://evil.example.org/a",
+      "config": {
+        "enabled": true,
+        "api_key": "fixture-only-key"
+      },
+      "params": {
+        "page": 7,
+        "language": "sv",
+        "safesearch": 2,
+        "time_range": "month"
+      },
+      "response": {
+        "status": 200,
+        "json": {
+          "query_status": "ok",
+          "id": "12",
+          "url": "https://evil.example.org/malware",
+          "host": "evil.example.org",
+          "threat": "malware_download",
+          "tags": [
+            "elf",
+            "bot"
+          ],
+          "file_type": "exe",
+          "firstseen": "2026-01-02",
+          "lastseen": "2026-01-03",
+          "url_status": "online"
+        }
+      }
+    }
+  ]
+}

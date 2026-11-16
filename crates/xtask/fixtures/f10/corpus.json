@@ -1,0 +1,3441 @@
+{
+  "local": [
+    {
+      "rate": 1,
+      "burst": 2,
+      "operations": [
+        [
+          0,
+          "a",
+          1
+        ],
+        [
+          0,
+          "a",
+          1
+        ],
+        [
+          0,
+          "a",
+          1
+        ],
+        [
+          0.5,
+          "a",
+          1
+        ],
+        [
+          1,
+          "a",
+          1
+        ],
+        [
+          1,
+          "b",
+          2
+        ],
+        [
+          10,
+          "a",
+          2
+        ]
+      ],
+      "expected": [
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "rate": 0,
+      "burst": 0,
+      "operations": [
+        [
+          0,
+          "a",
+          0
+        ],
+        [
+          1,
+          "a",
+          1
+        ]
+      ],
+      "expected": [
+        true,
+        false
+      ]
+    },
+    {
+      "rate": 0.5,
+      "burst": 1.5,
+      "operations": [
+        [
+          0,
+          "a",
+          1
+        ],
+        [
+          1,
+          "a",
+          1
+        ],
+        [
+          2,
+          "a",
+          1
+        ]
+      ],
+      "expected": [
+        true,
+        true,
+        false
+      ]
+    }
+  ],
+  "sequences": [
+    {
+      "name": "three-denials",
+      "allowed": [
+        false,
+        false,
+        false
+      ],
+      "operations": [
+        "acquire",
+        "acquire",
+        "acquire",
+        "acquire",
+        "reactivate"
+      ],
+      "outputs": [
+        {
+          "value": false,
+          "state": {
+            "consecutive_failures": 1,
+            "cooldown_until": 130.0,
+            "upstream_cooldown_until": 0.0,
+            "deactivated": false
+          },
+          "strategy_calls": 1,
+          "deactivated": []
+        },
+        {
+          "value": false,
+          "state": {
+            "consecutive_failures": 2,
+            "cooldown_until": 130.0,
+            "upstream_cooldown_until": 0.0,
+            "deactivated": false
+          },
+          "strategy_calls": 2,
+          "deactivated": []
+        },
+        {
+          "value": false,
+          "state": {
+            "consecutive_failures": 3,
+            "cooldown_until": 130.0,
+            "upstream_cooldown_until": 0.0,
+            "deactivated": true
+          },
+          "strategy_calls": 3,
+          "deactivated": [
+            "fakeeng"
+          ]
+        },
+        {
+          "value": false,
+          "state": {
+            "consecutive_failures": 3,
+            "cooldown_until": 130.0,
+            "upstream_cooldown_until": 0.0,
+            "deactivated": true
+          },
+          "strategy_calls": 3,
+          "deactivated": [
+            "fakeeng"
+          ]
+        },
+        {
+          "value": null,
+          "state": {
+            "consecutive_failures": 0,
+            "cooldown_until": 0.0,
+            "upstream_cooldown_until": 0.0,
+            "deactivated": false
+          },
+          "strategy_calls": 3,
+          "deactivated": []
+        }
+      ]
+    },
+    {
+      "name": "success-resets",
+      "allowed": [
+        false,
+        true,
+        false
+      ],
+      "operations": [
+        "acquire",
+        "acquire",
+        "acquire"
+      ],
+      "outputs": [
+        {
+          "value": false,
+          "state": {
+            "consecutive_failures": 1,
+            "cooldown_until": 130.0,
+            "upstream_cooldown_until": 0.0,
+            "deactivated": false
+          },
+          "strategy_calls": 1,
+          "deactivated": []
+        },
+        {
+          "value": true,
+          "state": {
+            "consecutive_failures": 0,
+            "cooldown_until": 0.0,
+            "upstream_cooldown_until": 0.0,
+            "deactivated": false
+          },
+          "strategy_calls": 2,
+          "deactivated": []
+        },
+        {
+          "value": false,
+          "state": {
+            "consecutive_failures": 1,
+            "cooldown_until": 130.0,
+            "upstream_cooldown_until": 0.0,
+            "deactivated": false
+          },
+          "strategy_calls": 3,
+          "deactivated": []
+        }
+      ]
+    },
+    {
+      "name": "provider-cooldown-no-strikes",
+      "allowed": [
+        true
+      ],
+      "operations": [
+        [
+          "publish",
+          60
+        ],
+        "acquire",
+        "remaining",
+        "reactivate",
+        [
+          "shared",
+          0
+        ],
+        "acquire"
+      ],
+      "outputs": [
+        {
+          "value": 60.0,
+          "state": {
+            "consecutive_failures": 0,
+            "cooldown_until": 0.0,
+            "upstream_cooldown_until": 160.0,
+            "deactivated": false
+          },
+          "strategy_calls": 0,
+          "deactivated": []
+        },
+        {
+          "value": false,
+          "state": {
+            "consecutive_failures": 0,
+            "cooldown_until": 0.0,
+            "upstream_cooldown_until": 160.0,
+            "deactivated": false
+          },
+          "strategy_calls": 0,
+          "deactivated": []
+        },
+        {
+          "value": 60.0,
+          "state": {
+            "consecutive_failures": 0,
+            "cooldown_until": 0.0,
+            "upstream_cooldown_until": 160.0,
+            "deactivated": false
+          },
+          "strategy_calls": 0,
+          "deactivated": []
+        },
+        {
+          "value": null,
+          "state": {
+            "consecutive_failures": 0,
+            "cooldown_until": 0.0,
+            "upstream_cooldown_until": 0.0,
+            "deactivated": false
+          },
+          "strategy_calls": 0,
+          "deactivated": []
+        },
+        {
+          "value": null,
+          "state": {
+            "consecutive_failures": 0,
+            "cooldown_until": 0.0,
+            "upstream_cooldown_until": 0.0,
+            "deactivated": false
+          },
+          "strategy_calls": 0,
+          "deactivated": []
+        },
+        {
+          "value": true,
+          "state": {
+            "consecutive_failures": 0,
+            "cooldown_until": 0.0,
+            "upstream_cooldown_until": 0.0,
+            "deactivated": false
+          },
+          "strategy_calls": 1,
+          "deactivated": []
+        }
+      ]
+    },
+    {
+      "name": "extend-only-local",
+      "allowed": [],
+      "operations": [
+        [
+          "publish",
+          90
+        ],
+        [
+          "publish",
+          2
+        ],
+        "remaining"
+      ],
+      "outputs": [
+        {
+          "value": 90.0,
+          "state": {
+            "consecutive_failures": 0,
+            "cooldown_until": 0.0,
+            "upstream_cooldown_until": 190.0,
+            "deactivated": false
+          },
+          "strategy_calls": 0,
+          "deactivated": []
+        },
+        {
+          "value": 2.0,
+          "state": {
+            "consecutive_failures": 0,
+            "cooldown_until": 0.0,
+            "upstream_cooldown_until": 190.0,
+            "deactivated": false
+          },
+          "strategy_calls": 0,
+          "deactivated": []
+        },
+        {
+          "value": 90.0,
+          "state": {
+            "consecutive_failures": 0,
+            "cooldown_until": 0.0,
+            "upstream_cooldown_until": 190.0,
+            "deactivated": false
+          },
+          "strategy_calls": 0,
+          "deactivated": []
+        }
+      ]
+    }
+  ],
+  "quota_law": [
+    {
+      "rate": 3,
+      "costs": [
+        1,
+        1,
+        1,
+        1,
+        0,
+        2
+      ],
+      "outputs": [
+        {
+          "allowed": true,
+          "count": 1
+        },
+        {
+          "allowed": true,
+          "count": 2
+        },
+        {
+          "allowed": true,
+          "count": 3
+        },
+        {
+          "allowed": false,
+          "count": 4
+        },
+        {
+          "allowed": false,
+          "count": 4
+        },
+        {
+          "allowed": false,
+          "count": 6
+        }
+      ]
+    },
+    {
+      "rate": 2.5,
+      "costs": [
+        1,
+        1,
+        1
+      ],
+      "outputs": [
+        {
+          "allowed": true,
+          "count": 1
+        },
+        {
+          "allowed": true,
+          "count": 2
+        },
+        {
+          "allowed": false,
+          "count": 3
+        }
+      ]
+    },
+    {
+      "rate": 0,
+      "costs": [
+        0,
+        1,
+        0
+      ],
+      "outputs": [
+        {
+          "allowed": true,
+          "count": 0
+        },
+        {
+          "allowed": false,
+          "count": 1
+        },
+        {
+          "allowed": false,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "rate": 3,
+      "costs": [
+        2,
+        2
+      ],
+      "outputs": [
+        {
+          "allowed": true,
+          "count": 2
+        },
+        {
+          "allowed": false,
+          "count": 4
+        }
+      ]
+    }
+  ],
+  "ttl_law": [
+    {
+      "window": 1,
+      "source_expiry_seconds": 2
+    },
+    {
+      "window": 0.75,
+      "source_expiry_seconds": 1
+    },
+    {
+      "window": 0.25,
+      "source_expiry_seconds": 0
+    },
+    {
+      "window": 0.001,
+      "source_expiry_seconds": 0
+    }
+  ],
+  "settings": [
+    {
+      "threshold": null,
+      "timeout": null,
+      "expected": [
+        5,
+        300
+      ]
+    },
+    {
+      "threshold": null,
+      "timeout": "",
+      "expected": [
+        5,
+        300
+      ]
+    },
+    {
+      "threshold": null,
+      "timeout": "-1",
+      "expected": [
+        5,
+        -1
+      ]
+    },
+    {
+      "threshold": null,
+      "timeout": "2.0",
+      "expected": [
+        5,
+        300
+      ]
+    },
+    {
+      "threshold": null,
+      "timeout": "２",
+      "expected": [
+        5,
+        2
+      ]
+    },
+    {
+      "threshold": "",
+      "timeout": null,
+      "expected": [
+        5,
+        300
+      ]
+    },
+    {
+      "threshold": "",
+      "timeout": "",
+      "expected": [
+        5,
+        300
+      ]
+    },
+    {
+      "threshold": "",
+      "timeout": "-1",
+      "expected": [
+        5,
+        -1
+      ]
+    },
+    {
+      "threshold": "",
+      "timeout": "2.0",
+      "expected": [
+        5,
+        300
+      ]
+    },
+    {
+      "threshold": "",
+      "timeout": "２",
+      "expected": [
+        5,
+        2
+      ]
+    },
+    {
+      "threshold": "bad",
+      "timeout": null,
+      "expected": [
+        5,
+        300
+      ]
+    },
+    {
+      "threshold": "bad",
+      "timeout": "",
+      "expected": [
+        5,
+        300
+      ]
+    },
+    {
+      "threshold": "bad",
+      "timeout": "-1",
+      "expected": [
+        5,
+        -1
+      ]
+    },
+    {
+      "threshold": "bad",
+      "timeout": "2.0",
+      "expected": [
+        5,
+        300
+      ]
+    },
+    {
+      "threshold": "bad",
+      "timeout": "２",
+      "expected": [
+        5,
+        2
+      ]
+    },
+    {
+      "threshold": "0",
+      "timeout": null,
+      "expected": [
+        0,
+        300
+      ]
+    },
+    {
+      "threshold": "0",
+      "timeout": "",
+      "expected": [
+        0,
+        300
+      ]
+    },
+    {
+      "threshold": "0",
+      "timeout": "-1",
+      "expected": [
+        0,
+        -1
+      ]
+    },
+    {
+      "threshold": "0",
+      "timeout": "2.0",
+      "expected": [
+        0,
+        300
+      ]
+    },
+    {
+      "threshold": "0",
+      "timeout": "２",
+      "expected": [
+        0,
+        2
+      ]
+    },
+    {
+      "threshold": "-2",
+      "timeout": null,
+      "expected": [
+        -2,
+        300
+      ]
+    },
+    {
+      "threshold": "-2",
+      "timeout": "",
+      "expected": [
+        -2,
+        300
+      ]
+    },
+    {
+      "threshold": "-2",
+      "timeout": "-1",
+      "expected": [
+        -2,
+        -1
+      ]
+    },
+    {
+      "threshold": "-2",
+      "timeout": "2.0",
+      "expected": [
+        -2,
+        300
+      ]
+    },
+    {
+      "threshold": "-2",
+      "timeout": "２",
+      "expected": [
+        -2,
+        2
+      ]
+    },
+    {
+      "threshold": "２",
+      "timeout": null,
+      "expected": [
+        2,
+        300
+      ]
+    },
+    {
+      "threshold": "２",
+      "timeout": "",
+      "expected": [
+        2,
+        300
+      ]
+    },
+    {
+      "threshold": "２",
+      "timeout": "-1",
+      "expected": [
+        2,
+        -1
+      ]
+    },
+    {
+      "threshold": "２",
+      "timeout": "2.0",
+      "expected": [
+        2,
+        300
+      ]
+    },
+    {
+      "threshold": "２",
+      "timeout": "２",
+      "expected": [
+        2,
+        2
+      ]
+    },
+    {
+      "threshold": "\u001c2",
+      "timeout": null,
+      "expected": [
+        5,
+        300
+      ]
+    },
+    {
+      "threshold": "\u001c2",
+      "timeout": "",
+      "expected": [
+        5,
+        300
+      ]
+    },
+    {
+      "threshold": "\u001c2",
+      "timeout": "-1",
+      "expected": [
+        5,
+        -1
+      ]
+    },
+    {
+      "threshold": "\u001c2",
+      "timeout": "2.0",
+      "expected": [
+        5,
+        300
+      ]
+    },
+    {
+      "threshold": "\u001c2",
+      "timeout": "２",
+      "expected": [
+        5,
+        2
+      ]
+    },
+    {
+      "threshold": "1_0",
+      "timeout": null,
+      "expected": [
+        10,
+        300
+      ]
+    },
+    {
+      "threshold": "1_0",
+      "timeout": "",
+      "expected": [
+        10,
+        300
+      ]
+    },
+    {
+      "threshold": "1_0",
+      "timeout": "-1",
+      "expected": [
+        10,
+        -1
+      ]
+    },
+    {
+      "threshold": "1_0",
+      "timeout": "2.0",
+      "expected": [
+        10,
+        300
+      ]
+    },
+    {
+      "threshold": "1_0",
+      "timeout": "２",
+      "expected": [
+        10,
+        2
+      ]
+    }
+  ],
+  "freshness": [
+    {
+      "input": null,
+      "expected": 300.0
+    },
+    {
+      "input": "",
+      "expected": 300.0
+    },
+    {
+      "input": "bad",
+      "expected": 300.0
+    },
+    {
+      "input": "0",
+      "expected": 300.0
+    },
+    {
+      "input": "-2",
+      "expected": 300.0
+    },
+    {
+      "input": "２",
+      "expected": 2.0
+    },
+    {
+      "input": "1_0",
+      "expected": 10.0
+    },
+    {
+      "input": "inf",
+      "expected": "infinite"
+    },
+    {
+      "input": "nan",
+      "expected": 300.0
+    },
+    {
+      "input": "0.0001",
+      "expected": 0.0001
+    },
+    {
+      "input": "\u001c2",
+      "expected": 2.0
+    },
+    {
+      "input": "\u001f2",
+      "expected": 2.0
+    }
+  ],
+  "health": [
+    {
+      "name": "ok-0.0",
+      "origin": "adapter",
+      "status": "ok",
+      "latency": 0.0,
+      "result_count": 2,
+      "initial_errors": 2,
+      "synthetic": false,
+      "now": 1700000000.25,
+      "expected": {
+        "status": "ok",
+        "status_at": "2023-11-14T22:13:20.250000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": null,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "name": "ok-3.25",
+      "origin": "adapter",
+      "status": "ok",
+      "latency": 3.25,
+      "result_count": 2,
+      "initial_errors": 2,
+      "synthetic": false,
+      "now": 1700000000.25,
+      "expected": {
+        "status": "ok",
+        "status_at": "2023-11-14T22:13:20.250000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "name": "ok--1.5",
+      "origin": "adapter",
+      "status": "ok",
+      "latency": -1.5,
+      "result_count": 2,
+      "initial_errors": 2,
+      "synthetic": false,
+      "now": 1700000000.25,
+      "expected": {
+        "status": "ok",
+        "status_at": "2023-11-14T22:13:20.250000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": -1.5,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "name": "rate_limited-0.0",
+      "origin": "adapter",
+      "status": "rate_limited",
+      "latency": 0.0,
+      "result_count": 0,
+      "initial_errors": 2,
+      "synthetic": false,
+      "now": 1700000000.25,
+      "expected": {
+        "status": "rate_limited",
+        "status_at": "2023-11-14T22:13:20.250000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 2,
+        "last_observed_latency_ms": null,
+        "last_observed_result_count": 0
+      }
+    },
+    {
+      "name": "rate_limited-3.25",
+      "origin": "adapter",
+      "status": "rate_limited",
+      "latency": 3.25,
+      "result_count": 0,
+      "initial_errors": 2,
+      "synthetic": false,
+      "now": 1700000000.25,
+      "expected": {
+        "status": "rate_limited",
+        "status_at": "2023-11-14T22:13:20.250000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 2,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 0
+      }
+    },
+    {
+      "name": "rate_limited--1.5",
+      "origin": "adapter",
+      "status": "rate_limited",
+      "latency": -1.5,
+      "result_count": 0,
+      "initial_errors": 2,
+      "synthetic": false,
+      "now": 1700000000.25,
+      "expected": {
+        "status": "rate_limited",
+        "status_at": "2023-11-14T22:13:20.250000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 2,
+        "last_observed_latency_ms": -1.5,
+        "last_observed_result_count": 0
+      }
+    },
+    {
+      "name": "blocked-0.0",
+      "origin": "adapter",
+      "status": "blocked",
+      "latency": 0.0,
+      "result_count": 0,
+      "initial_errors": 2,
+      "synthetic": false,
+      "now": 1700000000.25,
+      "expected": {
+        "status": "blocked",
+        "status_at": "2023-11-14T22:13:20.250000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": null,
+        "last_observed_result_count": 0
+      }
+    },
+    {
+      "name": "blocked-3.25",
+      "origin": "adapter",
+      "status": "blocked",
+      "latency": 3.25,
+      "result_count": 0,
+      "initial_errors": 2,
+      "synthetic": false,
+      "now": 1700000000.25,
+      "expected": {
+        "status": "blocked",
+        "status_at": "2023-11-14T22:13:20.250000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 0
+      }
+    },
+    {
+      "name": "blocked--1.5",
+      "origin": "adapter",
+      "status": "blocked",
+      "latency": -1.5,
+      "result_count": 0,
+      "initial_errors": 2,
+      "synthetic": false,
+      "now": 1700000000.25,
+      "expected": {
+        "status": "blocked",
+        "status_at": "2023-11-14T22:13:20.250000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": -1.5,
+        "last_observed_result_count": 0
+      }
+    },
+    {
+      "name": "error-0.0",
+      "origin": "adapter",
+      "status": "error",
+      "latency": 0.0,
+      "result_count": 0,
+      "initial_errors": 2,
+      "synthetic": false,
+      "now": 1700000000.25,
+      "expected": {
+        "status": "error",
+        "status_at": "2023-11-14T22:13:20.250000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 3,
+        "last_observed_latency_ms": null,
+        "last_observed_result_count": 0
+      }
+    },
+    {
+      "name": "error-3.25",
+      "origin": "adapter",
+      "status": "error",
+      "latency": 3.25,
+      "result_count": 0,
+      "initial_errors": 2,
+      "synthetic": false,
+      "now": 1700000000.25,
+      "expected": {
+        "status": "error",
+        "status_at": "2023-11-14T22:13:20.250000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 3,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 0
+      }
+    },
+    {
+      "name": "error--1.5",
+      "origin": "adapter",
+      "status": "error",
+      "latency": -1.5,
+      "result_count": 0,
+      "initial_errors": 2,
+      "synthetic": false,
+      "now": 1700000000.25,
+      "expected": {
+        "status": "error",
+        "status_at": "2023-11-14T22:13:20.250000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 3,
+        "last_observed_latency_ms": -1.5,
+        "last_observed_result_count": 0
+      }
+    },
+    {
+      "name": "timeout-0.0",
+      "origin": "adapter",
+      "status": "timeout",
+      "latency": 0.0,
+      "result_count": 0,
+      "initial_errors": 2,
+      "synthetic": false,
+      "now": 1700000000.25,
+      "expected": {
+        "status": "timeout",
+        "status_at": "2023-11-14T22:13:20.250000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 3,
+        "last_observed_latency_ms": null,
+        "last_observed_result_count": 0
+      }
+    },
+    {
+      "name": "timeout-3.25",
+      "origin": "adapter",
+      "status": "timeout",
+      "latency": 3.25,
+      "result_count": 0,
+      "initial_errors": 2,
+      "synthetic": false,
+      "now": 1700000000.25,
+      "expected": {
+        "status": "timeout",
+        "status_at": "2023-11-14T22:13:20.250000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 3,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 0
+      }
+    },
+    {
+      "name": "timeout--1.5",
+      "origin": "adapter",
+      "status": "timeout",
+      "latency": -1.5,
+      "result_count": 0,
+      "initial_errors": 2,
+      "synthetic": false,
+      "now": 1700000000.25,
+      "expected": {
+        "status": "timeout",
+        "status_at": "2023-11-14T22:13:20.250000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 3,
+        "last_observed_latency_ms": -1.5,
+        "last_observed_result_count": 0
+      }
+    },
+    {
+      "name": "unavailable-0.0",
+      "origin": "adapter",
+      "status": "unavailable",
+      "latency": 0.0,
+      "result_count": 0,
+      "initial_errors": 2,
+      "synthetic": false,
+      "now": 1700000000.25,
+      "expected": {
+        "status": "unavailable",
+        "status_at": "2023-11-14T22:13:20.250000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 2,
+        "last_observed_latency_ms": null,
+        "last_observed_result_count": 0
+      }
+    },
+    {
+      "name": "unavailable-3.25",
+      "origin": "adapter",
+      "status": "unavailable",
+      "latency": 3.25,
+      "result_count": 0,
+      "initial_errors": 2,
+      "synthetic": false,
+      "now": 1700000000.25,
+      "expected": {
+        "status": "unavailable",
+        "status_at": "2023-11-14T22:13:20.250000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 2,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 0
+      }
+    },
+    {
+      "name": "unavailable--1.5",
+      "origin": "adapter",
+      "status": "unavailable",
+      "latency": -1.5,
+      "result_count": 0,
+      "initial_errors": 2,
+      "synthetic": false,
+      "now": 1700000000.25,
+      "expected": {
+        "status": "unavailable",
+        "status_at": "2023-11-14T22:13:20.250000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 2,
+        "last_observed_latency_ms": -1.5,
+        "last_observed_result_count": 0
+      }
+    },
+    {
+      "name": "dispatched-synthetic-timeout",
+      "origin": "synthetic",
+      "status": "timeout",
+      "latency": 9999,
+      "result_count": 0,
+      "initial_errors": 0,
+      "synthetic": true,
+      "now": 1700000000.25,
+      "expected": {
+        "status": "timeout",
+        "status_at": "2023-11-14T22:13:20.250000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 1,
+        "last_observed_latency_ms": null,
+        "last_observed_result_count": 0
+      }
+    },
+    {
+      "name": "caller-cancelled",
+      "origin": "caller_cancelled",
+      "status": "unavailable",
+      "latency": 9999,
+      "result_count": 0,
+      "initial_errors": 0,
+      "synthetic": true,
+      "now": 1700000000.25,
+      "expected": {
+        "status": "unknown",
+        "status_at": null,
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": null,
+        "last_observed_result_count": null
+      }
+    },
+    {
+      "name": "never-dispatched",
+      "origin": "undispatched",
+      "status": "timeout",
+      "latency": 9999,
+      "result_count": 0,
+      "initial_errors": 0,
+      "synthetic": true,
+      "now": 1700000000.25,
+      "expected": {
+        "status": "unknown",
+        "status_at": null,
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": null,
+        "last_observed_result_count": null
+      },
+      "adapter_calls": 0
+    }
+  ],
+  "views": [
+    {
+      "at": 0,
+      "now": 0,
+      "context": [
+        true,
+        null,
+        null
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1970-01-01T00:00:00+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 0,
+      "now": 0,
+      "context": [
+        false,
+        "api_key",
+        false
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1970-01-01T00:00:00+00:00",
+        "stale": false,
+        "configured": false,
+        "auth_class": "api_key",
+        "auth_configured": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 0,
+      "now": 0,
+      "context": [
+        true,
+        "none",
+        true
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1970-01-01T00:00:00+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": "none",
+        "auth_configured": true,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 0,
+      "now": 300,
+      "context": [
+        true,
+        null,
+        null
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1970-01-01T00:00:00+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 0,
+      "now": 300,
+      "context": [
+        false,
+        "api_key",
+        false
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1970-01-01T00:00:00+00:00",
+        "stale": false,
+        "configured": false,
+        "auth_class": "api_key",
+        "auth_configured": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 0,
+      "now": 300,
+      "context": [
+        true,
+        "none",
+        true
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1970-01-01T00:00:00+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": "none",
+        "auth_configured": true,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 0,
+      "now": 300.0001,
+      "context": [
+        true,
+        null,
+        null
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1970-01-01T00:00:00+00:00",
+        "stale": true,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 0,
+      "now": 300.0001,
+      "context": [
+        false,
+        "api_key",
+        false
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1970-01-01T00:00:00+00:00",
+        "stale": true,
+        "configured": false,
+        "auth_class": "api_key",
+        "auth_configured": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 0,
+      "now": 300.0001,
+      "context": [
+        true,
+        "none",
+        true
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1970-01-01T00:00:00+00:00",
+        "stale": true,
+        "configured": true,
+        "auth_class": "none",
+        "auth_configured": true,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 0,
+      "now": -1,
+      "context": [
+        true,
+        null,
+        null
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1970-01-01T00:00:00+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": true,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 0,
+      "now": -1,
+      "context": [
+        false,
+        "api_key",
+        false
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1970-01-01T00:00:00+00:00",
+        "stale": false,
+        "configured": false,
+        "auth_class": "api_key",
+        "auth_configured": false,
+        "circuit_open": true,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 0,
+      "now": -1,
+      "context": [
+        true,
+        "none",
+        true
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1970-01-01T00:00:00+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": "none",
+        "auth_configured": true,
+        "circuit_open": true,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 0.25,
+      "now": 0.25,
+      "context": [
+        true,
+        null,
+        null
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1970-01-01T00:00:00.250000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 0.25,
+      "now": 0.25,
+      "context": [
+        false,
+        "api_key",
+        false
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1970-01-01T00:00:00.250000+00:00",
+        "stale": false,
+        "configured": false,
+        "auth_class": "api_key",
+        "auth_configured": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 0.25,
+      "now": 0.25,
+      "context": [
+        true,
+        "none",
+        true
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1970-01-01T00:00:00.250000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": "none",
+        "auth_configured": true,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 0.25,
+      "now": 300.25,
+      "context": [
+        true,
+        null,
+        null
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1970-01-01T00:00:00.250000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 0.25,
+      "now": 300.25,
+      "context": [
+        false,
+        "api_key",
+        false
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1970-01-01T00:00:00.250000+00:00",
+        "stale": false,
+        "configured": false,
+        "auth_class": "api_key",
+        "auth_configured": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 0.25,
+      "now": 300.25,
+      "context": [
+        true,
+        "none",
+        true
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1970-01-01T00:00:00.250000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": "none",
+        "auth_configured": true,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 0.25,
+      "now": 300.2501,
+      "context": [
+        true,
+        null,
+        null
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1970-01-01T00:00:00.250000+00:00",
+        "stale": true,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 0.25,
+      "now": 300.2501,
+      "context": [
+        false,
+        "api_key",
+        false
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1970-01-01T00:00:00.250000+00:00",
+        "stale": true,
+        "configured": false,
+        "auth_class": "api_key",
+        "auth_configured": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 0.25,
+      "now": 300.2501,
+      "context": [
+        true,
+        "none",
+        true
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1970-01-01T00:00:00.250000+00:00",
+        "stale": true,
+        "configured": true,
+        "auth_class": "none",
+        "auth_configured": true,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 0.25,
+      "now": -0.75,
+      "context": [
+        true,
+        null,
+        null
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1970-01-01T00:00:00.250000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": true,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 0.25,
+      "now": -0.75,
+      "context": [
+        false,
+        "api_key",
+        false
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1970-01-01T00:00:00.250000+00:00",
+        "stale": false,
+        "configured": false,
+        "auth_class": "api_key",
+        "auth_configured": false,
+        "circuit_open": true,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 0.25,
+      "now": -0.75,
+      "context": [
+        true,
+        "none",
+        true
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1970-01-01T00:00:00.250000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": "none",
+        "auth_configured": true,
+        "circuit_open": true,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": -0.25,
+      "now": -0.25,
+      "context": [
+        true,
+        null,
+        null
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1969-12-31T23:59:59.750000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": true,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": -0.25,
+      "now": -0.25,
+      "context": [
+        false,
+        "api_key",
+        false
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1969-12-31T23:59:59.750000+00:00",
+        "stale": false,
+        "configured": false,
+        "auth_class": "api_key",
+        "auth_configured": false,
+        "circuit_open": true,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": -0.25,
+      "now": -0.25,
+      "context": [
+        true,
+        "none",
+        true
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1969-12-31T23:59:59.750000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": "none",
+        "auth_configured": true,
+        "circuit_open": true,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": -0.25,
+      "now": 299.75,
+      "context": [
+        true,
+        null,
+        null
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1969-12-31T23:59:59.750000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": -0.25,
+      "now": 299.75,
+      "context": [
+        false,
+        "api_key",
+        false
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1969-12-31T23:59:59.750000+00:00",
+        "stale": false,
+        "configured": false,
+        "auth_class": "api_key",
+        "auth_configured": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": -0.25,
+      "now": 299.75,
+      "context": [
+        true,
+        "none",
+        true
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1969-12-31T23:59:59.750000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": "none",
+        "auth_configured": true,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": -0.25,
+      "now": 299.7501,
+      "context": [
+        true,
+        null,
+        null
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1969-12-31T23:59:59.750000+00:00",
+        "stale": true,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": -0.25,
+      "now": 299.7501,
+      "context": [
+        false,
+        "api_key",
+        false
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1969-12-31T23:59:59.750000+00:00",
+        "stale": true,
+        "configured": false,
+        "auth_class": "api_key",
+        "auth_configured": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": -0.25,
+      "now": 299.7501,
+      "context": [
+        true,
+        "none",
+        true
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1969-12-31T23:59:59.750000+00:00",
+        "stale": true,
+        "configured": true,
+        "auth_class": "none",
+        "auth_configured": true,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": -0.25,
+      "now": -1.25,
+      "context": [
+        true,
+        null,
+        null
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1969-12-31T23:59:59.750000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": true,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": -0.25,
+      "now": -1.25,
+      "context": [
+        false,
+        "api_key",
+        false
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1969-12-31T23:59:59.750000+00:00",
+        "stale": false,
+        "configured": false,
+        "auth_class": "api_key",
+        "auth_configured": false,
+        "circuit_open": true,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": -0.25,
+      "now": -1.25,
+      "context": [
+        true,
+        "none",
+        true
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "1969-12-31T23:59:59.750000+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": "none",
+        "auth_configured": true,
+        "circuit_open": true,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 1700000000.123456,
+      "now": 1700000000.123456,
+      "context": [
+        true,
+        null,
+        null
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "2023-11-14T22:13:20.123456+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 1700000000.123456,
+      "now": 1700000000.123456,
+      "context": [
+        false,
+        "api_key",
+        false
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "2023-11-14T22:13:20.123456+00:00",
+        "stale": false,
+        "configured": false,
+        "auth_class": "api_key",
+        "auth_configured": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 1700000000.123456,
+      "now": 1700000000.123456,
+      "context": [
+        true,
+        "none",
+        true
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "2023-11-14T22:13:20.123456+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": "none",
+        "auth_configured": true,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 1700000000.123456,
+      "now": 1700000300.123456,
+      "context": [
+        true,
+        null,
+        null
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "2023-11-14T22:13:20.123456+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 1700000000.123456,
+      "now": 1700000300.123456,
+      "context": [
+        false,
+        "api_key",
+        false
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "2023-11-14T22:13:20.123456+00:00",
+        "stale": false,
+        "configured": false,
+        "auth_class": "api_key",
+        "auth_configured": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 1700000000.123456,
+      "now": 1700000300.123456,
+      "context": [
+        true,
+        "none",
+        true
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "2023-11-14T22:13:20.123456+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": "none",
+        "auth_configured": true,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 1700000000.123456,
+      "now": 1700000300.123556,
+      "context": [
+        true,
+        null,
+        null
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "2023-11-14T22:13:20.123456+00:00",
+        "stale": true,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 1700000000.123456,
+      "now": 1700000300.123556,
+      "context": [
+        false,
+        "api_key",
+        false
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "2023-11-14T22:13:20.123456+00:00",
+        "stale": true,
+        "configured": false,
+        "auth_class": "api_key",
+        "auth_configured": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 1700000000.123456,
+      "now": 1700000300.123556,
+      "context": [
+        true,
+        "none",
+        true
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "2023-11-14T22:13:20.123456+00:00",
+        "stale": true,
+        "configured": true,
+        "auth_class": "none",
+        "auth_configured": true,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 1700000000.123456,
+      "now": 1699999999.123456,
+      "context": [
+        true,
+        null,
+        null
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "2023-11-14T22:13:20.123456+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 1700000000.123456,
+      "now": 1699999999.123456,
+      "context": [
+        false,
+        "api_key",
+        false
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "2023-11-14T22:13:20.123456+00:00",
+        "stale": false,
+        "configured": false,
+        "auth_class": "api_key",
+        "auth_configured": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 1700000000.123456,
+      "now": 1699999999.123456,
+      "context": [
+        true,
+        "none",
+        true
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "2023-11-14T22:13:20.123456+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": "none",
+        "auth_configured": true,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 1700000000.0,
+      "now": 1700000000.0,
+      "context": [
+        true,
+        null,
+        null
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "2023-11-14T22:13:20+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 1700000000.0,
+      "now": 1700000000.0,
+      "context": [
+        false,
+        "api_key",
+        false
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "2023-11-14T22:13:20+00:00",
+        "stale": false,
+        "configured": false,
+        "auth_class": "api_key",
+        "auth_configured": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 1700000000.0,
+      "now": 1700000000.0,
+      "context": [
+        true,
+        "none",
+        true
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "2023-11-14T22:13:20+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": "none",
+        "auth_configured": true,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 1700000000.0,
+      "now": 1700000300.0,
+      "context": [
+        true,
+        null,
+        null
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "2023-11-14T22:13:20+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 1700000000.0,
+      "now": 1700000300.0,
+      "context": [
+        false,
+        "api_key",
+        false
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "2023-11-14T22:13:20+00:00",
+        "stale": false,
+        "configured": false,
+        "auth_class": "api_key",
+        "auth_configured": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 1700000000.0,
+      "now": 1700000300.0,
+      "context": [
+        true,
+        "none",
+        true
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "2023-11-14T22:13:20+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": "none",
+        "auth_configured": true,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 1700000000.0,
+      "now": 1700000300.0001,
+      "context": [
+        true,
+        null,
+        null
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "2023-11-14T22:13:20+00:00",
+        "stale": true,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 1700000000.0,
+      "now": 1700000300.0001,
+      "context": [
+        false,
+        "api_key",
+        false
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "2023-11-14T22:13:20+00:00",
+        "stale": true,
+        "configured": false,
+        "auth_class": "api_key",
+        "auth_configured": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 1700000000.0,
+      "now": 1700000300.0001,
+      "context": [
+        true,
+        "none",
+        true
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "2023-11-14T22:13:20+00:00",
+        "stale": true,
+        "configured": true,
+        "auth_class": "none",
+        "auth_configured": true,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 1700000000.0,
+      "now": 1699999999.0,
+      "context": [
+        true,
+        null,
+        null
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "2023-11-14T22:13:20+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": null,
+        "auth_configured": null,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 1700000000.0,
+      "now": 1699999999.0,
+      "context": [
+        false,
+        "api_key",
+        false
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "2023-11-14T22:13:20+00:00",
+        "stale": false,
+        "configured": false,
+        "auth_class": "api_key",
+        "auth_configured": false,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    },
+    {
+      "at": 1700000000.0,
+      "now": 1699999999.0,
+      "context": [
+        true,
+        "none",
+        true
+      ],
+      "expected": {
+        "status": "ok",
+        "status_at": "2023-11-14T22:13:20+00:00",
+        "stale": false,
+        "configured": true,
+        "auth_class": "none",
+        "auth_configured": true,
+        "circuit_open": false,
+        "circuit_consecutive_errors": 0,
+        "last_observed_latency_ms": 3.25,
+        "last_observed_result_count": 2
+      }
+    }
+  ],
+  "circuit": [
+    {
+      "threshold": 5,
+      "timeout": 300,
+      "outputs": [
+        {
+          "operation": "failure",
+          "now": 100,
+          "errors": 1,
+          "open_until": 0.0,
+          "allowed": true,
+          "open": false
+        },
+        {
+          "operation": "failure",
+          "now": 100,
+          "errors": 2,
+          "open_until": 0.0,
+          "allowed": true,
+          "open": false
+        },
+        {
+          "operation": "failure",
+          "now": 100,
+          "errors": 3,
+          "open_until": 0.0,
+          "allowed": true,
+          "open": false
+        },
+        {
+          "operation": "failure",
+          "now": 100,
+          "errors": 4,
+          "open_until": 0.0,
+          "allowed": true,
+          "open": false
+        },
+        {
+          "operation": "failure",
+          "now": 100,
+          "errors": 5,
+          "open_until": 400,
+          "allowed": false,
+          "open": true
+        },
+        {
+          "operation": "failure",
+          "now": 100,
+          "errors": 6,
+          "open_until": 400,
+          "allowed": false,
+          "open": true
+        },
+        {
+          "operation": "check",
+          "now": 399.999,
+          "errors": 6,
+          "open_until": 400,
+          "allowed": false,
+          "open": true
+        },
+        {
+          "operation": "check",
+          "now": 400,
+          "errors": 6,
+          "open_until": 400,
+          "allowed": true,
+          "open": false
+        },
+        {
+          "operation": "success",
+          "now": 401,
+          "errors": 0,
+          "open_until": 0.0,
+          "allowed": true,
+          "open": false
+        }
+      ]
+    },
+    {
+      "threshold": 1,
+      "timeout": 2,
+      "outputs": [
+        {
+          "operation": "failure",
+          "now": 100,
+          "errors": 1,
+          "open_until": 102,
+          "allowed": false,
+          "open": true
+        },
+        {
+          "operation": "failure",
+          "now": 100,
+          "errors": 2,
+          "open_until": 102,
+          "allowed": false,
+          "open": true
+        },
+        {
+          "operation": "failure",
+          "now": 100,
+          "errors": 3,
+          "open_until": 102,
+          "allowed": false,
+          "open": true
+        },
+        {
+          "operation": "failure",
+          "now": 100,
+          "errors": 4,
+          "open_until": 102,
+          "allowed": false,
+          "open": true
+        },
+        {
+          "operation": "failure",
+          "now": 100,
+          "errors": 5,
+          "open_until": 102,
+          "allowed": false,
+          "open": true
+        },
+        {
+          "operation": "failure",
+          "now": 100,
+          "errors": 6,
+          "open_until": 102,
+          "allowed": false,
+          "open": true
+        },
+        {
+          "operation": "check",
+          "now": 399.999,
+          "errors": 6,
+          "open_until": 102,
+          "allowed": true,
+          "open": false
+        },
+        {
+          "operation": "check",
+          "now": 400,
+          "errors": 6,
+          "open_until": 102,
+          "allowed": true,
+          "open": false
+        },
+        {
+          "operation": "success",
+          "now": 401,
+          "errors": 0,
+          "open_until": 0.0,
+          "allowed": true,
+          "open": false
+        }
+      ]
+    },
+    {
+      "threshold": 0,
+      "timeout": 0,
+      "outputs": [
+        {
+          "operation": "failure",
+          "now": 100,
+          "errors": 1,
+          "open_until": 100,
+          "allowed": true,
+          "open": false
+        },
+        {
+          "operation": "failure",
+          "now": 100,
+          "errors": 2,
+          "open_until": 100,
+          "allowed": true,
+          "open": false
+        },
+        {
+          "operation": "failure",
+          "now": 100,
+          "errors": 3,
+          "open_until": 100,
+          "allowed": true,
+          "open": false
+        },
+        {
+          "operation": "failure",
+          "now": 100,
+          "errors": 4,
+          "open_until": 100,
+          "allowed": true,
+          "open": false
+        },
+        {
+          "operation": "failure",
+          "now": 100,
+          "errors": 5,
+          "open_until": 100,
+          "allowed": true,
+          "open": false
+        },
+        {
+          "operation": "failure",
+          "now": 100,
+          "errors": 6,
+          "open_until": 100,
+          "allowed": true,
+          "open": false
+        },
+        {
+          "operation": "check",
+          "now": 399.999,
+          "errors": 6,
+          "open_until": 100,
+          "allowed": true,
+          "open": false
+        },
+        {
+          "operation": "check",
+          "now": 400,
+          "errors": 6,
+          "open_until": 100,
+          "allowed": true,
+          "open": false
+        },
+        {
+          "operation": "success",
+          "now": 401,
+          "errors": 0,
+          "open_until": 0.0,
+          "allowed": true,
+          "open": false
+        }
+      ]
+    },
+    {
+      "threshold": -1,
+      "timeout": -2,
+      "outputs": [
+        {
+          "operation": "failure",
+          "now": 100,
+          "errors": 1,
+          "open_until": 98,
+          "allowed": true,
+          "open": false
+        },
+        {
+          "operation": "failure",
+          "now": 100,
+          "errors": 2,
+          "open_until": 98,
+          "allowed": true,
+          "open": false
+        },
+        {
+          "operation": "failure",
+          "now": 100,
+          "errors": 3,
+          "open_until": 98,
+          "allowed": true,
+          "open": false
+        },
+        {
+          "operation": "failure",
+          "now": 100,
+          "errors": 4,
+          "open_until": 98,
+          "allowed": true,
+          "open": false
+        },
+        {
+          "operation": "failure",
+          "now": 100,
+          "errors": 5,
+          "open_until": 98,
+          "allowed": true,
+          "open": false
+        },
+        {
+          "operation": "failure",
+          "now": 100,
+          "errors": 6,
+          "open_until": 98,
+          "allowed": true,
+          "open": false
+        },
+        {
+          "operation": "check",
+          "now": 399.999,
+          "errors": 6,
+          "open_until": 98,
+          "allowed": true,
+          "open": false
+        },
+        {
+          "operation": "check",
+          "now": 400,
+          "errors": 6,
+          "open_until": 98,
+          "allowed": true,
+          "open": false
+        },
+        {
+          "operation": "success",
+          "now": 401,
+          "errors": 0,
+          "open_until": 0.0,
+          "allowed": true,
+          "open": false
+        }
+      ]
+    }
+  ],
+  "retry_after": [
+    {
+      "input": null,
+      "now": 1700006400,
+      "expected": 30.0
+    },
+    {
+      "input": null,
+      "now": 1700006445,
+      "expected": 30.0
+    },
+    {
+      "input": "",
+      "now": 1700006400,
+      "expected": 30.0
+    },
+    {
+      "input": "",
+      "now": 1700006445,
+      "expected": 30.0
+    },
+    {
+      "input": " ",
+      "now": 1700006400,
+      "expected": 30.0
+    },
+    {
+      "input": " ",
+      "now": 1700006445,
+      "expected": 30.0
+    },
+    {
+      "input": "0",
+      "now": 1700006400,
+      "expected": 1.0
+    },
+    {
+      "input": "0",
+      "now": 1700006445,
+      "expected": 1.0
+    },
+    {
+      "input": "0.25",
+      "now": 1700006400,
+      "expected": 1.0
+    },
+    {
+      "input": "0.25",
+      "now": 1700006445,
+      "expected": 1.0
+    },
+    {
+      "input": "1",
+      "now": 1700006400,
+      "expected": 1.0
+    },
+    {
+      "input": "1",
+      "now": 1700006445,
+      "expected": 1.0
+    },
+    {
+      "input": "1.5",
+      "now": 1700006400,
+      "expected": 1.5
+    },
+    {
+      "input": "1.5",
+      "now": 1700006445,
+      "expected": 1.5
+    },
+    {
+      "input": "45",
+      "now": 1700006400,
+      "expected": 45.0
+    },
+    {
+      "input": "45",
+      "now": 1700006445,
+      "expected": 45.0
+    },
+    {
+      "input": "999999",
+      "now": 1700006400,
+      "expected": 300.0
+    },
+    {
+      "input": "999999",
+      "now": 1700006445,
+      "expected": 300.0
+    },
+    {
+      "input": "-1",
+      "now": 1700006400,
+      "expected": 30.0
+    },
+    {
+      "input": "-1",
+      "now": 1700006445,
+      "expected": 30.0
+    },
+    {
+      "input": "nan",
+      "now": 1700006400,
+      "expected": 30.0
+    },
+    {
+      "input": "nan",
+      "now": 1700006445,
+      "expected": 30.0
+    },
+    {
+      "input": "inf",
+      "now": 1700006400,
+      "expected": 30.0
+    },
+    {
+      "input": "inf",
+      "now": 1700006445,
+      "expected": 30.0
+    },
+    {
+      "input": "1e309",
+      "now": 1700006400,
+      "expected": 30.0
+    },
+    {
+      "input": "1e309",
+      "now": 1700006445,
+      "expected": 30.0
+    },
+    {
+      "input": "1_0",
+      "now": 1700006400,
+      "expected": 10.0
+    },
+    {
+      "input": "1_0",
+      "now": 1700006445,
+      "expected": 10.0
+    },
+    {
+      "input": "１.５",
+      "now": 1700006400,
+      "expected": 1.5
+    },
+    {
+      "input": "１.５",
+      "now": 1700006445,
+      "expected": 1.5
+    },
+    {
+      "input": "1__0",
+      "now": 1700006400,
+      "expected": 30.0
+    },
+    {
+      "input": "1__0",
+      "now": 1700006445,
+      "expected": 30.0
+    },
+    {
+      "input": "nonsense",
+      "now": 1700006400,
+      "expected": 30.0
+    },
+    {
+      "input": "nonsense",
+      "now": 1700006445,
+      "expected": 30.0
+    },
+    {
+      "input": "Wed, 15 Nov 2023 00:00:45 GMT",
+      "now": 1700006400,
+      "expected": 45.0
+    },
+    {
+      "input": "Wed, 15 Nov 2023 00:00:45 GMT",
+      "now": 1700006445,
+      "expected": 30.0
+    },
+    {
+      "input": "Wednesday, 15-Nov-23 00:00:45 GMT",
+      "now": 1700006400,
+      "expected": 45.0
+    },
+    {
+      "input": "Wednesday, 15-Nov-23 00:00:45 GMT",
+      "now": 1700006445,
+      "expected": 30.0
+    },
+    {
+      "input": "Wed Nov 15 00:00:45 2023",
+      "now": 1700006400,
+      "expected": 45.0
+    },
+    {
+      "input": "Wed Nov 15 00:00:45 2023",
+      "now": 1700006445,
+      "expected": 30.0
+    },
+    {
+      "input": "15 November 2023 00:00:45 +0000",
+      "now": 1700006400,
+      "expected": 45.0
+    },
+    {
+      "input": "15 November 2023 00:00:45 +0000",
+      "now": 1700006445,
+      "expected": 30.0
+    },
+    {
+      "input": "15 Nov 2023 00:00:45",
+      "now": 1700006400,
+      "expected": 45.0
+    },
+    {
+      "input": "15 Nov 2023 00:00:45",
+      "now": 1700006445,
+      "expected": 30.0
+    },
+    {
+      "input": "15 Nov 2023 00:00:45 XYZ",
+      "now": 1700006400,
+      "expected": 45.0
+    },
+    {
+      "input": "15 Nov 2023 00:00:45 XYZ",
+      "now": 1700006445,
+      "expected": 30.0
+    },
+    {
+      "input": "15 Nov 2023 01:00:45 +0100",
+      "now": 1700006400,
+      "expected": 45.0
+    },
+    {
+      "input": "15 Nov 2023 01:00:45 +0100",
+      "now": 1700006445,
+      "expected": 30.0
+    },
+    {
+      "input": "15 Nov 2023 00.00.45 GMT",
+      "now": 1700006400,
+      "expected": 45.0
+    },
+    {
+      "input": "15 Nov 2023 00.00.45 GMT",
+      "now": 1700006445,
+      "expected": 30.0
+    },
+    {
+      "input": "Wed,15 Nov 2023 00:00:45 GMT",
+      "now": 1700006400,
+      "expected": 45.0
+    },
+    {
+      "input": "Wed,15 Nov 2023 00:00:45 GMT",
+      "now": 1700006445,
+      "expected": 30.0
+    },
+    {
+      "input": "Wed, 31 Feb 2023 00:00:45 GMT",
+      "now": 1700006400,
+      "expected": 30.0
+    },
+    {
+      "input": "Wed, 31 Feb 2023 00:00:45 GMT",
+      "now": 1700006445,
+      "expected": 30.0
+    },
+    {
+      "input": "15 Nov 2023 00:00:45 +2400",
+      "now": 1700006400,
+      "expected": 30.0
+    },
+    {
+      "input": "15 Nov 2023 00:00:45 +2400",
+      "now": 1700006445,
+      "expected": 30.0
+    },
+    {
+      "input": "15 Nov ² 00:00:45 2023",
+      "now": 1700006400,
+      "expected": 30.0
+    },
+    {
+      "input": "15 Nov 2023,, 00:00:45 GMT",
+      "now": 1700006400,
+      "expected": 30.0
+    },
+    {
+      "input": "14 Nov 2023 19:00:45 EſT",
+      "now": 1700006400,
+      "expected": 45.0
+    },
+    {
+      "input": "\u001c45",
+      "now": 1700006400,
+      "expected": 45.0
+    },
+    {
+      "input": "\u001f45",
+      "now": 1700006400,
+      "expected": 45.0
+    }
+  ],
+  "bounds": [
+    {
+      "input": 0,
+      "expected": 30.0
+    },
+    {
+      "input": -1,
+      "expected": 30.0
+    },
+    {
+      "input": 0.25,
+      "expected": 1.0
+    },
+    {
+      "input": 1,
+      "expected": 1.0
+    },
+    {
+      "input": 1.5,
+      "expected": 1.5
+    },
+    {
+      "input": 300,
+      "expected": 300.0
+    },
+    {
+      "input": 301,
+      "expected": 300.0
+    }
+  ],
+  "registry": [
+    "abuseipdb",
+    "arxiv",
+    "ashby",
+    "brave",
+    "censys",
+    "clinicaltrials",
+    "crates",
+    "crtsh",
+    "cve",
+    "dehashed",
+    "dockerhub",
+    "duckduckgo",
+    "edgar",
+    "epss",
+    "europepmc",
+    "exploitdb",
+    "fred",
+    "github",
+    "google",
+    "greenhouse",
+    "greynoise",
+    "hackernews",
+    "hibp",
+    "huggingface",
+    "intelx",
+    "internetarchive",
+    "lever",
+    "mitreattack",
+    "musicbrainz",
+    "nominatim",
+    "npm",
+    "nvd",
+    "openalex",
+    "openfda",
+    "openlibrary",
+    "otx",
+    "oyez",
+    "pubchem",
+    "pubmed",
+    "pypi",
+    "reddit",
+    "rubygems",
+    "semanticscholar",
+    "shodan",
+    "stackexchange",
+    "tmdb",
+    "uniprot",
+    "urlhaus",
+    "virustotal",
+    "vulncheck",
+    "wikipedia"
+  ],
+  "url_resolution": [
+    {
+      "explicit": "",
+      "environment": null,
+      "expected": ""
+    },
+    {
+      "explicit": "",
+      "environment": "",
+      "expected": ""
+    },
+    {
+      "explicit": "",
+      "environment": "redis://injected",
+      "expected": "redis://injected"
+    },
+    {
+      "explicit": "redis://explicit",
+      "environment": null,
+      "expected": "redis://explicit"
+    },
+    {
+      "explicit": "redis://explicit",
+      "environment": "",
+      "expected": "redis://explicit"
+    },
+    {
+      "explicit": "redis://explicit",
+      "environment": "redis://injected",
+      "expected": "redis://explicit"
+    }
+  ],
+  "fail_settings": [
+    {
+      "fail_closed": false,
+      "direct_allowed": true,
+      "wrapped_allowed": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "warmup": null,
+      "shutdown": null
+    },
+    {
+      "fail_closed": true,
+      "direct_allowed": false,
+      "wrapped_allowed": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "warmup": null,
+      "shutdown": null
+    }
+  ],
+  "timestamp_limits": [
+    {
+      "at": -62135596800.0,
+      "expected": "0001-01-01T00:00:00+00:00"
+    },
+    {
+      "at": -62135596800.00001,
+      "expected": null
+    },
+    {
+      "at": -62135596799.99999,
+      "expected": "0001-01-01T00:00:00.000008+00:00"
+    },
+    {
+      "at": 253402300800.0,
+      "expected": null
+    },
+    {
+      "at": 253402300799.99997,
+      "expected": "9999-12-31T23:59:59.999969+00:00"
+    },
+    {
+      "at": 253402300800.00003,
+      "expected": null
+    },
+    {
+      "at": -5e-07,
+      "expected": "1970-01-01T00:00:00+00:00"
+    },
+    {
+      "at": 5e-07,
+      "expected": "1970-01-01T00:00:00+00:00"
+    },
+    {
+      "at": 1.5e-06,
+      "expected": "1970-01-01T00:00:00.000002+00:00"
+    },
+    {
+      "at": 0.9999995,
+      "expected": "1970-01-01T00:00:01+00:00"
+    },
+    {
+      "at": 1.9999995,
+      "expected": "1970-01-01T00:00:01.999999+00:00"
+    }
+  ],
+  "cooldown_script_sha256": "aa61f575f65aeed01bc0857e38f5163229d6c24a3edcc708ac689a8aba03bcf2",
+  "schema_version": 1,
+  "baseline": "9ab1c7a22de933762c42469145c1f50365220de2",
+  "python": "3.14.7",
+  "sources": [
+    {
+      "path": "slopsearx/ratelimit.py",
+      "git_blob": "5c7cd57a679591879b2a4e2d2bf2fb520d9d7eb5",
+      "sha256": "3f2a281ec40bb6b7639556e14ab394c10a9da20c6c215bdc1e07a188f397f751"
+    },
+    {
+      "path": "slopsearx/adapter.py",
+      "git_blob": "664e853d9ab1330596d01899ebe015701de09e88",
+      "sha256": "5883a35c48d0dad1077306fbda21997ee1d32116a8c03633a6b762de0c26d6f3"
+    },
+    {
+      "path": "slopsearx/capabilities.py",
+      "git_blob": "5ef6f90750352fdadbc877561d3520c1fe774fdb",
+      "sha256": "ed4e332a4df1de32d83b9dd2b62dddb622082ab4c236c0c9cef8d8d23336fd6f"
+    },
+    {
+      "path": "slopsearx/service.py",
+      "git_blob": "8b45ce71efc3c7cc4a72b962968e146a63e135be",
+      "sha256": "aed455ccbefcfee5ffcf099876dc7230cead27527313269edc0f69b504c20922"
+    },
+    {
+      "path": "engines/semanticscholar.py",
+      "git_blob": "ff91b7b2674f0685affdf2bb3ac258ebcb33dc08",
+      "sha256": "4a5daf809e77ff7001f9ba2b92f3d035eec507a7e3c199d2180582de3d4b8b8c"
+    },
+    {
+      "path": "tests/test_ratelimit.py",
+      "git_blob": "ca7c0ecaa79878ba363d881b77e692866ed9faa1",
+      "sha256": "dbc6fc426c4887f5be607c62cfe9c75067af15f89d8078592162685d5df9326d"
+    },
+    {
+      "path": "tests/test_observed_health.py",
+      "git_blob": "69b83cdfea82a07e90ada68fca31810aace72bb3",
+      "sha256": "40e1000319fa048ee63ee6eb8906fefdfd0c7e7832d834693cdf216ff98b0a83"
+    },
+    {
+      "path": "tests/test_interactive_deadline.py",
+      "git_blob": "d406af2adc49a11ee8de58f376a41b15e35ba956",
+      "sha256": "51b4f7fff63fff701e233d957f58175c949d82f8ea448fe938ad0fd7ddb12552"
+    },
+    {
+      "path": "tests/test_semanticscholar_cooldown.py",
+      "git_blob": "229c7f6577c08692818c5cd90c0f7c486f8979ce",
+      "sha256": "4304dde0f4cabef7c20219c596121cc7c34bb1565bc6bd823d819d47ebe32b2a"
+    }
+  ],
+  "exporter_sha256": "137fa18301e8f800317cd574495b52d277c2c5106e33227f39100459c655fc31"
+}

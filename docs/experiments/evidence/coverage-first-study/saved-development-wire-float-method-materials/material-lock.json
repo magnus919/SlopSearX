@@ -1,0 +1,27 @@
+{
+  "band_companion_sha256": "268a26679401cd728808ba24a589643c31770e3a747b0d33462f5ba2563fbfec",
+  "budget_limits_unchanged": true,
+  "candidate_models_projection_and_fallback_unchanged": true,
+  "candidate_source_sha256": "3be05771ebd32fcf18433ee87db031bd190ee9615237a95e4bbd96108487067a",
+  "cohorts_sha256": "377450c59f2b8498c8a7f923bb7b6d05a0b780300467cc9b9f8ef0bd69522595",
+  "development_new_capture_calls": 0,
+  "development_new_search_calls": 0,
+  "execution_contract_sha256": "9d800d31fa8054e5500d8cdba4d9f35781287ab6b8fa75e210abd18f0e6ce60a",
+  "historical_grades_reused": false,
+  "numeric_quality_and_task_use_unchanged": true,
+  "parser_wire_compatibility": {
+    "choice_probability_rounding_validation": "accept the nominal hundredth and exactly one adjacent binary float; require feasible hundredth-rounding intervals with exact unit probability mass; preserve raw wire values",
+    "choice_ties": "accept only the maximum or its immediately preceding float; treat adjacent maxima as unknown",
+    "existing_results_rescued": false,
+    "quality_thresholds_changed": false,
+    "ranking_instructions_changed": false,
+    "score_policy_changed": false,
+    "score_rounding_validation": "accept the nominal hundredth and exactly one adjacent binary float for the reported score and each probability; validate their probability mass and weighted mean jointly against feasible hundredth-rounding intervals summing exactly to one; preserve raw wire values"
+  },
+  "protocol_sha256": "65b5515eb161c849c54f196c300f03b3965cbdbd4162682131b13ccecd0911a8",
+  "reported_scores_and_ranking_instructions_unchanged": true,
+  "schema": "coverage-saved-wire-float-method-lock/1",
+  "scientific_calls": 0,
+  "simulation_quality_credit": false,
+  "status": "locked_materials_not_stage_admission"
+}

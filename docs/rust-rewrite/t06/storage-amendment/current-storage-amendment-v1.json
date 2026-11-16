@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "baseline": "7f8d8ea8befe8713fa406f217e19a01cc779ac5c",
+  "file": "crates/ssx-mcp/tests/t06_support/server.rs",
+  "before_sha256": "a28581ee38e14923b98218492853f11a291752ada85abbb3744e63e88bc5d567",
+  "archive": "docs/rust-rewrite/t06/storage-amendment/server.rs.7f8d.frozen",
+  "after_sha256": "8484b90d50c711f81cb5852054b40d16338d2e2b8d4cf27838ed5a47fd9a2205",
+  "scope": "Retain the registered fixture root override and all socket/readiness/owner guards; replace the hardcoded macOS temporary fallback with std::env::temp_dir. Original native fixture container, source captures and expected outcomes are unchanged."
+}

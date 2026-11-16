@@ -2,6 +2,41 @@
 
 This document helps AI coding agents understand the project structure, architecture, and conventions.
 
+## Start Every Session from Current Upstream Main
+
+Before codebase analysis, planning, or edits in a fresh session:
+
+1. Inspect `git status --short --branch`, `git worktree list --porcelain`, and
+   `git remote -v`. Identify local changes, the current branch, and which
+   worktree owns `main`; do not assume the starting checkout is current.
+2. Fetch the authoritative upstream main branch. In this repository the
+   upstream remote is normally `origin`: run `git fetch origin` and use
+   `origin/main`. If remotes differ, verify the authoritative remote first.
+3. Synchronize an available local `main` with `git switch main` followed by
+   `git merge --ff-only origin/main`. Start new task branches or isolated
+   worktrees from that freshly fetched main revision. For read-only analysis,
+   use the synchronized checkout or a clean detached worktree at `origin/main`.
+4. Preserve unrelated tracked and untracked files and existing branch commits.
+   Inspect any other worktree that owns `main` before changing its branch;
+   never disrupt active work. If the current checkout is dirty, diverged, or
+   owned by another task, use an isolated worktree from `origin/main` instead
+   of resetting, cleaning, force-checking out, or automatically stashing it.
+5. Verify and report the baseline commit with `git rev-parse HEAD` and
+   `git rev-parse origin/main`. Before new work, they must match;
+   `git rev-list --left-right --count HEAD...origin/main` must return `0 0`.
+   Re-read this guide and relevant contribution instructions after updating.
+
+When explicitly continuing an existing branch/PR or examining a historical
+revision, fetch main first, inspect divergence, and state the chosen revision
+and reason. Preserve that task's history; integrate main only through its
+normal reviewed workflow. A failed fetch is not evidence of freshness: report
+the limitation and do not present the checkout as current. Keep work independent
+of current-source assumptions moving while resolving access.
+
+After delivering and merging changes, safely fast-forward the primary local
+`main` again and verify it against a fresh fetch. Do not leave the primary
+checkout on an obsolete task branch for the next session.
+
 ## Project Structure
 
 ```
@@ -121,6 +156,51 @@ class MyEngine(EngineAdapter):
 - DCO sign-off required on every commit (`git commit -s`)
 - Run `pre-commit run --all-files` before pushing to catch lint, type, and dead-code issues locally
 - One feature or fix per PR
+
+## Rust Build Footprint and Post-Merge Cleanup
+
+Keep new Rust build and scratch artifacts outside the checkout. On this Mac,
+use `/Volumes/tank01/magnus/rust-builds/slopsearx/`; on another host, configure
+an equivalent persistent build root. Put Cargo targets and caches, `TMPDIR`,
+source copies, overlays, archives, logs, receipts, and handoffs under that
+root. Do not fall back to `/private/tmp`, `/tmp`, or `.codex` worktree
+locations without explicit user consent. A CI runner may use its designated
+ephemeral job directory if the job cleans it up. Give each task/run a specific
+directory and record its absolute paths, owner, issue or PR, artifact class,
+measured bytes, and retain/delete condition in the persistent task ledger
+under that root's `storage-ledger/` before starting work.
+
+Before a build, record `df` availability, the task directory's current `du`
+usage, and an estimate based on a comparable prior build or the planned inputs.
+Reuse an exclusive target or an approved shared cache when safe; for shared
+caches, record the owner, size, reuse justification, and review/prune date.
+Avoid duplicate targets and concurrent writers to a shared target.
+After moving a checkout, do not assume cached package artifacts match the new
+workspace root. Check the affected package's dep-info and compile-time or runtime
+fixture-root paths against the current checkout. If they still name the old root,
+invalidate and rebuild only the affected owned package artifacts in the same
+approved target under the normal exclusive source, target, and Cargo-cache leases; record target usage before and after, and
+preserve the original failure output and provenance. Keep the registry/download
+cache. Do not blanket-clean Cargo, create a duplicate target, or restore/copy the
+checkout to its former absolute path. See
+[`docs/RUST_BUILD_FOOTPRINT.md`](docs/RUST_BUILD_FOOTPRINT.md) for the run and
+cleanup checklist.
+
+Treat post-merge cleanup as a PR acceptance step. Audit active processes and
+open-file handles and search receipts/handoffs for references before removing
+owned build-only scratch and duplicate or superseded task targets/source
+copies. Preserve the baseline SHA, patch/lock/toolchain/commands and exits, and
+unique raw outputs needed to review the result. Compiled binaries and full
+source copies are reproducible build artifacts; retain them only for an
+explicit active investigation or release obligation with a review date. A
+receipt reference alone does not require indefinite retention: after checking
+references, record where an artifact was moved or that it was retired. Keep a
+shared cache only with its owner, size, reuse reason, and review/prune date.
+Archive a worktree with the Codex app tool when it is app-managed. For other
+worktrees, inspect branch state and local changes before any removal. After
+cleanup, record `du` and `df` again and report measured logical reduction,
+available-space change, and any remaining artifacts with their retention
+reasons.
 
 ## Design Documents
 

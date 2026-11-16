@@ -1,0 +1,267 @@
+{
+  "schema_version": 1,
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "unicode": "16.0.0",
+  "producer_sha256": "82e43ccfc759d769f9909a6267f06b675c8087d4e210765c46c18d177345c3ad",
+  "source_guards": {
+    "engines/openlibrary.py": "feeb75a9de3c2474304b04bfa45b635cbf1d6066f64e5b8eec036a056c41c6c6",
+    "engines/musicbrainz.py": "63cac10045fcd77406a43c1011ae6542e5091d582cee94a4a11232ef4ee2f062",
+    "engines/tmdb.py": "72155872efdef1916ee4c37ef4046588c619940bd3e50d3dae20957d133a4a18",
+    "engines/nominatim.py": "e2abcb603545e4fefedd3aa26f8daea122707a6c698200a430cbf9231112d632",
+    "engines/internetarchive.py": "6a4a0cdc10f2bc206380e3b67cbd82cbb329d02f9bbe0e5471ea483bdc44c4b4",
+    "slopsearx/adapter.py": "5883a35c48d0dad1077306fbda21997ee1d32116a8c03633a6b762de0c26d6f3",
+    "slopsearx/payload.py": "a44a95655566f9fadaf62da1bab8c975f71f3ead6c3cc57f48c411a9c093c40d",
+    "slopsearx/config.py": "1cf76b8732439782342a9d217fb2f7c423f688533f287dbf78729a1defc5236e",
+    "slopsearx/formatter.py": "8eaf74e1215ebaebc7a9d81438e02512aa56b9f5a7929ebb2df35e5b2f632e7a",
+    "slopsearx/merger.py": "5bb1a599ed8330aad02bd6567984d12c02f4ed735059c4f50cd6dfefd21e5eda",
+    "tests/test_internetarchive_adapter.py": "ec75ebdf9184ebb3c352323a96cf03ae6cf8f7946e5149b9290e2c13c5d36baa",
+    "tests/test_openlibrary_url_contract.py": "7e8a1d198551a56d72e94372d455ca7df11d5f5e8c33480a1a72c7968f908672",
+    "tests/test_tmdb.py": "ae06578f92be07aa382b5779d120d0588aad75ae306e1c9b10e968a429d9d180",
+    "tests/test_new_engines.py": "a6df3df9b68fdc8a4b617d4059a5bd26a8cd82c5d8de1574ac9c48d2d14ad8a4",
+    "tests/test_tier1_adapters.py": "1ddcbbbe307319500bc456a388a9650b8e81fab574d20c8df96a91cdf2d04679",
+    "tests/test_payload.py": "a7bc52b2747f0ebc440a4d7ce69671635530c7142d43eb128cb3132e297fb11a",
+    "tests/test_adapters.py": "0f5fdc19df84214e5a6422437686d41def5f9e9827ad8dfc8ca8ee8b2ad10454"
+  },
+  "system_proxy_flags": {
+    "HTTPEnable": 0,
+    "HTTPSEnable": 0,
+    "SOCKSEnable": 0,
+    "ProxyAutoConfigEnable": 0,
+    "ProxyAutoDiscoveryEnable": 0
+  },
+  "records": [
+    {
+      "id": "archive-timeout-zero-immediate",
+      "timeout_ms": 0,
+      "stall": false,
+      "requests": [],
+      "socket_eof": [
+        false
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "",
+        "results": []
+      }
+    },
+    {
+      "id": "archive-timeout-zero-stalled",
+      "timeout_ms": 0,
+      "stall": true,
+      "requests": [],
+      "socket_eof": [
+        false
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "",
+        "results": []
+      }
+    },
+    {
+      "id": "archive-timeout-negative-immediate",
+      "timeout_ms": -1,
+      "stall": false,
+      "requests": [],
+      "socket_eof": [
+        false
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "",
+        "results": []
+      }
+    },
+    {
+      "id": "archive-timeout-negative-stalled",
+      "timeout_ms": -1,
+      "stall": true,
+      "requests": [],
+      "socket_eof": [],
+      "output": {
+        "status": "error",
+        "error_message": "",
+        "results": []
+      }
+    },
+    {
+      "id": "archive-timeout-positive-immediate",
+      "timeout_ms": 50,
+      "stall": false,
+      "requests": [
+        "GET /advancedsearch.php?q=books&output=json&rows=10 HTTP/1.1\r\nHost: 127.0.0.1:<loopback-port>\r\nAccept: */*\r\nAccept-Encoding: gzip, deflate\r\nConnection: keep-alive\r\nUser-Agent: python-httpx/0.28.1\r\n\r\n"
+      ],
+      "socket_eof": [
+        true
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://archive.org/details/book",
+            "title": "Book",
+            "content": "",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.5,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "archive-timeout-positive-stalled",
+      "timeout_ms": 50,
+      "stall": true,
+      "requests": [
+        "GET /advancedsearch.php?q=books&output=json&rows=10 HTTP/1.1\r\nHost: 127.0.0.1:<loopback-port>\r\nAccept: */*\r\nAccept-Encoding: gzip, deflate\r\nConnection: keep-alive\r\nUser-Agent: python-httpx/0.28.1\r\n\r\n"
+      ],
+      "socket_eof": [
+        true
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "",
+        "results": []
+      }
+    },
+    {
+      "id": "archive-timeout-inf-immediate",
+      "timeout_ms": {
+        "$nonfinite": "inf"
+      },
+      "stall": false,
+      "requests": [
+        "GET /advancedsearch.php?q=books&output=json&rows=10 HTTP/1.1\r\nHost: 127.0.0.1:<loopback-port>\r\nAccept: */*\r\nAccept-Encoding: gzip, deflate\r\nConnection: keep-alive\r\nUser-Agent: python-httpx/0.28.1\r\n\r\n"
+      ],
+      "socket_eof": [
+        true
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://archive.org/details/book",
+            "title": "Book",
+            "content": "",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.5,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "archive-timeout-inf-stalled",
+      "timeout_ms": {
+        "$nonfinite": "inf"
+      },
+      "stall": true,
+      "requests": [
+        "GET /advancedsearch.php?q=books&output=json&rows=10 HTTP/1.1\r\nHost: 127.0.0.1:<loopback-port>\r\nAccept: */*\r\nAccept-Encoding: gzip, deflate\r\nConnection: keep-alive\r\nUser-Agent: python-httpx/0.28.1\r\n\r\n"
+      ],
+      "socket_eof": [
+        false
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "Server disconnected without sending a response.",
+        "results": []
+      }
+    },
+    {
+      "id": "archive-timeout-negative-inf-immediate",
+      "timeout_ms": {
+        "$nonfinite": "-inf"
+      },
+      "stall": false,
+      "requests": [],
+      "socket_eof": [
+        false
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "",
+        "results": []
+      }
+    },
+    {
+      "id": "archive-timeout-negative-inf-stalled",
+      "timeout_ms": {
+        "$nonfinite": "-inf"
+      },
+      "stall": true,
+      "requests": [],
+      "socket_eof": [],
+      "output": {
+        "status": "error",
+        "error_message": "",
+        "results": []
+      }
+    },
+    {
+      "id": "archive-timeout-nan-immediate",
+      "timeout_ms": {
+        "$nonfinite": "nan"
+      },
+      "stall": false,
+      "requests": [
+        "GET /advancedsearch.php?q=books&output=json&rows=10 HTTP/1.1\r\nHost: 127.0.0.1:<loopback-port>\r\nAccept: */*\r\nAccept-Encoding: gzip, deflate\r\nConnection: keep-alive\r\nUser-Agent: python-httpx/0.28.1\r\n\r\n"
+      ],
+      "socket_eof": [
+        true
+      ],
+      "output": {
+        "status": "ok",
+        "error_message": null,
+        "results": [
+          {
+            "url": "https://archive.org/details/book",
+            "title": "Book",
+            "content": "",
+            "engine": "internetarchive",
+            "position": 0,
+            "score": 0.5,
+            "category": "general",
+            "published_date": null,
+            "thumbnail": null,
+            "img_src": null,
+            "media": null,
+            "payload": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "archive-timeout-nan-stalled",
+      "timeout_ms": {
+        "$nonfinite": "nan"
+      },
+      "stall": true,
+      "requests": [
+        "GET /advancedsearch.php?q=books&output=json&rows=10 HTTP/1.1\r\nHost: 127.0.0.1:<loopback-port>\r\nAccept: */*\r\nAccept-Encoding: gzip, deflate\r\nConnection: keep-alive\r\nUser-Agent: python-httpx/0.28.1\r\n\r\n"
+      ],
+      "socket_eof": [
+        false
+      ],
+      "output": {
+        "status": "error",
+        "error_message": "Server disconnected without sending a response.",
+        "results": []
+      }
+    }
+  ]
+}

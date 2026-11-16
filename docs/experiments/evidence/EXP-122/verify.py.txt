@@ -1,0 +1,12 @@
+import json,sys
+from pathlib import Path
+def require(ok,msg):
+ if not ok: raise ValueError(msg)
+p=Path(sys.argv[1]);b=json.loads((p/'baseline.json').read_text())
+require('Application shutdown failed' in (p/'baseline.log.txt').read_text(),'baseline defect absent')
+for i in range(1,4):
+ c=json.loads((p/f'candidate-{i}.json').read_text());log=(p/f'candidate-{i}.log.txt').read_text()
+ require(all(x not in log for x in ['ERROR:', 'RuntimeError:', 'Application shutdown failed','Task exception was never retrieved']),'shutdown failure')
+ require(c==b,'catalog or complete controls changed')
+ require(c['catalog_equal']==c['catalog_total']==38 and c['provider_calls']==0,'schema/call guard')
+print('PASS clean shutdown 0/1 baseline -> 3/3 candidate; complete observations unchanged')

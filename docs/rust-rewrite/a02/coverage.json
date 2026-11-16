@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "plan_id": "A02",
+  "baseline": "025ab2f2d50febcb573ba62579eecf7e2d07ef3a",
+  "corpus_sha256": "1d6d4a2937dca03dfe8f281c13481c9112b7317c389fc1226e6b78605c16ff45",
+  "source_tests": [
+    {
+      "source_test": "tests/test_new_engines.py::TestPyPIAdapter::test_search_exact_package",
+      "native_test": "source_bound_package_corpus_replays_through_registry_and_real_http",
+      "corpus_cases": [
+        "pypi_exact"
+      ]
+    },
+    {
+      "source_test": "tests/test_new_engines.py::TestPyPIAdapter::test_non_mapping_project_urls_are_ignored",
+      "native_test": "source_bound_package_corpus_replays_through_registry_and_real_http",
+      "corpus_cases": [
+        "pypi_nonmapping_urls"
+      ]
+    },
+    {
+      "source_test": "tests/test_new_engines.py::TestPyPIAdapter::test_search_not_found_falls_back",
+      "native_test": "source_bound_package_corpus_replays_through_registry_and_real_http",
+      "corpus_cases": [
+        "pypi_fallback_404"
+      ]
+    },
+    {
+      "source_test": "tests/test_new_engines.py::TestPyPIAdapter::test_adapter_registered",
+      "native_test": "package_factories_complete_catalog_without_changing_metadata",
+      "corpus_cases": []
+    },
+    {
+      "source_test": "tests/test_new_engines.py::TestPyPIAdapter::test_adapter_categories",
+      "native_test": "package_factories_complete_catalog_without_changing_metadata",
+      "corpus_cases": []
+    },
+    {
+      "source_test": "tests/test_new_engines.py::TestRubyGemsAdapter::test_search_returns_results",
+      "native_test": "source_bound_package_corpus_replays_through_registry_and_real_http",
+      "corpus_cases": [
+        "rubygems_legacy"
+      ]
+    },
+    {
+      "source_test": "tests/test_new_engines.py::TestRubyGemsAdapter::test_adapter_registered",
+      "native_test": "package_factories_complete_catalog_without_changing_metadata",
+      "corpus_cases": []
+    },
+    {
+      "source_test": "tests/test_new_engines.py::TestDockerHubAdapter::test_search_returns_results",
+      "native_test": "source_bound_package_corpus_replays_through_registry_and_real_http",
+      "corpus_cases": [
+        "dockerhub_legacy"
+      ]
+    },
+    {
+      "source_test": "tests/test_new_engines.py::TestDockerHubAdapter::test_adapter_registered",
+      "native_test": "package_factories_complete_catalog_without_changing_metadata",
+      "corpus_cases": []
+    },
+    {
+      "source_test": "tests/test_payload.py::TestPackagesPayload::test_pypi_payload",
+      "native_test": "source_bound_package_corpus_replays_through_registry_and_real_http",
+      "corpus_cases": [
+        "pypi_payload_full"
+      ]
+    },
+    {
+      "source_test": "tests/test_payload.py::TestPackagesPayload::test_pypi_missing_license_and_homepage_stay_absent",
+      "native_test": "source_bound_package_corpus_replays_through_registry_and_real_http",
+      "corpus_cases": [
+        "pypi_payload_absent"
+      ]
+    },
+    {
+      "source_test": "tests/test_dockerhub.py::test_search_uses_documented_namespace_route_and_name_filter",
+      "native_test": "source_bound_package_corpus_replays_through_registry_and_real_http",
+      "corpus_cases": [
+        "dockerhub_scope_python"
+      ],
+      "supplemental_native_test": "adapters::dockerhub::tests::default_route_scope_and_percent_encoding_match_source"
+    },
+    {
+      "source_test": "tests/test_dockerhub.py::test_exact_official_name_is_promoted_without_dropping_alternatives",
+      "native_test": "source_bound_package_corpus_replays_through_registry_and_real_http",
+      "corpus_cases": [
+        "dockerhub_scope_python",
+        "dockerhub_scope_library/python",
+        "dockerhub_scope_docker.io/library/python:3.13"
+      ]
+    },
+    {
+      "source_test": "tests/test_dockerhub.py::test_namespace_qualified_query_preserves_namespace_and_identity",
+      "native_test": "source_bound_package_corpus_replays_through_registry_and_real_http",
+      "corpus_cases": [
+        "dockerhub_scope_acme/python",
+        "dockerhub_scope_docker.io/acme/python:3.13"
+      ]
+    },
+    {
+      "source_test": "tests/test_dockerhub.py::test_no_exact_match_preserves_upstream_order",
+      "native_test": "source_bound_package_corpus_replays_through_registry_and_real_http",
+      "corpus_cases": [
+        "dockerhub_scope_py"
+      ]
+    },
+    {
+      "source_test": "tests/test_dockerhub.py::test_exact_match_after_original_window_is_promoted_with_bounded_overfetch",
+      "native_test": "source_bound_package_corpus_replays_through_registry_and_real_http",
+      "corpus_cases": [
+        "dockerhub_cap_2"
+      ]
+    },
+    {
+      "source_test": "tests/test_dockerhub.py::test_candidate_overfetch_respects_docker_hub_page_size_cap",
+      "native_test": "source_bound_package_corpus_replays_through_registry_and_real_http",
+      "corpus_cases": [
+        "dockerhub_cap_80"
+      ]
+    },
+    {
+      "source_test": "tests/test_dockerhub.py::test_empty_or_malformed_query_remains_non_raising",
+      "native_test": "source_bound_package_corpus_replays_through_registry_and_real_http",
+      "corpus_cases": [
+        "dockerhub_scope_",
+        "dockerhub_scope_quay.io/acme/python/image"
+      ]
+    }
+  ],
+  "native_tests": [
+    "source_bound_package_corpus_replays_through_registry_and_real_http",
+    "package_admission_denials_and_unavailability_dispatch_zero_requests",
+    "cancelling_package_search_drops_work_and_prevents_followup_dispatch",
+    "package_factories_complete_catalog_without_changing_metadata",
+    "explicit_empty_pypi_and_rubygems_urls_fail_before_transport_dispatch",
+    "resetting_operation_deadline_preserves_request_and_cancellation_guards"
+  ],
+  "additional_contracts": [
+    "admission denied and unavailable both dispatch zero requests for all three engines",
+    "dropping active search cancels all three engine futures with no later PyPI fallback dispatch",
+    "configured result limit and ignored page/language/safesearch/time_range/presentation max_results",
+    "raw numeric response bytes retain integer-vs-float source semantics",
+    "PyPI resets configured timeout per HTTP operation while reusing caller pool; F14 must later cap each operation to remaining caller deadline",
+    "PyPI fallback cookie jar persists index->detail->detail; direct lookup cookies remain isolated. Deadline reset preserves F08 request budget/cancellation/stop state."
+  ],
+  "intentional_differences": [
+    {
+      "contract": "bounded native transport and JSON",
+      "reason": "Accepted F08 and F05 bounds remain authoritative; no attempt to bypass size/depth/deadline limits."
+    },
+    {
+      "contract": "error_message",
+      "reason": "Stable native error diagnostics; source HTTPX exception prose contains dynamic transport/URL details. Status, empty error results, request count and output fields compared exactly."
+    }
+  ],
+  "oracle_inventory": {
+    "path": "docs/rust-rewrite/a02/oracle/export.py",
+    "role": "temporary isolated migration capture only",
+    "runtime": "pinned Python 3.14 and project httpx/lxml dependencies",
+    "native_execution_dependency": false,
+    "retirement": "G08 deletes exporter and isolated interpreter; native gates replay immutable JSON using Rust only",
+    "supplemental_path": "docs/rust-rewrite/a02/oracle/export_extra.py"
+  },
+  "native_unit_tests": [
+    "adapters::dockerhub::tests::default_route_scope_and_percent_encoding_match_source",
+    "http::pypi_operation_timeout_tests::pypi_uses_fresh_per_operation_timeouts_on_the_caller_pool"
+  ],
+  "supplemental_corpus_sha256": "5df0064281e5cf633b700e30866de2a1a410b1771a509638a45e01cad061b1d5",
+  "supplemental_capture_reason": "Add actual Location-header redirect contracts, detail-shape failures, duplicate/cap semantics, configured query replacement and Docker iterable shape cases without replacing immutable initial corpus.",
+  "review_corpus_sha256": "4f0afe2be01b901079de9eb90e1e94ffc32817c831b351cf59e5c5cafc3e0fa7",
+  "empty_base_observations_sha256": "7f9028f727ae16cbb4d8887e8ca31bc0e819d56dd1f2982c249b657c62550436",
+  "review_capture_reason": "Independent review found source lxml byte decoding/empty-document, Python whitespace and explicit-empty config mismatches; preserve initial135 observations unchanged and add19 source-captured raw-byte cases plus separate config observations.",
+  "decoder_dependency": {
+    "name": "encoding_rs",
+    "version": "0.8.42",
+    "checksum": "8e985e0451871ad22fb8d2b6b076e2028a502a0d3950998c2c5c0a4f9b5d9679",
+    "license": "(Apache-2.0 OR MIT) AND BSD-3-Clause",
+    "change": "direct ssx-infra edge to existing locked package; all package identities and prior dependency edges preserved"
+  },
+  "meta_corpus_sha256": "9e3c39711372583d732cd51a3a8f8436e5f483e0d7cf49990335d85455d74331",
+  "meta_capture_reason": "Parent and independent reviewer confirmed3actualnative failures: ordinary meta content/name attributes do not declare document charset; unknown charset does not hide a later recognized declaration. Initial155 source observations unchanged."
+}

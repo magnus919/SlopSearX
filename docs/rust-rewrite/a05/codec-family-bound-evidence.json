@@ -1,0 +1,4584 @@
+{
+  "status": "implementation argument and actual table invariant inventory; not RSS or full parity qualification",
+  "canonical_count": 108,
+  "rejected_canonical": [
+    "base64",
+    "bz2",
+    "hex",
+    "idna",
+    "quopri",
+    "rot-13",
+    "undefined",
+    "uu",
+    "zlib"
+  ],
+  "codecs": [
+    {
+      "canonical": "cp037",
+      "labels": [
+        "037",
+        "cp037",
+        "csibm037",
+        "ebcdic_cp_ca",
+        "ebcdic_cp_nl",
+        "ebcdic_cp_us",
+        "ebcdic_cp_wt",
+        "ibm037",
+        "ibm039"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_0",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp1026",
+      "labels": [
+        "1026",
+        "cp1026",
+        "csibm1026",
+        "ibm1026"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_1",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp1125",
+      "labels": [
+        "1125",
+        "cp1125",
+        "cp866u",
+        "ibm1125",
+        "ruscii"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_2",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp1140",
+      "labels": [
+        "1140",
+        "cp01140",
+        "cp1140",
+        "csibm01140",
+        "ebcdic_us_37_euro",
+        "ibm01140",
+        "ibm1140"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_3",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp1250",
+      "labels": [
+        "1250",
+        "cp1250",
+        "windows_1250"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_4",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp1251",
+      "labels": [
+        "1251",
+        "cp1251",
+        "windows_1251"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_5",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp1252",
+      "labels": [
+        "1252",
+        "cp1252",
+        "windows_1252"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_6",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp1253",
+      "labels": [
+        "1253",
+        "cp1253",
+        "windows_1253"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_7",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp1254",
+      "labels": [
+        "1254",
+        "cp1254",
+        "windows_1254"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_8",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp1255",
+      "labels": [
+        "1255",
+        "cp1255",
+        "windows_1255"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_9",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp1256",
+      "labels": [
+        "1256",
+        "cp1256",
+        "windows_1256"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_10",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp1257",
+      "labels": [
+        "1257",
+        "cp1257",
+        "windows_1257"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_11",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp1258",
+      "labels": [
+        "1258",
+        "cp1258",
+        "windows_1258"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_12",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp273",
+      "labels": [
+        "273",
+        "cp273",
+        "csibm273",
+        "ibm273"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_13",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp424",
+      "labels": [
+        "424",
+        "cp424",
+        "csibm424",
+        "ebcdic_cp_he",
+        "ibm424"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_14",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp437",
+      "labels": [
+        "437",
+        "cp437",
+        "cspc8codepage437",
+        "ibm437"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_15",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp500",
+      "labels": [
+        "500",
+        "cp500",
+        "csibm500",
+        "ebcdic_cp_be",
+        "ebcdic_cp_ch",
+        "ibm500"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_16",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "ascii",
+      "labels": [
+        "646",
+        "ansi_x3.4_1968",
+        "ansi_x3.4_1986",
+        "ansi_x3_4_1968",
+        "ascii",
+        "cp367",
+        "csascii",
+        "ibm367",
+        "iso646_us",
+        "iso_646.irv_1991",
+        "iso_ir_6",
+        "us",
+        "us_ascii"
+      ],
+      "family": "single-byte-algorithm",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp775",
+      "labels": [
+        "775",
+        "cp775",
+        "cspc775baltic",
+        "ibm775"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_17",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp850",
+      "labels": [
+        "850",
+        "cp850",
+        "cspc850multilingual",
+        "ibm850"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_18",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp852",
+      "labels": [
+        "852",
+        "cp852",
+        "cspcp852",
+        "ibm852"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_19",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp855",
+      "labels": [
+        "855",
+        "cp855",
+        "csibm855",
+        "ibm855"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_20",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp857",
+      "labels": [
+        "857",
+        "cp857",
+        "csibm857",
+        "ibm857"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_21",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp858",
+      "labels": [
+        "858",
+        "cp00858",
+        "cp858",
+        "csibm00858",
+        "csibm858",
+        "ibm00858",
+        "ibm858",
+        "pc_multilingual_850_euro"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_22",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp860",
+      "labels": [
+        "860",
+        "cp860",
+        "csibm860",
+        "ibm860"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_23",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp861",
+      "labels": [
+        "861",
+        "cp861",
+        "cp_is",
+        "csibm861",
+        "ibm861"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_24",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp862",
+      "labels": [
+        "862",
+        "cp862",
+        "cspc862latinhebrew",
+        "ibm862"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_25",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp863",
+      "labels": [
+        "863",
+        "cp863",
+        "csibm863",
+        "ibm863"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_26",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp864",
+      "labels": [
+        "864",
+        "cp864",
+        "csibm864",
+        "ibm864"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_27",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp865",
+      "labels": [
+        "865",
+        "cp865",
+        "csibm865",
+        "ibm865"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_28",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp866",
+      "labels": [
+        "866",
+        "cp866",
+        "csibm866",
+        "ibm866"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_29",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp869",
+      "labels": [
+        "869",
+        "cp869",
+        "cp_gr",
+        "csibm869",
+        "ibm869"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_30",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp874",
+      "labels": [
+        "874",
+        "cp874",
+        "ms874",
+        "windows_874"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_31",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "iso8859-1",
+      "labels": [
+        "8859",
+        "cp819",
+        "csisolatin1",
+        "ibm819",
+        "iso8859",
+        "iso8859_1",
+        "iso_8859_1",
+        "iso_8859_1_1987",
+        "iso_ir_100",
+        "l1",
+        "latin",
+        "latin1",
+        "latin_1"
+      ],
+      "family": "single-byte-algorithm",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp932",
+      "labels": [
+        "932",
+        "cp932",
+        "ms932",
+        "ms_kanji",
+        "mskanji",
+        "windows_31j"
+      ],
+      "family": "CJK",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/cjk/cp932.pairs.bin",
+          "sha256": "b51e5e105b1e9b777b5fc0ddc080860a8444881ac40533e2b1669d1b414007ac"
+        },
+        {
+          "path": "src/cjk/cp932.single.bin",
+          "sha256": "f5f3981063d66814ca8db6f94f7fa973fa4826dbb5ac3fa7ce8e02ea3600f99f"
+        },
+        {
+          "path": "src/doublebyte.rs",
+          "sha256": "4fc1d1bfaeb75389c02b7e3f8cc39e1bdcbe565575832da683fef378354c0d0d"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "src/cjk/cp932.pairs.bin",
+          "entries": 9604,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "gbk",
+      "labels": [
+        "936",
+        "cp936",
+        "gbk",
+        "ms936"
+      ],
+      "family": "CJK",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/cjk/gbk.pairs.bin",
+          "sha256": "5ef8bf4c9643a792ddfc6dc0e6f70fc99453afd8d846a31009dd5f89988572fb"
+        },
+        {
+          "path": "src/cjk/gbk.single.bin",
+          "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8"
+        },
+        {
+          "path": "src/doublebyte.rs",
+          "sha256": "4fc1d1bfaeb75389c02b7e3f8cc39e1bdcbe565575832da683fef378354c0d0d"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "src/cjk/gbk.pairs.bin",
+          "entries": 21791,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp949",
+      "labels": [
+        "949",
+        "cp949",
+        "ms949",
+        "uhc"
+      ],
+      "family": "CJK",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/cjk/cp949.pairs.bin",
+          "sha256": "53d7b966f810d955efb6cb92f3280126ae412e0688a4e46b444ee662626a95d4"
+        },
+        {
+          "path": "src/cjk/cp949.single.bin",
+          "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8"
+        },
+        {
+          "path": "src/doublebyte.rs",
+          "sha256": "4fc1d1bfaeb75389c02b7e3f8cc39e1bdcbe565575832da683fef378354c0d0d"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "src/cjk/cp949.pairs.bin",
+          "entries": 17048,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp950",
+      "labels": [
+        "950",
+        "cp950",
+        "ms950"
+      ],
+      "family": "CJK",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/cjk/cp950.pairs.bin",
+          "sha256": "89af3c2176761d1bb76b8c61fed4877ab467f3b552bcd9c3bc99a28f6139da89"
+        },
+        {
+          "path": "src/cjk/cp950.single.bin",
+          "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8"
+        },
+        {
+          "path": "src/doublebyte.rs",
+          "sha256": "4fc1d1bfaeb75389c02b7e3f8cc39e1bdcbe565575832da683fef378354c0d0d"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "src/cjk/cp950.pairs.bin",
+          "entries": 13752,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "iso8859-6",
+      "labels": [
+        "arabic",
+        "asmo_708",
+        "csisolatinarabic",
+        "ecma_114",
+        "iso8859_6",
+        "iso_8859_6",
+        "iso_8859_6_1987",
+        "iso_ir_127"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_32",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "big5",
+      "labels": [
+        "big5",
+        "big5_tw",
+        "csbig5",
+        "x_mac_trad_chinese"
+      ],
+      "family": "CJK",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/cjk/big5.pairs.bin",
+          "sha256": "603594bb1e79752f25b50d72ff5ce0f3ae88a942e8c81a36f82e3daa2b4ca3dc"
+        },
+        {
+          "path": "src/cjk/big5.single.bin",
+          "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8"
+        },
+        {
+          "path": "src/doublebyte.rs",
+          "sha256": "4fc1d1bfaeb75389c02b7e3f8cc39e1bdcbe565575832da683fef378354c0d0d"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "src/cjk/big5.pairs.bin",
+          "entries": 13710,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "big5hkscs",
+      "labels": [
+        "big5_hkscs",
+        "big5hkscs",
+        "hkscs"
+      ],
+      "family": "CJK",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/cjk/big5hkscs.pairs.bin",
+          "sha256": "fc9461564284bac32fca61da4fb07b5b8a144b6943092425f0ac51876d1b344a"
+        },
+        {
+          "path": "src/cjk/big5hkscs.single.bin",
+          "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8"
+        },
+        {
+          "path": "src/doublebyte.rs",
+          "sha256": "4fc1d1bfaeb75389c02b7e3f8cc39e1bdcbe565575832da683fef378354c0d0d"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "src/cjk/big5hkscs.pairs.bin",
+          "entries": 18402,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 2
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "charmap",
+      "labels": [
+        "charmap"
+      ],
+      "family": "single-byte-algorithm",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "gb2312",
+      "labels": [
+        "chinese",
+        "csiso58gb231280",
+        "euc_cn",
+        "euccn",
+        "eucgb2312_cn",
+        "gb2312",
+        "gb2312_1980",
+        "gb2312_80",
+        "iso_ir_58",
+        "x_mac_simp_chinese"
+      ],
+      "family": "CJK",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/cjk/gb2312.pairs.bin",
+          "sha256": "0c62f0718d021cc5f7d0f9aebe12c62813db620673b17477d00b295ee5c55339"
+        },
+        {
+          "path": "src/cjk/gb2312.single.bin",
+          "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8"
+        },
+        {
+          "path": "src/doublebyte.rs",
+          "sha256": "4fc1d1bfaeb75389c02b7e3f8cc39e1bdcbe565575832da683fef378354c0d0d"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "src/cjk/gb2312.pairs.bin",
+          "entries": 7445,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp1006",
+      "labels": [
+        "cp1006"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_33",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "hp-roman8",
+      "labels": [
+        "cp1051",
+        "hp_roman8",
+        "ibm1051",
+        "r8",
+        "roman8"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_34",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "johab",
+      "labels": [
+        "cp1361",
+        "johab",
+        "ms1361"
+      ],
+      "family": "CJK",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/cjk/johab.pairs.bin",
+          "sha256": "864edf098cefd7e2f6c3eb6ee4e936f315e7c1314c9049cd809dec5d2b73ecc9"
+        },
+        {
+          "path": "src/cjk/johab.single.bin",
+          "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8"
+        },
+        {
+          "path": "src/doublebyte.rs",
+          "sha256": "4fc1d1bfaeb75389c02b7e3f8cc39e1bdcbe565575832da683fef378354c0d0d"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "src/cjk/johab.pairs.bin",
+          "entries": 17065,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "ptcp154",
+      "labels": [
+        "cp154",
+        "csptcp154",
+        "cyrillic_asian",
+        "pt154",
+        "ptcp154"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_35",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "utf-8",
+      "labels": [
+        "cp65001",
+        "u8",
+        "utf",
+        "utf8",
+        "utf8_ucs2",
+        "utf8_ucs4",
+        "utf_8"
+      ],
+      "family": "Unicode",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        },
+        {
+          "path": "src/unicode.rs",
+          "sha256": "f5f38ccc20be13449f56f0755bf2d5b0aff0dae29b2b633b929711213c5bbca6"
+        }
+      ],
+      "tables": [],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp720",
+      "labels": [
+        "cp720"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_36",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp737",
+      "labels": [
+        "cp737"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_37",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp856",
+      "labels": [
+        "cp856"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_38",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "cp875",
+      "labels": [
+        "cp875"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_39",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "euc_kr",
+      "labels": [
+        "cseuckr",
+        "euc_kr",
+        "euckr",
+        "korean",
+        "ks_c_5601",
+        "ks_c_5601_1987",
+        "ks_x_1001",
+        "ksc5601",
+        "ksx1001",
+        "x_mac_korean"
+      ],
+      "family": "CJK",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/cjk/euc_kr.pairs.bin",
+          "sha256": "4c113fb80dd7ff04e62417887f0d61241083ad47becae4bfab78dc22736157df"
+        },
+        {
+          "path": "src/cjk/euc_kr.single.bin",
+          "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8"
+        },
+        {
+          "path": "src/doublebyte.rs",
+          "sha256": "4fc1d1bfaeb75389c02b7e3f8cc39e1bdcbe565575832da683fef378354c0d0d"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "src/cjk/euc_kr.pairs.bin",
+          "entries": 8226,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "iso2022_jp",
+      "labels": [
+        "csiso2022jp",
+        "iso2022_jp",
+        "iso2022jp",
+        "iso_2022_jp"
+      ],
+      "family": "ISO2022",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/iso2022.rs",
+          "sha256": "2b8d8a2c1f169fe39c678bdff5c0ad7ea0d9ef8af891afad7b2b3f6fad850f2a"
+        },
+        {
+          "path": "src/iso2022/gb2312.bin",
+          "sha256": "7574d029b9ddf8626671117e378ad05ac47094d7aad27391148485cf0160f5ba"
+        },
+        {
+          "path": "src/iso2022/jis0208.bin",
+          "sha256": "0416112dcb0970a36b4a15c4a81d12b26415e38149543e08b9e34d5723e12b6d"
+        },
+        {
+          "path": "src/iso2022/jis0212.bin",
+          "sha256": "c7cd2049ea68c0e1818a57414a560d7cf06f468414485d2356781f1dd3ee60a0"
+        },
+        {
+          "path": "src/iso2022/jis0213_2000_1.bin",
+          "sha256": "7029af04afa447689f93827b81e77ba805f32716a9d153316802f4371ef6c040"
+        },
+        {
+          "path": "src/iso2022/jis0213_2000_2.bin",
+          "sha256": "b2a26bcc095be14d44ae9fb54301acff1345e593909fcc5cb10ab510a4777360"
+        },
+        {
+          "path": "src/iso2022/jis0213_2004_1.bin",
+          "sha256": "1d37c3ffe71db2269db566bdcb1140c18a2e3bebc56c4bb2dce65a555df12fa5"
+        },
+        {
+          "path": "src/iso2022/jis0213_2004_2.bin",
+          "sha256": "b2a26bcc095be14d44ae9fb54301acff1345e593909fcc5cb10ab510a4777360"
+        },
+        {
+          "path": "src/iso2022/ksx1001.bin",
+          "sha256": "bc07ce8231127b1b9127feb75e8340e5b07db070423163307fea47c28e4aec05"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "src/iso2022/gb2312.bin",
+          "entries": 7445,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/jis0208.bin",
+          "entries": 6879,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/jis0212.bin",
+          "entries": 6067,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/jis0213_2000_1.bin",
+          "entries": 8787,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 2
+        },
+        {
+          "name": "src/iso2022/jis0213_2000_2.bin",
+          "entries": 2436,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/jis0213_2004_1.bin",
+          "entries": 8797,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 2
+        },
+        {
+          "name": "src/iso2022/jis0213_2004_2.bin",
+          "entries": 2436,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/ksx1001.bin",
+          "entries": 8226,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "iso2022_kr",
+      "labels": [
+        "csiso2022kr",
+        "iso2022_kr",
+        "iso2022kr",
+        "iso_2022_kr"
+      ],
+      "family": "ISO2022",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/iso2022.rs",
+          "sha256": "2b8d8a2c1f169fe39c678bdff5c0ad7ea0d9ef8af891afad7b2b3f6fad850f2a"
+        },
+        {
+          "path": "src/iso2022/gb2312.bin",
+          "sha256": "7574d029b9ddf8626671117e378ad05ac47094d7aad27391148485cf0160f5ba"
+        },
+        {
+          "path": "src/iso2022/jis0208.bin",
+          "sha256": "0416112dcb0970a36b4a15c4a81d12b26415e38149543e08b9e34d5723e12b6d"
+        },
+        {
+          "path": "src/iso2022/jis0212.bin",
+          "sha256": "c7cd2049ea68c0e1818a57414a560d7cf06f468414485d2356781f1dd3ee60a0"
+        },
+        {
+          "path": "src/iso2022/jis0213_2000_1.bin",
+          "sha256": "7029af04afa447689f93827b81e77ba805f32716a9d153316802f4371ef6c040"
+        },
+        {
+          "path": "src/iso2022/jis0213_2000_2.bin",
+          "sha256": "b2a26bcc095be14d44ae9fb54301acff1345e593909fcc5cb10ab510a4777360"
+        },
+        {
+          "path": "src/iso2022/jis0213_2004_1.bin",
+          "sha256": "1d37c3ffe71db2269db566bdcb1140c18a2e3bebc56c4bb2dce65a555df12fa5"
+        },
+        {
+          "path": "src/iso2022/jis0213_2004_2.bin",
+          "sha256": "b2a26bcc095be14d44ae9fb54301acff1345e593909fcc5cb10ab510a4777360"
+        },
+        {
+          "path": "src/iso2022/ksx1001.bin",
+          "sha256": "bc07ce8231127b1b9127feb75e8340e5b07db070423163307fea47c28e4aec05"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "src/iso2022/gb2312.bin",
+          "entries": 7445,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/jis0208.bin",
+          "entries": 6879,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/jis0212.bin",
+          "entries": 6067,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/jis0213_2000_1.bin",
+          "entries": 8787,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 2
+        },
+        {
+          "name": "src/iso2022/jis0213_2000_2.bin",
+          "entries": 2436,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/jis0213_2004_1.bin",
+          "entries": 8797,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 2
+        },
+        {
+          "name": "src/iso2022/jis0213_2004_2.bin",
+          "entries": 2436,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/ksx1001.bin",
+          "entries": 8226,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "iso8859-2",
+      "labels": [
+        "csisolatin2",
+        "iso8859_2",
+        "iso_8859_2",
+        "iso_8859_2_1987",
+        "iso_ir_101",
+        "l2",
+        "latin2"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_40",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "iso8859-3",
+      "labels": [
+        "csisolatin3",
+        "iso8859_3",
+        "iso_8859_3",
+        "iso_8859_3_1988",
+        "iso_ir_109",
+        "l3",
+        "latin3"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_41",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "iso8859-4",
+      "labels": [
+        "csisolatin4",
+        "iso8859_4",
+        "iso_8859_4",
+        "iso_8859_4_1988",
+        "iso_ir_110",
+        "l4",
+        "latin4"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_42",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "iso8859-9",
+      "labels": [
+        "csisolatin5",
+        "iso8859_9",
+        "iso_8859_9",
+        "iso_8859_9_1989",
+        "iso_ir_148",
+        "l5",
+        "latin5"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_43",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "iso8859-10",
+      "labels": [
+        "csisolatin6",
+        "iso8859_10",
+        "iso_8859_10",
+        "iso_8859_10_1992",
+        "iso_ir_157",
+        "l6",
+        "latin6"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_44",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "iso8859-5",
+      "labels": [
+        "csisolatincyrillic",
+        "cyrillic",
+        "iso8859_5",
+        "iso_8859_5",
+        "iso_8859_5_1988",
+        "iso_ir_144"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_45",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "iso8859-7",
+      "labels": [
+        "csisolatingreek",
+        "ecma_118",
+        "elot_928",
+        "greek",
+        "greek8",
+        "iso8859_7",
+        "iso_8859_7",
+        "iso_8859_7_1987",
+        "iso_ir_126"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_46",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "iso8859-8",
+      "labels": [
+        "csisolatinhebrew",
+        "hebrew",
+        "iso8859_8",
+        "iso_8859_8",
+        "iso_8859_8_1988",
+        "iso_8859_8_e",
+        "iso_8859_8_i",
+        "iso_ir_138"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_47",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "koi8-r",
+      "labels": [
+        "cskoi8r",
+        "koi8_r"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_48",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "shift_jis",
+      "labels": [
+        "csshiftjis",
+        "s_jis",
+        "shift_jis",
+        "shiftjis",
+        "sjis",
+        "x_mac_japanese"
+      ],
+      "family": "CJK",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/cjk/shift_jis.pairs.bin",
+          "sha256": "76cc259c1fd8eb8e39d668d72422a9180e6c533a81ed2967c6202d5c0205c4c0"
+        },
+        {
+          "path": "src/cjk/shift_jis.single.bin",
+          "sha256": "29fdf4b03f25fb9cfae0d5ceba9b658497268a7f043d3e13d7a152e9124fca6e"
+        },
+        {
+          "path": "src/doublebyte.rs",
+          "sha256": "4fc1d1bfaeb75389c02b7e3f8cc39e1bdcbe565575832da683fef378354c0d0d"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "src/cjk/shift_jis.pairs.bin",
+          "entries": 6879,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "euc_jis_2004",
+      "labels": [
+        "euc_jis2004",
+        "euc_jis_2004",
+        "eucjis2004",
+        "jisx0213"
+      ],
+      "family": "CJK",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/cjk/euc_jis_2004.pairs.bin",
+          "sha256": "68d20bf66d1aa2f509e9e2b1dc1401a3dd9e1ef7219674a4076cf8ec45f004fc"
+        },
+        {
+          "path": "src/cjk/euc_jis_2004.single.bin",
+          "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8"
+        },
+        {
+          "path": "src/cjk/euc_jis_2004.triples.bin",
+          "sha256": "57e77b5703e6a040ccd08be4322fbf05f9b35bdfcebfa65819aa95849a9d0d2b"
+        },
+        {
+          "path": "src/doublebyte.rs",
+          "sha256": "4fc1d1bfaeb75389c02b7e3f8cc39e1bdcbe565575832da683fef378354c0d0d"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "src/cjk/euc_jis_2004.pairs.bin",
+          "entries": 9116,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 2
+        },
+        {
+          "name": "src/cjk/euc_jis_2004.triples.bin",
+          "entries": 8503,
+          "consumed_bytes": 3,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "euc_jisx0213",
+      "labels": [
+        "euc_jisx0213",
+        "eucjisx0213"
+      ],
+      "family": "CJK",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/cjk/euc_jisx0213.pairs.bin",
+          "sha256": "1cc39aebc4c4bf90d9b7e431bdf0a306104437d98a7e3b159c6b28765535c7a8"
+        },
+        {
+          "path": "src/cjk/euc_jisx0213.single.bin",
+          "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8"
+        },
+        {
+          "path": "src/cjk/euc_jisx0213.triples.bin",
+          "sha256": "8ff036f49e9de9ebdcd8c055528d7df007dec8b116dec50469cb40523664cd87"
+        },
+        {
+          "path": "src/doublebyte.rs",
+          "sha256": "4fc1d1bfaeb75389c02b7e3f8cc39e1bdcbe565575832da683fef378354c0d0d"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "src/cjk/euc_jisx0213.pairs.bin",
+          "entries": 9116,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 2
+        },
+        {
+          "name": "src/cjk/euc_jisx0213.triples.bin",
+          "entries": 8503,
+          "consumed_bytes": 3,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "euc_jp",
+      "labels": [
+        "euc_jp",
+        "eucjp",
+        "u_jis",
+        "ujis"
+      ],
+      "family": "CJK",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/cjk/euc_jp.pairs.bin",
+          "sha256": "ff25787a4fd0f23e987023188444cbdeb494ec6985eacaace939afbdc71c12f5"
+        },
+        {
+          "path": "src/cjk/euc_jp.single.bin",
+          "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8"
+        },
+        {
+          "path": "src/cjk/euc_jp.triples.bin",
+          "sha256": "4bc2f48ecae2307bff49571d531cf45e28da43d3a4886a09bdc0c5902dcb8d2c"
+        },
+        {
+          "path": "src/doublebyte.rs",
+          "sha256": "4fc1d1bfaeb75389c02b7e3f8cc39e1bdcbe565575832da683fef378354c0d0d"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "src/cjk/euc_jp.pairs.bin",
+          "entries": 7198,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/cjk/euc_jp.triples.bin",
+          "entries": 6067,
+          "consumed_bytes": 3,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "gb18030",
+      "labels": [
+        "gb18030",
+        "gb18030_2000"
+      ],
+      "family": "CJK",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/cjk/gb18030.pairs.bin",
+          "sha256": "ccc6e1e022d66c88cc16ac18de3d94595095b496d866d30136c2097b100cb566"
+        },
+        {
+          "path": "src/cjk/gb18030.single.bin",
+          "sha256": "834103c65e78c6bc3fb45b034669ce16f1cc50608081001c0ad2fa359ff263a8"
+        },
+        {
+          "path": "src/doublebyte.rs",
+          "sha256": "4fc1d1bfaeb75389c02b7e3f8cc39e1bdcbe565575832da683fef378354c0d0d"
+        },
+        {
+          "path": "src/gb18030_ranges.rs",
+          "sha256": "922c35417c984a328eba4034368bcde531ebd674d34f63060e72a4ad2442d477"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "src/cjk/gb18030.pairs.bin",
+          "entries": 25220,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "hz",
+      "labels": [
+        "hz",
+        "hz_gb",
+        "hz_gb_2312",
+        "hzgb"
+      ],
+      "family": "hz",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/hz.rs",
+          "sha256": "24c3c0e6c160b3a05f8bcdaade421e642f31b80b4178e7d909723b7ce5472d17"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "iso2022_jp_1",
+      "labels": [
+        "iso2022_jp_1",
+        "iso2022jp_1",
+        "iso_2022_jp_1"
+      ],
+      "family": "ISO2022",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/iso2022.rs",
+          "sha256": "2b8d8a2c1f169fe39c678bdff5c0ad7ea0d9ef8af891afad7b2b3f6fad850f2a"
+        },
+        {
+          "path": "src/iso2022/gb2312.bin",
+          "sha256": "7574d029b9ddf8626671117e378ad05ac47094d7aad27391148485cf0160f5ba"
+        },
+        {
+          "path": "src/iso2022/jis0208.bin",
+          "sha256": "0416112dcb0970a36b4a15c4a81d12b26415e38149543e08b9e34d5723e12b6d"
+        },
+        {
+          "path": "src/iso2022/jis0212.bin",
+          "sha256": "c7cd2049ea68c0e1818a57414a560d7cf06f468414485d2356781f1dd3ee60a0"
+        },
+        {
+          "path": "src/iso2022/jis0213_2000_1.bin",
+          "sha256": "7029af04afa447689f93827b81e77ba805f32716a9d153316802f4371ef6c040"
+        },
+        {
+          "path": "src/iso2022/jis0213_2000_2.bin",
+          "sha256": "b2a26bcc095be14d44ae9fb54301acff1345e593909fcc5cb10ab510a4777360"
+        },
+        {
+          "path": "src/iso2022/jis0213_2004_1.bin",
+          "sha256": "1d37c3ffe71db2269db566bdcb1140c18a2e3bebc56c4bb2dce65a555df12fa5"
+        },
+        {
+          "path": "src/iso2022/jis0213_2004_2.bin",
+          "sha256": "b2a26bcc095be14d44ae9fb54301acff1345e593909fcc5cb10ab510a4777360"
+        },
+        {
+          "path": "src/iso2022/ksx1001.bin",
+          "sha256": "bc07ce8231127b1b9127feb75e8340e5b07db070423163307fea47c28e4aec05"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "src/iso2022/gb2312.bin",
+          "entries": 7445,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/jis0208.bin",
+          "entries": 6879,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/jis0212.bin",
+          "entries": 6067,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/jis0213_2000_1.bin",
+          "entries": 8787,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 2
+        },
+        {
+          "name": "src/iso2022/jis0213_2000_2.bin",
+          "entries": 2436,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/jis0213_2004_1.bin",
+          "entries": 8797,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 2
+        },
+        {
+          "name": "src/iso2022/jis0213_2004_2.bin",
+          "entries": 2436,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/ksx1001.bin",
+          "entries": 8226,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "iso2022_jp_2",
+      "labels": [
+        "iso2022_jp_2",
+        "iso2022jp_2",
+        "iso_2022_jp_2"
+      ],
+      "family": "ISO2022",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/iso2022.rs",
+          "sha256": "2b8d8a2c1f169fe39c678bdff5c0ad7ea0d9ef8af891afad7b2b3f6fad850f2a"
+        },
+        {
+          "path": "src/iso2022/gb2312.bin",
+          "sha256": "7574d029b9ddf8626671117e378ad05ac47094d7aad27391148485cf0160f5ba"
+        },
+        {
+          "path": "src/iso2022/jis0208.bin",
+          "sha256": "0416112dcb0970a36b4a15c4a81d12b26415e38149543e08b9e34d5723e12b6d"
+        },
+        {
+          "path": "src/iso2022/jis0212.bin",
+          "sha256": "c7cd2049ea68c0e1818a57414a560d7cf06f468414485d2356781f1dd3ee60a0"
+        },
+        {
+          "path": "src/iso2022/jis0213_2000_1.bin",
+          "sha256": "7029af04afa447689f93827b81e77ba805f32716a9d153316802f4371ef6c040"
+        },
+        {
+          "path": "src/iso2022/jis0213_2000_2.bin",
+          "sha256": "b2a26bcc095be14d44ae9fb54301acff1345e593909fcc5cb10ab510a4777360"
+        },
+        {
+          "path": "src/iso2022/jis0213_2004_1.bin",
+          "sha256": "1d37c3ffe71db2269db566bdcb1140c18a2e3bebc56c4bb2dce65a555df12fa5"
+        },
+        {
+          "path": "src/iso2022/jis0213_2004_2.bin",
+          "sha256": "b2a26bcc095be14d44ae9fb54301acff1345e593909fcc5cb10ab510a4777360"
+        },
+        {
+          "path": "src/iso2022/ksx1001.bin",
+          "sha256": "bc07ce8231127b1b9127feb75e8340e5b07db070423163307fea47c28e4aec05"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "src/iso2022/gb2312.bin",
+          "entries": 7445,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/jis0208.bin",
+          "entries": 6879,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/jis0212.bin",
+          "entries": 6067,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/jis0213_2000_1.bin",
+          "entries": 8787,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 2
+        },
+        {
+          "name": "src/iso2022/jis0213_2000_2.bin",
+          "entries": 2436,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/jis0213_2004_1.bin",
+          "entries": 8797,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 2
+        },
+        {
+          "name": "src/iso2022/jis0213_2004_2.bin",
+          "entries": 2436,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/ksx1001.bin",
+          "entries": 8226,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "iso2022_jp_2004",
+      "labels": [
+        "iso2022_jp_2004",
+        "iso2022jp_2004",
+        "iso_2022_jp_2004"
+      ],
+      "family": "ISO2022",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/iso2022.rs",
+          "sha256": "2b8d8a2c1f169fe39c678bdff5c0ad7ea0d9ef8af891afad7b2b3f6fad850f2a"
+        },
+        {
+          "path": "src/iso2022/gb2312.bin",
+          "sha256": "7574d029b9ddf8626671117e378ad05ac47094d7aad27391148485cf0160f5ba"
+        },
+        {
+          "path": "src/iso2022/jis0208.bin",
+          "sha256": "0416112dcb0970a36b4a15c4a81d12b26415e38149543e08b9e34d5723e12b6d"
+        },
+        {
+          "path": "src/iso2022/jis0212.bin",
+          "sha256": "c7cd2049ea68c0e1818a57414a560d7cf06f468414485d2356781f1dd3ee60a0"
+        },
+        {
+          "path": "src/iso2022/jis0213_2000_1.bin",
+          "sha256": "7029af04afa447689f93827b81e77ba805f32716a9d153316802f4371ef6c040"
+        },
+        {
+          "path": "src/iso2022/jis0213_2000_2.bin",
+          "sha256": "b2a26bcc095be14d44ae9fb54301acff1345e593909fcc5cb10ab510a4777360"
+        },
+        {
+          "path": "src/iso2022/jis0213_2004_1.bin",
+          "sha256": "1d37c3ffe71db2269db566bdcb1140c18a2e3bebc56c4bb2dce65a555df12fa5"
+        },
+        {
+          "path": "src/iso2022/jis0213_2004_2.bin",
+          "sha256": "b2a26bcc095be14d44ae9fb54301acff1345e593909fcc5cb10ab510a4777360"
+        },
+        {
+          "path": "src/iso2022/ksx1001.bin",
+          "sha256": "bc07ce8231127b1b9127feb75e8340e5b07db070423163307fea47c28e4aec05"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "src/iso2022/gb2312.bin",
+          "entries": 7445,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/jis0208.bin",
+          "entries": 6879,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/jis0212.bin",
+          "entries": 6067,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/jis0213_2000_1.bin",
+          "entries": 8787,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 2
+        },
+        {
+          "name": "src/iso2022/jis0213_2000_2.bin",
+          "entries": 2436,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/jis0213_2004_1.bin",
+          "entries": 8797,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 2
+        },
+        {
+          "name": "src/iso2022/jis0213_2004_2.bin",
+          "entries": 2436,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/ksx1001.bin",
+          "entries": 8226,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "iso2022_jp_3",
+      "labels": [
+        "iso2022_jp_3",
+        "iso2022jp_3",
+        "iso_2022_jp_3"
+      ],
+      "family": "ISO2022",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/iso2022.rs",
+          "sha256": "2b8d8a2c1f169fe39c678bdff5c0ad7ea0d9ef8af891afad7b2b3f6fad850f2a"
+        },
+        {
+          "path": "src/iso2022/gb2312.bin",
+          "sha256": "7574d029b9ddf8626671117e378ad05ac47094d7aad27391148485cf0160f5ba"
+        },
+        {
+          "path": "src/iso2022/jis0208.bin",
+          "sha256": "0416112dcb0970a36b4a15c4a81d12b26415e38149543e08b9e34d5723e12b6d"
+        },
+        {
+          "path": "src/iso2022/jis0212.bin",
+          "sha256": "c7cd2049ea68c0e1818a57414a560d7cf06f468414485d2356781f1dd3ee60a0"
+        },
+        {
+          "path": "src/iso2022/jis0213_2000_1.bin",
+          "sha256": "7029af04afa447689f93827b81e77ba805f32716a9d153316802f4371ef6c040"
+        },
+        {
+          "path": "src/iso2022/jis0213_2000_2.bin",
+          "sha256": "b2a26bcc095be14d44ae9fb54301acff1345e593909fcc5cb10ab510a4777360"
+        },
+        {
+          "path": "src/iso2022/jis0213_2004_1.bin",
+          "sha256": "1d37c3ffe71db2269db566bdcb1140c18a2e3bebc56c4bb2dce65a555df12fa5"
+        },
+        {
+          "path": "src/iso2022/jis0213_2004_2.bin",
+          "sha256": "b2a26bcc095be14d44ae9fb54301acff1345e593909fcc5cb10ab510a4777360"
+        },
+        {
+          "path": "src/iso2022/ksx1001.bin",
+          "sha256": "bc07ce8231127b1b9127feb75e8340e5b07db070423163307fea47c28e4aec05"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "src/iso2022/gb2312.bin",
+          "entries": 7445,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/jis0208.bin",
+          "entries": 6879,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/jis0212.bin",
+          "entries": 6067,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/jis0213_2000_1.bin",
+          "entries": 8787,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 2
+        },
+        {
+          "name": "src/iso2022/jis0213_2000_2.bin",
+          "entries": 2436,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/jis0213_2004_1.bin",
+          "entries": 8797,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 2
+        },
+        {
+          "name": "src/iso2022/jis0213_2004_2.bin",
+          "entries": 2436,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/ksx1001.bin",
+          "entries": 8226,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "iso2022_jp_ext",
+      "labels": [
+        "iso2022_jp_ext",
+        "iso2022jp_ext",
+        "iso_2022_jp_ext"
+      ],
+      "family": "ISO2022",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/iso2022.rs",
+          "sha256": "2b8d8a2c1f169fe39c678bdff5c0ad7ea0d9ef8af891afad7b2b3f6fad850f2a"
+        },
+        {
+          "path": "src/iso2022/gb2312.bin",
+          "sha256": "7574d029b9ddf8626671117e378ad05ac47094d7aad27391148485cf0160f5ba"
+        },
+        {
+          "path": "src/iso2022/jis0208.bin",
+          "sha256": "0416112dcb0970a36b4a15c4a81d12b26415e38149543e08b9e34d5723e12b6d"
+        },
+        {
+          "path": "src/iso2022/jis0212.bin",
+          "sha256": "c7cd2049ea68c0e1818a57414a560d7cf06f468414485d2356781f1dd3ee60a0"
+        },
+        {
+          "path": "src/iso2022/jis0213_2000_1.bin",
+          "sha256": "7029af04afa447689f93827b81e77ba805f32716a9d153316802f4371ef6c040"
+        },
+        {
+          "path": "src/iso2022/jis0213_2000_2.bin",
+          "sha256": "b2a26bcc095be14d44ae9fb54301acff1345e593909fcc5cb10ab510a4777360"
+        },
+        {
+          "path": "src/iso2022/jis0213_2004_1.bin",
+          "sha256": "1d37c3ffe71db2269db566bdcb1140c18a2e3bebc56c4bb2dce65a555df12fa5"
+        },
+        {
+          "path": "src/iso2022/jis0213_2004_2.bin",
+          "sha256": "b2a26bcc095be14d44ae9fb54301acff1345e593909fcc5cb10ab510a4777360"
+        },
+        {
+          "path": "src/iso2022/ksx1001.bin",
+          "sha256": "bc07ce8231127b1b9127feb75e8340e5b07db070423163307fea47c28e4aec05"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "src/iso2022/gb2312.bin",
+          "entries": 7445,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/jis0208.bin",
+          "entries": 6879,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/jis0212.bin",
+          "entries": 6067,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/jis0213_2000_1.bin",
+          "entries": 8787,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 2
+        },
+        {
+          "name": "src/iso2022/jis0213_2000_2.bin",
+          "entries": 2436,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/jis0213_2004_1.bin",
+          "entries": 8797,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 2
+        },
+        {
+          "name": "src/iso2022/jis0213_2004_2.bin",
+          "entries": 2436,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        },
+        {
+          "name": "src/iso2022/ksx1001.bin",
+          "entries": 8226,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "iso8859-11",
+      "labels": [
+        "iso8859_11",
+        "iso_8859_11",
+        "iso_8859_11_2001",
+        "thai"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_49",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "iso8859-13",
+      "labels": [
+        "iso8859_13",
+        "iso_8859_13",
+        "l7",
+        "latin7"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_50",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "iso8859-14",
+      "labels": [
+        "iso8859_14",
+        "iso_8859_14",
+        "iso_8859_14_1998",
+        "iso_celtic",
+        "iso_ir_199",
+        "l8",
+        "latin8"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_51",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "iso8859-15",
+      "labels": [
+        "iso8859_15",
+        "iso_8859_15",
+        "l9",
+        "latin9"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_52",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "iso8859-16",
+      "labels": [
+        "iso8859_16",
+        "iso_8859_16",
+        "iso_8859_16_2001",
+        "iso_ir_226",
+        "l10",
+        "latin10"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_53",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "tis-620",
+      "labels": [
+        "iso_ir_166",
+        "tis620",
+        "tis_620",
+        "tis_620_0",
+        "tis_620_2529_0",
+        "tis_620_2529_1"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_54",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "koi8-t",
+      "labels": [
+        "koi8_t"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_55",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "koi8-u",
+      "labels": [
+        "koi8_u"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_56",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "kz1048",
+      "labels": [
+        "kz1048",
+        "kz_1048",
+        "rk1048",
+        "strk1048_2002"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_57",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "mac-arabic",
+      "labels": [
+        "mac_arabic"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_58",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "mac-latin2",
+      "labels": [
+        "mac_centeuro",
+        "mac_latin2",
+        "maccentraleurope",
+        "maclatin2"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_59",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "mac-croatian",
+      "labels": [
+        "mac_croatian"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_60",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "mac-cyrillic",
+      "labels": [
+        "mac_cyrillic",
+        "maccyrillic"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_61",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "mac-farsi",
+      "labels": [
+        "mac_farsi"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_62",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "mac-greek",
+      "labels": [
+        "mac_greek",
+        "macgreek"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_63",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "mac-iceland",
+      "labels": [
+        "mac_iceland",
+        "maciceland"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_64",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "mac-roman",
+      "labels": [
+        "mac_roman",
+        "macintosh",
+        "macroman"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_65",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "mac-romanian",
+      "labels": [
+        "mac_romanian"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_66",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "mac-turkish",
+      "labels": [
+        "mac_turkish",
+        "macturkish"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_67",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "palmos",
+      "labels": [
+        "palmos"
+      ],
+      "family": "single-byte-table",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/singlebyte.rs",
+          "sha256": "03d24b099a68745c43e53ad3aa62fe976c25314ed3119a108ee8a72efc3211bd"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "TABLE_68",
+          "entries": 256,
+          "consumed_bytes": 1,
+          "maximum_emitted_points": 1
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "punycode",
+      "labels": [
+        "punycode"
+      ],
+      "family": "punycode",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/punycode.rs",
+          "sha256": "e3eb6a8e8c6cd815eb6735e3b48378b7b8ec146361a98694b8afacf3ee36b544"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "raw-unicode-escape",
+      "labels": [
+        "raw_unicode_escape"
+      ],
+      "family": "raw-unicode-escape",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/raw_unicode_escape.rs",
+          "sha256": "b8873b853709339f901087b53208c62d4988cfe7289e590d88de406692ef29f1"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "shift_jis_2004",
+      "labels": [
+        "s_jis_2004",
+        "shift_jis_2004",
+        "shiftjis2004",
+        "sjis_2004"
+      ],
+      "family": "CJK",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/cjk/shift_jis_2004.pairs.bin",
+          "sha256": "559304f05cf5d6ff468c6169f2222c67d2653f669a6282494d2c3ca2c4f1b927"
+        },
+        {
+          "path": "src/cjk/shift_jis_2004.single.bin",
+          "sha256": "dde9ffb93d76fb44b4e6e3c209b021baabb51644934def3c14e7d167790dce5d"
+        },
+        {
+          "path": "src/doublebyte.rs",
+          "sha256": "4fc1d1bfaeb75389c02b7e3f8cc39e1bdcbe565575832da683fef378354c0d0d"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "src/cjk/shift_jis_2004.pairs.bin",
+          "entries": 11233,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 2
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "shift_jisx0213",
+      "labels": [
+        "s_jisx0213",
+        "shift_jisx0213",
+        "shiftjisx0213",
+        "sjisx0213"
+      ],
+      "family": "CJK",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/cjk/shift_jisx0213.pairs.bin",
+          "sha256": "59d22cc9f01036288d8640d3ed643df25aea1611ac86b29367500cc428cbfb2b"
+        },
+        {
+          "path": "src/cjk/shift_jisx0213.single.bin",
+          "sha256": "dde9ffb93d76fb44b4e6e3c209b021baabb51644934def3c14e7d167790dce5d"
+        },
+        {
+          "path": "src/doublebyte.rs",
+          "sha256": "4fc1d1bfaeb75389c02b7e3f8cc39e1bdcbe565575832da683fef378354c0d0d"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        }
+      ],
+      "tables": [
+        {
+          "name": "src/cjk/shift_jisx0213.pairs.bin",
+          "entries": 11233,
+          "consumed_bytes": 2,
+          "maximum_emitted_points": 2
+        }
+      ],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "utf-16",
+      "labels": [
+        "u16",
+        "utf16",
+        "utf_16"
+      ],
+      "family": "Unicode",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        },
+        {
+          "path": "src/unicode.rs",
+          "sha256": "f5f38ccc20be13449f56f0755bf2d5b0aff0dae29b2b633b929711213c5bbca6"
+        }
+      ],
+      "tables": [],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "utf-32",
+      "labels": [
+        "u32",
+        "utf32",
+        "utf_32"
+      ],
+      "family": "Unicode",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        },
+        {
+          "path": "src/unicode.rs",
+          "sha256": "f5f38ccc20be13449f56f0755bf2d5b0aff0dae29b2b633b929711213c5bbca6"
+        }
+      ],
+      "tables": [],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "utf-7",
+      "labels": [
+        "u7",
+        "unicode_1_1_utf_7",
+        "utf7",
+        "utf_7"
+      ],
+      "family": "Unicode",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        },
+        {
+          "path": "src/unicode.rs",
+          "sha256": "f5f38ccc20be13449f56f0755bf2d5b0aff0dae29b2b633b929711213c5bbca6"
+        },
+        {
+          "path": "src/utf7.rs",
+          "sha256": "a5ca507e22f8cb1d48a743d560f0bd0bbb8699dd5661f183c2cc14ce4b0cb30e"
+        }
+      ],
+      "tables": [],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "unicode-escape",
+      "labels": [
+        "unicode_escape"
+      ],
+      "family": "unicode-escape",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        },
+        {
+          "path": "src/unicode_escape.rs",
+          "sha256": "9d5cea94649335a0a15e35d5a80393fc6944a04973528d3f59d8eb61dfbc8b28"
+        },
+        {
+          "path": "src/unicode_name_ranges.rs",
+          "sha256": "599e706e2cb261bec418c48a588384b74be9c50b72155f9e43c853ac80b4bc83"
+        },
+        {
+          "path": "src/unicode_names.rs",
+          "sha256": "c9ff0bf97ae36ad98006939785e23f391eff9b7b64778f60068bc42db20a2f29"
+        }
+      ],
+      "tables": [],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "utf-16-be",
+      "labels": [
+        "unicodebigunmarked",
+        "utf_16_be",
+        "utf_16be"
+      ],
+      "family": "Unicode",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        },
+        {
+          "path": "src/unicode.rs",
+          "sha256": "f5f38ccc20be13449f56f0755bf2d5b0aff0dae29b2b633b929711213c5bbca6"
+        }
+      ],
+      "tables": [],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "utf-16-le",
+      "labels": [
+        "unicodelittleunmarked",
+        "utf_16_le",
+        "utf_16le"
+      ],
+      "family": "Unicode",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        },
+        {
+          "path": "src/unicode.rs",
+          "sha256": "f5f38ccc20be13449f56f0755bf2d5b0aff0dae29b2b633b929711213c5bbca6"
+        }
+      ],
+      "tables": [],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "utf-32-be",
+      "labels": [
+        "utf_32_be",
+        "utf_32be"
+      ],
+      "family": "Unicode",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        },
+        {
+          "path": "src/unicode.rs",
+          "sha256": "f5f38ccc20be13449f56f0755bf2d5b0aff0dae29b2b633b929711213c5bbca6"
+        }
+      ],
+      "tables": [],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "utf-32-le",
+      "labels": [
+        "utf_32_le",
+        "utf_32le"
+      ],
+      "family": "Unicode",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        },
+        {
+          "path": "src/unicode.rs",
+          "sha256": "f5f38ccc20be13449f56f0755bf2d5b0aff0dae29b2b633b929711213c5bbca6"
+        }
+      ],
+      "tables": [],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    },
+    {
+      "canonical": "utf-8-sig",
+      "labels": [
+        "utf_8_sig"
+      ],
+      "family": "Unicode",
+      "implementation_files": [
+        {
+          "path": "src/aliases.rs",
+          "sha256": "f665494eacf85b5e5c926324f4c3670486d1527d4498237186cd69e4e43a6e48"
+        },
+        {
+          "path": "src/lib.rs",
+          "sha256": "23c65b6862a1f4304ced5fe25f63ba2c31c353c2a6bb4535db67c23fdf421087"
+        },
+        {
+          "path": "src/text.rs",
+          "sha256": "bfafddebb65906e5a90fdd179b3ab6cd110252611005c38101711d5f152f5c8a"
+        },
+        {
+          "path": "src/unicode.rs",
+          "sha256": "f5f38ccc20be13449f56f0755bf2d5b0aff0dae29b2b633b929711213c5bbca6"
+        }
+      ],
+      "tables": [],
+      "point_bound": "completed output codepoints <= consumed body bytes; algorithm actions require review"
+    }
+  ]
+}

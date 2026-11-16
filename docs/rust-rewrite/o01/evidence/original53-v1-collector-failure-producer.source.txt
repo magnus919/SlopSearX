@@ -1,0 +1,51 @@
+"""Temporary offline original O01 regression oracle; retire at G08, never native runtime."""
+import hashlib
+import json
+import os
+from pathlib import Path
+import socket
+import sys
+
+ROOT = Path('/Volumes/tank01/magnus/worktrees/slopsearx-o01')
+OUT = Path('/private/tmp/o01-original42-source-execution')
+pins = json.loads((ROOT / 'crates/xtask/fixtures/o01/sources.json').read_text())
+for row in pins:
+    if hashlib.sha256((ROOT / row['path']).read_bytes()).hexdigest() != row['sha256']:
+        raise RuntimeError('source preimage drift: ' + row['path'])
+connections = []
+def forbidden(*args, **kwargs):
+    connections.append('forbidden-connect')
+    raise RuntimeError('offline original oracle forbids network connection')
+socket.socket.connect = forbidden
+socket.socket.connect_ex = forbidden
+socket.create_connection = forbidden
+os.environ['PYTEST_DISABLE_PLUGIN_AUTOLOAD'] = '1'
+sys.path.insert(0, str(ROOT))
+import pytest
+
+class Receipts:
+    def __init__(self):
+        self.collected = []
+        self.reports = []
+        self.deselected = []
+    def pytest_collection_finish(self, session):
+        self.collected = [item.nodeid for item in session.items]
+    def pytest_deselected(self, items):
+        self.deselected.extend(item.nodeid for item in items)
+    def pytest_runtest_logreport(self, report):
+        self.reports.append({'nodeid': report.nodeid, 'when': report.when, 'outcome': report.outcome})
+
+plugin = Receipts()
+args = ['-p','pytest_asyncio.plugin','-o','addopts=','-o','asyncio_mode=auto','-vv','--tb=short',
+        'tests/test_metrics.py','tests/test_saved_event_metrics.py','tests/test_workflow_metrics.py','tests/test_audit.py','tests/test_stats.py',
+        '--deselect=tests/test_metrics.py::TestMetricsEndpoint::test_metrics_endpoint_returns_200',
+        '--deselect=tests/test_metrics.py::test_user_input_does_not_create_unbounded_metric_series']
+code = int(pytest.main(args, plugins=[plugin]))
+calls = [r for r in plugin.reports if r['when'] == 'call']
+result = {'status':'source-only-temporary-oracle','python':sys.version,'pytest':pytest.__version__,'exit':code,'args':args,'pins':pins,
+          'collected':plugin.collected,'deselected':plugin.deselected,'reports':plugin.reports,'network_attempts':connections,
+          'retirement':'G08 remove executable source oracle; native gate consumes immutable JSON only'}
+(OUT/'result.json').write_text(json.dumps(result, indent=2)+'\n')
+if code or connections or len(plugin.collected) != 49 or len(calls) != 49 or any(r['outcome'] != 'passed' for r in plugin.reports):
+    raise RuntimeError('strict original42 source qualification failed; preserved actual result')
+print('O01_ORIGINAL_SOURCE_COMPLETE', len(calls), 'cases /42 functions;2HTTP nodes explicitly downstream')

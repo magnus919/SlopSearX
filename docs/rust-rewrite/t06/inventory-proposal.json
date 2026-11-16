@@ -1,0 +1,210 @@
+{
+  "baseline": "6c44976444340cc8f343fef61e2e8d723b189c19",
+  "kind": "parent_owned_narrow_inventory_proposal_not_applied",
+  "source_rows": [
+    {
+      "path": "docs/rust-rewrite/t06/boundaries_capture.py",
+      "classification": "backend-coupled tooling/test",
+      "migration_owner": "T06",
+      "migration_owners": [
+        "T06",
+        "G08"
+      ],
+      "disposition": "temporary_developer_oracle_retire_before_backend_removal",
+      "evidence": "Finite pinned CPython3.14.7/FastMCP4.0.11/mcp2.3.0 guarded loopback reference observations; native gates read frozen JSON/source bytes only. G08.md enumerates each producer and current write-once launcher.",
+      "reason": "No backend, provider, deployment, client-only or mandatory native Python dependency; retire all executable reference producers and launcher under G08.",
+      "introduced_after_baseline": "6c44976444340cc8f343fef61e2e8d723b189c19",
+      "source_sha256": "09414ee82366e52b1525133dbde0de1b108725dc2368943a2ad10a90e7c9300c",
+      "git_blob": "6b99f3f22d9fe0ff87819d092eccb9ddcf8111ff"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/bounds_capture.py",
+      "classification": "backend-coupled tooling/test",
+      "migration_owner": "T06",
+      "migration_owners": [
+        "T06",
+        "G08"
+      ],
+      "disposition": "temporary_developer_oracle_retire_before_backend_removal",
+      "evidence": "Finite pinned CPython3.14.7/FastMCP4.0.11/mcp2.3.0 guarded loopback reference observations; native gates read frozen JSON/source bytes only. G08.md enumerates each producer and current write-once launcher.",
+      "reason": "No backend, provider, deployment, client-only or mandatory native Python dependency; retire all executable reference producers and launcher under G08.",
+      "introduced_after_baseline": "6c44976444340cc8f343fef61e2e8d723b189c19",
+      "source_sha256": "bfaa57d91f57334e28f60983e0e98554361060e7380037cff7dc76b1c09d2e10",
+      "git_blob": "c659f1f0738c56fde5a8ff278ac1cd51e042d070"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/capture.py",
+      "classification": "backend-coupled tooling/test",
+      "migration_owner": "T06",
+      "migration_owners": [
+        "T06",
+        "G08"
+      ],
+      "disposition": "temporary_developer_oracle_retire_before_backend_removal",
+      "evidence": "Finite pinned CPython3.14.7/FastMCP4.0.11/mcp2.3.0 guarded loopback reference observations; native gates read frozen JSON/source bytes only. G08.md enumerates each producer and current write-once launcher.",
+      "reason": "No backend, provider, deployment, client-only or mandatory native Python dependency; retire all executable reference producers and launcher under G08.",
+      "introduced_after_baseline": "6c44976444340cc8f343fef61e2e8d723b189c19",
+      "source_sha256": "d4b23e9b9d591b49b9ac5d7407f618ddc5cf75765a44a27994e8753c49af61f6",
+      "git_blob": "fe8d40e40be1938adaef2346aefc3afc58f2f44d"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/capture_guarded.py",
+      "classification": "backend-coupled tooling/test",
+      "migration_owner": "T06",
+      "migration_owners": [
+        "T06",
+        "G08"
+      ],
+      "disposition": "temporary_developer_oracle_retire_before_backend_removal",
+      "evidence": "Finite pinned CPython3.14.7/FastMCP4.0.11/mcp2.3.0 guarded loopback reference observations; native gates read frozen JSON/source bytes only. G08.md enumerates each producer and current write-once launcher.",
+      "reason": "No backend, provider, deployment, client-only or mandatory native Python dependency; retire all executable reference producers and launcher under G08.",
+      "introduced_after_baseline": "6c44976444340cc8f343fef61e2e8d723b189c19",
+      "source_sha256": "71b2550dc438b9fe75120fe60d8d5137f9e8e00eb159e2bad713502a61f01c79",
+      "git_blob": "582ccf8e18299fb8380b159e9708564d5c7af69d"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/entities_capture.py",
+      "classification": "backend-coupled tooling/test",
+      "migration_owner": "T06",
+      "migration_owners": [
+        "T06",
+        "G08"
+      ],
+      "disposition": "temporary_developer_oracle_retire_before_backend_removal",
+      "evidence": "Finite pinned CPython3.14.7/FastMCP4.0.11/mcp2.3.0 guarded loopback reference observations; native gates read frozen JSON/source bytes only. G08.md enumerates each producer and current write-once launcher.",
+      "reason": "No backend, provider, deployment, client-only or mandatory native Python dependency; retire all executable reference producers and launcher under G08.",
+      "introduced_after_baseline": "6c44976444340cc8f343fef61e2e8d723b189c19",
+      "source_sha256": "5036e392946241b66e405e934c086eda05f635a4be248aa25b4c5fdbaa965d6b",
+      "git_blob": "0878af8dbb9c049e5c240bb018be44d6ac3f5b88"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/legacy_capture.py",
+      "classification": "backend-coupled tooling/test",
+      "migration_owner": "T06",
+      "migration_owners": [
+        "T06",
+        "G08"
+      ],
+      "disposition": "temporary_developer_oracle_retire_before_backend_removal",
+      "evidence": "Finite pinned CPython3.14.7/FastMCP4.0.11/mcp2.3.0 guarded loopback reference observations; native gates read frozen JSON/source bytes only. G08.md enumerates each producer and current write-once launcher.",
+      "reason": "No backend, provider, deployment, client-only or mandatory native Python dependency; retire all executable reference producers and launcher under G08.",
+      "introduced_after_baseline": "6c44976444340cc8f343fef61e2e8d723b189c19",
+      "source_sha256": "53cc8b5531552b541060a3426743e61a2a5407c4ae0533a1bc8760bfb8f4a6df",
+      "git_blob": "6e4c0ad9e03d945a1cbdd878f2039e0b8a9a3708"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/policy_capture.py",
+      "classification": "backend-coupled tooling/test",
+      "migration_owner": "T06",
+      "migration_owners": [
+        "T06",
+        "G08"
+      ],
+      "disposition": "temporary_developer_oracle_retire_before_backend_removal",
+      "evidence": "Finite pinned CPython3.14.7/FastMCP4.0.11/mcp2.3.0 guarded loopback reference observations; native gates read frozen JSON/source bytes only. G08.md enumerates each producer and current write-once launcher.",
+      "reason": "No backend, provider, deployment, client-only or mandatory native Python dependency; retire all executable reference producers and launcher under G08.",
+      "introduced_after_baseline": "6c44976444340cc8f343fef61e2e8d723b189c19",
+      "source_sha256": "8d4fdf72a30faa97e005b78503e0b64cbdf0d9878eef866850b53b9ea0f7df86",
+      "git_blob": "6cafa0cfa6eabe27c5783985aebdf095f7934083"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/prompts_capture.py",
+      "classification": "backend-coupled tooling/test",
+      "migration_owner": "T06",
+      "migration_owners": [
+        "T06",
+        "G08"
+      ],
+      "disposition": "temporary_developer_oracle_retire_before_backend_removal",
+      "evidence": "Finite pinned CPython3.14.7/FastMCP4.0.11/mcp2.3.0 guarded loopback reference observations; native gates read frozen JSON/source bytes only. G08.md enumerates each producer and current write-once launcher.",
+      "reason": "No backend, provider, deployment, client-only or mandatory native Python dependency; retire all executable reference producers and launcher under G08.",
+      "introduced_after_baseline": "6c44976444340cc8f343fef61e2e8d723b189c19",
+      "source_sha256": "95ea3db7abb919ec79f345080ce1ec071371dff6df286e6345cb67ecbb3a4ef2",
+      "git_blob": "ad57bfbf79c0fcaae6310a400f27ac51386c1084"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/prompts_envelope_capture.py",
+      "classification": "backend-coupled tooling/test",
+      "migration_owner": "T06",
+      "migration_owners": [
+        "T06",
+        "G08"
+      ],
+      "disposition": "temporary_developer_oracle_retire_before_backend_removal",
+      "evidence": "Finite pinned CPython3.14.7/FastMCP4.0.11/mcp2.3.0 guarded loopback reference observations; native gates read frozen JSON/source bytes only. G08.md enumerates each producer and current write-once launcher.",
+      "reason": "No backend, provider, deployment, client-only or mandatory native Python dependency; retire all executable reference producers and launcher under G08.",
+      "introduced_after_baseline": "6c44976444340cc8f343fef61e2e8d723b189c19",
+      "source_sha256": "9605100a887ea512253c739079ec5d082dd9131413805d7566b980cece980518",
+      "git_blob": "47fd88221ba423ab0f386319ccae2b1387cd9f21"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/prompts_raw_capture.py",
+      "classification": "backend-coupled tooling/test",
+      "migration_owner": "T06",
+      "migration_owners": [
+        "T06",
+        "G08"
+      ],
+      "disposition": "temporary_developer_oracle_retire_before_backend_removal",
+      "evidence": "Finite pinned CPython3.14.7/FastMCP4.0.11/mcp2.3.0 guarded loopback reference observations; native gates read frozen JSON/source bytes only. G08.md enumerates each producer and current write-once launcher.",
+      "reason": "No backend, provider, deployment, client-only or mandatory native Python dependency; retire all executable reference producers and launcher under G08.",
+      "introduced_after_baseline": "6c44976444340cc8f343fef61e2e8d723b189c19",
+      "source_sha256": "af8c4bd71f1dda2fec34f47f798d692bcb5ba6f979e794b2979ea8aeaef0b0bc",
+      "git_blob": "65879d7208f10839e0fabb57076c446909cc5757"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/prompts_unknown_capture.py",
+      "classification": "backend-coupled tooling/test",
+      "migration_owner": "T06",
+      "migration_owners": [
+        "T06",
+        "G08"
+      ],
+      "disposition": "temporary_developer_oracle_retire_before_backend_removal",
+      "evidence": "Finite pinned CPython3.14.7/FastMCP4.0.11/mcp2.3.0 guarded loopback reference observations; native gates read frozen JSON/source bytes only. G08.md enumerates each producer and current write-once launcher.",
+      "reason": "No backend, provider, deployment, client-only or mandatory native Python dependency; retire all executable reference producers and launcher under G08.",
+      "introduced_after_baseline": "6c44976444340cc8f343fef61e2e8d723b189c19",
+      "source_sha256": "8227d0b5a5906260c034b54564e118741a4e55d253387a60b311e9b552005447",
+      "git_blob": "c9780ccb369ace6857f8b1ad096c38840378b2ed"
+    },
+    {
+      "path": "docs/rust-rewrite/t06/snapshots_capture.py",
+      "classification": "backend-coupled tooling/test",
+      "migration_owner": "T06",
+      "migration_owners": [
+        "T06",
+        "G08"
+      ],
+      "disposition": "temporary_developer_oracle_retire_before_backend_removal",
+      "evidence": "Finite pinned CPython3.14.7/FastMCP4.0.11/mcp2.3.0 guarded loopback reference observations; native gates read frozen JSON/source bytes only. G08.md enumerates each producer and current write-once launcher.",
+      "reason": "No backend, provider, deployment, client-only or mandatory native Python dependency; retire all executable reference producers and launcher under G08.",
+      "introduced_after_baseline": "6c44976444340cc8f343fef61e2e8d723b189c19",
+      "source_sha256": "9a27e69c91c2a8208be12b95f02eec03517f2e9187cfe0ac153e9e8137d82751",
+      "git_blob": "e117e5997e56e49c59b9d7b23a8f659844e587c2"
+    }
+  ],
+  "invocation_row": {
+    "path": "docs/rust-rewrite/t06/G08.md",
+    "example_path": "docs/rust-rewrite/t06/capture_guarded.py",
+    "evidence": "/private/tmp/slopsearx-rust-oracle-py314/bin/python docs/rust-rewrite/t06/capture_guarded.py PRODUCER NEW_OUTPUT",
+    "classification": "temporary backend-coupled developer oracle; never a mandatory native gate or runtime dependency",
+    "migration_owner": "T06",
+    "retirement_owner": "G08",
+    "disposition": "retire executable Python before backend removal; retain immutable JSON source evidence"
+  },
+  "deltas": {
+    "tracked_python_source_count": 12,
+    "backend-coupled tooling/test": 12,
+    "backend/runtime": 0,
+    "client-only": 0,
+    "developer_oracle_invocation_rows": 1
+  },
+  "required_shared_updates": [
+    "python-disposition.json add12 complete rows and refresh exact source-set/classification counts against current merged main",
+    "python-invocations.json add one documented guarded-launcher invocation row; all11 producer choices are inventoried source rows",
+    "DRIFT.md append T06 historical6c baseline, G08 retirement and generated bytecode exclusion",
+    "crates/xtask/fixtures/F01.json add12 source blobs and update only reviewed changed inventory anchors",
+    "Preserve W06 and all other current-main rows; do not apply absolute historical totals"
+  ],
+  "preservation": "All original eight producer/capture bytes preserved. Three new prompt boundary producers and current write-once wrapper are Ruff linted; generated pyc is not a delivered or required source."
+}

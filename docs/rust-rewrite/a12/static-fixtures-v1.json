@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "provenance": "STATIC_ORIGINAL_TEST_DERIVATION",
+  "source_executed": false,
+  "source_run_ids": [
+
+  ],
+  "provider_calls": 0,
+  "payloads": {
+    "censys": {
+      "result": {
+        "hits": [
+          {
+            "ip": "1.2.3.4",
+            "location": {
+              "country": "US",
+              "city": "Mountain View"
+            },
+            "services": [
+              {
+                "service_name": "HTTP",
+                "port": 80
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "shodan": {
+      "matches": [
+        {
+          "ip_str": "1.2.3.4",
+          "port": 80,
+          "org": "Example ISP",
+          "product": "nginx",
+          "hostnames": [
+            "www.example.com"
+          ],
+          "transport": "tcp"
+        }
+      ]
+    },
+    "virustotal": {
+      "data": [
+        {
+          "id": "d41d8cd98f00b204e9800998ecf8427e",
+          "attributes": {
+            "last_analysis_stats": {
+              "malicious": 5,
+              "suspicious": 2,
+              "harmless": 50,
+              "undetected": 10
+            },
+            "meaningful_name": "bad.exe",
+            "reputation": -5
+          }
+        }
+      ]
+    },
+    "vulncheck": {
+      "data": {
+        "exploit_state": "exploited",
+        "date_added": "2024-04-01",
+        "vendor_data": [
+          {
+            "vendor": "apache"
+          }
+        ],
+        "exploit_urls": [
+          "https://example.com/exploit"
+        ]
+      }
+    },
+    "crtsh": [
+      {
+        "id": 12345,
+        "common_name": "example.com",
+        "issuer_name": "C=US, O=Let's Encrypt",
+        "name_value": "example.com\nwww.example.com",
+        "not_before": "2024-01-01T00:00:00",
+        "not_after": "2025-01-01T00:00:00",
+        "serial_number": "abc123"
+      },
+      {
+        "id": 12346,
+        "common_name": "test.org",
+        "issuer_name": "C=US, O=DigiCert",
+        "name_value": "test.org\nmail.test.org",
+        "not_before": "2024-06-01T00:00:00",
+        "not_after": "2025-06-01T00:00:00",
+        "serial_number": "def456"
+      }
+    ]
+  }
+}

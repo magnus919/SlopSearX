@@ -1,0 +1,139 @@
+import asyncio, copy, dataclasses, hashlib, json, pathlib, sys, uuid
+from types import SimpleNamespace
+
+root = pathlib.Path("/private/tmp/slopsearx-w06")
+sys.path.insert(0, str(root))
+controls = json.loads((root / "docs/rust-rewrite/w06/source-controls.json").read_text())
+controls.update(
+    {
+        "slopsearx/capabilities.py": "ed4e332a4df1de32d83b9dd2b62dddb622082ab4c236c0c9cef8d8d23336fd6f",
+        "slopsearx/mcp/tools.py": "6bbbdb270f14fda7d90ae8dbe1983aae33526df430f76a960f0c7483417eb35a",
+    }
+)
+if sys.version_info[:3] != (3, 14, 7):
+    raise RuntimeError("unpinned interpreter")
+for path, expected in controls.items():
+    if hashlib.sha256((root / path).read_bytes()).hexdigest() != expected:
+        raise RuntimeError("source drift: " + path)
+import pytest
+from slopsearx import staged
+from slopsearx.capabilities import MCPPolicy
+from slopsearx.mcp import staged_tools
+from slopsearx.mcp.state import set_state
+from tests.test_mcp_tools import _FakeStore, _build_state
+
+
+def state(names):
+    p = MCPPolicy()
+    p.enabled_tools.update({"staged_search": True, "jobs": True})
+    s = _build_state(names, policy=p)
+    shared = _FakeStore()
+    s.ctx.cache = shared
+    s.staged_store = staged.StagedSearchStore(shared)
+    s.staged_runner = SimpleNamespace(enqueue=lambda *_: asyncio.sleep(0))
+    set_state(s)
+    return s
+
+
+async def main():
+    rows = []
+    cases = [
+        ("explicit_active_removed", {"active_remove": ["wikipedia"]}),
+        (
+            "explicit_auth_missing",
+            {"catalog_changes": {"wikipedia": {"auth_class": "required", "auth_configured": False}}},
+        ),
+        (
+            "explicit_circuit_open",
+            {"catalog_changes": {"wikipedia": {"circuit_open": True, "last_known_status": "timeout"}}},
+        ),
+        ("explicit_health_unavailable", {"catalog_changes": {"wikipedia": {"last_known_status": "unavailable"}}}),
+        ("explicit_disabled", {"catalog_changes": {"wikipedia": {"enabled": False}}}),
+        ("explicit_unknown", {"catalog_remove": ["wikipedia"]}),
+        ("explicit_sensitive_denied", {"sensitive_engines": ["wikipedia"]}),
+        ("explicit_sensitive_allowed", {"sensitive_engines": ["wikipedia"], "targeted_sensitive_allowed": True}),
+        ("unused_fallback_sensitive_denied", {"sensitive_engines": ["brave"]}),
+        ("intent_routing_active_changed", {"intent": "web", "active_remove": ["wikipedia"]}),
+        ("intent_jobs_grant_revoked", {"intent": "jobs", "jobs_granted": False}),
+        ("staged_grant_revoked", {"staged_granted": False}),
+        ("operator_cap_narrowed", {"deadline_limit": 1000}),
+    ]
+    for index, (name, mutation) in enumerate(cases):
+        names = (
+            ["wikipedia", "brave", "greenhouse", "ashby", "lever", "duckduckgo"]
+            if mutation.get("intent") == "jobs"
+            else ["wikipedia", "brave"]
+        )
+        s = state(names)
+        with pytest.MonkeyPatch.context() as patch:
+            counter = iter(range(index * 100 + 1, index * 100 + 100))
+            patch.setattr(uuid, "uuid4", lambda: uuid.UUID(int=next(counter) << 80))
+            patch.setattr(staged.time, "time", lambda: 1000.0)
+            args = dict(
+                query="retained authority evidence",
+                objectives={"deadline_ms": 5000, "max_engine_calls": 8},
+                initial_scope={"intent": mutation["intent"]} if "intent" in mutation else {"engines": ["wikipedia"]},
+                fallback_scope=None if "intent" in mutation else {"engines": ["brave"]},
+                allow_scope_expansion="intent" not in mutation,
+                filters=None,
+            )
+            accepted = await staged_tools.slopsearx_search_staged(**args, idempotency_key="retained-" + name)
+            if "error" in accepted:
+                raise RuntimeError(f"capture admission failed {name}: {accepted}")
+            record = copy.deepcopy((await s.staged_store.read("default", accepted["operation_id"])).record)
+            for engine in mutation.get("active_remove", []):
+                s.ctx.active_engines.pop(engine)
+            for engine in mutation.get("catalog_remove", []):
+                s.catalog._by_name.pop(engine)
+            for engine, changes in mutation.get("catalog_changes", {}).items():
+                s.catalog._by_name[engine] = dataclasses.replace(s.catalog._by_name[engine], **changes)
+            if "sensitive_engines" in mutation:
+                s.policy.sensitive_engines = set(mutation["sensitive_engines"])
+            s.policy.targeted_sensitive_allowed = mutation.get("targeted_sensitive_allowed", False)
+            s.policy.enabled_tools["staged_search"] = mutation.get("staged_granted", True)
+            s.policy.enabled_tools["jobs"] = mutation.get("jobs_granted", True)
+            s.policy.staged_max_deadline_ms = mutation.get("deadline_limit", s.policy.staged_max_deadline_ms)
+            result = staged_tools._policy_check(record)
+            allowed = {
+                "explicit_active_removed",
+                "explicit_auth_missing",
+                "explicit_circuit_open",
+                "explicit_health_unavailable",
+                "explicit_sensitive_allowed",
+            }
+            if (result is None) != (name in allowed):
+                raise RuntimeError(f"retained source fixture did not reach intended branch {name}: {result}")
+            calls = sum(e.calls for e in s.ctx.active_engines.values())
+            if calls:
+                raise RuntimeError("policy capture dispatched")
+            rows.append(
+                dict(
+                    id="retained." + name,
+                    input=args,
+                    record=record,
+                    mutations=mutation,
+                    initial_active_engines=names,
+                    current_active_engines=sorted(s.ctx.active_engines),
+                    output=result,
+                    fixture_engine_calls=calls,
+                )
+            )
+    set_state(None)
+    packet = json.loads((root / "docs/rust-rewrite/w06/source.json").read_text())
+    value = dict(
+        schema_version=1,
+        plan_id="W06",
+        baseline=packet["baseline"],
+        source_controls=controls,
+        context=packet["context"],
+        execution="actual original _policy_check over actual admitted original records with explicit context mutations; no acquisition/provider/network",
+        provider_calls=0,
+        nondeterminism={"wall_time": 1000.0, "uuid": "sequential shifted80 per case"},
+        cases=rows,
+    )
+    destination = root / "docs/rust-rewrite/w06/evidence/retained-policy-source-outcomes.json"
+    destination.write_text(json.dumps(value, indent=2) + "\n")
+    print(json.dumps([{"id": r["id"], "output": r["output"]} for r in rows], indent=2))
+
+
+asyncio.run(main())

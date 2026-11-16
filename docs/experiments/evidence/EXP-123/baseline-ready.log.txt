@@ -1,0 +1,148 @@
+/private/tmp/slopsearx-daily-20261015/.venv/lib/python3.12/site-packages/pydantic_settings/sources/utils.py:47: IncompleteFieldDefinitionWarning: Field 'lifespan' has an incomplete definition: its annotation contains an unresolved forward reference, so settings sources may fail to correctly resolve its value. Call `model_rebuild()` on the model where the field is defined, once all the referenced types are defined.
+  warnings.warn(
+[10/15/26 08:59:28] INFO     StreamableHTTP       streamable_http_manager.py:143
+                             session manager                                    
+                             started                                            
+                    INFO     HTTP Request: GET                   _client.py:1740
+                             http://127.0.0.1:60516/mcp                         
+                             "HTTP/1.1 401 Unauthorized"                        
+[10/15/26 08:59:29] INFO     Created new          streamable_http_manager.py:301
+                             transport with                                     
+                             session ID:                                        
+                             844ee34fd3e34e52b376                               
+                             357240b053c4                                       
+                    WARNING  MCP startup problem: intent 'images'  server.py:144
+                             has media types matching no enabled                
+                             engines: ['image']                                 
+                    WARNING  MCP startup problem: intent 'videos'  server.py:144
+                             has media types matching no enabled                
+                             engines: ['video']                                 
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:60516/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Received session ID:         streamable_http.py:181
+                             844ee34fd3e34e52b376357240b0                       
+                             53c4                                               
+                    INFO     Negotiated protocol version: streamable_http.py:193
+                             2025-11-25                                         
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:60516/mcp                         
+                             "HTTP/1.1 202 Accepted"                            
+                    INFO     HTTP Request: GET                   _client.py:1740
+                             http://127.0.0.1:60516/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:60516/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Processing request of type            server.py:733
+                             ListToolsRequest                                   
+                    INFO     Remote gateway connected to          gateway.py:497
+                             http://127.0.0.1:60516/mcp (38 tools               
+                             registered)                                        
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:60516/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     Terminating session:         streamable_http.py:788
+                             844ee34fd3e34e52b376357240b0                       
+                             53c4                                               
+                    INFO     HTTP Request: DELETE                _client.py:1740
+                             http://127.0.0.1:60516/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     StreamableHTTP       streamable_http_manager.py:147
+                             session manager                                    
+                             shutting down                                      
+                    INFO     StreamableHTTP       streamable_http_manager.py:143
+                             session manager                                    
+                             started                                            
+                    INFO     HTTP Request: GET                   _client.py:1740
+                             http://127.0.0.1:60528/mcp                         
+                             "HTTP/1.1 401 Unauthorized"                        
+[10/15/26 08:59:30] INFO     Created new          streamable_http_manager.py:301
+                             transport with                                     
+                             session ID:                                        
+                             a13c7ab7fc9c41e691a5                               
+                             20bebf6d5442                                       
+                    WARNING  MCP startup problem: intent 'images'  server.py:144
+                             has media types matching no enabled                
+                             engines: ['image']                                 
+                    WARNING  MCP startup problem: intent 'videos'  server.py:144
+                             has media types matching no enabled                
+                             engines: ['video']                                 
+                    INFO     HTTP Request: POST                  _client.py:1740
+                             http://127.0.0.1:60528/mcp                         
+                             "HTTP/1.1 200 OK"                                  
+                    INFO     Received session ID:         streamable_http.py:181
+                             a13c7ab7fc9c41e691a520bebf6d                       
+                             5442                                               
+ERROR:    ASGI callable returned without completing response.
+[10/15/26 09:00:34] INFO     StreamableHTTP       streamable_http_manager.py:147
+                             session manager                                    
+                             shutting down                                      
+                    WARNING  Session termination failed:  streamable_http.py:593
+                             All connection attempts                            
+                             failed                                             
+Traceback (most recent call last):
+  File "/private/tmp/slopsearx-daily-20261015/slopsearx/mcp/gateway.py", line 430, in _gateway_lifespan
+    await asyncio.shield(ready)
+asyncio.exceptions.CancelledError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/private/tmp/exp123-worker.py", line 41, in main
+  File "/private/tmp/exp123-worker.py", line 33, in case
+    asyncio.run(main())
+                  ^^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/slopsearx-daily-20261015/slopsearx/mcp/gateway.py", line 437, in _gateway_lifespan
+    await owner
+  File "/private/tmp/slopsearx-daily-20261015/slopsearx/mcp/gateway.py", line 420, in own_connection
+    async with _gateway_connection(server, remote_url, token, connect_timeout, **options):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/slopsearx-daily-20261015/slopsearx/mcp/gateway.py", line 479, in _gateway_connection
+    async with ClientSession(read, write) as session:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/slopsearx-daily-20261015/.venv/lib/python3.12/site-packages/mcp/shared/session.py", line 238, in __aexit__
+    return await self._task_group.__aexit__(exc_type, exc_val, exc_tb)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/slopsearx-daily-20261015/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 803, in __aexit__
+    raise exc_val
+  File "/private/tmp/slopsearx-daily-20261015/slopsearx/mcp/gateway.py", line 481, in _gateway_connection
+    await session.initialize()
+  File "/private/tmp/slopsearx-daily-20261015/.venv/lib/python3.12/site-packages/mcp/client/session.py", line 183, in initialize
+    result = await self.send_request(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/slopsearx-daily-20261015/.venv/lib/python3.12/site-packages/mcp/shared/session.py", line 292, in send_request
+    response_or_error = await response_stream_reader.receive()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/slopsearx-daily-20261015/.venv/lib/python3.12/site-packages/anyio/streams/memory.py", line 125, in receive
+    await receive_event.wait()
+  File "/private/tmp/slopsearx-daily-20261015/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 1804, in wait
+    await self._event.wait()
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/locks.py", line 212, in wait
+    await fut
+asyncio.exceptions.CancelledError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/private/tmp/exp123-worker.py", line 43, in <module>
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 123, in run
+    raise KeyboardInterrupt()
+KeyboardInterrupt

@@ -1,0 +1,209 @@
+{
+  "baseline": "8b48dc9ea0917230f31dfcc9c44ea2698b612b36",
+  "method": "Read-only Python AST declaration inventory; actual41 call reports captured independently. Native gate never invokes Python.",
+  "functions": [
+    {
+      "identity": "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_search_returns_reputation",
+      "path": "tests/test_abuseipdb.py",
+      "line": 21
+    },
+    {
+      "identity": "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_missing_api_key",
+      "path": "tests/test_abuseipdb.py",
+      "line": 40
+    },
+    {
+      "identity": "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_rate_limited",
+      "path": "tests/test_abuseipdb.py",
+      "line": 46
+    },
+    {
+      "identity": "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_adapter_registered",
+      "path": "tests/test_abuseipdb.py",
+      "line": 51
+    },
+    {
+      "identity": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_ip_lookup",
+      "path": "tests/test_greynoise.py",
+      "line": 31
+    },
+    {
+      "identity": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_no_ip_in_query",
+      "path": "tests/test_greynoise.py",
+      "line": 39
+    },
+    {
+      "identity": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_404",
+      "path": "tests/test_greynoise.py",
+      "line": 44
+    },
+    {
+      "identity": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_mismatched_ip_response_is_error",
+      "path": "tests/test_greynoise.py",
+      "line": 50
+    },
+    {
+      "identity": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_malformed_response_shape_is_error",
+      "path": "tests/test_greynoise.py",
+      "line": 57
+    },
+    {
+      "identity": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_invalid_json_response_is_error",
+      "path": "tests/test_greynoise.py",
+      "line": 64
+    },
+    {
+      "identity": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_rate_limited",
+      "path": "tests/test_greynoise.py",
+      "line": 70
+    },
+    {
+      "identity": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_with_api_key",
+      "path": "tests/test_greynoise.py",
+      "line": 75
+    },
+    {
+      "identity": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_adapter_registered",
+      "path": "tests/test_greynoise.py",
+      "line": 87
+    },
+    {
+      "identity": "tests/test_greynoise.py::TestGreyNoiseAdapter::test_adapter_categories",
+      "path": "tests/test_greynoise.py",
+      "line": 92
+    },
+    {
+      "identity": "tests/test_otx.py::TestOTXAdapter::test_missing_api_key",
+      "path": "tests/test_otx.py",
+      "line": 21
+    },
+    {
+      "identity": "tests/test_otx.py::TestOTXAdapter::test_rate_limited",
+      "path": "tests/test_otx.py",
+      "line": 27
+    },
+    {
+      "identity": "tests/test_otx.py::TestOTXAdapter::test_adapter_registered",
+      "path": "tests/test_otx.py",
+      "line": 32
+    },
+    {
+      "identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_url_search",
+      "path": "tests/test_urlhaus.py",
+      "line": 39
+    },
+    {
+      "identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_host_search",
+      "path": "tests/test_urlhaus.py",
+      "line": 47
+    },
+    {
+      "identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error",
+      "path": "tests/test_urlhaus.py",
+      "line": 61
+    },
+    {
+      "identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error",
+      "path": "tests/test_urlhaus.py",
+      "line": 76
+    },
+    {
+      "identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results",
+      "path": "tests/test_urlhaus.py",
+      "line": 90
+    },
+    {
+      "identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_missing_auth_is_unavailable_without_http_dispatch",
+      "path": "tests/test_urlhaus.py",
+      "line": 96
+    },
+    {
+      "identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_rate_limited",
+      "path": "tests/test_urlhaus.py",
+      "line": 103
+    },
+    {
+      "identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_request_is_error",
+      "path": "tests/test_urlhaus.py",
+      "line": 108
+    },
+    {
+      "identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_or_provider_block_is_classified",
+      "path": "tests/test_urlhaus.py",
+      "line": 116
+    },
+    {
+      "identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_malformed_json_is_error",
+      "path": "tests/test_urlhaus.py",
+      "line": 123
+    },
+    {
+      "identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error",
+      "path": "tests/test_urlhaus.py",
+      "line": 137
+    },
+    {
+      "identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_unsupported_input_is_error_without_dispatch",
+      "path": "tests/test_urlhaus.py",
+      "line": 143
+    },
+    {
+      "identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_key_is_forwarded_as_header",
+      "path": "tests/test_urlhaus.py",
+      "line": 152
+    },
+    {
+      "identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_adapter_registered",
+      "path": "tests/test_urlhaus.py",
+      "line": 165
+    },
+    {
+      "identity": "tests/test_urlhaus.py::TestURLhausAdapter::test_adapter_categories",
+      "path": "tests/test_urlhaus.py",
+      "line": 170
+    }
+  ],
+  "actual_literal_calls": [
+    "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_search_returns_reputation",
+    "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_missing_api_key",
+    "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_rate_limited",
+    "tests/test_abuseipdb.py::TestAbuseIPDBAdapter::test_adapter_registered",
+    "tests/test_greynoise.py::TestGreyNoiseAdapter::test_ip_lookup",
+    "tests/test_greynoise.py::TestGreyNoiseAdapter::test_no_ip_in_query",
+    "tests/test_greynoise.py::TestGreyNoiseAdapter::test_404",
+    "tests/test_greynoise.py::TestGreyNoiseAdapter::test_mismatched_ip_response_is_error",
+    "tests/test_greynoise.py::TestGreyNoiseAdapter::test_malformed_response_shape_is_error",
+    "tests/test_greynoise.py::TestGreyNoiseAdapter::test_invalid_json_response_is_error",
+    "tests/test_greynoise.py::TestGreyNoiseAdapter::test_rate_limited",
+    "tests/test_greynoise.py::TestGreyNoiseAdapter::test_with_api_key",
+    "tests/test_greynoise.py::TestGreyNoiseAdapter::test_adapter_registered",
+    "tests/test_greynoise.py::TestGreyNoiseAdapter::test_adapter_categories",
+    "tests/test_otx.py::TestOTXAdapter::test_missing_api_key",
+    "tests/test_otx.py::TestOTXAdapter::test_rate_limited",
+    "tests/test_otx.py::TestOTXAdapter::test_adapter_registered",
+    "tests/test_urlhaus.py::TestURLhausAdapter::test_url_search",
+    "tests/test_urlhaus.py::TestURLhausAdapter::test_host_search",
+    "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[invalid-host.example-invalid_host]",
+    "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[https://example.com/not-malware-invalid_url]",
+    "tests/test_urlhaus.py::TestURLhausAdapter::test_urlhaus_documented_invalid_input_is_error[0123456789abcdef0123456789abcdef-invalid_md5]",
+    "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[example.com-invalid_url]",
+    "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[https://example.com/not-malware-invalid_host]",
+    "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_input_status_for_wrong_query_kind_is_error[0123456789abcdef0123456789abcdef-invalid_host]",
+    "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[https://clean.example.com/not-malware]",
+    "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[clean.example.com]",
+    "tests/test_urlhaus.py::TestURLhausAdapter::test_no_results[0123456789abcdef0123456789abcdef]",
+    "tests/test_urlhaus.py::TestURLhausAdapter::test_missing_auth_is_unavailable_without_http_dispatch",
+    "tests/test_urlhaus.py::TestURLhausAdapter::test_rate_limited",
+    "tests/test_urlhaus.py::TestURLhausAdapter::test_invalid_request_is_error",
+    "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_or_provider_block_is_classified[401]",
+    "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_or_provider_block_is_classified[403]",
+    "tests/test_urlhaus.py::TestURLhausAdapter::test_malformed_json_is_error",
+    "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload0]",
+    "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload1]",
+    "tests/test_urlhaus.py::TestURLhausAdapter::test_unexpected_success_shape_is_error[payload2]",
+    "tests/test_urlhaus.py::TestURLhausAdapter::test_unsupported_input_is_error_without_dispatch",
+    "tests/test_urlhaus.py::TestURLhausAdapter::test_auth_key_is_forwarded_as_header",
+    "tests/test_urlhaus.py::TestURLhausAdapter::test_adapter_registered",
+    "tests/test_urlhaus.py::TestURLhausAdapter::test_adapter_categories"
+  ]
+}

@@ -1,0 +1,170 @@
+{
+  "schema": "O02_UPSTREAM_CONTRACTS_TRANSITION_V1",
+  "issue": 919,
+  "plan_id": "O02",
+  "baseline": "661af83a1b95a3e7873cfda99c05d0fb6a02fe0a",
+  "implementation_scope": "Replace the active upstream-contract workflow invocation with a bounded Rust xtask command. This is one O02 slice only; it does not complete O02 or retire historical Python sources.",
+  "implementation_source": {
+    "path": "crates/xtask/src/o02_upstream_contracts.rs",
+    "git_blob": "828e58db7796b7d27dd8a503af50a85cc6a9f17c",
+    "baseline_workflow_blob": "60892fe2347e530d42f0e16afefab5f915c067a4",
+    "sha256": "7e91e12e0addbe92f673c1de8793d5e87a98c013af269453ad51d53338c350a2",
+    "current_workflow_sha256": "41996506954834119ad17341b505c004d85635c189392e8ced0fc2a4a6e27824"
+  },
+  "historical_sources": [
+    {
+      "path": "scripts/upstream_contracts.py",
+      "baseline_git_blob": "5501042cb507cf082b9a2654558e5488e711f6c4",
+      "active_invocation": false,
+      "disposition": "Retained byte-identically as frozen migration evidence until separately reviewed F01/G08 source retirement."
+    },
+    {
+      "path": "tests/test_upstream_contracts.py",
+      "baseline_git_blob": "38890808971958c1322b502a885d71f5db5d8d64",
+      "active_invocation": false,
+      "disposition": "Retained byte-identically as historical Python adapter regression evidence until separately reviewed source retirement."
+    }
+  ],
+  "fixture_sources": [
+    {
+      "path": "tests/fixtures/upstream_contracts/npm.json",
+      "baseline_git_blob": "76fb9a81b01db87cd001434ef6b93010bb10dbfc"
+    },
+    {
+      "path": "tests/fixtures/upstream_contracts/openalex.json",
+      "baseline_git_blob": "5146f17ccddc24d11d1498f490a06919f049d3e4"
+    },
+    {
+      "path": "tests/fixtures/upstream_contracts/crates.json",
+      "baseline_git_blob": "1409df4adc780242212ea65f17f5abf75d76b878"
+    }
+  ],
+  "former_invocation": {
+    "workflow": ".github/workflows/upstream-contracts.yml",
+    "job": "live-contracts",
+    "command": "python -m scripts.upstream_contracts --output upstream-report.json",
+    "behavior": "Any manual dispatch invoked live probes; the weekly schedule was gated by LIVE_UPSTREAM_CONTRACTS=true."
+  },
+  "current_invocation": {
+    "workflow": ".github/workflows/upstream-contracts.yml",
+    "job": "live-contracts",
+    "command": "cargo xtask upstream-contracts --live --output upstream-report.json",
+    "manual_authorization": "workflow_dispatch input run_live must be true; it defaults to false",
+    "scheduled_authorization": "schedule event and repository variable LIVE_UPSTREAM_CONTRACTS=true",
+    "toolchain": "rust-toolchain.toml pins Rust 1.99.0"
+  },
+  "local_commands": {
+    "offline_default": "cargo xtask upstream-contracts --output PATH",
+    "explicit_live": "cargo xtask upstream-contracts --live --output PATH",
+    "capture": "--capture-dir PATH; outputs label live capture or offline fixture replay provenance"
+  },
+  "preserved_contract": [
+    "The three fixed probes remain npm/typescript, OpenAlex/Attention Is All You Need, and crates.io/serde, requesting three results each.",
+    "Live mode permits only one HTTPS GET per exact host, path, and query set; default port 443; no URL credentials, fragment, request body, auth/cookie headers, proxy, retry, redirect, or content compression.",
+    "Each probe has a ten-second asynchronous deadline, identity-only response encoding, a 1 MiB response cap enforced before or during streaming, and a final-response URL check.",
+    "Reports distinguish passed, contract_failure, and upstream_unavailable; exit codes are 0, 1, and 2, with contract_failure taking precedence.",
+    "Reports include adapter status, result count, latency, HTTP status, adapter attempts, live wire requests, fixed bounds, and relevance_evaluated=false.",
+    "Captures are limited to successful probes and allowlisted public parser fields for the first three records; headers and personal author/publisher identities are omitted.",
+    "Adapter and transport diagnostics are replaced with fixed safe reason tokens; raw provider response bodies are never written to reports."
+  ],
+  "intentional_differences": [
+    "The Rust command defaults to offline fixture replay and reports mode=offline_fixture with network_requests=0; live network access requires an explicit --live flag. The former Python command performed live probes when invoked.",
+    "The report adds mode and network_requests fields while retaining the prior report facts and exit semantics.",
+    "Offline capture-dir outputs are marked offline_fixture_replay, retain the original fixture path and capture time, and use generated_at; captured_at is reserved for live probes.",
+    "OpenAlex uses its native Rust adapter user agent. Identical request headers are not claimed."
+  ],
+  "verification": {
+    "focused_test_command": "cargo test --locked --offline -p xtask o02_upstream_contracts -- --nocapture",
+    "focused_test_evidence": "run01/evidence/focused-upstream-tests-v6.log",
+    "focused_test_exit_code": 0,
+    "focused_test_count": 16,
+    "format_command": "cargo fmt --all -- --check",
+    "format_exit_code": 0,
+    "clippy_command": "cargo clippy --locked --offline -p xtask --all-targets -- -D warnings",
+    "clippy_evidence": "run01/evidence/clippy-v4.log",
+    "clippy_exit_code": 0,
+    "offline_cli_command": "cargo xtask upstream-contracts --output run01/evidence/offline-report.json",
+    "offline_cli_exit_code": 0,
+    "offline_report_sha256": "991ca250736fdbd17dfdd775963d88ad3c007b650c09484a37a5a662dc59c9d6",
+    "offline_report_observation": "All three actual Rust adapters returned three usable results from committed fixtures, one adapter request each, zero network requests.",
+    "live_provider_calls": "none",
+    "workflow_dispatch_or_schedule": "not run",
+    "source_hygiene_command": "cargo xtask ci-helper source-hygiene",
+    "source_hygiene_exit_code": 0,
+    "o06_command": "cargo xtask check O06 --output run01/evidence/O06-final.json",
+    "o06_evidence": "run01/evidence/O06-final.json",
+    "o06_status": "passed",
+    "o06_adversarial_test_count": 15,
+    "o06_exit_code": 0
+  },
+  "limitations_and_remaining_scope": [
+    "The async ten-second deadline cancels send and body futures; synchronous adapter parsing is bounded by the 1 MiB response cap but cannot be preempted mid-poll by Tokio's cooperative timeout.",
+    "No hosted GitHub Actions run of the modified workflow was performed in this local slice; live providers and manual/scheduled workflow dispatch were not invoked.",
+    "Issue #919 remains open: its image-promotion workflow still uses an active Python writer; inline release helpers and remaining operational acceptance/ownership work are outside this upstream-probe slice; cargo xtask check O02 is not implemented here.",
+    "Historical Python helpers/tests/inventories remain frozen until their separate F01/G08 retirement acceptance; the backend and image runtime are not yet Python-free.",
+    "No SearXNG, portal, cache, authorization, ranking, or search API runtime behavior changed; this CI/tooling transition has no portal impact."
+  ],
+  "storage_ledger": "/Volumes/tank01/magnus/rust-builds/slopsearx/storage-ledger/issue919-upstream-contracts-native-20261114.json",
+  "gate_catalog": {
+    "path": "docs/rust-rewrite/ci/gates.json",
+    "key": "upstream-contracts.yml:live-contracts",
+    "owner": "O02",
+    "state": "additive",
+    "actual_inventory_sha256": "15e3676d2a3b9d40171aa9e936c405e9f2895c1052c26057f137c66a8a5fa2dd",
+    "o06_check": "passed"
+  },
+  "source_custody_successor": {
+    "capsule": "docs/rust-rewrite/o02/UPSTREAM_CONTRACTS_SOURCE_SUCCESSOR.json",
+    "sha256": "7c2a0024e2d1d3abe37ab6e49337e9fcfd989c406c3bf154c6a7b44e29ed534b",
+    "proof_leaf": "docs/rust-rewrite/o02/upstream-contracts-source-successor-v1.rs",
+    "baseline": "661af83a1b95a3e7873cfda99c05d0fb6a02fe0a",
+    "scope": "Exact two-path main/lock O02 outer source admission before unchanged RMCP, T03, health, CLI and W07 historical frames; current integrated qualification remains required.",
+    "catalog_capsule": {
+      "path": "docs/rust-rewrite/o02/UPSTREAM_CONTRACTS_GATES_SUCCESSOR.json",
+      "sha256": "007d933a6e2d4b758a83078d35c4650035ff1a8433ccb2ac5519fa4301a2f58a",
+      "scope": "Seven exact spans only in upstream-contracts.yml:live-contracts; authenticates newest physical gates.json before unchanged DNSpython historical inverse."
+    },
+    "physical_read": "Exact-size no-follow open; descriptor read bounded to expected size plus one; before/opened/after/path metadata and mode checks; no symlink ancestors. Unix device/inode/timestamps and0644; Windows stage-zero100644, no reparse points, deny concurrent write/delete sharing."
+  },
+  "repair_validation": {
+    "applied_to_commit": "dab31a06fce89a7c522da556ae05f074bdb80773",
+    "source_identity": {
+      "path": "crates/xtask/src/o02_upstream_contracts.rs",
+      "git_blob": "828e58db7796b7d27dd8a503af50a85cc6a9f17c",
+      "sha256": "7e91e12e0addbe92f673c1de8793d5e87a98c013af269453ad51d53338c350a2"
+    },
+    "review_findings": [
+      "Offline fixture replay captures now identify mode=offline_fixture_replay, use generated_at, and preserve fixture path and original capture time; captured_at is reserved for live captures.",
+      "Atomic-write failure cleanup removes a temporary path only after this invocation successfully created it; a regression test confirms a pre-existing temporary file is preserved."
+    ],
+    "focused_test_command": "cargo test --locked --offline -p xtask o02_upstream_contracts -- --nocapture --test-threads=1",
+    "focused_test_evidence": "run02/logs/focused-tests-pinned.log",
+    "focused_test_exit_code": 0,
+    "focused_test_count": 18,
+    "format_command": "cargo fmt --all -- --check",
+    "format_toolchain": "Rust 1.99.0",
+    "format_exit_code": 0,
+    "clippy_command": "cargo clippy --locked --offline -p xtask --all-targets -- -D warnings",
+    "clippy_evidence": "run02/logs/clippy.log",
+    "clippy_exit_code": 0,
+    "offline_cli_command": "cargo xtask upstream-contracts --output run02/evidence/offline-report.json --capture-dir run02/evidence/captures",
+    "offline_cli_evidence": "run02/evidence/offline-report.json",
+    "offline_cli_exit_code": 0,
+    "offline_probe_count": 3,
+    "network_requests": 0,
+    "live_provider_calls": "none",
+    "precommit_all_files": {
+      "command": "pre-commit run --all-files",
+      "evidence": "run02/logs/pre-commit.log",
+      "exit_code": 1,
+      "outcome": "All hooks passed except ruff-format, which changed one unrelated assertion's wrapping in tests/test_coverage_saved_method_materials.py, and import-linter, whose configured .venv/bin/lint-imports executable was absent. The unrelated formatter-only diff was restored to HEAD. The changed-file pre-commit run and import-linter both passed separately."
+    },
+    "precommit_changed_files_command": "pre-commit run --files crates/xtask/src/o02_upstream_contracts.rs docs/UPSTREAM_CONTRACTS.md docs/rust-rewrite/o02/UPSTREAM_CONTRACTS_TRANSITION.json",
+    "precommit_changed_files_evidence": "run02/logs/pre-commit-changed-files.log",
+    "precommit_changed_files_exit_code": 0,
+    "import_linter_command": "lint-imports (import-linter==2.15)",
+    "import_linter_evidence": "run02/logs/import-linter.log",
+    "import_linter_exit_code": 0,
+    "independent_review": "Both findings are closed; no remaining code findings."
+  }
+}

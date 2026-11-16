@@ -1,0 +1,32 @@
+"""Temporary offline O01 metric state oracle, synthetic scalars only; retire G08."""
+import hashlib
+import json
+from pathlib import Path
+import socket
+import sys
+ROOT = Path('/Volumes/tank01/magnus/worktrees/slopsearx-o01')
+source = ROOT / 'slopsearx/metrics.py'
+pin = '2df238e07c692be05f73bdc3b1e7896dbae576df1d5128a445e6a9fe196c0edc'
+if hashlib.sha256(source.read_bytes()).hexdigest() != pin:
+    raise RuntimeError('original metrics source drift')
+def forbidden(*args, **kwargs):
+    raise RuntimeError('offline oracle forbids network')
+socket.socket.connect = forbidden
+socket.create_connection = forbidden
+sys.path.insert(0, str(ROOT))
+from slopsearx import metrics
+metrics.saved_event_reads._values.clear()
+metrics.saved_event_retention_gaps._values.clear()
+metrics.saved_event_backlog_age._values.clear()
+rows = []
+for outcome, age in [('gap', 42.0), ('delivered', None), ('gap', None)]:
+    metrics.record_saved_event_read(outcome, oldest_age_seconds=age)
+    rows.append({'id': 'saved.' + str(len(rows)), 'outcome': outcome, 'age': age, 'backlog': metrics.saved_event_backlog_age._values[''], 'retention_gaps': metrics.saved_event_retention_gaps._values['']})
+metrics.reconcile_workflow('saved_search', queued=1, running=1, active_leases=1, oldest_claimable_age_seconds=42.0)
+metrics.reconcile_workflow('saved_search', queued=0, running=0, active_leases=0, oldest_claimable_age_seconds=7.0)
+if 'saved_search' in metrics._workflow_oldest_started:
+    raise RuntimeError('unexpected retained workflow refresh state')
+rows.append({'id': 'workflow.zero_positive_age', 'queued': 0, 'oldest': metrics.workflow_oldest_claimable_age._values['workflow="saved_search"'], 'refresh_state': False})
+if [r['backlog'] for r in rows[:3]] != [42.0, 42.0, 0.0] or rows[-1]['oldest'] != 7.0:
+    raise RuntimeError('unexpected original metric state')
+print(json.dumps({'source_sha256': pin, 'scope': 'actual original helper state, no service/network', 'cases': rows}, indent=2, sort_keys=True))

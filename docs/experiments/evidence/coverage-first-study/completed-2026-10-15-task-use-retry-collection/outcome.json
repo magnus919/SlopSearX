@@ -1,0 +1,93 @@
+{
+  "schema": "coverage-public-collection-outcome/1",
+  "stage_kind": "development",
+  "stage_uuid": "ed73afd5-5c15-4da5-8c00-5132e20ff21e",
+  "source_revision": "943f0b7ef670b3ffe4a3abb03b2aee54570e6a0c",
+  "registration_merge_commit": "6aa33a16baf049dd9c0ec1fa22c8e610f10beef0",
+  "protocol_sha256": "9278fa98aa0de47fcb9a83a0f7067ef002671012e7995a6907b144ce66ecd37f",
+  "cohorts_sha256": "4ae302eaebd54d9fe2c3bbd49d243811d07ffd2135c207698db1742644355b72",
+  "status": "terminal-incomplete",
+  "terminal_reason": "frozen_pool_input-failed",
+  "collection_status": "inconclusive",
+  "collection_started_utc": "2026-10-15T18:25:45.909626Z",
+  "collection_completed_utc": "2026-10-15T18:27:20.361915Z",
+  "collection_elapsed_seconds": 94.452289,
+  "stage_elapsed_seconds": 96.36067565099802,
+  "physical_requests": 30,
+  "responses_by_engine_status": [
+    {"engine": "arxiv", "http_status": 200, "count": 5},
+    {"engine": "github", "http_status": 200, "count": 11},
+    {"engine": "openalex", "http_status": 200, "count": 7},
+    {"engine": "wikipedia", "http_status": 200, "count": 7}
+  ],
+  "combined_development_attempts": {
+    "prior_attempt_requests": 26,
+    "replacement_attempt_requests": 30,
+    "total_requests": 56,
+    "registered_combined_ceiling_including_conditional_confirmation": 107,
+    "conditional_confirmation_requests_used": 0,
+    "replacement_development_allowance_exhausted": true
+  },
+  "operations": [
+    {"operation_id": "D27-R01", "status": "complete", "card_count": 33, "pool_status": "complete", "failure_reasons": []},
+    {"operation_id": "D27-R02", "status": "complete", "card_count": 20, "pool_status": "complete", "failure_reasons": []},
+    {"operation_id": "D27-R03", "status": "complete", "card_count": 8, "pool_status": "complete", "failure_reasons": []},
+    {"operation_id": "D27-R04", "status": "complete", "card_count": 20, "pool_status": "complete", "failure_reasons": []},
+    {"operation_id": "D27-R05", "status": "inconclusive", "card_count": 40, "required_card_count": "41-80", "pool_status": "inconclusive", "failure_reasons": ["natural_pool_band_mismatch"], "engine_results": {"github": 20, "openalex": 20, "arxiv": 0, "wikipedia": 0}},
+    {"operation_id": "D27-R06", "status": "complete", "card_count": 45, "pool_status": "complete", "failure_reasons": []},
+    {"operation_id": "D27-R07", "status": "complete", "card_count": 61, "pool_status": "complete", "failure_reasons": []},
+    {"operation_id": "D27-R08", "status": "complete", "card_count": 60, "pool_status": "complete", "failure_reasons": []},
+    {"operation_id": "D27-N01", "status": "complete", "card_count": 20, "pool_status": "complete", "failure_reasons": []},
+    {"operation_id": "D27-N02", "status": "complete", "card_count": 20, "pool_status": "complete", "failure_reasons": []},
+    {"operation_id": "D27-N03", "status": "inconclusive", "card_count": 20, "pool_status": "inconclusive", "failure_reasons": ["exact_target_not_rank1"]},
+    {"operation_id": "D27-N04", "status": "complete", "card_count": 20, "pool_status": "complete", "failure_reasons": []},
+    {"operation_id": "D27-N05", "status": "complete", "card_count": 20, "pool_status": "complete", "failure_reasons": []}
+  ],
+  "phases": [
+    {"phase": "frozen_pool_input", "status": "terminal-failure"},
+    {"phase": "pipeline_inputs", "status": "not-invoked"},
+    {"phase": "late_preflight", "status": "not-invoked"},
+    {"phase": "capture", "status": "not-invoked"},
+    {"phase": "reference_packet_preparation", "status": "not-invoked"},
+    {"phase": "reference_grading", "status": "not-invoked"},
+    {"phase": "reference_grade_closure", "status": "not-invoked"},
+    {"phase": "selector", "status": "not-invoked"},
+    {"phase": "paired_answer_inputs", "status": "not-invoked"},
+    {"phase": "answerer", "status": "not-invoked"},
+    {"phase": "answerer_dispatch_verification", "status": "not-invoked"},
+    {"phase": "answer_packet_preparation", "status": "not-invoked"},
+    {"phase": "answer_grading", "status": "not-invoked"},
+    {"phase": "answer_grade_closure", "status": "not-invoked"},
+    {"phase": "resource_evidence_collection", "status": "not-invoked"},
+    {"phase": "gate_calculation", "status": "not-invoked"}
+  ],
+  "brave_requests": 0,
+  "source_capture_calls": 0,
+  "reference_grades": 0,
+  "jev_calls": 0,
+  "answer_calls": 0,
+  "answer_grades": 0,
+  "confirmation_invocations": 0,
+  "retry": false,
+  "quality_result": "not_measured",
+  "product_authorized": false,
+  "navigation_failure": {
+    "operation_id": "D27-N03",
+    "query": "backstage platform",
+    "expected_url": "https://github.com/backstage/backstage",
+    "returned_card_count": 20,
+    "expected_url_present": false,
+    "interpretation": "The collector's exact_target_not_rank1 failure occurred because the expected URL was absent from the pool.",
+    "stage": "input collection before W0 or candidate ranking"
+  },
+  "retention": {
+    "private_raw_archive_sha256": "65044c6b02007d8c21e0ab4c7ac21ad0b601c976acae522268b138ec4cea52dd",
+    "private_raw_archive_bytes": 2713600,
+    "raw_bodies_and_operational_metadata_published": false
+  },
+  "identity_disposition": {
+    "replacement_development_and_confirmation_pairs_retired": true,
+    "retired_identity_count": 129,
+    "retired_identity_ledger_sha256": "483adf13af25e93bae0749ef3130dd599e0d2a1bfb0b58329254aa40e74fdba0"
+  }
+}

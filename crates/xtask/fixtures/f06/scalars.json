@@ -1,0 +1,1577 @@
+{
+  "schema_version": 1,
+  "python": "3.14.7",
+  "baseline": "7cc420f7ffb61127750e77bf6130e225925f9186",
+  "source": "slopsearx/config.py",
+  "source_blob": "761db0521d74ec6d955aa8a84fd92a4a62533c43",
+  "cases": [
+    {
+      "name": "defaults",
+      "yaml": "",
+      "env": [],
+      "expected": {
+        "engines": {
+          "brave": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 5000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 20
+              },
+              "rate_limit": {
+                "kind": "int",
+                "value": 15
+              },
+              "weight": {
+                "kind": "float",
+                "value": 1.0
+              }
+            }
+          },
+          "arxiv": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 5
+              },
+              "rate_limit": {
+                "kind": "float",
+                "value": 0.33
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.8
+              }
+            }
+          },
+          "duckduckgo": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 10
+              },
+              "rate_limit": {
+                "kind": "NoneType",
+                "value": null
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.6
+              }
+            }
+          }
+        },
+        "ttl": 300,
+        "default_engines": [
+          "brave",
+          "wikipedia"
+        ],
+        "formats": [
+          "html",
+          "csv",
+          "json",
+          "rss"
+        ],
+        "log_level": "INFO"
+      }
+    },
+    {
+      "name": "integer-grammar",
+      "yaml": "",
+      "env": [
+        [
+          "ENGINE_BRAVE_MAX_RESULTS",
+          " +\u0661_\u0662 "
+        ]
+      ],
+      "expected": {
+        "engines": {
+          "brave": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 5000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 12
+              },
+              "rate_limit": {
+                "kind": "int",
+                "value": 15
+              },
+              "weight": {
+                "kind": "float",
+                "value": 1.0
+              }
+            }
+          },
+          "arxiv": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 5
+              },
+              "rate_limit": {
+                "kind": "float",
+                "value": 0.33
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.8
+              }
+            }
+          },
+          "duckduckgo": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 10
+              },
+              "rate_limit": {
+                "kind": "NoneType",
+                "value": null
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.6
+              }
+            }
+          }
+        },
+        "ttl": 300,
+        "default_engines": [
+          "brave",
+          "wikipedia"
+        ],
+        "formats": [
+          "html",
+          "csv",
+          "json",
+          "rss"
+        ],
+        "log_level": "INFO"
+      }
+    },
+    {
+      "name": "unicode16-digits",
+      "yaml": "",
+      "env": [
+        [
+          "ENGINE_BRAVE_MAX_RESULTS",
+          "\ud803\udd41\ud803\udd42"
+        ]
+      ],
+      "expected": {
+        "engines": {
+          "brave": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 5000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 12
+              },
+              "rate_limit": {
+                "kind": "int",
+                "value": 15
+              },
+              "weight": {
+                "kind": "float",
+                "value": 1.0
+              }
+            }
+          },
+          "arxiv": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 5
+              },
+              "rate_limit": {
+                "kind": "float",
+                "value": 0.33
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.8
+              }
+            }
+          },
+          "duckduckgo": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 10
+              },
+              "rate_limit": {
+                "kind": "NoneType",
+                "value": null
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.6
+              }
+            }
+          }
+        },
+        "ttl": 300,
+        "default_engines": [
+          "brave",
+          "wikipedia"
+        ],
+        "formats": [
+          "html",
+          "csv",
+          "json",
+          "rss"
+        ],
+        "log_level": "INFO"
+      }
+    },
+    {
+      "name": "float-grammar",
+      "yaml": "",
+      "env": [
+        [
+          "ENGINE_BRAVE_WEIGHT",
+          " +\u0661_\u0662.\u0665e+\u0661 "
+        ]
+      ],
+      "expected": {
+        "engines": {
+          "brave": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 5000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 20
+              },
+              "rate_limit": {
+                "kind": "int",
+                "value": 15
+              },
+              "weight": {
+                "kind": "float",
+                "value": 125.0
+              }
+            }
+          },
+          "arxiv": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 5
+              },
+              "rate_limit": {
+                "kind": "float",
+                "value": 0.33
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.8
+              }
+            }
+          },
+          "duckduckgo": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 10
+              },
+              "rate_limit": {
+                "kind": "NoneType",
+                "value": null
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.6
+              }
+            }
+          }
+        },
+        "ttl": 300,
+        "default_engines": [
+          "brave",
+          "wikipedia"
+        ],
+        "formats": [
+          "html",
+          "csv",
+          "json",
+          "rss"
+        ],
+        "log_level": "INFO"
+      }
+    },
+    {
+      "name": "float-rate",
+      "yaml": "",
+      "env": [
+        [
+          "ENGINE_ARXIV_RATE_LIMIT",
+          " .\uff15 "
+        ]
+      ],
+      "expected": {
+        "engines": {
+          "brave": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 5000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 20
+              },
+              "rate_limit": {
+                "kind": "int",
+                "value": 15
+              },
+              "weight": {
+                "kind": "float",
+                "value": 1.0
+              }
+            }
+          },
+          "arxiv": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 5
+              },
+              "rate_limit": {
+                "kind": "float",
+                "value": 0.5
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.8
+              }
+            }
+          },
+          "duckduckgo": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 10
+              },
+              "rate_limit": {
+                "kind": "NoneType",
+                "value": null
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.6
+              }
+            }
+          }
+        },
+        "ttl": 300,
+        "default_engines": [
+          "brave",
+          "wikipedia"
+        ],
+        "formats": [
+          "html",
+          "csv",
+          "json",
+          "rss"
+        ],
+        "log_level": "INFO"
+      }
+    },
+    {
+      "name": "integer-rate-rejects-fraction",
+      "yaml": "",
+      "env": [
+        [
+          "ENGINE_BRAVE_RATE_LIMIT",
+          "1.25"
+        ]
+      ],
+      "expected": {
+        "error": "invalid"
+      }
+    },
+    {
+      "name": "none-rate-text",
+      "yaml": "",
+      "env": [
+        [
+          "ENGINE_DUCKDUCKGO_RATE_LIMIT",
+          "1.25"
+        ]
+      ],
+      "expected": {
+        "engines": {
+          "brave": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 5000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 20
+              },
+              "rate_limit": {
+                "kind": "int",
+                "value": 15
+              },
+              "weight": {
+                "kind": "float",
+                "value": 1.0
+              }
+            }
+          },
+          "arxiv": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 5
+              },
+              "rate_limit": {
+                "kind": "float",
+                "value": 0.33
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.8
+              }
+            }
+          },
+          "duckduckgo": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 10
+              },
+              "rate_limit": {
+                "kind": "str",
+                "value": "1.25"
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.6
+              }
+            }
+          }
+        },
+        "ttl": 300,
+        "default_engines": [
+          "brave",
+          "wikipedia"
+        ],
+        "formats": [
+          "html",
+          "csv",
+          "json",
+          "rss"
+        ],
+        "log_level": "INFO"
+      }
+    },
+    {
+      "name": "none-rate-unvalidated",
+      "yaml": "",
+      "env": [
+        [
+          "ENGINE_DUCKDUCKGO_RATE_LIMIT",
+          "not-a-number"
+        ]
+      ],
+      "expected": {
+        "engines": {
+          "brave": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 5000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 20
+              },
+              "rate_limit": {
+                "kind": "int",
+                "value": 15
+              },
+              "weight": {
+                "kind": "float",
+                "value": 1.0
+              }
+            }
+          },
+          "arxiv": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 5
+              },
+              "rate_limit": {
+                "kind": "float",
+                "value": 0.33
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.8
+              }
+            }
+          },
+          "duckduckgo": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 10
+              },
+              "rate_limit": {
+                "kind": "str",
+                "value": "not-a-number"
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.6
+              }
+            }
+          }
+        },
+        "ttl": 300,
+        "default_engines": [
+          "brave",
+          "wikipedia"
+        ],
+        "formats": [
+          "html",
+          "csv",
+          "json",
+          "rss"
+        ],
+        "log_level": "INFO"
+      }
+    },
+    {
+      "name": "yaml-integer-origin",
+      "yaml": "engines:\n  brave:\n    weight: 1\n",
+      "env": [
+        [
+          "ENGINE_BRAVE_WEIGHT",
+          "1.25"
+        ]
+      ],
+      "expected": {
+        "error": "invalid"
+      }
+    },
+    {
+      "name": "yaml-float-origin",
+      "yaml": "engines:\n  brave:\n    max_results: 1.0\n",
+      "env": [
+        [
+          "ENGINE_BRAVE_MAX_RESULTS",
+          "1.25"
+        ]
+      ],
+      "expected": {
+        "engines": {
+          "brave": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 5000
+              },
+              "max_results": {
+                "kind": "float",
+                "value": 1.25
+              },
+              "rate_limit": {
+                "kind": "int",
+                "value": 15
+              },
+              "weight": {
+                "kind": "float",
+                "value": 1.0
+              }
+            }
+          },
+          "arxiv": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 5
+              },
+              "rate_limit": {
+                "kind": "float",
+                "value": 0.33
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.8
+              }
+            }
+          },
+          "duckduckgo": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 10
+              },
+              "rate_limit": {
+                "kind": "NoneType",
+                "value": null
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.6
+              }
+            }
+          }
+        },
+        "ttl": 300,
+        "default_engines": [
+          "brave",
+          "wikipedia"
+        ],
+        "formats": [
+          "html",
+          "csv",
+          "json",
+          "rss"
+        ],
+        "log_level": "INFO"
+      }
+    },
+    {
+      "name": "yaml-text-origin",
+      "yaml": "engines:\n  brave:\n    max_results: file-text\n",
+      "env": [
+        [
+          "ENGINE_BRAVE_MAX_RESULTS",
+          "next-text"
+        ]
+      ],
+      "expected": {
+        "engines": {
+          "brave": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 5000
+              },
+              "max_results": {
+                "kind": "str",
+                "value": "next-text"
+              },
+              "rate_limit": {
+                "kind": "int",
+                "value": 15
+              },
+              "weight": {
+                "kind": "float",
+                "value": 1.0
+              }
+            }
+          },
+          "arxiv": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 5
+              },
+              "rate_limit": {
+                "kind": "float",
+                "value": 0.33
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.8
+              }
+            }
+          },
+          "duckduckgo": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 10
+              },
+              "rate_limit": {
+                "kind": "NoneType",
+                "value": null
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.6
+              }
+            }
+          }
+        },
+        "ttl": 300,
+        "default_engines": [
+          "brave",
+          "wikipedia"
+        ],
+        "formats": [
+          "html",
+          "csv",
+          "json",
+          "rss"
+        ],
+        "log_level": "INFO"
+      }
+    },
+    {
+      "name": "yaml-bool-origin",
+      "yaml": "engines:\n  brave:\n    weight: false\n",
+      "env": [
+        [
+          "ENGINE_BRAVE_WEIGHT",
+          " true "
+        ]
+      ],
+      "expected": {
+        "engines": {
+          "brave": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 5000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 20
+              },
+              "rate_limit": {
+                "kind": "int",
+                "value": 15
+              },
+              "weight": {
+                "kind": "bool",
+                "value": false
+              }
+            }
+          },
+          "arxiv": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 5
+              },
+              "rate_limit": {
+                "kind": "float",
+                "value": 0.33
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.8
+              }
+            }
+          },
+          "duckduckgo": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 10
+              },
+              "rate_limit": {
+                "kind": "NoneType",
+                "value": null
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.6
+              }
+            }
+          }
+        },
+        "ttl": 300,
+        "default_engines": [
+          "brave",
+          "wikipedia"
+        ],
+        "formats": [
+          "html",
+          "csv",
+          "json",
+          "rss"
+        ],
+        "log_level": "INFO"
+      }
+    },
+    {
+      "name": "search-case",
+      "yaml": "",
+      "env": [
+        [
+          "SEARCH_default_engines",
+          " arxiv , wikipedia "
+        ],
+        [
+          "SEARCH_Log_Level",
+          "debug"
+        ],
+        [
+          "SEARCH_cache_ttl_seconds",
+          " +\u0664_\u0665 "
+        ],
+        [
+          "SEARCH_Formats",
+          " JSON, HTML "
+        ]
+      ],
+      "expected": {
+        "engines": {
+          "brave": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 5000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 20
+              },
+              "rate_limit": {
+                "kind": "int",
+                "value": 15
+              },
+              "weight": {
+                "kind": "float",
+                "value": 1.0
+              }
+            }
+          },
+          "arxiv": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 5
+              },
+              "rate_limit": {
+                "kind": "float",
+                "value": 0.33
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.8
+              }
+            }
+          },
+          "duckduckgo": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 10
+              },
+              "rate_limit": {
+                "kind": "NoneType",
+                "value": null
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.6
+              }
+            }
+          }
+        },
+        "ttl": 45,
+        "default_engines": [
+          "arxiv",
+          "wikipedia"
+        ],
+        "formats": [
+          "json",
+          "html"
+        ],
+        "log_level": "DEBUG"
+      }
+    },
+    {
+      "name": "search-nonaliases",
+      "yaml": "",
+      "env": [
+        [
+          "search_FORMATS",
+          "yaml"
+        ],
+        [
+          "SEARCH_FORMAT\u017f",
+          "yaml"
+        ]
+      ],
+      "expected": {
+        "engines": {
+          "brave": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 5000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 20
+              },
+              "rate_limit": {
+                "kind": "int",
+                "value": 15
+              },
+              "weight": {
+                "kind": "float",
+                "value": 1.0
+              }
+            }
+          },
+          "arxiv": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 5
+              },
+              "rate_limit": {
+                "kind": "float",
+                "value": 0.33
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.8
+              }
+            }
+          },
+          "duckduckgo": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 10
+              },
+              "rate_limit": {
+                "kind": "NoneType",
+                "value": null
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.6
+              }
+            }
+          }
+        },
+        "ttl": 300,
+        "default_engines": [
+          "brave",
+          "wikipedia"
+        ],
+        "formats": [
+          "html",
+          "csv",
+          "json",
+          "rss"
+        ],
+        "log_level": "INFO"
+      }
+    },
+    {
+      "name": "search-alias-last-valid",
+      "yaml": "",
+      "env": [
+        [
+          "SEARCH_CACHE_TTL_SECONDS",
+          "invalid"
+        ],
+        [
+          "SEARCH_cache_ttl_seconds",
+          "45"
+        ]
+      ],
+      "expected": {
+        "engines": {
+          "brave": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 5000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 20
+              },
+              "rate_limit": {
+                "kind": "int",
+                "value": 15
+              },
+              "weight": {
+                "kind": "float",
+                "value": 1.0
+              }
+            }
+          },
+          "arxiv": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 5
+              },
+              "rate_limit": {
+                "kind": "float",
+                "value": 0.33
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.8
+              }
+            }
+          },
+          "duckduckgo": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 10
+              },
+              "rate_limit": {
+                "kind": "NoneType",
+                "value": null
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.6
+              }
+            }
+          }
+        },
+        "ttl": 45,
+        "default_engines": [
+          "brave",
+          "wikipedia"
+        ],
+        "formats": [
+          "html",
+          "csv",
+          "json",
+          "rss"
+        ],
+        "log_level": "INFO"
+      }
+    },
+    {
+      "name": "search-alias-last-invalid",
+      "yaml": "",
+      "env": [
+        [
+          "SEARCH_cache_ttl_seconds",
+          "45"
+        ],
+        [
+          "SEARCH_CACHE_TTL_SECONDS",
+          "invalid"
+        ]
+      ],
+      "expected": {
+        "error": "invalid"
+      }
+    },
+    {
+      "name": "engine-alias-last-valid",
+      "yaml": "",
+      "env": [
+        [
+          "ENGINE_BRAVE_MAX_RESULTS",
+          "invalid"
+        ],
+        [
+          "ENGINE_brave_max_results",
+          "3"
+        ]
+      ],
+      "expected": {
+        "engines": {
+          "brave": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 5000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 3
+              },
+              "rate_limit": {
+                "kind": "int",
+                "value": 15
+              },
+              "weight": {
+                "kind": "float",
+                "value": 1.0
+              }
+            }
+          },
+          "arxiv": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 5
+              },
+              "rate_limit": {
+                "kind": "float",
+                "value": 0.33
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.8
+              }
+            }
+          },
+          "duckduckgo": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 10
+              },
+              "rate_limit": {
+                "kind": "NoneType",
+                "value": null
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.6
+              }
+            }
+          }
+        },
+        "ttl": 300,
+        "default_engines": [
+          "brave",
+          "wikipedia"
+        ],
+        "formats": [
+          "html",
+          "csv",
+          "json",
+          "rss"
+        ],
+        "log_level": "INFO"
+      }
+    },
+    {
+      "name": "strip-distinction",
+      "yaml": "",
+      "env": [
+        [
+          "SEARCH_DEFAULT_ENGINES",
+          "\u001cbrave\u001f, ,wikipedia\u001d"
+        ],
+        [
+          "ENGINE_BRAVE_CATEGORIES",
+          "\u001cscience\u001f, , news"
+        ],
+        [
+          "SEARCH_FORMATS",
+          "\u001cJSON\u001f, , HTML"
+        ]
+      ],
+      "expected": {
+        "engines": {
+          "brave": {
+            "enabled": true,
+            "categories": [
+              "science",
+              "news"
+            ],
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 5000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 20
+              },
+              "rate_limit": {
+                "kind": "int",
+                "value": 15
+              },
+              "weight": {
+                "kind": "float",
+                "value": 1.0
+              }
+            }
+          },
+          "arxiv": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 5
+              },
+              "rate_limit": {
+                "kind": "float",
+                "value": 0.33
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.8
+              }
+            }
+          },
+          "duckduckgo": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 10
+              },
+              "rate_limit": {
+                "kind": "NoneType",
+                "value": null
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.6
+              }
+            }
+          }
+        },
+        "ttl": 300,
+        "default_engines": [
+          "brave",
+          "",
+          "wikipedia"
+        ],
+        "formats": [
+          "json",
+          "html"
+        ],
+        "log_level": "INFO"
+      }
+    },
+    {
+      "name": "numeric-control-not-strip",
+      "yaml": "",
+      "env": [
+        [
+          "ENGINE_BRAVE_MAX_RESULTS",
+          "\u001c2"
+        ]
+      ],
+      "expected": {
+        "error": "invalid"
+      }
+    },
+    {
+      "name": "bool-not-strip",
+      "yaml": "",
+      "env": [
+        [
+          "ENGINE_BRAVE_ENABLED",
+          " true "
+        ]
+      ],
+      "expected": {
+        "engines": {
+          "brave": {
+            "enabled": false,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 5000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 20
+              },
+              "rate_limit": {
+                "kind": "int",
+                "value": 15
+              },
+              "weight": {
+                "kind": "float",
+                "value": 1.0
+              }
+            }
+          },
+          "arxiv": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 5
+              },
+              "rate_limit": {
+                "kind": "float",
+                "value": 0.33
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.8
+              }
+            }
+          },
+          "duckduckgo": {
+            "enabled": true,
+            "categories": null,
+            "scalars": {
+              "timeout_ms": {
+                "kind": "int",
+                "value": 10000
+              },
+              "max_results": {
+                "kind": "int",
+                "value": 10
+              },
+              "rate_limit": {
+                "kind": "NoneType",
+                "value": null
+              },
+              "weight": {
+                "kind": "float",
+                "value": 0.6
+              }
+            }
+          }
+        },
+        "ttl": 300,
+        "default_engines": [
+          "brave",
+          "wikipedia"
+        ],
+        "formats": [
+          "html",
+          "csv",
+          "json",
+          "rss"
+        ],
+        "log_level": "INFO"
+      }
+    },
+    {
+      "name": "ttl-positive",
+      "yaml": "",
+      "env": [
+        [
+          "SEARCH_CACHE_TTL_SECONDS",
+          "0"
+        ]
+      ],
+      "expected": {
+        "error": "invalid"
+      }
+    }
+  ]
+}

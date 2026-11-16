@@ -1,0 +1,22 @@
+
+running 1 test
+test adapters::clinicaltrials::resource_tests::pubchem_second_request_renews_500ms_budget_on_the_same_manual_owner ... FAILED
+
+successes:
+
+successes:
+
+failures:
+
+---- adapters::clinicaltrials::resource_tests::pubchem_second_request_renews_500ms_budget_on_the_same_manual_owner stdout ----
+
+thread 'adapters::clinicaltrials::resource_tests::pubchem_second_request_renews_500ms_budget_on_the_same_manual_owner' (90035599) panicked at crates/ssx-infra/src/adapters/../../tests/support/a07_resources.rs:910:13:
+PUBCHEM_RENEWAL_BOUNDARY: second request expired at first request deadline
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    adapters::clinicaltrials::resource_tests::pubchem_second_request_renews_500ms_budget_on_the_same_manual_owner
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 262 filtered out; finished in 0.07s
+

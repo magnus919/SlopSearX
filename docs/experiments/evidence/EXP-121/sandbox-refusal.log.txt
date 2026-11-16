@@ -1,0 +1,20 @@
+/private/tmp/slopsearx-daily-20261013/.venv/lib/python3.12/site-packages/pydantic_settings/sources/utils.py:47: IncompleteFieldDefinitionWarning: Field 'lifespan' has an incomplete definition: its annotation contains an unresolved forward reference, so settings sources may fail to correctly resolve its value. Call `model_rebuild()` on the model where the field is defined, once all the referenced types are defined.
+  warnings.warn(
+Traceback (most recent call last):
+  File "/private/tmp/exp121-worker.py", line 32, in <module>
+    asyncio.run(main())
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/magnus/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/private/tmp/exp121-worker.py", line 14, in main
+    port=_free_port();server=uvicorn.Server(uvicorn.Config(make_http_app(remote,TOKEN),host='127.0.0.1',port=port,log_level='warning'));task=asyncio.create_task(server.serve())
+         ^^^^^^^^^^^^
+  File "/private/tmp/slopsearx-daily-20261013/tests/test_mcp_gateway.py", line 33, in _free_port
+    sock.bind(("127.0.0.1", 0))
+PermissionError: [Errno 1] Operation not permitted

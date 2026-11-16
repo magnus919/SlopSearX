@@ -1,0 +1,32 @@
+import asyncio,json,sys
+from pathlib import Path
+import uvicorn
+from fastmcp import Client
+from slopsearx.mcp.server import create_server
+from slopsearx.mcp.harness import build_fixture_context
+from slopsearx.mcp.gateway import create_gateway,_field
+from slopsearx.mcp.security import make_http_app
+from tests.test_mcp_gateway import _free_port,_wait_for_port,_gateway_client,TOKEN
+PRIMARY=('slopsearx_search_targeted','slopsearx_search_science','slopsearx_plan_research')
+async def main():
+ async def state():return build_fixture_context()
+ remote=create_server(state_factory=state)
+ port=_free_port();server=uvicorn.Server(uvicorn.Config(make_http_app(remote,TOKEN),host='127.0.0.1',port=port,log_level='warning'));task=asyncio.create_task(server.serve())
+ try:
+  assert await _wait_for_port(port)
+  url=f'http://127.0.0.1:{port}/mcp'
+  controls=[('slopsearx_list_capabilities',{'include_auth_requirements':False}),('slopsearx_search',{'query':'offline','intent':'not-real'})]
+  async with Client(url,auth=TOKEN) as direct:
+   direct_list=await direct.list_tools(); direct_tools={t.name:_field(t,'input_schema','inputSchema') for t in direct_list}; direct_metadata={t.name:t.model_dump(mode='json',by_alias=True) for t in direct_list}
+   before=[await direct.call_tool_mcp(n,a) for n,a in controls]
+  async with _gateway_client(create_gateway(url,token=TOKEN)) as client:
+   gateway_list=await client.list_tools(); gateway_tools={t.name:_field(t,'input_schema','inputSchema') for t in gateway_list}; gateway_metadata={t.name:t.model_dump(mode='json',by_alias=True) for t in gateway_list}
+   after=[await client.call_tool_mcp(n,a) for n,a in controls]
+  rows=[{'name':n,'primary':n in PRIMARY,'equal':direct_tools[n]==gateway_tools.get(n),'upstream':direct_tools[n],'gateway':gateway_tools.get(n)} for n in sorted(direct_tools)]
+  control_rows=[{'name':n,'equal':_field(b,'structured_content','structuredContent')==_field(a,'structured_content','structuredContent'),'upstream':b.model_dump(mode='json',by_alias=True),'gateway':a.model_dump(mode='json',by_alias=True)} for (n,_),b,a in zip(controls,before,after)]
+ finally:
+  server.should_exit=True;await asyncio.wait_for(task,timeout=10)
+ out=Path(sys.argv[1]);out.mkdir(exist_ok=False)
+ data={'rows':rows,'controls':control_rows,'primary_passed':sum(r['equal'] for r in rows if r['primary']),'primary_total':3,'catalog_equal':sum(r['equal'] for r in rows),'catalog_total':len(rows),'provider_calls':0,'direct_metadata':direct_metadata,'gateway_metadata':gateway_metadata}
+ (out/'result.json').write_text(json.dumps(data,indent=2)+'\n');print(json.dumps({k:v for k,v in data.items() if k not in ('rows','controls','direct_metadata','gateway_metadata')}))
+asyncio.run(main())

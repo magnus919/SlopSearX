@@ -1,0 +1,150 @@
+{
+  "baseline": "7cc420f7ffb61127750e77bf6130e225925f9186",
+  "license": "MIT source-exact repository Lua; no external captures or personal data",
+  "scripts": [
+    {
+      "path": "crates/ssx-infra/src/valkey/scripts/research_recent_record_script.lua",
+      "sha256": "7972fada68a5eb27d4577302459cbc21b870259aa65b9a8c0a124f2828b6b8c9",
+      "source": "slopsearx/research_store.py",
+      "symbol": "_RECENT_RECORD_SCRIPT"
+    },
+    {
+      "path": "crates/ssx-infra/src/valkey/scripts/research_ready_refresh_script.lua",
+      "sha256": "6bdbc4ad88239a475e13057923697d05bdf21dce230ea5180e0b227beba6c6b9",
+      "source": "slopsearx/research_store.py",
+      "symbol": "_READY_REFRESH_SCRIPT"
+    },
+    {
+      "path": "crates/ssx-infra/src/valkey/scripts/research_ready_take_script.lua",
+      "sha256": "8a35d61d941f39fa1df8009be317365af0dea6bc25e7ce058cf0d3e6b8fa7085",
+      "source": "slopsearx/research_store.py",
+      "symbol": "_READY_TAKE_SCRIPT"
+    },
+    {
+      "path": "crates/ssx-infra/src/valkey/scripts/research_lease_save_script.lua",
+      "sha256": "b3e87271493fcea6209b71db66221b5d72c0259e5cad0d656506edaa50d12d66",
+      "source": "slopsearx/research_store.py",
+      "symbol": "_LEASE_SAVE_SCRIPT"
+    },
+    {
+      "path": "crates/ssx-infra/src/valkey/scripts/research_lease_renew_script.lua",
+      "sha256": "26c261d7d0a7ecfe28664acb652365562889ba58d4a6829f0aef4e66aca9a53b",
+      "source": "slopsearx/research_store.py",
+      "symbol": "_LEASE_RENEW_SCRIPT"
+    },
+    {
+      "path": "crates/ssx-infra/src/valkey/scripts/research_lease_release_script.lua",
+      "sha256": "757aa3e8650c3e3adb20ba2fc56d08a21ba502092188573a0c0fc964a5da1910",
+      "source": "slopsearx/research_store.py",
+      "symbol": "_LEASE_RELEASE_SCRIPT"
+    },
+    {
+      "path": "crates/ssx-infra/src/valkey/scripts/research_idempotent_create_script.lua",
+      "sha256": "060b9d73f546ecec80a90addf61b78b3f6d9fa21e7036b17726a3ec7f53f7565",
+      "source": "slopsearx/research_store.py",
+      "symbol": "_IDEMPOTENT_CREATE_SCRIPT"
+    },
+    {
+      "path": "crates/ssx-infra/src/valkey/scripts/saved_recent_record.lua",
+      "sha256": "38516069ae071e825590732cc203cce604d121e136303adc296637461f41511c",
+      "source": "slopsearx/saved_store.py",
+      "symbol": "_RECENT_RECORD"
+    },
+    {
+      "path": "crates/ssx-infra/src/valkey/scripts/saved_create.lua",
+      "sha256": "339533e38abd94381dadec18813483f7283cfe63753d8bc3d437333e6e89a0af",
+      "source": "slopsearx/saved_store.py",
+      "symbol": "_CREATE"
+    },
+    {
+      "path": "crates/ssx-infra/src/valkey/scripts/saved_cas.lua",
+      "sha256": "d86082775d7099e515a637469e8f41bef0490b9eea94b46de57fba83c28085d0",
+      "source": "slopsearx/saved_store.py",
+      "symbol": "_CAS"
+    },
+    {
+      "path": "crates/ssx-infra/src/valkey/scripts/saved_delete.lua",
+      "sha256": "1bb956ebeb7c507a16910a63bbb5e1b8088ab48df63740dcbe4e1778c4fc91c0",
+      "source": "slopsearx/saved_store.py",
+      "symbol": "_DELETE"
+    },
+    {
+      "path": "crates/ssx-infra/src/valkey/scripts/saved_claim.lua",
+      "sha256": "191820aca44ad067d610bbbd4561cd60bea2c26173518626918552c7bffab2db",
+      "source": "slopsearx/saved_store.py",
+      "symbol": "_CLAIM"
+    },
+    {
+      "path": "crates/ssx-infra/src/valkey/scripts/saved_commit.lua",
+      "sha256": "bccef015b77c03296be2be542399416b31cb78bd29cd772b2f11a6a75857c0af",
+      "source": "slopsearx/saved_store.py",
+      "symbol": "_COMMIT"
+    },
+    {
+      "path": "crates/ssx-infra/src/valkey/scripts/saved_read_events.lua",
+      "sha256": "8820351645b599e0d4730415942e66e0ed543ce0d3f0cb371b4e0842ea75b351",
+      "source": "slopsearx/saved_store.py",
+      "symbol": "_READ_EVENTS"
+    },
+    {
+      "path": "crates/ssx-infra/src/valkey/scripts/saved_ack_event.lua",
+      "sha256": "02d7f0313aaaec84ca825e7c37f98146b00da936b976685fd1f7c11e26245136",
+      "source": "slopsearx/saved_store.py",
+      "symbol": "_ACK_EVENT"
+    },
+    {
+      "path": "crates/ssx-infra/src/valkey/scripts/saved_publish_expiry.lua",
+      "sha256": "1e7197c5167e4ff8631011e13e33348217c7148343b9eae547381940c14266b0",
+      "source": "slopsearx/saved_store.py",
+      "symbol": "_PUBLISH_EXPIRY"
+    },
+    {
+      "path": "crates/ssx-infra/src/valkey/scripts/saved_renew.lua",
+      "sha256": "d75e2b55f28ad4d6f6a003734bfc018cfb7e471e58485e07472bc77ab7bb1b2d",
+      "source": "slopsearx/saved_store.py",
+      "symbol": "_RENEW"
+    },
+    {
+      "path": "crates/ssx-infra/src/valkey/scripts/saved_release.lua",
+      "sha256": "1a3305dc96bf29e260e15070d2cb8a87453e38f279bdf60ff9b7f6de49a931fa",
+      "source": "slopsearx/saved_store.py",
+      "symbol": "_RELEASE"
+    },
+    {
+      "path": "crates/ssx-infra/src/valkey/scripts/staged_admit_script.lua",
+      "sha256": "5d88ab582c09f97cd55099bd1d292f5310e12485bd7dc35d994ce00844df50ad",
+      "source": "slopsearx/staged.py",
+      "symbol": "_ADMIT_SCRIPT"
+    },
+    {
+      "path": "crates/ssx-infra/src/valkey/scripts/staged_claim_script.lua",
+      "sha256": "761ac136c8babd1280d086a0f2c116c6f847c352ba805acfea201a8feff91c46",
+      "source": "slopsearx/staged.py",
+      "symbol": "_CLAIM_SCRIPT"
+    },
+    {
+      "path": "crates/ssx-infra/src/valkey/scripts/staged_owned_save_script.lua",
+      "sha256": "d24d96229f86d8405ee69ba01a9d8f21e17421016cd2fddc588c197c090e4468",
+      "source": "slopsearx/staged.py",
+      "symbol": "_OWNED_SAVE_SCRIPT"
+    },
+    {
+      "path": "crates/ssx-infra/src/valkey/scripts/staged_renew_script.lua",
+      "sha256": "d0ac3460f33b39001b01267aff4f0461cf3145902d2fc804568e1cd7c54fe5dc",
+      "source": "slopsearx/staged.py",
+      "symbol": "_RENEW_SCRIPT"
+    },
+    {
+      "path": "crates/ssx-infra/src/valkey/scripts/staged_interrupt_script.lua",
+      "sha256": "6e1ea506da441d78713ba0fdb282bc4fd6f5aafe70767a5ed8cdfcf18b62b735",
+      "source": "slopsearx/staged.py",
+      "symbol": "_INTERRUPT_SCRIPT"
+    },
+    {
+      "path": "crates/ssx-infra/src/valkey/scripts/staged_retry_script.lua",
+      "sha256": "ec929bf61c5bae521cd0da71711aa0dd500bd74034c3bd26d262df048aaaf06d",
+      "source": "slopsearx/staged.py",
+      "symbol": "_RETRY_SCRIPT"
+    }
+  ]
+}

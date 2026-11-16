@@ -1,0 +1,50 @@
+{
+  "api_key_env": "ENGINE_INTELX_API_KEY",
+  "api_secret_env": null,
+  "auth_class": "required",
+  "categories": [
+    "security",
+    "threat-intel"
+  ],
+  "caveats": [],
+  "cost_class": "freemium",
+  "defaults": {
+    "base_url": "https://2.intelx.io",
+    "enabled": true,
+    "max_results": 10,
+    "rate_limit": 1,
+    "timeout_ms": 15000,
+    "type": "api",
+    "weight": 0.5
+  },
+  "display_name": "Intelligence X (IntelX)",
+  "enabled_by_default": true,
+  "enforced_filters": {},
+  "engine_type": "api",
+  "failure_classes": [
+    "rate_limited",
+    "blocked",
+    "error",
+    "timeout"
+  ],
+  "implementation": "unavailable",
+  "name": "intelx",
+  "routing": {
+    "purpose": "paid threat-intelligence search",
+    "role": "specialist",
+    "use_when": "authorized threat-intelligence lookup is explicit"
+  },
+  "sensitive": false,
+  "supported_filters": {
+    "date_from": false,
+    "date_to": false,
+    "language": false,
+    "pagination": false,
+    "safesearch": false,
+    "time_range": false
+  },
+  "supported_media_types": [],
+  "supported_result_types": [
+    "text"
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "scope": "Actual temporary offline source producer executions; frozen captures only are native gate inputs. Global invocation rows are reconciled separately; no guessed CI execution.",
+  "interpreter": {
+    "path": "/private/tmp/slopsearx-rust-oracle-py314/bin/python",
+    "version": "3.14.7",
+    "unicode": "16.0.0"
+  },
+  "records": [
+    {
+      "id": "a06.source.timeout.private-loopback",
+      "producer": "/private/tmp/a06-timeout-source-loopback.py",
+      "command": "PYTHONPATH=. /private/tmp/slopsearx-rust-oracle-py314/bin/python -O /private/tmp/a06-timeout-source-loopback.py",
+      "capture": "docs/rust-rewrite/a06/source-timeout-loopback.json",
+      "stdout": "/private/tmp/a06-timeout-source-loopback-final.json",
+      "stderr": "/private/tmp/a06-timeout-source-loopback-final.log",
+      "execution_receipt": "/private/tmp/a06-config-runtime-freeze/receipt.json",
+      "cases": 18,
+      "producer_sha256": "f211893638b7ec14ff44ede5afb6656c8727c66f4dcf41e177fb2f71757a93ec",
+      "capture_sha256": "4375e93bc84c6e609d89e3581301fbe6fed6167e6d07db4b41a398e1f3a741fa",
+      "stderr_sha256": "fa5104b14ac642091c3f2da98a7e3e01bbefc4dd3df84b7b45d535bdaeee612b",
+      "execution_receipt_sha256": "00c903499a5f09ba02ce70e360a4438fbea58c1ab467a954dcf002aa79448861",
+      "exit_code": 0,
+      "owner": "A06",
+      "retirement_owner": "G08",
+      "native_gate_executes": false,
+      "provider_calls": false,
+      "production_calls": false
+    },
+    {
+      "id": "a06.source.resolved-config.service-factory",
+      "producer": "/private/tmp/a06-resolved-config-source.py",
+      "command": "PYTHONPATH=. /private/tmp/slopsearx-rust-oracle-py314/bin/python -O /private/tmp/a06-resolved-config-source.py",
+      "capture": "docs/rust-rewrite/a06/source-resolved-config.json",
+      "stdout": "/private/tmp/a06-resolved-config-source.json",
+      "stderr": "/private/tmp/a06-resolved-config-source.log",
+      "execution_receipt": "/private/tmp/a06-resolved-config-freeze/receipt.json",
+      "cases": 36,
+      "producer_sha256": "451cf32549f8e5abec84e47ca7cf369590a88798b81131eb9bdc16b77bf136b1",
+      "capture_sha256": "bfb7106a6c790493b22f789aeac9f023bef1b0f4317778f29447bdc91b1cd1cb",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "execution_receipt_sha256": "439d15786f40757070809c24bfc0bd3d32c0e9e4e679c8a939161b0176eb1008",
+      "exit_code": 0,
+      "owner": "A06",
+      "retirement_owner": "G08",
+      "native_gate_executes": false,
+      "provider_calls": false,
+      "production_calls": false
+    }
+  ],
+  "temporary_derivations": [
+    {
+      "path": "/private/tmp/a06-regression-inventory.py",
+      "sha256": "0290c3497c0560d5b553620214a526a23ec05eb20db18a25ff408f90ea97528e",
+      "owner": "A06/G08",
+      "purpose": "AST-only source test inventory, not original runtime/source behavior execution",
+      "native_gate_executes": false
+    }
+  ],
+  "retirement": "Retire temporary producers/derivers with executable legacy backend at G08; preserve immutable captures and licensed provenance/history. No runtime/client exception."
+}

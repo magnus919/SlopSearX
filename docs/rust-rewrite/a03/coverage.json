@@ -1,0 +1,438 @@
+{
+  "schema_version": 1,
+  "plan_id": "A03",
+  "baseline": "35d97ccf8c9b2d8246373b2024cc8d7a457705a3",
+  "provenance": "Actual unmodified source offline observations; no live provider calls. Every listed named-engine regression maps to executed native evidence or an explicit reviewed ownership supersession.",
+  "source_observations": [
+    {
+      "path": "engines/github.py",
+      "git_blob": "58950161475abc9c4d529637ddc998d96cd9c6d4"
+    },
+    {
+      "path": "engines/huggingface.py",
+      "git_blob": "9dbfc93b66a5c46c80109555e78c0ad2515ec8e1"
+    },
+    {
+      "path": "engines/stackexchange.py",
+      "git_blob": "1ea554802e6358ad2f4d62b5711d14309403d6ff"
+    },
+    {
+      "path": "engines/hackernews.py",
+      "git_blob": "9b3384fa85e391f1c827552292603eeb98cf07a7"
+    },
+    {
+      "path": "slopsearx/adapter.py",
+      "git_blob": "664e853d9ab1330596d01899ebe015701de09e88"
+    },
+    {
+      "path": "slopsearx/payload.py",
+      "git_blob": "efa149d48bae401f7a0a9df6e50c8c614adecbb5"
+    },
+    {
+      "path": "slopsearx/config.py",
+      "git_blob": "761db0521d74ec6d955aa8a84fd92a4a62533c43"
+    },
+    {
+      "path": "tests/test_github.py",
+      "git_blob": "46e84d0020f16768414da0fd9badf206697846e4"
+    },
+    {
+      "path": "tests/test_stackexchange_adapter.py",
+      "git_blob": "7a70dd10e66d2c9c95aaf18dd18a38461214df38"
+    },
+    {
+      "path": "tests/test_adapters.py",
+      "git_blob": "788f5747f84438f96bacbec5c6d813dea44ef4cd"
+    },
+    {
+      "path": "tests/test_tier1_adapters.py",
+      "git_blob": "453cb90bfb4a31870f4e1a7370fcd1816dcb2d3c"
+    },
+    {
+      "path": "tests/test_config.py",
+      "git_blob": "ab1b85cb9ee446f99e87dedfcbb3c8babb41686b"
+    },
+    {
+      "path": "tests/test_capabilities.py",
+      "git_blob": "50e9ddccc5e1c8b4eaf54264c0d5e1e2a3b9a94c"
+    },
+    {
+      "path": "uv.lock",
+      "git_blob": "24e92a80e8ecc761880fe603a01da41312dea180"
+    }
+  ],
+  "native_identity_sources": [
+    "crates/ssx-infra/src/adapters/community.rs",
+    "crates/ssx-infra/src/adapters/crates_io.rs",
+    "crates/ssx-infra/src/adapters/github.rs",
+    "crates/ssx-infra/src/adapters/hackernews.rs",
+    "crates/ssx-infra/src/adapters/huggingface.rs",
+    "crates/ssx-infra/src/adapters/mod.rs",
+    "crates/ssx-infra/src/adapters/npm.rs",
+    "crates/ssx-infra/src/adapters/stackexchange.rs",
+    "crates/ssx-infra/tests/a03_community.rs",
+    "crates/ssx-application/src/calendar.rs",
+    "crates/ssx-application/src/lib.rs",
+    "crates/ssx-domain/src/records.rs",
+    "crates/ssx-domain/src/storage.rs",
+    "crates/ssx-domain/src/oauth.rs",
+    "crates/ssx-registry/src/lib.rs",
+    "crates/ssx-infra/src/http.rs",
+    "crates/ssx-infra/src/valkey/rate.rs",
+    "crates/ssx-application/src/rate.rs",
+    "crates/xtask/src/a03.rs",
+    "crates/xtask/src/main.rs",
+    "docs/rust-rewrite/a03/README.md",
+    "docs/rust-rewrite/a03/PARITY.md",
+    "docs/rust-rewrite/a03/cases.json",
+    "docs/rust-rewrite/a03/capture.py",
+    "docs/rust-rewrite/a03/coverage.json",
+    ".github/workflows/rust.yml",
+    "docs/rust-rewrite/ci/gates.json",
+    "Cargo.lock",
+    "crates/ssx-infra/Cargo.toml",
+    "docs/rust-rewrite/f06/fragments/github.json",
+    "docs/rust-rewrite/f06/fragments/huggingface.json",
+    "docs/rust-rewrite/f06/fragments/stackexchange.json",
+    "docs/rust-rewrite/f06/fragments/hackernews.json"
+  ],
+  "source_regressions": [
+    {
+      "source": "tests/test_github.py::TestGitHubAdapter.test_adapter_registered",
+      "native_test": "four_native_factories_keep_source_f06_capabilities_and_jev_cards",
+      "source_cases": []
+    },
+    {
+      "source": "tests/test_github.py::TestGitHubAdapter.test_public_search_does_not_require_token",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "github:repositories",
+        "github:issues"
+      ],
+      "parameter_cases": [
+        "reference",
+        "github:issues"
+      ]
+    },
+    {
+      "source": "tests/test_github.py::TestGitHubAdapter.test_code_search_requires_token",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "github:code-missing-token",
+        "github:code-whitespace-token"
+      ]
+    },
+    {
+      "source": "tests/test_github.py::TestGitHubAdapter.test_authenticated_search_uses_expected_endpoint",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "github:code-precedence",
+        "github:issues",
+        "github:prs",
+        "github:repositories"
+      ],
+      "parameter_cases": [
+        "github:code",
+        "github:issues",
+        "github:prs",
+        "reference"
+      ]
+    },
+    {
+      "source": "tests/test_github.py::TestGitHubAdapter.test_unauthorized_upstream_response_is_unavailable",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "github:http-401"
+      ]
+    },
+    {
+      "source": "tests/test_github.py::TestGitHubAdapter.test_invalid_search_query_is_error",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "github:http-422"
+      ]
+    },
+    {
+      "source": "tests/test_github.py::TestGitHubAdapter.test_missing_token_is_ready_for_public_health",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "github:repositories",
+        "github:code-missing-token"
+      ],
+      "reviewed_supersession": "SearchEngine has no probe hook; accepted F10 observed/configured health remains separate from actual search. Public no-token success and code-only rejection prove the optional credential boundary without inventing an HTTP health request."
+    },
+    {
+      "source": "tests/test_stackexchange_adapter.py::TestStackExchangeAdapterRegistration.test_adapter_registered",
+      "native_test": "four_native_factories_keep_source_f06_capabilities_and_jev_cards",
+      "source_cases": []
+    },
+    {
+      "source": "tests/test_stackexchange_adapter.py::TestStackExchangeAdapterRegistration.test_adapter_categories",
+      "native_test": "four_native_factories_keep_source_f06_capabilities_and_jev_cards",
+      "source_cases": []
+    },
+    {
+      "source": "tests/test_stackexchange_adapter.py::TestStackExchangeAdapterSearch.test_search_returns_results",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "stackexchange:questions-sliced"
+      ]
+    },
+    {
+      "source": "tests/test_stackexchange_adapter.py::TestStackExchangeAdapterSearch.test_search_defaults_to_stackoverflow",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "stackexchange:default-site"
+      ]
+    },
+    {
+      "source": "tests/test_stackexchange_adapter.py::TestStackExchangeAdapterSearch.test_search_serverfault_site",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "stackexchange:serverfault-first"
+      ]
+    },
+    {
+      "source": "tests/test_stackexchange_adapter.py::TestStackExchangeAdapterSearch.test_search_code_site",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "stackexchange:code-first"
+      ]
+    },
+    {
+      "source": "tests/test_stackexchange_adapter.py::TestStackExchangeAdapterSearch.test_search_empty_results",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "stackexchange:collection-empty"
+      ]
+    },
+    {
+      "source": "tests/test_stackexchange_adapter.py::TestStackExchangeAdapterSearch.test_search_rate_limited",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "stackexchange:http-400"
+      ]
+    },
+    {
+      "source": "tests/test_stackexchange_adapter.py::TestStackExchangeAdapterSearch.test_search_error",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "stackexchange:http-500"
+      ]
+    },
+    {
+      "source": "tests/test_stackexchange_adapter.py::TestStackExchangeAdapterSearch.test_search_timeout",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "stackexchange:timeout"
+      ]
+    },
+    {
+      "source": "tests/test_stackexchange_adapter.py::TestStackExchangeAdapterSearch.test_search_http_status_error_sanitized",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "stackexchange:http-500"
+      ],
+      "reviewed_supersession": "Native errors deliberately contain fixed provider-safe diagnostics, superseding URL-bearing source transport exception prose; credential values and request URLs never appear in errors."
+    },
+    {
+      "source": "tests/test_stackexchange_adapter.py::TestStackExchangeAdapterSearch.test_search_broad_exception_sanitized",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "stackexchange:connect-error"
+      ],
+      "reviewed_supersession": "Native errors deliberately contain fixed provider-safe diagnostics, superseding source transport exception prose; malformed outside-catch parsing is also classified."
+    },
+    {
+      "source": "tests/test_stackexchange_adapter.py::TestStackExchangeAdapterSearch.test_uses_x_api_key_header",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "stackexchange:header-key",
+        "stackexchange:strip-key"
+      ]
+    },
+    {
+      "source": "tests/test_stackexchange_adapter.py::TestStackExchangeAdapterSearch.test_empty_key_still_works_free_tier",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "stackexchange:default-site"
+      ]
+    },
+    {
+      "source": "tests/test_stackexchange_adapter.py::TestStackExchangeAdapterSearch.test_whitespace_key_treated_as_no_key",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "stackexchange:whitespace-key"
+      ]
+    },
+    {
+      "source": "tests/test_adapters.py::TestGitHubAdapter.test_search_repos",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "github:repositories"
+      ]
+    },
+    {
+      "source": "tests/test_adapters.py::TestGitHubAdapter.test_search_missing_token",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "github:code-missing-token",
+        "github:code-whitespace-token"
+      ]
+    },
+    {
+      "source": "tests/test_adapters.py::TestGitHubAdapter.test_search_rate_limited",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "github:rate-limit-text"
+      ]
+    },
+    {
+      "source": "tests/test_adapters.py::TestGitHubAdapter.test_search_422_graceful",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "github:http-422"
+      ]
+    },
+    {
+      "source": "tests/test_adapters.py::TestHackerNewsAdapter.test_search_returns_results",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "hackernews:stories-unsliced"
+      ]
+    },
+    {
+      "source": "tests/test_adapters.py::TestHackerNewsAdapter.test_search_story_without_url_uses_hn_link",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "hackernews:stories-unsliced"
+      ]
+    },
+    {
+      "source": "tests/test_adapters.py::TestHackerNewsAdapter.test_search_empty_results",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "hackernews:collection-empty"
+      ]
+    },
+    {
+      "source": "tests/test_adapters.py::TestHackerNewsAdapter.test_search_timeout",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "hackernews:timeout"
+      ]
+    },
+    {
+      "source": "tests/test_adapters.py::TestHuggingFaceAdapter.test_search_returns_models",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "huggingface:models-unsliced"
+      ]
+    },
+    {
+      "source": "tests/test_adapters.py::TestHuggingFaceAdapter.test_search_empty",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "huggingface:collection-empty"
+      ]
+    },
+    {
+      "source": "tests/test_adapters.py::TestHuggingFaceAdapter.test_search_rate_limited",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "huggingface:http-429"
+      ]
+    },
+    {
+      "source": "tests/test_adapters.py::TestHuggingFaceAdapter.test_search_sends_token_when_configured",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "huggingface:optional-token",
+        "huggingface:whitespace-token-not-stripped"
+      ]
+    },
+    {
+      "source": "tests/test_tier1_adapters.py::TestStackExchangeAdapter.test_site_from_categories_defaults_to_stackoverflow",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "stackexchange:default-site"
+      ]
+    },
+    {
+      "source": "tests/test_tier1_adapters.py::TestStackExchangeAdapter.test_site_from_categories_serverfault",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "stackexchange:serverfault-first"
+      ]
+    },
+    {
+      "source": "tests/test_tier1_adapters.py::TestStackExchangeAdapter.test_site_from_categories_code",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "stackexchange:code-first"
+      ]
+    },
+    {
+      "source": "tests/test_tier1_adapters.py::TestStackExchangeAdapter.test_site_code_wins_over_serverfault_in_order",
+      "native_test": "source_232_observations_replay_over_actual_f08_requests",
+      "source_cases": [
+        "stackexchange:code-first"
+      ]
+    },
+    {
+      "source": "tests/test_tier1_adapters.py::TestStackExchangeAdapter.test_adapter_registered",
+      "native_test": "four_native_factories_keep_source_f06_capabilities_and_jev_cards",
+      "source_cases": []
+    },
+    {
+      "source": "tests/test_tier1_adapters.py::TestStackExchangeAdapter.test_adapter_categories",
+      "native_test": "four_native_factories_keep_source_f06_capabilities_and_jev_cards",
+      "source_cases": []
+    },
+    {
+      "source": "tests/test_config.py::TestLoadConfig.test_huggingface_token_alias_from_env",
+      "native_test": "tests::hf_alias_is_overridden_by_explicit_variable_and_secrets_are_redacted",
+      "native_package": "ssx-config",
+      "source_cases": [
+        "huggingface:optional-token"
+      ],
+      "reviewed_supersession": "Actual HF_TOKEN alias/layering is accepted F06 ownership and its named native regression is executed by A03. Adapters consume the projected Secret and do not read environment variables."
+    },
+    {
+      "source": "tests/test_capabilities.py::TestCatalogBasics.test_subcategories",
+      "native_test": "four_native_factories_keep_source_f06_capabilities_and_jev_cards",
+      "source_cases": [],
+      "reviewed_supersession": "A03 retains exact accepted F06 per-engine capability/Jev fragments; shared intent-policy behavior is accepted F09 ownership, not a second adapter policy gate."
+    },
+    {
+      "source": "tests/test_capabilities.py::TestCatalogBasics.test_caveats",
+      "native_test": "four_native_factories_keep_source_f06_capabilities_and_jev_cards",
+      "source_cases": [],
+      "reviewed_supersession": "A03 retains exact accepted F06 per-engine capability/Jev fragments; shared intent-policy behavior is accepted F09 ownership, not a second adapter policy gate."
+    },
+    {
+      "source": "tests/test_capabilities.py::TestCatalogFeatureMatrix.test_declared_failure_classes_match_adapter_behavior",
+      "native_test": "four_native_factories_keep_source_f06_capabilities_and_jev_cards",
+      "source_cases": [],
+      "reviewed_supersession": "A03 retains exact accepted F06 per-engine capability/Jev fragments; shared intent-policy behavior is accepted F09 ownership, not a second adapter policy gate."
+    },
+    {
+      "source": "tests/test_capabilities.py::TestIntentProfiles.test_code_profile_known_engines",
+      "native_test": "four_native_factories_keep_source_f06_capabilities_and_jev_cards",
+      "source_cases": [],
+      "reviewed_supersession": "A03 retains exact accepted F06 per-engine capability/Jev fragments; shared intent-policy behavior is accepted F09 ownership, not a second adapter policy gate."
+    }
+  ],
+  "source_case_count": 232,
+  "loopback_replayed_case_count": 196,
+  "native_tests": [
+    "source_232_observations_replay_over_actual_f08_requests",
+    "typed_config_bounds_zero_deadline_and_secret_redaction_before_dispatch",
+    "shared_registry_preserves_pilots_and_caller_transport_after_adapter_drop",
+    "dropping_search_cancels_actual_request_without_retry_or_closing_shared_pool",
+    "unavailable_admission_is_fail_closed_before_http_and_auth_is_separate",
+    "actual_private_valkey_f10_quota_and_cooldown_stop_all_four_before_dispatch",
+    "operator_numeric_projection_refuses_all_28_captured_invalid_configurations",
+    "four_native_factories_keep_source_f06_capabilities_and_jev_cards"
+  ]
+}

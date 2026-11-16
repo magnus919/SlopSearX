@@ -24,6 +24,10 @@ def configure_source_import() -> Path:
 def main() -> int:
     cache_prefix = configure_source_import()
     try:
+        if len(sys.argv) > 1 and sys.argv[1] == "issue-development-pass":
+            from scripts.coverage_stage_finalization import main as issue_development_pass
+
+            return issue_development_pass(sys.argv[2:])
         from scripts.coverage_operator_runner import main as run_operator
 
         return run_operator()

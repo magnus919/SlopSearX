@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "plan_id": "F12",
+  "baseline": "6ae5e34fed19e8e9da7c19b95eeea894512f0e6d",
+  "source_captures": {
+    "source": "e0be6fc6246992ca59914fb02e656dc23426b8654b96901dee4b84ea93c0ec91",
+    "hazards": "641e35375e8d289fa5067da182df509b057e91626210761b67ccb93e6640a295",
+    "overflow": "87019ce71862f98460a3457b2945a35cc3f4e4a0b08097c144a7df541af0202f"
+  },
+  "preserved": [
+    "key-only enablement; keyless deterministic fallback",
+    "raw explicit scope/media suppress advice",
+    "one sorted batched request with source exact question bytes and query disclosure",
+    "inclusive threshold, descending score/name order, Boolean scores",
+    "source model/cards/threshold/query/candidate cache identity and exact JSON bytes",
+    "real Valkey TTL and cache failure decision preservation",
+    "preview permitted decision call and reuse without second request",
+    "TTL positiveoverflow/invalid syntax skips cache write preserving decision; negativeoverflow floors1; source actual Valkey observations"
+  ],
+  "intentional_differences": [
+    {
+      "boundary": "automatic_advice_budget",
+      "source": "appended advice can exceed current cost/count and retain contradictory exclusions",
+      "native": "F09 automatic eligibility before/after advice and baseline-first remaining count slots; final explanations recomputed"
+    },
+    {
+      "boundary": "cache_validation",
+      "source": "cache accepts NaN, duplicate and noncanonical/underthreshold selections",
+      "native": "all malformed/nonfinite/out-of-range or noncanonical cache choices become misses; providerBooleancoercion retained"
+    },
+    {
+      "boundary": "bounded_transport",
+      "source": "HTTPX scalar per-phase timeout; no responsebyte bounds",
+      "native": "F08 absolute total deadline; one request/zero redirects; 1MiB request/wire/decoded body bounds"
+    },
+    {
+      "boundary": "timeout_integer_overflow",
+      "source": "1e20millisecond timeout remains valid; 400digitpositive raises OverflowError; huge negatives floor50ms",
+      "native": "positive beyond i64 disables enhanced router; negative overflow floors50ms; invalid threshold/timeout syntax retains pair defaults; threshold numeric semantics unchanged"
+    }
+  ],
+  "downstream": {
+    "F14_F15": "compose prepare_optional, consume PreparedAdvice.authorize and fresh with_revalidated; never explicit-scope advice bypass",
+    "T02_T03": "same prepared preview/dispatch provenance, no extra decision call",
+    "F13": "advice cache is best effort; full search cache/legacy reconnect policy remains F13",
+    "G08": "retire isolated Python exporter; preserve immutable JSON captures"
+  }
+}

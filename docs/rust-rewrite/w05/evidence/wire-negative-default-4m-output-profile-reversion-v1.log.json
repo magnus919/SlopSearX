@@ -1,0 +1,6 @@
+{
+  "stdout": "   Compiling ssx-infra v0.1.0 (/Volumes/tank01/magnus/git/slopsearx-w05/crates/ssx-infra)\n   Compiling ssx-mcp v0.1.0 (/Volumes/tank01/magnus/git/slopsearx-w05/crates/ssx-mcp)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 12.86s\n     Running tests/w05.rs (/Volumes/tank01/magnus/rust-builds/slopsearx/w05/debug/deps/w05-bb02813cd0544c32)\n\nrunning 1 test\n\nthread 'actual_maximum_batches_preserve_100_exact_64k_events_and_escaping' (34407113) panicked at crates/ssx-mcp/tests/w05.rs:650:9:\nactual raw HTTP tool status 502 Bad Gateway\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\ntest actual_maximum_batches_preserve_100_exact_64k_events_and_escaping ... FAILED\n\nfailures:\n\nfailures:\n    actual_maximum_batches_preserve_100_exact_64k_events_and_escaping\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 2.10s\n\nerror: test failed, to rerun pass `-p ssx-mcp --test w05`\n",
+  "sha256": "34c02acfe06afd55d56e54c1926461de5de51bf9b327b54ee208c25bd6ee6c26",
+  "control": "default-4m-output-profile-reversion",
+  "terminal_exit": 101
+}

@@ -1,0 +1,2892 @@
+{
+  "baseline": "7b2d876307189d7a62000d1f289b3ef4b65eaff6",
+  "observations": {
+    "accepted": {
+      "body": "Accepted",
+      "status": 202
+    },
+    "content_type": "text/event-stream; charset=utf-8",
+    "echo_result": {
+      "content": [
+        {
+          "text": "{\"payload\":{\"items\":[1,2]},\"note\":null}",
+          "type": "text"
+        }
+      ],
+      "isError": false,
+      "structuredContent": {
+        "note": null,
+        "payload": {
+          "items": [
+            1,
+            2
+          ]
+        }
+      }
+    },
+    "endpoint_event": "endpoint",
+    "head": {
+      "body": "",
+      "content_type": "text/event-stream; charset=utf-8",
+      "status": 200
+    },
+    "initialize": {
+      "id": 1,
+      "jsonrpc": "2.0",
+      "result": {
+        "capabilities": {
+          "logging": {},
+          "prompts": {
+            "listChanged": true
+          },
+          "resources": {
+            "listChanged": true,
+            "subscribe": false
+          },
+          "tools": {
+            "listChanged": true
+          }
+        },
+        "instructions": "SlopSearX is a meta-search engine: it fans a query out to\nmany specialized engines and merges the results.\n\nHow to search correctly:\n- Prefer intent-based search (slopsearx_search) over explicit engines. Use\n  slopsearx_explain_search_scope first to preview routing without spending\n  rate limits.\n- Use slopsearx_search_targeted only when you need a specific evidence\n  boundary; unknown engines are rejected with valid alternatives.\n- Results are search findings, not verified facts. Slopsearx never fetches\n  or verifies full page bodies \u2014 treat snippets as leads and cite with the\n  citation.url. The score is a cross-engine presence signal\n  (tier_then_cross_engine_presence), not relevance confidence.\n- Partial results are normal: check engine_outcomes for which sources\n  answered and which failed. Absence from a source does not prove absence\n  of the thing you searched for.\n- Pagination: use the cursor from a search with slopsearx_read_results;\n  pages come from a captured snapshot and never re-run the query.\n- Specialist tools (jobs, security, science, research, saved searches,\n  retrieval receipts, staged search, dependency dossiers) are disabled until\n  the operator grants them (MCP_GRANT_JOBS / MCP_GRANT_SECURITY /\n  MCP_GRANT_SCIENCE / MCP_GRANT_RESEARCH / MCP_GRANT_SAVED_SEARCHES /\n  MCP_GRANT_RETRIEVAL_RECEIPTS / MCP_GRANT_STAGED_SEARCH /\n  MCP_GRANT_DEPENDENCY_DOSSIER).\n- Capabilities, routing profiles, and health are available as resources\n  (slopsearx://capabilities, slopsearx://routing-profiles,\n  slopsearx://health/summary) \u2014 read them instead of guessing engine names.\n",
+        "protocolVersion": "2025-11-25",
+        "serverInfo": {
+          "name": "slopsearx",
+          "version": "4.0.11"
+        }
+      }
+    },
+    "integer_echo_result": {
+      "content": [
+        {
+          "text": "{\"payload\":{\"items\":[9223372036854775808,18446744073709551617,-18446744073709551617]},\"note\":null}",
+          "type": "text"
+        }
+      ],
+      "isError": false,
+      "structuredContent": {
+        "note": null,
+        "payload": {
+          "items": [
+            9223372036854775808,
+            18446744073709551617,
+            -18446744073709551617
+          ]
+        }
+      }
+    },
+    "invalid_json": {
+      "body": "Could not parse message",
+      "status": 400
+    },
+    "invalid_rpc": {
+      "body": "Could not parse message",
+      "status": 400
+    },
+    "invalid_session": {
+      "body": "Invalid session ID",
+      "status": 400
+    },
+    "large_tools": [
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Opaque numeric descriptor qualification",
+        "inputSchema": {
+          "properties": {
+            "payload": {
+              "type": "object"
+            }
+          },
+          "type": "object",
+          "x-boundary": {
+            "integer": 18446744073709551617,
+            "ordinary_object": {
+              "$serde_json::private::Number": "123"
+            }
+          }
+        },
+        "name": "t01_large",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "T01 Large"
+      }
+    ],
+    "lifecycle": {
+      "before_initialize": {
+        "error": {
+          "code": -32602,
+          "data": "",
+          "message": "Invalid request parameters"
+        },
+        "id": 100,
+        "jsonrpc": "2.0"
+      },
+      "before_initialized_notification": {
+        "id": 103,
+        "jsonrpc": "2.0",
+        "result": {
+          "tool_names": [
+            "slopsearx_search",
+            "slopsearx_search_targeted",
+            "slopsearx_search_jobs",
+            "slopsearx_search_security",
+            "slopsearx_search_science",
+            "slopsearx_list_capabilities",
+            "slopsearx_explain_search_scope",
+            "slopsearx_get_service_status",
+            "slopsearx_read_results",
+            "slopsearx_read_result",
+            "slopsearx_read_entities",
+            "slopsearx_plan_research",
+            "slopsearx_plan_query_variants",
+            "slopsearx_plan_research_followup",
+            "slopsearx_start_research",
+            "slopsearx_get_job",
+            "slopsearx_cancel_job",
+            "slopsearx_retry_research",
+            "slopsearx_extend_research",
+            "slopsearx_update_research",
+            "slopsearx_create_saved_search",
+            "slopsearx_get_saved_search",
+            "slopsearx_update_saved_search",
+            "slopsearx_pause_saved_search",
+            "slopsearx_delete_saved_search",
+            "slopsearx_read_saved_search_reports",
+            "slopsearx_read_saved_search_events",
+            "slopsearx_ack_saved_search_events",
+            "slopsearx_submit_retrieval_receipt",
+            "slopsearx_read_retrieval_receipts",
+            "slopsearx_export_research_manifest",
+            "slopsearx_preview_staged_search",
+            "slopsearx_search_staged",
+            "slopsearx_get_staged_search",
+            "slopsearx_retry_staged_search",
+            "slopsearx_start_dependency_dossier",
+            "slopsearx_get_dependency_dossier",
+            "slopsearx_get_artifact_lineage",
+            "t01_echo",
+            "t01_large"
+          ]
+        }
+      },
+      "malformed_initialize": {
+        "error": {
+          "code": -32602,
+          "data": "",
+          "message": "Invalid request parameters"
+        },
+        "id": 101,
+        "jsonrpc": "2.0"
+      },
+      "repeated_initialize": {
+        "id": 104,
+        "jsonrpc": "2.0",
+        "result": {
+          "capabilities": {
+            "logging": {},
+            "prompts": {
+              "listChanged": true
+            },
+            "resources": {
+              "listChanged": true,
+              "subscribe": false
+            },
+            "tools": {
+              "listChanged": true
+            }
+          },
+          "instructions": "SlopSearX is a meta-search engine: it fans a query out to\nmany specialized engines and merges the results.\n\nHow to search correctly:\n- Prefer intent-based search (slopsearx_search) over explicit engines. Use\n  slopsearx_explain_search_scope first to preview routing without spending\n  rate limits.\n- Use slopsearx_search_targeted only when you need a specific evidence\n  boundary; unknown engines are rejected with valid alternatives.\n- Results are search findings, not verified facts. Slopsearx never fetches\n  or verifies full page bodies \u2014 treat snippets as leads and cite with the\n  citation.url. The score is a cross-engine presence signal\n  (tier_then_cross_engine_presence), not relevance confidence.\n- Partial results are normal: check engine_outcomes for which sources\n  answered and which failed. Absence from a source does not prove absence\n  of the thing you searched for.\n- Pagination: use the cursor from a search with slopsearx_read_results;\n  pages come from a captured snapshot and never re-run the query.\n- Specialist tools (jobs, security, science, research, saved searches,\n  retrieval receipts, staged search, dependency dossiers) are disabled until\n  the operator grants them (MCP_GRANT_JOBS / MCP_GRANT_SECURITY /\n  MCP_GRANT_SCIENCE / MCP_GRANT_RESEARCH / MCP_GRANT_SAVED_SEARCHES /\n  MCP_GRANT_RETRIEVAL_RECEIPTS / MCP_GRANT_STAGED_SEARCH /\n  MCP_GRANT_DEPENDENCY_DOSSIER).\n- Capabilities, routing profiles, and health are available as resources\n  (slopsearx://capabilities, slopsearx://routing-profiles,\n  slopsearx://health/summary) \u2014 read them instead of guessing engine names.\n",
+          "protocolVersion": "2024-11-05",
+          "serverInfo": {
+            "name": "slopsearx",
+            "version": "4.0.11"
+          }
+        }
+      },
+      "unsupported_initialize": {
+        "id": 102,
+        "jsonrpc": "2.0",
+        "result": {
+          "capabilities": {
+            "logging": {},
+            "prompts": {
+              "listChanged": true
+            },
+            "resources": {
+              "listChanged": true,
+              "subscribe": false
+            },
+            "tools": {
+              "listChanged": true
+            }
+          },
+          "instructions": "SlopSearX is a meta-search engine: it fans a query out to\nmany specialized engines and merges the results.\n\nHow to search correctly:\n- Prefer intent-based search (slopsearx_search) over explicit engines. Use\n  slopsearx_explain_search_scope first to preview routing without spending\n  rate limits.\n- Use slopsearx_search_targeted only when you need a specific evidence\n  boundary; unknown engines are rejected with valid alternatives.\n- Results are search findings, not verified facts. Slopsearx never fetches\n  or verifies full page bodies \u2014 treat snippets as leads and cite with the\n  citation.url. The score is a cross-engine presence signal\n  (tier_then_cross_engine_presence), not relevance confidence.\n- Partial results are normal: check engine_outcomes for which sources\n  answered and which failed. Absence from a source does not prove absence\n  of the thing you searched for.\n- Pagination: use the cursor from a search with slopsearx_read_results;\n  pages come from a captured snapshot and never re-run the query.\n- Specialist tools (jobs, security, science, research, saved searches,\n  retrieval receipts, staged search, dependency dossiers) are disabled until\n  the operator grants them (MCP_GRANT_JOBS / MCP_GRANT_SECURITY /\n  MCP_GRANT_SCIENCE / MCP_GRANT_RESEARCH / MCP_GRANT_SAVED_SEARCHES /\n  MCP_GRANT_RETRIEVAL_RECEIPTS / MCP_GRANT_STAGED_SEARCH /\n  MCP_GRANT_DEPENDENCY_DOSSIER).\n- Capabilities, routing profiles, and health are available as resources\n  (slopsearx://capabilities, slopsearx://routing-profiles,\n  slopsearx://health/summary) \u2014 read them instead of guessing engine names.\n",
+          "protocolVersion": "2025-11-25",
+          "serverInfo": {
+            "name": "slopsearx",
+            "version": "4.0.11"
+          }
+        }
+      }
+    },
+    "message_prefix": "/messages/",
+    "missing_session": {
+      "body": "session_id is required",
+      "status": 400
+    },
+    "oversized": {
+      "body": "Request body too large",
+      "status": 413
+    },
+    "prompt_result": {
+      "messages": [
+        {
+          "content": {
+            "text": "topic: test",
+            "type": "text"
+          },
+          "role": "user"
+        }
+      ]
+    },
+    "prompts": [
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "arguments": [
+          {
+            "name": "topic",
+            "required": true
+          }
+        ],
+        "name": "t01_prompt"
+      }
+    ],
+    "public_prompts": [
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "arguments": [
+          {
+            "description": "Provide a value matching the following JSON schema: {\"type\":\"string\"}. Encode non-string values as JSON.",
+            "name": "question",
+            "required": true
+          }
+        ],
+        "description": "Search broadly, inspect capability coverage, return diverse evidence.",
+        "name": "research_with_source_coverage"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "arguments": [
+          {
+            "description": "Provide a value matching the following JSON schema: {\"type\":\"string\"}. Encode non-string values as JSON.",
+            "name": "target",
+            "required": true
+          }
+        ],
+        "description": "Search security sources, separate discovery from confirmation.",
+        "name": "investigate_vulnerability"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "arguments": [
+          {
+            "description": "Provide a value matching the following JSON schema: {\"type\":\"string\"}. Encode non-string values as JSON.",
+            "name": "company",
+            "required": true
+          }
+        ],
+        "description": "Search ATS boards for a named company, preserving provenance.",
+        "name": "find_company_jobs"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "arguments": [
+          {
+            "description": "Provide a value matching the following JSON schema: {\"type\":\"string\"}. Encode non-string values as JSON.",
+            "name": "name",
+            "required": true
+          }
+        ],
+        "description": "Search package registries and developer sources, dedupe by URL.",
+        "name": "compare_package_or_project"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "arguments": [
+          {
+            "description": "Provide a value matching the following JSON schema: {\"type\":\"string\"}. Encode non-string values as JSON.",
+            "name": "question",
+            "required": true
+          }
+        ],
+        "description": "Decompose, search, and propose evidence-linked follow-ups within durable budgets.",
+        "name": "plan_research_with_evidence"
+      }
+    ],
+    "public_resources": [
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Current generated engine and category catalog, redacted",
+        "mimeType": "text/plain",
+        "name": "render_capabilities",
+        "title": "Engine catalog",
+        "uri": "slopsearx://capabilities"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Intent-to-category/profile definitions and their provenance",
+        "mimeType": "text/plain",
+        "name": "render_routing_profiles",
+        "title": "Routing profiles",
+        "uri": "slopsearx://routing-profiles"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Current server health with the active-health limitation stated",
+        "mimeType": "text/plain",
+        "name": "render_health_summary",
+        "title": "Health summary",
+        "uri": "slopsearx://health/summary"
+      }
+    ],
+    "public_tools": [
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Search across SlopSearX engines with intent-based routing.\n\n- intent: one of auto, web, news, science, reference, code, social,\n  historical, jobs, security, medical, finance, packages, media, images,\n  videos, legal, geography. auto uses query-topic routing with tier-1\n  fallback.\n- categories: explicit category OR-filter (overridden by engines).\n- engines: explicit engine list (overrides everything; must be known).\n- media_type: image | video. Constrains the dispatched scope to engines\n  that advertise the requested media type; when no selected engine\n  advertises it, the coverage gap is reported explicitly.\n- safesearch: off | moderate | strict. strict fails closed because no\n  adapter enforces it.\n- interactive_timeout_ms: optional 1\u201330000 ms engine/suggestion wait budget;\n  may return incomplete coverage. Omit for full configured engine deadlines.\n- freshness: prefer_cache | prefer_fresh | no_preference.\n- include: subset of results, suggestions, engine_status, diagnostics,\n  payload. When ``payload`` is included, compact result cards inline the\n  domain payload only when it is within ``PAYLOAD_MAX_PERSIST_BYTES``\n  (the snapshot persistence bound); otherwise cards inline a payload only\n  when it is small. The full payload is available via\n  slopsearx_read_result when it is within the persistence bound.\nReturns results, scope, engine outcomes, and a pagination cursor.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "categories": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "engines": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "freshness": {
+              "default": "no_preference",
+              "type": "string"
+            },
+            "include": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "intent": {
+              "default": "auto",
+              "type": "string"
+            },
+            "interactive_timeout_ms": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "language": {
+              "default": "en",
+              "type": "string"
+            },
+            "max_results": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "media_type": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "query": {
+              "type": "string"
+            },
+            "safesearch": {
+              "default": "off",
+              "type": "string"
+            },
+            "time_range": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_search",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Search"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Search only the named engines (deliberate, auditable scope).\n\nRequires at least one known, active engine; unknown or inactive\nengines produce an error listing valid alternatives. Sensitive\nengines require the operator grant MCP_TARGETED_SENSITIVE_ALLOWED=1.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "engines": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "language": {
+              "default": "en",
+              "type": "string"
+            },
+            "max_results": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "query": {
+              "type": "string"
+            },
+            "safesearch": {
+              "default": "off",
+              "type": "string"
+            },
+            "time_range": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            }
+          },
+          "required": [
+            "query",
+            "engines"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_search_targeted",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Search Targeted"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Search ATS job boards for a named company.\n\nBuilds the internal \"\u2026 at <company>\" query the job adapters\nunderstand and targets the ATS boards explicitly. Requires the\njobs grant (MCP_GRANT_JOBS=1).",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "company": {
+              "type": "string"
+            },
+            "employment_type": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "keywords": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "location": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "max_results": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "sources": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            }
+          },
+          "required": [
+            "company"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_search_jobs",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Search Jobs"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Security and threat-intelligence search.\n\nevidence_types resolve to engine profiles: vulnerability, exposure,\nreputation, malware, threat_intel, exploit. Requires the security\ngrant (MCP_GRANT_SECURITY=1).",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "engines": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "evidence_types": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "max_results": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "query": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_search_security",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Search Security"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Research-oriented search.\n\nsource_types resolve to engine profiles: papers, scholarly_index,\nbiomedical, chemistry, datasets, general_reference. Requires the\nscience grant (MCP_GRANT_SCIENCE=1).",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "date_from": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "date_to": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "engines": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "max_results": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "query": {
+              "type": "string"
+            },
+            "source_types": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_search_science",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Search Science"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "List the live engine catalog with categories, auth classes, caveats.\n\nGenerated from the runtime registry and effective configuration \u2014\nnever from prose documentation. Auth requirements describe whether\nan engine needs credentials; actual key values are never exposed.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "category": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "family": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "include_auth_requirements": {
+              "default": true,
+              "type": "boolean"
+            },
+            "include_disabled": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          "type": "object"
+        },
+        "name": "slopsearx_list_capabilities",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx List Capabilities"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Dry-run routing preview: which engines would run and why.\n\nExecutes no engine searches and spends no engine rate limits. With Jev\nenabled, an unscoped preview may make one billable Jev call on a cache\nmiss. ``media_type`` (image | video) constrains the preview to engines\nthat advertise the requested media type.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "categories": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "engines": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "intent": {
+              "default": "auto",
+              "type": "string"
+            },
+            "media_type": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "query": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_explain_search_scope",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Explain Search Scope"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Operational status: liveness, versions, Valkey, engine inventory.\n\nReturns the curated, non-secret diagnostics schema shared with\n``slopsearx://health/summary``. /health does not actively probe external\nAPIs \u2014 engine health is observed passively through search outcomes.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {},
+          "type": "object"
+        },
+        "name": "slopsearx_get_service_status",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Get Service Status"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Read a stable page from a captured search snapshot.\n\nNever re-runs the query \u2014 pages come from the captured evidence.\ncursor values are server-issued; arbitrary URLs are not accepted.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "cursor": {
+              "type": "string"
+            },
+            "max_results": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "page": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "cursor"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_read_results",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Read Results"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Expand one server-issued result ID into a full result record.\n\nReturns complete content (not the card snippet), media fields, every\ncontributing engine, provenance, a ``content_available`` flag, and an\nexplicit note that SlopSearX did not fetch or verify the linked page.\nServed from the immutable snapshot \u2014 the search is not re-executed.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "result_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "result_id"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_read_result",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Read Result"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Read versioned explicit-identifier groups from a captured snapshot.\n\nmax_results counts entities, not members; groups contain original result IDs\nfor slopsearx_read_result. Unknown identities stay separate. This read-only\nview neither searches nor establishes source independence or verification.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "cursor": {
+              "type": "string"
+            },
+            "max_results": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "page": {
+              "default": 1,
+              "type": "integer"
+            },
+            "version": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "cursor"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_read_entities",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Read Entities"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Preview an original-plus-facets research plan without searching or storing it.\n\nSupply distinct evidence needs as id/question pairs, optionally query/intent/engines.\nReturns start_research arguments; the caller owns decomposition and sufficiency.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "engines": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "intent": {
+              "default": "web",
+              "type": "string"
+            },
+            "max_attempts": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "max_engine_attempts": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "max_engines_per_query": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "max_queries": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "max_results": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "question": {
+              "type": "string"
+            },
+            "subquestions": {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "question",
+            "subquestions"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_plan_research",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Plan Research"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Preview bounded caller-authored terminology variants, retaining the original.\n\nVariants must preserve exact recognizable identifiers. No model runs, factual\nclaims, automatic default expansion or search-quality guarantees are added.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "engines": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "intent": {
+              "default": "web",
+              "type": "string"
+            },
+            "max_attempts": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "max_engine_attempts": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "max_engines_per_query": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "max_queries": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "max_results": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "question": {
+              "type": "string"
+            },
+            "variants": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "question",
+            "variants"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_plan_query_variants",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Plan Query Variants"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Preview an evidence-linked follow-up using admitted results from this job.\n\nReads permitted unexpired snapshots; never appends, executes, reserves a budget\nor marks a subquestion resolved. Returned arguments are revalidated by extend.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "engines": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "evidence_result_ids": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "intent": {
+              "default": "web",
+              "type": "string"
+            },
+            "job_id": {
+              "type": "string"
+            },
+            "parent_attempt_id": {
+              "type": "string"
+            },
+            "query": {
+              "type": "string"
+            },
+            "rationale": {
+              "type": "string"
+            },
+            "subquestion_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            }
+          },
+          "required": [
+            "job_id",
+            "query",
+            "parent_attempt_id",
+            "evidence_result_ids",
+            "rationale"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_plan_research_followup",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Plan Research Followup"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Start an asynchronous multi-query research job.\n\nAn optional artifact source contributes retained evidence and lineage but\nnever execution policy. Strategies: triangulate (same question across independent sources),\nbroad (several source families), fresh (recent material),\ncounterevidence (limits, criticism, counterexamples). Returns a job\nhandle immediately; poll slopsearx_get_job for progress.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "deadline": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "idempotency_key": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "initial_plan": {
+              "anyOf": [
+                {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "max_attempts": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "max_engine_attempts": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "max_engines_per_query": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "max_queries": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "max_results": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "question": {
+              "type": "string"
+            },
+            "source": {
+              "anyOf": [
+                {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "strategy": {
+              "default": "triangulate",
+              "type": "string"
+            },
+            "subquestions": {
+              "anyOf": [
+                {
+                  "items": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            }
+          },
+          "required": [
+            "question"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_start_research",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Start Research"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Return research job state, progress, and per-query cursors.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "job_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "job_id"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_get_job",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Get Job"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Best-effort cancellation of a research job.\n\nStops undispatched queries; in-flight upstream calls complete and\ntheir evidence stays readable.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "job_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "job_id"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_cancel_job",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Cancel Job"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Re-run only failed/empty subqueries of a research job.\n\nSuccessful subqueries are never re-executed; their snapshot cursors\nremain byte-for-byte unchanged. Each retried subquery is linked to the\nsame job under a NEW attempt/cursor; the original failed/empty attempt's\nevidence stays readable. Returns a structured ``no_retryable_work``\nerror when the job has no failed/empty work (VAL-RESEARCH-008/016/021).",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "job_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "job_id"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_retry_research",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Retry Research"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Append and execute one bounded follow-up query to a research job.\n\nAppends a new subquery only while the job has remaining query budget\n(under ``job_max_queries``) and its deadline has not passed. The\nfollow-up is validated and routed through the same sensitive-engine /\nspecialist-grant gate as a normal subquery (VAL-RESEARCH-009/015/020).",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "continuation_key": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "engines": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "evidence_result_ids": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "intent": {
+              "default": "web",
+              "type": "string"
+            },
+            "job_id": {
+              "type": "string"
+            },
+            "parent_attempt_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "planning_method": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "query": {
+              "type": "string"
+            },
+            "rationale": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "subquestion_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            }
+          },
+          "required": [
+            "job_id",
+            "query"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_extend_research",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Extend Research"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Record caller-declared progress or completion without judging evidence.\n\nState values are resolved/unresolved. Completion preserves unresolved\nquestions and permanently prevents new execution for this job.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "complete": {
+              "default": false,
+              "type": "boolean"
+            },
+            "job_id": {
+              "type": "string"
+            },
+            "rationale": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "subquestion_states": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          },
+          "required": [
+            "job_id",
+            "subquestion_states"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_update_research",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Update Research"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Create one bounded, explicitly scoped scheduled search.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "engines": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "expires_in_seconds": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "interval_seconds": {
+              "type": "integer"
+            },
+            "max_reports": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "max_results": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "query": {
+              "type": "string"
+            },
+            "retention_seconds": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "start_immediately": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "query",
+            "engines",
+            "interval_seconds"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_create_saved_search",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Create Saved Search"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Read one caller-owned definition.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "search_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "search_id"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_get_saved_search",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Get Saved Search"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Update with optimistic revision checking; scope changes reset baseline.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "engines": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "expected_revision": {
+              "type": "integer"
+            },
+            "interval_seconds": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "max_reports": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "max_results": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "query": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "retention_seconds": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "search_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "search_id",
+            "expected_revision"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_update_saved_search",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Update Saved Search"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Pause or resume; both revisions fence any old in-flight commit.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "expected_revision": {
+              "type": "integer"
+            },
+            "paused": {
+              "default": true,
+              "type": "boolean"
+            },
+            "search_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "search_id",
+            "expected_revision"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_pause_saved_search",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Pause Saved Search"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Delete the caller-owned definition and fence late workers.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "expected_revision": {
+              "type": "integer"
+            },
+            "search_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "search_id",
+            "expected_revision"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_delete_saved_search",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Delete Saved Search"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Poll retained, coverage-aware change reports.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "limit": {
+              "default": 20,
+              "type": "integer"
+            },
+            "search_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "search_id"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_read_saved_search_reports",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Read Saved Search Reports"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Read one bounded, tenant-ordered at-least-once saved-search event batch.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "consumer_id": {
+              "type": "string"
+            },
+            "cursor": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "limit": {
+              "default": 50,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "consumer_id"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_read_saved_search_events",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Read Saved Search Events"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Idempotently advance one tenant-scoped saved-search event consumer.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "consumer_id": {
+              "type": "string"
+            },
+            "cursor": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "consumer_id",
+            "cursor"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_ack_saved_search_events",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Ack Saved Search Events"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Store one attributed retrieval observation without fetching supplied data.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "capture_ref": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "captured_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "content_sha256": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "failure_code": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "failure_message": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "final_url": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "idempotency_key": {
+              "type": "string"
+            },
+            "passage_refs": {
+              "anyOf": [
+                {
+                  "items": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "result_id": {
+              "type": "string"
+            },
+            "retriever": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "result_id",
+            "retriever",
+            "idempotency_key",
+            "status"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_submit_retrieval_receipt",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Submit Retrieval Receipt"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Read bounded attributed observations without altering their source snapshot.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "limit": {
+              "default": 20,
+              "type": "integer"
+            },
+            "result_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "result_id"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_read_retrieval_receipts",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Read Retrieval Receipts"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Join explicit results, a lineage cut, or one workflow source to observations.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "artifacts": {
+              "anyOf": [
+                {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "max_depth": {
+              "default": 2,
+              "type": "integer"
+            },
+            "max_nodes": {
+              "default": 100,
+              "type": "integer"
+            },
+            "result_ids": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "source": {
+              "anyOf": [
+                {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            }
+          },
+          "type": "object"
+        },
+        "name": "slopsearx_export_research_manifest",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Export Research Manifest"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Resolve a staged-search plan without dispatch or persistence.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "allow_scope_expansion": {
+              "default": false,
+              "type": "boolean"
+            },
+            "fallback_scope": {
+              "anyOf": [
+                {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "filters": {
+              "anyOf": [
+                {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "initial_scope": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "objectives": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "query": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "query",
+            "objectives",
+            "initial_scope"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_preview_staged_search",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Preview Staged Search"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Accept a durable staged search, optionally deriving its query from a saved report.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "allow_scope_expansion": {
+              "default": false,
+              "type": "boolean"
+            },
+            "fallback_scope": {
+              "anyOf": [
+                {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "filters": {
+              "anyOf": [
+                {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "idempotency_key": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "include": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "initial_scope": {
+              "anyOf": [
+                {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "max_results": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "objectives": {
+              "anyOf": [
+                {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "query": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "source": {
+              "anyOf": [
+                {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            }
+          },
+          "type": "object"
+        },
+        "name": "slopsearx_search_staged",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Search Staged"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Read a staged operation without dispatch.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "include": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "max_results": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "operation_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation_id"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_get_staged_search",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Get Staged Search"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Retry the latest failed or interrupted stage under its original limits.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "operation_id": {
+              "type": "string"
+            },
+            "retry_key": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation_id",
+            "retry_key"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_retry_staged_search",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Retry Staged Search"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Start an attributed investigation with optional retained seed evidence.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "deadline": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "ecosystem": {
+              "type": "string"
+            },
+            "idempotency_key": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "package": {
+              "type": "string"
+            },
+            "repository": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "source": {
+              "anyOf": [
+                {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            }
+          },
+          "required": [
+            "ecosystem",
+            "package"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_start_dependency_dossier",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Start Dependency Dossier"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Read a stored dependency dossier without dispatching new searches.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "job_id": {
+              "type": "string"
+            },
+            "max_results": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            }
+          },
+          "required": [
+            "job_id"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_get_dependency_dossier",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Get Dependency Dossier"
+      },
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Resolve a bounded lineage graph without dispatch or retention extension.",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "artifact": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "direction": {
+              "default": "both",
+              "type": "string"
+            },
+            "max_depth": {
+              "default": 2,
+              "type": "integer"
+            },
+            "max_nodes": {
+              "default": 100,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "artifact"
+          ],
+          "type": "object"
+        },
+        "name": "slopsearx_get_artifact_lineage",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Slopsearx Get Artifact Lineage"
+      }
+    ],
+    "resource_result": {
+      "contents": [
+        {
+          "mimeType": "text/plain",
+          "text": "fixture text",
+          "uri": "t01://text"
+        }
+      ]
+    },
+    "resources": [
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "mimeType": "text/plain",
+        "name": "t01_text",
+        "uri": "t01://text"
+      }
+    ],
+    "tools": [
+      {
+        "_meta": {
+          "fastmcp": {
+            "tags": []
+          }
+        },
+        "description": "Echo nested values for transport qualification",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "note": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "payload": {
+              "additionalProperties": false,
+              "properties": {
+                "items": {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "items"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "payload"
+          ],
+          "type": "object"
+        },
+        "name": "t01_echo",
+        "outputSchema": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "T01 Echo"
+      }
+    ],
+    "unknown_session": {
+      "body": "Could not find session",
+      "status": 404
+    },
+    "wrong_content_type": {
+      "body": "Invalid Content-Type header",
+      "status": 400
+    },
+    "wrong_method": {
+      "body": "",
+      "status": 405
+    }
+  },
+  "oracle": {
+    "f04_helper_git_blob": "0efc1b2917d7be5c66bb7fe08697273807728598",
+    "git_blob": "3c3104a3bc8a275454c4a8eca48e4b427c2a45ca",
+    "path": "docs/rust-rewrite/replay/oracle/export_mcp.py",
+    "sha256": "086de9e2991dbe62aa643eef5d654da07d339a593624e489e4e38b2bb92c400d"
+  },
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "schema_version": 1,
+  "sources": {
+    "slopsearx/mcp/harness.py": "b661b6775315da47b462b0345da5cf6d61a78265",
+    "slopsearx/mcp/security.py": "a0d6300d0883f2cca19e3bbd70ce7126b33ee6a9",
+    "slopsearx/mcp/server.py": "f5f7c6c368e2b6dc3f8056090e978f3bd6243649",
+    "uv.lock": "24e92a80e8ecc761880fe603a01da41312dea180"
+  },
+  "versions": {
+    "fastmcp": "4.0.11",
+    "mcp": "2.3.0"
+  }
+}

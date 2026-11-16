@@ -1,0 +1,40 @@
+{
+  "baseline": "6c44976444340cc8f343fef61e2e8d723b189c19",
+  "versions": {
+    "fastmcp": "4.0.11",
+    "mcp": "2.3.0"
+  },
+  "cases": [
+    {
+      "case": "params_null",
+      "raw_request": "{\"jsonrpc\":\"2.0\",\"id\":200,\"method\":\"prompts/get\",\"params\":null}",
+      "status": 200,
+      "body": "{\"jsonrpc\":\"2.0\",\"id\":200,\"error\":{\"code\":-32602,\"message\":\"Invalid request parameters\",\"data\":\"\"}}"
+    },
+    {
+      "case": "params_scalar",
+      "raw_request": "{\"jsonrpc\":\"2.0\",\"id\":201,\"method\":\"prompts/get\",\"params\":1}",
+      "status": 400,
+      "body": "{\"jsonrpc\":\"2.0\",\"id\":null,\"error\":{\"code\":-32602,\"message\":\"Validation error: 4 validation errors for union[JSONRPCRequest,JSONRPCNotification,JSONRPCResponse,JSONRPCError]\\nJSONRPCRequest.params\\n  Input should be a valid dictionary [type=dict_type, input_value=1, input_type=int]\\n    For further information visit https://errors.pydantic.dev/2.13/v/dict_type\\nJSONRPCNotification.params\\n  Input should be a valid dictionary [type=dict_type, input_value=1, input_type=int]\\n    For further information visit https://errors.pydantic.dev/2.13/v/dict_type\\nJSONRPCResponse.result\\n  Field required [type=missing, input_value={'jsonrpc': '2.0', 'id': ...ompts/get', 'params': 1}, input_type=dict]\\n    For further information visit https://errors.pydantic.dev/2.13/v/missing\\nJSONRPCError.error\\n  Field required [type=missing, input_value={'jsonrpc': '2.0', 'id': ...ompts/get', 'params': 1}, input_type=dict]\\n    For further information visit https://errors.pydantic.dev/2.13/v/missing\"}}"
+    },
+    {
+      "case": "params_array",
+      "raw_request": "{\"jsonrpc\":\"2.0\",\"id\":202,\"method\":\"prompts/get\",\"params\":[]}",
+      "status": 400,
+      "body": "{\"jsonrpc\":\"2.0\",\"id\":null,\"error\":{\"code\":-32602,\"message\":\"Validation error: 4 validation errors for union[JSONRPCRequest,JSONRPCNotification,JSONRPCResponse,JSONRPCError]\\nJSONRPCRequest.params\\n  Input should be a valid dictionary [type=dict_type, input_value=[], input_type=list]\\n    For further information visit https://errors.pydantic.dev/2.13/v/dict_type\\nJSONRPCNotification.params\\n  Input should be a valid dictionary [type=dict_type, input_value=[], input_type=list]\\n    For further information visit https://errors.pydantic.dev/2.13/v/dict_type\\nJSONRPCResponse.result\\n  Field required [type=missing, input_value={'jsonrpc': '2.0', 'id': ...mpts/get', 'params': []}, input_type=dict]\\n    For further information visit https://errors.pydantic.dev/2.13/v/missing\\nJSONRPCError.error\\n  Field required [type=missing, input_value={'jsonrpc': '2.0', 'id': ...mpts/get', 'params': []}, input_type=dict]\\n    For further information visit https://errors.pydantic.dev/2.13/v/missing\"}}"
+    },
+    {
+      "case": "missing_name",
+      "raw_request": "{\"jsonrpc\":\"2.0\",\"id\":203,\"method\":\"prompts/get\",\"params\":{}}",
+      "status": 200,
+      "body": "{\"jsonrpc\":\"2.0\",\"id\":203,\"error\":{\"code\":-32602,\"message\":\"Invalid request parameters\",\"data\":\"\"}}"
+    },
+    {
+      "case": "numeric_name",
+      "raw_request": "{\"jsonrpc\":\"2.0\",\"id\":204,\"method\":\"prompts/get\",\"params\":{\"name\":1,\"arguments\":{}}}",
+      "status": 200,
+      "body": "{\"jsonrpc\":\"2.0\",\"id\":204,\"error\":{\"code\":-32602,\"message\":\"Invalid request parameters\",\"data\":\"\"}}"
+    }
+  ],
+  "dispatches": 0
+}

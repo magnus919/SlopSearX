@@ -1,0 +1,145 @@
+{
+  "coverage_sha256": "92686ed70979a698b0dab3414cad813198b720fe586421062db8a4cef5102d9b",
+  "schema": "A06_SHARED_ADMISSION_SUCCESSOR_V1",
+  "sources": [
+    {
+      "current_bytes": 35477,
+      "current_sha256": "19f82f602c99485a1ca0c915faece54f973340784c584f441afe0664cefdbb6f",
+      "edits": [
+        {
+          "at": 12722,
+          "insert": "// The acquire future may own a semaphore reservation before its next poll.\n// Keep both that future and a delivered permit inside one cancellation guard.\n// Notification MUST follow both drops so shutdown can observe restored capacity.\nstruct AdmissionAttempt<F> {\n    waiting: Option<F>,\n    permit: Option<tokio::sync::OwnedSemaphorePermit>,\n    drained: std::sync::Arc<tokio::sync::Notify>,\n}\nimpl<F> Drop for AdmissionAttempt<F> {\n    fn drop(&mut self) {\n        drop(self.waiting.take());\n        drop(self.permit.take());\n        self.drained.notify_waiters();\n    }\n}\n\n",
+          "remove": ""
+        },
+        {
+          "at": 21588,
+          "insert": "    /// Wait for the same single operation before HTTP. Queueing consumes the\n    /// already selected network deadline, never a renewed timeout; parsing keeps\n    /// the original caller operation deadline. Dropping this future removes its\n    /// semaphore waiter without creating a worker or retaining a permit.\n    pub(crate) async fn begin_raw_for_http(\n",
+          "remove": "    pub(crate) fn begin_raw_for_http(\n"
+        },
+        {
+          "at": 21723,
+          "insert": "        network_deadline: tokio::time::Instant,\n",
+          "remove": ""
+        },
+        {
+          "at": 21815,
+          "insert": "        let clock = http.deadline_clock();\n",
+          "remove": ""
+        },
+        {
+          "at": 21836,
+          "insert": "        assert!(\n            !clock.is_manual() || clock.is_pending_only(),\n            \"scholarly Manual owner is pending-only\"\n        );\n        let wait_deadline = deadline.min(network_deadline).into_std();\n        let mut closing = self.closing.subscribe();\n        if *closing.borrow() || self.admission.is_closed() {\n            return Err(RawAdmissionError::Shutdown);\n",
+          "remove": "        {\n            let clock = http.deadline_clock();\n            assert!(\n                !clock.is_manual() || clock.is_pending_only(),\n                \"scholarly Manual owner is pending-only\"\n            );\n            if clock.observed() {\n                if clock.expired(deadline.into_std()) {\n                    return Err(RawAdmissionError::Deadline);\n                }\n                let mut operation = self.begin_raw_admitted(budget, deadline)?;\n                operation.clock = Some(clock);\n                return Ok(operation);\n            }\n"
+        },
+        {
+          "at": 22407,
+          "insert": "        if clock.expired(wait_deadline) {\n            return Err(RawAdmissionError::Deadline);\n        }\n        let mut attempt = AdmissionAttempt {\n            waiting: Some(Box::pin(self.admission.clone().acquire_owned())),\n            permit: None,\n            drained: self.drained.clone(),\n        };\n        attempt.permit = Some(tokio::select! {\n            biased;\n            _ = closing.changed() => return Err(RawAdmissionError::Shutdown),\n            _ = clock.sleep_until(wait_deadline) => return Err(RawAdmissionError::Deadline),\n            permit = attempt.waiting.as_mut().expect(\"admission acquire retained\").as_mut() =>\n                permit.map_err(|_| RawAdmissionError::Shutdown)?,\n        });\n        // Closure or expiry can become ready together with the permit. Recheck\n        // before exposing operation ownership or polling any HTTP/source work.\n        if *closing.borrow() || self.admission.is_closed() {\n            return Err(RawAdmissionError::Shutdown);\n        }\n        if clock.expired(wait_deadline) {\n            return Err(RawAdmissionError::Deadline);\n        }\n        Ok(RawOperation {\n            pool: self.clone(),\n            operation: std::sync::Arc::new(Operation {\n                permit: attempt.permit.take(),\n                drained: self.drained.clone(),\n            }),\n            budget,\n            deadline,\n            #[cfg(test)]\n            clock: clock.observed().then_some(clock),\n        })\n",
+          "remove": "        #[cfg(not(test))]\n        let _ = http;\n        self.begin_raw(budget, deadline)\n"
+        }
+      ],
+      "historical_bytes": 33298,
+      "historical_sha256": "6114e8b298853470085193be17bcbf7b55583de4bf91608be7b539494a0ffd61",
+      "path": "crates/ssx-infra/src/adapters/arxiv_expat.rs"
+    },
+    {
+      "current_bytes": 20078,
+      "current_sha256": "17176b24a3e984150e14c2fba5c6e8f39e54daebf63065e53279e0d61c64c5e8",
+      "edits": [
+        {
+          "at": 3673,
+          "insert": "        let operation = match self\n            .parser\n            .begin_raw_for_http(\n                budget.clone(),\n                deadline.into(),\n                network_deadline.into(),\n                &self.http,\n            )\n            .await\n        {\n            Ok(value) => value,\n            Err(RawAdmissionError::Deadline) => {\n                return bare(EngineStatus::Timeout, None, start);\n            }\n            Err(RawAdmissionError::Shutdown) => {\n                return bare(\n                    EngineStatus::Error,\n                    Some(\"arXiv native XML parser shutdown\"),\n                    start,\n                );\n            }\n            Err(RawAdmissionError::Saturated) => {\n                return bare(\n                    EngineStatus::Error,\n                    Some(\"arXiv native XML parser saturated\"),\n                    start,\n                );\n            }\n        };\n",
+          "remove": "        let operation =\n            match self\n                .parser\n                .begin_raw_for_http(budget.clone(), deadline.into(), &self.http)\n            {\n                Ok(value) => value,\n                Err(RawAdmissionError::Deadline) => {\n                    return bare(EngineStatus::Timeout, None, start);\n                }\n                Err(RawAdmissionError::Shutdown) => {\n                    return bare(\n                        EngineStatus::Error,\n                        Some(\"arXiv native XML parser shutdown\"),\n                        start,\n                    );\n                }\n                Err(RawAdmissionError::Saturated) => {\n                    return bare(\n                        EngineStatus::Error,\n                        Some(\"arXiv native XML parser saturated\"),\n                        start,\n                    );\n                }\n            };\n"
+        }
+      ],
+      "historical_bytes": 20055,
+      "historical_sha256": "b7ddc92105cd9148ce1b1ad1b409296299575e8fa177f3fe08c60120498f2441",
+      "path": "crates/ssx-infra/src/adapters/arxiv_runtime.rs"
+    },
+    {
+      "current_bytes": 25725,
+      "current_sha256": "c90f464bed74ffdbfdef62d40d7dbbbc4818283eda8274802fa97b6ea723b502",
+      "edits": [
+        {
+          "at": 4467,
+          "insert": "        let operation = match self\n            .lifecycle\n            .begin_raw_for_http(\n                budget.clone(),\n                deadline.into(),\n                network_deadline.into(),\n                &self.http,\n            )\n            .await\n        {\n            Ok(v) => v,\n            Err(RawAdmissionError::Deadline) => {\n                return bare(EngineStatus::Timeout, None, start);\n            }\n            Err(RawAdmissionError::Shutdown) => {\n                return bare(\n                    EngineStatus::Error,\n                    Some(\"OpenAlex lifecycle shutdown\"),\n                    start,\n                );\n            }\n            Err(RawAdmissionError::Saturated) => {\n                return bare(\n                    EngineStatus::Error,\n                    Some(\"OpenAlex lifecycle saturated\"),\n                    start,\n                );\n            }\n        };\n",
+          "remove": "        let operation =\n            match self\n                .lifecycle\n                .begin_raw_for_http(budget.clone(), deadline.into(), &self.http)\n            {\n                Ok(v) => v,\n                Err(RawAdmissionError::Deadline) => {\n                    return bare(EngineStatus::Timeout, None, start);\n                }\n                Err(RawAdmissionError::Shutdown) => {\n                    return bare(\n                        EngineStatus::Error,\n                        Some(\"OpenAlex lifecycle shutdown\"),\n                        start,\n                    );\n                }\n                Err(RawAdmissionError::Saturated) => {\n                    return bare(\n                        EngineStatus::Error,\n                        Some(\"OpenAlex lifecycle saturated\"),\n                        start,\n                    );\n                }\n            };\n"
+        }
+      ],
+      "historical_bytes": 25702,
+      "historical_sha256": "e1a53bd992c9e12a29ab4bc31ccbd5070c85577554dfce81b0260268d3b90db1",
+      "path": "crates/ssx-infra/src/adapters/openalex_runtime.rs"
+    },
+    {
+      "current_bytes": 26291,
+      "current_sha256": "57796b27f09f41bcda1d8abead0357696a190119536a347b2e1d2dfc69da01d3",
+      "edits": [
+        {
+          "at": 3938,
+          "insert": "        let operation = match self\n            .lifecycle\n            .begin_raw_for_http(\n                budget.clone(),\n                deadline.into(),\n                network_deadline.into(),\n                &self.http,\n            )\n            .await\n        {\n            Ok(v) => v,\n            Err(RawAdmissionError::Deadline) => {\n                return bare(EngineStatus::Timeout, None, start);\n            }\n            Err(RawAdmissionError::Shutdown) => {\n                return bare(\n                    EngineStatus::Error,\n                    Some(\"Semantic Scholar lifecycle shutdown\"),\n                    start,\n                );\n            }\n            Err(RawAdmissionError::Saturated) => {\n                return bare(\n                    EngineStatus::Error,\n                    Some(\"Semantic Scholar lifecycle saturated\"),\n                    start,\n                );\n            }\n        };\n",
+          "remove": "        let operation =\n            match self\n                .lifecycle\n                .begin_raw_for_http(budget.clone(), deadline.into(), &self.http)\n            {\n                Ok(v) => v,\n                Err(RawAdmissionError::Deadline) => {\n                    return bare(EngineStatus::Timeout, None, start);\n                }\n                Err(RawAdmissionError::Shutdown) => {\n                    return bare(\n                        EngineStatus::Error,\n                        Some(\"Semantic Scholar lifecycle shutdown\"),\n                        start,\n                    );\n                }\n                Err(RawAdmissionError::Saturated) => {\n                    return bare(\n                        EngineStatus::Error,\n                        Some(\"Semantic Scholar lifecycle saturated\"),\n                        start,\n                    );\n                }\n            };\n"
+        }
+      ],
+      "historical_bytes": 26268,
+      "historical_sha256": "c31a75f51b6ddea8c7a880d788c9ebebd553a550024c2a8299a192c9f7089fc2",
+      "path": "crates/ssx-infra/src/adapters/semantic_runtime.rs"
+    },
+    {
+      "current_bytes": 31105,
+      "current_sha256": "43f2ba9055362991e975baf6e83176c35b0a123b166d3fb589134ccce4cf0ac3",
+      "edits": [
+        {
+          "at": 797,
+          "insert": "use std::future::Future as _;\n",
+          "remove": ""
+        },
+        {
+          "at": 9436,
+          "insert": "    shared_factory_admission_regressions().await;\n",
+          "remove": ""
+        },
+        {
+          "at": 9438,
+          "insert": "\n// Additional lifecycle scenarios extend the existing factory outcome test ID.\n// All three registered engines share one real AtomPool. Injected transport owns\n// no socket/thread and is deliberately pending until the test releases it.\nstruct SharedReplies {\n    calls: AtomicUsize,\n    active: AtomicUsize,\n    peak: AtomicUsize,\n    release: tokio::sync::Semaphore,\n}\nstruct ActiveExchange<'a>(&'a AtomicUsize);\nimpl Drop for ActiveExchange<'_> {\n    fn drop(&mut self) {\n        self.0.fetch_sub(1, Ordering::SeqCst);\n    }\n}\nimpl Transport for SharedReplies {\n    fn exchange(&self, request: Request) -> ExchangeFuture<'_> {\n        Box::pin(async move {\n            self.calls.fetch_add(1, Ordering::SeqCst);\n            let active = self.active.fetch_add(1, Ordering::SeqCst) + 1;\n            let _active = ActiveExchange(&self.active);\n            self.peak.fetch_max(active, Ordering::SeqCst);\n            assert_eq!(active, 1, \"shared operation admission was bypassed\");\n            self.release.acquire().await.unwrap().forget();\n            let body: &[u8] = match request.url.host_str().unwrap() {\n                \"api.openalex.org\" => br#\"{\"results\":[]}\"#,\n                \"api.semanticscholar.org\" => br#\"{\"data\":[]}\"#,\n                \"export.arxiv.org\" => br#\"<feed xmlns=\"http://www.w3.org/2005/Atom\"/>\"#,\n                other => panic!(\"unexpected scholarly host {other}\"),\n            };\n            Ok(Response {\n                status: 200,\n                url: request.url,\n                headers: Default::default(),\n                body: body.to_vec(),\n            })\n        })\n    }\n}\nfn shared_factories() -> (\n    ssx_registry::Registry,\n    AtomPool,\n    Arc<AdapterHttp>,\n    Arc<SharedReplies>,\n) {\n    let http = Arc::new(AdapterHttp::default());\n    let transport = Arc::new(SharedReplies {\n        calls: AtomicUsize::new(0),\n        active: AtomicUsize::new(0),\n        peak: AtomicUsize::new(0),\n        release: tokio::sync::Semaphore::new(0),\n    });\n    http.set_transport(transport.clone()).unwrap();\n    let pool = AtomPool::new(\n        PathBuf::from(env!(\"CARGO_BIN_EXE_ssx-atom-parser\")),\n        NonZeroUsize::new(1).unwrap(),\n    )\n    .unwrap();\n    let settings = ssx_infra::adapters::scholarly_runtime::ScholarlySettings::from_resolved(\n        &ssx_config::Config::default(),\n    );\n    let mut registry = ssx_registry::Registry::builtins().unwrap();\n    ssx_infra::adapters::scholarly_runtime::register(\n        &mut registry,\n        http.clone(),\n        Arc::new(ssx_infra::adapters::AllowAllAdmission),\n        settings,\n        pool.clone(),\n    )\n    .unwrap();\n    (registry, pool, http, transport)\n}\nfn pending<T>(future: std::pin::Pin<&mut impl std::future::Future<Output = T>>) {\n    let mut context = std::task::Context::from_waker(std::task::Waker::noop());\n    assert!(\n        future.poll(&mut context).is_pending(),\n        \"busy admission must wait, not fail\"\n    );\n}\nfn entered<T>(\n    mut future: std::pin::Pin<&mut impl std::future::Future<Output = T>>,\n    transport: &SharedReplies,\n) {\n    // Actually poll through the short URL encoder's cooperative yields until\n    // exchange entry is observed. No task-start/yield scheduling assumption.\n    for _ in 0..128 {\n        pending(future.as_mut());\n        if transport.calls.load(Ordering::SeqCst) == 1 {\n            return;\n        }\n    }\n    panic!(\"first registered engine did not enter transport\");\n}\n// A semaphore grant can reserve capacity without polling its waiter again.\n// Cancellation must notify an already sleeping pool shutdown AFTER returning it.\nasync fn granted_unpolled_cancellation_wakes_shutdown(request: &SearchRequest) {\n    let (registry, pool, http, transport) = shared_factories();\n    let holder = pool\n        .begin_raw(\n            ssx_owned_budget::Budget::new(1024).unwrap(),\n            tokio::time::Instant::now() + Duration::from_secs(10),\n        )\n        .unwrap();\n    let engine = registry.instantiate(\"semanticscholar\").unwrap();\n    let mut queued = Box::pin(engine.search_with_context(\n        request,\n        SearchContext {\n            deadline: Instant::now() + Duration::from_secs(10),\n        },\n    ));\n    pending(queued.as_mut());\n    drop(holder);\n    assert_eq!(\n        pool.available_operations(),\n        0,\n        \"permit reserved for unpolled acquire\"\n    );\n    let mut shutdown = Box::pin(pool.shutdown());\n    pending(shutdown.as_mut());\n    // Never poll queued between the semaphore grant and cancellation. The old\n    // implementation released its reservation but left shutdown's Notify asleep.\n    drop(queued);\n    let mut context = std::task::Context::from_waker(std::task::Waker::noop());\n    assert!(\n        matches!(\n            shutdown.as_mut().poll(&mut context),\n            std::task::Poll::Ready(Ok(()))\n        ),\n        \"reserved-but-unpolled cancellation did not wake shutdown\"\n    );\n    assert_eq!(transport.calls.load(Ordering::SeqCst), 0);\n    assert_eq!(pool.available_operations(), 1);\n    assert_eq!(pool.available_slots(), 1);\n    http.shutdown_and_wait().await;\n}\nasync fn held_http_caller_drop_hands_off_to_queued_peer(request: &SearchRequest) {\n    let (registry, pool, http, transport) = shared_factories();\n    let first = registry.instantiate(\"openalex\").unwrap();\n    let second = registry.instantiate(\"semanticscholar\").unwrap();\n    let context = SearchContext {\n        deadline: Instant::now() + Duration::from_secs(10),\n    };\n    let mut holder = Box::pin(first.search_with_context(request, context));\n    entered(holder.as_mut(), &transport);\n    let mut queued = Box::pin(second.search_with_context(request, context));\n    pending(queued.as_mut());\n    assert_eq!(transport.calls.load(Ordering::SeqCst), 1);\n    assert_eq!(transport.active.load(Ordering::SeqCst), 1);\n    drop(holder);\n    assert_eq!(\n        transport.active.load(Ordering::SeqCst),\n        0,\n        \"actual HTTP future dropped\"\n    );\n    transport.release.add_permits(1);\n    assert_eq!(queued.await.status, EngineStatus::Ok);\n    assert_eq!(transport.calls.load(Ordering::SeqCst), 2);\n    assert_eq!(transport.peak.load(Ordering::SeqCst), 1);\n    assert_eq!(transport.active.load(Ordering::SeqCst), 0);\n    assert_eq!(pool.available_operations(), 1);\n    assert_eq!(pool.available_slots(), 1);\n    pool.shutdown().await.unwrap();\n    http.shutdown_and_wait().await;\n}\n\nasync fn shared_factory_admission_regressions() {\n    tokio::time::timeout(Duration::from_secs(15), async {\n        let request = SearchRequest {\n            query: \"shared admission\".into(),\n            ..Default::default()\n        };\n        granted_unpolled_cancellation_wakes_shutdown(&request).await;\n        held_http_caller_drop_hands_off_to_queued_peer(&request).await;\n        // Prove all three registered engines survive normal fanout, while only\n        // one can dispatch/parse/project at a time on the original global quota.\n        {\n            let (registry, pool, http, transport) = shared_factories();\n            let first = registry.instantiate(\"openalex\").unwrap();\n            let second = registry.instantiate(\"semanticscholar\").unwrap();\n            let third = registry.instantiate(\"arxiv\").unwrap();\n            let context = SearchContext {\n                deadline: Instant::now() + Duration::from_secs(10),\n            };\n            let mut a = Box::pin(first.search_with_context(&request, context));\n            entered(a.as_mut(), &transport);\n            let mut b = Box::pin(second.search_with_context(&request, context));\n            let mut c = Box::pin(third.search_with_context(&request, context));\n            pending(b.as_mut());\n            pending(c.as_mut());\n            assert_eq!(transport.calls.load(Ordering::SeqCst), 1);\n            assert_eq!(pool.available_operations(), 0);\n            assert_eq!(pool.available_slots(), 1);\n            transport.release.add_permits(3);\n            let (a, b, c) = tokio::join!(a, b, c);\n            for result in [a, b, c] {\n                assert_eq!(result.status, EngineStatus::Ok);\n                assert!(result.results.is_empty());\n            }\n            assert_eq!(transport.calls.load(Ordering::SeqCst), 3);\n            assert_eq!(transport.peak.load(Ordering::SeqCst), 1);\n            assert_eq!(transport.active.load(Ordering::SeqCst), 0);\n            assert_eq!(pool.available_operations(), 1);\n            assert_eq!(pool.available_slots(), 1);\n            pool.shutdown().await.unwrap();\n            http.shutdown_and_wait().await;\n        }\n        // A queued caller expires on its ORIGINAL real deadline without HTTP;\n        // releasing the holder later does not publish a late operation.\n        {\n            let (registry, pool, http, transport) = shared_factories();\n            let holder = pool\n                .begin_raw(\n                    ssx_owned_budget::Budget::new(1024).unwrap(),\n                    tokio::time::Instant::now() + Duration::from_secs(10),\n                )\n                .unwrap();\n            let engine = registry.instantiate(\"semanticscholar\").unwrap();\n            let deadline = Instant::now() + Duration::from_millis(100);\n            let mut queued =\n                Box::pin(engine.search_with_context(&request, SearchContext { deadline }));\n            pending(queued.as_mut());\n            tokio::time::sleep_until(deadline.into()).await;\n            drop(holder);\n            assert_eq!(queued.await.status, EngineStatus::Timeout);\n            assert_eq!(transport.calls.load(Ordering::SeqCst), 0);\n            assert_eq!(pool.available_operations(), 1);\n            assert_eq!(pool.available_slots(), 1);\n            pool.shutdown().await.unwrap();\n            http.shutdown_and_wait().await;\n        }\n        // Dropping one genuinely queued caller must cancel only that waiter;\n        // dropping the holder then admits the surviving peer and restores quota.\n        {\n            let (registry, pool, http, transport) = shared_factories();\n            let holder = pool\n                .begin_raw(\n                    ssx_owned_budget::Budget::new(1024).unwrap(),\n                    tokio::time::Instant::now() + Duration::from_secs(10),\n                )\n                .unwrap();\n            let cancelled = registry.instantiate(\"openalex\").unwrap();\n            let survivor = registry.instantiate(\"semanticscholar\").unwrap();\n            let context = SearchContext {\n                deadline: Instant::now() + Duration::from_secs(10),\n            };\n            let mut a = Box::pin(cancelled.search_with_context(&request, context));\n            let mut b = Box::pin(survivor.search_with_context(&request, context));\n            pending(a.as_mut());\n            pending(b.as_mut());\n            drop(a);\n            assert_eq!(transport.calls.load(Ordering::SeqCst), 0);\n            drop(holder);\n            transport.release.add_permits(1);\n            assert_eq!(b.await.status, EngineStatus::Ok);\n            assert_eq!(transport.calls.load(Ordering::SeqCst), 1);\n            assert_eq!(pool.available_operations(), 1);\n            assert_eq!(pool.available_slots(), 1);\n            pool.shutdown().await.unwrap();\n            http.shutdown_and_wait().await;\n        }\n        // Close wakes queued peers even while a preexisting operation remains\n        // held. Shutdown itself may complete only after that holder is dropped.\n        {\n            let (registry, pool, http, transport) = shared_factories();\n            let holder = pool\n                .begin_raw(\n                    ssx_owned_budget::Budget::new(1024).unwrap(),\n                    tokio::time::Instant::now() + Duration::from_secs(10),\n                )\n                .unwrap();\n            let first = registry.instantiate(\"openalex\").unwrap();\n            let second = registry.instantiate(\"semanticscholar\").unwrap();\n            let context = SearchContext {\n                deadline: Instant::now() + Duration::from_secs(10),\n            };\n            let mut a = Box::pin(first.search_with_context(&request, context));\n            let mut b = Box::pin(second.search_with_context(&request, context));\n            pending(a.as_mut());\n            pending(b.as_mut());\n            let mut close = Box::pin(pool.shutdown());\n            pending(close.as_mut());\n            assert_eq!(a.await.status, EngineStatus::Error);\n            assert_eq!(b.await.status, EngineStatus::Error);\n            assert_eq!(transport.calls.load(Ordering::SeqCst), 0);\n            pending(close.as_mut());\n            drop(holder);\n            close.await.unwrap();\n            assert_eq!(pool.available_operations(), 1);\n            assert_eq!(pool.available_slots(), 1);\n            http.shutdown_and_wait().await;\n        }\n    })\n    .await\n    .expect(\"shared scholarly admission scenarios exceeded watchdog\");\n}\n\n",
+          "remove": ""
+        }
+      ],
+      "historical_bytes": 18197,
+      "historical_sha256": "a6ea061fac46834800350689f156e658b97de1fc6d8ce5edb15a950c2555c93e",
+      "path": "crates/ssx-infra/tests/a06_admission.rs"
+    },
+    {
+      "current_bytes": 26591,
+      "current_sha256": "311097b776409454c196268466c8e93673773a130fabb7347e96c294e16595ed",
+      "edits": [
+        {
+          "at": 15382,
+          "insert": "    let unsupported_deadline = unsupported_driver.now() + Duration::from_secs(1);\n    let mut unsupported_admission = Box::pin(unsupported_pool.begin_raw_for_http(\n        ssx_owned_budget::Budget::new(512 * 1024 * 1024).unwrap(),\n        unsupported_deadline.into(),\n        unsupported_deadline.into(),\n        &unsupported,\n    ));\n    // Async construction does not enter the owner check: poll it inside the\n    // panic boundary so the original forbidden-owner assertion still executes.\n",
+          "remove": ""
+        },
+        {
+          "at": 15395,
+          "insert": "        std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {\n            let mut cx = std::task::Context::from_waker(std::task::Waker::noop());\n            std::future::Future::poll(unsupported_admission.as_mut(), &mut cx)\n        }))\n",
+          "remove": "        std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| unsupported_pool\n            .begin_raw_for_http(\n                ssx_owned_budget::Budget::new(512 * 1024 * 1024).unwrap(),\n                (unsupported_driver.now() + Duration::from_secs(1)).into(),\n                &unsupported\n            )))\n"
+        },
+        {
+          "at": 15731,
+          "insert": "    drop(unsupported_admission);\n",
+          "remove": ""
+        },
+        {
+          "at": 16466,
+          "insert": "            deadline.into(),\n",
+          "remove": ""
+        },
+        {
+          "at": 16495,
+          "insert": "        .await\n",
+          "remove": ""
+        }
+      ],
+      "historical_bytes": 26092,
+      "historical_sha256": "26cb13397f21daba9f2335c439d978bc718139b3546011dd386595783c8bde8c",
+      "path": "crates/ssx-infra/tests/support/a06_timeout_clock.rs"
+    }
+  ]
+}

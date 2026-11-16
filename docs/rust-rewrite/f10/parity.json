@@ -1,0 +1,68 @@
+{
+  "plan_id": "F10",
+  "issue": 889,
+  "baseline": "9ab1c7a22de933762c42469145c1f50365220de2",
+  "status": "implemented_pending_independent_review_and_exact_head_ci",
+  "source_behavior": [
+    "fixed per-engine windows; integer counts compared with source fractional/nonnegative rate; zero cost and zero rate",
+    "denied requests remain charged; three local denials deactivate;30s marker is observational and does not gate",
+    "bounded source provider Retry-After; atomic extend-only source TTL cooldown script, no local strikes",
+    "five-error300s source local circuit, equality half-open, ok/blocked reset and unavailable/rate-limited retain counters",
+    "unknown/stale/measured/synthetic/undispatched/caller-cancelled health distinctions and independent auth/configuration",
+    "explicit empty URL environment fallback and fail-open/closed settings"
+  ],
+  "intentional_hardening": [
+    {
+      "contract": "shared quota authority",
+      "source": "process-local monotonic clock in bucket key; separate INCRBY then EXPIRE",
+      "native": "Valkey TIME, INCRBY and expiry in one atomic Lua operation",
+      "evidence": "two actual child-process clocks and killed postcommit native waiter"
+    },
+    {
+      "contract": "fractional-window retention",
+      "source": "EXPIRE int(2*window_seconds), including immediate expiry below0.5seconds",
+      "native": "PEXPIRE exact2*window_ms; bounded nonzero TTL and persistent-counter repair",
+      "decision": "explicit maintainer approval; quota charging and fixed bucket law unchanged",
+      "evidence": "source ttl_law plus actual native physical expiry"
+    },
+    {
+      "contract": "invalid inputs and lifecycle",
+      "source": "negative costs can refund; nonfinite/bad timing inputs can reach arithmetic; shutdown may reconnect",
+      "native": "bounded registry-compatible engine IDs, nonnegative exact cost, finite nonnegative rate, positive whole-millisecond window; terminal close/invalid input never fail open; borrowed authority remains owned by caller",
+      "evidence": "before-command invalid cases; all51 registry IDs; terminal/borrowed store tests"
+    },
+    {
+      "contract": "observed health freshness/latency",
+      "source": "infinite freshness disables stale; zero latency default is coerced to null at service boundary",
+      "native": "finite-positive freshness with invalid inf/nan fallback300; shared helper preserves source zero-to-null/synthetic masking and nonzero finite latency including negative-value edge",
+      "decision": "explicit maintainer finite-freshness approval",
+      "evidence": "source freshness settings and health views plus actual F08 peers"
+    },
+    {
+      "contract": "authority outcome visibility",
+      "source": "best-effort cooldown read collapses missing/unavailable into0",
+      "native": "missing/active/malformed/unavailable distinct while preserving best-effort wrapper continuation",
+      "evidence": "private Valkey missing/outage/restart and explicit fallback diagnostics"
+    }
+  ],
+  "state_compatibility": [
+    {
+      "namespace": "ratelimit:{engine}:{bucket}",
+      "disposition": "exclusive writer cutover after expiry/drain; transient recompute",
+      "change": "server-time bucket meaning; do not overlap source/native quota writers",
+      "g04_rehearsal": "pending"
+    },
+    {
+      "namespace": "ratelimit:upstream-cooldown:{engine}",
+      "disposition": "source literal bytes and TTL/EX Lua body retained",
+      "g04_reverse_reader": "pending"
+    }
+  ],
+  "boundaries": {
+    "providers": 0,
+    "production_wiring": false,
+    "F09_policy": false,
+    "F14_runner": false,
+    "global_health_authority": false
+  }
+}

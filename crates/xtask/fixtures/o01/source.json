@@ -1,0 +1,387 @@
+{
+  "cases": [
+    {
+      "kind": "histogram",
+      "render": "# HELP latency latency\n# TYPE latency histogram\nlatency_bucket{engine=\"fixture\",le=\"0.005\"} 1\nlatency_bucket{engine=\"fixture\",le=\"0.01\"} 1\nlatency_bucket{engine=\"fixture\",le=\"0.025\"} 2\nlatency_bucket{engine=\"fixture\",le=\"0.05\"} 2\nlatency_bucket{engine=\"fixture\",le=\"0.1\"} 2\nlatency_bucket{engine=\"fixture\",le=\"0.25\"} 2\nlatency_bucket{engine=\"fixture\",le=\"0.5\"} 3\nlatency_bucket{engine=\"fixture\",le=\"1\"} 3\nlatency_bucket{engine=\"fixture\",le=\"2.5\"} 4\nlatency_bucket{engine=\"fixture\",le=\"5\"} 4\nlatency_bucket{engine=\"fixture\",le=\"10\"} 4\nlatency_bucket{engine=\"fixture\",le=\"30\"} 4\nlatency_bucket{engine=\"fixture\",le=\"60\"} 4\nlatency_bucket{engine=\"fixture\",le=\"+Inf\"} 5\nlatency_sum{engine=\"fixture\"} 92.52\nlatency_count{engine=\"fixture\"} 5\n"
+    },
+    {
+      "input": "0.0",
+      "kind": "format_value",
+      "render": "0"
+    },
+    {
+      "input": "-0.0",
+      "kind": "format_value",
+      "render": "0"
+    },
+    {
+      "input": "0.3333333333333333",
+      "kind": "format_value",
+      "render": "0.333333"
+    },
+    {
+      "input": "1.23456789",
+      "kind": "format_value",
+      "render": "1.23457"
+    },
+    {
+      "input": "1e-07",
+      "kind": "format_value",
+      "render": "1e-07"
+    },
+    {
+      "input": "1e-05",
+      "kind": "format_value",
+      "render": "1e-05"
+    },
+    {
+      "input": "0.0001",
+      "kind": "format_value",
+      "render": "0.0001"
+    },
+    {
+      "input": "999999.1",
+      "kind": "format_value",
+      "render": "999999"
+    },
+    {
+      "input": "1e+20",
+      "kind": "format_value",
+      "render": "100000000000000000000"
+    },
+    {
+      "input": "-1.23456789e-07",
+      "kind": "format_value",
+      "render": "-1.23457e-07"
+    },
+    {
+      "input": "inf",
+      "kind": "format_value",
+      "render": "+Inf"
+    },
+    {
+      "input": "-inf",
+      "kind": "format_value",
+      "render": "-Inf"
+    },
+    {
+      "input": "nan",
+      "kind": "format_value",
+      "render": "NaN"
+    },
+    {
+      "kind": "ordering",
+      "metric_kind": "counter",
+      "render": "# HELP ordered ordered\n# TYPE ordered counter\nordered{category=\"A\"} 0.333333\nordered{category=\"B\"} 0.333333\nordered{category=\"\\\"\"} 0.333333\nordered{category=\"\\\\\"} 0.333333\nordered{category=\"\\n\"} 0.333333\n"
+    },
+    {
+      "kind": "ordering",
+      "metric_kind": "gauge",
+      "render": "# HELP ordered ordered\n# TYPE ordered gauge\nordered{category=\"A\"} 0.333333\nordered{category=\"B\"} 0.333333\nordered{category=\"\\\"\"} 0.333333\nordered{category=\"\\\\\"} 0.333333\nordered{category=\"\\n\"} 0.333333\n"
+    },
+    {
+      "kind": "ordering",
+      "metric_kind": "histogram",
+      "render": "# HELP ordered ordered\n# TYPE ordered histogram\nordered_bucket{category=\"A\",le=\"0.005\"} 0\nordered_bucket{category=\"A\",le=\"0.01\"} 0\nordered_bucket{category=\"A\",le=\"0.025\"} 0\nordered_bucket{category=\"A\",le=\"0.05\"} 0\nordered_bucket{category=\"A\",le=\"0.1\"} 0\nordered_bucket{category=\"A\",le=\"0.25\"} 0\nordered_bucket{category=\"A\",le=\"0.5\"} 1\nordered_bucket{category=\"A\",le=\"1\"} 1\nordered_bucket{category=\"A\",le=\"2.5\"} 1\nordered_bucket{category=\"A\",le=\"5\"} 1\nordered_bucket{category=\"A\",le=\"10\"} 1\nordered_bucket{category=\"A\",le=\"30\"} 1\nordered_bucket{category=\"A\",le=\"60\"} 1\nordered_bucket{category=\"A\",le=\"+Inf\"} 1\nordered_sum{category=\"A\"} 0.333333\nordered_count{category=\"A\"} 1\nordered_bucket{category=\"B\",le=\"0.005\"} 0\nordered_bucket{category=\"B\",le=\"0.01\"} 0\nordered_bucket{category=\"B\",le=\"0.025\"} 0\nordered_bucket{category=\"B\",le=\"0.05\"} 0\nordered_bucket{category=\"B\",le=\"0.1\"} 0\nordered_bucket{category=\"B\",le=\"0.25\"} 0\nordered_bucket{category=\"B\",le=\"0.5\"} 1\nordered_bucket{category=\"B\",le=\"1\"} 1\nordered_bucket{category=\"B\",le=\"2.5\"} 1\nordered_bucket{category=\"B\",le=\"5\"} 1\nordered_bucket{category=\"B\",le=\"10\"} 1\nordered_bucket{category=\"B\",le=\"30\"} 1\nordered_bucket{category=\"B\",le=\"60\"} 1\nordered_bucket{category=\"B\",le=\"+Inf\"} 1\nordered_sum{category=\"B\"} 0.333333\nordered_count{category=\"B\"} 1\nordered_bucket{category=\"\\\"\",le=\"0.005\"} 0\nordered_bucket{category=\"\\\"\",le=\"0.01\"} 0\nordered_bucket{category=\"\\\"\",le=\"0.025\"} 0\nordered_bucket{category=\"\\\"\",le=\"0.05\"} 0\nordered_bucket{category=\"\\\"\",le=\"0.1\"} 0\nordered_bucket{category=\"\\\"\",le=\"0.25\"} 0\nordered_bucket{category=\"\\\"\",le=\"0.5\"} 1\nordered_bucket{category=\"\\\"\",le=\"1\"} 1\nordered_bucket{category=\"\\\"\",le=\"2.5\"} 1\nordered_bucket{category=\"\\\"\",le=\"5\"} 1\nordered_bucket{category=\"\\\"\",le=\"10\"} 1\nordered_bucket{category=\"\\\"\",le=\"30\"} 1\nordered_bucket{category=\"\\\"\",le=\"60\"} 1\nordered_bucket{category=\"\\\"\",le=\"+Inf\"} 1\nordered_sum{category=\"\\\"\"} 0.333333\nordered_count{category=\"\\\"\"} 1\nordered_bucket{category=\"\\\\\",le=\"0.005\"} 0\nordered_bucket{category=\"\\\\\",le=\"0.01\"} 0\nordered_bucket{category=\"\\\\\",le=\"0.025\"} 0\nordered_bucket{category=\"\\\\\",le=\"0.05\"} 0\nordered_bucket{category=\"\\\\\",le=\"0.1\"} 0\nordered_bucket{category=\"\\\\\",le=\"0.25\"} 0\nordered_bucket{category=\"\\\\\",le=\"0.5\"} 1\nordered_bucket{category=\"\\\\\",le=\"1\"} 1\nordered_bucket{category=\"\\\\\",le=\"2.5\"} 1\nordered_bucket{category=\"\\\\\",le=\"5\"} 1\nordered_bucket{category=\"\\\\\",le=\"10\"} 1\nordered_bucket{category=\"\\\\\",le=\"30\"} 1\nordered_bucket{category=\"\\\\\",le=\"60\"} 1\nordered_bucket{category=\"\\\\\",le=\"+Inf\"} 1\nordered_sum{category=\"\\\\\"} 0.333333\nordered_count{category=\"\\\\\"} 1\nordered_bucket{category=\"\\n\",le=\"0.005\"} 0\nordered_bucket{category=\"\\n\",le=\"0.01\"} 0\nordered_bucket{category=\"\\n\",le=\"0.025\"} 0\nordered_bucket{category=\"\\n\",le=\"0.05\"} 0\nordered_bucket{category=\"\\n\",le=\"0.1\"} 0\nordered_bucket{category=\"\\n\",le=\"0.25\"} 0\nordered_bucket{category=\"\\n\",le=\"0.5\"} 1\nordered_bucket{category=\"\\n\",le=\"1\"} 1\nordered_bucket{category=\"\\n\",le=\"2.5\"} 1\nordered_bucket{category=\"\\n\",le=\"5\"} 1\nordered_bucket{category=\"\\n\",le=\"10\"} 1\nordered_bucket{category=\"\\n\",le=\"30\"} 1\nordered_bucket{category=\"\\n\",le=\"60\"} 1\nordered_bucket{category=\"\\n\",le=\"+Inf\"} 1\nordered_sum{category=\"\\n\"} 0.333333\nordered_count{category=\"\\n\"} 1\n"
+    },
+    {
+      "kind": "engine_status",
+      "render": "# HELP slopsearx_engine_queries_total Total queries dispatched per engine\n# TYPE slopsearx_engine_queries_total counter\nslopsearx_engine_queries_total{engine=\"fixture\"} 1\n# HELP slopsearx_engine_errors_total Failed engine outcomes, excluding successful empty results\n# TYPE slopsearx_engine_errors_total counter\nslopsearx_engine_errors_total{engine=\"fixture\"} 0\n# HELP slopsearx_engine_latency_seconds Query latency per engine in seconds\n# TYPE slopsearx_engine_latency_seconds histogram\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.005\"} 0\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.01\"} 0\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.025\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.05\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.1\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.25\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.5\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"1\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"2.5\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"5\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"10\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"30\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"60\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"+Inf\"} 1\nslopsearx_engine_latency_seconds_sum{engine=\"fixture\"} 0.0127\nslopsearx_engine_latency_seconds_count{engine=\"fixture\"} 1\n# HELP slopsearx_engine_status Engine status (0=ok, 1=degraded, 2=down)\n# TYPE slopsearx_engine_status gauge\nslopsearx_engine_status{engine=\"fixture\"} 0\n",
+      "status": "ok"
+    },
+    {
+      "kind": "engine_status",
+      "render": "# HELP slopsearx_engine_queries_total Total queries dispatched per engine\n# TYPE slopsearx_engine_queries_total counter\nslopsearx_engine_queries_total{engine=\"fixture\"} 1\n# HELP slopsearx_engine_errors_total Failed engine outcomes, excluding successful empty results\n# TYPE slopsearx_engine_errors_total counter\nslopsearx_engine_errors_total{engine=\"fixture\"} 1\n# HELP slopsearx_engine_latency_seconds Query latency per engine in seconds\n# TYPE slopsearx_engine_latency_seconds histogram\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.005\"} 0\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.01\"} 0\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.025\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.05\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.1\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.25\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.5\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"1\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"2.5\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"5\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"10\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"30\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"60\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"+Inf\"} 1\nslopsearx_engine_latency_seconds_sum{engine=\"fixture\"} 0.0127\nslopsearx_engine_latency_seconds_count{engine=\"fixture\"} 1\n# HELP slopsearx_engine_status Engine status (0=ok, 1=degraded, 2=down)\n# TYPE slopsearx_engine_status gauge\nslopsearx_engine_status{engine=\"fixture\"} 1\n",
+      "status": "rate_limited"
+    },
+    {
+      "kind": "engine_status",
+      "render": "# HELP slopsearx_engine_queries_total Total queries dispatched per engine\n# TYPE slopsearx_engine_queries_total counter\nslopsearx_engine_queries_total{engine=\"fixture\"} 1\n# HELP slopsearx_engine_errors_total Failed engine outcomes, excluding successful empty results\n# TYPE slopsearx_engine_errors_total counter\nslopsearx_engine_errors_total{engine=\"fixture\"} 1\n# HELP slopsearx_engine_latency_seconds Query latency per engine in seconds\n# TYPE slopsearx_engine_latency_seconds histogram\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.005\"} 0\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.01\"} 0\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.025\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.05\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.1\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.25\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.5\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"1\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"2.5\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"5\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"10\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"30\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"60\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"+Inf\"} 1\nslopsearx_engine_latency_seconds_sum{engine=\"fixture\"} 0.0127\nslopsearx_engine_latency_seconds_count{engine=\"fixture\"} 1\n# HELP slopsearx_engine_status Engine status (0=ok, 1=degraded, 2=down)\n# TYPE slopsearx_engine_status gauge\nslopsearx_engine_status{engine=\"fixture\"} 2\n",
+      "status": "blocked"
+    },
+    {
+      "kind": "engine_status",
+      "render": "# HELP slopsearx_engine_queries_total Total queries dispatched per engine\n# TYPE slopsearx_engine_queries_total counter\nslopsearx_engine_queries_total{engine=\"fixture\"} 1\n# HELP slopsearx_engine_errors_total Failed engine outcomes, excluding successful empty results\n# TYPE slopsearx_engine_errors_total counter\nslopsearx_engine_errors_total{engine=\"fixture\"} 1\n# HELP slopsearx_engine_latency_seconds Query latency per engine in seconds\n# TYPE slopsearx_engine_latency_seconds histogram\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.005\"} 0\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.01\"} 0\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.025\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.05\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.1\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.25\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.5\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"1\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"2.5\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"5\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"10\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"30\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"60\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"+Inf\"} 1\nslopsearx_engine_latency_seconds_sum{engine=\"fixture\"} 0.0127\nslopsearx_engine_latency_seconds_count{engine=\"fixture\"} 1\n# HELP slopsearx_engine_status Engine status (0=ok, 1=degraded, 2=down)\n# TYPE slopsearx_engine_status gauge\nslopsearx_engine_status{engine=\"fixture\"} 2\n",
+      "status": "error"
+    },
+    {
+      "kind": "engine_status",
+      "render": "# HELP slopsearx_engine_queries_total Total queries dispatched per engine\n# TYPE slopsearx_engine_queries_total counter\nslopsearx_engine_queries_total{engine=\"fixture\"} 1\n# HELP slopsearx_engine_errors_total Failed engine outcomes, excluding successful empty results\n# TYPE slopsearx_engine_errors_total counter\nslopsearx_engine_errors_total{engine=\"fixture\"} 1\n# HELP slopsearx_engine_latency_seconds Query latency per engine in seconds\n# TYPE slopsearx_engine_latency_seconds histogram\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.005\"} 0\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.01\"} 0\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.025\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.05\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.1\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.25\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.5\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"1\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"2.5\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"5\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"10\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"30\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"60\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"+Inf\"} 1\nslopsearx_engine_latency_seconds_sum{engine=\"fixture\"} 0.0127\nslopsearx_engine_latency_seconds_count{engine=\"fixture\"} 1\n# HELP slopsearx_engine_status Engine status (0=ok, 1=degraded, 2=down)\n# TYPE slopsearx_engine_status gauge\nslopsearx_engine_status{engine=\"fixture\"} 1\n",
+      "status": "timeout"
+    },
+    {
+      "kind": "engine_status",
+      "render": "# HELP slopsearx_engine_queries_total Total queries dispatched per engine\n# TYPE slopsearx_engine_queries_total counter\nslopsearx_engine_queries_total{engine=\"fixture\"} 1\n# HELP slopsearx_engine_errors_total Failed engine outcomes, excluding successful empty results\n# TYPE slopsearx_engine_errors_total counter\nslopsearx_engine_errors_total{engine=\"fixture\"} 1\n# HELP slopsearx_engine_latency_seconds Query latency per engine in seconds\n# TYPE slopsearx_engine_latency_seconds histogram\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.005\"} 0\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.01\"} 0\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.025\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.05\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.1\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.25\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"0.5\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"1\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"2.5\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"5\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"10\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"30\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"60\"} 1\nslopsearx_engine_latency_seconds_bucket{engine=\"fixture\",le=\"+Inf\"} 1\nslopsearx_engine_latency_seconds_sum{engine=\"fixture\"} 0.0127\nslopsearx_engine_latency_seconds_count{engine=\"fixture\"} 1\n# HELP slopsearx_engine_status Engine status (0=ok, 1=degraded, 2=down)\n# TYPE slopsearx_engine_status gauge\nslopsearx_engine_status{engine=\"fixture\"} 2\n",
+      "status": "unavailable"
+    },
+    {
+      "commands": [
+        [
+          "execute_command",
+          "XADD",
+          "query_audit:2026-10-16",
+          "MAXLEN",
+          "~",
+          "10000",
+          "*",
+          "query",
+          "raw query credential-looking text",
+          "client_ip",
+          "192.0.2.12",
+          "timestamp",
+          "2026-10-16T12:00:00.000Z",
+          "engines",
+          "fixture",
+          "engines_ok",
+          "1",
+          "engines_error",
+          "0",
+          "engines_timeout",
+          "0",
+          "total_results",
+          "4",
+          "latency_ms",
+          "123.4"
+        ],
+        [
+          "expire",
+          "query_audit:2026-10-16",
+          7776000
+        ]
+      ],
+      "kind": "audit_raw"
+    },
+    {
+      "commands": [
+        [
+          "hincrby",
+          "engine_stats:fixture:2026-10-16",
+          "queries",
+          1
+        ],
+        [
+          "hincrby",
+          "engine_stats:fixture:2026-10-16",
+          "results_returned",
+          4
+        ],
+        [
+          "hincrby",
+          "engine_stats:fixture:2026-10-16",
+          "errors",
+          0
+        ],
+        [
+          "hincrby",
+          "engine_stats:fixture:2026-10-16",
+          "rate_limited",
+          0
+        ],
+        [
+          "hincrby",
+          "engine_stats:fixture:2026-10-16",
+          "total_latency_ms",
+          12
+        ],
+        [
+          "hincrby",
+          "engine_stats:fixture:2026-10-16",
+          "total_score",
+          750
+        ],
+        [
+          "expire",
+          "engine_stats:fixture:2026-10-16",
+          7776000
+        ]
+      ],
+      "kind": "stats"
+    },
+    {
+      "kind": "audit_disabled_failed",
+      "returned": true
+    }
+  ],
+  "metrics": [
+    {
+      "help": "Total queries dispatched per engine",
+      "kind": "counter",
+      "name": "slopsearx_engine_queries_total"
+    },
+    {
+      "help": "Failed engine outcomes, excluding successful empty results",
+      "kind": "counter",
+      "name": "slopsearx_engine_errors_total"
+    },
+    {
+      "help": "Query latency per engine in seconds",
+      "kind": "histogram",
+      "name": "slopsearx_engine_latency_seconds"
+    },
+    {
+      "help": "Engine status (0=ok, 1=degraded, 2=down)",
+      "kind": "gauge",
+      "name": "slopsearx_engine_status"
+    },
+    {
+      "help": "Cache hit/miss counters",
+      "kind": "counter",
+      "name": "slopsearx_cache_hit_total"
+    },
+    {
+      "help": "Total search requests handled",
+      "kind": "counter",
+      "name": "slopsearx_server_requests_total"
+    },
+    {
+      "help": "Completed HTTP searches by outcome (success, rejected, failure)",
+      "kind": "counter",
+      "name": "slopsearx_http_search_completed_total"
+    },
+    {
+      "help": "HTTP search application duration including response rendering, by outcome",
+      "kind": "histogram",
+      "name": "slopsearx_http_search_duration_seconds"
+    },
+    {
+      "help": "Search requests per category",
+      "kind": "counter",
+      "name": "slopsearx_server_requests_by_category_total"
+    },
+    {
+      "help": "Search requests per output format",
+      "kind": "counter",
+      "name": "slopsearx_server_requests_by_format_total"
+    },
+    {
+      "help": "Server errors by type (timeout, circuit_open, rate_limited, internal)",
+      "kind": "counter",
+      "name": "slopsearx_server_errors_total"
+    },
+    {
+      "help": "MCP tool invocations per tool",
+      "kind": "counter",
+      "name": "slopsearx_mcp_tool_calls_total"
+    },
+    {
+      "help": "MCP tool errors per tool and error code",
+      "kind": "counter",
+      "name": "slopsearx_mcp_tool_errors_total"
+    },
+    {
+      "help": "MCP tool latency per tool in seconds",
+      "kind": "histogram",
+      "name": "slopsearx_mcp_tool_latency_seconds"
+    },
+    {
+      "help": "Accepted durable workflow operations",
+      "kind": "counter",
+      "name": "slopsearx_workflow_accepted_total"
+    },
+    {
+      "help": "Durable workflow terminal outcomes",
+      "kind": "counter",
+      "name": "slopsearx_workflow_terminal_total"
+    },
+    {
+      "help": "Durable workflow retry attempts",
+      "kind": "counter",
+      "name": "slopsearx_workflow_retries_total"
+    },
+    {
+      "help": "Expired workflow leases recovered by a worker",
+      "kind": "counter",
+      "name": "slopsearx_workflow_lease_recoveries_total"
+    },
+    {
+      "help": "Rejected workflow operations by reason class",
+      "kind": "counter",
+      "name": "slopsearx_workflow_rejections_total"
+    },
+    {
+      "help": "Observed durable workflow artifact expirations",
+      "kind": "counter",
+      "name": "slopsearx_workflow_expired_total"
+    },
+    {
+      "help": "Queued workflow operations visible to this replica",
+      "kind": "gauge",
+      "name": "slopsearx_workflow_queued"
+    },
+    {
+      "help": "Running workflow operations visible to this replica",
+      "kind": "gauge",
+      "name": "slopsearx_workflow_running"
+    },
+    {
+      "help": "Active workflow leases held by this replica",
+      "kind": "gauge",
+      "name": "slopsearx_workflow_active_leases"
+    },
+    {
+      "help": "Age of the oldest claimable workflow operation",
+      "kind": "gauge",
+      "name": "slopsearx_workflow_oldest_claimable_age_seconds"
+    },
+    {
+      "help": "Bounded workflow store or index cardinality",
+      "kind": "gauge",
+      "name": "slopsearx_workflow_store_items"
+    },
+    {
+      "help": "Workflow queue wait before claim",
+      "kind": "histogram",
+      "name": "slopsearx_workflow_queue_wait_seconds"
+    },
+    {
+      "help": "Workflow execution duration",
+      "kind": "histogram",
+      "name": "slopsearx_workflow_execution_seconds"
+    },
+    {
+      "help": "Saved-search report generation duration",
+      "kind": "histogram",
+      "name": "slopsearx_workflow_report_generation_seconds"
+    },
+    {
+      "help": "Results admitted to one durable workflow artifact",
+      "kind": "histogram",
+      "name": "slopsearx_workflow_admitted_results"
+    },
+    {
+      "help": "Saved-search outbox events published by event type",
+      "kind": "counter",
+      "name": "slopsearx_saved_search_event_publications_total"
+    },
+    {
+      "help": "Saved-search outbox read operations by closed outcome",
+      "kind": "counter",
+      "name": "slopsearx_saved_search_event_reads_total"
+    },
+    {
+      "help": "Saved-search outbox acknowledgement operations by closed outcome",
+      "kind": "counter",
+      "name": "slopsearx_saved_search_event_acknowledgements_total"
+    },
+    {
+      "help": "Saved-search outbox reads that observed a retention gap",
+      "kind": "counter",
+      "name": "slopsearx_saved_search_event_retention_gaps_total"
+    },
+    {
+      "help": "Saved-search outbox operations rejected by bounded resource",
+      "kind": "counter",
+      "name": "slopsearx_saved_search_event_capacity_rejections_total"
+    },
+    {
+      "help": "Age of the oldest event returned by the most recent local consumer read",
+      "kind": "gauge",
+      "name": "slopsearx_saved_search_event_backlog_age_seconds"
+    }
+  ],
+  "plan_id": "O01",
+  "python": "3.14.7",
+  "rendered": "# HELP slopsearx_engine_queries_total Total queries dispatched per engine\n# TYPE slopsearx_engine_queries_total counter\n# HELP slopsearx_engine_errors_total Failed engine outcomes, excluding successful empty results\n# TYPE slopsearx_engine_errors_total counter\n# HELP slopsearx_engine_latency_seconds Query latency per engine in seconds\n# TYPE slopsearx_engine_latency_seconds histogram\n# HELP slopsearx_engine_status Engine status (0=ok, 1=degraded, 2=down)\n# TYPE slopsearx_engine_status gauge\n# HELP slopsearx_cache_hit_total Cache hit/miss counters\n# TYPE slopsearx_cache_hit_total counter\n# HELP slopsearx_server_requests_total Total search requests handled\n# TYPE slopsearx_server_requests_total counter\n# HELP slopsearx_http_search_completed_total Completed HTTP searches by outcome (success, rejected, failure)\n# TYPE slopsearx_http_search_completed_total counter\n# HELP slopsearx_http_search_duration_seconds HTTP search application duration including response rendering, by outcome\n# TYPE slopsearx_http_search_duration_seconds histogram\n# HELP slopsearx_server_requests_by_category_total Search requests per category\n# TYPE slopsearx_server_requests_by_category_total counter\n# HELP slopsearx_server_requests_by_format_total Search requests per output format\n# TYPE slopsearx_server_requests_by_format_total counter\n# HELP slopsearx_server_errors_total Server errors by type (timeout, circuit_open, rate_limited, internal)\n# TYPE slopsearx_server_errors_total counter\n# HELP slopsearx_mcp_tool_calls_total MCP tool invocations per tool\n# TYPE slopsearx_mcp_tool_calls_total counter\n# HELP slopsearx_mcp_tool_errors_total MCP tool errors per tool and error code\n# TYPE slopsearx_mcp_tool_errors_total counter\n# HELP slopsearx_mcp_tool_latency_seconds MCP tool latency per tool in seconds\n# TYPE slopsearx_mcp_tool_latency_seconds histogram\n# HELP slopsearx_workflow_accepted_total Accepted durable workflow operations\n# TYPE slopsearx_workflow_accepted_total counter\nslopsearx_workflow_accepted_total{mode=\"durable_leased\",workflow=\"dependency_dossier\"} 1\nslopsearx_workflow_accepted_total{mode=\"durable_leased\",workflow=\"research\"} 1\nslopsearx_workflow_accepted_total{mode=\"durable_leased\",workflow=\"retrieval_receipt\"} 1\nslopsearx_workflow_accepted_total{mode=\"durable_leased\",workflow=\"saved_search\"} 1\nslopsearx_workflow_accepted_total{mode=\"durable_leased\",workflow=\"staged_search\"} 1\n# HELP slopsearx_workflow_terminal_total Durable workflow terminal outcomes\n# TYPE slopsearx_workflow_terminal_total counter\nslopsearx_workflow_terminal_total{outcome=\"interrupted\",workflow=\"dependency_dossier\"} 1\nslopsearx_workflow_terminal_total{outcome=\"interrupted\",workflow=\"research\"} 1\nslopsearx_workflow_terminal_total{outcome=\"interrupted\",workflow=\"retrieval_receipt\"} 1\nslopsearx_workflow_terminal_total{outcome=\"interrupted\",workflow=\"saved_search\"} 1\nslopsearx_workflow_terminal_total{outcome=\"interrupted\",workflow=\"staged_search\"} 1\n# HELP slopsearx_workflow_retries_total Durable workflow retry attempts\n# TYPE slopsearx_workflow_retries_total counter\n# HELP slopsearx_workflow_lease_recoveries_total Expired workflow leases recovered by a worker\n# TYPE slopsearx_workflow_lease_recoveries_total counter\n# HELP slopsearx_workflow_rejections_total Rejected workflow operations by reason class\n# TYPE slopsearx_workflow_rejections_total counter\nslopsearx_workflow_rejections_total{reason=\"policy\",workflow=\"dependency_dossier\"} 1\nslopsearx_workflow_rejections_total{reason=\"policy\",workflow=\"research\"} 1\nslopsearx_workflow_rejections_total{reason=\"policy\",workflow=\"retrieval_receipt\"} 1\nslopsearx_workflow_rejections_total{reason=\"policy\",workflow=\"saved_search\"} 1\nslopsearx_workflow_rejections_total{reason=\"policy\",workflow=\"staged_search\"} 1\n# HELP slopsearx_workflow_expired_total Observed durable workflow artifact expirations\n# TYPE slopsearx_workflow_expired_total counter\n# HELP slopsearx_workflow_queued Queued workflow operations visible to this replica\n# TYPE slopsearx_workflow_queued gauge\n# HELP slopsearx_workflow_running Running workflow operations visible to this replica\n# TYPE slopsearx_workflow_running gauge\n# HELP slopsearx_workflow_active_leases Active workflow leases held by this replica\n# TYPE slopsearx_workflow_active_leases gauge\n# HELP slopsearx_workflow_oldest_claimable_age_seconds Age of the oldest claimable workflow operation\n# TYPE slopsearx_workflow_oldest_claimable_age_seconds gauge\n# HELP slopsearx_workflow_store_items Bounded workflow store or index cardinality\n# TYPE slopsearx_workflow_store_items gauge\n# HELP slopsearx_workflow_queue_wait_seconds Workflow queue wait before claim\n# TYPE slopsearx_workflow_queue_wait_seconds histogram\n# HELP slopsearx_workflow_execution_seconds Workflow execution duration\n# TYPE slopsearx_workflow_execution_seconds histogram\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"dependency_dossier\",le=\"0.005\"} 0\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"dependency_dossier\",le=\"0.01\"} 0\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"dependency_dossier\",le=\"0.025\"} 0\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"dependency_dossier\",le=\"0.05\"} 0\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"dependency_dossier\",le=\"0.1\"} 0\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"dependency_dossier\",le=\"0.25\"} 0\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"dependency_dossier\",le=\"0.5\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"dependency_dossier\",le=\"1\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"dependency_dossier\",le=\"2.5\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"dependency_dossier\",le=\"5\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"dependency_dossier\",le=\"10\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"dependency_dossier\",le=\"30\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"dependency_dossier\",le=\"60\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"dependency_dossier\",le=\"+Inf\"} 1\nslopsearx_workflow_execution_seconds_sum{outcome=\"interrupted\",workflow=\"dependency_dossier\"} 0.5\nslopsearx_workflow_execution_seconds_count{outcome=\"interrupted\",workflow=\"dependency_dossier\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"research\",le=\"0.005\"} 0\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"research\",le=\"0.01\"} 0\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"research\",le=\"0.025\"} 0\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"research\",le=\"0.05\"} 0\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"research\",le=\"0.1\"} 0\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"research\",le=\"0.25\"} 0\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"research\",le=\"0.5\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"research\",le=\"1\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"research\",le=\"2.5\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"research\",le=\"5\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"research\",le=\"10\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"research\",le=\"30\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"research\",le=\"60\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"research\",le=\"+Inf\"} 1\nslopsearx_workflow_execution_seconds_sum{outcome=\"interrupted\",workflow=\"research\"} 0.5\nslopsearx_workflow_execution_seconds_count{outcome=\"interrupted\",workflow=\"research\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"retrieval_receipt\",le=\"0.005\"} 0\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"retrieval_receipt\",le=\"0.01\"} 0\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"retrieval_receipt\",le=\"0.025\"} 0\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"retrieval_receipt\",le=\"0.05\"} 0\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"retrieval_receipt\",le=\"0.1\"} 0\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"retrieval_receipt\",le=\"0.25\"} 0\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"retrieval_receipt\",le=\"0.5\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"retrieval_receipt\",le=\"1\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"retrieval_receipt\",le=\"2.5\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"retrieval_receipt\",le=\"5\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"retrieval_receipt\",le=\"10\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"retrieval_receipt\",le=\"30\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"retrieval_receipt\",le=\"60\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"retrieval_receipt\",le=\"+Inf\"} 1\nslopsearx_workflow_execution_seconds_sum{outcome=\"interrupted\",workflow=\"retrieval_receipt\"} 0.5\nslopsearx_workflow_execution_seconds_count{outcome=\"interrupted\",workflow=\"retrieval_receipt\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"saved_search\",le=\"0.005\"} 0\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"saved_search\",le=\"0.01\"} 0\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"saved_search\",le=\"0.025\"} 0\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"saved_search\",le=\"0.05\"} 0\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"saved_search\",le=\"0.1\"} 0\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"saved_search\",le=\"0.25\"} 0\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"saved_search\",le=\"0.5\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"saved_search\",le=\"1\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"saved_search\",le=\"2.5\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"saved_search\",le=\"5\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"saved_search\",le=\"10\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"saved_search\",le=\"30\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"saved_search\",le=\"60\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"saved_search\",le=\"+Inf\"} 1\nslopsearx_workflow_execution_seconds_sum{outcome=\"interrupted\",workflow=\"saved_search\"} 0.5\nslopsearx_workflow_execution_seconds_count{outcome=\"interrupted\",workflow=\"saved_search\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"staged_search\",le=\"0.005\"} 0\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"staged_search\",le=\"0.01\"} 0\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"staged_search\",le=\"0.025\"} 0\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"staged_search\",le=\"0.05\"} 0\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"staged_search\",le=\"0.1\"} 0\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"staged_search\",le=\"0.25\"} 0\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"staged_search\",le=\"0.5\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"staged_search\",le=\"1\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"staged_search\",le=\"2.5\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"staged_search\",le=\"5\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"staged_search\",le=\"10\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"staged_search\",le=\"30\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"staged_search\",le=\"60\"} 1\nslopsearx_workflow_execution_seconds_bucket{outcome=\"interrupted\",workflow=\"staged_search\",le=\"+Inf\"} 1\nslopsearx_workflow_execution_seconds_sum{outcome=\"interrupted\",workflow=\"staged_search\"} 0.5\nslopsearx_workflow_execution_seconds_count{outcome=\"interrupted\",workflow=\"staged_search\"} 1\n# HELP slopsearx_workflow_report_generation_seconds Saved-search report generation duration\n# TYPE slopsearx_workflow_report_generation_seconds histogram\n# HELP slopsearx_workflow_admitted_results Results admitted to one durable workflow artifact\n# TYPE slopsearx_workflow_admitted_results histogram\n# HELP slopsearx_saved_search_event_publications_total Saved-search outbox events published by event type\n# TYPE slopsearx_saved_search_event_publications_total counter\nslopsearx_saved_search_event_publications_total{event_type=\"definition_expired\"} 1\nslopsearx_saved_search_event_publications_total{event_type=\"definition_paused\"} 1\nslopsearx_saved_search_event_publications_total{event_type=\"report_created\"} 1\nslopsearx_saved_search_event_publications_total{event_type=\"run_failed\"} 1\nslopsearx_saved_search_event_publications_total{event_type=\"run_incomparable\"} 1\n# HELP slopsearx_saved_search_event_reads_total Saved-search outbox read operations by closed outcome\n# TYPE slopsearx_saved_search_event_reads_total counter\nslopsearx_saved_search_event_reads_total{outcome=\"delivered\"} 1\nslopsearx_saved_search_event_reads_total{outcome=\"empty\"} 1\nslopsearx_saved_search_event_reads_total{outcome=\"gap\"} 1\nslopsearx_saved_search_event_reads_total{outcome=\"redacted\"} 1\nslopsearx_saved_search_event_reads_total{outcome=\"rejected\"} 1\n# HELP slopsearx_saved_search_event_acknowledgements_total Saved-search outbox acknowledgement operations by closed outcome\n# TYPE slopsearx_saved_search_event_acknowledgements_total counter\nslopsearx_saved_search_event_acknowledgements_total{outcome=\"advanced\"} 1\nslopsearx_saved_search_event_acknowledgements_total{outcome=\"idempotent\"} 1\nslopsearx_saved_search_event_acknowledgements_total{outcome=\"rejected\"} 1\n# HELP slopsearx_saved_search_event_retention_gaps_total Saved-search outbox reads that observed a retention gap\n# TYPE slopsearx_saved_search_event_retention_gaps_total counter\nslopsearx_saved_search_event_retention_gaps_total{} 1\n# HELP slopsearx_saved_search_event_capacity_rejections_total Saved-search outbox operations rejected by bounded resource\n# TYPE slopsearx_saved_search_event_capacity_rejections_total counter\nslopsearx_saved_search_event_capacity_rejections_total{resource=\"consumer\"} 1\nslopsearx_saved_search_event_capacity_rejections_total{resource=\"stream\"} 1\n# HELP slopsearx_saved_search_event_backlog_age_seconds Age of the oldest event returned by the most recent local consumer read\n# TYPE slopsearx_saved_search_event_backlog_age_seconds gauge\nslopsearx_saved_search_event_backlog_age_seconds{} 3\n",
+  "schema_version": 1,
+  "source_commit": "1e9dd82d62456fe6f511cc5ade88bae619fac027"
+}

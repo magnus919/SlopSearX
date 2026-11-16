@@ -1,0 +1,43 @@
+use std::{fs,path::Path};
+use std::os::unix::fs::{PermissionsExt,MetadataExt};
+type Result<T> = std::result::Result<T,String>;
+fn need(ok:bool,msg:&str)->Result<()> {if ok {Ok(())} else {Err(msg.into())}}
+fn regular(root: &Path, path: &str) -> Result<Vec<u8>> {
+    use std::io::Read;
+    let full = root.join(path);
+    let before = fs::symlink_metadata(&full).map_err(|e| e.to_string())?;
+    need(
+        before.is_file() && !before.file_type().is_symlink() && before.len() <= 262144,
+        "bounded regular leaf",
+    )?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::MetadataExt;
+        need(before.mode() & 0o7777 == 0o644, "regular0644 leaf")?;
+        let opened = fs::File::open(full).map_err(|e| e.to_string())?;
+        let after = opened.metadata().map_err(|e| e.to_string())?;
+        need(
+            after.is_file()
+                && before.dev() == after.dev()
+                && before.ino() == after.ino()
+                && after.mode() & 0o7777 == 0o644,
+            "opened leaf custody",
+        )?;
+        let mut bytes = vec![];
+        opened
+            .take(262145)
+            .read_to_end(&mut bytes)
+            .map_err(|e| e.to_string())?;
+        need(
+            bytes.len() <= 262144 && bytes.len() as u64 == after.len(),
+            "finite opened length",
+        )?;
+        Ok(bytes)
+    }
+    #[cfg(not(unix))]
+    {
+        Err("W07 helper source proof requires Unix".into())
+    }
+}
+
+fn main(){let root=std::env::args().nth(1).unwrap();let root=Path::new(&root);fs::create_dir(root).unwrap();for mode in [0o644,0o600,0o4644,0o4755]{for repeat in 0..3{let p=root.join("probe");fs::write(&p,b"inert").unwrap();fs::set_permissions(&p,fs::Permissions::from_mode(mode)).unwrap();let before=fs::symlink_metadata(&p).unwrap().mode() & 0o7777;let result=regular(root,"probe");let after=fs::symlink_metadata(&p).unwrap().mode() & 0o7777;println!("requested={mode:o} repeat={repeat} before={before:o} after={after:o} result={result:?}");assert_eq!(result.is_ok(),mode==0o644);assert_eq!(before,mode);assert_eq!(after,before);if mode==0o644{assert_eq!(result.unwrap(),b"inert");}fs::remove_file(p).unwrap();}}fs::remove_dir(root).unwrap();}

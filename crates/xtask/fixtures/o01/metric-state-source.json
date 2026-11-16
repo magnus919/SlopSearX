@@ -1,0 +1,33 @@
+{
+  "cases": [
+    {
+      "age": 42.0,
+      "backlog": 42.0,
+      "id": "saved.0",
+      "outcome": "gap",
+      "retention_gaps": 1.0
+    },
+    {
+      "age": null,
+      "backlog": 42.0,
+      "id": "saved.1",
+      "outcome": "delivered",
+      "retention_gaps": 1.0
+    },
+    {
+      "age": null,
+      "backlog": 0.0,
+      "id": "saved.2",
+      "outcome": "gap",
+      "retention_gaps": 2.0
+    },
+    {
+      "id": "workflow.zero_positive_age",
+      "oldest": 7.0,
+      "queued": 0,
+      "refresh_state": false
+    }
+  ],
+  "scope": "actual original helper state, no service/network",
+  "source_sha256": "2df238e07c692be05f73bdc3b1e7896dbae576df1d5128a445e6a9fe196c0edc"
+}

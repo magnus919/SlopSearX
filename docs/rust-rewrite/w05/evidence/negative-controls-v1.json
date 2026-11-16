@@ -1,0 +1,46 @@
+{
+  "plan_id": "W05",
+  "controls": [
+    {
+      "name": "corpus-drift",
+      "exit_code": 1,
+      "status": "failed",
+      "error": "W05 frozen source/case/export identity changed: source.json",
+      "mutated_path": "docs/rust-rewrite/w05/source.json",
+      "before_sha256": "bfa6a97cc9912f97054e78b56fd3ead683f417d0da293440d5c173f5d579dccf",
+      "mutant_sha256": "fe584eb6c41915547b9a2e8cd4f24410d65ea4092210c3fe38c7e1022359b196",
+      "restoration": "byte_exact"
+    },
+    {
+      "name": "ignored-required-native",
+      "exit_code": 1,
+      "status": "failed",
+      "error": "W05 ssx-infra required tests missing, ignored or failed",
+      "mutated_path": "crates/ssx-infra/tests/w05.rs",
+      "before_sha256": "75c8aaf6e6d4f9624711e89b9befc03b47c23aa6fdbf56c9af0c392ff8569f6d",
+      "mutant_sha256": "13605c15aefd295ada79da0a10f301db254ed32e18eb8439d0fd8d4388a35849",
+      "restoration": "byte_exact"
+    },
+    {
+      "name": "caseless-native-pass",
+      "exit_code": 1,
+      "status": "failed",
+      "error": "W05 native PASS without exact completed semantic case receipts",
+      "mutated_path": "crates/ssx-infra/tests/w05.rs",
+      "before_sha256": "75c8aaf6e6d4f9624711e89b9befc03b47c23aa6fdbf56c9af0c392ff8569f6d",
+      "mutant_sha256": "d49e6858d1b6cfaa6e86376e10225c26ed219b48e3c245a3ba990a1eaed4e576",
+      "restoration": "byte_exact"
+    },
+    {
+      "name": "capacity-semantic-mutation",
+      "exit_code": 1,
+      "status": "failed",
+      "error": "command failed: cargo test --locked -p ssx-infra --test w05 -- --nocapture --test-threads=1",
+      "mutated_path": "crates/ssx-infra/src/valkey/saved_scripts/events/commit.lua",
+      "before_sha256": "8ffe1be82626dd2d3a1d3d535d2ba77c51a0379a25bf7fb8917bc7d4ca826de9",
+      "mutant_sha256": "1c8ee9e62d413d09c9f6a5c7b4290f045dd41495beb19a8e9c81332e09122c27",
+      "restoration": "byte_exact"
+    }
+  ],
+  "provider_calls": 0
+}

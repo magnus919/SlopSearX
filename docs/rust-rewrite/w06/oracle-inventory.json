@@ -1,0 +1,109 @@
+{
+  "plan_id": "W06",
+  "temporary_migration_oracles": [
+    {
+      "path": "docs/rust-rewrite/w06/capture_source.py",
+      "interpreter": "isolated CPython 3.14.7",
+      "purpose": "manual offline complete staged plan, runner, replay and saved-source outcome capture",
+      "source_guards": "docs/rust-rewrite/w06/source-controls.json",
+      "output": "docs/rust-rewrite/w06/source.json",
+      "native_runtime_dependency": false,
+      "mandatory_gate_dependency": false,
+      "provider_calls": 0,
+      "retirement_owner": "G08",
+      "retirement_action": "remove executable exporter; retain immutable non-executable source corpus, capture corrections and provenance"
+    },
+    {
+      "path": "/private/tmp/w06-language-source-capture.py",
+      "source_copy": "docs/rust-rewrite/w06/evidence/language-source-producer.source.txt",
+      "producer_sha256": "46cf840c30c1d36b0a69bcd20d71b96b693a54069cd721ef86f06ca59f179722",
+      "interpreter": "isolated CPython 3.14.7",
+      "purpose": "manual offline actual original shared-service and staged-runner behavior for five nonstring language values",
+      "output": "docs/rust-rewrite/w06/evidence/language-input-source-outcomes.json",
+      "receipt": "docs/rust-rewrite/w06/evidence/language-capture-receipt.json",
+      "native_runtime_dependency": false,
+      "mandatory_gate_dependency": false,
+      "provider_calls": 0,
+      "retirement_owner": "G08",
+      "retirement_action": "remove ephemeral executable producer; retain non-executable source copy, immutable outcomes and receipt"
+    },
+    {
+      "path": "/private/tmp/w06-retained-policy-source-capture.py",
+      "source_copy": "docs/rust-rewrite/w06/evidence/retained-policy-source-producer.source.txt",
+      "producer_sha256": "301fcf030f0a582923ca15635894bd637f21481b942318a3809987d267800e3c",
+      "interpreter": "isolated CPython 3.14.7",
+      "purpose": "manual offline actual retained staged-record policy checks over admitted original records with explicit context mutations",
+      "output": "docs/rust-rewrite/w06/evidence/retained-policy-source-outcomes.json",
+      "receipt": "docs/rust-rewrite/w06/evidence/retained-policy-capture-receipt.json",
+      "native_runtime_dependency": false,
+      "mandatory_gate_dependency": false,
+      "provider_calls": 0,
+      "retirement_owner": "G08",
+      "retirement_action": "remove ephemeral executable producer; retain non-executable source copy, immutable outcomes and receipt"
+    },
+    {
+      "path": "/private/tmp/w06-saved-source-authority-capture.py",
+      "source_copy": "docs/rust-rewrite/w06/evidence/saved-source-authority-producer.source.txt",
+      "producer_sha256": "b40e1f04bb1101b64d807721d1ae64c25cf99299595347e3d32d7a434cfe0794",
+      "interpreter": "isolated CPython 3.14.7",
+      "purpose": "manual offline actual original saved-report authority outcomes across retained policy and fingerprint changes",
+      "output": "docs/rust-rewrite/w06/evidence/saved-source-authority-outcomes.json",
+      "output_sha256": "7b3f1375ee478af9fbb7aaa8e975390ee5c5427e8beab976b41955a54922f079",
+      "receipt": "docs/rust-rewrite/w06/evidence/saved-source-authority-capture-receipt.json",
+      "native_runtime_dependency": false,
+      "mandatory_gate_dependency": false,
+      "provider_calls": 0,
+      "network_calls": 0,
+      "retirement_owner": "G08",
+      "retirement_action": "remove ephemeral executable producer; retain non-executable source copy, immutable outcomes and receipt"
+    },
+    {
+      "path": "/private/tmp/w06-review-public-source-capture.py",
+      "source_copy": "docs/rust-rewrite/w06/evidence/review-public-source-producer.source.txt",
+      "producer_sha256": "9a9e01b55290a741c6795b9eb1cfa09e0cf7b44c79d4156e0ececba71e887fce",
+      "interpreter": "isolated CPython 3.14.7",
+      "purpose": "manual offline complete original public-error/replay outcomes plus explicitly classified actual runner reference controls",
+      "output": "docs/rust-rewrite/w06/evidence/review-public-source-outcomes.json",
+      "output_sha256": "0d43f086c5c98a9bee7bd5339dc80d1ea7801147d7fa6e4be4c71263a5c86a1e",
+      "receipt": "docs/rust-rewrite/w06/evidence/review-public-capture-receipt.json",
+      "native_runtime_dependency": false,
+      "mandatory_gate_dependency": false,
+      "provider_calls": 0,
+      "network_calls": 0,
+      "retirement_owner": "G08",
+      "retirement_action": "remove ephemeral executable producer; retain non-executable source copy, immutable outcomes and receipt"
+    },
+    {
+      "path": "/private/tmp/w06-huge-integer-truthiness-capture.py",
+      "source_copy": "docs/rust-rewrite/w06/evidence/huge-integer-truthiness-producer.source.txt",
+      "producer_sha256": "4b3a5e6fb340d3be8f71fab2b45904092482928c8daf6c81d102948aa68d5624",
+      "interpreter": "isolated CPython 3.14.7",
+      "purpose": "manual offline actual original full planning outcomes for exact signed huge-integer and zero/finite-float fallback truthiness",
+      "output": "docs/rust-rewrite/w06/evidence/huge-integer-truthiness-source-outcomes.json",
+      "output_sha256": "4bce3df0415a2c49b3df348bf997462864af20efa984d5ca574650ee024c8487",
+      "receipt": "docs/rust-rewrite/w06/evidence/huge-integer-truthiness-capture-receipt.json",
+      "native_runtime_dependency": false,
+      "mandatory_gate_dependency": false,
+      "provider_calls": 0,
+      "network_calls": 0,
+      "retirement_owner": "G08",
+      "retirement_action": "remove ephemeral executable producer; retain non-executable source copy, immutable outcomes and receipt"
+    }
+  ],
+  "historical_captures": [
+    {
+      "path": "docs/rust-rewrite/w06/evidence/source-before-composite-id-correction.json",
+      "status": "rejected_prequalification",
+      "reason": "saved report source fixture used saved:run instead of the actual composite-v1 hex artifact ID; this short-circuited intended source cases to source_not_found",
+      "replacement": "docs/rust-rewrite/w06/source.json",
+      "qualification_claim": false
+    },
+    {
+      "path": "docs/rust-rewrite/w06/evidence/source-before-unique-snapshot-ids.json",
+      "status": "rejected_prequalification",
+      "reason": "sequential UUID low bits shared the first12 hex characters used by SnapshotStore IDs, creating a fixture-only collision across fallback stages",
+      "replacement": "docs/rust-rewrite/w06/source.json",
+      "qualification_claim": false
+    }
+  ]
+}
