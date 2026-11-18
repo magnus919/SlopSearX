@@ -11,15 +11,23 @@ fn windows_directory_chain(root: &Path) -> Result<Vec<std::path::PathBuf>> {
     let mut saw_root = false;
     let mut chain = Vec::new();
     for component in root.components() {
-        cursor.push(component.as_os_str());
         match component {
-            Component::Prefix(_) => {}
+            Component::Prefix(_) => cursor.push(component.as_os_str()),
             Component::RootDir => {
+                cursor.push(component.as_os_str());
                 saw_root = true;
                 chain.push(cursor.clone());
             }
-            Component::Normal(_) if saw_root => chain.push(cursor.clone()),
-            _ => return Err("Windows root is not an absolute path".into()),
+            Component::Normal(_) if saw_root => {
+                cursor.push(component.as_os_str());
+                chain.push(cursor.clone());
+            }
+            Component::CurDir if saw_root => {}
+            Component::ParentDir if chain.len() > 1 => {
+                chain.pop();
+                cursor = chain.last().ok_or("missing Windows root anchor")?.clone();
+            }
+            _ => return Err("Windows root is not an anchored absolute path".into()),
         }
     }
     need(
@@ -81,6 +89,16 @@ fn bounded_read_inner<F: FnOnce()>(
     limit: u64,
     after_open: F,
 ) -> Result<(Vec<u8>, u32)> {
+    bounded_read_with_hooks(root, path, limit, after_open, || {})
+}
+
+fn bounded_read_with_hooks(
+    root: &Path,
+    path: &str,
+    limit: u64,
+    after_open: impl FnOnce(),
+    after_read: impl FnOnce(),
+) -> Result<(Vec<u8>, u32)> {
     #[cfg(any(target_os = "macos", target_os = "linux"))]
     {
         use nix::{
@@ -132,6 +150,7 @@ fn bounded_read_inner<F: FnOnce()>(
             .take(limit.saturating_add(1))
             .read_to_end(&mut bytes)
             .map_err(|e| e.to_string())?;
+        after_read();
         let after = file.metadata().map_err(|e| e.to_string())?;
         // Re-resolve from the held root after reading. This catches a parent
         // directory that was renamed/replaced during the read, without
@@ -157,14 +176,30 @@ fn bounded_read_inner<F: FnOnce()>(
             )
             .map_err(|e| e.to_string())?,
         );
+        let mut current = Vec::new();
+        (&named_file)
+            .take(limit.saturating_add(1))
+            .read_to_end(&mut current)
+            .map_err(|e| e.to_string())?;
         let named_meta = named_file.metadata().map_err(|e| e.to_string())?;
+        let times = |meta: &fs::Metadata| {
+            (
+                meta.mtime(),
+                meta.mtime_nsec(),
+                meta.ctime(),
+                meta.ctime_nsec(),
+            )
+        };
         let named_root = unix_root(root)?.metadata().map_err(|e| e.to_string())?;
         need(
             root_identity.dev() == named_root.dev() && root_identity.ino() == named_root.ino(),
             "source root identity changed during bounded read",
         )?;
         need(
-            bytes.len() as u64 <= limit
+            bytes.len() as u64 == opened.len()
+                && current == bytes
+                && times(&after) == times(&opened)
+                && times(&named_meta) == times(&after)
                 && after.is_file()
                 && after.len() == opened.len()
                 && after.dev() == opened.dev()
@@ -177,7 +212,7 @@ fn bounded_read_inner<F: FnOnce()>(
                 && named_meta.ino() == after.ino(),
             "source identity or size changed during bounded read",
         )?;
-        Ok((bytes, mode))
+        Ok((current, mode))
     }
     #[cfg(not(any(target_os = "macos", target_os = "linux")))]
     {
@@ -199,7 +234,12 @@ fn bounded_read_inner<F: FnOnce()>(
             // without resolving reparse points and held against replacement.
             let absolute_root = std::path::absolute(root).map_err(|e| e.to_string())?;
             let mut held_directories = Vec::new();
-            for directory_path in windows_directory_chain(&absolute_root)? {
+            let root_chain = windows_directory_chain(&absolute_root)?;
+            let held_root_path = root_chain
+                .last()
+                .ok_or("missing Windows root anchor")?
+                .clone();
+            for directory_path in root_chain {
                 let directory = fs::OpenOptions::new()
                     .read(true)
                     .share_mode(FILE_SHARE_READ)
@@ -213,9 +253,9 @@ fn bounded_read_inner<F: FnOnce()>(
                 )?;
                 held_directories.push(directory);
             }
-            let full = absolute_root.join(path);
+            let mut parent_path = held_root_path;
+            let full = parent_path.join(path);
             let components: Vec<_> = Path::new(path).components().collect();
-            let mut parent_path = absolute_root.clone();
             for part in &components[..components.len().saturating_sub(1)] {
                 parent_path.push(part.as_os_str());
                 let directory = fs::OpenOptions::new()
@@ -250,6 +290,7 @@ fn bounded_read_inner<F: FnOnce()>(
                 .take(limit.saturating_add(1))
                 .read_to_end(&mut bytes)
                 .map_err(|e| e.to_string())?;
+            after_read();
             let after = file.metadata().map_err(|e| e.to_string())?;
             need(
                 bytes.len() as u64 <= limit
@@ -264,7 +305,7 @@ fn bounded_read_inner<F: FnOnce()>(
         #[cfg(not(windows))]
         {
             let _ = (root, path, limit);
-            let _ = after_open;
+            let _ = (after_open, after_read);
             Err("descriptor-bound source read requires a supported host".into())
         }
     }
@@ -309,6 +350,10 @@ mod windows_handle_tests {
         assert_eq!(drive.first().unwrap(), Path::new(r"C:\"));
         let unc = windows_directory_chain(Path::new(r"\\server\share\repo")).unwrap();
         assert_eq!(unc.first().unwrap(), Path::new(r"\\server\share\"));
+        let verbatim = Path::new(r"\\?\C:\repo\crates\xtask\..\..");
+        let normalized = windows_directory_chain(verbatim).unwrap();
+        assert_eq!(normalized.last().unwrap(), Path::new(r"\\?\C:\repo"));
+        assert_eq!(normalized.len(), 2);
     }
 
     fn held_leaf_handle_blocks_write_delete_and_replacement_until_read_returns(
@@ -402,7 +447,7 @@ mod windows_handle_tests {
     reason = "Only the T08A test owner calls these controls; other suites include the reader by path"
 )]
 mod bounded_read_tests {
-    use super::bounded_read_inner;
+    use super::{bounded_read_inner, bounded_read_with_hooks};
     use std::{
         fs,
         os::unix::fs::symlink,
@@ -474,6 +519,22 @@ mod bounded_read_tests {
             })
             .is_err(),
             "in-place mutation after open rejected by post-read metadata check"
+        );
+
+        let equal_size = dir.join("equal-size");
+        fs::write(&equal_size, b"before").unwrap();
+        assert!(
+            bounded_read_with_hooks(
+                &dir,
+                "equal-size",
+                64,
+                || {},
+                || {
+                    fs::write(&equal_size, b"rewrit").unwrap();
+                }
+            )
+            .is_err(),
+            "equal-size rewrite after the first read must invalidate custody"
         );
 
         let parent = dir.join("parent");
