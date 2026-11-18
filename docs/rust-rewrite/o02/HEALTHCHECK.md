@@ -11,3 +11,13 @@ The digest-pinned Rust 1.99.1 Bookworm builder compiles/tests the native helper 
 Run `cargo test --locked -p ssx-healthcheck` and `cargo clippy --locked -p ssx-healthcheck --all-targets -- -D warnings`. The unit owner exercises actual loopback requests, status-only success with absent/invalid bodies, non-200/redirect/malformed/oversized headers, refused connections and a slow-header deadline. Existing amd64/ARM64 Docker CI builds the actual image and executes its shipped helper against the running server with hostile proxy settings, then verifies silent exit 1 in an otherwise empty container. Local Docker/Podman are unavailable on the authoring Mac; hosted image acceptance is required. Source authorship or a native host unit pass cannot substitute for that witness.
 
 This is a partial delivery, not complete O02 or Python-free server/release acceptance. The upstream-probe workflow invocation is transitioned to native Rust in the [O02 upstream-contracts receipt](UPSTREAM_CONTRACTS_TRANSITION.json), with offline replay by default and live dispatch explicitly gated. The digest promotion workflow still has an active Python writer; portal-smoke and mirror configuration have native invocations, while their historical Python files remain frozen for G08 source-retirement review. Other operational Python and full O02 acceptance remain in scope. O04 owns final native image/package assembly; G08 owns backend Python retirement after its hard predecessors. No production activation is included.
+
+## Python-free image verification
+
+The T02 image also runs the shipped `ssx-healthcheck` binary against the
+native HTTP fixture on loopback port 8080. The binary must exit silently with
+1 before startup, 0 while the service is ready, and 1 after owned shutdown.
+Each probe runs with hostile proxy variables and an otherwise empty environment.
+The existing image gate supplies the Python-free, network-none, read-only and
+nonroot witness. This exercise covers the qualification fixture and healthcheck
+binary. The server release packaging remains under O04.
