@@ -3,18 +3,15 @@
 use super::super::{PROMOTION_FILES, PinText, PromotionPlan, promotion_plan};
 use super::{ApplyPoint, open, parent, read};
 use nix::{
-    fcntl::{AtFlags, OFlag, renameat},
+    fcntl::{AtFlags, OFlag},
     sys::stat::{Mode, fstatat, mkdirat},
     unistd::{UnlinkatFlags, unlinkat},
 };
 use serde::{Deserialize, Serialize};
 use std::{
-    fs::{File, Permissions},
+    fs::File,
     io::{self, Read, Write},
-    os::{
-        fd::AsRawFd,
-        unix::fs::{MetadataExt, PermissionsExt},
-    },
+    os::{fd::AsRawFd, unix::fs::MetadataExt},
     path::Path,
 };
 const DIRECTORY: &str = ".ssx-image-promotion";
@@ -136,17 +133,7 @@ pub(crate) fn recover(path: &Path) -> Result<File, String> {
     }
     match directory(&root) {
         Ok(dir) => match journal_plan(&dir, COMMITTED) {
-            Ok((plan, stages)) => {
-                for output in &plan.outputs {
-                    let parent = parent(&root, output.path).map_err(|e| e.to_string())?;
-                    let name = output.path.rsplit('/').next().ok_or("pin name")?;
-                    if read(&parent, name).map_err(|e| e.to_string())?.1 != output.bytes {
-                        return Err(fail().to_string());
-                    }
-                }
-                cleanup_stages(&root, &plan, &stages).map_err(|e| e.to_string())?;
-                complete(&root).map_err(|e| e.to_string())?;
-            }
+            Ok(_) => complete(&root).map_err(|e| e.to_string())?,
             Err(e) if e.kind() == io::ErrorKind::NotFound => {
                 rollback_locked(&root, |_| Ok(())).map_err(|e| e.to_string())?
             }
@@ -244,11 +231,9 @@ pub(super) fn begin(
 ) -> io::Result<()> {
     for (index, old) in plan.originals.iter().enumerate() {
         let parent = parent(root, old.path)?;
-        for name in [&format!(".ssx-image-rollback-{index}"), &stages[index]] {
-            match open(&parent, name, OFlag::O_RDONLY, Mode::empty()) {
-                Err(e) if e.kind() == io::ErrorKind::NotFound => {}
-                _ => return Err(fail()),
-            }
+        match open(&parent, &stages[index], OFlag::O_RDONLY, Mode::empty()) {
+            Err(e) if e.kind() == io::ErrorKind::NotFound => {}
+            _ => return Err(fail()),
         }
     }
     let stamp = std::time::SystemTime::now()
@@ -381,6 +366,21 @@ fn publish_no_replace(
     new_parent: &File,
     new_name: &str,
 ) -> io::Result<()> {
+    rename_with_flags(old_parent, old_name, new_parent, new_name, false)
+}
+
+/// Both names must exist. The displaced entry remains available for verification.
+pub(super) fn exchange(parent: &File, stage: &str, source: &str) -> io::Result<()> {
+    rename_with_flags(parent, stage, parent, source, true)
+}
+
+fn rename_with_flags(
+    old_parent: &File,
+    old_name: &str,
+    new_parent: &File,
+    new_name: &str,
+    exchange: bool,
+) -> io::Result<()> {
     let old = std::ffi::CString::new(old_name).map_err(|_| fail())?;
     let new = std::ffi::CString::new(new_name).map_err(|_| fail())?;
     #[cfg(target_os = "macos")]
@@ -390,7 +390,11 @@ fn publish_no_replace(
             old.as_ptr(),
             new_parent.as_raw_fd(),
             new.as_ptr(),
-            nix::libc::RENAME_EXCL,
+            if exchange {
+                nix::libc::RENAME_SWAP
+            } else {
+                nix::libc::RENAME_EXCL
+            },
         )
     };
     #[cfg(target_os = "linux")]
@@ -401,7 +405,11 @@ fn publish_no_replace(
             old.as_ptr(),
             new_parent.as_raw_fd(),
             new.as_ptr(),
-            nix::libc::RENAME_NOREPLACE,
+            if exchange {
+                nix::libc::RENAME_EXCHANGE
+            } else {
+                nix::libc::RENAME_NOREPLACE
+            },
         )
     };
     #[cfg(not(any(target_os = "macos", target_os = "linux")))]
@@ -592,18 +600,34 @@ pub(super) fn complete_with_hook(
         PENDING
     };
     let raw = owned_record(&dir, name)?;
-    let (plan, _) = plan_bytes(&raw)?;
+    let (plan, stages) = plan_bytes(&raw)?;
     for name in &names {
         if name == COMMIT_PENDING {
             continue;
         }
-        let (other, _) = journal_plan(&dir, name)?;
-        if other.originals != plan.originals || other.outputs != plan.outputs {
+        let (other, other_stages) = journal_plan(&dir, name)?;
+        if other.originals != plan.originals
+            || other.outputs != plan.outputs
+            || other_stages != stages
+        {
             return Err(fail());
         }
     }
-    let outputs = verify_endpoint(root, &plan, true).is_ok();
+    let outputs = name == COMMITTED;
     verify_endpoint(root, &plan, outputs)?;
+    let documents = if outputs {
+        &plan.originals
+    } else {
+        &plan.outputs
+    };
+    for (document, stage) in documents.iter().zip(&stages) {
+        let parent = parent(root, document.path)?;
+        if stage_is_owned(&parent, stage, &document.bytes, outputs)? {
+            unlinkat(&parent, stage.as_str(), UnlinkatFlags::NoRemoveDir)
+                .map_err(io::Error::from)?;
+            parent.sync_all()?;
+        }
+    }
     let meta = dir.metadata()?;
     let record = CleanupRecord {
         schema: 1,
@@ -651,12 +675,14 @@ pub(super) fn rollback_locked(
         Err(e) if e.kind() == io::ErrorKind::NotFound => journal_plan(&dir, PENDING)?,
         Err(e) => return Err(e),
     };
-    // Validate the complete set before any compensating replacement.
-    for (old, new) in plan.originals.iter().zip(&plan.outputs) {
+    // Validate every pair before starting compensation.
+    for ((old, new), stage) in plan.originals.iter().zip(&plan.outputs).zip(&stages) {
         let parent = parent(root, old.path)?;
         let name = old.path.rsplit('/').next().ok_or_else(fail)?;
         let (_, current) = read(&parent, name)?;
-        if current != old.bytes && current != new.bytes {
+        if current == old.bytes {
+            stage_is_owned(&parent, stage, &new.bytes, false)?;
+        } else if current != new.bytes || read(&parent, stage)?.1 != old.bytes {
             return Err(fail());
         }
     }
@@ -672,39 +698,29 @@ pub(super) fn rollback_locked(
         if current == old.bytes {
             continue;
         }
-        if current != new.bytes {
-            return Err(fail());
-        }
         hook(index)?;
-        // The name alone grants no cleanup authority. Only bytes consistent
-        // with the interrupted compensation for this exact journal may retire.
-        let stage = format!(".ssx-image-rollback-{index}");
-        retire_stage(&parent, &stage, &old.bytes)?;
-        let mut file = open(
-            &parent,
-            &stage,
-            OFlag::O_WRONLY | OFlag::O_CREAT | OFlag::O_EXCL,
-            Mode::S_IRUSR | Mode::S_IWUSR,
-        )?;
-        file.write_all(&old.bytes)?;
-        file.set_permissions(Permissions::from_mode(0o644))?;
-        file.sync_all()?;
-        let (_, current) = read(&parent, name)?;
-        if current != new.bytes {
+        let stage = &stages[index];
+        let (installed, current) = read(&parent, name)?;
+        let (displaced, original) = read(&parent, stage)?;
+        if current != new.bytes || original != old.bytes {
             return Err(fail());
         }
-        renameat(&parent, stage.as_str(), &parent, name).map_err(io::Error::from)?;
+        exchange(&parent, stage, name)?;
+        let restored = read(&parent, name).is_ok_and(|(after, bytes)| {
+            after.matches_after_exchange(&displaced) && bytes == old.bytes
+        });
+        let staged = read(&parent, stage).is_ok_and(|(after, bytes)| {
+            after.matches_after_exchange(&installed) && bytes == new.bytes
+        });
+        if !restored || !staged {
+            if restored || staged {
+                let _ = exchange(&parent, stage, name);
+            }
+            parent.sync_all()?;
+            return Err(fail());
+        }
         parent.sync_all()?;
     }
-    // Recheck byte-identical originals before retiring the only recovery record.
-    for old in &plan.originals {
-        let parent = parent(root, old.path)?;
-        let name = old.path.rsplit('/').next().ok_or_else(fail)?;
-        if read(&parent, name)?.1 != old.bytes {
-            return Err(fail());
-        }
-    }
-    cleanup_stages(root, &plan, &stages)?;
     unlink_partial(
         &dir,
         COMMIT_PENDING,
@@ -729,11 +745,11 @@ pub(super) fn commit(
     let mut published = false;
     let result = (|| -> io::Result<()> {
         let dir = directory(root)?;
-        let (plan, _) = journal_plan(&dir, JOURNAL)?;
-        for output in &plan.outputs {
-            let parent = parent(root, output.path)?;
-            let name = output.path.rsplit('/').next().ok_or_else(fail)?;
-            if read(&parent, name)?.1 != output.bytes {
+        let (plan, stages) = journal_plan(&dir, JOURNAL)?;
+        verify_endpoint(root, &plan, true)?;
+        for (old, stage) in plan.originals.iter().zip(&stages) {
+            let parent = parent(root, old.path)?;
+            if !stage_is_owned(&parent, stage, &old.bytes, true)? {
                 return Err(fail());
             }
         }
@@ -764,10 +780,10 @@ pub(super) fn commit(
     result.map_err(|_| CommitFailure { published })
 }
 
-fn retire_stage(parent: &File, name: &str, expected: &[u8]) -> io::Result<()> {
+fn stage_is_owned(parent: &File, name: &str, expected: &[u8], exact: bool) -> io::Result<bool> {
     let file = match open(parent, name, OFlag::O_RDONLY, Mode::empty()) {
         Ok(file) => file,
-        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(false),
         Err(error) => return Err(error),
     };
     let before = file.metadata()?;
@@ -786,6 +802,7 @@ fn retire_stage(parent: &File, name: &str, expected: &[u8]) -> io::Result<()> {
         .read_to_end(&mut bytes)?;
     let after = file.metadata()?;
     if bytes.len() as u64 != before.len()
+        || (exact && bytes != expected)
         || !expected.starts_with(&bytes)
         || before.len() != after.len()
         || before.mode() != after.mode()
@@ -798,16 +815,7 @@ fn retire_stage(parent: &File, name: &str, expected: &[u8]) -> io::Result<()> {
         return Err(fail());
     }
     named_identity(parent, name, &after)?;
-    unlinkat(parent, name, UnlinkatFlags::NoRemoveDir).map_err(io::Error::from)?;
-    parent.sync_all()
-}
-
-fn cleanup_stages(root: &File, plan: &PromotionPlan, stages: &[String]) -> io::Result<()> {
-    for (output, name) in plan.outputs.iter().zip(stages) {
-        let parent = parent(root, output.path)?;
-        retire_stage(&parent, name, &output.bytes)?;
-    }
-    Ok(())
+    Ok(true)
 }
 
 #[cfg(test)]

@@ -57,7 +57,10 @@ originals, validated outputs and the owned staging names. It synchronizes the
 journal and directories. Reserved journal, active-directory, commit-marker and cleanup-receipt publication
 also use no-replace renames, preserving foreign artifacts inserted after
 preflight. Each staged output and each source identity is checked
-again before its individual atomic rename.
+again before the writer atomically exchanges the two names on Linux or macOS.
+The former source remains at the stage name. The writer verifies both entries
+after exchange and attempts to swap them back if either differs. An unknown
+entry is preserved for recovery when the exchange cannot be safely reversed.
 
 Before commit-marker publication, a failure makes the writer compensate in reverse order and verifies
 byte-identical originals before retiring the recovery record. The same transaction owns the two active YAML examples in `spec.md`: exactly
@@ -85,11 +88,13 @@ bytes and directory device/inode. It safely resumes cleanup if the bound
 directory is empty or already removed, while an unrelated empty directory still
 has no cleanup authority. Commit cleanup failure emits a retention message while the promotion
 remains successful; a later check still refuses the pending journal until
-recovery completes. An interrupted compensating staging write is safely
-recreated when its contents match a nonempty prefix of the journal's exact
-original bytes. The same check against the expected output applies before
-retiring a forward stage. An empty or unrelated file at a recorded staging
-name remains in place and recovery reports the conflict.
+recovery completes. Before rollback, the live outputs must have their exact
+displaced originals at the recorded stage names. Rollback exchanges each pair
+in reverse order and verifies both entries. When a live original is present,
+recovery may retire a forward stage whose contents match a nonempty prefix of
+the expected output. After commitment, recovery retires only displaced stages
+that match the complete original. An empty or unrelated file at a recorded
+staging name remains in place and recovery reports the conflict.
 
 `--check` remains comparison-only: a pending transaction causes an error with
 no source/journal mutation. `--write` recovers under its lease before preparing

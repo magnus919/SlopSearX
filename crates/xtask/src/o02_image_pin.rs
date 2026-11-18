@@ -2084,6 +2084,89 @@ mod tests {
 
     #[test]
     #[cfg(unix)]
+    fn promotion_preserves_an_edit_after_the_last_source_check() {
+        use promotion_files::{ApplyPoint, PinSnapshot};
+        let root = promotion_fixture("late-source-edit");
+        let original = root.join(PIN_FILES[0]);
+        let saved = root.join("saved-original");
+        let incoming = root.join("incoming-edit");
+        let before = fs::read(&original).unwrap();
+        let foreign = b"a concurrent editor's replacement";
+        fs::write(&incoming, foreign).unwrap();
+        let snapshot = PinSnapshot::read(&root).unwrap();
+        let plan = snapshot
+            .plan(&format!("sha256:{}", "f".repeat(64)))
+            .unwrap();
+        let error = snapshot
+            .apply_with_test_hook(&plan, |point, index, _, _| {
+                if point == ApplyPoint::BeforeRename && index == 0 {
+                    fs::rename(&original, &saved)?;
+                    fs::rename(&incoming, &original)?;
+                }
+                Ok(())
+            })
+            .unwrap_err();
+        assert!(error.replaced.is_empty());
+        assert!(!error.cleanup_failed.is_empty());
+        drop(snapshot);
+        assert_eq!(fs::read(&original).unwrap(), foreign);
+        assert_eq!(fs::read(&saved).unwrap(), before);
+        assert!(recover_promotion(&root).is_err());
+        assert_eq!(fs::read(&original).unwrap(), foreign);
+        let preserved_edit = root.join("preserved-edit");
+        fs::rename(&original, &preserved_edit).unwrap();
+        fs::rename(&saved, &original).unwrap();
+        recover_promotion(&root).unwrap();
+        assert_eq!(fs::read(&preserved_edit).unwrap(), foreign);
+        assert_eq!(fs::read(&original).unwrap(), before);
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn recovery_preserves_foreign_source_displaced_at_interruption() {
+        use promotion_files::{ApplyPoint, PinSnapshot};
+        let root = promotion_fixture("foreign-displaced");
+        let source = root.join(PIN_FILES[0]);
+        let saved = root.join("saved-original");
+        let incoming = root.join("incoming-edit");
+        let before = fs::read(&source).unwrap();
+        let foreign = b"a concurrent editor's replacement";
+        fs::write(&incoming, foreign).unwrap();
+        let snapshot = PinSnapshot::read(&root).unwrap();
+        let plan = snapshot
+            .plan(&format!("sha256:{}", "f".repeat(64)))
+            .unwrap();
+        let stopped = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            let _ = snapshot.apply_with_test_hook(&plan, |point, index, _, _| {
+                if index == 0 && point == ApplyPoint::BeforeRename {
+                    fs::rename(&source, &saved)?;
+                    fs::rename(&incoming, &source)?;
+                }
+                if index == 0 && point == ApplyPoint::AfterExchange {
+                    panic!("interrupted before verifying the displaced entry");
+                }
+                Ok(())
+            });
+        }));
+        assert!(stopped.is_err());
+        drop(snapshot);
+        let journal = fs::read(root.join(".ssx-image-promotion/journal.json")).unwrap();
+        let record: serde_json::Value = serde_json::from_slice(&journal).unwrap();
+        let stage = source.with_file_name(record["stages"][0].as_str().unwrap());
+        assert!(recover_promotion(&root).is_err());
+        assert_eq!(fs::read(&stage).unwrap(), foreign);
+        assert_eq!(fs::read(&source).unwrap(), plan.outputs[0].bytes);
+        assert_eq!(fs::read(&saved).unwrap(), before);
+        let preserved_edit = root.join("preserved-edit");
+        fs::rename(&stage, &preserved_edit).unwrap();
+        fs::rename(&saved, &stage).unwrap();
+        recover_promotion(&root).unwrap();
+        assert_eq!(fs::read(&source).unwrap(), before);
+        assert_eq!(fs::read(&preserved_edit).unwrap(), foreign);
+    }
+
+    #[test]
+    #[cfg(unix)]
     fn promotion_rolls_back_every_rename_boundary_and_retains_failed_rollback() {
         use promotion_files::{ApplyPoint, PinSnapshot};
         let new = format!("sha256:{}", "f".repeat(64));
@@ -2127,22 +2210,24 @@ mod tests {
                     for (path, bytes) in PROMOTION_FILES.into_iter().zip(state) {
                         assert_eq!(fs::read(root.join(path)).unwrap(), bytes);
                     }
-                    // A process can stop while preparing a compensating file.
-                    // Its journal-owned partial staging bytes are retired safely.
-                    use std::os::unix::fs::PermissionsExt;
-                    let partial = root.join(".ssx-image-rollback-0");
+                    // Compensation uses the original preserved by exchange.
+                    // An unknown entry at that name must block recovery and survive it.
+                    let record: serde_json::Value = serde_json::from_slice(&journal).unwrap();
+                    let displaced = root
+                        .join(PROMOTION_FILES[0])
+                        .with_file_name(record["stages"][0].as_str().unwrap());
+                    assert_eq!(fs::read(&displaced).unwrap(), before[0]);
                     let unrelated = b"foreign staging file";
-                    fs::write(&partial, unrelated).unwrap();
-                    fs::set_permissions(&partial, fs::Permissions::from_mode(0o600)).unwrap();
+                    fs::write(&displaced, unrelated).unwrap();
                     assert!(recover_promotion(&root).is_err());
-                    assert_eq!(fs::read(&partial).unwrap(), unrelated);
+                    assert_eq!(fs::read(&displaced).unwrap(), unrelated);
                     assert_eq!(
                         fs::read(root.join(".ssx-image-promotion/journal.json")).unwrap(),
                         journal
                     );
-                    fs::write(&partial, &before[0][..16]).unwrap();
+                    fs::write(&displaced, &before[0]).unwrap();
                     recover_promotion(&root).unwrap();
-                    assert!(!partial.exists());
+                    assert!(!displaced.exists());
                 }
                 assert_eq!(
                     extract_pinned_digest(&root).unwrap(),
@@ -2212,10 +2297,23 @@ mod tests {
                 fs::read(root.join(".ssx-image-promotion/journal.json")).unwrap(),
                 journal
             );
-            for (stage, document) in stages.iter().zip(record["documents"].as_array().unwrap()) {
-                let expected = document["updated"].as_str().unwrap().as_bytes();
-                fs::write(stage, &expected[..16]).unwrap();
-                fs::set_permissions(stage, fs::Permissions::from_mode(0o600)).unwrap();
+            for (index, (stage, document)) in stages
+                .iter()
+                .zip(record["documents"].as_array().unwrap())
+                .enumerate()
+            {
+                if index < boundary {
+                    // Put back the displaced original that would survive a crash.
+                    if index == 0 {
+                        fs::write(stage, &before[index]).unwrap();
+                        fs::set_permissions(stage, fs::Permissions::from_mode(0o644)).unwrap();
+                    }
+                    assert_eq!(fs::read(stage).unwrap(), before[index]);
+                } else {
+                    let expected = document["updated"].as_str().unwrap().as_bytes();
+                    fs::write(stage, &expected[..16]).unwrap();
+                    fs::set_permissions(stage, fs::Permissions::from_mode(0o600)).unwrap();
+                }
             }
             recover_promotion(&root).unwrap();
             if boundary % 2 == 0 {

@@ -6,7 +6,7 @@ pub(super) use transaction::{read_guard, recover};
 const FILE_BYTES: usize = MAX_PIN_INPUT_BYTES as usize;
 const PIN_PATHS: [&str; 4] = PROMOTION_FILES;
 use nix::{
-    fcntl::{AtFlags, OFlag, openat, renameat},
+    fcntl::{AtFlags, OFlag, openat},
     sys::stat::{Mode, fstatat},
     unistd::{UnlinkatFlags, unlinkat},
 };
@@ -27,6 +27,15 @@ struct Identity {
     changed: (i64, i64),
 }
 impl Identity {
+    fn matches_after_exchange(&self, before: &Self) -> bool {
+        // Exchanging a directory entry may change its inode's ctime.
+        self.dev == before.dev
+            && self.ino == before.ino
+            && self.bytes == before.bytes
+            && self.mode == before.mode
+            && self.modified == before.modified
+    }
+
     fn of(meta: &Metadata) -> Self {
         Self {
             dev: meta.dev(),
@@ -56,6 +65,7 @@ pub(super) enum ApplyPoint {
     BeforeReplace,
     ReadyToRename,
     BeforeRename,
+    AfterExchange,
     BeforeRollback,
     BeforeCommit,
     AfterCommit,
@@ -352,14 +362,32 @@ impl PinSnapshot {
                 }
                 hook(ApplyPoint::BeforeRename, index, &source.parent, &stage.name)
                     .map_err(|_| "replacement control failed")?;
-                renameat(
-                    &stage.parent,
-                    stage.name.as_str(),
-                    &source.parent,
-                    source.name.as_str(),
-                )
-                .map_err(|_| "atomic pin replacement failed; review partial state before retry")?;
+                transaction::exchange(&source.parent, &stage.name, &source.name)
+                    .map_err(|_| "atomic pin exchange failed; review partial state before retry")?;
+                // This entry now holds the displaced source. Only the durable
+                // journal can authorize its recovery or retirement.
                 stage.pending = false;
+                hook(
+                    ApplyPoint::AfterExchange,
+                    index,
+                    &source.parent,
+                    &stage.name,
+                )
+                .map_err(|_| "post-exchange control failed")?;
+                let installed = read(&source.parent, &source.name).is_ok_and(|(after, bytes)| {
+                    after.matches_after_exchange(&identity) && bytes == plan.outputs[index].bytes
+                });
+                let displaced = read(&stage.parent, &stage.name).is_ok_and(|(after, bytes)| {
+                    after.matches_after_exchange(&source.identity) && bytes == source.bytes
+                });
+                if !installed || !displaced {
+                    if installed || displaced {
+                        // Exchange back without unlinking either participant.
+                        let _ = transaction::exchange(&source.parent, &stage.name, &source.name);
+                    }
+                    let _ = source.parent.sync_all();
+                    return Err("pin source or staging file changed during exchange");
+                }
                 replaced.push(source.relative);
                 source.parent.sync_all().map_err(
                     |_| "pin directory synchronization failed; review partial state before retry",
