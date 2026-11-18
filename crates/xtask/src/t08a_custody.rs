@@ -160,6 +160,32 @@ const RMCP_SECURITY_CAPSULE: &str =
     include_str!("../../../docs/rust-rewrite/t08a/rmcp-security-successor.json");
 const RMCP_SECURITY_CAPSULE_SHA: &str =
     "b348258e03bc90feafc68b721d583e5f977d660a90062bff20b8c0f8521aec09";
+#[path = "../../../docs/rust-rewrite/t08a/rmcp-source-afterimage.rs"]
+#[allow(
+    dead_code,
+    clippy::duplicate_mod,
+    reason = "Independent proof roots use different entry points of the stateless inverse"
+)]
+mod rmcp_source_afterimage;
+const RMCP_RUNTIME_SOURCES: &str =
+    include_str!("../../../docs/rust-rewrite/t08a/rmcp-runtime-afterimages.json");
+const RMCP_RUNTIME_SHA: &str = "562478fd0d40d0cfae8a2b93e1958d0e80b41feb44359caca9a79c15b899c402";
+
+pub(crate) fn rmcp_historical_operand(
+    path: &str,
+    physical: &[u8],
+    mode: &str,
+) -> Result<Option<Vec<u8>>> {
+    let mode = u32::from_str_radix(mode, 8).map_err(|error| error.to_string())?;
+    rmcp_source_afterimage::runtime_prior(
+        RMCP_RUNTIME_SOURCES,
+        RMCP_RUNTIME_SHA,
+        path,
+        physical,
+        mode,
+    )
+}
+
 const OPTIONAL_CHRONO: &str =
     include_str!("../../../docs/rust-rewrite/t08a/rmcp-optional-chrono-successor.json");
 const OPTIONAL_CHRONO_SHA: &str =

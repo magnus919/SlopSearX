@@ -1,0 +1,347 @@
+[
+  {
+    "path": "crates/ssx-infra/Cargo.toml",
+    "current_bytes": 1258,
+    "current_sha256": "747687877299958c4565c219166a3a25286ef61fb4daca1391cee517686cd691",
+    "prior_bytes": 1254,
+    "prior_sha256": "349c3dc8db94a995d7eef27acbe8b5eeccb9f6cff1ccdd3e8308f638d301f51e",
+    "spans": [
+      {
+        "at": 931,
+        "current": "jiff = \"=0.2.46\"\ntime = { version = \"=0.3.55\", features = [\"large-dates\", \"local-offset\"] }\n",
+        "prior": "chrono = { version = \"=0.4.45\", default-features = false, features = [\"clock\", \"std\"] }\n"
+      }
+    ]
+  },
+  {
+    "path": "crates/ssx-infra/src/adapters/europepmc.rs",
+    "current_bytes": 11835,
+    "current_sha256": "b5ba22cffd0fcc33adfb91a08af1b341ef431163df91a9f0aef17db8e0625b22",
+    "prior_bytes": 12061,
+    "prior_sha256": "fbdcc3903ecb18faaa56c22229e94ff2bb0f750c08e4e094dcf9ba1674946585",
+    "spans": [
+      {
+        "at": 6340,
+        "current": "                Some(date) => Some(fixed_format(budget, 10, format_args!(\"{date}\"))?),\n",
+        "prior": "                Some(date) => Some(fixed_format(\n                    budget,\n                    10,\n                    format_args!(\"{}\", date.format(\"%Y-%m-%d\")),\n                )?),\n"
+      },
+      {
+        "at": 9406,
+        "current": "fn iso_date(value: &str) -> Option<jiff::civil::Date> {\n",
+        "prior": "fn iso_date(value: &str) -> Option<chrono::NaiveDate> {\n"
+      },
+      {
+        "at": 10351,
+        "current": "        jiff::civil::Date::strptime(\"%Y-%m-%d\", value).ok()\n",
+        "prior": "        chrono::NaiveDate::parse_from_str(value, \"%Y-%m-%d\").ok()\n"
+      },
+      {
+        "at": 10468,
+        "current": "        jiff::civil::Date::strptime(\"%Y%m%d\", value).ok()\n",
+        "prior": "        chrono::NaiveDate::parse_from_str(value, \"%Y%m%d\").ok()\n"
+      },
+      {
+        "at": 10539,
+        "current": "        jiff::civil::Date::strptime(\"%G-W%V-%u\", value)\n            .or_else(|_| jiff::civil::Date::strptime(\"%GW%V%u\", value))\n",
+        "prior": "        chrono::NaiveDate::parse_from_str(value, \"%G-W%V-%u\")\n            .or_else(|_| chrono::NaiveDate::parse_from_str(value, \"%GW%V%u\"))\n"
+      },
+      {
+        "at": 10831,
+        "current": "    parsed.filter(|d| (1..=9999).contains(&d.year()))\n",
+        "prior": "    parsed.filter(|d| (1..=9999).contains(&chrono::Datelike::year(d)))\n"
+      },
+      {
+        "at": 10964,
+        "current": ") -> std::result::Result<jiff::civil::Date, jiff::Error> {\n",
+        "prior": ") -> std::result::Result<chrono::NaiveDate, chrono::ParseError> {\n"
+      },
+      {
+        "at": 11224,
+        "current": "    jiff::civil::Date::strptime(format, &bytes[..length])\n",
+        "prior": "    chrono::NaiveDate::parse_from_str(\n        std::str::from_utf8(&bytes[..length]).expect(\"ISO ASCII grammar\"),\n        format,\n    )\n"
+      }
+    ]
+  },
+  {
+    "path": "crates/ssx-infra/src/adapters/scholarly_frame.rs",
+    "current_bytes": 20720,
+    "current_sha256": "c257ae53ebb8f2a1d37a0a4174e9c80c034655b6421c8c3168164a89ba53b163",
+    "prior_bytes": 20868,
+    "prior_sha256": "15b1f10388a40ff4c057f163bd29d67a6a1e216488afabb80417e5559e5400f5",
+    "spans": [
+      {
+        "at": 2206,
+        "current": "    !value.starts_with(\"0000\") && jiff::civil::Date::strptime(\"%Y-%m-%d\", value).is_ok()\n",
+        "prior": "    let year: i32 = value[..4].parse().unwrap_or(0);\n    let month: u32 = value[5..7].parse().unwrap_or(0);\n    let day: u32 = value[8..].parse().unwrap_or(0);\n    year != 0 && chrono::NaiveDate::from_ymd_opt(year, month, day).is_some()\n"
+      }
+    ]
+  },
+  {
+    "path": "crates/ssx-infra/src/observability/logging.rs",
+    "current_bytes": 16593,
+    "current_sha256": "c39130bcea986a8486a418df28fd95f8f53c0714a1cfa18a1dcb15f5db87a206",
+    "prior_bytes": 16582,
+    "prior_sha256": "23832ab9825a66198fa44c3e4731483e2a0f68a1336fdf6bdd549474e2e999e9",
+    "spans": [
+      {
+        "at": 2051,
+        "current": "        json!({\"timestamp\":super::rfc3339_utc(jiff::Timestamp::now()),\"logger\":\"slopsearx\",\"level\":self.level.text(),\"event\":self.event.text(),\"request_id\":id,\"query_id\":query_id,\"duration_ms\":self.duration_ms})\n",
+        "prior": "        json!({\"timestamp\":chrono::Utc::now().to_rfc3339(),\"logger\":\"slopsearx\",\"level\":self.level.text(),\"event\":self.event.text(),\"request_id\":id,\"query_id\":query_id,\"duration_ms\":self.duration_ms})\n"
+      }
+    ]
+  },
+  {
+    "path": "crates/ssx-infra/src/observability/mod.rs",
+    "current_bytes": 21456,
+    "current_sha256": "5b9618fa0a17dd60c6b470277cff62966603427f6c34116831f6dff2bf092a62",
+    "prior_bytes": 21121,
+    "prior_sha256": "e32ec1a5d7b0fa487335a2fd55c142bfbf271634a87a2f1e8edcdafa53c4f032",
+    "spans": [
+      {
+        "at": 141,
+        "current": "use jiff::{Timestamp, tz::TimeZone};\n",
+        "prior": "use chrono::{DateTime, Utc};\n"
+      },
+      {
+        "at": 1250,
+        "current": "fn rfc3339_utc(timestamp: Timestamp) -> String {\n    let nanos = timestamp.subsec_nanosecond();\n    let format = if nanos == 0 {\n        \"%Y-%m-%dT%H:%M:%S+00:00\"\n    } else if nanos % 1_000_000 == 0 {\n        \"%Y-%m-%dT%H:%M:%S%.3f+00:00\"\n    } else if nanos % 1_000 == 0 {\n        \"%Y-%m-%dT%H:%M:%S%.6f+00:00\"\n    } else {\n        \"%Y-%m-%dT%H:%M:%S%.9f+00:00\"\n    };\n    timestamp.strftime(format).to_string()\n}\n\n",
+        "prior": ""
+      },
+      {
+        "at": 1687,
+        "current": "    at: Timestamp,\n",
+        "prior": "    at: DateTime<Utc>,\n"
+      },
+      {
+        "at": 1770,
+        "current": "    at: Timestamp,\n",
+        "prior": "    at: DateTime<Utc>,\n"
+      },
+      {
+        "at": 5311,
+        "current": "                            let key =\n                                format!(\"query_audit:{}\", e.at.to_zoned(TimeZone::system()).date());\n",
+        "prior": "                            let key = format!(\n                                \"query_audit:{}\",\n                                e.at.with_timezone(&chrono::Local).format(\"%Y-%m-%d\")\n                            );\n"
+      },
+      {
+        "at": 6152,
+        "current": "                                e.at.to_zoned(TimeZone::system()).date()\n",
+        "prior": "                                e.at.with_timezone(&chrono::Local).format(\"%Y-%m-%d\")\n"
+      },
+      {
+        "at": 13212,
+        "current": "                at: Timestamp::now(),\n",
+        "prior": "                at: Utc::now(),\n"
+      },
+      {
+        "at": 15679,
+        "current": "        let at = Timestamp::now();\n",
+        "prior": "        let at = Utc::now();\n"
+      },
+      {
+        "at": 16388,
+        "current": "                at.strftime(\"%Y-%m-%dT%H:%M:%S%.3fZ\").to_string(),\n",
+        "prior": "                at.to_rfc3339_opts(chrono::SecondsFormat::Millis, true),\n"
+      }
+    ]
+  },
+  {
+    "path": "crates/ssx-infra/src/observability/sentry.rs",
+    "current_bytes": 26194,
+    "current_sha256": "dd1418bda692a118e5139fc2fe5374d42ad22b357baa011966cd6a20604ecd90",
+    "prior_bytes": 26183,
+    "prior_sha256": "f3ef8224683c0c462f53f1437558c902add7e570e8fd9939ad1eb9f875527c7c",
+    "spans": [
+      {
+        "at": 7087,
+        "current": "        event[\"timestamp\"] = json!(super::rfc3339_utc(jiff::Timestamp::now()));\n",
+        "prior": "        event[\"timestamp\"] = json!(chrono::Utc::now().to_rfc3339());\n"
+      }
+    ]
+  },
+  {
+    "path": "crates/ssx-infra/src/research_planning.rs",
+    "current_bytes": 94378,
+    "current_sha256": "758be7ab933b3d2ef0229f041e0a181047298a7185005434d62534fae4f696df",
+    "prior_bytes": 93112,
+    "prior_sha256": "20bd25d7aa070fe3f7bc390e03f1da5f7c991238316862cdcadd3d4ca3767981",
+    "spans": [
+      {
+        "at": 84727,
+        "current": "    let timestamp =\n        time::OffsetDateTime::from_unix_timestamp_nanos(i128::from(micros as i64) * 1000).ok()?;\n    let (year, month, day) = timestamp.to_calendar_date();\n    // Preserve the predecessor's accepted proleptic Gregorian range.\n    if !(-262_143..=262_142).contains(&year) {\n        return None;\n    }\n    let year = if (0..=9999).contains(&year) {\n        format!(\"{year:04}\")\n    } else {\n        format!(\"{year:+05}\")\n    };\n    let (hour, minute, second, fraction) = timestamp.to_hms_micro();\n    let mut result = format!(\n        \"{year}-{:02}-{day:02}T{hour:02}:{minute:02}:{second:02}\",\n        month as u8\n    );\n    if fraction != 0 {\n        use std::fmt::Write;\n        write!(result, \".{fraction:06}\").expect(\"in-memory timestamp formatting\");\n    }\n    result.push_str(\"+00:00\");\n    Some(result)\n",
+        "prior": "    chrono::DateTime::from_timestamp_micros(micros as i64).map(|v| {\n        v.to_rfc3339_opts(\n            if v.timestamp_subsec_micros() == 0 {\n                chrono::SecondsFormat::Secs\n            } else {\n                chrono::SecondsFormat::Micros\n            },\n            false,\n        )\n    })\n"
+      },
+      {
+        "at": 87974,
+        "current": "            1 => time::Weekday::Monday,\n            2 => time::Weekday::Tuesday,\n            3 => time::Weekday::Wednesday,\n            4 => time::Weekday::Thursday,\n            5 => time::Weekday::Friday,\n            6 => time::Weekday::Saturday,\n            7 => time::Weekday::Sunday,\n",
+        "prior": "            1 => chrono::Weekday::Mon,\n            2 => chrono::Weekday::Tue,\n            3 => chrono::Weekday::Wed,\n            4 => chrono::Weekday::Thu,\n            5 => chrono::Weekday::Fri,\n            6 => chrono::Weekday::Sat,\n            7 => chrono::Weekday::Sun,\n"
+      },
+      {
+        "at": 88303,
+        "current": "        time::Date::from_iso_week_date(year as i32, week as u8, weekday).ok()?\n",
+        "prior": "        chrono::NaiveDate::from_isoywd_opt(year as i32, week, weekday)?\n"
+      },
+      {
+        "at": 88612,
+        "current": "        time::Date::from_calendar_date(\n            year as i32,\n            time::Month::try_from(month as u8).ok()?,\n            day as u8,\n        )\n        .ok()?\n",
+        "prior": "        chrono::NaiveDate::from_ymd_opt(year as i32, month, day)?\n"
+      },
+      {
+        "at": 91534,
+        "current": "        day = day.next_day()?;\n",
+        "prior": "        day = day.succ_opt()?;\n"
+      },
+      {
+        "at": 91589,
+        "current": "    let naive = day\n        .with_hms_micro(\n            hour as u8,\n            components[1] as u8,\n            components[2] as u8,\n            components[3],\n        )\n        .ok()?;\n",
+        "prior": "    let naive = day.and_hms_micro_opt(hour, components[1], components[2], components[3])?;\n"
+      },
+      {
+        "at": 91817,
+        "current": "        (naive.assume_utc().unix_timestamp_nanos() / 1000) as f64 / 1e6 - offset\n",
+        "prior": "        naive.and_utc().timestamp_micros() as f64 / 1e6 - offset\n"
+      },
+      {
+        "at": 92171,
+        "current": "fn naive_local_timestamp(naive: time::PrimitiveDateTime) -> Option<f64> {\n    let zone = jiff::tz::TimeZone::system();\n",
+        "prior": "fn naive_local_timestamp(naive: chrono::NaiveDateTime) -> Option<f64> {\n"
+      },
+      {
+        "at": 92338,
+        "current": "        let value = time::OffsetDateTime::from_unix_timestamp(seconds).ok()?;\n        let offset_seconds = match jiff::Timestamp::from_second(seconds) {\n            Ok(timestamp) => zone.to_offset(timestamp).seconds(),\n            // A civil date can be valid even outside Jiff's timestamp range,\n            // which reserves room for every offset. Ask the host at these bounds.\n            Err(_) => time::UtcOffset::local_offset_at(value)\n                .ok()?\n                .whole_seconds(),\n        };\n        let offset = time::UtcOffset::from_whole_seconds(offset_seconds).ok()?;\n        let year = value.to_offset(offset).year();\n",
+        "prior": "        let value = chrono::DateTime::from_timestamp(seconds, 0)?\n            .with_timezone(&chrono::Local)\n            .naive_local();\n"
+      },
+      {
+        "at": 92998,
+        "current": "            .contains(&year)\n            .then(|| seconds + i64::from(offset_seconds))\n",
+        "prior": "            .contains(&chrono::Datelike::year(&value))\n            .then_some(value.and_utc().timestamp())\n"
+      },
+      {
+        "at": 93092,
+        "current": "    let t = naive.assume_utc().unix_timestamp();\n    let fraction = naive.microsecond() as f64 / 1e6;\n",
+        "prior": "    let utc = naive.and_utc();\n    let t = utc.timestamp();\n    let fraction = utc.timestamp_subsec_micros() as f64 / 1e6;\n"
+      }
+    ]
+  },
+  {
+    "path": "crates/ssx-infra/tests/o01.rs",
+    "current_bytes": 58057,
+    "current_sha256": "d24154d8a842a8e6501bff120dda7d09519321e7b5d4b744be65917ef12172fb",
+    "prior_bytes": 58402,
+    "prior_sha256": "98a959bf3826aaf86e49124f60beb72d294e0c5361e7674799f13807b0583fd7",
+    "spans": [
+      {
+        "at": 4012,
+        "current": "    let day = jiff::Zoned::now().date();\n",
+        "prior": "    let day = chrono::Local::now().format(\"%Y-%m-%d\");\n"
+      },
+      {
+        "at": 5546,
+        "current": "        .arg(format!(\"query_audit:{}\", jiff::Zoned::now().date()))\n",
+        "prior": "        .arg(format!(\n            \"query_audit:{}\",\n            chrono::Local::now().format(\"%Y-%m-%d\")\n        ))\n"
+      },
+      {
+        "at": 12823,
+        "current": "        .arg(format!(\"query_audit:{}\", jiff::Zoned::now().date()))\n",
+        "prior": "        .arg(format!(\n            \"query_audit:{}\",\n            chrono::Local::now().format(\"%Y-%m-%d\")\n        ))\n"
+      },
+      {
+        "at": 13485,
+        "current": "            jiff::Zoned::now().date()\n",
+        "prior": "            chrono::Local::now().format(\"%Y-%m-%d\")\n"
+      },
+      {
+        "at": 15286,
+        "current": "    let day = jiff::Zoned::now().date();\n",
+        "prior": "    let day = chrono::Local::now().format(\"%Y-%m-%d\");\n"
+      },
+      {
+        "at": 21528,
+        "current": "    let key = format!(\"query_audit:{}\", jiff::Zoned::now().date());\n",
+        "prior": "    let key = format!(\"query_audit:{}\", chrono::Local::now().format(\"%Y-%m-%d\"));\n"
+      },
+      {
+        "at": 25790,
+        "current": "        .arg(format!(\"query_audit:{}\", jiff::Zoned::now().date()))\n",
+        "prior": "        .arg(format!(\n            \"query_audit:{}\",\n            chrono::Local::now().format(\"%Y-%m-%d\")\n        ))\n"
+      },
+      {
+        "at": 30542,
+        "current": "        let day = jiff::Zoned::now().date();\n",
+        "prior": "        let day = chrono::Local::now().format(\"%Y-%m-%d\");\n"
+      },
+      {
+        "at": 35331,
+        "current": "        let day = jiff::Zoned::now().date();\n",
+        "prior": "        let day = chrono::Local::now().format(\"%Y-%m-%d\");\n"
+      },
+      {
+        "at": 35870,
+        "current": "                let at = actual.parse::<jiff::Timestamp>().unwrap();\n                assert!(at.as_millisecond() <= jiff::Timestamp::now().as_millisecond());\n",
+        "prior": "                let at = chrono::DateTime::parse_from_rfc3339(&actual).unwrap();\n                assert!(at.timestamp_millis() <= chrono::Utc::now().timestamp_millis());\n"
+      },
+      {
+        "at": 36053,
+        "current": "                    jiff::Timestamp::now().duration_since(at).as_millis()\n                        <= started.elapsed().as_millis() as i128 + 1\n",
+        "prior": "                    chrono::Utc::now()\n                        .signed_duration_since(at)\n                        .num_milliseconds()\n                        <= started.elapsed().as_millis() as i64 + 1\n"
+      },
+      {
+        "at": 39521,
+        "current": "        let day = jiff::Zoned::now().date();\n",
+        "prior": "        let day = chrono::Local::now().format(\"%Y-%m-%d\");\n"
+      },
+      {
+        "at": 49522,
+        "current": "    let day = jiff::Zoned::now().date();\n",
+        "prior": "    let day = chrono::Local::now().format(\"%Y-%m-%d\");\n"
+      },
+      {
+        "at": 49732,
+        "current": "    assert!(jiff::civil::Date::strptime(\"%Y-%m-%d\", parts[1]).is_ok());\n",
+        "prior": "    assert!(chrono::NaiveDate::parse_from_str(parts[1], \"%Y-%m-%d\").is_ok());\n"
+      },
+      {
+        "at": 50633,
+        "current": "    assert!(timestamp.parse::<jiff::Timestamp>().is_ok());\n",
+        "prior": "    assert!(chrono::DateTime::parse_from_rfc3339(&timestamp).is_ok());\n"
+      }
+    ]
+  },
+  {
+    "path": "crates/ssx-infra/tests/w03.rs",
+    "current_bytes": 127005,
+    "current_sha256": "67847ad5943bc9cc3916b9052f0efe41a58e18fe0e7540e7793b2eff71ccc809",
+    "prior_bytes": 127058,
+    "prior_sha256": "834580b94fea560c82fea1f3cf89983ce98c17fea7eaf44f55cacc06bbfdc6a9",
+    "spans": [
+      {
+        "at": 51125,
+        "current": "    let naive = jiff::civil::datetime(2026, 10, 17, 14, 30, 12, 0);\n    let local = jiff::tz::TimeZone::system()\n        .to_ambiguous_timestamp(naive)\n        .unambiguous()\n",
+        "prior": "    let naive = chrono::NaiveDate::from_ymd_opt(2026, 10, 17)\n        .unwrap()\n        .and_hms_opt(14, 30, 12)\n        .unwrap();\n    let local = chrono::TimeZone::from_local_datetime(&chrono::Local, &naive)\n        .single()\n"
+      },
+      {
+        "at": 51386,
+        "current": "        Some(local.as_second() as f64)\n",
+        "prior": "        Some(local.timestamp() as f64)\n"
+      }
+    ]
+  },
+  {
+    "path": "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+    "current_bytes": 88343,
+    "current_sha256": "9a23c8fc4cab95b460b5389eea2f030fa04687d119895d5479cfb6d8e89c49ee",
+    "prior_bytes": 87891,
+    "prior_sha256": "8e2347c9e17f87e1d1145c9ea247e0a30d6d5a502b15a545a7339e012686a3ac",
+    "spans": [
+      {
+        "at": 25525,
+        "current": "    let mode = permissions(&path)?;\n    let name = text(row, \"path\")?;\n    let raw = if name.starts_with(\"crates/ssx-infra/\") {\n        w07_t02_joint::cli_source_custody::rmcp_historical_operand(name, &raw, &mode)?\n            .unwrap_or(raw)\n    } else {\n        raw\n    };\n    material(row, &raw, &mode)?;\n",
+        "prior": "    material(row, &raw, &permissions(&path)?)?;\n"
+      },
+      {
+        "at": 86618,
+        "current": "    let accepted = w07_t02_joint::cli_source_custody::rmcp_historical_operand(path, actual, mode)?\n        .ok_or(\"O01 RMCP runtime source row absent\")?;\n    let actual = accepted.as_slice();\n",
+        "prior": ""
+      }
+    ]
+  }
+]
