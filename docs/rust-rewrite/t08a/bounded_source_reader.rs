@@ -240,6 +240,10 @@ fn bounded_read_inner<F: FnOnce()>(
 // Exercise the shared reader in its existing owning test. Registering tests here
 // would change the frozen inventory of the other binaries that include this file.
 #[cfg(all(test, any(unix, windows)))]
+#[allow(
+    dead_code,
+    reason = "Only the T08A test owner calls these controls; other suites include the reader by path"
+)]
 pub(super) fn controls() {
     #[cfg(unix)]
     bounded_read_tests::controls();
@@ -248,6 +252,10 @@ pub(super) fn controls() {
 }
 
 #[cfg(all(test, windows))]
+#[allow(
+    dead_code,
+    reason = "Only the T08A test owner calls these controls; other suites include the reader by path"
+)]
 mod windows_handle_tests {
     use super::{bounded_read_inner, windows_directory_chain};
     use std::{
@@ -354,6 +362,10 @@ mod windows_handle_tests {
 }
 
 #[cfg(all(test, unix))]
+#[allow(
+    dead_code,
+    reason = "Only the T08A test owner calls these controls; other suites include the reader by path"
+)]
 mod bounded_read_tests {
     use super::bounded_read_inner;
     use std::{
