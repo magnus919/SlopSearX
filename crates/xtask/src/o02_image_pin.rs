@@ -2193,17 +2193,29 @@ mod tests {
             // unwinding, SIGKILL would not run Stage::drop).
             use std::os::unix::fs::PermissionsExt;
             let record: serde_json::Value = serde_json::from_slice(&journal).unwrap();
-            for (path, name) in PROMOTION_FILES
+            let stages: Vec<_> = PROMOTION_FILES
                 .into_iter()
                 .zip(record["stages"].as_array().unwrap())
-            {
-                let stage = root
-                    .join(path)
-                    .parent()
-                    .unwrap()
-                    .join(name.as_str().unwrap());
-                fs::write(&stage, b"interrupted output write").unwrap();
-                fs::set_permissions(&stage, fs::Permissions::from_mode(0o600)).unwrap();
+                .map(|(path, name)| {
+                    root.join(path)
+                        .parent()
+                        .unwrap()
+                        .join(name.as_str().unwrap())
+                })
+                .collect();
+            let unrelated = b"foreign staging data";
+            fs::write(&stages[0], unrelated).unwrap();
+            fs::set_permissions(&stages[0], fs::Permissions::from_mode(0o600)).unwrap();
+            assert!(recover_promotion(&root).is_err());
+            assert_eq!(fs::read(&stages[0]).unwrap(), unrelated);
+            assert_eq!(
+                fs::read(root.join(".ssx-image-promotion/journal.json")).unwrap(),
+                journal
+            );
+            for (stage, document) in stages.iter().zip(record["documents"].as_array().unwrap()) {
+                let expected = document["updated"].as_str().unwrap().as_bytes();
+                fs::write(stage, &expected[..16]).unwrap();
+                fs::set_permissions(stage, fs::Permissions::from_mode(0o600)).unwrap();
             }
             recover_promotion(&root).unwrap();
             if boundary % 2 == 0 {
