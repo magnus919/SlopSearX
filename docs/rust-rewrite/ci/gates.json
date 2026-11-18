@@ -2277,7 +2277,13 @@
             },
             {
               "name": "Native search and discovery through authenticated transports",
-              "run": "cargo xtask check T06 --output target/rust-evidence/T06.json"
+              "env": {
+                "SLOPSEARX_TEST_TEMP_ROOT": "${{ runner.temp }}/t06",
+                "TMPDIR": "${{ runner.temp }}/t06",
+                "TMP": "${{ runner.temp }}/t06",
+                "TEMP": "${{ runner.temp }}/t06"
+              },
+              "run": "mkdir \"$SLOPSEARX_TEST_TEMP_ROOT\"\ntrap 'rmdir \"$SLOPSEARX_TEST_TEMP_ROOT\"' EXIT\ncargo xtask check T06 --output target/rust-evidence/T06.json\n"
             },
             {
               "name": "MCP transport and gateway qualification",
