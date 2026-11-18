@@ -84,8 +84,11 @@ binding under `retained_formatter_assertions`. The check covers the entire
 malformed-content response for the forbidden URL scheme and rejects missing,
 duplicate or mismatched evidence. Source-owner review of fixture equivalence
 remains pending. The historical inventory and its acceptance states are
-preserved. The compact-results uncompressed and gzip budgets still require
-their exact fixture mapping.
+preserved. The compact-results budget uses the original query and single ordinary result
+in a direct native formatter fixture. The native renderer derives grouping
+from the result. The gate measures that receipt’s exact UTF-8 bytes and its
+level-nine gzip representation against the original 50 KiB and 15 KiB caps.
+The browser landing-page budgets run separately.
 
 The fast and slow trusted-click controls first record a bounded pre-input readiness
 phase: the target is brought forward, a trial click proves Playwright actionability
