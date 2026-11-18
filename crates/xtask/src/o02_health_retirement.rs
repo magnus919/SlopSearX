@@ -9,9 +9,9 @@ use sha2::{Digest, Sha256};
 mod builder_patch;
 #[cfg(unix)]
 use std::io::Read;
-use std::{collections::BTreeSet, fs, path::Path, process::Command};
+use std::{collections::BTreeSet, fs, path::Path};
 #[cfg(test)]
-use std::{ffi::OsString, path::PathBuf};
+use std::{ffi::OsString, path::PathBuf, process::Command};
 type Result<T> = std::result::Result<T, String>;
 pub(crate) const PATH: &str = "docker/healthcheck.py";
 const BLOB: &str = "39bcbc736bed7e441531ab00f3e6d540e4b3af65";

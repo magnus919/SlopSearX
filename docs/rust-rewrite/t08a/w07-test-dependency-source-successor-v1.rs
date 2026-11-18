@@ -160,6 +160,14 @@ fn git(root: &Path, args: &[&str]) -> Result<Vec<u8>> {
     need(output.status.success(), "Git identity command")?;
     Ok(output.stdout)
 }
+#[cfg(any(test, windows))]
+fn windows_stage_zero_index(index: &str, path: &str) -> bool {
+    let mut lines = index.lines();
+    lines
+        .next()
+        .is_some_and(|line| line.starts_with("100644 ") && line.ends_with(&format!(" 0\t{path}")))
+        && lines.next().is_none()
+}
 pub(crate) fn prior(root: &Path, path: &str, current: &[u8], opened_mode: u32) -> Result<Vec<u8>> {
     need(owns(path), "unowned prior path")?;
     #[cfg(unix)]
@@ -170,9 +178,7 @@ pub(crate) fn prior(root: &Path, path: &str, current: &[u8], opened_mode: u32) -
         let index = git(root, &["ls-files", "--stage", "--", path])?;
         let index = std::str::from_utf8(&index).map_err(|error| error.to_string())?;
         need(
-            index.lines().count() == 1
-                && index.starts_with("100644 ")
-                && index.ends_with(&format!(" 0\t{path}")),
+            windows_stage_zero_index(index, path),
             "Windows stage-zero index mode",
         )?;
     }
@@ -192,6 +198,22 @@ pub(crate) fn prior(root: &Path, path: &str, current: &[u8], opened_mode: u32) -
     Ok(prior)
 }
 pub(crate) fn controls(root: &Path) -> Result<()> {
+    #[cfg(test)]
+    {
+        let entry = format!("100644 {PRIOR_BLOB} 0\t{PATH}\n");
+        need(
+            windows_stage_zero_index(&entry, PATH),
+            "stage-zero record with Git newline",
+        )?;
+        need(
+            !windows_stage_zero_index(&entry.repeat(2), PATH),
+            "duplicate index record rejected",
+        )?;
+        need(
+            !windows_stage_zero_index(&entry.replace(" 0\t", " 1\t"), PATH),
+            "nonzero stage rejected",
+        )?;
+    }
     let (current, opened_mode) = super::regular_material(root, PATH)?;
     let projected_prior = prior(root, PATH, &current, opened_mode)?;
     need(

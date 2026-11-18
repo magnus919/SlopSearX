@@ -237,6 +237,16 @@ fn bounded_read_inner<F: FnOnce()>(
     }
 }
 
+// Exercise the shared reader in its existing owning test. Registering tests here
+// would change the frozen inventory of the other binaries that include this file.
+#[cfg(all(test, any(unix, windows)))]
+pub(super) fn controls() {
+    #[cfg(unix)]
+    bounded_read_tests::controls();
+    #[cfg(windows)]
+    windows_handle_tests::controls();
+}
+
 #[cfg(all(test, windows))]
 mod windows_handle_tests {
     use super::{bounded_read_inner, windows_directory_chain};
@@ -245,7 +255,13 @@ mod windows_handle_tests {
         time::{SystemTime, UNIX_EPOCH},
     };
 
-    #[test]
+    pub(super) fn controls() {
+        drive_and_unc_roots_start_at_complete_anchors();
+        held_leaf_handle_blocks_write_delete_and_replacement_until_read_returns();
+        parent_reparse_point_is_rejected_when_symlink_creation_is_available();
+        held_parent_handle_blocks_rename_during_leaf_read();
+    }
+
     fn drive_and_unc_roots_start_at_complete_anchors() {
         use std::path::Path;
         let drive = windows_directory_chain(Path::new(r"C:\repo\child")).unwrap();
@@ -254,7 +270,6 @@ mod windows_handle_tests {
         assert_eq!(unc.first().unwrap(), Path::new(r"\\server\share\"));
     }
 
-    #[test]
     fn held_leaf_handle_blocks_write_delete_and_replacement_until_read_returns() {
         let nonce = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -296,7 +311,6 @@ mod windows_handle_tests {
         fs::remove_dir_all(base).unwrap();
     }
 
-    #[test]
     fn parent_reparse_point_is_rejected_when_symlink_creation_is_available() {
         use std::os::windows::fs::symlink_dir;
         let nonce = SystemTime::now()
@@ -313,7 +327,6 @@ mod windows_handle_tests {
         fs::remove_dir_all(base).unwrap();
     }
 
-    #[test]
     fn held_parent_handle_blocks_rename_during_leaf_read() {
         let nonce = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -369,8 +382,7 @@ mod bounded_read_tests {
         dir
     }
 
-    #[test]
-    fn bounded_open_handle_accepts_valid_and_rejects_symlink_oversize_replacement_and_mutation() {
+    pub(super) fn controls() {
         let dir = fixture();
         let valid = dir.join("valid");
         fs::write(&valid, b"source bytes").unwrap();

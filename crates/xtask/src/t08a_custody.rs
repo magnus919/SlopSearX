@@ -176,8 +176,8 @@ const RMCP_SECURITY_CAPSULE: &str =
 const RMCP_SECURITY_CAPSULE_SHA: &str =
     "b348258e03bc90feafc68b721d583e5f977d660a90062bff20b8c0f8521aec09";
 pub(crate) const CURRENT_LOCK_SHA: &str =
-    "be8d91b79e48175ea1d3d523c05e5e21a9e8cac815bfb4d49db6fd188b8ca4d0";
-pub(crate) const CURRENT_LOCK_BYTES: usize = 94358;
+    "b775c6fad235c1e60f7868aa424d13e84843d0f3c83a0af2af389bb523a24c27";
+pub(crate) const CURRENT_LOCK_BYTES: usize = 94366;
 const RMCP_ROWS: [(&str, usize); 2] = [("Cargo.toml", 1), ("Cargo.lock", 6)];
 fn rmcp_security_capsule(raw: &str) -> Result<Value> {
     need(
@@ -672,6 +672,8 @@ fn upstream_controls_with_projected_lock(root: &Path) -> Result<()> {
 }
 
 pub(crate) fn controls(root: &Path) -> Result<()> {
+    #[cfg(all(test, any(unix, windows)))]
+    bounded_source_reader::controls();
     issue903_config_controls(root)?;
     w07_test_dependency_source_successor::controls(root)?;
     upstream_controls_with_projected_lock(root)?;
