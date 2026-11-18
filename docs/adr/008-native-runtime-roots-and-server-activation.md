@@ -4,6 +4,7 @@
 - **Scope:** `ssx-infra` runtime composition, `ssx-server` activation, and the T08/O04 boundary
 - **Decision authority:** Rust rewrite case study, planning issue #903 (T08) and #921 (O04)
 - **Date:** 2026-11-05
+- **Proposal updated:** 2026-11-18
 - **Depends on:** ADR 003 (workspace boundaries), ADR 004 (Valkey authority), ADR 005 (protocol/TLS), ADR 007 (shared execution ownership), F01 catalog
 
 ## Context
@@ -26,13 +27,19 @@ repository builds it for production. Three measured facts:
    generations" and that HTTP, MCP and workers "share clones of one service".
    No such runtime root exists.
 
-That leaves a real gap in the dependency graph as well as the code: T08 (#903)
-must integrate the native client "against an actual separately launched native
-HTTP service", while O04 (#921) is listed as blocked by T08 yet its assembly
-role is described elsewhere — `docs/rust-rewrite/t03/CORE_DELIVERY.md` calls
-`HttpState::with_public_portal` "the composition seam for later O04 server
-assembly". The two issues are therefore mutually dependent in substance, so no
-one starts.
+The original November 5 proposal identified an apparent T08/O04 dependency
+inversion. [T08](https://github.com/magnus919/SlopSearX/issues/903) subsequently
+merged its CLI integration against a separate process running the production
+HTTP router, SearchService, npm adapter and private Valkey. The [T08
+handoff](../rust-rewrite/t08/README.md) records that component qualification and
+the independent acceptance it still requires.
+
+[O04](https://github.com/magnus919/SlopSearX/issues/921) consumes the accepted T08
+handoff and owns production-shaped runtime assembly and release packaging. O04
+proves its packaged commands in isolation. Production traffic activation is
+authorized through [G07](https://github.com/magnus919/SlopSearX/issues/945) after
+staging. The maintainer still needs to decide the runtime assembly design
+proposed below.
 
 ## Decision (proposed)
 
@@ -46,8 +53,10 @@ RuntimeRoot::from_config(&ssx_config::Config, RuntimePorts) -> Result<Runtime, A
 `Runtime` owns the `SearchService`, the `PolicyService`, telemetry, the Valkey
 store and the explicitly owned `AdapterHttp` transports that ADR 007 requires to
 be closed only after flights join. `ssx-server` parses argv and environment, then
-calls it. The gateway, MCP server and workers obtain the same root or a clone of
-its services; none of them rebuilds `SearchDependencies`.
+calls it. HTTP, MCP and worker entry points that share a process use clones of
+that process's service. Standalone server and worker processes use the same
+assembly rules and Valkey authority, with process-local lifecycle ownership.
+The gateway consumes the native MCP endpoint over its existing wire contract.
 
 **Fail-closed engine assembly.** The assembler iterates the engine set the
 registry declares. Every engine needs an explicit constructor rule; an engine
@@ -71,28 +80,31 @@ the fake runtime.
 
 ## Proposed migration order
 
-1. Assembler skeleton plus a set-parity gate: registry engine names must equal
-   assembled engine names, and a test asserts that no `SearchDependencies`
-   literal exists outside test modules.
-2. Engines that already expose a typed runtime module and need no credential
-   (`arxiv`, `openalex`, `semanticscholar`) and the credential-free scrape and
-   reference engines.
-3. Credential-bearing and sensitive engines, including the F10 admission and
-   quota paths.
-4. Enable `ssx-server` search mode and switch the T02 image to it.
-5. T08 integration against that service, then O04 release composition.
+1. Accept the T08 component handoff and meet O04's other predecessors before
+   starting O04 implementation.
+2. In O04, establish one assembly root and an executable parity check between
+   the registry and the engine constructor rules. Keep construction of
+   production `SearchDependencies` at that root and exercise it through the
+   packaged entry points.
+3. Add typed rules for credential-free engines, followed by credential-bearing
+   and sensitive engines and their admission and quota configuration. Keep
+   incomplete assembly unavailable for search.
+4. Qualify the packaged server and workers in native search mode with the
+   accepted CLI, deterministic private upstream fixtures, and disposable Valkey.
+   Record exact artifacts, readiness, policy and tenant behavior, and joined
+   shutdown. Carry the release artifacts forward to G06 staging.
 
 ## Consequences
 
-- Until step 4, `ssx-server` continues to declare foundation mode explicitly;
-  nothing silently claims search readiness.
+- Foundation readiness remains explicit until assembled search mode is
+  available and qualified.
 - Because assembly is fail-closed, steps 2 and 3 are additive and reviewable per
   engine, rather than one unreviewable drop.
 - The set-parity gate turns "all engines assembled" into an executable property
   instead of a checklist claim.
-- Ownership becomes unambiguous: `ssx-infra` owns assembly, `ssx-server` owns
-  activation, T08 owns client integration, O04 owns release composition. This
-  removes the #903/#921 inversion without duplicating a shared interface.
+- `ssx-infra` owns assembly code and `ssx-server` owns entry-point mode
+  selection within O04. T08 owns CLI component qualification. O04 owns packaged
+  assembly and delivery to staging. G07 owns production traffic activation.
 
 ## Alternatives rejected
 
@@ -103,9 +115,9 @@ the fake runtime.
   sufficient: the existing environment parser covers execution knobs, while the
   engine set, typed engine configuration, policy catalog and reranker need typed
   configuration.
-- **Keep the fake runtime until G04 staging.** Rejected: T08 cannot integrate
-  against it, so G-series qualification cannot begin, and the remaining
-  milestone issues stay transitively blocked.
+- **Extend the foundation runtime into staging.** Rejected: G06 needs the real
+  packaged native commands and state migration evidence from G04, including
+  runtime readiness, supervised shutdown and deterministic upstream behavior.
 - **Default to a partial engine set when a rule is missing.** Rejected: it would
   silently shrink coverage, which F01 and G01 exist to prevent.
 
@@ -120,5 +132,7 @@ the fake runtime.
   `crates/ssx-infra/src/research_runner/completion_tests.rs`).
 - ADR 007: "Runtime roots supply logical adapter generations"; "HTTP, MCP and
   workers must share clones of one service".
-- Milestone assessment `docs/rust-rewrite/MILESTONE_11_ASSESSMENT.md` records the
-  corresponding dependency inversion.
+- The [November 5 assessment](../rust-rewrite/MILESTONE_11_ASSESSMENT.md)
+  retains the original sequencing concern. The live [O04 handoff
+  criteria](https://github.com/magnus919/SlopSearX/issues/921) preserve the
+  T08 → O04 dependency.
