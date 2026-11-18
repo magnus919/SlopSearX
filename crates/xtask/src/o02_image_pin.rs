@@ -2353,7 +2353,10 @@ mod tests {
                 } else {
                     let expected = document["updated"].as_str().unwrap().as_bytes();
                     fs::write(stage, &expected[..16]).unwrap();
-                    fs::set_permissions(stage, fs::Permissions::from_mode(0o600)).unwrap();
+                    fs::set_permissions(stage, fs::Permissions::from_mode(0o644)).unwrap();
+                    assert!(recover_promotion(&root).is_err());
+                    assert_eq!(fs::read(stage).unwrap(), &expected[..16]);
+                    fs::write(stage, expected).unwrap();
                 }
             }
             recover_promotion(&root).unwrap();

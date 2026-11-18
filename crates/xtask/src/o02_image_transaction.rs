@@ -669,12 +669,7 @@ pub(super) fn complete_with_hook(
     };
     for (document, stage) in documents.iter().zip(&stages) {
         let parent = parent(root, document.path)?;
-        let content = if outputs {
-            StageContent::Exact
-        } else {
-            StageContent::Prefix
-        };
-        if stage_is_owned(&parent, stage, &document.bytes, content)? {
+        if stage_is_owned(&parent, stage, &document.bytes, StageContent::Exact)? {
             unlinkat(&parent, stage.as_str(), UnlinkatFlags::NoRemoveDir)
                 .map_err(io::Error::from)?;
             parent.sync_all()?;
@@ -733,7 +728,7 @@ pub(super) fn rollback_locked(
         let name = old.path.rsplit('/').next().ok_or_else(fail)?;
         let (_, current) = read(&parent, name)?;
         if current == old.bytes {
-            stage_is_owned(&parent, stage, &new.bytes, StageContent::Prefix)?;
+            stage_is_owned(&parent, stage, &new.bytes, StageContent::Exact)?;
         } else if current != new.bytes || read(&parent, stage)?.1 != old.bytes {
             return Err(fail());
         }
@@ -834,7 +829,6 @@ pub(super) fn commit(
 
 enum StageContent {
     Exact,
-    Prefix,
     Draft,
 }
 

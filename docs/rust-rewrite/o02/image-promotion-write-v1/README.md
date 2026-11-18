@@ -95,8 +95,8 @@ remains successful; a later check still refuses the pending journal until
 recovery completes. Before rollback, the live outputs must have their exact
 displaced originals at the recorded stage names. Rollback exchanges each pair
 in reverse order and verifies both entries. When a live original is present,
-recovery may retire a forward stage whose contents match a nonempty prefix of
-the expected output. After commitment, recovery retires only displaced stages
+recovery retires a published forward stage only when its contents match the
+complete expected output. A private draft may contain an incomplete prefix. After commitment, recovery retires only displaced stages
 that match the complete original. An empty or unrelated file at a recorded
 staging name remains in place and recovery reports the conflict.
 
