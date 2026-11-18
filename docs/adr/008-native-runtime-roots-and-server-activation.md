@@ -34,11 +34,12 @@ HTTP router, SearchService, npm adapter and private Valkey. The [T08
 handoff](../rust-rewrite/t08/README.md) records that component qualification and
 the independent acceptance it still requires.
 
-[O04](https://github.com/magnus919/SlopSearX/issues/921) consumes the accepted T08
+[O04](https://github.com/magnus919/SlopSearX/issues/921) requires an accepted T08
 handoff and owns production-shaped runtime assembly and release packaging. O04
-proves its packaged commands in isolation. Production traffic activation is
-authorized through [G07](https://github.com/magnus919/SlopSearX/issues/945) after
-staging. The maintainer still needs to decide the runtime assembly design
+must still qualify the packaged commands in isolation against deterministic
+private upstream fixtures and disposable Valkey. Production traffic activation
+requires separate [G07 authorization](https://github.com/magnus919/SlopSearX/issues/945)
+after staging. The maintainer still needs to decide the runtime assembly design
 proposed below.
 
 ## Decision (proposed)
