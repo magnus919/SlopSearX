@@ -31,7 +31,7 @@
     "Port the upstream manifest edit to Cargo's normalized registry manifest and pin published rmcp-macros at 3.11.0.",
     "Omit the nested lockfile and upstream integration tests and their dev dependencies. The SlopSearX workspace lock and qualification suites govern delivery.",
     "Terminate the registry-generated VCS metadata with a newline for repository text checks.",
-    "Normalize the empty resource module to zero bytes per the repository EOF hook."
+    "Add a module documentation comment to the empty resource module so rustfmt and the repository EOF hook agree."
   ],
   "private_root": "vendor/rmcp",
   "files": {
@@ -49,7 +49,7 @@
     "src/handler/server.rs": "cbf2708ec42e50bc98d24575ed01e6347769aa15db7a636f6e1757ea7bd0ec67",
     "src/handler/server/common.rs": "63df37f3dc6c77fb093ecd6146b9a7440ffb9e7ed09b0f234e5927fe463adb5e",
     "src/handler/server/prompt.rs": "5d9ba6444c1b92da54c106f62dd4734ace3e1ff3ad331207c818ba3446d489ee",
-    "src/handler/server/resource.rs": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/handler/server/resource.rs": "3cb6c81655500018016cac7e4bc42dab09b1bcdc456aea6ae870e07bcc56a6f0",
     "src/handler/server/router.rs": "d3d3c473bfcac764461f410a989c1b41b465048d29b790d169bf35aab7a8cb23",
     "src/handler/server/router/prompt.rs": "2245cac16b4d82c89363589f876681e1911e5cf70170c42ed3cddbdfe0f03eed",
     "src/handler/server/router/tool.rs": "aeeaaf8a6032c457833fca1d25367201349354f0a7e28a460db3fed077f4a8a6",
