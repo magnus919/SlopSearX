@@ -745,15 +745,7 @@ jobs:
         run: cargo xtask check T05 --output target/rust-evidence/T05.json
 
       - name: Native search and discovery through authenticated transports
-        env:
-          SLOPSEARX_TEST_TEMP_ROOT: ${{ runner.temp }}/t06
-          TMPDIR: ${{ runner.temp }}/t06
-          TMP: ${{ runner.temp }}/t06
-          TEMP: ${{ runner.temp }}/t06
-        run: |
-          mkdir "$SLOPSEARX_TEST_TEMP_ROOT"
-          trap 'rmdir "$SLOPSEARX_TEST_TEMP_ROOT"' EXIT
-          cargo xtask check T06 --output target/rust-evidence/T06.json
+        run: cargo xtask check T06 --output target/rust-evidence/T06.json
 
       - name: MCP transport and gateway qualification
         run: cargo xtask check T01 --output target/rust-evidence/T01.json

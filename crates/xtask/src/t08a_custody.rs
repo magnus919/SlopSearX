@@ -596,9 +596,16 @@ fn configured_control_scratch_root() -> Result<std::path::PathBuf> {
         )?;
         path.canonicalize().map_err(|error| error.to_string())
     }
-    let owned = checked_root(
-        std::env::var_os("TMPDIR").ok_or("TMPDIR must be configured for T08A controls")?,
-    )?;
+    let scratch = match std::env::var_os("TMPDIR") {
+        Some(path) => path,
+        // Foundation's T06 job already has a runner-owned scratch directory.
+        // Each custody control creates and retires its own child there.
+        None if std::env::var("GITHUB_ACTIONS").as_deref() == Ok("true") => {
+            std::env::var_os("RUNNER_TEMP").ok_or("RUNNER_TEMP is missing in GitHub Actions")?
+        }
+        None => return Err("TMPDIR must be configured for T08A controls".into()),
+    };
+    let owned = checked_root(scratch)?;
     if let Some(value) = std::env::var_os("SLOPSEARX_TEST_TEMP_ROOT") {
         need(
             owned == checked_root(value)?,
