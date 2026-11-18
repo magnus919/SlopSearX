@@ -951,6 +951,10 @@ async function runContract() {
     assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark');
     await clickAndMeasure(page, page.getByRole('button', { name: 'Use darker mode' }), 'theme');
     assert.equal(await page.locator('html').getAttribute('data-theme'), 'darker');
+    assert(
+      await page.getByRole('button', { name: 'Use dark mode', exact: true }).isVisible(),
+      'switching to the darker theme must expose the Use dark mode button',
+    );
     assert.equal(await page.evaluate(() => localStorage.getItem('slopsearx-theme')), 'darker');
     await page.reload({ waitUntil: 'domcontentloaded' });
     assert.equal(await page.locator('html').getAttribute('data-theme'), 'darker');
