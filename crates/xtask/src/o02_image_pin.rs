@@ -2486,6 +2486,29 @@ mod tests {
 
     #[test]
     #[cfg(unix)]
+    fn inert_initialization_and_full_root_scan_do_not_block_recovery() {
+        let root = promotion_fixture("inert-init-scan");
+        let inert = root.join(".ssx-image-promotion-init-inert");
+        fs::create_dir(&inert).unwrap();
+        for index in 0..=4096 {
+            fs::write(root.join(format!("unrelated-{index}")), b"").unwrap();
+        }
+
+        recover_promotion(&root).unwrap();
+
+        assert!(
+            inert.is_dir(),
+            "an empty initialization has no journal authority"
+        );
+        assert_eq!(fs::read(root.join("unrelated-4096")).unwrap(), b"");
+        assert_eq!(
+            extract_pinned_digest(&root).unwrap(),
+            FROZEN_TEST_PIN_DIGEST
+        );
+    }
+
+    #[test]
+    #[cfg(unix)]
     fn recovery_preserves_unknown_or_invalid_transaction_material() {
         use std::os::unix::fs::{PermissionsExt, symlink};
         for kind in 0..7 {

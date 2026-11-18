@@ -336,7 +336,10 @@ fn duplicate_stream_fd(dir: &File) -> io::Result<i32> {
     }
     Ok(fd)
 }
-fn entries_with_limit(dir: &File, limit: usize) -> io::Result<std::collections::BTreeSet<String>> {
+fn entries_with_limit(
+    dir: &File,
+    limit: usize,
+) -> io::Result<(std::collections::BTreeSet<String>, bool)> {
     let fd = duplicate_stream_fd(dir)?;
     let stream = unsafe { nix::libc::fdopendir(fd) };
     if stream.is_null() {
@@ -354,19 +357,23 @@ fn entries_with_limit(dir: &File, limit: usize) -> io::Result<std::collections::
                 .to_str()
                 .map_err(|_| fail())?;
             if name != "." && name != ".." {
+                if names.len() == limit {
+                    return Ok((names, true));
+                }
                 names.insert(name.to_string());
             }
-            if names.len() > limit {
-                return Err(fail());
-            }
         }
-        Ok(names)
+        Ok((names, false))
     })();
     unsafe { nix::libc::closedir(stream) };
     result
 }
 fn entries(dir: &File) -> io::Result<std::collections::BTreeSet<String>> {
-    entries_with_limit(dir, 4)
+    let (names, truncated) = entries_with_limit(dir, 4)?;
+    if truncated {
+        return Err(fail());
+    }
+    Ok(names)
 }
 fn publish_no_replace(
     old_parent: &File,
@@ -410,7 +417,13 @@ fn publish_no_replace(
     }
 }
 fn clean_initializations(root: &File) -> io::Result<()> {
-    for name in entries_with_limit(root, 4096)? {
+    // This scan only finds cleanup candidates. Recovery of the active
+    // journal uses its exact names and must not depend on inert root entries.
+    let (names, truncated) = entries_with_limit(root, 4096)?;
+    if truncated {
+        eprintln!("O02 image pin: initialization cleanup scan reached its entry limit");
+    }
+    for name in names {
         if !name.starts_with(".ssx-image-promotion-init-") {
             continue;
         }

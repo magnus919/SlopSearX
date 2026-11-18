@@ -93,7 +93,9 @@ are retired using the recorded names.
 no source/journal mutation. `--write` recovers under its lease before preparing
 its next transaction. Clean same-digest writes are idempotent. Unpublished initialization directories cannot have changed target files. A
 complete authenticated initialization can be cleaned; partial/unknown inert
-initializations remain untouched with diagnostics. A root stream descriptor
+initializations remain untouched with diagnostics. Reaching the bounded
+initialization scan limit emits a diagnostic. Recovery of the active journal
+uses its exact names and can complete independently of that scan. A root stream descriptor
 uses CLOEXEC so child processes cannot retain the advisory lease; controlled
 negative and positive subprocess cases cover this boundary.
 
