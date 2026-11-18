@@ -19,12 +19,12 @@ fn windows_directory_chain(root: &Path) -> Result<Vec<std::path::PathBuf>> {
                 chain.push(cursor.clone());
             }
             Component::Normal(_) if saw_root => chain.push(cursor.clone()),
-            _ => return Err("canonical Windows root is not an absolute path".into()),
+            _ => return Err("Windows root is not an absolute path".into()),
         }
     }
     need(
         saw_root && !chain.is_empty(),
-        "canonical Windows root has no complete anchor",
+        "Windows root has no complete anchor",
     )?;
     Ok(chain)
 }
@@ -34,6 +34,43 @@ const _: () = {
     assert!(nix::fcntl::OFlag::O_DIRECTORY.bits() == 0x4000);
     assert!(nix::fcntl::OFlag::O_NOFOLLOW.bits() == 0x8000);
 };
+
+#[cfg(any(target_os = "macos", target_os = "linux"))]
+fn unix_root(root: &Path) -> Result<fs::File> {
+    use nix::{
+        fcntl::{OFlag, open, openat},
+        sys::stat::Mode,
+    };
+    use std::path::Component;
+
+    let flags = OFlag::O_RDONLY | OFlag::O_DIRECTORY | OFlag::O_NOFOLLOW | OFlag::O_CLOEXEC;
+    let anchor = Path::new(if root.is_absolute() { "/" } else { "." });
+    let anchor = fs::File::from(open(anchor, flags, Mode::empty()).map_err(|e| e.to_string())?);
+    let mut held = vec![anchor];
+    for part in root.components() {
+        match part {
+            Component::RootDir | Component::CurDir => {}
+            Component::ParentDir if held.len() > 1 => {
+                held.pop();
+            }
+            Component::Normal(_) | Component::ParentDir => {
+                let parent = held.last().ok_or("missing source root anchor")?;
+                let directory = fs::File::from(
+                    openat(parent, part.as_os_str(), flags, Mode::empty())
+                        .map_err(|e| e.to_string())?,
+                );
+                if part == Component::ParentDir {
+                    held[0] = directory;
+                } else {
+                    held.push(directory);
+                }
+            }
+            Component::Prefix(_) => return Err("unexpected source root prefix".into()),
+        }
+    }
+    held.pop()
+        .ok_or_else(|| "missing source root anchor".into())
+}
 
 pub(crate) fn bounded_read(root: &Path, path: &str, limit: u64) -> Result<(Vec<u8>, u32)> {
     bounded_read_inner(root, path, limit, || {})
@@ -47,7 +84,7 @@ fn bounded_read_inner<F: FnOnce()>(
     #[cfg(any(target_os = "macos", target_os = "linux"))]
     {
         use nix::{
-            fcntl::{OFlag, open, openat},
+            fcntl::{OFlag, openat},
             sys::stat::Mode,
         };
         use std::os::unix::fs::{MetadataExt, PermissionsExt};
@@ -58,19 +95,8 @@ fn bounded_read_inner<F: FnOnce()>(
                     .all(|part| matches!(part, std::path::Component::Normal(_))),
             "source path must be a relative normal path",
         )?;
-        let root = root.canonicalize().map_err(|e| e.to_string())?;
-        let root_dir = fs::File::from(
-            open(
-                &root,
-                OFlag::O_RDONLY | OFlag::O_DIRECTORY | OFlag::O_NOFOLLOW | OFlag::O_CLOEXEC,
-                Mode::empty(),
-            )
-            .map_err(|e| e.to_string())?,
-        );
-        need(
-            root_dir.metadata().map_err(|e| e.to_string())?.is_dir(),
-            "source root must be a directory",
-        )?;
+        let root_dir = unix_root(root)?;
+        let root_identity = root_dir.metadata().map_err(|e| e.to_string())?;
         let mut parent = root_dir.try_clone().map_err(|e| e.to_string())?;
         let parts: Vec<_> = Path::new(path).components().collect();
         for part in &parts[..parts.len().saturating_sub(1)] {
@@ -132,6 +158,11 @@ fn bounded_read_inner<F: FnOnce()>(
             .map_err(|e| e.to_string())?,
         );
         let named_meta = named_file.metadata().map_err(|e| e.to_string())?;
+        let named_root = unix_root(root)?.metadata().map_err(|e| e.to_string())?;
+        need(
+            root_identity.dev() == named_root.dev() && root_identity.ino() == named_root.ino(),
+            "source root identity changed during bounded read",
+        )?;
         need(
             bytes.len() as u64 <= limit
                 && after.is_file()
@@ -164,9 +195,11 @@ fn bounded_read_inner<F: FnOnce()>(
             const BACKUP_SEMANTICS: u32 = 0x0200_0000;
             const FILE_SHARE_READ: u32 = 0x0000_0001;
             const REPARSE_POINT: u32 = 0x0000_0400;
-            let canonical_root = root.canonicalize().map_err(|e| e.to_string())?;
+            // Resolve lexical components first; each actual directory is opened
+            // without resolving reparse points and held against replacement.
+            let absolute_root = std::path::absolute(root).map_err(|e| e.to_string())?;
             let mut held_directories = Vec::new();
-            for directory_path in windows_directory_chain(&canonical_root)? {
+            for directory_path in windows_directory_chain(&absolute_root)? {
                 let directory = fs::OpenOptions::new()
                     .read(true)
                     .share_mode(FILE_SHARE_READ)
@@ -180,9 +213,9 @@ fn bounded_read_inner<F: FnOnce()>(
                 )?;
                 held_directories.push(directory);
             }
-            let full = canonical_root.join(path);
+            let full = absolute_root.join(path);
             let components: Vec<_> = Path::new(path).components().collect();
-            let mut parent_path = canonical_root.clone();
+            let mut parent_path = absolute_root.clone();
             for part in &components[..components.len().saturating_sub(1)] {
                 parent_path.push(part.as_os_str());
                 let directory = fs::OpenOptions::new()
@@ -457,6 +490,30 @@ mod bounded_read_tests {
             .is_err(),
             "parent replacement after open rejected by no-follow root-relative recheck"
         );
+
+        let checkout = dir.join("checkout");
+        let replacement = dir.join("next-checkout");
+        fs::create_dir(&checkout).unwrap();
+        fs::create_dir(&replacement).unwrap();
+        fs::write(checkout.join("leaf"), b"admitted checkout").unwrap();
+        fs::write(replacement.join("leaf"), b"unintended bytes").unwrap();
+        symlink(&checkout, dir.join("linked-checkout")).unwrap();
+        assert!(bounded_read_inner(&dir.join("linked-checkout"), "leaf", 64, || {}).is_err());
+        let linked_ancestor = dir.join("linked-ancestor");
+        symlink(&dir, &linked_ancestor).unwrap();
+        assert!(bounded_read_inner(&linked_ancestor.join("checkout"), "leaf", 64, || {}).is_err());
+        assert_eq!(
+            bounded_read_inner(&checkout.join("../checkout"), "leaf", 64, || {})
+                .unwrap()
+                .0,
+            b"admitted checkout"
+        );
+        let error = bounded_read_inner(&checkout, "leaf", 64, || {
+            fs::rename(&checkout, dir.join("old-checkout")).unwrap();
+            fs::rename(&replacement, &checkout).unwrap();
+        })
+        .unwrap_err();
+        assert_eq!(error, "source root identity changed during bounded read");
 
         let mode_changed = dir.join("mode-changed");
         fs::write(&mode_changed, b"same length").unwrap();
