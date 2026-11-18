@@ -12,8 +12,9 @@
     "upstream_pull_request": "https://github.com/modelcontextprotocol/rust-sdk/pull/1474",
     "upstream_commit": "a95b8045c69c58f08a7bc1bd7642d0e3cf25a5ba",
     "path": "docs/rust-rewrite/t08a/rmcp-3.11.0-optional-chrono.patch",
-    "sha256": "131f85fe0f4ef7807f0f2ff1b467537e93eaef15e8d8273eebf74aee433db772",
+    "sha256": "0093b88a9e81fb9d7c2058097790cd2e50919b941b1f48eac9de0a19015fa280",
     "changed_files": [
+      ".cargo_vcs_info.json",
       "Cargo.toml",
       "README.md",
       "src/lib.rs",
@@ -27,11 +28,12 @@
   },
   "local_adjustments": [
     "Port the upstream manifest edit to Cargo's normalized registry manifest and pin published rmcp-macros at 3.11.0.",
-    "Omit the nested lockfile and upstream integration tests and their dev dependencies. The SlopSearX workspace lock and qualification suites govern delivery."
+    "Omit the nested lockfile and upstream integration tests and their dev dependencies. The SlopSearX workspace lock and qualification suites govern delivery.",
+    "Terminate the registry-generated VCS metadata with a newline for repository text checks."
   ],
   "private_root": "vendor/rmcp",
   "files": {
-    ".cargo_vcs_info.json": "d7eb12a32300c61e8446d702dee26023e0e122f236a457fea5e8948cc71cdccb",
+    ".cargo_vcs_info.json": "342cdffc660823998ec10c8a7aab544f19008c0dc4f3f4b3a7fa429dc1030c76",
     "CHANGELOG.md": "904f592c08be7ae4a4639e6e609be1836638a5629be0facf11bb354ddfc5e861",
     "Cargo.toml": "27e523e343198ec1448ca60da3cc4aa84117a408452187e9667909706d458bc9",
     "Cargo.toml.orig": "cd564d14f4da7d05671171d2fa1b73e5eebedc77f432ef43fc7aa715b074fdf5",

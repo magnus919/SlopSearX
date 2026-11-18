@@ -1,0 +1,29 @@
+{
+  "path": "crates/ssx-infra/src/search.rs",
+  "current_bytes": 91653,
+  "current_sha256": "006951df90832abcc45947987220ebd0d0da195d8e8481295b16ccf98c43cc4f",
+  "prior_bytes": 91285,
+  "prior_sha256": "35b5a30a1a2a7cfb03e79c0e8ecdf5b85563d6075824ec00a08e84c580d2e7d1",
+  "spans": [
+    {
+      "at": 4200,
+      "current": "        let local_day = jiff::Zoned::try_from(now).map_or_else(\n            |_| {\n                // Jiff reserves a margin at both ends of its timeline for zone offsets.\n                let utc = time::OffsetDateTime::from(now);\n                let offset = time::UtcOffset::local_offset_at(utc).unwrap_or(time::UtcOffset::UTC);\n                utc.to_offset(offset).date().to_string()\n            },\n            |local| local.date().to_string(),\n        );\n",
+      "prior": "        let local: chrono::DateTime<chrono::Local> = now.into();\n"
+    },
+    {
+      "at": 4891,
+      "current": "            local_day,\n",
+      "prior": "            local.format(\"%Y-%m-%d\").to_string(),\n"
+    },
+    {
+      "at": 83058,
+      "current": "                let recorded = value[\"status_at\"]\n                    .as_str()\n                    .unwrap()\n                    .parse::<jiff::Timestamp>()\n                    .unwrap();\n",
+      "prior": "                let recorded =\n                    chrono::DateTime::parse_from_rfc3339(value[\"status_at\"].as_str().unwrap())\n                        .unwrap();\n"
+    },
+    {
+      "at": 83272,
+      "current": "                    (recorded.as_microsecond() as f64 / 1_000_000.0 - observed_at.seconds()).abs()\n",
+      "prior": "                    (recorded.timestamp_micros() as f64 / 1_000_000.0 - observed_at.seconds())\n                        .abs()\n"
+    }
+  ]
+}
