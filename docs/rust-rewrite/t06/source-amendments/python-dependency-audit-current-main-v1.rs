@@ -2,6 +2,18 @@
 //! Current physical source is authenticated before reconstructing the fixed predecessor.
 #[path = "../../../../crates/xtask/src/o02_image_gate_successor.rs"]
 mod o02_image_gate_successor;
+#[path = "../../t08a/rmcp-source-afterimage.rs"]
+#[allow(
+    clippy::duplicate_mod,
+    reason = "Independent proof roots share the same stateless inverse"
+)]
+mod rmcp_source_afterimage;
+const RMCP_READER_PATH: &str =
+    "docs/rust-rewrite/t06/source-amendments/python-dependency-audit-source-reader-v1.rs";
+const RMCP_READER_BYTES: usize = 32524;
+const RMCP_READER_BLOB: &str = "bb1c7208045b1f9b4e5132cb1b34917f0669c090";
+const RMCP_READER_SOURCE: &str = include_str!("../../t08a/rmcp-t06-reader-afterimage.json");
+const RMCP_READER_SHA: &str = "35ecf64f2769ca579f90a206dff11c0e62acb99e8033d91140fcfe472708c15b";
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{
@@ -79,10 +91,23 @@ fn physical_operand(
     path: &str,
     expected_bytes: usize,
 ) -> Result<Vec<u8>> {
-    let physical_bytes = o02_image_gate_successor::physical_bytes(path, expected_bytes);
+    let physical_bytes = if path == RMCP_READER_PATH {
+        RMCP_READER_BYTES
+    } else {
+        o02_image_gate_successor::physical_bytes(path, expected_bytes)
+    };
     regular(physical_root, path, physical_bytes)
 }
 fn logical_operand(path: &str, expected_bytes: usize, physical: &[u8]) -> Result<Vec<u8>> {
+    if path == RMCP_READER_PATH {
+        return rmcp_source_afterimage::prior(
+            RMCP_READER_SOURCE,
+            RMCP_READER_SHA,
+            path,
+            physical,
+            0o644,
+        );
+    }
     o02_image_gate_successor::project(path, expected_bytes, physical.to_vec())
 }
 pub(crate) fn current_at(
@@ -124,6 +149,9 @@ pub(crate) fn frozen_operand(
     prior(root, path, supplied).map(Some)
 }
 pub(crate) fn current_git_blob(path: &str) -> Result<String> {
+    if path == RMCP_READER_PATH {
+        return Ok(RMCP_READER_BLOB.to_owned());
+    }
     let doc = decode(CAPSULE)?;
     Ok(pin(&doc, path)?.current_blob.to_owned())
 }

@@ -1013,11 +1013,12 @@ mod tests {
     fn reviewed_mapping_covers_every_live_local_package() {
         let root = repository();
         let mappings = load_mappings(&root).expect("mapping loads");
-        assert_eq!(mappings.rows.len(), 4);
+        assert_eq!(mappings.rows.len(), 5);
         let kinds: Vec<_> = mappings.rows.iter().map(|row| row.kind.clone()).collect();
         assert_eq!(
             kinds,
             vec![
+                Kind::ThirdPartyFork,
                 Kind::ThirdPartyFork,
                 Kind::ThirdPartyFork,
                 Kind::ThirdPartyFork,

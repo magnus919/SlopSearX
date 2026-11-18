@@ -2,7 +2,7 @@
 mod event_metrics;
 pub mod metrics;
 pub mod sentry;
-use chrono::{DateTime, Utc};
+use jiff::{Timestamp, tz::TimeZone};
 use ssx_application::{Audit, Metrics, Supervisor, TaskEvent, TaskState};
 use ssx_domain::{AdapterResponse, EngineStatus, SearchRequest, SearchResponse};
 use std::{
@@ -43,12 +43,26 @@ impl Default for Options {
         }
     }
 }
+fn rfc3339_utc(timestamp: Timestamp) -> String {
+    let nanos = timestamp.subsec_nanosecond();
+    let format = if nanos == 0 {
+        "%Y-%m-%dT%H:%M:%S+00:00"
+    } else if nanos % 1_000_000 == 0 {
+        "%Y-%m-%dT%H:%M:%S%.3f+00:00"
+    } else if nanos % 1_000 == 0 {
+        "%Y-%m-%dT%H:%M:%S%.6f+00:00"
+    } else {
+        "%Y-%m-%dT%H:%M:%S%.9f+00:00"
+    };
+    timestamp.strftime(format).to_string()
+}
+
 struct AuditEntry {
-    at: DateTime<Utc>,
+    at: Timestamp,
     fields: Vec<(&'static str, String)>,
 }
 struct EngineEntry {
-    at: DateTime<Utc>,
+    at: Timestamp,
     engine: String,
     count: usize,
     latency: f64,
@@ -145,10 +159,8 @@ impl Telemetry {
                     pipe.atomic();
                     match event {
                         Event::Audit(e) => {
-                            let key = format!(
-                                "query_audit:{}",
-                                e.at.with_timezone(&chrono::Local).format("%Y-%m-%d")
-                            );
+                            let key =
+                                format!("query_audit:{}", e.at.to_zoned(TimeZone::system()).date());
                             pipe.cmd("XADD")
                                 .arg(&key)
                                 .arg("MAXLEN")
@@ -164,7 +176,7 @@ impl Telemetry {
                             let key = format!(
                                 "engine_stats:{}:{}",
                                 e.engine,
-                                e.at.with_timezone(&chrono::Local).format("%Y-%m-%d")
+                                e.at.to_zoned(TimeZone::system()).date()
                             );
                             for (field, n) in [
                                 ("queries", 1),
@@ -362,7 +374,7 @@ impl Metrics for Telemetry {
             && origin != ssx_application::health::OutcomeOrigin::CallerCancelled
         {
             self.send(Event::Engine(EngineEntry {
-                at: Utc::now(),
+                at: Timestamp::now(),
                 engine: engine.into(),
                 count: response.results.len(),
                 score: if response.results.is_empty() {
@@ -432,7 +444,7 @@ impl Telemetry {
             self.delivery.dropped.fetch_add(1, Ordering::Relaxed);
             return;
         };
-        let at = Utc::now();
+        let at = Timestamp::now();
         let raw = matches!(self.options.privacy, QueryPrivacy::RetainRaw);
         let fields = vec![
             (
@@ -456,7 +468,7 @@ impl Telemetry {
             ),
             (
                 "timestamp",
-                at.to_rfc3339_opts(chrono::SecondsFormat::Millis, true),
+                at.strftime("%Y-%m-%dT%H:%M:%S%.3fZ").to_string(),
             ),
             (
                 "engines",
