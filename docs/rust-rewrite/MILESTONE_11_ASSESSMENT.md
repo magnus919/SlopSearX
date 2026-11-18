@@ -70,14 +70,13 @@ evidence. No combination of automated changes can close any of the 23.
 
 ## Two structural problems worth an owner decision
 
-1. **The critical path runs through a closed pull request.** #902's
-   implementation is a 110-commit branch whose platform-trust qualification
-   cannot pass on hosted runners. #1073/#1075 protect that qualification
-   correctly — they refuse to weaken the witness — but they need authority that
-   the routine rewrite mandate does not carry. Until someone decides how trust
-   is established and removed in the qualification environment, or formally
-   amends the T07 acceptance contract, the gateway cannot land and 17 of the 23
-   open issues cannot start.
+1. **The critical path runs through a closed pull request.** The #902
+   implementation is on a 110-commit branch. The hosted macOS user-domain
+   attempt did not complete trust establishment. Hosted macOS with admin-domain
+   trust remains a candidate pending supported authorization for both adding
+   and removing the test CA. Windows qualification has its own investigation
+   under #1075. The gateway remains blocked until both platform qualifications
+   are accepted or the maintainer formally amends the T07 acceptance contract.
 
 2. **#903 and #921 are mutually dependent in substance.** #921 is listed as
    blocked by #903, but the production server assembly that #903 needs lives in
