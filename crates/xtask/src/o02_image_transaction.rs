@@ -637,14 +637,13 @@ pub(super) fn complete_with_hook(
         if name == COMMIT_PENDING {
             continue;
         }
-        if !outputs {
-            if let Some(index) = stages.iter().position(|stage| draft_name(stage) == *name) {
-                let expected = &plan.outputs[index].bytes;
-                if stage_is_owned(&dir, name, expected, StageContent::Draft)? {
-                    drafts.push(name);
-                }
-                continue;
+        if !outputs && let Some(index) = stages.iter().position(|stage| draft_name(stage) == *name)
+        {
+            let expected = &plan.outputs[index].bytes;
+            if stage_is_owned(&dir, name, expected, StageContent::Draft)? {
+                drafts.push(name);
             }
+            continue;
         }
         if ![JOURNAL, PENDING, COMMITTED].contains(&name.as_str()) {
             return Err(fail());
