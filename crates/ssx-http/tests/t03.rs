@@ -790,7 +790,7 @@ async fn blank_optional_html_bounds_are_absent_and_machine_blanks_stay_rejected(
 
 #[tokio::test]
 async fn landing_native_form_submits_query_and_scope_together_from_both_buttons() {
-    let mut process = Process::start("landing-form", "contract");
+    let mut process = Process::start_with_theme("landing-form", "contract", "darker");
     let (status, body) = process.get("/", "landing-form-source").await;
     assert_eq!(status, 200);
     let document = scraper::Html::parse_document(&body);

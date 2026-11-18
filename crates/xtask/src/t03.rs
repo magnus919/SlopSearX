@@ -916,6 +916,7 @@ const RETAINED_FORMATTER_CHECKS: &[(&str, &str, &[FormatterPredicate])] = &[
         "landing-form",
         "landing-form-source",
         &[
+            (532, true, "data-default-theme=\"darker\""),
             (535, true, "Search <em>SlopSearX.</em>"),
             (536, true, "let stored = null"),
             (537, true, "storage is optional"),
@@ -3416,7 +3417,7 @@ mod tests {
             })
             .collect();
         let comparisons = retained_formatter_comparisons(&manifest, &wire).unwrap();
-        assert_eq!(comparisons.as_array().unwrap().len(), 16);
+        assert_eq!(comparisons.as_array().unwrap().len(), 17);
         let good = wire.clone();
         let target = wire
             .iter_mut()
@@ -3433,7 +3434,23 @@ mod tests {
                 .contains("F:L551")
         );
         wire = good.clone();
-        wire[0]["observation"]["body"] = json!("");
+        wire[0]["observation"]["body"] =
+            json!(wire[0]["observation"]["body"].as_str().unwrap().replace(
+                "data-default-theme=\"darker\"",
+                "data-default-theme=\"dark\""
+            ));
+        assert!(
+            retained_formatter_comparisons(&manifest, &wire)
+                .unwrap_err()
+                .contains("F:L532")
+        );
+        wire = good.clone();
+        wire[0]["observation"]["body"] = json!(
+            wire[0]["observation"]["body"]
+                .as_str()
+                .unwrap()
+                .replace("Search <em>SlopSearX.</em>", "")
+        );
         assert!(
             retained_formatter_comparisons(&manifest, &wire)
                 .unwrap_err()

@@ -77,9 +77,10 @@ assertions still require their original acceptance evidence. Current-main date
 roundtrip and profiling controls remain alongside the empty-date-control journey
 and source/media evidence in this candidate.
 
-The HTTP receipt validator now applies 16 frozen formatter literal predicates
-to named native responses for landing, result, malformed-content and error
-paths. Each result includes its original source row and current HTTP receipt
+The HTTP receipt validator applies 17 frozen formatter literal predicates to
+named native responses for landing, result, malformed-content and error paths.
+The landing-form fixture starts with the darker theme and checks that the
+response declares that default. Each result includes its original source row and current HTTP receipt
 binding under `retained_formatter_assertions`. The check covers the entire
 malformed-content response for the forbidden URL scheme and rejects missing,
 duplicate or mismatched evidence. Source-owner review of fixture equivalence
