@@ -35,10 +35,11 @@ runtime-validated in this macOS run; the guarantee is limited to documented
 Windows sharing and reparse semantics represented by Rust's `OpenOptionsExt` flags.
 
 The T08A compatibility overlay uses only the configured, existing
-`SLOPSEARX_TEST_TEMP_ROOT`, and requires it to resolve to the same nonsymlink
-directory as `TMPDIR`. Its unique child directory is created exclusively and
-removed after the controls. The active run ledger records the registered short
-scratch root; the code does not fall back to the operating system temp root.
+`TMPDIR` initialized by the native CLI workflow. When supplied,
+`SLOPSEARX_TEST_TEMP_ROOT` must resolve to that same directory. The gate
+requires an absolute, existing non-symlink root and exclusively creates its
+owned child beneath it. The hosted Windows T08A gate exercises the held-handle
+controls there as part of the existing source-custody check.
 
 Focused controls use an owned temporary fixture and exercise valid exact-bound
 bytes, an oversize file, leaf and parent symlinks, leaf and parent replacement

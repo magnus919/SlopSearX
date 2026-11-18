@@ -54,12 +54,10 @@ jobs:
           set -euo pipefail
           export CARGO_TARGET_DIR="$RUNNER_TEMP/ssx-cli-target"
           export TMPDIR="$RUNNER_TEMP/ssx-cli-tmp"
-          export SLOPSEARX_TEST_TEMP_ROOT="$TMPDIR"
           export TMP="$TMPDIR" TEMP="$TMPDIR"
           {
             printf 'CARGO_TARGET_DIR=%s\n' "$CARGO_TARGET_DIR"
             printf 'TMPDIR=%s\n' "$TMPDIR"
-            printf 'SLOPSEARX_TEST_TEMP_ROOT=%s\n' "$SLOPSEARX_TEST_TEMP_ROOT"
             printf 'TMP=%s\n' "$TMP"
             printf 'TEMP=%s\n' "$TEMP"
           } >> "$GITHUB_ENV"

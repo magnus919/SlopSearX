@@ -239,19 +239,19 @@ fn bounded_read_inner<F: FnOnce()>(
 
 // Exercise the shared reader in its existing owning test. Registering tests here
 // would change the frozen inventory of the other binaries that include this file.
-#[cfg(all(test, any(unix, windows)))]
+#[cfg(any(all(test, unix), windows))]
 #[allow(
     dead_code,
     reason = "Only the T08A test owner calls these controls; other suites include the reader by path"
 )]
-pub(super) fn controls() {
+pub(super) fn controls(root: &std::path::Path) {
     #[cfg(unix)]
-    bounded_read_tests::controls();
+    bounded_read_tests::controls(root);
     #[cfg(windows)]
-    windows_handle_tests::controls();
+    windows_handle_tests::controls(root);
 }
 
-#[cfg(all(test, windows))]
+#[cfg(windows)]
 #[allow(
     dead_code,
     reason = "Only the T08A test owner calls these controls; other suites include the reader by path"
@@ -263,11 +263,11 @@ mod windows_handle_tests {
         time::{SystemTime, UNIX_EPOCH},
     };
 
-    pub(super) fn controls() {
+    pub(super) fn controls(root: &std::path::Path) {
         drive_and_unc_roots_start_at_complete_anchors();
-        held_leaf_handle_blocks_write_delete_and_replacement_until_read_returns();
-        parent_reparse_point_is_rejected_when_symlink_creation_is_available();
-        held_parent_handle_blocks_rename_during_leaf_read();
+        held_leaf_handle_blocks_write_delete_and_replacement_until_read_returns(root);
+        parent_reparse_point_is_rejected_when_symlink_creation_is_available(root);
+        held_parent_handle_blocks_rename_during_leaf_read(root);
     }
 
     fn drive_and_unc_roots_start_at_complete_anchors() {
@@ -278,12 +278,14 @@ mod windows_handle_tests {
         assert_eq!(unc.first().unwrap(), Path::new(r"\\server\share\"));
     }
 
-    fn held_leaf_handle_blocks_write_delete_and_replacement_until_read_returns() {
+    fn held_leaf_handle_blocks_write_delete_and_replacement_until_read_returns(
+        root: &std::path::Path,
+    ) {
         let nonce = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_nanos();
-        let base = std::env::temp_dir().join(format!("ssx-bounded-leaf-{nonce}"));
+        let base = root.join(format!("ssx-bounded-leaf-{nonce}"));
         let parent = base.join("parent");
         fs::create_dir_all(&parent).unwrap();
         let leaf = parent.join("leaf");
@@ -319,13 +321,13 @@ mod windows_handle_tests {
         fs::remove_dir_all(base).unwrap();
     }
 
-    fn parent_reparse_point_is_rejected_when_symlink_creation_is_available() {
+    fn parent_reparse_point_is_rejected_when_symlink_creation_is_available(root: &std::path::Path) {
         use std::os::windows::fs::symlink_dir;
         let nonce = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_nanos();
-        let base = std::env::temp_dir().join(format!("ssx-bounded-reparse-{nonce}"));
+        let base = root.join(format!("ssx-bounded-reparse-{nonce}"));
         let outside = base.join("outside");
         fs::create_dir_all(&outside).unwrap();
         fs::write(outside.join("leaf"), b"outside bytes").unwrap();
@@ -335,12 +337,12 @@ mod windows_handle_tests {
         fs::remove_dir_all(base).unwrap();
     }
 
-    fn held_parent_handle_blocks_rename_during_leaf_read() {
+    fn held_parent_handle_blocks_rename_during_leaf_read(root: &std::path::Path) {
         let nonce = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_nanos();
-        let base = std::env::temp_dir().join(format!("ssx-bounded-parent-{nonce}"));
+        let base = root.join(format!("ssx-bounded-parent-{nonce}"));
         let parent = base.join("parent");
         fs::create_dir_all(&parent).unwrap();
         fs::write(parent.join("leaf"), b"bounded windows bytes").unwrap();
@@ -377,11 +379,8 @@ mod bounded_read_tests {
 
     static NEXT: AtomicU64 = AtomicU64::new(0);
 
-    fn fixture() -> PathBuf {
-        let base = PathBuf::from(
-            std::env::var_os("SLOPSEARX_TEST_TEMP_ROOT").expect("registered short test root"),
-        );
-        let dir = base.join(format!(
+    fn fixture(root: &std::path::Path) -> PathBuf {
+        let dir = root.join(format!(
             "ssx-bound-read-{}-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
@@ -394,8 +393,8 @@ mod bounded_read_tests {
         dir
     }
 
-    pub(super) fn controls() {
-        let dir = fixture();
+    pub(super) fn controls(root: &std::path::Path) {
+        let dir = fixture(root);
         let valid = dir.join("valid");
         fs::write(&valid, b"source bytes").unwrap();
         assert_eq!(

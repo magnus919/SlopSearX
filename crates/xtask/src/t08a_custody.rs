@@ -579,35 +579,29 @@ pub(crate) fn test_dependency_prior(
     Ok(prior)
 }
 fn configured_control_scratch_root() -> Result<std::path::PathBuf> {
-    let tmp_dir =
-        std::env::var_os("TMPDIR").ok_or("TMPDIR must be configured for T08A controls")?;
-    let fixture_root = std::env::var_os("SLOPSEARX_TEST_TEMP_ROOT")
-        .ok_or("SLOPSEARX_TEST_TEMP_ROOT must be configured for T08A controls")?;
-    let tmp_dir = std::path::PathBuf::from(tmp_dir);
-    let fixture_root = std::path::PathBuf::from(fixture_root);
-    need(
-        tmp_dir.is_absolute() && fixture_root.is_absolute(),
-        "T08A control scratch roots must be absolute",
+    fn checked_root(value: std::ffi::OsString) -> Result<std::path::PathBuf> {
+        let path = std::path::PathBuf::from(value);
+        need(
+            path.is_absolute(),
+            "T08A control scratch root must be absolute",
+        )?;
+        let metadata = std::fs::symlink_metadata(&path).map_err(|error| error.to_string())?;
+        need(
+            metadata.is_dir() && !metadata.file_type().is_symlink(),
+            "T08A control scratch root must be an existing non-symlink directory",
+        )?;
+        path.canonicalize().map_err(|error| error.to_string())
+    }
+    let owned = checked_root(
+        std::env::var_os("TMPDIR").ok_or("TMPDIR must be configured for T08A controls")?,
     )?;
-    let tmp_meta = std::fs::symlink_metadata(&tmp_dir).map_err(|error| error.to_string())?;
-    let fixture_meta =
-        std::fs::symlink_metadata(&fixture_root).map_err(|error| error.to_string())?;
-    need(
-        tmp_meta.is_dir()
-            && !tmp_meta.file_type().is_symlink()
-            && fixture_meta.is_dir()
-            && !fixture_meta.file_type().is_symlink(),
-        "T08A control scratch roots must be existing non-symlink directories",
-    )?;
-    let tmp_dir = tmp_dir.canonicalize().map_err(|error| error.to_string())?;
-    let fixture_root = fixture_root
-        .canonicalize()
-        .map_err(|error| error.to_string())?;
-    need(
-        tmp_dir == fixture_root,
-        "TMPDIR and SLOPSEARX_TEST_TEMP_ROOT must resolve to one registered scratch root",
-    )?;
-    Ok(tmp_dir)
+    if let Some(value) = std::env::var_os("SLOPSEARX_TEST_TEMP_ROOT") {
+        need(
+            owned == checked_root(value)?,
+            "TMPDIR and SLOPSEARX_TEST_TEMP_ROOT must resolve to one registered scratch root",
+        )?;
+    }
+    Ok(owned)
 }
 fn upstream_controls_with_projected_lock(root: &Path) -> Result<()> {
     #[cfg(unix)]
@@ -672,8 +666,8 @@ fn upstream_controls_with_projected_lock(root: &Path) -> Result<()> {
 }
 
 pub(crate) fn controls(root: &Path) -> Result<()> {
-    #[cfg(all(test, any(unix, windows)))]
-    bounded_source_reader::controls();
+    #[cfg(any(all(test, unix), windows))]
+    bounded_source_reader::controls(&configured_control_scratch_root()?);
     issue903_config_controls(root)?;
     w07_test_dependency_source_successor::controls(root)?;
     upstream_controls_with_projected_lock(root)?;
