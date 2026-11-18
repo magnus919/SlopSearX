@@ -52,27 +52,22 @@ pub(super) fn project(path: &str, expected: usize, raw: Vec<u8>) -> Result<Vec<u
     Ok(prior)
 }
 #[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn exact_o02_catalog_row_retains_the_prior_t06_endpoint() {
-        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-        let raw = std::fs::read(root.join(PATH)).unwrap();
-        let prior = project(PATH, PRIOR_BYTES, raw.clone()).unwrap();
-        assert_eq!(hash(&prior), PRIOR_SHA);
-        for mutant in [
-            vec![],
-            prior,
-            {
-                let mut bytes = raw.clone();
-                bytes[0] ^= 1;
-                bytes
-            },
-            [raw.clone(), raw.clone()].concat(),
-        ] {
-            assert!(project(PATH, PRIOR_BYTES, mutant).is_err());
-        }
-        assert_eq!(physical_bytes(PATH, PRIOR_BYTES), CURRENT_BYTES);
-        assert_eq!(physical_bytes("unlisted", 7), 7);
+pub(super) fn controls(root: &std::path::Path) {
+    let raw = std::fs::read(root.join(PATH)).unwrap();
+    let prior = project(PATH, PRIOR_BYTES, raw.clone()).unwrap();
+    assert_eq!(hash(&prior), PRIOR_SHA);
+    for mutant in [
+        vec![],
+        prior,
+        {
+            let mut bytes = raw.clone();
+            bytes[0] ^= 1;
+            bytes
+        },
+        [raw.clone(), raw.clone()].concat(),
+    ] {
+        assert!(project(PATH, PRIOR_BYTES, mutant).is_err());
     }
+    assert_eq!(physical_bytes(PATH, PRIOR_BYTES), CURRENT_BYTES);
+    assert_eq!(physical_bytes("unlisted", 7), 7);
 }

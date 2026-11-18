@@ -580,6 +580,7 @@ fn prior_at(
 /// Additive controls for existing owning test identities. No historical test names change.
 #[cfg(test)]
 pub(crate) fn controls(root: &Path) -> Result<()> {
+    o02_image_gate_successor::controls(root);
     let doc = decode(CAPSULE)?;
     let mut capsule_mutant = CAPSULE.to_vec();
     capsule_mutant.push(b' ');
