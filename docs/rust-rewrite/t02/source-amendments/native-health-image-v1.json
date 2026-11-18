@@ -1,0 +1,96 @@
+{
+  "schema": "T02_NATIVE_HEALTH_IMAGE_V1",
+  "base": "98aa2e931de1c4c63455ca79a23760fb7581ed38",
+  "rows": [
+    {
+      "path": "crates/ssx-http/Dockerfile.t02",
+      "prior": {
+        "bytes": 1086,
+        "sha256": "53e3674581512f4992c0770340cba421015815c5f11ee703b1dcc31b53751199",
+        "blob": "a8b3a9d1655f76964678f6fe50949caeb73ce110"
+      },
+      "current": {
+        "bytes": 1227,
+        "sha256": "4158ac9760976b45712b7149f0704859d7efdcbffcfa598dac0f696c85e5af38",
+        "blob": "c59b7c09c8c5d19d2ae416e086659e2d6e21c391"
+      },
+      "edits": [
+        {
+          "offset": 490,
+          "prior": "RUN cargo build --locked --release -p ssx-http --example t02_fixture --example t02_image_smoke\n",
+          "current": "RUN cargo build --locked --release -p ssx-http --example t02_fixture --example t02_image_smoke \\\n && cargo build --locked --release -p ssx-healthcheck\n"
+        },
+        {
+          "offset": 986,
+          "prior": "",
+          "current": "COPY --from=build /src/target/release/ssx-healthcheck /usr/local/bin/ssx-healthcheck\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-http/examples/t02_fixture.rs",
+      "prior": {
+        "bytes": 14214,
+        "sha256": "28f15580777155c58b70e8ca7f749f111aff62ef20e0d6ac8aff4a7d0826bb26",
+        "blob": "eed739e31a987457c3d11bf97daf807442c808fe"
+      },
+      "current": {
+        "bytes": 14487,
+        "sha256": "31446f0c4fa333b59d9a7db2819f4203a50340da4b43ee2bf6069607a3397e16",
+        "blob": "be53a8807252eef0fbacb3fc0d3340a38b3f46e2"
+      },
+      "edits": [
+        {
+          "offset": 12622,
+          "prior": "    let listener = tokio::net::TcpListener::bind(\"127.0.0.1:0\").await?;\n",
+          "current": "    let listen = match std::env::var(\"SLOPSEARX_T02_IMAGE_PORT\").as_deref() {\n        Ok(\"8080\") => \"127.0.0.1:8080\",\n        Err(std::env::VarError::NotPresent) => \"127.0.0.1:0\",\n        _ => return Err(\"the image fixture only admits the native healthcheck port\".into()),\n    };\n    let listener = tokio::net::TcpListener::bind(listen).await?;\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-http/examples/t02_image_smoke.rs",
+      "prior": {
+        "bytes": 10538,
+        "sha256": "c62e6df87ece4816bba465e21517a816c43578056244c3f80dbd881d11b8fcd3",
+        "blob": "845e78b6c10632746f23080c469a1ded08e593c1"
+      },
+      "current": {
+        "bytes": 11617,
+        "sha256": "433e290f5d8281bb448761c91fd46f24bf06bc6d32c1a69c6848a80723711a83",
+        "blob": "d8d74d3d3526e50f03eeab2c96b9e32df6eee777"
+      },
+      "edits": [
+        {
+          "offset": 2223,
+          "prior": "",
+          "current": "fn require_healthcheck(\n    executable: &Path,\n    expected_exit: i32,\n) -> Result<(), Box<dyn std::error::Error>> {\n    let output = Command::new(executable)\n        .env_clear()\n        .env(\"HTTP_PROXY\", \"http://127.0.0.1:9\")\n        .env(\"http_proxy\", \"http://127.0.0.1:9\")\n        .env(\"ALL_PROXY\", \"http://127.0.0.1:9\")\n        .output()?;\n    if output.status.code() != Some(expected_exit)\n        || !output.stdout.is_empty()\n        || !output.stderr.is_empty()\n    {\n        return Err(format!(\n            \"healthcheck expected silent exit {expected_exit}, received {}\",\n            output.status\n        )\n        .into());\n    }\n    Ok(())\n}\n\n"
+        },
+        {
+          "offset": 2988,
+          "prior": "    let executable = std::env::current_exe()?\n        .parent()\n        .ok_or(\"client executable has no parent\")?\n        .join(\"ssx-t02-http\");\n",
+          "current": "    let current = std::env::current_exe()?;\n    let directory = current.parent().ok_or(\"client executable has no parent\")?;\n    let executable = directory.join(\"ssx-t02-http\");\n    let healthcheck = directory.join(\"ssx-healthcheck\");\n    require_healthcheck(&healthcheck, 1)?;\n"
+        },
+        {
+          "offset": 3614,
+          "prior": "",
+          "current": "        .env(\"SLOPSEARX_T02_IMAGE_PORT\", \"8080\")\n"
+        },
+        {
+          "offset": 4803,
+          "prior": "",
+          "current": "    assert_eq!(base, \"http://127.0.0.1:8080\");\n    require_healthcheck(&healthcheck, 0)?;\n"
+        },
+        {
+          "offset": 11085,
+          "prior": "",
+          "current": "    require_healthcheck(&healthcheck, 1)?;\n"
+        },
+        {
+          "offset": 11193,
+          "prior": "        json!({\"scope\":\"T02 offline real service fixture; not production assembly or deployment\",\"python_executables\":false,\"libpython\":false,\"runtime_inventory_entries\":inventory,\"completed\":completed,\"server_child_shutdown\":\"success\",\"network\":\"container network none; owned loopback only\"})\n",
+          "current": "        json!({\"scope\":\"T02 offline real service fixture; not production assembly or deployment\",\"python_executables\":false,\"libpython\":false,\"runtime_inventory_entries\":inventory,\"completed\":completed,\"server_child_shutdown\":\"success\",\"native_healthcheck\":{\"before_start\":1,\"while_ready\":0,\"after_shutdown\":1,\"silent\":true,\"hostile_proxy\":true},\"network\":\"container network none; owned loopback only\"})\n"
+        }
+      ]
+    }
+  ]
+}

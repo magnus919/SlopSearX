@@ -64,13 +64,37 @@ fn query(base: &str, path: &str, params: &[(&str, &str)]) -> String {
     }
     encoded.finish()
 }
+fn require_healthcheck(
+    executable: &Path,
+    expected_exit: i32,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let output = Command::new(executable)
+        .env_clear()
+        .env("HTTP_PROXY", "http://127.0.0.1:9")
+        .env("http_proxy", "http://127.0.0.1:9")
+        .env("ALL_PROXY", "http://127.0.0.1:9")
+        .output()?;
+    if output.status.code() != Some(expected_exit)
+        || !output.stdout.is_empty()
+        || !output.stderr.is_empty()
+    {
+        return Err(format!(
+            "healthcheck expected silent exit {expected_exit}, received {}",
+            output.status
+        )
+        .into());
+    }
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let inventory = no_python()?;
-    let executable = std::env::current_exe()?
-        .parent()
-        .ok_or("client executable has no parent")?
-        .join("ssx-t02-http");
+    let current = std::env::current_exe()?;
+    let directory = current.parent().ok_or("client executable has no parent")?;
+    let executable = directory.join("ssx-t02-http");
+    let healthcheck = directory.join("ssx-healthcheck");
+    require_healthcheck(&healthcheck, 1)?;
     let calls = Path::new("/tmp/t02-image-engine-calls.jsonl");
     let stderr = fs::OpenOptions::new()
         .write(true)
@@ -80,6 +104,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .args([calls.to_str().unwrap(), "dark", "stdin"])
         .env_clear()
         .env("TZ", "UTC")
+        .env("SLOPSEARX_T02_IMAGE_PORT", "8080")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(stderr)
@@ -113,6 +138,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .as_str()
             .ok_or("missing startup address")?
     );
+    assert_eq!(base, "http://127.0.0.1:8080");
+    require_healthcheck(&healthcheck, 0)?;
     let client = reqwest::Client::builder()
         .no_proxy()
         .timeout(Duration::from_secs(5))
@@ -278,10 +305,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         tokio::time::sleep(Duration::from_millis(10)).await;
     };
     assert!(status.success());
+    require_healthcheck(&healthcheck, 1)?;
     assert_eq!(completed.len(), 22);
     println!(
         "{}",
-        json!({"scope":"T02 offline real service fixture; not production assembly or deployment","python_executables":false,"libpython":false,"runtime_inventory_entries":inventory,"completed":completed,"server_child_shutdown":"success","network":"container network none; owned loopback only"})
+        json!({"scope":"T02 offline real service fixture; not production assembly or deployment","python_executables":false,"libpython":false,"runtime_inventory_entries":inventory,"completed":completed,"server_child_shutdown":"success","native_healthcheck":{"before_start":1,"while_ready":0,"after_shutdown":1,"silent":true,"hostile_proxy":true},"network":"container network none; owned loopback only"})
     );
     Ok(())
 }

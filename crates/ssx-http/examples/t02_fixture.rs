@@ -348,7 +348,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         &policy_arc,
         "0.0.0",
     );
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
+    let listen = match std::env::var("SLOPSEARX_T02_IMAGE_PORT").as_deref() {
+        Ok("8080") => "127.0.0.1:8080",
+        Err(std::env::VarError::NotPresent) => "127.0.0.1:0",
+        _ => return Err("the image fixture only admits the native healthcheck port".into()),
+    };
+    let listener = tokio::net::TcpListener::bind(listen).await?;
     println!(
         "{}",
         json!({"address":listener.local_addr()?.to_string(),"mode":"offline-t02-fixture"})

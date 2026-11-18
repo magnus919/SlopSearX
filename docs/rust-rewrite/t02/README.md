@@ -67,7 +67,10 @@ policy path.
 offline native router/service fixture with an independent compiled Rust client.
 The final image must have no Python executable, matching Python/PyPy symlink,
 libpython or Python backend fallback; the client sends22 requests and joins the
-server child under network-none, read-only, nonroot constraints. A Dockerfile or
+server child under network-none, read-only, nonroot constraints. The shipped
+native healthcheck runs against that same loopback service on port 8080 under
+hostile proxy settings. It must exit silently with 1 before startup, 0 while
+the service is ready, and 1 after its owned shutdown. A Dockerfile or
 compiled client is not image execution evidence. Actual published-head image CI
 is required before image acceptance. Production assembly belongs O04 and later
 cutover/release gates; the main deployment remains unchanged.
