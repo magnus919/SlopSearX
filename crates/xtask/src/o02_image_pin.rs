@@ -2167,6 +2167,47 @@ mod tests {
 
     #[test]
     #[cfg(unix)]
+    fn recovery_retires_the_empty_private_draft_after_interruption() {
+        use promotion_files::{ApplyPoint, PinSnapshot};
+        let root = promotion_fixture("empty-private-draft");
+        let before = PROMOTION_FILES.map(|path| fs::read(root.join(path)).unwrap());
+        let unrelated = root.join(".ssx-image-promotion-unrelated.tmp");
+        fs::write(&unrelated, []).unwrap();
+        let snapshot = PinSnapshot::read(&root).unwrap();
+        let plan = snapshot
+            .plan(&format!("sha256:{}", "f".repeat(64)))
+            .unwrap();
+        let interrupted = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            let _ = snapshot.apply_with_test_hook(&plan, |point, index, _, _| {
+                if point == ApplyPoint::StageCreated && index == 0 {
+                    panic!("interrupted after creation and before the first write");
+                }
+                Ok(())
+            });
+        }));
+        assert!(interrupted.is_err());
+        drop(snapshot);
+
+        let directory = root.join(".ssx-image-promotion");
+        let journal: serde_json::Value =
+            serde_json::from_slice(&fs::read(directory.join("journal.json")).unwrap()).unwrap();
+        let stage = journal["stages"][0].as_str().unwrap();
+        let draft = directory.join(format!("{stage}.draft"));
+        assert_eq!(fs::metadata(&draft).unwrap().len(), 0);
+        assert!(!root.join(PROMOTION_FILES[0]).with_file_name(stage).exists());
+
+        recover_promotion(&root).unwrap();
+        recover_promotion(&root).unwrap();
+        assert!(!directory.exists());
+        assert_eq!(fs::read(&unrelated).unwrap(), b"");
+        assert_eq!(
+            PROMOTION_FILES.map(|path| fs::read(root.join(path)).unwrap()),
+            before
+        );
+    }
+
+    #[test]
+    #[cfg(unix)]
     fn promotion_rolls_back_every_rename_boundary_and_retains_failed_rollback() {
         use promotion_files::{ApplyPoint, PinSnapshot};
         let new = format!("sha256:{}", "f".repeat(64));

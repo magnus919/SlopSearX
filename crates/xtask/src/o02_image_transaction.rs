@@ -9,9 +9,12 @@ use nix::{
 };
 use serde::{Deserialize, Serialize};
 use std::{
-    fs::File,
+    fs::{File, Metadata, Permissions},
     io::{self, Read, Write},
-    os::{fd::AsRawFd, unix::fs::MetadataExt},
+    os::{
+        fd::AsRawFd,
+        unix::fs::{MetadataExt, PermissionsExt},
+    },
     path::Path,
 };
 const DIRECTORY: &str = ".ssx-image-promotion";
@@ -223,6 +226,37 @@ fn plan_bytes(raw: &[u8]) -> io::Result<(PromotionPlan, Vec<String>)> {
     }
     Ok((plan, journal.stages))
 }
+fn draft_name(stage: &str) -> String {
+    format!("{stage}.draft")
+}
+
+pub(super) fn publish_stage(
+    root: &File,
+    destination: &File,
+    stage: &str,
+    bytes: &[u8],
+    after_create: impl FnOnce(&File, &str) -> io::Result<()>,
+) -> io::Result<Metadata> {
+    let dir = directory(root)?;
+    let draft = draft_name(stage);
+    let mut file = open(
+        &dir,
+        &draft,
+        OFlag::O_WRONLY | OFlag::O_CREAT | OFlag::O_EXCL,
+        Mode::S_IRUSR | Mode::S_IWUSR,
+    )?;
+    after_create(&dir, &draft)?;
+    file.write_all(bytes)?;
+    file.set_permissions(Permissions::from_mode(0o644))?;
+    file.sync_all()?;
+    let metadata = file.metadata()?;
+    named_identity(&dir, &draft, &metadata)?;
+    publish_no_replace(&dir, &draft, destination, stage)?;
+    destination.sync_all()?;
+    dir.sync_all()?;
+    Ok(metadata)
+}
+
 pub(super) fn begin(
     root: &File,
     plan: &PromotionPlan,
@@ -585,11 +619,7 @@ pub(super) fn complete_with_hook(
 ) -> io::Result<()> {
     let dir = directory(root)?;
     let names = entries(&dir)?;
-    if names.is_empty()
-        || names
-            .iter()
-            .any(|name| ![JOURNAL, PENDING, COMMITTED, COMMIT_PENDING].contains(&name.as_str()))
-    {
+    if names.is_empty() {
         return Err(fail());
     }
     let name = if names.contains(COMMITTED) {
@@ -601,9 +631,23 @@ pub(super) fn complete_with_hook(
     };
     let raw = owned_record(&dir, name)?;
     let (plan, stages) = plan_bytes(&raw)?;
+    let outputs = name == COMMITTED;
+    let mut drafts = Vec::new();
     for name in &names {
         if name == COMMIT_PENDING {
             continue;
+        }
+        if !outputs {
+            if let Some(index) = stages.iter().position(|stage| draft_name(stage) == *name) {
+                let expected = &plan.outputs[index].bytes;
+                if stage_is_owned(&dir, name, expected, StageContent::Draft)? {
+                    drafts.push(name);
+                }
+                continue;
+            }
+        }
+        if ![JOURNAL, PENDING, COMMITTED].contains(&name.as_str()) {
+            return Err(fail());
         }
         let (other, other_stages) = journal_plan(&dir, name)?;
         if other.originals != plan.originals
@@ -613,8 +657,11 @@ pub(super) fn complete_with_hook(
             return Err(fail());
         }
     }
-    let outputs = name == COMMITTED;
     verify_endpoint(root, &plan, outputs)?;
+    for draft in drafts {
+        unlinkat(&dir, draft.as_str(), UnlinkatFlags::NoRemoveDir).map_err(io::Error::from)?;
+    }
+    dir.sync_all()?;
     let documents = if outputs {
         &plan.originals
     } else {
@@ -622,7 +669,12 @@ pub(super) fn complete_with_hook(
     };
     for (document, stage) in documents.iter().zip(&stages) {
         let parent = parent(root, document.path)?;
-        if stage_is_owned(&parent, stage, &document.bytes, outputs)? {
+        let content = if outputs {
+            StageContent::Exact
+        } else {
+            StageContent::Prefix
+        };
+        if stage_is_owned(&parent, stage, &document.bytes, content)? {
             unlinkat(&parent, stage.as_str(), UnlinkatFlags::NoRemoveDir)
                 .map_err(io::Error::from)?;
             parent.sync_all()?;
@@ -681,7 +733,7 @@ pub(super) fn rollback_locked(
         let name = old.path.rsplit('/').next().ok_or_else(fail)?;
         let (_, current) = read(&parent, name)?;
         if current == old.bytes {
-            stage_is_owned(&parent, stage, &new.bytes, false)?;
+            stage_is_owned(&parent, stage, &new.bytes, StageContent::Prefix)?;
         } else if current != new.bytes || read(&parent, stage)?.1 != old.bytes {
             return Err(fail());
         }
@@ -749,7 +801,7 @@ pub(super) fn commit(
         verify_endpoint(root, &plan, true)?;
         for (old, stage) in plan.originals.iter().zip(&stages) {
             let parent = parent(root, old.path)?;
-            if !stage_is_owned(&parent, stage, &old.bytes, true)? {
+            if !stage_is_owned(&parent, stage, &old.bytes, StageContent::Exact)? {
                 return Err(fail());
             }
         }
@@ -780,7 +832,18 @@ pub(super) fn commit(
     result.map_err(|_| CommitFailure { published })
 }
 
-fn stage_is_owned(parent: &File, name: &str, expected: &[u8], exact: bool) -> io::Result<bool> {
+enum StageContent {
+    Exact,
+    Prefix,
+    Draft,
+}
+
+fn stage_is_owned(
+    parent: &File,
+    name: &str,
+    expected: &[u8],
+    content: StageContent,
+) -> io::Result<bool> {
     let file = match open(parent, name, OFlag::O_RDONLY, Mode::empty()) {
         Ok(file) => file,
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(false),
@@ -791,7 +854,8 @@ fn stage_is_owned(parent: &File, name: &str, expected: &[u8], exact: bool) -> io
         || before.uid() != unsafe { nix::libc::geteuid() }
         || before.nlink() != 1
         || ![0o600, 0o644].contains(&(before.mode() & 0o7777))
-        || before.len() == 0
+        || (before.len() == 0
+            && (!matches!(content, StageContent::Draft) || before.mode() & 0o7777 != 0o600))
         || before.len() > expected.len() as u64
     {
         return Err(fail());
@@ -802,7 +866,7 @@ fn stage_is_owned(parent: &File, name: &str, expected: &[u8], exact: bool) -> io
         .read_to_end(&mut bytes)?;
     let after = file.metadata()?;
     if bytes.len() as u64 != before.len()
-        || (exact && bytes != expected)
+        || (matches!(content, StageContent::Exact) && bytes != expected)
         || !expected.starts_with(&bytes)
         || before.len() != after.len()
         || before.mode() != after.mode()

@@ -56,7 +56,11 @@ no-replace rename as a private 0700
 originals, validated outputs and the owned staging names. It synchronizes the
 journal and directories. Reserved journal, active-directory, commit-marker and cleanup-receipt publication
 also use no-replace renames, preserving foreign artifacts inserted after
-preflight. Each staged output and each source identity is checked
+preflight. Outputs are written and synchronized as drafts inside the private transaction
+directory before an exclusive rename publishes them beside the destinations.
+Recovery can retire a zero-byte draft at its journal-derived name after a
+create-before-write interruption. A zero-byte file beside a destination still
+requires inspection. Each staged output and each source identity is checked
 again before the writer atomically exchanges the two names on Linux or macOS.
 The former source remains at the stage name. The writer verifies both entries
 after exchange and attempts to swap them back if either differs. An unknown

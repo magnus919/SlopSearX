@@ -11,9 +11,9 @@ use nix::{
     unistd::{UnlinkatFlags, unlinkat},
 };
 use std::{
-    fs::{self, File, Metadata, Permissions},
-    io::{self, Read, Write},
-    os::unix::fs::{MetadataExt, PermissionsExt},
+    fs::{self, File, Metadata},
+    io::{self, Read},
+    os::unix::fs::MetadataExt,
     path::{Path, PathBuf},
     sync::atomic::{AtomicU64, Ordering},
 };
@@ -62,6 +62,7 @@ pub struct PinSnapshot {
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(super) enum ApplyPoint {
     BeforeStage,
+    StageCreated,
     BeforeReplace,
     ReadyToRename,
     BeforeRename,
@@ -280,37 +281,24 @@ impl PinSnapshot {
                     .parent
                     .try_clone()
                     .map_err(|_| "cannot retain staging directory")?;
-                let mut file = open(
+                let initial = transaction::publish_stage(
+                    &self.root,
                     &source.parent,
                     &name,
-                    OFlag::O_WRONLY | OFlag::O_CREAT | OFlag::O_EXCL,
-                    Mode::S_IRUSR | Mode::S_IWUSR,
+                    &output.bytes,
+                    |draft_parent, draft| {
+                        hook(ApplyPoint::StageCreated, index, draft_parent, draft)
+                    },
                 )
-                .map_err(|_| "cannot create owned pin staging file")?;
+                .map_err(|_| "cannot prepare and publish owned pin staging file")?;
                 stages.push(Stage {
                     parent: held_parent,
                     name,
                     relative: source.relative,
-                    dev: 0,
-                    ino: 0,
-                    identified: false,
+                    dev: initial.dev(),
+                    ino: initial.ino(),
                     pending: true,
                 });
-                let initial = file
-                    .metadata()
-                    .map_err(|_| "cannot identify pin staging file")?;
-                stages[index].dev = initial.dev();
-                stages[index].ino = initial.ino();
-                stages[index].identified = true;
-                file.write_all(&output.bytes)
-                    .map_err(|_| "cannot write pin staging output")?;
-                file.set_permissions(Permissions::from_mode(source.identity.mode & 0o7777))
-                    .map_err(|_| "cannot preserve pin file permissions")?;
-                file.flush()
-                    .map_err(|_| "cannot flush pin staging output")?;
-                file.sync_all()
-                    .map_err(|_| "cannot synchronize pin staging output")?;
-                drop(file);
                 let (identity, bytes) = read(&source.parent, &stages[index].name)
                     .map_err(|_| "cannot verify staged pin output")?;
                 if identity.dev != stages[index].dev
@@ -476,7 +464,6 @@ struct Stage {
     relative: &'static str,
     dev: u64,
     ino: u64,
-    identified: bool,
     pending: bool,
 }
 fn device_id<T: TryInto<u64>>(value: T) -> Option<u64> {
@@ -487,9 +474,6 @@ impl Stage {
     fn cleanup(&mut self) -> io::Result<()> {
         if !self.pending {
             return Ok(());
-        }
-        if !self.identified {
-            return Err(err());
         }
         match fstatat(
             &self.parent,
