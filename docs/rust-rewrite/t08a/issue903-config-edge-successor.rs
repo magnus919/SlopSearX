@@ -291,17 +291,17 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
     need(
         capsule.rows[0].edits.len() == 3
             && capsule.rows[0].edits[0].offset == 67341
-            && capsule.rows[0].edits[0].remove_utf8 == ""
+            && capsule.rows[0].edits[0].remove_utf8.is_empty()
             && capsule.rows[0].edits[0].insert_utf8 == " \"serde\",\n"
             && capsule.rows[0].edits[1].offset == 68937
-            && capsule.rows[0].edits[1].remove_utf8 == ""
+            && capsule.rows[0].edits[1].remove_utf8.is_empty()
             && capsule.rows[0].edits[1].insert_utf8 == " \"nix\",\n"
             && capsule.rows[0].edits[2].offset == 69483
-            && capsule.rows[0].edits[2].remove_utf8 == ""
+            && capsule.rows[0].edits[2].remove_utf8.is_empty()
             && capsule.rows[0].edits[2].insert_utf8 == " \"nix\",\n"
             && capsule.rows[1].edits.len() == 2
             && capsule.rows[1].edits[0].offset == 205
-            && capsule.rows[1].edits[0].remove_utf8 == ""
+            && capsule.rows[1].edits[0].remove_utf8.is_empty()
             && capsule.rows[1].edits[0].insert_utf8 == "serde.workspace = true\n"
             && capsule.rows[1].edits[1].offset == 616
             && capsule.rows[1].edits[1].remove_utf8 == "features = [\"signal\"]\n"
