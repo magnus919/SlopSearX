@@ -147,7 +147,8 @@ fn sources(root: &Path) -> Result<Value> {
             "T08A source path escape",
         )?;
         let expected_bytes = row["bytes"].as_u64().ok_or("source byte count")?;
-        let (bytes, actual_mode) = source_custody::bounded_read(root, path, expected_bytes)?;
+        let (bytes, actual_mode) = source_custody::bounded_read(root, path, expected_bytes)
+            .map_err(|error| format!("T08A source {path}: {error}"))?;
         ensure(
             bytes.len() as u64 == expected_bytes,
             "T08A opened regular source has exact size",
