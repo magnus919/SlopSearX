@@ -156,7 +156,9 @@ the published RMCP 3.11.0 crate. The archive checksum, patch, and full vendor
 file hashes are pinned in the advisory mapping and
 [provenance record](rmcp-provenance.json). SlopSearX enables the existing
 Base64, macros, server, and transport features explicitly. The lock excludes
-Chrono and resolves the published 3.11.0 macro crate.
+Chrono and resolves the published 3.11.0 macro crate. The normalized manifest
+disables the upstream build script that installs Git hooks. The original script
+remains in the vendored source for provenance.
 
 Retire the vendored crate when a published RMCP package passes the same
 workspace dependency, advisory, and native MCP qualification checks with

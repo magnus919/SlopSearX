@@ -31,13 +31,14 @@
     "Port the upstream manifest edit to Cargo's normalized registry manifest and pin published rmcp-macros at 3.11.0.",
     "Omit the nested lockfile and upstream integration tests and their dev dependencies. The SlopSearX workspace lock and qualification suites govern delivery.",
     "Terminate the registry-generated VCS metadata with a newline for repository text checks.",
-    "Add a module documentation comment to the empty resource module so rustfmt and the repository EOF hook agree."
+    "Add a module documentation comment to the empty resource module so rustfmt and the repository EOF hook agree.",
+    "Disable the upstream Git-hook installation build script in the normalized manifest; retain the original script for source provenance."
   ],
   "private_root": "vendor/rmcp",
   "files": {
     ".cargo_vcs_info.json": "342cdffc660823998ec10c8a7aab544f19008c0dc4f3f4b3a7fa429dc1030c76",
     "CHANGELOG.md": "904f592c08be7ae4a4639e6e609be1836638a5629be0facf11bb354ddfc5e861",
-    "Cargo.toml": "27e523e343198ec1448ca60da3cc4aa84117a408452187e9667909706d458bc9",
+    "Cargo.toml": "9089320c7f1f6d9229e4f056ee5036b5fef3f105df815e8c0e59681c0b3bb530",
     "Cargo.toml.orig": "cd564d14f4da7d05671171d2fa1b73e5eebedc77f432ef43fc7aa715b074fdf5",
     "LICENSE": "0382b0057770ca05e9c350a50aa3b1c1fea84da0bc81d723bf00b9aa841be58a",
     "README.md": "ac431ff8b3b640f61e7390588e5a8ff7aed88b4a7568808b3078a1a43e5f5e4e",
