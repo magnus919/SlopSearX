@@ -3,6 +3,7 @@ use crate::{Result, command};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{collections::BTreeSet, fs, path::Path};
+const COVERAGE: &str = "docs/rust-rewrite/o01/coverage.json";
 const COVERAGE_SHA: &str = "32da35318cb2b2e369b10975bb985aa55469bcc1a39c1549425d1723bd5dcbce";
 fn require(ok: bool, message: &str) -> Result<()> {
     if ok { Ok(()) } else { Err(message.into()) }
@@ -60,9 +61,34 @@ fn execution(output: &str, expected: &[Value]) -> Result<()> {
         "O01 exact native tests missing, duplicated, extra, or ignored",
     )
 }
+fn check_artifact(root: &Path, artifact: &Value) -> Result<()> {
+    let path = artifact["path"]
+        .as_str()
+        .ok_or("O01 artifact path missing")?;
+    let sha = artifact["sha256"]
+        .as_str()
+        .ok_or("O01 artifact digest absent")?;
+    let size = artifact["bytes"].as_u64().map(|bytes| bytes as usize);
+    match path {
+        "crates/ssx-infra/src/observability/logging.rs"
+        | "crates/ssx-infra/src/observability/sentry.rs"
+        | "crates/ssx-infra/tests/o01.rs" => {
+            let physical = crate::a06::bounded_regular_material(root, path, 64 * 1024)?;
+            let frozen =
+                crate::t08a::source_custody::rmcp_historical_operand(path, &physical, "0644")?
+                    .ok_or("O01 RMCP source transition absent")?;
+            require(
+                digest(&frozen) == sha && size.is_none_or(|bytes| bytes == frozen.len()),
+                "O01 frozen artifact identity differs",
+            )
+        }
+        _ => crate::a13::check_source_pin(root, COVERAGE, COVERAGE_SHA, path, sha, size),
+    }
+    .map_err(|error| format!("O01 artifact differs: {path}: {error}"))
+}
+
 pub fn check(root: &Path, commands: &mut Vec<Value>) -> Result<()> {
-    let bytes =
-        fs::read(root.join("docs/rust-rewrite/o01/coverage.json")).map_err(|e| e.to_string())?;
+    let bytes = fs::read(root.join(COVERAGE)).map_err(|e| e.to_string())?;
     require(
         digest(&bytes) == COVERAGE_SHA,
         "O01 coverage digest differs",
@@ -73,20 +99,7 @@ pub fn check(root: &Path, commands: &mut Vec<Value>) -> Result<()> {
         .as_array()
         .ok_or("O01 artifacts missing")?
     {
-        let path = artifact["path"]
-            .as_str()
-            .ok_or("O01 artifact path missing")?;
-        crate::a13::check_source_pin(
-            root,
-            "docs/rust-rewrite/o01/coverage.json",
-            COVERAGE_SHA,
-            path,
-            artifact["sha256"]
-                .as_str()
-                .ok_or("O01 artifact digest absent")?,
-            artifact["bytes"].as_u64().map(|v| v as usize),
-        )
-        .map_err(|_| format!("O01 artifact differs: {path}"))?;
+        check_artifact(root, artifact)?;
     }
     let source: Value = serde_json::from_slice(
         &fs::read(
@@ -191,9 +204,10 @@ pub fn check(root: &Path, commands: &mut Vec<Value>) -> Result<()> {
     )?;
     execution(
         &self_output,
-        &[json!(
-            "o01::tests::successful_test_status_cannot_replace_exact_source_completions"
-        )],
+        &[
+            json!("o01::tests::observability_artifacts_follow_the_exact_calendar_transitions"),
+            json!("o01::tests::successful_test_status_cannot_replace_exact_source_completions"),
+        ],
     )?;
     let mut original = Vec::new();
     let mut supplement = Vec::new();
@@ -252,6 +266,31 @@ pub fn check(root: &Path, commands: &mut Vec<Value>) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn observability_artifacts_follow_the_exact_calendar_transitions() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let coverage = fs::read(root.join(COVERAGE)).unwrap();
+        assert_eq!(digest(&coverage), COVERAGE_SHA);
+        let coverage: Value = serde_json::from_slice(&coverage).unwrap();
+        let artifacts = coverage["artifacts"].as_array().unwrap();
+        for artifact in artifacts {
+            check_artifact(&root, artifact).unwrap();
+        }
+        for path in [
+            "crates/ssx-infra/src/observability/logging.rs",
+            "crates/ssx-infra/src/observability/sentry.rs",
+            "crates/ssx-infra/tests/o01.rs",
+        ] {
+            let mut artifact = artifacts
+                .iter()
+                .find(|row| row["path"] == path)
+                .unwrap()
+                .clone();
+            artifact["sha256"] = json!(digest(&fs::read(root.join(path)).unwrap()));
+            assert!(check_artifact(&root, &artifact).is_err());
+        }
+    }
+
     #[test]
     fn successful_test_status_cannot_replace_exact_source_completions() {
         let expected = vec![

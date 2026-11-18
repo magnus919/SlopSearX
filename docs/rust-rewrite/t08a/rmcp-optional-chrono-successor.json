@@ -1,0 +1,181 @@
+{
+  "schema": "RMCP_OPTIONAL_CHRONO_SUCCESSOR_V1",
+  "baseline": "145f6da8fadd2deb7de5e1cfa9ee48464ffd1031",
+  "rows": [
+    {
+      "path": "Cargo.lock",
+      "prior": {
+        "bytes": 94340,
+        "sha256": "fcc6f4375b5f967d6a1d96172a0707438957e95fbddd83a502105bf5fede4847",
+        "mode": "0644"
+      },
+      "current": {
+        "bytes": 96180,
+        "sha256": "fd04cdf3d534a04be379d067583ff2dfb383fd98e6982092e922a00d56d4e7c9",
+        "mode": "0644"
+      },
+      "edits": [
+        {
+          "at": 517,
+          "remove_utf8": "]\n\n[[package]]\nname = \"android_system_properties\"\nversion = \"0.1.6\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"ae221649c9976a6f6c56ae1facf410f3ddb33cc661c4b7b61020a912d4237fbc\"\ndependencies = [\n \"libc\",\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 9143,
+          "remove_utf8": "]\n\n[[package]]\nname = \"chrono\"\nversion = \"0.4.45\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"1aa79e62e7697b8e29b513a68abacf485adcd1fe8284a4316c5ae868e6633327\"\ndependencies = [\n \"iana-time-zone\",\n \"num-traits\",\n \"serde\",\n \"windows-link\",\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 19175,
+          "remove_utf8": " \"windows-sys 0.61.2\",\n",
+          "insert_utf8": " \"windows-sys 0.52.0\",\n"
+        },
+        {
+          "at": 28783,
+          "remove_utf8": "name = \"iana-time-zone\"\nversion = \"0.1.65\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"e31bc9ad994ba00e440a8aa5c9ef0ec67d5cb5e5cb0cc7f8b744a35b389cc470\"\ndependencies = [\n \"android_system_properties\",\n \"core-foundation-sys\",\n \"iana-time-zone-haiku\",\n \"js-sys\",\n \"log\",\n \"wasm-bindgen\",\n \"windows-core\",\n]\n\n[[package]]\nname = \"iana-time-zone-haiku\"\nversion = \"0.1.2\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"f31827a206f56af32e590ba56d5d2d085f558508192593743f16b2306495269f\"\ndependencies = [\n \"cc\",\n]\n\n[[package]]\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 33119,
+          "remove_utf8": "",
+          "insert_utf8": "\n[[package]]\nname = \"jiff\"\nversion = \"0.2.46\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"175dc66334db3b9ab9985bf8b61cfed50dc16d20964bb47f9e479adcae984a7f\"\ndependencies = [\n \"jiff-core 0.1.8\",\n \"jiff-static 0.2.46\",\n \"jiff-tzdb-platform\",\n \"log\",\n \"portable-atomic\",\n \"portable-atomic-util\",\n \"serde_core\",\n \"windows-link\",\n]\n\n[[package]]\nname = \"jiff\"\nversion = \"1.0.1\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"ed5d126d72eb017f10b302e73bdeca446bea405ee449af4d9e7866d6b082d83e\"\ndependencies = [\n \"jiff-core 1.0.1\",\n \"jiff-static 1.0.1\",\n \"log\",\n \"portable-atomic\",\n \"portable-atomic-util\",\n \"serde_core\",\n]\n\n[[package]]\nname = \"jiff-core\"\nversion = \"0.1.8\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"e599b80292e597019b8b3e392de3f4bea2959ddfb8c7dff60e035e9e311a2c1b\"\ndependencies = [\n \"log\",\n]\n\n[[package]]\nname = \"jiff-core\"\nversion = \"1.0.1\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"b6b46a105a9874634dd96231021526bf24ca04955a5998c59a9c7666e634b7b8\"\ndependencies = [\n \"log\",\n]\n\n[[package]]\nname = \"jiff-static\"\nversion = \"0.2.46\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"c7b1af7547d47354bc438d797e3854601bde8f8d185780c5ba4ab27afa54f1ba\"\ndependencies = [\n \"jiff-core 0.1.8\",\n \"proc-macro2\",\n \"quote\",\n \"syn 2.0.119\",\n]\n\n[[package]]\nname = \"jiff-static\"\nversion = \"1.0.1\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"c0127e9bde3c6130d6169e7d8d68676e4be69c4bf7573c308b6f960a5089c428\"\ndependencies = [\n \"jiff-core 1.0.1\",\n \"proc-macro2\",\n \"quote\",\n \"syn 3.0.9\",\n]\n\n[[package]]\nname = \"jiff-tzdb\"\nversion = \"0.1.10\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"0980fca2cc272465bd60e82397607ba9f33add9e48defd77923301bbd03808f2\"\n\n[[package]]\nname = \"jiff-tzdb-platform\"\nversion = \"0.1.3\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"875a5a69ac2bab1a891711cf5eccbec1ce0341ea805560dcd90b7a2e925132e8\"\ndependencies = [\n \"jiff-tzdb\",\n]\n"
+        },
+        {
+          "at": 40573,
+          "remove_utf8": "",
+          "insert_utf8": "name = \"num_threads\"\nversion = \"0.1.8\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"cabcc654086861f9e1bc5115258de62ef92c79b20f4615a1b0cc57c4e82027d4\"\ndependencies = [\n \"libc\",\n]\n\n[[package]]\n"
+        },
+        {
+          "at": 45456,
+          "remove_utf8": "",
+          "insert_utf8": "name = \"portable-atomic\"\nversion = \"1.15.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"05c8b63e8d9609db387f0324918f81d68fe27748f084ef092fb35954d0539a85\"\n\n[[package]]\nname = \"portable-atomic-util\"\nversion = \"0.2.8\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"10ab3eb7f3becc3a1cbc4f2c6f20267996cfc1a6467a873763411b136a122715\"\ndependencies = [\n \"portable-atomic\",\n]\n\n[[package]]\n"
+        },
+        {
+          "at": 48666,
+          "remove_utf8": " \"windows-sys 0.61.2\",\n",
+          "insert_utf8": " \"windows-sys 0.52.0\",\n"
+        },
+        {
+          "at": 53039,
+          "remove_utf8": "version = \"3.9.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"d24a7e92f4bcaa36b97fa93c4fa7ca8f3e669eced949345b3462dba333c7f909\"\n",
+          "insert_utf8": "version = \"3.11.0\"\n"
+        },
+        {
+          "at": 53254,
+          "remove_utf8": " \"chrono\",\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 53332,
+          "remove_utf8": "",
+          "insert_utf8": " \"jiff 1.0.1\",\n"
+        },
+        {
+          "at": 53352,
+          "remove_utf8": "",
+          "insert_utf8": " \"percent-encoding\",\n"
+        },
+        {
+          "at": 53638,
+          "remove_utf8": "",
+          "insert_utf8": " \"unicode-general-category\",\n \"unicode-normalization\",\n"
+        },
+        {
+          "at": 53683,
+          "remove_utf8": "version = \"3.9.0\"\n",
+          "insert_utf8": "version = \"3.11.0\"\n"
+        },
+        {
+          "at": 53766,
+          "remove_utf8": "checksum = \"b3140f24a766f80f9ec1607bde85680959a69b83d46fa9ce87dadab7e67ab029\"\n",
+          "insert_utf8": "checksum = \"3598e3f36f4af2b5219b133baf7d97a2197039225adc3d4acf3dd8805b5a2aef\"\n"
+        },
+        {
+          "at": 55897,
+          "remove_utf8": " \"windows-sys 0.61.2\",\n",
+          "insert_utf8": " \"windows-sys 0.52.0\",\n"
+        },
+        {
+          "at": 57477,
+          "remove_utf8": " \"chrono\",\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 67267,
+          "remove_utf8": " \"chrono\",\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 67319,
+          "remove_utf8": "",
+          "insert_utf8": " \"jiff 0.2.46\",\n"
+        },
+        {
+          "at": 73446,
+          "remove_utf8": "",
+          "insert_utf8": " \"libc\",\n"
+        },
+        {
+          "at": 73459,
+          "remove_utf8": "",
+          "insert_utf8": " \"num_threads\",\n"
+        },
+        {
+          "at": 79210,
+          "remove_utf8": "",
+          "insert_utf8": "name = \"unicode-general-category\"\nversion = \"1.1.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"0b993bddc193ae5bd0d623b49ec06ac3e9312875fdae725a975c51db1cc1677f\"\n\n[[package]]\n"
+        },
+        {
+          "at": 85263,
+          "remove_utf8": " \"windows-sys 0.61.2\",\n",
+          "insert_utf8": " \"windows-sys 0.52.0\",\n"
+        }
+      ]
+    },
+    {
+      "path": "Cargo.toml",
+      "prior": {
+        "bytes": 2039,
+        "sha256": "fb55fe19bb79aa592b4a9282e0af2fc1ff7efdf0000822811e51c0e3511f89a6",
+        "mode": "0644"
+      },
+      "current": {
+        "bytes": 2146,
+        "sha256": "c5fd53795e64fec53ff995459d0f141d14a89949a7fcb58b5c69e914285ec958",
+        "mode": "0644"
+      },
+      "edits": [
+        {
+          "at": 59,
+          "remove_utf8": "exclude = [\"vendor/expat\", \"vendor/libxml\", \"vendor/ssx-cli-process-wrap\"]\n",
+          "insert_utf8": "exclude = [\"vendor/expat\", \"vendor/libxml\", \"vendor/rmcp\", \"vendor/ssx-cli-process-wrap\"]\n"
+        },
+        {
+          "at": 712,
+          "remove_utf8": "rmcp = { version = \"=3.9.0\" }\n",
+          "insert_utf8": "rmcp = { path = \"vendor/rmcp\", version = \"=3.11.0\", default-features = false, features = [\"base64\", \"macros\", \"server\"] }\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/Cargo.toml",
+      "prior": {
+        "bytes": 1254,
+        "sha256": "349c3dc8db94a995d7eef27acbe8b5eeccb9f6cff1ccdd3e8308f638d301f51e",
+        "mode": "0644"
+      },
+      "current": {
+        "bytes": 1258,
+        "sha256": "747687877299958c4565c219166a3a25286ef61fb4daca1391cee517686cd691",
+        "mode": "0644"
+      },
+      "edits": [
+        {
+          "at": 931,
+          "remove_utf8": "chrono = { version = \"=0.4.45\", default-features = false, features = [\"clock\", \"std\"] }\n",
+          "insert_utf8": "jiff = \"=0.2.46\"\ntime = { version = \"=0.3.55\", features = [\"large-dates\", \"local-offset\"] }\n"
+        }
+      ]
+    }
+  ]
+}

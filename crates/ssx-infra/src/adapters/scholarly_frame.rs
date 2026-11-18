@@ -86,10 +86,7 @@ fn date(value: &str) -> bool {
     {
         return false;
     }
-    let year: i32 = value[..4].parse().unwrap_or(0);
-    let month: u32 = value[5..7].parse().unwrap_or(0);
-    let day: u32 = value[8..].parse().unwrap_or(0);
-    year != 0 && chrono::NaiveDate::from_ymd_opt(year, month, day).is_some()
+    !value.starts_with("0000") && jiff::civil::Date::strptime("%Y-%m-%d", value).is_ok()
 }
 fn dates(from: Option<&str>, to: Option<&str>) -> Result<(), Error> {
     if from.is_some_and(|v| !date(v))

@@ -71,7 +71,7 @@ impl LogRecord {
             .query_id
             .as_deref()
             .filter(|s| s.len() == 12 && s.bytes().all(|b| b.is_ascii_hexdigit()));
-        json!({"timestamp":chrono::Utc::now().to_rfc3339(),"logger":"slopsearx","level":self.level.text(),"event":self.event.text(),"request_id":id,"query_id":query_id,"duration_ms":self.duration_ms})
+        json!({"timestamp":super::rfc3339_utc(jiff::Timestamp::now()),"logger":"slopsearx","level":self.level.text(),"event":self.event.text(),"request_id":id,"query_id":query_id,"duration_ms":self.duration_ms})
     }
     pub fn render(&self, minimum: Level, json_output: bool) -> Option<String> {
         if self.level.rank() < minimum.rank() {

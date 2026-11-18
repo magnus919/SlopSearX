@@ -188,7 +188,7 @@ impl Exporter {
         let id: String = random.iter().map(|b| format!("{b:02x}")).collect();
         let mut event = record.sentry_event();
         event["event_id"] = json!(id);
-        event["timestamp"] = json!(chrono::Utc::now().to_rfc3339());
+        event["timestamp"] = json!(super::rfc3339_utc(jiff::Timestamp::now()));
         let payload = event.to_string();
         let envelope = format!(
             "{}\n{}\n{}\n",

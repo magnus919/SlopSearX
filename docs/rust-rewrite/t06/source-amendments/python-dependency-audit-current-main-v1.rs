@@ -1,5 +1,17 @@
 //! Exact #1129 runtime/dev audit successor over accepted main.
 //! Current physical source is authenticated before reconstructing the fixed predecessor.
+#[path = "../../t08a/rmcp-source-afterimage.rs"]
+#[allow(
+    clippy::duplicate_mod,
+    reason = "Independent proof roots share the same stateless inverse"
+)]
+mod rmcp_source_afterimage;
+const RMCP_READER_PATH: &str =
+    "docs/rust-rewrite/t06/source-amendments/python-dependency-audit-source-reader-v1.rs";
+const RMCP_READER_BYTES: usize = 32524;
+const RMCP_READER_BLOB: &str = "bb1c7208045b1f9b4e5132cb1b34917f0669c090";
+const RMCP_READER_SOURCE: &str = include_str!("../../t08a/rmcp-t06-reader-afterimage.json");
+const RMCP_READER_SHA: &str = "35ecf64f2769ca579f90a206dff11c0e62acb99e8033d91140fcfe472708c15b";
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{
@@ -77,9 +89,23 @@ fn physical_operand(
     path: &str,
     expected_bytes: usize,
 ) -> Result<Vec<u8>> {
-    regular(physical_root, path, expected_bytes)
+    let size = if path == RMCP_READER_PATH {
+        RMCP_READER_BYTES
+    } else {
+        expected_bytes
+    };
+    regular(physical_root, path, size)
 }
-fn logical_operand(_path: &str, physical: &[u8]) -> Result<Vec<u8>> {
+fn logical_operand(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
+    if path == RMCP_READER_PATH {
+        return rmcp_source_afterimage::prior(
+            RMCP_READER_SOURCE,
+            RMCP_READER_SHA,
+            path,
+            physical,
+            0o644,
+        );
+    }
     Ok(physical.to_vec())
 }
 pub(crate) fn current_at(
@@ -121,6 +147,9 @@ pub(crate) fn frozen_operand(
     prior(root, path, supplied).map(Some)
 }
 pub(crate) fn current_git_blob(path: &str) -> Result<String> {
+    if path == RMCP_READER_PATH {
+        return Ok(RMCP_READER_BLOB.to_owned());
+    }
     let doc = decode(CAPSULE)?;
     Ok(pin(&doc, path)?.current_blob.to_owned())
 }
@@ -372,7 +401,8 @@ fn inverse(pin: &Pin<'_>, row: &Value, actual: &[u8], mode: u32) -> Result<Vec<u
 pub(crate) fn frame(path: &str, physical: &[u8], mode: u32) -> Result<Vec<u8>> {
     let doc = decode(CAPSULE)?;
     let pin = pin(&doc, path)?;
-    inverse(&pin, row(&doc, path)?, physical, mode)
+    let logical = logical_operand(path, physical)?;
+    inverse(&pin, row(&doc, path)?, &logical, mode)
 }
 fn confined(root: &Path, path: &str) -> Result<std::path::PathBuf> {
     need(!Path::new(path).is_absolute(), "relative material path")?;

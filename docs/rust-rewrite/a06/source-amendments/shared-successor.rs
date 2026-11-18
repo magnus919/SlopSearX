@@ -651,7 +651,15 @@ fn read_exact(root: &Path, row: &Value) -> Result<Vec<u8>, String> {
     } else {
         raw
     };
-    material(row, &raw, &permissions(&path)?)?;
+    let mode = permissions(&path)?;
+    let name = text(row, "path")?;
+    let raw = if name.starts_with("crates/ssx-infra/") {
+        w07_t02_joint::cli_source_custody::rmcp_historical_operand(name, &raw, &mode)?
+            .unwrap_or(raw)
+    } else {
+        raw
+    };
+    material(row, &raw, &mode)?;
     Ok(raw)
 }
 fn edits(before: &[u8], changes: &Value) -> Result<Vec<u8>, String> {
@@ -2278,6 +2286,9 @@ pub(crate) fn o01_metrics_predecessor(
         doc["artifacts"][6] == json!({"path":path,"sha256":expected}),
         "O01 Metrics frozen row differs",
     )?;
+    let accepted = w07_t02_joint::cli_source_custody::rmcp_historical_operand(path, actual, mode)?
+        .ok_or("O01 RMCP runtime source row absent")?;
+    let actual = accepted.as_slice();
     need(
         mode == "0644"
             && actual.len() == 21121
