@@ -1,0 +1,30 @@
+name: T07 Windows certificate-load diagnostic
+
+on:
+  push:
+    branches: [codex/windows-ca-load-no-store-20261118]
+
+permissions:
+  contents: read
+
+jobs:
+  no-store:
+    runs-on: windows-2025
+    timeout-minutes: 35
+    env:
+      CARGO_BUILD_JOBS: "2"
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      CARGO_INCREMENTAL: "0"
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Run fixed certificate-load probe
+        shell: pwsh
+        run: ./scripts/diagnostics/t07-ca-load/run.ps1
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: windows-ca-load-no-store
+          path: ${{ runner.temp }}/ssx-ca-load-diagnostic/evidence/
+          retention-days: 14

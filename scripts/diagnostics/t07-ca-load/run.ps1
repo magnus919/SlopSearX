@@ -1,0 +1,110 @@
+$ErrorActionPreference = 'Stop'
+if (-not $IsWindows -or $env:GITHUB_ACTIONS -ne 'true' -or $env:RUNNER_OS -ne 'Windows') {
+    throw 'This probe requires an isolated GitHub-hosted Windows job.'
+}
+$runRoot = Join-Path $env:RUNNER_TEMP 'ssx-ca-load-diagnostic'
+$caseRoot = Join-Path $runRoot ("platform-tls-store-{0}" -f $PID)
+$evidence = Join-Path $runRoot 'evidence'
+New-Item -ItemType Directory -Path $runRoot | Out-Null
+New-Item -ItemType Directory -Path $caseRoot, $evidence | Out-Null
+$fixture = Join-Path $caseRoot 'ca.der'
+$probe = Join-Path $PSScriptRoot 'ca-load-probe.ps1'
+$system = [Environment]::SystemDirectory
+$windows = (Split-Path -Parent $system)
+$application = Join-Path $system 'WindowsPowerShell/v1.0/powershell.exe'
+$probeHash = (Get-FileHash -LiteralPath $probe -Algorithm SHA256).Hash.ToLowerInvariant()
+if ($probeHash -ne '4ef2f1761f552367791279d4e0fa49f506e66c32d5ecf670a16ba74edc8bf402') {
+    throw 'The fixed no-store probe source differs.'
+}
+$env:CARGO_TARGET_DIR = Join-Path $env:RUNNER_TEMP 'ssx-ca-load-target'
+cargo run --locked --package ssx-http --example t07-ca-load-fixture -- $fixture
+if ($LASTEXITCODE -ne 0) {
+    throw "Fixture generation failed with exit $LASTEXITCODE."
+}
+Copy-Item -LiteralPath $fixture -Destination (Join-Path $evidence 'ca.der')
+$fixtureHash = (Get-FileHash -LiteralPath $fixture -Algorithm SHA256).Hash.ToLowerInvariant()
+$applicationHash = (Get-FileHash -LiteralPath $application -Algorithm SHA256).Hash.ToLowerInvariant()
+$arguments = @('-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', $probe, '-CaseRoot', $caseRoot)
+$info = [System.Diagnostics.ProcessStartInfo]::new($application)
+$info.UseShellExecute = $false
+$info.RedirectStandardError = $true
+$info.RedirectStandardOutput = $true
+$info.CreateNoWindow = $true
+$info.WorkingDirectory = $env:GITHUB_WORKSPACE
+$info.Environment.Clear()
+$info.Environment['SystemRoot'] = $windows
+$info.Environment['WINDIR'] = $windows
+$info.Environment['TEMP'] = $caseRoot
+$info.Environment['TMP'] = $caseRoot
+$info.Environment['GITHUB_ACTIONS'] = 'true'
+foreach ($argument in $arguments) {
+    $info.ArgumentList.Add($argument)
+}
+
+$elapsed = [Diagnostics.Stopwatch]::StartNew()
+$process = [Diagnostics.Process]::Start($info)
+try {
+    $stdout = $process.StandardOutput.ReadToEndAsync()
+    $stderr = $process.StandardError.ReadToEndAsync()
+    $timedOut = -not $process.WaitForExit(15000)
+    if ($timedOut) {
+        if (-not $process.HasExited) {
+            $process.Kill()
+        }
+        if (-not $process.WaitForExit(5000)) {
+            throw 'Timed-out PowerShell did not retire.'
+        }
+    }
+    if (-not $stdout.Wait(5000) -or -not $stderr.Wait(5000)) {
+        throw 'Redirected reader did not retire.'
+    }
+    $elapsed.Stop()
+    $stdoutText = $stdout.GetAwaiter().GetResult()
+    $stderrText = $stderr.GetAwaiter().GetResult()
+    if ($stdoutText.Length -gt 16384 -or $stderrText.Length -gt 16384) {
+        throw 'PowerShell transcript exceeded the diagnostic bound.'
+    }
+    [IO.File]::WriteAllText((Join-Path $evidence 'stdout.txt'), $stdoutText)
+    [IO.File]::WriteAllText((Join-Path $evidence 'stderr.txt'), $stderrText)
+    Remove-Item -LiteralPath $fixture
+    if (@(Get-ChildItem -LiteralPath $caseRoot -Force).Count -eq 0) {
+        [IO.Directory]::Delete($caseRoot)
+    }
+    $observed = @($stderrText -split '\r?\n' | Where-Object { $_.StartsWith('SSX_TRUST_STAGE ') })
+    $expected = @('script-entry', 'before-ca-load', 'after-ca-path', 'before-ca-constructor', 'after-ca-load') |
+        ForEach-Object { "SSX_TRUST_STAGE $_" }
+    $matched = ($observed -join "`n") -ceq ($expected -join "`n")
+    $receipt = [ordered]@{
+        revision = $env:GITHUB_SHA
+        runner_image = $env:ImageOS
+        runner_image_version = $env:ImageVersion
+        fixture_recipe = '3947261d874c0782fe1d9879616be94665857abe:crates/ssx-gateway/tests/platform_support/tls.rs'
+        fixture_sha256 = $fixtureHash
+        probe_sha256 = $probeHash
+        application = $application
+        application_sha256 = $applicationHash
+        application_version = (Get-Item -LiteralPath $application).VersionInfo.FileVersion
+        arguments = $arguments
+        environment_keys = @('SystemRoot', 'WINDIR', 'TEMP', 'TMP', 'GITHUB_ACTIONS')
+        pid = $process.Id
+        timeout_ms = 15000
+        elapsed_ms = $elapsed.ElapsedMilliseconds
+        timed_out = $timedOut
+        exit_code = $process.ExitCode
+        child_retired = $process.HasExited
+        readers_retired = $stdout.IsCompletedSuccessfully -and $stderr.IsCompletedSuccessfully
+        fixture_retired = -not (Test-Path -LiteralPath $caseRoot)
+        markers = $observed
+        full_prefix = $matched
+    }
+    $receipt | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $evidence 'receipt.json')
+    if ($timedOut -or $process.ExitCode -ne 0 -or -not $matched -or $stdoutText.Length -ne 0 -or -not $receipt.fixture_retired) {
+        throw 'Certificate-load witness did not finish cleanly. See the diagnostic artifact.'
+    }
+} finally {
+    if (-not $process.HasExited) {
+        $process.Kill()
+        [void]$process.WaitForExit(5000)
+    }
+    $process.Dispose()
+}
