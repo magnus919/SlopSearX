@@ -122,13 +122,21 @@ impl SearchClock for SystemSearchClock {
 }
 impl SystemSearchClock {
     pub fn at(now: SystemTime) -> (WallClockTimestamp, String) {
-        let local: chrono::DateTime<chrono::Local> = now.into();
+        let local_day = jiff::Zoned::try_from(now).map_or_else(
+            |_| {
+                // Jiff reserves a margin at both ends of its timeline for zone offsets.
+                let utc = time::OffsetDateTime::from(now);
+                let offset = time::UtcOffset::local_offset_at(utc).unwrap_or(time::UtcOffset::UTC);
+                utc.to_offset(offset).date().to_string()
+            },
+            |local| local.date().to_string(),
+        );
         let seconds = now
             .duration_since(UNIX_EPOCH)
             .map_or_else(|e| -e.duration().as_secs_f64(), |v| v.as_secs_f64());
         (
             WallClockTimestamp::new(seconds).expect("finite system clock"),
-            local.format("%Y-%m-%d").to_string(),
+            local_day,
         )
     }
 }
@@ -2160,12 +2168,13 @@ mod tests {
             if caller {
                 assert_eq!(value["status_at"], ssx_json::Value::Null);
             } else {
-                let recorded =
-                    chrono::DateTime::parse_from_rfc3339(value["status_at"].as_str().unwrap())
-                        .unwrap();
+                let recorded = value["status_at"]
+                    .as_str()
+                    .unwrap()
+                    .parse::<jiff::Timestamp>()
+                    .unwrap();
                 assert!(
-                    (recorded.timestamp_micros() as f64 / 1_000_000.0 - observed_at.seconds())
-                        .abs()
+                    (recorded.as_microsecond() as f64 / 1_000_000.0 - observed_at.seconds()).abs()
                         <= 0.000_001
                 );
             }

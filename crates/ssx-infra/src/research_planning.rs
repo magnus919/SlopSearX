@@ -2140,16 +2140,29 @@ pub fn iso_timestamp(seconds: f64) -> Option<String> {
     if !micros.is_finite() || micros < i64::MIN as f64 || micros > i64::MAX as f64 {
         return None;
     }
-    chrono::DateTime::from_timestamp_micros(micros as i64).map(|v| {
-        v.to_rfc3339_opts(
-            if v.timestamp_subsec_micros() == 0 {
-                chrono::SecondsFormat::Secs
-            } else {
-                chrono::SecondsFormat::Micros
-            },
-            false,
-        )
-    })
+    let timestamp =
+        time::OffsetDateTime::from_unix_timestamp_nanos(i128::from(micros as i64) * 1000).ok()?;
+    let (year, month, day) = timestamp.to_calendar_date();
+    // Preserve the predecessor's accepted proleptic Gregorian range.
+    if !(-262_143..=262_142).contains(&year) {
+        return None;
+    }
+    let year = if (0..=9999).contains(&year) {
+        format!("{year:04}")
+    } else {
+        format!("{year:+05}")
+    };
+    let (hour, minute, second, fraction) = timestamp.to_hms_micro();
+    let mut result = format!(
+        "{year}-{:02}-{day:02}T{hour:02}:{minute:02}:{second:02}",
+        month as u8
+    );
+    if fraction != 0 {
+        use std::fmt::Write;
+        write!(result, ".{fraction:06}").expect("in-memory timestamp formatting");
+    }
+    result.push_str("+00:00");
+    Some(result)
 }
 
 /// CPython ISO datetime input accepted by research admission. Numeric fields are
@@ -2229,16 +2242,16 @@ pub fn parse_iso_deadline(input: &str) -> Option<f64> {
             1
         };
         let weekday = match day {
-            1 => chrono::Weekday::Mon,
-            2 => chrono::Weekday::Tue,
-            3 => chrono::Weekday::Wed,
-            4 => chrono::Weekday::Thu,
-            5 => chrono::Weekday::Fri,
-            6 => chrono::Weekday::Sat,
-            7 => chrono::Weekday::Sun,
+            1 => time::Weekday::Monday,
+            2 => time::Weekday::Tuesday,
+            3 => time::Weekday::Wednesday,
+            4 => time::Weekday::Thursday,
+            5 => time::Weekday::Friday,
+            6 => time::Weekday::Saturday,
+            7 => time::Weekday::Sunday,
             _ => return None,
         };
-        chrono::NaiveDate::from_isoywd_opt(year as i32, week, weekday)?
+        time::Date::from_iso_week_date(year as i32, week as u8, weekday).ok()?
     } else {
         let month = digits(pos, 2)?;
         pos += 2;
@@ -2247,7 +2260,12 @@ pub fn parse_iso_deadline(input: &str) -> Option<f64> {
         }
         pos += usize::from(has_sep);
         let day = digits(pos, 2)?;
-        chrono::NaiveDate::from_ymd_opt(year as i32, month, day)?
+        time::Date::from_calendar_date(
+            year as i32,
+            time::Month::try_from(month as u8).ok()?,
+            day as u8,
+        )
+        .ok()?
     };
     let remaining = if n == separator {
         String::new()
@@ -2331,12 +2349,19 @@ pub fn parse_iso_deadline(input: &str) -> Option<f64> {
     let mut day = date;
     let mut hour = components[0];
     if hour == 24 && components[1..].iter().all(|n| *n == 0) {
-        day = day.succ_opt()?;
+        day = day.next_day()?;
         hour = 0;
     }
-    let naive = day.and_hms_micro_opt(hour, components[1], components[2], components[3])?;
+    let naive = day
+        .with_hms_micro(
+            hour as u8,
+            components[1] as u8,
+            components[2] as u8,
+            components[3],
+        )
+        .ok()?;
     Some(if let Some(offset) = offset {
-        naive.and_utc().timestamp_micros() as f64 / 1e6 - offset
+        (naive.assume_utc().unix_timestamp_nanos() / 1000) as f64 / 1e6 - offset
     } else {
         naive_local_timestamp(naive)?
     })
@@ -2344,18 +2369,26 @@ pub fn parse_iso_deadline(input: &str) -> Option<f64> {
 /// CPython datetime._mktime fold=0: solve t=local(u), probe24h for a
 /// repeated local time, and choose max(u1,u2) for a skipped local time.
 /// Parsing a local DST gap must not become an invalid ISO timestamp.
-fn naive_local_timestamp(naive: chrono::NaiveDateTime) -> Option<f64> {
+fn naive_local_timestamp(naive: time::PrimitiveDateTime) -> Option<f64> {
+    let zone = jiff::tz::TimeZone::system();
     let local = |seconds: i64| -> Option<i64> {
-        let value = chrono::DateTime::from_timestamp(seconds, 0)?
-            .with_timezone(&chrono::Local)
-            .naive_local();
+        let value = time::OffsetDateTime::from_unix_timestamp(seconds).ok()?;
+        let offset_seconds = match jiff::Timestamp::from_second(seconds) {
+            Ok(timestamp) => zone.to_offset(timestamp).seconds(),
+            // A civil date can be valid even outside Jiff's timestamp range,
+            // which reserves room for every offset. Ask the host at these bounds.
+            Err(_) => time::UtcOffset::local_offset_at(value)
+                .ok()?
+                .whole_seconds(),
+        };
+        let offset = time::UtcOffset::from_whole_seconds(offset_seconds).ok()?;
+        let year = value.to_offset(offset).year();
         (1..=9999)
-            .contains(&chrono::Datelike::year(&value))
-            .then_some(value.and_utc().timestamp())
+            .contains(&year)
+            .then(|| seconds + i64::from(offset_seconds))
     };
-    let utc = naive.and_utc();
-    let t = utc.timestamp();
-    let fraction = utc.timestamp_subsec_micros() as f64 / 1e6;
+    let t = naive.assume_utc().unix_timestamp();
+    let fraction = naive.microsecond() as f64 / 1e6;
     let a = local(t)?.checked_sub(t)?;
     let u1 = t.checked_sub(a)?;
     let t1 = local(u1)?;
