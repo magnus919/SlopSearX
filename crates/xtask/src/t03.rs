@@ -669,6 +669,9 @@ fn validate_http(base: &Path, stdout: &str, binary: &Path, binary_sha: &str) -> 
         "original two-node/16-assertion handoff differs",
     )?;
     let assertions = assertion_evidence(&nodes, &wire)?;
+    let source_manifest: Value = serde_json::from_slice(SOURCE_ASSERTIONS)
+        .map_err(|error| format!("T03 source-assertion manifest JSON: {error}"))?;
+    let retained_formatter_assertions = retained_formatter_comparisons(&source_manifest, &wire)?;
     let formatter_dir = process_dirs
         .get("source-availability")
         .ok_or("T03 source-availability process directory missing")?;
@@ -733,9 +736,131 @@ fn validate_http(base: &Path, stdout: &str, binary: &Path, binary_sha: &str) -> 
         }
     }
     Ok(
-        json!({"http_receipts":wire,"processes":processes,"source_assertions":assertions,"source_availability_assertions":source_availability_assertions,"child_joined":true,"child_exit_success":true}),
+        json!({"http_receipts":wire,"processes":processes,"source_assertions":assertions,"retained_formatter_assertions":retained_formatter_assertions,"source_availability_assertions":source_availability_assertions,"child_joined":true,"child_exit_success":true}),
     )
 }
+// Literal checks against the named deterministic HTTP responses. The
+// historical formatter fixtures and their acceptance status stay in the source inventory.
+type FormatterPredicate = (usize, bool, &'static str);
+const RETAINED_FORMATTER_CHECKS: &[(&str, &str, &[FormatterPredicate])] = &[
+    (
+        "landing-form",
+        "landing-form-source",
+        &[
+            (535, true, "Search <em>SlopSearX.</em>"),
+            (536, true, "let stored = null"),
+            (537, true, "storage is optional"),
+        ],
+    ),
+    (
+        "states",
+        "state-malicious",
+        &[(551, false, "javascript:"), (747, true, "not eligible")],
+    ),
+    (
+        "inherited",
+        "inherited-scope",
+        &[
+            (643, true, "name=\"time_range\""),
+            (648, true, "pageno=3"),
+            (662, true, "Matched 2 sources"),
+            (
+                663,
+                true,
+                "title=\"Same result or identified work found by 2 configured engines\"",
+            ),
+            (666, true, "Open result ↗"),
+            (667, true, "Open JSON view ↗"),
+            (669, true, "Source status"),
+            (735, true, "has not been fetched or verified"),
+        ],
+    ),
+    (
+        "states",
+        "state-missing",
+        &[(670, true, "Page 1 · more may be available")],
+    ),
+    (
+        "denials",
+        "deny-strict",
+        &[
+            (809, true, "Field: safesearch"),
+            (810, true, "Return to search"),
+        ],
+    ),
+];
+
+fn retained_formatter_comparisons(manifest: &Value, wire: &[Value]) -> Result<Value> {
+    let rows = manifest["rows"]
+        .as_array()
+        .ok_or("T03 source-assertion rows missing")?;
+    let mut comparisons = Vec::new();
+    for &(group, binding, predicates) in RETAINED_FORMATTER_CHECKS {
+        let mut receipts = wire
+            .iter()
+            .filter(|receipt| receipt["group"] == group && receipt["binding"]["id"] == binding);
+        let receipt = receipts
+            .next()
+            .ok_or_else(|| format!("T03 {binding} receipt missing"))?;
+        need(
+            receipts.next().is_none(),
+            &format!("duplicate {binding} receipt"),
+        )?;
+        let body = receipt["observation"]["body"]
+            .as_str()
+            .ok_or_else(|| format!("T03 {binding} response body missing"))?;
+        for &(line, present, literal) in predicates {
+            let id = format!("F:L{line}");
+            let mut matching = rows.iter().filter(|row| row["id"] == id);
+            let row = matching
+                .next()
+                .ok_or_else(|| format!("T03 {id} source row missing"))?;
+            let kind = if present {
+                "contains"
+            } else {
+                "does_not_contain"
+            };
+            let quote = if literal.contains('"') { "'" } else { "\"" };
+            let operator = if present { "in" } else { "not in" };
+            let predicate = format!("{quote}{literal}{quote} {operator} output");
+            let assertion = format!("assert {predicate}");
+            need(
+                matching.next().is_none()
+                    && row["scope"] == "formatter_html"
+                    && row["source"]["path"] == "tests/test_formatter.py"
+                    && row["source"]["baseline_commit"]
+                        == "20109f9083babd014971951e8c02565ae51c2326"
+                    && row["source"]["git_blob"] == "012c9365c62fa4523c3cac67081024995975bdc3"
+                    && row["source"]["line"] == line
+                    && row["source"]["end_line"] == line
+                    && row["source"]["file_sha256"]
+                        == "28de731a81090067f90eabf2d37c28e92c026da38e0d95007d116f9fe60929b6"
+                    && row["source"]["predicate"] == predicate
+                    && row["source"]["assertion"] == assertion
+                    && row["source"]["assertion_sha256"] == hash(assertion.as_bytes())
+                    && row["expectation"]
+                        == json!({"kind":kind,"subject":"output","value":literal})
+                    && row["expected_predicate_result"] == true
+                    && row["original_assertion_accepted"] == false,
+                &format!("{id} frozen formatter predicate differs"),
+            )?;
+            need(
+                body.contains(literal) == present,
+                &format!("{id} formatter comparison failed for {binding}"),
+            )?;
+            comparisons.push(json!({
+                "id":id,
+                "source":row["source"],
+                "receipt":receipt["binding"],
+                "comparison":row["expectation"],
+                "result":true,
+                "fixture_equivalence_reviewed":false
+            }));
+        }
+    }
+    Ok(Value::Array(comparisons))
+}
+
 fn assertion_evidence(nodes: &[Value], wire: &[Value]) -> Result<Value> {
     let mut assertions = Vec::new();
     for (index, (id, literals)) in [
@@ -3089,7 +3214,8 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::{
-        SOURCE_ASSERTIONS, formatter_completion, hash, roundtrip_controls, roundtrip_html_proof,
+        RETAINED_FORMATTER_CHECKS, SOURCE_ASSERTIONS, formatter_completion, hash,
+        retained_formatter_comparisons, roundtrip_controls, roundtrip_html_proof,
         roundtrip_machine_document, roundtrip_request_key, source_availability_evidence,
         validate_budgets, validate_date_roundtrip_call_log, validate_date_roundtrip_machine_proof,
         validate_engine_call, validate_http_error_evidence, validate_source_assertion_inventory,
@@ -3102,6 +3228,66 @@ mod tests {
         time::{SystemTime, UNIX_EPOCH},
     };
     use url::Url;
+
+    #[test]
+    fn retained_formatter_predicates_reject_response_and_mapping_drift() {
+        let manifest: Value = serde_json::from_slice(SOURCE_ASSERTIONS).unwrap();
+        let mut wire: Vec<_> = RETAINED_FORMATTER_CHECKS
+            .iter()
+            .map(|(group, binding, predicates)| {
+                let body = predicates
+                    .iter()
+                    .filter_map(|(_, present, literal)| present.then_some(*literal))
+                    .collect::<Vec<_>>()
+                    .join("\n");
+                json!({"group":group,"binding":{"id":binding},"observation":{"body":body}})
+            })
+            .collect();
+        let comparisons = retained_formatter_comparisons(&manifest, &wire).unwrap();
+        assert_eq!(comparisons.as_array().unwrap().len(), 16);
+        let good = wire.clone();
+        let target = wire
+            .iter_mut()
+            .find(|receipt| receipt["binding"]["id"] == "state-malicious")
+            .unwrap();
+        let unsafe_body = format!(
+            "{} javascript:",
+            target["observation"]["body"].as_str().unwrap()
+        );
+        target["observation"]["body"] = json!(unsafe_body);
+        assert!(
+            retained_formatter_comparisons(&manifest, &wire)
+                .unwrap_err()
+                .contains("F:L551")
+        );
+        wire = good.clone();
+        wire[0]["observation"]["body"] = json!("");
+        assert!(
+            retained_formatter_comparisons(&manifest, &wire)
+                .unwrap_err()
+                .contains("F:L535")
+        );
+        wire = good.clone();
+        wire.push(good[0].clone());
+        assert!(
+            retained_formatter_comparisons(&manifest, &wire)
+                .unwrap_err()
+                .contains("duplicate landing-form-source")
+        );
+        let mut manifest = manifest;
+        let row = manifest["rows"]
+            .as_array_mut()
+            .unwrap()
+            .iter_mut()
+            .find(|row| row["id"] == "F:L535")
+            .unwrap();
+        row["expectation"]["value"] = json!("weakened predicate");
+        assert!(
+            retained_formatter_comparisons(&manifest, &good)
+                .unwrap_err()
+                .contains("frozen formatter predicate differs")
+        );
+    }
 
     #[test]
     fn source_assertion_inventory_counts_every_row_without_claiming_acceptance() {
