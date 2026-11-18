@@ -69,6 +69,14 @@ pub(crate) fn project_issue903_config(
     opened_source_mode(root, path, opened_mode)?;
     issue903_config_successor::prior(root, path, current, opened_mode)
 }
+#[allow(
+    dead_code,
+    reason = "W07/O02 consumers use the identity; the standalone checker compiles this module as well"
+)]
+pub(crate) fn current_lock_identity() -> Result<(usize, String)> {
+    issue903_config_successor::current_lock_identity()
+}
+
 pub(crate) fn issue903_config_controls(root: &Path) -> Result<()> {
     issue903_config_successor::controls(root)
 }
@@ -175,9 +183,6 @@ const RMCP_SECURITY_CAPSULE: &str =
     include_str!("../../../docs/rust-rewrite/t08a/rmcp-security-successor.json");
 const RMCP_SECURITY_CAPSULE_SHA: &str =
     "b348258e03bc90feafc68b721d583e5f977d660a90062bff20b8c0f8521aec09";
-pub(crate) const CURRENT_LOCK_SHA: &str =
-    "b775c6fad235c1e60f7868aa424d13e84843d0f3c83a0af2af389bb523a24c27";
-pub(crate) const CURRENT_LOCK_BYTES: usize = 94366;
 const RMCP_ROWS: [(&str, usize); 2] = [("Cargo.toml", 1), ("Cargo.lock", 6)];
 fn rmcp_security_capsule(raw: &str) -> Result<Value> {
     need(
@@ -228,13 +233,12 @@ const PORTAL_LOCK_EDITS: [(usize, &[u8]); 3] = [
 ];
 pub(crate) fn portal_health_lock_frame(root: &Path, current: &[u8]) -> Result<Vec<u8>> {
     let (physical, opened_mode) = regular_material(root, "Cargo.lock")?;
-    need(
-        current == physical
-            && physical.len() == CURRENT_LOCK_BYTES
-            && digest(&physical) == CURRENT_LOCK_SHA,
-        "issue903 exact physical current lock",
-    )?;
-    let prior = project_issue903_config(root, "Cargo.lock", &physical, opened_mode)?;
+    need(current == physical, "issue903 exact physical current lock")?;
+    portal_health_lock_from_admitted(root, &physical, opened_mode)
+}
+
+fn portal_health_lock_from_admitted(root: &Path, physical: &[u8], mode: u32) -> Result<Vec<u8>> {
+    let prior = project_issue903_config(root, "Cargo.lock", physical, mode)?;
     portal_health_lock_frame_prior(&prior)
 }
 fn portal_health_lock_frame_prior(current: &[u8]) -> Result<Vec<u8>> {
@@ -313,7 +317,11 @@ fn cli_logical_input(
     opened_mode: u32,
 ) -> Result<Vec<u8>> {
     if path == "Cargo.lock" {
-        return native_health_lock_prior(&portal_health_lock_frame(root, physical)?);
+        return native_health_lock_prior(&portal_health_lock_from_admitted(
+            root,
+            physical,
+            opened_mode,
+        )?);
     }
     if path == "Cargo.toml" {
         return rmcp_security_prior(path, physical);
@@ -370,17 +378,13 @@ pub(crate) fn w07_lock_prior_from_physical(
         path == "Cargo.lock" && expected_prior == W07_PRIOR_SHA,
         "exact W07 lock caller tuple",
     )?;
-    need(
-        mode == "0644"
-            && supplied.len() == CURRENT_LOCK_BYTES
-            && digest(supplied) == CURRENT_LOCK_SHA,
-        "authenticated physical current lock bytes/mode",
-    )?;
+    need(mode == "0644", "authenticated physical current lock mode")?;
     let index = ROWS
         .iter()
         .position(|row| row.0 == path)
         .ok_or("unowned W07 Cargo.lock successor path")?;
-    let logical = cli_logical_input(root, path, supplied, 0o644)?;
+    let mode_bits = if cfg!(windows) { 0 } else { 0o644 };
+    let logical = cli_logical_input(root, path, supplied, mode_bits)?;
     let doc = capsule(root)?;
     let prior = inverse(&doc["rows"][index], &logical, mode, ROWS[index].1)?;
     need(

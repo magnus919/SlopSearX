@@ -5,7 +5,7 @@ use std::{path::Path, process::Command};
 type Result<T> = std::result::Result<T, String>;
 const BASE: &str = "cab037909ca261d3d7157a5cab5628f1b6a8cf83";
 const CAPSULE: &[u8] = include_bytes!("issue903-config-edge-successor-v1.json");
-const CAPSULE_SHA: &str = "75feea20b5593394b0eb7a83eb448e95746896412b610348ec814e680b43d643";
+const CAPSULE_SHA: &str = "3eaf5c0d03d9eb24310fb433392dd8bafb3bef90a6b32f9874a60c28e6981e29";
 const MAX_PHYSICAL_BYTES: u64 = 1_048_576;
 
 #[derive(Deserialize)]
@@ -64,7 +64,7 @@ fn capsule() -> Result<Capsule> {
     need(
         capsule.schema == "ISSUE903_CONFIG_EDGE_SUCCESSOR_V1"
             && capsule.baseline_commit == BASE
-            && capsule.rows.len() == 8
+            && capsule.rows.len() == 9
             && capsule.rows[0].path == "Cargo.lock"
             && capsule.rows[1].path == "crates/ssx-cli-check/Cargo.toml"
             && capsule.rows[2].path == "crates/ssx-mcp/Cargo.toml"
@@ -74,8 +74,9 @@ fn capsule() -> Result<Capsule> {
             && capsule.rows[5].path == "docs/rust-rewrite/t03/source-successor-v1.rs"
             && capsule.rows[6].path == "crates/ssx-infra/Cargo.toml"
             && capsule.rows[7].path
-                == "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
-        "closed eight-path capsule identity/order",
+                == "docs/rust-rewrite/a06/source-amendments/shared-successor.rs"
+            && capsule.rows[8].path == "crates/xtask/src/w07.rs",
+        "closed nine-path capsule identity/order",
     )?;
     for row in &capsule.rows {
         need(
@@ -85,6 +86,20 @@ fn capsule() -> Result<Capsule> {
     }
     Ok(capsule)
 }
+#[allow(
+    dead_code,
+    reason = "W07/O02 use this authority; independent source gates also include this module"
+)]
+pub(crate) fn current_lock_identity() -> Result<(usize, String)> {
+    let capsule = capsule()?;
+    let row = capsule
+        .rows
+        .into_iter()
+        .next()
+        .ok_or("missing Cargo.lock row")?;
+    Ok((row.current.bytes, row.current.sha256))
+}
+
 fn git(root: &Path, args: &[&str]) -> Result<Vec<u8>> {
     let output = Command::new("git")
         .args(args)
@@ -105,6 +120,7 @@ pub(crate) fn owns(path: &str) -> bool {
             | "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs"
             | "docs/rust-rewrite/t03/source-successor-v1.rs"
             | "docs/rust-rewrite/a06/source-amendments/shared-successor.rs"
+            | "crates/xtask/src/w07.rs"
     )
 }
 fn project_row(row: &Row, current: &[u8]) -> Result<Vec<u8>> {
@@ -294,7 +310,8 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
             && capsule.rows[6].edits[0].offset == capsule.rows[6].prior.bytes
             && capsule.rows[6].edits[0].insert_utf8
                 == "\n[target.'cfg(unix)'.dev-dependencies.nix]\nversion = \"=0.31.3\"\nfeatures = [\"fs\"]\n"
-            && !capsule.rows[7].edits.is_empty(),
+            && !capsule.rows[7].edits.is_empty()
+            && !capsule.rows[8].edits.is_empty(),
         "finite dependency and source successor spans",
     )?;
     Ok(())

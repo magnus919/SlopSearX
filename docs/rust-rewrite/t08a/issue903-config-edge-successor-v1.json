@@ -544,6 +544,62 @@
           "insert_utf8": "    let manifest_row = source(&doc, ISSUE903_INFRA_MANIFEST)?;\n    let (manifest_physical, manifest_mode) =\n        w07_t02_joint::cli_source_custody::bounded_read(root, ISSUE903_INFRA_MANIFEST, 1_048_576)?;\n    let manifest_prior = issue903_infra_manifest_prior(\n        root,\n        &manifest_row[\"current\"],\n        &manifest_physical,\n        manifest_mode,\n    )?;\n    need(\n        manifest_prior.len() == 1254\n            && digest(&manifest_prior) == ISSUE903_INFRA_MANIFEST_PRIOR_SHA,\n        \"A06/A13 bounded manifest projection positive\",\n    )?;\n    need(\n        issue903_infra_manifest_prior(root, &manifest_row[\"current\"], &manifest_physical, 0o600)\n            .is_err(),\n        \"A06/A13 bounded manifest wrong opened mode rejected\",\n    )?;\n    let mut changed_manifest = manifest_physical.clone();\n    changed_manifest[0] ^= 1;\n    need(\n        issue903_infra_manifest_prior(\n            root,\n            &manifest_row[\"current\"],\n            &changed_manifest,\n            manifest_mode,\n        )\n        .is_err(),\n        \"A06/A13 bounded manifest changed physical bytes rejected\",\n    )?;\n    let (_, routed_manifest) = verify_transition(root, manifest_row)?;\n    need(\n        routed_manifest == manifest_prior,\n        \"A06/A13 manifest transition consumes bounded projection\",\n    )?;\n"
         }
       ]
+    },
+    {
+      "path": "crates/xtask/src/w07.rs",
+      "prior": {
+        "bytes": 51485,
+        "sha256": "2545f2cbcc9a99116e193724aea392b9598a4192fb26a5cd79a8f41b77b08c6e",
+        "mode": "0644",
+        "git_blob": "da0ad65ba205f02beea4b17837d0822032769559"
+      },
+      "current": {
+        "bytes": 51279,
+        "sha256": "1c73d6f46f0e6dbfe446280aad518f2286ad9d68b531dac74ff6fc670ddb6666",
+        "mode": "0644"
+      },
+      "edits": [
+        {
+          "offset": 2029,
+          "remove_utf8": "",
+          "insert_utf8": "    #[cfg(any(unix, windows))]\n    let (current_bytes, current_sha) = w07_t02_joint::cli_source_custody::current_lock_identity()?;\n"
+        },
+        {
+          "offset": 2449,
+          "remove_utf8": "            || before.len() != w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES as u64\n",
+          "insert_utf8": "            || before.len() != current_bytes as u64\n"
+        },
+        {
+          "offset": 3549,
+          "remove_utf8": "        let mut bytes = Vec::with_capacity(w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES);\n",
+          "insert_utf8": "        let mut bytes = Vec::with_capacity(current_bytes);\n"
+        },
+        {
+          "offset": 3664,
+          "remove_utf8": "            .take(w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES as u64 + 1)\n",
+          "insert_utf8": "            .take(current_bytes as u64 + 1)\n"
+        },
+        {
+          "offset": 4474,
+          "remove_utf8": "            || bytes.len() != w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES\n            || sha(&bytes) != w07_t02_joint::cli_source_custody::CURRENT_LOCK_SHA\n",
+          "insert_utf8": "            || bytes.len() != current_bytes\n            || sha(&bytes) != current_sha\n"
+        },
+        {
+          "offset": 4812,
+          "remove_utf8": "        let (bytes, mode) = w07_windows_reader::physical_current_cargo_lock(\n            root,\n            w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES,\n        )?;\n        if sha(&bytes) != w07_t02_joint::cli_source_custody::CURRENT_LOCK_SHA {\n",
+          "insert_utf8": "        let (bytes, mode) = w07_windows_reader::physical_current_cargo_lock(root, current_bytes)?;\n        if sha(&bytes) != current_sha {\n"
+        },
+        {
+          "offset": 35059,
+          "remove_utf8": "        let windows_reader = w07_windows_reader::physical_current_cargo_lock(\n            root,\n            w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES,\n        )\n        .unwrap();\n",
+          "insert_utf8": "        let (current_bytes, current_sha) =\n            w07_t02_joint::cli_source_custody::current_lock_identity().unwrap();\n        let windows_reader =\n            w07_windows_reader::physical_current_cargo_lock(root, current_bytes).unwrap();\n"
+        },
+        {
+          "offset": 35314,
+          "remove_utf8": "        assert_eq!(\n            sha(&windows_reader.0),\n            w07_t02_joint::cli_source_custody::CURRENT_LOCK_SHA\n        );\n",
+          "insert_utf8": "        assert_eq!(sha(&windows_reader.0), current_sha);\n"
+        }
+      ]
     }
   ]
 }

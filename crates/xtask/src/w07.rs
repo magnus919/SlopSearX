@@ -58,6 +58,8 @@ fn sha(bytes: &[u8]) -> String {
 /// Read the exact current Cargo.lock before W07 can apply a historical hash
 /// shortcut. Unix also binds the opened descriptor identity to the named path.
 fn physical_current_cargo_lock(root: &Path) -> Result<(Vec<u8>, &'static str)> {
+    #[cfg(any(unix, windows))]
+    let (current_bytes, current_sha) = w07_t02_joint::cli_source_custody::current_lock_identity()?;
     #[cfg(unix)]
     {
         use std::io::Read;
@@ -67,7 +69,7 @@ fn physical_current_cargo_lock(root: &Path) -> Result<(Vec<u8>, &'static str)> {
         let before = fs::symlink_metadata(&full).map_err(|error| error.to_string())?;
         if !before.is_file()
             || before.file_type().is_symlink()
-            || before.len() != w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES as u64
+            || before.len() != current_bytes as u64
             || before.len() > 1_048_576
             || before.permissions().mode() & 0o7777 != 0o644
             || !full
@@ -91,9 +93,9 @@ fn physical_current_cargo_lock(root: &Path) -> Result<(Vec<u8>, &'static str)> {
         {
             return Err("W07 current Cargo.lock descriptor identity changed".into());
         }
-        let mut bytes = Vec::with_capacity(w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES);
+        let mut bytes = Vec::with_capacity(current_bytes);
         (&file)
-            .take(w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES as u64 + 1)
+            .take(current_bytes as u64 + 1)
             .read_to_end(&mut bytes)
             .map_err(|error| error.to_string())?;
         let after = file.metadata().map_err(|error| error.to_string())?;
@@ -109,8 +111,8 @@ fn physical_current_cargo_lock(root: &Path) -> Result<(Vec<u8>, &'static str)> {
             || named.permissions().mode() & 0o7777 != 0o644
             || named.dev() != after.dev()
             || named.ino() != after.ino()
-            || bytes.len() != w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES
-            || sha(&bytes) != w07_t02_joint::cli_source_custody::CURRENT_LOCK_SHA
+            || bytes.len() != current_bytes
+            || sha(&bytes) != current_sha
         {
             return Err("W07 current Cargo.lock changed during bounded source read".into());
         }
@@ -118,11 +120,8 @@ fn physical_current_cargo_lock(root: &Path) -> Result<(Vec<u8>, &'static str)> {
     }
     #[cfg(windows)]
     {
-        let (bytes, mode) = w07_windows_reader::physical_current_cargo_lock(
-            root,
-            w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES,
-        )?;
-        if sha(&bytes) != w07_t02_joint::cli_source_custody::CURRENT_LOCK_SHA {
+        let (bytes, mode) = w07_windows_reader::physical_current_cargo_lock(root, current_bytes)?;
+        if sha(&bytes) != current_sha {
             return Err("W07 current Cargo.lock changed during bounded source read".into());
         }
         Ok((bytes, mode))
@@ -797,16 +796,12 @@ mod tests {
         assert!(frozen(root, "Cargo.toml", expected).is_err());
 
         let (current, mode) = physical_current_cargo_lock(root).unwrap();
-        let windows_reader = w07_windows_reader::physical_current_cargo_lock(
-            root,
-            w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES,
-        )
-        .unwrap();
+        let (current_bytes, current_sha) =
+            w07_t02_joint::cli_source_custody::current_lock_identity().unwrap();
+        let windows_reader =
+            w07_windows_reader::physical_current_cargo_lock(root, current_bytes).unwrap();
         assert_eq!(windows_reader, (current.clone(), "0644"));
-        assert_eq!(
-            sha(&windows_reader.0),
-            w07_t02_joint::cli_source_custody::CURRENT_LOCK_SHA
-        );
+        assert_eq!(sha(&windows_reader.0), current_sha);
         assert!(
             w07_t02_joint::cli_source_custody::w07_lock_prior_from_physical(
                 root,
