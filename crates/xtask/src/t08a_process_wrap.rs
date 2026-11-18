@@ -188,6 +188,10 @@ fn root_graph(root: &Path, metadata: &Value) -> Result<Value> {
         .join("Cargo.toml")
         .canonicalize()
         .map_err(|e| e.to_string())?;
+    let rmcp_manifest = root
+        .join("vendor/rmcp/Cargo.toml")
+        .canonicalize()
+        .map_err(|e| e.to_string())?;
     let packages = metadata["packages"]
         .as_array()
         .ok_or("private root packages")?;
@@ -254,13 +258,19 @@ fn root_graph(root: &Path, metadata: &Value) -> Result<Value> {
                         .map_err(|e| e.to_string())?,
                 );
             } else {
+                let consumer_id = parent["id"].as_str().ok_or("registry consumer ID")?;
+                let manifest = parent["manifest_path"]
+                    .as_str()
+                    .ok_or("RMCP consumer manifest")?;
                 need(
                     parent["name"] == "rmcp"
-                        && parent["version"] == "3.9.0"
-                        && parent["source"] == REGISTRY,
-                    "upstream registry consumer changed",
+                        && parent["version"] == "3.11.0"
+                        && parent["source"].is_null()
+                        && consumer_id.starts_with("path+file:")
+                        && Path::new(manifest).canonicalize().ok().as_ref() == Some(&rmcp_manifest),
+                    "vendored RMCP consumer of registry process-wrap changed",
                 )?;
-                registry_parents.insert(parent["id"].as_str().ok_or("registry consumer ID")?);
+                registry_parents.insert(consumer_id);
             }
         }
     }
@@ -306,20 +316,45 @@ pub(super) fn qualify(
         .iter()
         .position(|p| p["id"] == graph["private_package_id"])
         .ok_or("private actual package")?;
+    let rmcp_position = metadata["packages"]
+        .as_array()
+        .ok_or("private packages")?
+        .iter()
+        .position(|p| p["id"] == graph["registry_rmcp_consumer"][0])
+        .ok_or("actual vendored RMCP consumer")?;
+    let registry_source = json!("registry+https://github.com/rust-lang/crates.io-index");
+    let wrong_manifest = json!(root.join("Cargo.toml"));
+    let private_identity = "T08A private process-wrap: exact canonical private package missing, duplicate or wrong source";
+    let rmcp_identity =
+        "T08A private process-wrap: vendored RMCP consumer of registry process-wrap changed";
     let mut controls = Vec::new();
-    for field in ["source", "manifest_path"] {
+    for (position, field, replacement, expected) in [
+        (
+            position,
+            "source",
+            registry_source.clone(),
+            private_identity,
+        ),
+        (
+            position,
+            "manifest_path",
+            wrong_manifest.clone(),
+            private_identity,
+        ),
+        (rmcp_position, "source", registry_source, rmcp_identity),
+        (
+            rmcp_position,
+            "manifest_path",
+            wrong_manifest,
+            rmcp_identity,
+        ),
+    ] {
         let mut mutant = metadata.clone();
-        let replacement = if field == "source" {
-            json!("registry+https://github.com/rust-lang/crates.io-index")
-        } else {
-            json!(root.join("Cargo.toml"))
-        };
         mutant["packages"][position][field] = replacement;
         let rejection = root_graph(root, &mutant).err();
-        let expected = "T08A private process-wrap: exact canonical private package missing, duplicate or wrong source";
         need(
             rejection.as_deref() == Some(expected),
-            "wrong private identity was not rejected for its exact reason",
+            "wrong identity was not rejected for its exact reason",
         )?;
         controls.push(json!({"pointer":format!("/packages/{position}/{field}"),"mutant_sha256":super::hash(&serde_json::to_vec(&mutant).map_err(|e| e.to_string())?),"exact_rejection":expected}));
     }

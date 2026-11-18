@@ -1,0 +1,24 @@
+{
+  "path": "docs/rust-rewrite/t06/source-amendments/python-dependency-audit-source-reader-v1.rs",
+  "current_bytes": 32524,
+  "current_sha256": "c8c04e56f23e0828e5c9f211832fc12cada1521d6e5f9498ae75c7e801bf749e",
+  "prior_bytes": 31817,
+  "prior_sha256": "e66d91525c9b50a26d1fabd1eb2bf137d83e2fc9ed8c7cbe5a6e71dda8edfca9",
+  "spans": [
+    {
+      "at": 664,
+      "current": "#[path = \"../../t08a/rmcp-source-afterimage.rs\"]\n#[allow(\n    clippy::duplicate_mod,\n    reason = \"Independent proof roots share the same stateless inverse\"\n)]\nmod rmcp_source_afterimage;\nconst RMCP_T03_PATH: &str = \"docs/rust-rewrite/t03/source-successor-v1.rs\";\nconst RMCP_T03_BYTES: usize = 42326;\nconst RMCP_T03_SOURCE: &str = include_str!(\"../../t08a/rmcp-t03-reader-afterimage.json\");\nconst RMCP_T03_SHA: &str = \"02fd7cfb61e2aeb3683c4bc4c9738aa493ae9159babb03589cd262ca8b4575ea\";\n",
+      "prior": ""
+    },
+    {
+      "at": 3495,
+      "current": "    } else if path == RMCP_T03_PATH {\n        regular(physical_root, path, RMCP_T03_BYTES)\n",
+      "prior": ""
+    },
+    {
+      "at": 4001,
+      "current": "    } else if path == RMCP_T03_PATH {\n        rmcp_source_afterimage::prior(RMCP_T03_SOURCE, RMCP_T03_SHA, path, physical, 0o644)\n",
+      "prior": ""
+    }
+  ]
+}

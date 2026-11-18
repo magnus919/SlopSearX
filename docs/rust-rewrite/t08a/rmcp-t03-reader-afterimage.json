@@ -1,0 +1,44 @@
+{
+  "path": "docs/rust-rewrite/t03/source-successor-v1.rs",
+  "current_bytes": 42326,
+  "current_sha256": "d39665d84a6d287f7d3f88099a6305ef09b64b250decb3ae03f70e17b98a8c89",
+  "prior_bytes": 40547,
+  "prior_sha256": "9090524bb86a7679a0c7d3c95698cdd34f2b8e350bc50545bca19b950df70f03",
+  "spans": [
+    {
+      "at": 430,
+      "current": "#[path = \"../t08a/rmcp-source-afterimage.rs\"]\n#[allow(\n    clippy::duplicate_mod,\n    reason = \"Independent proof roots share the same stateless inverse\"\n)]\nmod rmcp_source_afterimage;\nconst RMCP_SEARCH_PATH: &str = \"crates/ssx-infra/src/search.rs\";\nconst RMCP_SEARCH_BYTES: usize = 91653;\nconst RMCP_SEARCH_SOURCE: &str = include_str!(\"../t08a/rmcp-search-clock-afterimage.json\");\nconst RMCP_SEARCH_SHA: &str = \"41ac09394815a14b008e9590299317e6a73ba552a1b927bea27190e0886c894a\";\n\n",
+      "prior": ""
+    },
+    {
+      "at": 12518,
+      "current": "    let projected = logical_material(path, physical, mode)?;\n    inverse(&pin, row(&doc, path)?, projected.as_ref(), mode)\n}\nfn logical_material<'a>(\n    path: &str,\n    physical: &'a [u8],\n    mode: u32,\n) -> Result<std::borrow::Cow<'a, [u8]>> {\n    if path == RMCP_SEARCH_PATH {\n        let old = rmcp_source_afterimage::prior(\n            RMCP_SEARCH_SOURCE,\n            RMCP_SEARCH_SHA,\n            path,\n            physical,\n            mode,\n        )?;\n        return Ok(std::borrow::Cow::Owned(old));\n    }\n    Ok(std::borrow::Cow::Borrowed(physical))\n}\nfn current_source_size(pin: &Pin<'_>) -> usize {\n    if pin.path == RMCP_SEARCH_PATH {\n        RMCP_SEARCH_BYTES\n    } else {\n        pin.current_bytes\n    }\n",
+      "prior": "    inverse(&pin, row(&doc, path)?, physical, mode)\n"
+    },
+    {
+      "at": 37705,
+      "current": "    let physical = regular(root, path, current_source_size(&pin))?;\n",
+      "prior": "    let physical = regular(root, path, pin.current_bytes)?;\n"
+    },
+    {
+      "at": 37845,
+      "current": "    let logical = logical_material(path, &physical, 0o644)?;\n    let prior = inverse(&pin, row(&doc, path)?, logical.as_ref(), 0o644)?;\n",
+      "prior": "    let prior = inverse(&pin, row(&doc, path)?, &physical, 0o644)?;\n"
+    },
+    {
+      "at": 38740,
+      "current": "            let physical = regular(root, pin.path, current_source_size(pin))?;\n            let logical = logical_material(pin.path, &physical, 0o644)?.into_owned();\n            (physical, logical)\n",
+      "prior": "            let physical = regular(root, pin.path, pin.current_bytes)?;\n            (physical.clone(), physical)\n"
+    },
+    {
+      "at": 39214,
+      "current": "            frame(\n                pin.path,\n                if pin.path == RMCP_SEARCH_PATH {\n                    &physical\n                } else {\n                    &logical\n                },\n                0o644,\n            )? == prior_bytes,\n",
+      "prior": "            frame(pin.path, &logical, 0o644)? == prior_bytes,\n"
+    },
+    {
+      "at": 39717,
+      "current": "        if pin.path == RMCP_SEARCH_PATH {\n            need(\n                frame(pin.path, &logical, 0o644).is_err()\n                    && prior(root, pin.path, &logical).is_err(),\n                \"pre-RMCP search bytes rejected as physical current\",\n            )?;\n        }\n",
+      "prior": ""
+    }
+  ]
+}

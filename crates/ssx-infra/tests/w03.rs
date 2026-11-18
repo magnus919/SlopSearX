@@ -1430,16 +1430,14 @@ fn capture_timezone_child(test: &str) -> bool {
         return false;
     }
     // Production parsing still follows the actual caller process's local zone.
-    let naive = chrono::NaiveDate::from_ymd_opt(2026, 10, 17)
-        .unwrap()
-        .and_hms_opt(14, 30, 12)
-        .unwrap();
-    let local = chrono::TimeZone::from_local_datetime(&chrono::Local, &naive)
-        .single()
+    let naive = jiff::civil::datetime(2026, 10, 17, 14, 30, 12, 0);
+    let local = jiff::tz::TimeZone::system()
+        .to_ambiguous_timestamp(naive)
+        .unambiguous()
         .unwrap();
     assert_eq!(
         parse_iso_deadline("2026-10-17T14:30:12"),
-        Some(local.timestamp() as f64)
+        Some(local.as_second() as f64)
     );
     struct Owned {
         child: Option<Child>,
