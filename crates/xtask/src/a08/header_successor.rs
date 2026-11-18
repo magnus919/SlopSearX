@@ -112,14 +112,6 @@ fn permission_bits(raw: u32) -> u32 {
     raw & 0o7777
 }
 fn load(root: &Path, path: &str) -> Result<Material> {
-    if path == "crates/ssx-infra/Cargo.toml" {
-        use crate::t08a::source_custody::{bounded_read, project_issue903_config};
-
-        let (physical, mode) = bounded_read(root, path, 1_048_576)?;
-        let bytes = project_issue903_config(root, path, &physical, mode)?;
-        return Ok(Material { bytes, mode: 0o644 });
-    }
-
     let old = match path {
         "crates/ssx-infra/tests/a08_factories.rs" => Some((
             "329ff395b82e91eed0a0ab384367bbb745e1011812584391ce03f44210c24a92",
@@ -160,6 +152,8 @@ fn load(root: &Path, path: &str) -> Result<Material> {
     let physical = fs::read(p).map_err(|e| e.to_string())?;
     let bytes = if path == "Cargo.toml" {
         crate::t08a::source_custody::legacy_prior(root, path, &physical)?
+    } else if path == "crates/ssx-infra/Cargo.toml" {
+        crate::t08a::source_custody::prior_infra_manifest(root, &physical)?
     } else if path == "crates/ssx-infra/tests/a08_regulatory.rs" {
         let frame = json!({"path":path,"sha256":"64ca51a260c2d106e63f65aae06c4a912050ab2d8814958b69816ffae4e81254","bytes":12831,"mode":"0644"});
         crate::a13::a06_source_successor::native_search::page_prior(root, &frame, Some(&physical))?

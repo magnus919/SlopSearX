@@ -1,35 +1,35 @@
 {
   "schema": "ISSUE903_CONFIG_EDGE_SUCCESSOR_V1",
-  "baseline_commit": "cab037909ca261d3d7157a5cab5628f1b6a8cf83",
+  "baseline_commit": "7d904b9d46f4c4ba8c59dc1ba09828f9e7ea204d",
   "rows": [
     {
       "path": "Cargo.lock",
       "prior": {
-        "bytes": 94340,
-        "sha256": "fcc6f4375b5f967d6a1d96172a0707438957e95fbddd83a502105bf5fede4847",
+        "bytes": 96180,
+        "sha256": "fd04cdf3d534a04be379d067583ff2dfb383fd98e6982092e922a00d56d4e7c9",
         "mode": "0644",
-        "git_blob": "c7fddce0c1d2f5d4bfed297056f2f81da936caf8"
+        "git_blob": "b8cd182865bdbaf7f1d6cbf07c34fb52db29c9d1"
       },
       "current": {
-        "bytes": 94366,
-        "sha256": "b775c6fad235c1e60f7868aa424d13e84843d0f3c83a0af2af389bb523a24c27",
+        "bytes": 96206,
+        "sha256": "c4cac865449f9e8b424ed16698bdf2daf5cb601bda7f096ae7765da8d838e6a1",
         "mode": "0644"
       },
       "edits": [
         {
-          "offset": 65746,
+          "offset": 67341,
           "remove_utf8": "",
-          "insert_utf8": "\",\n \"serde"
+          "insert_utf8": " \"serde\",\n"
         },
         {
-          "offset": 67332,
+          "offset": 68937,
           "remove_utf8": "",
-          "insert_utf8": "nix\",\n \""
+          "insert_utf8": " \"nix\",\n"
         },
         {
-          "offset": 67878,
+          "offset": 69483,
           "remove_utf8": "",
-          "insert_utf8": "nix\",\n \""
+          "insert_utf8": " \"nix\",\n"
         }
       ]
     },
@@ -48,14 +48,14 @@
       },
       "edits": [
         {
-          "offset": 204,
+          "offset": 205,
           "remove_utf8": "",
-          "insert_utf8": "\nserde.workspace = true"
+          "insert_utf8": "serde.workspace = true\n"
         },
         {
-          "offset": 636,
-          "remove_utf8": "]\n",
-          "insert_utf8": ", \"fs\"]\n"
+          "offset": 616,
+          "remove_utf8": "features = [\"signal\"]\n",
+          "insert_utf8": "features = [\"signal\", \"fs\"]\n"
         }
       ]
     },
@@ -95,49 +95,24 @@
       },
       "edits": [
         {
-          "offset": 147,
-          "remove_utf8": "fs, ",
+          "offset": 137,
+          "remove_utf8": "use std::{fs, path::Path, process::Command};\n",
+          "insert_utf8": "use std::{path::Path, process::Command};\n#[allow(\n    clippy::duplicate_mod,\n    reason = \"Independent source gates include the same std-only bounded reader\"\n)]\n#[path = \"../../t08a/bounded_source_reader.rs\"]\nmod bounded_source_reader;\n"
+        },
+        {
+          "offset": 1427,
+          "remove_utf8": "    let full = root.join(path);\n    let meta = fs::symlink_metadata(&full).map_err(|e| format!(\"{path}: {e}\"))?;\n    need(\n        meta.is_file() && !meta.file_type().is_symlink(),\n        \"regular non-symlink material\",\n    )?;\n",
           "insert_utf8": ""
         },
         {
-          "offset": 180,
-          "remove_utf8": "",
-          "insert_utf8": ";\n#[allow(\n    clippy::duplicate_mod,\n    reason = \"Independent source gates include the same std-only bounded reader\"\n)]\n#[path = \"../../t08a/bounded_source_reader.rs\"]\nmod bounded_source_reader"
+          "offset": 1673,
+          "remove_utf8": "    let mode = {\n        use std::os::unix::fs::PermissionsExt;\n        meta.permissions().mode() & 0o7777\n    };\n",
+          "insert_utf8": "    let (bytes, mode) = bounded_source_reader::bounded_read(root, path, 1048576)\n        .map_err(|e| format!(\"{path}: {e}\"))?;\n"
         },
         {
-          "offset": 1431,
-          "remove_utf8": "let full = root.join(path);\n    let",
-          "insert_utf8": "#[cfg(unix)]\n    let (bytes,"
-        },
-        {
-          "offset": 1468,
-          "remove_utf8": "eta = fs",
-          "insert_utf8": "ode) = bounded_source_reader"
-        },
-        {
-          "offset": 1478,
-          "remove_utf8": "symlink_metadata(&full)",
-          "insert_utf8": "bounded_read(root, path, 1048576)\n        "
-        },
-        {
-          "offset": 1544,
-          "remove_utf8": "need(\n        meta.is_file() && !meta.file_type().is_symlink(),\n        \"regular non-symlink material\",\n    )?;\n    #[cfg(unix)]\n    let mode = {\n        use std::os::unix::fs::PermissionsExt;\n        meta.permissions().mode() & 0o7777\n    };\n    ",
-          "insert_utf8": ""
-        },
-        {
-          "offset": 1905,
-          "remove_utf8": "\n       ",
-          "insert_utf8": ""
-        },
-        {
-          "offset": 1919,
-          "remove_utf8": ": fs::read(full).",
-          "insert_utf8": ", "
-        },
-        {
-          "offset": 1937,
-          "remove_utf8": "ap_err(|e| e.to_string())?,\n        mode,\n   ",
-          "insert_utf8": "ode"
+          "offset": 1888,
+          "remove_utf8": "    Ok(Material {\n        bytes: fs::read(full).map_err(|e| e.to_string())?,\n        mode,\n    })\n",
+          "insert_utf8": "    Ok(Material { bytes, mode })\n"
         }
       ]
     },
@@ -156,119 +131,29 @@
       },
       "edits": [
         {
-          "offset": 29603,
-          "remove_utf8": "full",
-          "insert_utf8": "(bytes, mode)"
+          "offset": 29595,
+          "remove_utf8": "    let full = root.join(row.path);\n    let meta = fs::symlink_metadata(&full).map_err(|e| e.to_string())?;\n    need(\n        meta.is_file() && !meta.file_type().is_symlink(),\n        \"regular non-symlink source\",\n    )?;\n",
+          "insert_utf8": "    let (bytes, mode) = cli_source_custody::bounded_read(root, row.path, 1_048_576)?;\n    #[cfg(unix)]\n    need(mode == 0o644, \"opened regular source mode0644\")?;\n    #[cfg(not(unix))]\n    return Err(\"W07/T02 source mode proof requires Unix\".into());\n    #[cfg(unix)]\n    Ok((bytes, mode))\n}\n\n/// The direct dev edge belongs to one exact physical MCP manifest on every lock route.\nfn paired_manifest(physical_root: &Path, trusted_source_root: &Path) -> Result<()> {\n    let (current, mode) =\n        cli_source_custody::bounded_read(physical_root, \"crates/ssx-mcp/Cargo.toml\", 1_048_576)?;\n"
         },
         {
-          "offset": 29610,
-          "remove_utf8": "root.join(",
-          "insert_utf8": "cli_source_custody::bounded_read(root, "
+          "offset": 29840,
+          "remove_utf8": "        use std::os::unix::fs::PermissionsExt;\n        Ok((\n            fs::read(full).map_err(|e| e.to_string())?,\n            meta.permissions().mode() & 0o7777,\n        ))\n    }\n    #[cfg(not(unix))]\n    {\n        Err(\"W07/T02 source mode proof requires Unix\".into())\n    }\n}\n/// The direct dev edge belongs to one exact physical MCP manifest on every lock route.\nfn paired_manifest(root: &Path) -> Result<()> {\n    let path = root.join(\"crates/ssx-mcp/Cargo.toml\");\n    let meta = fs::symlink_metadata(&path).map_err(|e| e.to_string())?;\n    need(\n        meta.is_file() && !meta.file_type().is_symlink(),\n        \"regular non-symlink paired MCP manifest\",\n    )?;\n    #[cfg(unix)]\n    {\n        use std::os::unix::fs::PermissionsExt;\n        let bytes = fs::read(path).map_err(|e| e.to_string())?;\n",
+          "insert_utf8": "        need(mode == 0o644, \"opened paired manifest mode0644\")?;\n        let prior = cli_source_custody::project_issue903_config(\n            trusted_source_root,\n            \"crates/ssx-mcp/Cargo.toml\",\n            &current,\n            mode,\n        )?;\n"
         },
         {
-          "offset": 29628,
-          "remove_utf8": ");\n    let meta = fs::symlink_metadata(&full).map_err(|e| e.to_string()",
-          "insert_utf8": ", 1_048_576"
+          "offset": 30657,
+          "remove_utf8": "            meta.permissions().mode() & 0o7777 == 0o644\n                && bytes.len() == 1234\n                && sha(&bytes)\n",
+          "insert_utf8": "            prior.len() == 1234\n                && sha(&prior)\n"
         },
         {
-          "offset": 29707,
-          "remove_utf8": "need(\n        meta.is_file() && !meta.file_type().is_symlink(),\n        \"re",
-          "insert_utf8": "#[cf"
+          "offset": 30874,
+          "remove_utf8": "            \"exact paired MCP manifest bytes/mode\",\n",
+          "insert_utf8": "            \"exact paired MCP manifest predecessor bytes/mode/Git identity\",\n"
         },
         {
-          "offset": 29783,
-          "remove_utf8": "ular non-symlink source\",\n    ",
-          "insert_utf8": "(unix)]\n    need(mode == 0o644, \"opened regular source mode0644\""
-        },
-        {
-          "offset": 29827,
+          "offset": 30970,
           "remove_utf8": "",
-          "insert_utf8": "not("
-        },
-        {
-          "offset": 29832,
-          "remove_utf8": "",
-          "insert_utf8": ")"
-        },
-        {
-          "offset": 29838,
-          "remove_utf8": "{\n        use std::os::unix::fs::PermissionsExt;\n        Ok((\n            fs::read(full).map_err(|e| e.to_string())?,\n            meta.permissions().mode() & 0o7777,\n        ))\n    }\n    #[cfg(not(unix))]\n    {\n       ",
-          "insert_utf8": "return"
-        },
-        {
-          "offset": 30110,
-          "remove_utf8": "\n    ",
-          "insert_utf8": ";\n    #[cfg(unix)]\n    Ok((bytes, mode))\n"
-        },
-        {
-          "offset": 30117,
-          "remove_utf8": "}",
-          "insert_utf8": ""
-        },
-        {
-          "offset": 30226,
-          "remove_utf8": "",
-          "insert_utf8": "physical_"
-        },
-        {
-          "offset": 30237,
-          "remove_utf8": "",
-          "insert_utf8": ", trusted_source_root: &Path"
-        },
-        {
-          "offset": 30263,
-          "remove_utf8": "pat",
-          "insert_utf8": "(current, mode) =\n        cli_source_custody::bounded_read(p"
-        },
-        {
-          "offset": 30267,
-          "remove_utf8": " = root.join(",
-          "insert_utf8": "ysical_root, "
-        },
-        {
-          "offset": 30307,
-          "remove_utf8": ");\n    let meta = fs::symlink_metadata(&path).map_err(|e| e.to_string()",
-          "insert_utf8": ", 1_048_576"
-        },
-        {
-          "offset": 30386,
-          "remove_utf8": "need(\n        meta.is_file() && !meta.file_type().is_symlink(),\n        \"regular non-symlink paired MCP manifest\",\n    )?;\n    ",
-          "insert_utf8": ""
-        },
-        {
-          "offset": 30540,
-          "remove_utf8": "use std::os::unix::fs::PermissionsExt;\n        let bytes = fs::read(path).map_err(|e| e.to_string())?;\n        need(\n            meta.permissions().mode() & 0o7777",
-          "insert_utf8": "need(mode"
-        },
-        {
-          "offset": 30712,
-          "remove_utf8": "\n    ",
-          "insert_utf8": ", \"opened paired manifest mode0644\")?;\n        let prior = cli_source_custody::project_issue903_config(\n            trusted_source_root,\n            \"crates/ssx-mcp/Cargo.toml\",\n"
-        },
-        {
-          "offset": 30730,
-          "remove_utf8": "& bytes",
-          "insert_utf8": "current,\n            mode,\n        )?;\n        need(\n            prior"
-        },
-        {
-          "offset": 30776,
-          "remove_utf8": "bytes",
-          "insert_utf8": "prior"
-        },
-        {
-          "offset": 30913,
-          "remove_utf8": "",
-          "insert_utf8": "predecessor "
-        },
-        {
-          "offset": 30923,
-          "remove_utf8": "",
-          "insert_utf8": "/Git identity"
-        },
-        {
-          "offset": 30969,
-          "remove_utf8": "",
-          "insert_utf8": "\n        let _ = (current, mode, trusted_source_root);"
+          "insert_utf8": "        let _ = (current, mode, trusted_source_root);\n"
         },
         {
           "offset": 31056,
@@ -276,239 +161,139 @@
           "insert_utf8": "\n"
         },
         {
-          "offset": 33718,
+          "offset": 33681,
+          "remove_utf8": "        paired_manifest(physical_root)?;\n",
+          "insert_utf8": "        paired_manifest(physical_root, trusted_source_root)?;\n"
+        },
+        {
+          "offset": 35441,
           "remove_utf8": "",
-          "insert_utf8": ", trusted_source_root"
+          "insert_utf8": "    cli_source_custody::issue903_config_controls(root)?;\n"
         },
         {
-          "offset": 35424,
-          "remove_utf8": "",
-          "insert_utf8": "controls(root)?;\n    cli_source_custody::issue903_config_"
+          "offset": 41168,
+          "remove_utf8": "    let manifest = fs::read(root.join(\"crates/ssx-mcp/Cargo.toml\")).map_err(|e| e.to_string())?;\n",
+          "insert_utf8": "    let (manifest, manifest_mode) =\n        cli_source_custody::bounded_read(root, \"crates/ssx-mcp/Cargo.toml\", 1_048_576)?;\n    need(\n        manifest_mode == 0o644,\n        \"opened paired manifest source mode0644\",\n    )?;\n"
         },
         {
-          "offset": 41176,
-          "remove_utf8": "manifest",
-          "insert_utf8": "(manifest, manifest_mode)"
-        },
-        {
-          "offset": 41186,
-          "remove_utf8": " fs::read(root.join(",
-          "insert_utf8": "\n        cli_source_custody::bounded_read(root, "
-        },
-        {
-          "offset": 41233,
-          "remove_utf8": ")).map_err(|e| e.to_string()",
-          "insert_utf8": ", 1_048_576)?;\n    need(\n        manifest_mode == 0o644,\n        \"opened paired manifest source mode0644\",\n    "
-        },
-        {
-          "offset": 44384,
-          "remove_utf8": "",
-          "insert_utf8": "("
-        },
-        {
-          "offset": 44388,
-          "remove_utf8": "",
-          "insert_utf8": ", lock_mode)"
-        },
-        {
-          "offset": 44390,
-          "remove_utf8": " fs::read(",
-          "insert_utf8": "\n        cli_source_custody::bounded_read(&"
-        },
-        {
-          "offset": 44419,
-          "remove_utf8": ".join(",
-          "insert_utf8": ", "
-        },
-        {
-          "offset": 44437,
-          "remove_utf8": ")).map_err(|e| e.to_string()",
-          "insert_utf8": ", 1_048_576)?;\n    need(lock_mode == 0o644, \"opened fixture lock mode0644\""
+          "offset": 44376,
+          "remove_utf8": "    let lock = fs::read(owned.physical_root.join(\"Cargo.lock\")).map_err(|e| e.to_string())?;\n",
+          "insert_utf8": "    let (lock, lock_mode) =\n        cli_source_custody::bounded_read(&owned.physical_root, \"Cargo.lock\", 1_048_576)?;\n    need(lock_mode == 0o644, \"opened fixture lock mode0644\")?;\n"
         }
       ]
     },
     {
       "path": "docs/rust-rewrite/t03/source-successor-v1.rs",
       "prior": {
-        "bytes": 40547,
-        "sha256": "9090524bb86a7679a0c7d3c95698cdd34f2b8e350bc50545bca19b950df70f03",
+        "bytes": 42326,
+        "sha256": "d39665d84a6d287f7d3f88099a6305ef09b64b250decb3ae03f70e17b98a8c89",
         "mode": "0644",
-        "git_blob": "c6f955083f7dae389136e5799c8446e14932ef0c"
+        "git_blob": "cb2aa548ce1797b71eda83422b9e835056237ea3"
       },
       "current": {
-        "bytes": 42194,
-        "sha256": "065bb991fb93ab73b43125156d698e493d24ac4a08983827d8a53364725dbd43",
+        "bytes": 43951,
+        "sha256": "84f6d4218d7355e874a7ee63c90a41485ad27abadd81fc0761cd223b9d4f090d",
         "mode": "0644"
       },
       "edits": [
         {
-          "offset": 174,
+          "offset": 172,
           "remove_utf8": "",
-          "insert_utf8": "allow(\n    dead_code,\n    clippy::duplicate_mod,\n    reason = \"T08 bounded physical admission shared with the custody roots\"\n)]\n#[path = \"../t08a/bounded_source_reader.rs\"]\nmod bounded_source_reader;\n#["
+          "insert_utf8": "#[allow(\n    dead_code,\n    clippy::duplicate_mod,\n    reason = \"T08 bounded physical admission shared with the custody roots\"\n)]\n#[path = \"../t08a/bounded_source_reader.rs\"]\nmod bounded_source_reader;\n"
         },
         {
-          "offset": 428,
+          "offset": 430,
           "remove_utf8": "",
-          "insert_utf8": ";\n#[allow(\n    dead_code,\n    clippy::duplicate_mod,\n    reason = \"Exact issue903 source layer is shared by T08A custody and T03 admission\"\n)]\n#[path = \"../t08a/issue903-config-edge-successor.rs\"]\nmod issue903_config_successor;\nconst ISSUE903_JOINT_SOURCE: &str = \"docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs\";\nconst ISSUE903_NATIVE_SOURCE: &str =\n    \"docs/rust-rewrite/a06/source-amendments/native-search-reader.rs\""
+          "insert_utf8": "#[allow(\n    dead_code,\n    clippy::duplicate_mod,\n    reason = \"Exact issue903 source layer is shared by T08A custody and T03 admission\"\n)]\n#[path = \"../t08a/issue903-config-edge-successor.rs\"]\nmod issue903_config_successor;\nconst ISSUE903_JOINT_SOURCE: &str = \"docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs\";\nconst ISSUE903_NATIVE_SOURCE: &str =\n    \"docs/rust-rewrite/a06/source-amendments/native-search-reader.rs\";\n"
         },
         {
-          "offset": 31124,
+          "offset": 32196,
+          "remove_utf8": "fn w07_main_current_frame(root: &Path, path: &str) -> Result<(Vec<u8>, Vec<u8>)> {\n",
+          "insert_utf8": "fn w07_main_current_frame(root: &Path, path: &str) -> Result<(Vec<u8>, Vec<u8>, Vec<u8>)> {\n"
+        },
+        {
+          "offset": 32476,
+          "remove_utf8": "    let physical = regular(root, path, source.current_bytes)?;\n    let prior = inverse(&source, source_row, &physical, 0o644)?;\n",
+          "insert_utf8": "    let (physical, logical) = if path == ISSUE903_NATIVE_SOURCE {\n        let (physical, mode) = bounded_source_reader::bounded_read(root, path, LIMIT)?;\n        let logical = issue903_config_successor::prior(root, path, &physical, mode)?;\n        (physical, logical)\n    } else {\n        let physical = regular(root, path, source.current_bytes)?;\n        (physical.clone(), physical)\n    };\n    let prior = inverse(&source, source_row, &logical, 0o644)?;\n"
+        },
+        {
+          "offset": 32697,
+          "remove_utf8": "        git(root, &[\"show\", &format!(\"{W07_MAIN_BASE}:{path}\")])? == physical,\n",
+          "insert_utf8": "        git(root, &[\"show\", &format!(\"{W07_MAIN_BASE}:{path}\")])? == logical,\n"
+        },
+        {
+          "offset": 33493,
+          "remove_utf8": "    Ok((physical, prior))\n",
+          "insert_utf8": "    Ok((physical, logical, prior))\n"
+        },
+        {
+          "offset": 34092,
+          "remove_utf8": "        let (physical, prior_bytes) = w07_main_current_frame(root, source.path)?;\n",
+          "insert_utf8": "        let (physical, logical, prior_bytes) = w07_main_current_frame(root, source.path)?;\n"
+        },
+        {
+          "offset": 34188,
+          "remove_utf8": "            inverse(&source, source_row, &physical, 0o644)? == prior_bytes\n",
+          "insert_utf8": "            inverse(&source, source_row, &logical, 0o644)? == prior_bytes\n"
+        },
+        {
+          "offset": 34622,
+          "remove_utf8": "                inverse(&source, source_row, &physical, mode).is_err(),\n",
+          "insert_utf8": "                inverse(&source, source_row, &logical, mode).is_err(),\n"
+        },
+        {
+          "offset": 35731,
+          "remove_utf8": "                inverse(&source, &bad, &physical, 0o644).is_err(),\n",
+          "insert_utf8": "                inverse(&source, &bad, &logical, 0o644).is_err(),\n"
+        },
+        {
+          "offset": 36161,
+          "remove_utf8": "                inverse(&source, &reordered, &physical, 0o644).is_err(),\n",
+          "insert_utf8": "                inverse(&source, &reordered, &logical, 0o644).is_err(),\n"
+        },
+        {
+          "offset": 36450,
+          "remove_utf8": "                inverse(&source, &duplicate, &physical, 0o644).is_err(),\n",
+          "insert_utf8": "                inverse(&source, &duplicate, &logical, 0o644).is_err(),\n"
+        },
+        {
+          "offset": 37388,
+          "remove_utf8": "        let (physical, predecessor) = w07_main_current_frame(root, path)?;\n",
+          "insert_utf8": "        let (physical, _logical, predecessor) = w07_main_current_frame(root, path)?;\n"
+        },
+        {
+          "offset": 37705,
+          "remove_utf8": "    let physical = regular(root, path, current_source_size(&pin))?;\n    need(physical == supplied, \"supplied bytes are physical current\")?;\n    let logical = logical_material(path, &physical, 0o644)?;\n    let prior = inverse(&pin, row(&doc, path)?, logical.as_ref(), 0o644)?;\n",
+          "insert_utf8": "    let logical = if path == ISSUE903_JOINT_SOURCE {\n        let (physical, mode) = bounded_source_reader::bounded_read(root, path, LIMIT)?;\n        need(physical == supplied, \"supplied bytes are physical current\")?;\n        issue903_config_successor::prior(root, path, &physical, mode)?\n    } else {\n        let physical = regular(root, path, current_source_size(&pin))?;\n        need(physical == supplied, \"supplied bytes are physical current\")?;\n        logical_material(path, &physical, 0o644)?.into_owned()\n    };\n    let prior = inverse(&pin, row(&doc, path)?, &logical, 0o644)?;\n"
+        },
+        {
+          "offset": 38209,
           "remove_utf8": "",
-          "insert_utf8": ", Vec<u8>"
+          "insert_utf8": "    issue903_config_successor::controls(root)?;\n"
         },
         {
-          "offset": 31334,
+          "offset": 38723,
           "remove_utf8": "",
-          "insert_utf8": "("
-        },
-        {
-          "offset": 31342,
-          "remove_utf8": "",
-          "insert_utf8": ", logical) = if path == ISSUE903_NATIVE_SOURCE {\n        let (physical, mode) = bounded_source_reader::bounded_read(root, path, LIMIT)?;\n        let logical = issue903_config_successor::prior(root, path, &physical, mode)?;\n        (physical, logical)\n    } else {\n        let physical"
-        },
-        {
-          "offset": 31393,
-          "remove_utf8": "let prior = inverse(&source, source_row, &",
-          "insert_utf8": "    ("
-        },
-        {
-          "offset": 31439,
-          "remove_utf8": "",
-          "insert_utf8": "ical.clone(), physical)\n    };\n    let prior = inverse(&source, source_row, &log"
-        },
-        {
-          "offset": 31616,
-          "remove_utf8": "phys",
-          "insert_utf8": "log"
-        },
-        {
-          "offset": 32355,
-          "remove_utf8": "",
-          "insert_utf8": "ical, log"
-        },
-        {
-          "offset": 32965,
-          "remove_utf8": "",
-          "insert_utf8": "logical, "
-        },
-        {
-          "offset": 33080,
-          "remove_utf8": "phys",
-          "insert_utf8": "log"
-        },
-        {
-          "offset": 33518,
-          "remove_utf8": "phys",
-          "insert_utf8": "log"
-        },
-        {
-          "offset": 34621,
-          "remove_utf8": "phys",
-          "insert_utf8": "log"
-        },
-        {
-          "offset": 35057,
-          "remove_utf8": "phys",
-          "insert_utf8": "log"
-        },
-        {
-          "offset": 35346,
-          "remove_utf8": "phys",
-          "insert_utf8": "log"
-        },
-        {
-          "offset": 36261,
-          "remove_utf8": "",
-          "insert_utf8": "_logical, "
-        },
-        {
-          "offset": 36563,
-          "remove_utf8": "",
-          "insert_utf8": "logical = if path == ISSUE903_JOINT_SOURCE {\n        let ("
-        },
-        {
-          "offset": 36571,
-          "remove_utf8": " = regular",
-          "insert_utf8": ", mode) = bounded_source_reader::bounded_read"
-        },
-        {
-          "offset": 36594,
-          "remove_utf8": "pin.current_",
-          "insert_utf8": "LIMIT)?;\n        need(physical == supplied, \"supplied "
-        },
-        {
-          "offset": 36611,
-          "remove_utf8": "",
-          "insert_utf8": " are physical current\""
-        },
-        {
-          "offset": 36619,
-          "remove_utf8": "need(",
-          "insert_utf8": "    issue903_config_successor::prior(root, path, &"
-        },
-        {
-          "offset": 36632,
-          "remove_utf8": " == supplied, \"supplied ",
-          "insert_utf8": ", mode)?\n    } else {\n        let physical = regular(root, path, pin.current_"
-        },
-        {
-          "offset": 36661,
-          "remove_utf8": " are ",
-          "insert_utf8": ")?;\n        need("
-        },
-        {
-          "offset": 36675,
-          "remove_utf8": "",
-          "insert_utf8": "== supplied, \"supplied bytes are physical "
-        },
-        {
-          "offset": 36691,
-          "remove_utf8": "let prior = inverse(&pin, row(&doc, path)?, &",
-          "insert_utf8": "    "
-        },
-        {
-          "offset": 36740,
-          "remove_utf8": "",
-          "insert_utf8": "ical\n    };\n    let prior = inverse(&pin, row(&doc, path)?, &log"
-        },
-        {
-          "offset": 36987,
-          "remove_utf8": "",
-          "insert_utf8": "issue903_config_successor::controls(root)?;\n    "
-        },
-        {
-          "offset": 37512,
-          "remove_utf8": "{\n            let p",
-          "insert_utf8": "if pin.pat"
-        },
-        {
-          "offset": 37532,
-          "remove_utf8": "ysical = regular(root, pin.path, pin.current_bytes)?;\n            (physical.clone(), physical)\n        };\n        let prior_bytes = prior(root, pin.path, &physical)?;\n        let source_row = row(&doc, pin.path)?;\n        need(\n            inverse(pin, source_row, &logical, 0o644)? == prior_bytes,\n            \"pure positive precedes controls\",\n        )?;\n        need(\n            frame(pin.path, &logical, 0o644)? == prior_bytes,\n            \"same pure frame as full custody\",\n        )?;\n        need(\n            prior(root, pin.path, &prior_bytes).is_err()\n                && frame(pin.path, &prior_bytes, 0o644).is_err(),\n            \"stale parent is not current\",\n        )?;\n        if pin.path == W07",
-          "insert_utf8": " == ISSUE903_JOINT"
-        },
-        {
-          "offset": 38265,
-          "remove_utf8": "",
-          "insert_utf8": "let (physical, mode) = bounded_source_reader::bounded_read(root, pin.path, LIMIT)?;\n            let logical = issue903_config_successor::prior(root, pin.path, &physical, mode)?;\n            (physical, logical)\n        } else {\n            let physical = regular(root, pin.path, pin.current_bytes)?;\n            (physical.clone(), physical)\n        };\n        let prior_bytes = prior(root, pin.path, &physical)?;\n        let source_row = row(&doc, pin.path)?;\n        need(\n            inverse(pin, source_row, &logical, 0o644)? == prior_bytes,\n            \"pure positive precedes controls\",\n        )?;\n        need(\n            frame(pin.path, &logical, 0o644)? == prior_bytes,\n            \"same pure frame as full custody\",\n        )?;\n        need(\n            prior(root, pin.path, &prior_bytes).is_err()\n                && frame(pin.path, &prior_bytes, 0o644).is_err(),\n            \"stale parent is not current\",\n        )?;\n        if pin.path == W07_SOURCE {\n            "
+          "insert_utf8": "        } else if pin.path == ISSUE903_JOINT_SOURCE {\n            let (physical, mode) = bounded_source_reader::bounded_read(root, pin.path, LIMIT)?;\n            let logical = issue903_config_successor::prior(root, pin.path, &physical, mode)?;\n            (physical, logical)\n"
         }
       ]
     },
     {
       "path": "crates/ssx-infra/Cargo.toml",
       "prior": {
-        "bytes": 1254,
-        "sha256": "349c3dc8db94a995d7eef27acbe8b5eeccb9f6cff1ccdd3e8308f638d301f51e",
+        "bytes": 1258,
+        "sha256": "747687877299958c4565c219166a3a25286ef61fb4daca1391cee517686cd691",
         "mode": "0644",
-        "git_blob": "ef6d4a2e8b1fde715c80e0d0c8c37ee0456ed4d9"
+        "git_blob": "0c5b78991def2df53c8904edbe2b6952332cb2d8"
       },
       "current": {
-        "bytes": 1335,
-        "sha256": "02140eac8c7de2bff43d7cbc6638321301008266661c3e4f1549237664f94d4b",
+        "bytes": 1339,
+        "sha256": "d5b77bf856254de3b4599c2d42f7a96f7a35919e7dea2bc0ab1b51205106afe6",
         "mode": "0644"
       },
       "edits": [
         {
-          "offset": 1254,
+          "offset": 1258,
           "remove_utf8": "",
           "insert_utf8": "\n[target.'cfg(unix)'.dev-dependencies.nix]\nversion = \"=0.31.3\"\nfeatures = [\"fs\"]\n"
         }
@@ -517,21 +302,21 @@
     {
       "path": "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
       "prior": {
-        "bytes": 87891,
-        "sha256": "8e2347c9e17f87e1d1145c9ea247e0a30d6d5a502b15a545a7339e012686a3ac",
+        "bytes": 88343,
+        "sha256": "9a23c8fc4cab95b460b5389eea2f030fa04687d119895d5479cfb6d8e89c49ee",
         "mode": "0644",
-        "git_blob": "9471d04e831ccc01fe4a55194f42c3cdc9b56ad9"
+        "git_blob": "f6678c5a28bb2a21cfece17a5e8b45d5fa75c41e"
       },
       "current": {
-        "bytes": 90405,
-        "sha256": "8a5a7636e1775a2ac8d40b87fc147bc862596d35e293f566ed11c8057f5bbd38",
+        "bytes": 91016,
+        "sha256": "9c19bf9db372eb79be08cacffe8c426e37f6eb43f7b6c3c2260cad0841c234c2",
         "mode": "0644"
       },
       "edits": [
         {
           "offset": 21634,
           "remove_utf8": "",
-          "insert_utf8": "const ISSUE903_INFRA_MANIFEST: &str = \"crates/ssx-infra/Cargo.toml\";\nconst ISSUE903_INFRA_MANIFEST_PRIOR_SHA: &str =\n    \"349c3dc8db94a995d7eef27acbe8b5eeccb9f6cff1ccdd3e8308f638d301f51e\";\nfn issue903_infra_manifest_prior(\n    root: &Path,\n    row: &Value,\n    physical: &[u8],\n    opened_mode: u32,\n) -> Result<Vec<u8>, String> {\n    need(\n        row[\"path\"] == ISSUE903_INFRA_MANIFEST\n            && row[\"sha256\"] == ISSUE903_INFRA_MANIFEST_PRIOR_SHA\n            && row[\"bytes\"] == 1254\n            && row[\"mode\"] == \"0644\",\n        \"exact sealed A06 ssx-infra manifest endpoint\",\n    )?;\n    let prior = w07_t02_joint::cli_source_custody::project_issue903_config(\n        root,\n        ISSUE903_INFRA_MANIFEST,\n        physical,\n        opened_mode,\n    )?;\n    material(row, &prior, \"0644\")?;\n    Ok(prior)\n}\n"
+          "insert_utf8": "const ISSUE903_INFRA_MANIFEST: &str = \"crates/ssx-infra/Cargo.toml\";\nconst ISSUE903_INFRA_MANIFEST_PRIOR_SHA: &str =\n    \"349c3dc8db94a995d7eef27acbe8b5eeccb9f6cff1ccdd3e8308f638d301f51e\";\nfn issue903_infra_manifest_prior(\n    root: &Path,\n    row: &Value,\n    physical: &[u8],\n    opened_mode: u32,\n) -> Result<Vec<u8>, String> {\n    need(\n        row[\"path\"] == ISSUE903_INFRA_MANIFEST\n            && row[\"sha256\"] == ISSUE903_INFRA_MANIFEST_PRIOR_SHA\n            && row[\"bytes\"] == 1254\n            && row[\"mode\"] == \"0644\",\n        \"exact sealed A06 ssx-infra manifest endpoint\",\n    )?;\n    let remediation = w07_t02_joint::cli_source_custody::project_issue903_config(\n        root,\n        ISSUE903_INFRA_MANIFEST,\n        physical,\n        opened_mode,\n    )?;\n    let prior = w07_t02_joint::cli_source_custody::optional_chrono_prior(\n        ISSUE903_INFRA_MANIFEST,\n        &remediation,\n        \"0644\",\n    )?;\n    material(row, &prior, \"0644\")?;\n    Ok(prior)\n}\n"
         },
         {
           "offset": 21981,
@@ -539,7 +324,7 @@
           "insert_utf8": "    }\n    if text(row, \"path\")? == ISSUE903_INFRA_MANIFEST\n        && row[\"sha256\"] == ISSUE903_INFRA_MANIFEST_PRIOR_SHA\n    {\n        let (physical, opened_mode) = w07_t02_joint::cli_source_custody::bounded_read(\n            root,\n            ISSUE903_INFRA_MANIFEST,\n            1_048_576,\n        )?;\n        return issue903_infra_manifest_prior(root, row, &physical, opened_mode);\n"
         },
         {
-          "offset": 49015,
+          "offset": 49275,
           "remove_utf8": "",
           "insert_utf8": "    let manifest_row = source(&doc, ISSUE903_INFRA_MANIFEST)?;\n    let (manifest_physical, manifest_mode) =\n        w07_t02_joint::cli_source_custody::bounded_read(root, ISSUE903_INFRA_MANIFEST, 1_048_576)?;\n    let manifest_prior = issue903_infra_manifest_prior(\n        root,\n        &manifest_row[\"current\"],\n        &manifest_physical,\n        manifest_mode,\n    )?;\n    need(\n        manifest_prior.len() == 1254\n            && digest(&manifest_prior) == ISSUE903_INFRA_MANIFEST_PRIOR_SHA,\n        \"A06/A13 bounded manifest projection positive\",\n    )?;\n    need(\n        issue903_infra_manifest_prior(root, &manifest_row[\"current\"], &manifest_physical, 0o600)\n            .is_err(),\n        \"A06/A13 bounded manifest wrong opened mode rejected\",\n    )?;\n    let mut changed_manifest = manifest_physical.clone();\n    changed_manifest[0] ^= 1;\n    need(\n        issue903_infra_manifest_prior(\n            root,\n            &manifest_row[\"current\"],\n            &changed_manifest,\n            manifest_mode,\n        )\n        .is_err(),\n        \"A06/A13 bounded manifest changed physical bytes rejected\",\n    )?;\n    let (_, routed_manifest) = verify_transition(root, manifest_row)?;\n    need(\n        routed_manifest == manifest_prior,\n        \"A06/A13 manifest transition consumes bounded projection\",\n    )?;\n"
         }

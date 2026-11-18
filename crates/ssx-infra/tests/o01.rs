@@ -138,7 +138,7 @@ async fn retained_audit_and_stats_use_native_private_valkey() {
     telemetry.shutdown().await;
     assert_eq!(telemetry.delivery.failed.load(Ordering::Relaxed), 0);
     assert_eq!(telemetry.delivery.written.load(Ordering::Relaxed), 2);
-    let day = chrono::Local::now().format("%Y-%m-%d");
+    let day = jiff::Zoned::now().date();
     let mut connection = server.connection();
     let key = format!("query_audit:{day}");
     let rows: redis::streams::StreamRangeReply = redis::cmd("XRANGE")
@@ -180,10 +180,7 @@ async fn redacted_and_disabled_auditing_are_distinct() {
     telemetry.shutdown().await;
     let mut conn = server.connection();
     let rows: redis::streams::StreamRangeReply = redis::cmd("XRANGE")
-        .arg(format!(
-            "query_audit:{}",
-            chrono::Local::now().format("%Y-%m-%d")
-        ))
+        .arg(format!("query_audit:{}", jiff::Zoned::now().date()))
         .arg("-")
         .arg("+")
         .query(&mut conn)
@@ -398,10 +395,7 @@ async fn shared_search_audit_uses_unsliced_outcomes_when_status_is_excluded() {
     telemetry.shutdown().await;
     let mut conn = server.connection();
     let rows: redis::streams::StreamRangeReply = redis::cmd("XRANGE")
-        .arg(format!(
-            "query_audit:{}",
-            chrono::Local::now().format("%Y-%m-%d")
-        ))
+        .arg(format!("query_audit:{}", jiff::Zoned::now().date()))
         .arg("-")
         .arg("+")
         .query(&mut conn)
@@ -420,7 +414,7 @@ async fn shared_search_audit_uses_unsliced_outcomes_when_status_is_excluded() {
     let score: i64 = redis::cmd("HGET")
         .arg(format!(
             "engine_stats:fixture:{}",
-            chrono::Local::now().format("%Y-%m-%d")
+            jiff::Zoned::now().date()
         ))
         .arg("total_score")
         .query(&mut conn)
@@ -474,7 +468,7 @@ async fn actual_source_audit_and_stat_pipeline_values_round_trip() {
     );
     telemetry.shutdown().await;
     let mut conn = server.connection();
-    let day = chrono::Local::now().format("%Y-%m-%d");
+    let day = jiff::Zoned::now().date();
     let rows: redis::streams::StreamRangeReply = redis::cmd("XRANGE")
         .arg(format!("query_audit:{day}"))
         .arg("-")
@@ -642,7 +636,7 @@ fn passive_health_keeps_unknown_stale_and_synthetic_measurements_distinct() {
 async fn approximate_audit_stream_cap_and_ttl_are_applied_to_existing_stream() {
     let server = Server::start();
     let mut connection = server.connection();
-    let key = format!("query_audit:{}", chrono::Local::now().format("%Y-%m-%d"));
+    let key = format!("query_audit:{}", jiff::Zoned::now().date());
     let mut pipe = redis::pipe();
     for _ in 0..10200 {
         pipe.cmd("XADD")
@@ -761,10 +755,7 @@ async fn explicit_raw_retention_and_absent_store_are_qualified() {
     telemetry.shutdown().await;
     let mut conn = server.connection();
     let rows: redis::streams::StreamRangeReply = redis::cmd("XRANGE")
-        .arg(format!(
-            "query_audit:{}",
-            chrono::Local::now().format("%Y-%m-%d")
-        ))
+        .arg(format!("query_audit:{}", jiff::Zoned::now().date()))
         .arg("-")
         .arg("+")
         .query(&mut conn)
@@ -896,7 +887,7 @@ async fn six_original_stats_statuses_match_actual_private_backend_fields_and_ret
         assert_eq!(telemetry.delivery.written.load(Ordering::Relaxed), 1);
         assert_eq!(telemetry.delivery.failed.load(Ordering::Relaxed), 0);
         assert_eq!(telemetry.delivery.dropped.load(Ordering::Relaxed), 0);
-        let day = chrono::Local::now().format("%Y-%m-%d");
+        let day = jiff::Zoned::now().date();
         let key = format!("engine_stats:fixture:{day}");
         let actual: BTreeMap<String, i64> = redis::cmd("HGETALL")
             .arg(&key)
@@ -1023,7 +1014,7 @@ async fn original_object_and_dictionary_audit_fields_share_exact_native_typed_pr
         assert_eq!(telemetry.delivery.written.load(Ordering::Relaxed), 1);
         assert_eq!(telemetry.delivery.failed.load(Ordering::Relaxed), 0);
         assert_eq!(telemetry.delivery.dropped.load(Ordering::Relaxed), 0);
-        let day = chrono::Local::now().format("%Y-%m-%d");
+        let day = jiff::Zoned::now().date();
         let key = format!("query_audit:{day}");
         let rows: redis::streams::StreamRangeReply = redis::cmd("XRANGE")
             .arg(&key)
@@ -1036,13 +1027,11 @@ async fn original_object_and_dictionary_audit_fields_share_exact_native_typed_pr
         for (field, value) in &expected {
             let actual = rows.ids[0].get::<String>(field).unwrap();
             if field == "timestamp" {
-                let at = chrono::DateTime::parse_from_rfc3339(&actual).unwrap();
-                assert!(at.timestamp_millis() <= chrono::Utc::now().timestamp_millis());
+                let at = actual.parse::<jiff::Timestamp>().unwrap();
+                assert!(at.as_millisecond() <= jiff::Timestamp::now().as_millisecond());
                 assert!(
-                    chrono::Utc::now()
-                        .signed_duration_since(at)
-                        .num_milliseconds()
-                        <= started.elapsed().as_millis() as i64 + 1
+                    jiff::Timestamp::now().duration_since(at).as_millis()
+                        <= started.elapsed().as_millis() as i128 + 1
                 );
             } else {
                 assert_eq!(actual, *value, "{id}: {field}");
@@ -1132,7 +1121,7 @@ async fn original_thirteen_audit_latencies_match_except_reviewed_duration_signed
         telemetry.shutdown().await;
         assert_eq!(telemetry.delivery.written.load(Ordering::Relaxed), 1);
         assert_eq!(telemetry.delivery.failed.load(Ordering::Relaxed), 0);
-        let day = chrono::Local::now().format("%Y-%m-%d");
+        let day = jiff::Zoned::now().date();
         let key = format!("query_audit:{day}");
         let rows: redis::streams::StreamRangeReply = redis::cmd("XRANGE")
             .arg(&key)
@@ -1381,12 +1370,12 @@ async fn original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joine
     assert_eq!(telemetry.delivery.written.load(Ordering::Relaxed), 1);
     assert_eq!(telemetry.delivery.failed.load(Ordering::Relaxed), 0);
     assert_eq!(telemetry.delivery.dropped.load(Ordering::Relaxed), 0);
-    let day = chrono::Local::now().format("%Y-%m-%d");
+    let day = jiff::Zoned::now().date();
     let key = format!("query_audit:{day}");
     let parts = key.split(':').collect::<Vec<_>>();
     assert_eq!(parts.len(), 2);
     assert_eq!(parts[0], "query_audit");
-    assert!(chrono::NaiveDate::parse_from_str(parts[1], "%Y-%m-%d").is_ok());
+    assert!(jiff::civil::Date::strptime("%Y-%m-%d", parts[1]).is_ok());
     let date_parts = parts[1].split('-').map(str::len).collect::<Vec<_>>();
     assert_eq!(date_parts, vec![4, 2, 2]);
     let rows: redis::streams::StreamRangeReply = redis::cmd("XRANGE")
@@ -1410,7 +1399,7 @@ async fn original_audit_and_stats_pipeline_assertions_use_exact_inputs_and_joine
         assert_eq!(rows.ids[0].get::<String>(field).unwrap(), value);
     }
     let timestamp = rows.ids[0].get::<String>("timestamp").unwrap();
-    assert!(chrono::DateTime::parse_from_rfc3339(&timestamp).is_ok());
+    assert!(timestamp.parse::<jiff::Timestamp>().is_ok());
     let ttl: i64 = redis::cmd("TTL").arg(&key).query(&mut connection).unwrap();
     assert!(
         ttl > 0 && ttl <= 7_776_000 && 7_776_000 - ttl <= started.elapsed().as_secs() as i64 + 1

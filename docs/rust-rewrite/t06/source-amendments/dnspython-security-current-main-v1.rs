@@ -28,6 +28,17 @@ mod issue903_config_successor;
 )]
 #[path = "../../o02/upstream-contracts-source-successor-v1.rs"]
 mod o02_upstream_outer;
+#[path = "../../t08a/rmcp-source-afterimage.rs"]
+#[allow(
+    clippy::duplicate_mod,
+    reason = "Independent proof roots share the same stateless inverse"
+)]
+mod rmcp_source_afterimage;
+const RMCP_T03_PATH: &str = "docs/rust-rewrite/t03/source-successor-v1.rs";
+const RMCP_T03_BYTES: usize = 42326;
+const RMCP_T03_SOURCE: &str = include_str!("../../t08a/rmcp-t03-reader-afterimage.json");
+const RMCP_T03_SHA: &str = "02fd7cfb61e2aeb3683c4bc4c9738aa493ae9159babb03589cd262ca8b4575ea";
+
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{
@@ -109,6 +120,8 @@ fn physical_operand(
             o02_upstream_outer::gates_current_at(physical_root, proof_root)?,
             0o644,
         ))
+    } else if path == RMCP_T03_PATH {
+        Ok((regular(physical_root, path, RMCP_T03_BYTES)?, 0o644))
     } else {
         Ok((regular(physical_root, path, expected_bytes)?, 0o644))
     }
@@ -123,6 +136,11 @@ fn logical_operand(
         issue903_config_successor::prior(proof_root, path, physical, opened_mode)?
     } else {
         physical.to_vec()
+    };
+    let projected = if path == RMCP_T03_PATH {
+        rmcp_source_afterimage::prior(RMCP_T03_SOURCE, RMCP_T03_SHA, path, &projected, 0o644)?
+    } else {
+        projected
     };
     let mut accepted = if dependency_audit_outer::owns(path) {
         dependency_audit_outer::admit_opened_mode(proof_root, path, opened_mode)?;
@@ -412,6 +430,11 @@ pub(crate) fn frame(path: &str, physical: &[u8], mode: u32) -> Result<Vec<u8>> {
         issue903_config_successor::project_current(path, physical)?
     } else {
         physical.to_vec()
+    };
+    let projected = if path == RMCP_T03_PATH {
+        rmcp_source_afterimage::prior(RMCP_T03_SOURCE, RMCP_T03_SHA, path, &projected, 0o644)?
+    } else {
+        projected
     };
     let mut logical = if dependency_audit_outer::owns(path) {
         dependency_audit_outer::frame(path, &projected, mode)?

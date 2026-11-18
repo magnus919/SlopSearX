@@ -28,6 +28,16 @@ mod issue903_config_successor;
 )]
 #[path = "../../o02/python-dependency-audit-gates-reader-v1.rs"]
 mod o02_upstream_outer;
+#[path = "../../t08a/rmcp-source-afterimage.rs"]
+#[allow(
+    clippy::duplicate_mod,
+    reason = "Independent proof roots share the same stateless inverse"
+)]
+mod rmcp_source_afterimage;
+const RMCP_T03_PATH: &str = "docs/rust-rewrite/t03/source-successor-v1.rs";
+const RMCP_T03_BYTES: usize = 42326;
+const RMCP_T03_SOURCE: &str = include_str!("../../t08a/rmcp-t03-reader-afterimage.json");
+const RMCP_T03_SHA: &str = "02fd7cfb61e2aeb3683c4bc4c9738aa493ae9159babb03589cd262ca8b4575ea";
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{
@@ -109,6 +119,8 @@ fn physical_operand(
             o02_upstream_outer::gates_current_at(physical_root, proof_root)?,
             0o644,
         ))
+    } else if path == RMCP_T03_PATH {
+        Ok((regular(physical_root, path, RMCP_T03_BYTES)?, 0o644))
     } else {
         Ok((regular(physical_root, path, expected_bytes)?, 0o644))
     }
@@ -123,6 +135,11 @@ fn logical_operand(
         issue903_config_successor::prior(proof_root, path, physical, opened_mode)?
     } else {
         physical.to_vec()
+    };
+    let projected = if path == RMCP_T03_PATH {
+        rmcp_source_afterimage::prior(RMCP_T03_SOURCE, RMCP_T03_SHA, path, &projected, 0o644)?
+    } else {
+        projected
     };
     let accepted = if path == o02_upstream_outer::GATES_PATH {
         o02_upstream_outer::gates_frame(&projected, 0o644)?
@@ -417,6 +434,11 @@ pub(crate) fn frame(path: &str, physical: &[u8], mode: u32) -> Result<Vec<u8>> {
         )
     } else {
         (physical.to_vec(), mode)
+    };
+    let projected = if path == RMCP_T03_PATH {
+        rmcp_source_afterimage::prior(RMCP_T03_SOURCE, RMCP_T03_SHA, path, &projected, 0o644)?
+    } else {
+        projected
     };
     let logical = if path == o02_upstream_outer::GATES_PATH {
         o02_upstream_outer::gates_frame(&projected, mode)?

@@ -3,9 +3,9 @@ use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use std::{path::Path, process::Command};
 type Result<T> = std::result::Result<T, String>;
-const BASE: &str = "cab037909ca261d3d7157a5cab5628f1b6a8cf83";
+const BASE: &str = "7d904b9d46f4c4ba8c59dc1ba09828f9e7ea204d";
 const CAPSULE: &[u8] = include_bytes!("issue903-config-edge-successor-v1.json");
-const CAPSULE_SHA: &str = "3eaf5c0d03d9eb24310fb433392dd8bafb3bef90a6b32f9874a60c28e6981e29";
+const CAPSULE_SHA: &str = "d85f8fc1142214630d9f4cdb5dbdefc14447a464462590e1647684f07500cda5";
 const MAX_PHYSICAL_BYTES: u64 = 1_048_576;
 
 #[derive(Deserialize)]
@@ -290,15 +290,22 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
     }
     need(
         capsule.rows[0].edits.len() == 3
-            && capsule.rows[0].edits[0].insert_utf8 == "\",\n \"serde"
-            && capsule.rows[0].edits[1].offset == 67332
-            && capsule.rows[0].edits[1].insert_utf8 == "nix\",\n \""
-            && capsule.rows[0].edits[2].offset == 67878
-            && capsule.rows[0].edits[2].insert_utf8 == "nix\",\n \""
+            && capsule.rows[0].edits[0].offset == 67341
+            && capsule.rows[0].edits[0].remove_utf8 == ""
+            && capsule.rows[0].edits[0].insert_utf8 == " \"serde\",\n"
+            && capsule.rows[0].edits[1].offset == 68937
+            && capsule.rows[0].edits[1].remove_utf8 == ""
+            && capsule.rows[0].edits[1].insert_utf8 == " \"nix\",\n"
+            && capsule.rows[0].edits[2].offset == 69483
+            && capsule.rows[0].edits[2].remove_utf8 == ""
+            && capsule.rows[0].edits[2].insert_utf8 == " \"nix\",\n"
             && capsule.rows[1].edits.len() == 2
-            && capsule.rows[1].edits[0].insert_utf8 == "\nserde.workspace = true"
-            && capsule.rows[1].edits[1].remove_utf8 == "]\n"
-            && capsule.rows[1].edits[1].insert_utf8 == ", \"fs\"]\n"
+            && capsule.rows[1].edits[0].offset == 205
+            && capsule.rows[1].edits[0].remove_utf8 == ""
+            && capsule.rows[1].edits[0].insert_utf8 == "serde.workspace = true\n"
+            && capsule.rows[1].edits[1].offset == 616
+            && capsule.rows[1].edits[1].remove_utf8 == "features = [\"signal\"]\n"
+            && capsule.rows[1].edits[1].insert_utf8 == "features = [\"signal\", \"fs\"]\n"
             && capsule.rows[2].edits.len() == 1
             && capsule.rows[2].edits[0].remove_utf8.is_empty()
             && capsule.rows[2].edits[0].insert_utf8

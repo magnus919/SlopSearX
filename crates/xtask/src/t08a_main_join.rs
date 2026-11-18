@@ -448,6 +448,9 @@ fn accepted_current(root: &Path, path: &str, physical: &[u8], opened_mode: u32) 
     };
     let upstream = if path == "crates/xtask/src/main.rs" {
         super::upstream_contracts_successor::frame(path, &issue903, 0o644)?
+    } else if path == "docs/rust-rewrite/a06/source-amendments/shared-successor.rs" {
+        super::rmcp_historical_operand(path, &issue903, "0644")?
+            .ok_or("RMCP shared source reader row absent")?
     } else {
         issue903
     };

@@ -24,6 +24,17 @@ mod issue903_config_successor;
 const ISSUE903_JOINT_SOURCE: &str = "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs";
 const ISSUE903_NATIVE_SOURCE: &str =
     "docs/rust-rewrite/a06/source-amendments/native-search-reader.rs";
+#[path = "../t08a/rmcp-source-afterimage.rs"]
+#[allow(
+    clippy::duplicate_mod,
+    reason = "Independent proof roots share the same stateless inverse"
+)]
+mod rmcp_source_afterimage;
+const RMCP_SEARCH_PATH: &str = "crates/ssx-infra/src/search.rs";
+const RMCP_SEARCH_BYTES: usize = 91653;
+const RMCP_SEARCH_SOURCE: &str = include_str!("../t08a/rmcp-search-clock-afterimage.json");
+const RMCP_SEARCH_SHA: &str = "41ac09394815a14b008e9590299317e6a73ba552a1b927bea27190e0886c894a";
+
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{
@@ -327,7 +338,32 @@ fn inverse(pin: &Pin<'_>, row: &Value, actual: &[u8], mode: u32) -> Result<Vec<u
 pub(crate) fn frame(path: &str, physical: &[u8], mode: u32) -> Result<Vec<u8>> {
     let doc = decode(CAPSULE)?;
     let pin = pin(&doc, path)?;
-    inverse(&pin, row(&doc, path)?, physical, mode)
+    let projected = logical_material(path, physical, mode)?;
+    inverse(&pin, row(&doc, path)?, projected.as_ref(), mode)
+}
+fn logical_material<'a>(
+    path: &str,
+    physical: &'a [u8],
+    mode: u32,
+) -> Result<std::borrow::Cow<'a, [u8]>> {
+    if path == RMCP_SEARCH_PATH {
+        let old = rmcp_source_afterimage::prior(
+            RMCP_SEARCH_SOURCE,
+            RMCP_SEARCH_SHA,
+            path,
+            physical,
+            mode,
+        )?;
+        return Ok(std::borrow::Cow::Owned(old));
+    }
+    Ok(std::borrow::Cow::Borrowed(physical))
+}
+fn current_source_size(pin: &Pin<'_>) -> usize {
+    if pin.path == RMCP_SEARCH_PATH {
+        RMCP_SEARCH_BYTES
+    } else {
+        pin.current_bytes
+    }
 }
 fn confined(root: &Path, path: &str) -> Result<std::path::PathBuf> {
     need(!Path::new(path).is_absolute(), "relative material path")?;
@@ -972,9 +1008,9 @@ pub(crate) fn prior(root: &Path, path: &str, supplied: &[u8]) -> Result<Vec<u8>>
         need(physical == supplied, "supplied bytes are physical current")?;
         issue903_config_successor::prior(root, path, &physical, mode)?
     } else {
-        let physical = regular(root, path, pin.current_bytes)?;
+        let physical = regular(root, path, current_source_size(&pin))?;
         need(physical == supplied, "supplied bytes are physical current")?;
-        physical
+        logical_material(path, &physical, 0o644)?.into_owned()
     };
     let prior = inverse(&pin, row(&doc, path)?, &logical, 0o644)?;
     git_prior(root, &pin, &prior)?;
@@ -1003,8 +1039,9 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
             let logical = issue903_config_successor::prior(root, pin.path, &physical, mode)?;
             (physical, logical)
         } else {
-            let physical = regular(root, pin.path, pin.current_bytes)?;
-            (physical.clone(), physical)
+            let physical = regular(root, pin.path, current_source_size(pin))?;
+            let logical = logical_material(pin.path, &physical, 0o644)?.into_owned();
+            (physical, logical)
         };
         let prior_bytes = prior(root, pin.path, &physical)?;
         let source_row = row(&doc, pin.path)?;
@@ -1013,7 +1050,15 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
             "pure positive precedes controls",
         )?;
         need(
-            frame(pin.path, &logical, 0o644)? == prior_bytes,
+            frame(
+                pin.path,
+                if pin.path == RMCP_SEARCH_PATH {
+                    &physical
+                } else {
+                    &logical
+                },
+                0o644,
+            )? == prior_bytes,
             "same pure frame as full custody",
         )?;
         need(
@@ -1021,6 +1066,13 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
                 && frame(pin.path, &prior_bytes, 0o644).is_err(),
             "stale parent is not current",
         )?;
+        if pin.path == RMCP_SEARCH_PATH {
+            need(
+                frame(pin.path, &logical, 0o644).is_err()
+                    && prior(root, pin.path, &logical).is_err(),
+                "pre-RMCP search bytes rejected as physical current",
+            )?;
+        }
         if pin.path == W07_SOURCE {
             need(
                 frame(pin.path, &physical, 0o644).is_err()

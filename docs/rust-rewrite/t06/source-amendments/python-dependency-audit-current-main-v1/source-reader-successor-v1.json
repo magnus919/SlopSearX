@@ -4,8 +4,8 @@
   "row": {
     "path": "docs/rust-rewrite/t06/source-amendments/python-dependency-audit-source-reader-v1.rs",
     "current": {
-      "bytes": 34170,
-      "sha256": "e7ea56cf22aaf8cb15ddcced504e4274de40eab3a0ccf686c5813c52df55e9c1",
+      "bytes": 35121,
+      "sha256": "198a3670525be6da45c4630f8e2367d2f9cb9559b95cc051006487d364ce0244",
       "mode": "0644"
     },
     "prior": {
@@ -21,9 +21,14 @@
         "insert_utf8": "#[allow(\n    dead_code,\n    clippy::duplicate_mod,\n    reason = \"T08 bounded source reader shared with independent custody roots\"\n)]\n#[path = \"../../t08a/bounded_source_reader.rs\"]\nmod bounded_source_reader;\n"
       },
       {
-        "at": 399,
+        "at": 450,
         "remove_utf8": "",
-        "insert_utf8": "#[allow(\n    dead_code,\n    clippy::duplicate_mod,\n    reason = \"Exact T08 source layer precedes unchanged T06 historical inverses\"\n)]\n#[path = \"../../t08a/issue903-config-edge-successor.rs\"]\nmod issue903_config_successor;\n"
+        "insert_utf8": "    reason = \"Exact T08 source layer precedes unchanged T06 historical inverses\"\n)]\n#[path = \"../../t08a/issue903-config-edge-successor.rs\"]\nmod issue903_config_successor;\n#[allow(\n    dead_code,\n    clippy::duplicate_mod,\n"
+      },
+      {
+        "at": 664,
+        "remove_utf8": "",
+        "insert_utf8": "#[path = \"../../t08a/rmcp-source-afterimage.rs\"]\n#[allow(\n    clippy::duplicate_mod,\n    reason = \"Independent proof roots share the same stateless inverse\"\n)]\nmod rmcp_source_afterimage;\nconst RMCP_T03_PATH: &str = \"docs/rust-rewrite/t03/source-successor-v1.rs\";\nconst RMCP_T03_BYTES: usize = 42326;\nconst RMCP_T03_SOURCE: &str = include_str!(\"../../t08a/rmcp-t03-reader-afterimage.json\");\nconst RMCP_T03_SHA: &str = \"02fd7cfb61e2aeb3683c4bc4c9738aa493ae9159babb03589cd262ca8b4575ea\";\n"
       },
       {
         "at": 2741,
@@ -33,7 +38,7 @@
       {
         "at": 2937,
         "remove_utf8": "        o02_upstream_outer::gates_current_at(physical_root, proof_root)\n",
-        "insert_utf8": "        Ok((\n            o02_upstream_outer::gates_current_at(physical_root, proof_root)?,\n            0o644,\n        ))\n"
+        "insert_utf8": "        Ok((\n            o02_upstream_outer::gates_current_at(physical_root, proof_root)?,\n            0o644,\n        ))\n    } else if path == RMCP_T03_PATH {\n        Ok((regular(physical_root, path, RMCP_T03_BYTES)?, 0o644))\n"
       },
       {
         "at": 3022,
@@ -48,12 +53,12 @@
       {
         "at": 3319,
         "remove_utf8": "    if path == o02_upstream_outer::GATES_PATH {\n        o02_upstream_outer::gates_frame(physical, 0o644)\n",
-        "insert_utf8": "    let accepted = if path == o02_upstream_outer::GATES_PATH {\n        o02_upstream_outer::gates_frame(&projected, 0o644)?\n    } else if dependency_audit_outer::owns(path) {\n        dependency_audit_outer::admit_opened_mode(proof_root, path, opened_mode)?;\n        dependency_audit_outer::frame(path, &projected, 0o644)?\n"
+        "insert_utf8": "    let projected = if path == RMCP_T03_PATH {\n        rmcp_source_afterimage::prior(RMCP_T03_SOURCE, RMCP_T03_SHA, path, &projected, 0o644)?\n"
       },
       {
         "at": 3437,
         "remove_utf8": "        Ok(accepted)\n    }\n",
-        "insert_utf8": "        projected\n    };\n    Ok(accepted)\n"
+        "insert_utf8": "        projected\n    };\n    let accepted = if path == o02_upstream_outer::GATES_PATH {\n        o02_upstream_outer::gates_frame(&projected, 0o644)?\n    } else if dependency_audit_outer::owns(path) {\n        dependency_audit_outer::admit_opened_mode(proof_root, path, opened_mode)?;\n        dependency_audit_outer::frame(path, &projected, 0o644)?\n    } else {\n        projected\n    };\n    Ok(accepted)\n"
       },
       {
         "at": 3756,
@@ -68,7 +73,7 @@
       {
         "at": 13241,
         "remove_utf8": "    let logical = logical_operand(path, physical)?;\n    inverse(&pin, row(&doc, path)?, &logical, mode)\n",
-        "insert_utf8": "    let (projected, inverse_mode) = if issue903_config_successor::owns(path) {\n        (\n            issue903_config_successor::project_current(path, physical)?,\n            0o644,\n        )\n    } else {\n        (physical.to_vec(), mode)\n    };\n    let logical = if path == o02_upstream_outer::GATES_PATH {\n        o02_upstream_outer::gates_frame(&projected, mode)?\n    } else if dependency_audit_outer::owns(path) {\n        dependency_audit_outer::frame(path, &projected, 0o644)?\n    } else {\n        projected\n    };\n    inverse(&pin, row(&doc, path)?, &logical, inverse_mode)\n"
+        "insert_utf8": "    let (projected, inverse_mode) = if issue903_config_successor::owns(path) {\n        (\n            issue903_config_successor::project_current(path, physical)?,\n            0o644,\n        )\n    } else {\n        (physical.to_vec(), mode)\n    };\n    let projected = if path == RMCP_T03_PATH {\n        rmcp_source_afterimage::prior(RMCP_T03_SOURCE, RMCP_T03_SHA, path, &projected, 0o644)?\n    } else {\n        projected\n    };\n    let logical = if path == o02_upstream_outer::GATES_PATH {\n        o02_upstream_outer::gates_frame(&projected, mode)?\n    } else if dependency_audit_outer::owns(path) {\n        dependency_audit_outer::frame(path, &projected, 0o644)?\n    } else {\n        projected\n    };\n    inverse(&pin, row(&doc, path)?, &logical, inverse_mode)\n"
       },
       {
         "at": 20535,

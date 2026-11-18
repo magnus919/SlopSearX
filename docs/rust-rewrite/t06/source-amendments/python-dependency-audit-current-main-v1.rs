@@ -23,7 +23,7 @@ const CAPSULE_SHA: &str = "04bbd43240f0d0663ec4e8fd993ddf7c616aeabcfa64e04df4297
 const SOURCE_READER_OUTER: &[u8] =
     include_bytes!("python-dependency-audit-current-main-v1/source-reader-successor-v1.json");
 const SOURCE_READER_OUTER_SHA: &str =
-    "0e3c07ad517c4c7d7ced22fca61305210595c7265f77cf653263a2a0b96e9f4e";
+    "9a874473ee7a2956636fccb4abfe2141d3b5e69a6cd88cf5758b5f587c31be64";
 const BASE: &str = "6cd400c2af9ec77613caf9ecab27a7264acac79f";
 const LIMIT: u64 = 1_048_576;
 const SOURCE_READER_PATH: &str =
