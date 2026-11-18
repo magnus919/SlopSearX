@@ -1,37 +1,16 @@
 {
   "schema": "O02_IMAGE_PROMOTION_WRITE_BINDINGS_V1",
-  "baseline": "88314a23079333e185d96cdcdb973554a9500182",
-  "prior_sha256": "c74f0d3b3e6a52015d867eeeb9a0dd6fa70b04739e237fc60d4e01734ac2b844",
-  "current_sha256": "a7464843cb3ff07eeaf1b9b696fbe340e4de3932be6b330a7296432c0bd000e6",
+  "baseline": "145f6da8fadd2deb7de5e1cfa9ee48464ffd1031",
+  "prior_sha256": "b4a6cbc5fbe5cfa652c5e2f296e59dd887594807e9db823e82f207448333d7f4",
+  "current_sha256": "1577e859ed193669fc921d9bf4b1a78ee7909dae73e7b786684172ed96a0fd3b",
   "changed_rows": [
     {
       "path": "crates/xtask/src/o02_image_gate_successor.rs",
       "prior": null,
       "current": {
         "path": "crates/xtask/src/o02_image_gate_successor.rs",
-        "bytes": 9764,
-        "sha256": "35779809f316fe92ba99c18f46e20a3fdf6327e9941f97e07b8a885041a536a3",
-        "mode": 420,
-        "unix_modes": [
-          420
-        ]
-      }
-    },
-    {
-      "path": "docs/rust-rewrite/t06/source-amendments/dnspython-security-current-main-v1.rs",
-      "prior": {
-        "path": "docs/rust-rewrite/t06/source-amendments/dnspython-security-current-main-v1.rs",
-        "bytes": 28731,
-        "sha256": "766a1714ba02c68cbda5a1405c9a3be601a333435429538e604424fac136fe10",
-        "mode": 420,
-        "unix_modes": [
-          420
-        ]
-      },
-      "current": {
-        "path": "docs/rust-rewrite/t06/source-amendments/dnspython-security-current-main-v1.rs",
-        "bytes": 30446,
-        "sha256": "6e4424d8596b876b2c4e953f2666b9cdb502d937ccfad5f28c8c8c5fc7e1f621",
+        "bytes": 9765,
+        "sha256": "e9200f4fe681946414b1b4a81a8860774f62a01212dea78839ccbedae750955d",
         "mode": 420,
         "unix_modes": [
           420
@@ -42,8 +21,8 @@
       "path": "docs/rust-rewrite/ci/gates.json",
       "prior": {
         "path": "docs/rust-rewrite/ci/gates.json",
-        "bytes": 176465,
-        "sha256": "45c7f9f39791ee75c3e6d91f6da1ecca2e213ed29080dea13f853511dd0c655e",
+        "bytes": 181677,
+        "sha256": "9bf6b0a3ac823b90fae1f545417cb0f130a567130d0ed32ba41bfb06b9d6bdea",
         "mode": 420,
         "unix_modes": [
           420
@@ -51,8 +30,8 @@
       },
       "current": {
         "path": "docs/rust-rewrite/ci/gates.json",
-        "bytes": 177543,
-        "sha256": "96e79651427f59c19c6a5bb3a695da0ba14b3db036eb64ca98e9fdc3acb4b545",
+        "bytes": 182755,
+        "sha256": "102663fb2aa906ed6f0c2e252c360100f6648470671da3756bc4195da84266fb",
         "mode": 420,
         "unix_modes": [
           420
@@ -80,8 +59,8 @@
         "unix_modes": [
           420
         ],
-        "bytes": 937,
-        "sha256": "0e90db4dbe2f030fc5fe1973c766bf456b4e93f1dbb4fc2577c89dfd5b30d08a"
+        "bytes": 1018,
+        "sha256": "39ee6ddaee21e38e7174b2a84e6abefced166b0d7f175fcefaf4601808b8305e"
       },
       "current": {
         "path": "crates/xtask/Cargo.toml",
@@ -89,8 +68,8 @@
         "unix_modes": [
           420
         ],
-        "bytes": 943,
-        "sha256": "561b5cf8c398ada3e213e94969eab796fd8a8845f7c05b6834e02e5a44a8f4f3"
+        "bytes": 1024,
+        "sha256": "c13d53e4f1d97ec68d120dbc5efd907ce0e35e126aca8ab5bf591c10cc22b481"
       }
     },
     {
@@ -181,6 +160,27 @@
         "path": "crates/xtask/src/o02_image_transaction.rs",
         "bytes": 29539,
         "sha256": "a6fd256480893bdc387b5c26bd078277353cd93d3912769b1f20878372724cf7",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ]
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/t06/source-amendments/python-dependency-audit-current-main-v1.rs",
+      "prior": {
+        "path": "docs/rust-rewrite/t06/source-amendments/python-dependency-audit-current-main-v1.rs",
+        "bytes": 33304,
+        "sha256": "601db89119579110deed38d3b76c1128b9756019d8933926c57b0a2226144ca4",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ]
+      },
+      "current": {
+        "path": "docs/rust-rewrite/t06/source-amendments/python-dependency-audit-current-main-v1.rs",
+        "bytes": 33700,
+        "sha256": "2e1d957b7e321eb1ca4f4cbb7fedd98aa35134d481fce21821a114f7964c8ec8",
         "mode": 420,
         "unix_modes": [
           420

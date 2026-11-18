@@ -125,11 +125,10 @@ this PR. No portal behavior acceptance is inferred from offline writer tests.
 ## Catalog custody composition
 
 The promotion workflow source is mirrored exactly in the F03/O06 gate catalog.
-That catalog is also owned by the existing T06 dnspython security successor.
+The current Python dependency-audit successor reads that catalog before the earlier upstream-contracts and T06 inverses.
 `catalog-successor.json` and `o02_image_gate_successor.rs` define one finite
 replacement of only the `image-promotion.yml:promote` row, preserving every other
-byte and reconstructing its exact prior endpoint before the unchanged T06
-inverse. The physical reader returns actual current bytes; supplied buffers
+byte and reconstructing the exact current-main endpoint before the unchanged catalog inverses. The physical reader returns actual current bytes; supplied buffers
 are compared with those descriptor-read bytes before projection. Controls use
 `fs::read` to prove true current buffers pass and normalized/stale buffers fail.
 Neither the prior security capsule nor its historical Git identities change.

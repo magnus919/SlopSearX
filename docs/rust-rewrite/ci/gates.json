@@ -305,13 +305,28 @@
               "name": "Set up Python",
               "uses": "actions/setup-python@v7",
               "with": {
-                "cache": "pip",
-                "python-version": "3.12"
+                "python-version": "3.12",
+                "cache": "pip"
               }
             },
             {
-              "name": "Install dependencies",
-              "run": "python -m pip install --upgrade pip\npip install -e \".[dev]\"\n"
+              "name": "Install locked runtime and development dependencies",
+              "run": "python -m pip install \"uv==0.11.18\"\necho \"UV_PROJECT_ENVIRONMENT=$RUNNER_TEMP/python-dependency-audit-venv\" >> \"$GITHUB_ENV\"\nUV_PROJECT_ENVIRONMENT=\"$RUNNER_TEMP/python-dependency-audit-venv\" uv sync --locked --extra dev --python \"$(command -v python)\"\necho \"$RUNNER_TEMP/python-dependency-audit-venv/bin\" >> \"$GITHUB_PATH\"\n"
+            },
+            {
+              "name": "Audit locked runtime and development dependencies",
+              "run": "set -euo pipefail\naudit_dir=\"$RUNNER_TEMP/python-dependency-audit\"\nmkdir -p \"$audit_dir\"\nuv --version | tee \"$audit_dir/uv-version.txt\"\npython --version | tee \"$audit_dir/python-version.txt\"\npython -m pip_audit --version | tee \"$audit_dir/pip-audit-version.txt\"\nprintf 'PyPI JSON vulnerability service: https://pypi.org/pypi/<package>/<version>/json\\n' > \"$audit_dir/vulnerability-service.txt\"\nuv lock --check\npython -m pip check\npython -m pip list --format=json > \"$audit_dir/installed-packages.json\"\npython -m pip_audit --local --skip-editable --vulnerability-service pypi --format json --output \"$audit_dir/installed.json\"\nuv export --locked --no-dev --no-emit-project --format requirements-txt --output-file \"$audit_dir/runtime-requirements.txt\"\npython -m pip_audit --requirement \"$audit_dir/runtime-requirements.txt\" --no-deps --disable-pip --strict --vulnerability-service pypi --format json --output \"$audit_dir/runtime.json\"\npython - \"$audit_dir/installed-packages.json\" \"$audit_dir/installed.json\" \"$audit_dir/runtime.json\" <<'PY'\nimport json\nimport re\nimport sys\nfrom pathlib import Path\n\ndef fail(message):\n    raise SystemExit(message)\n\ndef read_json(path):\n    with Path(path).open(encoding=\"utf-8\") as stream:\n        return json.load(stream)\n\ndef package_name(record, label):\n    if not isinstance(record, dict):\n        fail(f\"{label}: package record is not an object\")\n    name = record.get(\"name\")\n    if not isinstance(name, str) or not name:\n        fail(f\"{label}: package name is missing\")\n    return re.sub(r\"[-_.]+\", \"-\", name).lower()\n\ninventory = read_json(sys.argv[1])\nif not isinstance(inventory, list) or not inventory:\n    fail(\"installed package inventory is empty or malformed\")\ninventory_names = [package_name(record, \"pip list\") for record in inventory]\nif len(inventory_names) != len(set(inventory_names)):\n    fail(\"pip list contains duplicate normalized package names\")\n\ndef validate_report(path, label, allowed_skips, expected_names=None):\n    report = read_json(path)\n    if not isinstance(report, dict) or not isinstance(report.get(\"dependencies\"), list):\n        fail(f\"{label}: malformed pip-audit report\")\n    dependencies = report[\"dependencies\"]\n    if not dependencies:\n        fail(f\"{label}: pip-audit reported no dependencies\")\n    names = []\n    skipped = []\n    for record in dependencies:\n        name = package_name(record, label)\n        names.append(name)\n        if \"skip_reason\" in record:\n            if set(record) != {\"name\", \"skip_reason\"} or not isinstance(record[\"skip_reason\"], str):\n                fail(f\"{label}: malformed skipped dependency record\")\n            skipped.append((name, record[\"skip_reason\"]))\n        else:\n            if not isinstance(record.get(\"version\"), str) or not record[\"version\"] or not isinstance(record.get(\"vulns\"), list):\n                fail(f\"{label}: incomplete audited dependency record for {name}\")\n            if record[\"vulns\"]:\n                fail(f\"{label}: vulnerability findings for {name}\")\n    if len(names) != len(set(names)):\n        fail(f\"{label}: duplicate normalized package names\")\n    if expected_names is not None and set(names) != expected_names:\n        fail(f\"{label}: package inventory mismatch; missing={sorted(expected_names - set(names))}, extra={sorted(set(names) - expected_names)}\")\n    if sorted(skipped) != sorted(allowed_skips):\n        fail(f\"{label}: unexpected skipped dependencies: {skipped!r}\")\n    print(f\"{label}: {len(names) - len(skipped)} audited, {len(skipped)} allowed skips, zero findings\")\n\nvalidate_report(\n    sys.argv[2],\n    \"installed audit\",\n    {(\"slopsearx\", \"distribution marked as editable\")},\n    set(inventory_names),\n)\nvalidate_report(sys.argv[3], \"runtime audit\", set())\nPY\n"
+            },
+            {
+              "name": "Retain dependency audit reports",
+              "if": "always()",
+              "uses": "actions/upload-artifact@v7",
+              "with": {
+                "name": "python-dependency-audit",
+                "path": "${{ runner.temp }}/python-dependency-audit/",
+                "if-no-files-found": "error",
+                "retention-days": 14
+              }
             },
             {
               "name": "Lint with ruff",
@@ -339,19 +354,19 @@
             },
             {
               "name": "Unused dependency check with deptry",
-              "run": "deptry . --per-rule-ignores \"DEP002=lxml|uvicorn|pytest|pytest-asyncio|ruff|cssselect|mypy|pytest-cov|pip-tools|pre-commit|radon|vulture|import-linter|deptry|pip-audit|fastmcp|prometheus-client|dnspython,DEP003=starlette\""
+              "run": "deptry ."
             }
           ]
         },
         "workflow": {
           "name": "CI",
           "on": {
-            "pull_request": {
+            "push": {
               "branches": [
                 "main"
               ]
             },
-            "push": {
+            "pull_request": {
               "branches": [
                 "main"
               ]
@@ -1161,8 +1176,8 @@
               "name": "Set up Python",
               "uses": "actions/setup-python@v7",
               "with": {
-                "cache": "pip",
-                "python-version": "3.12"
+                "python-version": "3.12",
+                "cache": "pip"
               }
             },
             {
@@ -1195,7 +1210,7 @@
             },
             {
               "name": "Unused dependency check with deptry",
-              "run": "deptry . --per-rule-ignores \"DEP002=lxml|uvicorn|pytest|pytest-asyncio|ruff|cssselect|mypy|pytest-cov|pip-tools|pre-commit|radon|vulture|import-linter|deptry|pip-audit|dnspython,DEP003=starlette\""
+              "run": "deptry ."
             }
           ]
         },
@@ -1869,24 +1884,23 @@
     "upstream-contracts.yml:live-contracts": {
       "source": {
         "job": {
-          "if": "github.event_name == 'workflow_dispatch' || vars.LIVE_UPSTREAM_CONTRACTS == 'true'",
+          "if": "(github.event_name == 'workflow_dispatch' && inputs.run_live == true) || (github.event_name == 'schedule' && vars.LIVE_UPSTREAM_CONTRACTS == 'true')",
           "runs-on": "ubuntu-latest",
           "steps": [
             {
               "uses": "actions/checkout@v7"
             },
             {
-              "uses": "actions/setup-python@v7",
-              "with": {
-                "python-version": "3.12"
-              }
+              "name": "Install repository-pinned Rust toolchain",
+              "run": "set -euo pipefail\ntoolchain=\"$(sed -n 's/^channel = \"\\([^\"\\]*\\)\"/\\1/p' rust-toolchain.toml)\"\ntest \"$toolchain\" = \"1.99.0\"\nrustup toolchain install \"$toolchain\" --profile minimal\n"
             },
             {
-              "run": "pip install -e ."
+              "name": "Confirm pinned Rust toolchain",
+              "run": "rustup run 1.99.0 rustc --version --verbose"
             },
             {
               "name": "Probe three public upstreams",
-              "run": "python -m scripts.upstream_contracts --output upstream-report.json"
+              "run": "cargo xtask upstream-contracts --live --output upstream-report.json"
             },
             {
               "if": "always()",
@@ -1897,7 +1911,7 @@
               }
             }
           ],
-          "timeout-minutes": 5
+          "timeout-minutes": 15
         },
         "workflow": {
           "name": "Upstream contracts (opt-in)",
@@ -1907,16 +1921,25 @@
                 "cron": "17 8 * * 1"
               }
             ],
-            "workflow_dispatch": null
+            "workflow_dispatch": {
+              "inputs": {
+                "run_live": {
+                  "default": false,
+                  "description": "Run the bounded probes against public upstreams",
+                  "required": false,
+                  "type": "boolean"
+                }
+              }
+            }
           },
           "permissions": {
             "contents": "read"
           }
         }
       },
-      "owner": "O07",
-      "state": "pending-owner",
-      "successor": "cargo xtask check O07; native bounded opt-in probe runner retaining fixture/report classifications and live-call authorization; schedule remains existing until accepted successor"
+      "owner": "O02",
+      "state": "additive",
+      "successor": "Native Rust upstream-contract runner; local default uses frozen offline adapter fixtures; live provider checks require manual run_live=true or the existing explicitly enabled weekly repository variable; retain exact-host/path/query, one-request, timeout, body, no-proxy/no-retry/no-redirect, sanitization, report, and exit contracts. This is only the upstream-probe slice; full O02 acceptance and F01/G08 source retirement remain pending."
     },
     "rust-t02-image.yml:t02-image": {
       "source": {

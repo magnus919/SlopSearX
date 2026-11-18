@@ -142,3 +142,27 @@ be unique, map keys must match exactly, and each mapping value must be a string
 array. Legacy `categories` objects take precedence and retain their original
 semantics; raw `config --json` remains raw JSON presentation. Thirty
 separate external native-shape controls preserve the frozen original corpus.
+
+The O02 upstream-contracts runner adds only two dispatcher insertions and two
+xtask dependency edges to the current main/lock sources. Its closed
+[`UPSTREAM_CONTRACTS_SOURCE_SUCCESSOR.json`](../o02/UPSTREAM_CONTRACTS_SOURCE_SUCCESSOR.json)
+and shared Rust proof leaf authenticate physical current bytes before projecting
+the exact `661af83a1b95a3e7873cfda99c05d0fb6a02fe0a` predecessor. The existing
+RMCP, T03, health, CLI and W07 historical inverses then consume their unchanged
+frames. The controls verify predecessor Git bytes/mode/blob, complete forward
+reconstruction and rejection of altered scope, historical-as-current bytes,
+wrong modes, missing/duplicate/moved/changed spans and unrelated source edits.
+This source admission does not confer native CLI, upstream availability or
+release acceptance; the current integrated artifact must pass its gates.
+
+The same O02 source proof also owns a separate one-path catalog capsule,
+[`UPSTREAM_CONTRACTS_GATES_SUCCESSOR.json`](../o02/UPSTREAM_CONTRACTS_GATES_SUCCESSOR.json).
+Its seven exact spans change only `upstream-contracts.yml:live-contracts`; the
+DNSpython source reader authenticates the new physical catalog and projects its
+accepted predecessor before the unchanged security inverse. Both capsules use
+exact-size no-follow descriptor reads bounded to the expected size plus one,
+with identity/mode checks before and after reading and confined non-symlink
+ancestors. Unix checks descriptor device/inode, timestamps and physical `0644`;
+Windows requires stage-zero Git `100644`, rejects reparse points and denies
+concurrent writers/deletion while reading. Hostile controls reject stale, altered,
+misordered, duplicated and wrong-mode operands without changing earlier pins.

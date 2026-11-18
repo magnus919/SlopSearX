@@ -23,10 +23,13 @@ successor coverage is checked by ID. Legacy Python sources are already owned
 in F01's `inventory/python-disposition.json` and inline invocations in
 `inventory/python-invocations.json`; this ledger adds the gate-level handoff.
 
-The `pending-owner` entries deliberately require O02/O04 shipping and registry
-helpers, O05 behavioral/coverage suites, T07 browser tests, O07 upstream probes,
-and O09 architecture/security activation. O06 cannot replace those with a
-passing placeholder. Native Rust type/build/test, fmt/Clippy and cargo-deny
+The `pending-owner` entries deliberately require remaining O02/O04 shipping and
+registry helpers, O05 behavioral/coverage suites, T07 browser tests, and O09
+architecture/security activation. The upstream-contract workflow is now an
+O02-owned additive transition to the bounded native runner; its separate
+receipt documents the partial scope, while full O02 acceptance remains pending.
+O06 cannot replace those with a passing placeholder. Native Rust
+type/build/test, fmt/Clippy and cargo-deny
 already run in the additive F03 workflow. O09 must retain each gate until its
 listed owner provides meaningful native evidence, and must explicitly review
 metric changes such as Python complexity analysis or native code coverage.
@@ -45,6 +48,8 @@ cargo test --locked -p xtask 'o06::tests::'
 cargo xtask check O06 --output target/rust-evidence/O06.json
 cargo xtask ci-helper inventory
 cargo xtask ci-helper source-hygiene
+cargo xtask upstream-contracts --output /path/to/upstream-report.json
+cargo xtask upstream-contracts --live --output /path/to/upstream-report.json
 cargo xtask ci-helper mirror-config /path/to/daemon.json
 cargo xtask ci-helper manifest /path/to/oci-index.json
 cargo xtask ci-helper review-bootstrap-plan /absolute/temp/trusted-review-harness
