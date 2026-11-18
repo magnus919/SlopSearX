@@ -20,6 +20,10 @@ pub(crate) fn prior(
         return Err("RMCP source transition record identity differs".into());
     }
     let row: Value = serde_json::from_str(record).map_err(|err| err.to_string())?;
+    prior_row(&row, path, physical, mode)
+}
+
+fn prior_row(row: &Value, path: &str, physical: &[u8], mode: u32) -> Result<Vec<u8>, String> {
     if row["path"] != path
         || row["current_bytes"] != physical.len()
         || row["current_sha256"] != sha(physical)
@@ -58,4 +62,26 @@ pub(crate) fn prior(
         return Err("RMCP historical source identity differs".into());
     }
     Ok(predecessor)
+}
+
+/// Select only the finite post-Chrono runtime sources in the authenticated catalog.
+#[allow(
+    dead_code,
+    reason = "Other source roots share only the single-record inverse"
+)]
+pub(crate) fn runtime_prior(
+    record: &str,
+    record_sha: &str,
+    path: &str,
+    physical: &[u8],
+    mode: u32,
+) -> Result<Option<Vec<u8>>, String> {
+    if sha(record.as_bytes()) != record_sha {
+        return Err("RMCP runtime source catalog identity differs".into());
+    }
+    let rows: Vec<Value> = serde_json::from_str(record).map_err(|err| err.to_string())?;
+    let Some(row) = rows.iter().find(|row| row["path"] == path) else {
+        return Ok(None);
+    };
+    prior_row(row, path, physical, mode).map(Some)
 }
