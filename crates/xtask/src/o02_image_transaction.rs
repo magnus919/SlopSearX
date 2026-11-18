@@ -144,7 +144,7 @@ pub(crate) fn recover(path: &Path) -> Result<File, String> {
                         return Err(fail().to_string());
                     }
                 }
-                cleanup_stages(&root, &stages).map_err(|e| e.to_string())?;
+                cleanup_stages(&root, &plan, &stages).map_err(|e| e.to_string())?;
                 complete(&root).map_err(|e| e.to_string())?;
             }
             Err(e) if e.kind() == io::ErrorKind::NotFound => {
@@ -676,27 +676,10 @@ pub(super) fn rollback_locked(
             return Err(fail());
         }
         hook(index)?;
-        // The journal owns these fixed recovery names; reject any foreign
-        // symlink, hard link, non-file or owner/mode before retiring an
-        // interrupted partial staging write and rebuilding its exact bytes.
+        // The name alone grants no cleanup authority. Only bytes consistent
+        // with the interrupted compensation for this exact journal may retire.
         let stage = format!(".ssx-image-rollback-{index}");
-        match open(&parent, &stage, OFlag::O_RDONLY, Mode::empty()) {
-            Ok(file) => {
-                let m = file.metadata()?;
-                if !m.is_file()
-                    || m.uid() != unsafe { nix::libc::geteuid() }
-                    || m.nlink() != 1
-                    || ![0o600, 0o644].contains(&(m.mode() & 0o7777))
-                {
-                    return Err(fail());
-                }
-                named_identity(&parent, &stage, &m)?;
-                unlinkat(&parent, stage.as_str(), UnlinkatFlags::NoRemoveDir)
-                    .map_err(io::Error::from)?;
-            }
-            Err(e) if e.kind() == io::ErrorKind::NotFound => {}
-            Err(e) => return Err(e),
-        }
+        retire_stage(&parent, &stage, &old.bytes)?;
         let mut file = open(
             &parent,
             &stage,
@@ -721,7 +704,7 @@ pub(super) fn rollback_locked(
             return Err(fail());
         }
     }
-    cleanup_stages(root, &stages)?;
+    cleanup_stages(root, &plan, &stages)?;
     unlink_partial(
         &dir,
         COMMIT_PENDING,
@@ -781,27 +764,48 @@ pub(super) fn commit(
     result.map_err(|_| CommitFailure { published })
 }
 
-fn cleanup_stages(root: &File, stages: &[String]) -> io::Result<()> {
-    for (path, name) in PROMOTION_FILES.into_iter().zip(stages) {
-        let parent = parent(root, path)?;
-        match open(&parent, name, OFlag::O_RDONLY, Mode::empty()) {
-            Ok(file) => {
-                let m = file.metadata()?;
-                if !m.is_file()
-                    || m.uid() != unsafe { nix::libc::geteuid() }
-                    || m.nlink() != 1
-                    || ![0o600, 0o644].contains(&(m.mode() & 0o7777))
-                {
-                    return Err(fail());
-                }
-                named_identity(&parent, name, &m)?;
-                unlinkat(&parent, name.as_str(), UnlinkatFlags::NoRemoveDir)
-                    .map_err(io::Error::from)?;
-                parent.sync_all()?;
-            }
-            Err(e) if e.kind() == io::ErrorKind::NotFound => {}
-            Err(e) => return Err(e),
-        }
+fn retire_stage(parent: &File, name: &str, expected: &[u8]) -> io::Result<()> {
+    let file = match open(parent, name, OFlag::O_RDONLY, Mode::empty()) {
+        Ok(file) => file,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),
+        Err(error) => return Err(error),
+    };
+    let before = file.metadata()?;
+    if !before.is_file()
+        || before.uid() != unsafe { nix::libc::geteuid() }
+        || before.nlink() != 1
+        || ![0o600, 0o644].contains(&(before.mode() & 0o7777))
+        || before.len() == 0
+        || before.len() > expected.len() as u64
+    {
+        return Err(fail());
+    }
+    let mut bytes = Vec::new();
+    (&file)
+        .take(expected.len() as u64 + 1)
+        .read_to_end(&mut bytes)?;
+    let after = file.metadata()?;
+    if bytes.len() as u64 != before.len()
+        || !expected.starts_with(&bytes)
+        || before.len() != after.len()
+        || before.mode() != after.mode()
+        || before.nlink() != after.nlink()
+        || before.mtime() != after.mtime()
+        || before.mtime_nsec() != after.mtime_nsec()
+        || before.ctime() != after.ctime()
+        || before.ctime_nsec() != after.ctime_nsec()
+    {
+        return Err(fail());
+    }
+    named_identity(parent, name, &after)?;
+    unlinkat(parent, name, UnlinkatFlags::NoRemoveDir).map_err(io::Error::from)?;
+    parent.sync_all()
+}
+
+fn cleanup_stages(root: &File, plan: &PromotionPlan, stages: &[String]) -> io::Result<()> {
+    for (output, name) in plan.outputs.iter().zip(stages) {
+        let parent = parent(root, output.path)?;
+        retire_stage(&parent, name, &output.bytes)?;
     }
     Ok(())
 }

@@ -2131,8 +2131,16 @@ mod tests {
                     // Its journal-owned partial staging bytes are retired safely.
                     use std::os::unix::fs::PermissionsExt;
                     let partial = root.join(".ssx-image-rollback-0");
-                    fs::write(&partial, b"partial backup write").unwrap();
+                    let unrelated = b"foreign staging file";
+                    fs::write(&partial, unrelated).unwrap();
                     fs::set_permissions(&partial, fs::Permissions::from_mode(0o600)).unwrap();
+                    assert!(recover_promotion(&root).is_err());
+                    assert_eq!(fs::read(&partial).unwrap(), unrelated);
+                    assert_eq!(
+                        fs::read(root.join(".ssx-image-promotion/journal.json")).unwrap(),
+                        journal
+                    );
+                    fs::write(&partial, &before[0][..16]).unwrap();
                     recover_promotion(&root).unwrap();
                     assert!(!partial.exists());
                 }

@@ -86,8 +86,10 @@ directory is empty or already removed, while an unrelated empty directory still
 has no cleanup authority. Commit cleanup failure emits a retention message while the promotion
 remains successful; a later check still refuses the pending journal until
 recovery completes. An interrupted compensating staging write is safely
-recreated under its journal-owned name. Output stages from a hard interruption
-are retired using the recorded names.
+recreated when its contents match a nonempty prefix of the journal's exact
+original bytes. The same check against the expected output applies before
+retiring a forward stage. An empty or unrelated file at a recorded staging
+name remains in place and recovery reports the conflict.
 
 `--check` remains comparison-only: a pending transaction causes an error with
 no source/journal mutation. `--write` recovers under its lease before preparing
