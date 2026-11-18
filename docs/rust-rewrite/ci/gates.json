@@ -1065,6 +1065,8 @@
                 "add-paths": "docker-compose.yml\nk8s/deployment.yaml\ntests/test_deployment_artifacts.py\nspec.md\n",
                 "branch": "chore/promote-image-digest",
                 "delete-branch": true,
+                "author": "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+                "signoff": true,
                 "labels": "ci,automated",
                 "commit-message": "chore: promote slopsearx image digest to current latest",
                 "title": "chore: promote slopsearx image digest to current latest",
@@ -1084,7 +1086,8 @@
             "workflow_dispatch": null
           },
           "permissions": {
-            "contents": "write"
+            "contents": "write",
+            "pull-requests": "write"
           }
         }
       },

@@ -102,7 +102,11 @@ workflow restricts generated PR contents to the four operands and refuses pendin
 transaction artifacts before publication. It now installs/confirms the repository-pinned Rust toolchain and runs
 native recover/check/write/recover in order. It accepts only check exits 0/1 and write
 exits 0/10; every other exit fails. Its schedule and publication integration are
-retained. This change does not dispatch or otherwise run that workflow.
+retained. The workflow gives the repository token contents and pull-request
+write permissions for its existing publication step. The action authors and
+signs off the generated commit as the Actions bot. GitHub may require a
+maintainer to approve checks on a bot-created PR. This change does not dispatch
+or otherwise run that workflow.
 
 ## Validation boundaries
 
