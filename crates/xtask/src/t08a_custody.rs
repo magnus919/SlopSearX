@@ -46,7 +46,7 @@ fn regular_material(root: &Path, path: &str) -> Result<(Vec<u8>, u32)> {
 fn regular(root: &Path, path: &str) -> Result<Vec<u8>> {
     regular_material(root, path).map(|(bytes, _)| bytes)
 }
-fn opened_source_mode(root: &Path, path: &str, mode: u32) -> Result<&'static str> {
+pub(crate) fn opened_source_mode(root: &Path, path: &str, mode: u32) -> Result<&'static str> {
     #[cfg(unix)]
     {
         let _ = (root, path);
@@ -90,9 +90,15 @@ fn source_mode(root: &Path, path: &str) -> Result<&'static str> {
         .current_dir(root)
         .output()
         .map_err(|e| e.to_string())?;
+    let index = std::str::from_utf8(&out.stdout).map_err(|error| error.to_string())?;
+    let mut entries = index.lines();
     need(
-        out.status.success() && String::from_utf8_lossy(&out.stdout).starts_with("100644 "),
-        "Windows current source index requires100644",
+        out.status.success()
+            && entries.next().is_some_and(|entry| {
+                entry.starts_with("100644 ") && entry.ends_with(&format!(" 0\t{path}"))
+            })
+            && entries.next().is_none(),
+        "Windows current source index requires one stage-zero file with mode100644",
     )?;
     Ok("0644")
 }

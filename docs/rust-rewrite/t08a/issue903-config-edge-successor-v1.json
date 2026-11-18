@@ -339,8 +339,8 @@
         "git_blob": "da0ad65ba205f02beea4b17837d0822032769559"
       },
       "current": {
-        "bytes": 51279,
-        "sha256": "1c73d6f46f0e6dbfe446280aad518f2286ad9d68b531dac74ff6fc670ddb6666",
+        "bytes": 49137,
+        "sha256": "a894f58ac5d7107114497b9e4e3194f493ca5f97a8e6fb4aa8a98536ec5b5bec",
         "mode": "0644"
       },
       "edits": [
@@ -350,24 +350,9 @@
           "insert_utf8": "    #[cfg(any(unix, windows))]\n    let (current_bytes, current_sha) = w07_t02_joint::cli_source_custody::current_lock_identity()?;\n"
         },
         {
-          "offset": 2449,
-          "remove_utf8": "            || before.len() != w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES as u64\n",
-          "insert_utf8": "            || before.len() != current_bytes as u64\n"
-        },
-        {
-          "offset": 3549,
-          "remove_utf8": "        let mut bytes = Vec::with_capacity(w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES);\n",
-          "insert_utf8": "        let mut bytes = Vec::with_capacity(current_bytes);\n"
-        },
-        {
-          "offset": 3664,
-          "remove_utf8": "            .take(w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES as u64 + 1)\n",
-          "insert_utf8": "            .take(current_bytes as u64 + 1)\n"
-        },
-        {
-          "offset": 4474,
-          "remove_utf8": "            || bytes.len() != w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES\n            || sha(&bytes) != w07_t02_joint::cli_source_custody::CURRENT_LOCK_SHA\n",
-          "insert_utf8": "            || bytes.len() != current_bytes\n            || sha(&bytes) != current_sha\n"
+          "offset": 2052,
+          "remove_utf8": "        use std::io::Read;\n        use std::os::unix::fs::{MetadataExt, OpenOptionsExt, PermissionsExt};\n        let full = root.join(\"Cargo.lock\");\n        let root_canonical = root.canonicalize().map_err(|error| error.to_string())?;\n        let before = fs::symlink_metadata(&full).map_err(|error| error.to_string())?;\n        if !before.is_file()\n            || before.file_type().is_symlink()\n            || before.len() != w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES as u64\n            || before.len() > 1_048_576\n            || before.permissions().mode() & 0o7777 != 0o644\n            || !full\n                .canonicalize()\n                .map_err(|error| error.to_string())?\n                .starts_with(&root_canonical)\n        {\n            return Err(\"W07 current Cargo.lock must be the exact regular0644 source\".into());\n        }\n        let mut options = fs::OpenOptions::new();\n        options\n            .read(true)\n            .custom_flags(nix::libc::O_NOFOLLOW | nix::libc::O_NONBLOCK);\n        let file = options.open(&full).map_err(|error| error.to_string())?;\n        let opened = file.metadata().map_err(|error| error.to_string())?;\n        if !opened.is_file()\n            || opened.len() != before.len()\n            || opened.permissions().mode() & 0o7777 != 0o644\n            || opened.dev() != before.dev()\n            || opened.ino() != before.ino()\n        {\n            return Err(\"W07 current Cargo.lock descriptor identity changed\".into());\n        }\n        let mut bytes = Vec::with_capacity(w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES);\n        (&file)\n            .take(w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES as u64 + 1)\n            .read_to_end(&mut bytes)\n            .map_err(|error| error.to_string())?;\n        let after = file.metadata().map_err(|error| error.to_string())?;\n        let named = fs::symlink_metadata(&full).map_err(|error| error.to_string())?;\n        if !after.is_file()\n            || after.len() != before.len()\n            || after.permissions().mode() & 0o7777 != 0o644\n            || after.dev() != opened.dev()\n            || after.ino() != opened.ino()\n            || !named.is_file()\n            || named.file_type().is_symlink()\n            || named.len() != after.len()\n            || named.permissions().mode() & 0o7777 != 0o644\n            || named.dev() != after.dev()\n            || named.ino() != after.ino()\n            || bytes.len() != w07_t02_joint::cli_source_custody::CURRENT_LOCK_BYTES\n            || sha(&bytes) != w07_t02_joint::cli_source_custody::CURRENT_LOCK_SHA\n        {\n",
+          "insert_utf8": "        let (bytes, mode) = w07_t02_joint::cli_source_custody::bounded_read(\n            root,\n            \"Cargo.lock\",\n            current_bytes as u64,\n        )?;\n        if mode != 0o644 || bytes.len() != current_bytes || sha(&bytes) != current_sha {\n"
         },
         {
           "offset": 4812,
@@ -383,6 +368,27 @@
           "offset": 35314,
           "remove_utf8": "        assert_eq!(\n            sha(&windows_reader.0),\n            w07_t02_joint::cli_source_custody::CURRENT_LOCK_SHA\n        );\n",
           "insert_utf8": "        assert_eq!(sha(&windows_reader.0), current_sha);\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/xtask/Cargo.toml",
+      "prior": {
+        "bytes": 1018,
+        "sha256": "39ee6ddaee21e38e7174b2a84e6abefced166b0d7f175fcefaf4601808b8305e",
+        "mode": "0644",
+        "git_blob": "ab6ccac6ffcf2ba458483a23e0f8f0ad2c84c719"
+      },
+      "current": {
+        "bytes": 1024,
+        "sha256": "c13d53e4f1d97ec68d120dbc5efd907ce0e35e126aca8ab5bf591c10cc22b481",
+        "mode": "0644"
+      },
+      "edits": [
+        {
+          "offset": 996,
+          "remove_utf8": "features = [\"signal\"]\n",
+          "insert_utf8": "features = [\"signal\", \"fs\"]\n"
         }
       ]
     }

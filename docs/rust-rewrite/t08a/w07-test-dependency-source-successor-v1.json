@@ -3,16 +3,16 @@
   "baseline_commit": "cebf0f8c701d2fde2c8b22ae3da39386e874bcae",
   "row": {
     "path": "docs/rust-rewrite/w07/source-amendments/test_dependency_successor.rs",
-    "current": {
-      "bytes": 13422,
-      "sha256": "6659dfd5b8b5959b896c2f073ec044d581c332b08c8ac00cb9bfdc74b2218bb7",
-      "mode": "0644"
-    },
     "prior": {
       "bytes": 12158,
       "sha256": "5dd1fc5bd429e413a9dac90402ec322d5d1cb4894ea3b8d63f958074b76aaf15",
       "mode": "0644",
       "git_blob": "2fe4c3acf212bcffb6546219e9d102f88c4a4e3a"
+    },
+    "current": {
+      "bytes": 13215,
+      "sha256": "fb8725bff7cbe82719db5076fae73979bf7f81ab4445ae8a5354b98db7e0b664",
+      "mode": "0644"
     },
     "edits": [
       {
@@ -23,7 +23,7 @@
       {
         "offset": 2067,
         "remove_utf8": "#[cfg(unix)]\nfn mode(stat: &fs::Metadata) -> Result<u32> {\n    use std::os::unix::fs::PermissionsExt;\n    Ok(stat.permissions().mode() & 0o777)\n}\n#[cfg(not(unix))]\nfn mode(_: &fs::Metadata) -> Result<u32> {\n    Err(\"W07 dependency source mode proof requires Unix\".into())\n",
-        "insert_utf8": "fn read_material(root: &Path, path: &str) -> Result<(Vec<u8>, u32)> {\n    let (bytes, opened_mode) =\n        super::w07_t02_joint::cli_source_custody::bounded_read(root, path, 1_048_576)?;\n    #[cfg(unix)]\n    need(\n        opened_mode == 0o644,\n        \"W07 dependency source must be a bounded regular0644 file\",\n    )?;\n    #[cfg(not(unix))]\n    {\n        let _ = (bytes, opened_mode);\n        return Err(\"W07 dependency source mode proof requires Unix\".into());\n    }\n    #[cfg(unix)]\n    Ok((bytes, opened_mode))\n"
+        "insert_utf8": "fn read_material(root: &Path, path: &str) -> Result<(Vec<u8>, u32)> {\n    let (bytes, opened_mode) =\n        super::w07_t02_joint::cli_source_custody::bounded_read(root, path, 1_048_576)?;\n    super::w07_t02_joint::cli_source_custody::opened_source_mode(root, path, opened_mode)?;\n    Ok((bytes, opened_mode))\n"
       },
       {
         "offset": 2395,

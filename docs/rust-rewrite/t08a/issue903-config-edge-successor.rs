@@ -5,7 +5,7 @@ use std::{path::Path, process::Command};
 type Result<T> = std::result::Result<T, String>;
 const BASE: &str = "7d904b9d46f4c4ba8c59dc1ba09828f9e7ea204d";
 const CAPSULE: &[u8] = include_bytes!("issue903-config-edge-successor-v1.json");
-const CAPSULE_SHA: &str = "d85f8fc1142214630d9f4cdb5dbdefc14447a464462590e1647684f07500cda5";
+const CAPSULE_SHA: &str = "3199e5ec4c56ef21659446cd244198240e8d932ec67c180dcdb70f40af402ca2";
 const MAX_PHYSICAL_BYTES: u64 = 1_048_576;
 
 #[derive(Deserialize)]
@@ -64,7 +64,7 @@ fn capsule() -> Result<Capsule> {
     need(
         capsule.schema == "ISSUE903_CONFIG_EDGE_SUCCESSOR_V1"
             && capsule.baseline_commit == BASE
-            && capsule.rows.len() == 9
+            && capsule.rows.len() == 10
             && capsule.rows[0].path == "Cargo.lock"
             && capsule.rows[1].path == "crates/ssx-cli-check/Cargo.toml"
             && capsule.rows[2].path == "crates/ssx-mcp/Cargo.toml"
@@ -75,8 +75,9 @@ fn capsule() -> Result<Capsule> {
             && capsule.rows[6].path == "crates/ssx-infra/Cargo.toml"
             && capsule.rows[7].path
                 == "docs/rust-rewrite/a06/source-amendments/shared-successor.rs"
-            && capsule.rows[8].path == "crates/xtask/src/w07.rs",
-        "closed nine-path capsule identity/order",
+            && capsule.rows[8].path == "crates/xtask/src/w07.rs"
+            && capsule.rows[9].path == "crates/xtask/Cargo.toml",
+        "closed ten-path capsule identity/order",
     )?;
     for row in &capsule.rows {
         need(
@@ -318,7 +319,10 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
             && capsule.rows[6].edits[0].insert_utf8
                 == "\n[target.'cfg(unix)'.dev-dependencies.nix]\nversion = \"=0.31.3\"\nfeatures = [\"fs\"]\n"
             && !capsule.rows[7].edits.is_empty()
-            && !capsule.rows[8].edits.is_empty(),
+            && !capsule.rows[8].edits.is_empty()
+            && capsule.rows[9].edits.len() == 1
+            && capsule.rows[9].edits[0].remove_utf8 == "features = [\"signal\"]\n"
+            && capsule.rows[9].edits[0].insert_utf8 == "features = [\"signal\", \"fs\"]\n",
         "finite dependency and source successor spans",
     )?;
     Ok(())

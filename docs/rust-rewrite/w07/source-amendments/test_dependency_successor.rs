@@ -65,17 +65,7 @@ fn reconstruct_manifest(bytes: &[u8]) -> Result<Vec<u8>> {
 fn read_material(root: &Path, path: &str) -> Result<(Vec<u8>, u32)> {
     let (bytes, opened_mode) =
         super::w07_t02_joint::cli_source_custody::bounded_read(root, path, 1_048_576)?;
-    #[cfg(unix)]
-    need(
-        opened_mode == 0o644,
-        "W07 dependency source must be a bounded regular0644 file",
-    )?;
-    #[cfg(not(unix))]
-    {
-        let _ = (bytes, opened_mode);
-        return Err("W07 dependency source mode proof requires Unix".into());
-    }
-    #[cfg(unix)]
+    super::w07_t02_joint::cli_source_custody::opened_source_mode(root, path, opened_mode)?;
     Ok((bytes, opened_mode))
 }
 fn read(root: &Path, path: &str) -> Result<Vec<u8>> {
