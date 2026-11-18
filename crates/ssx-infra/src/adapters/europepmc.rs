@@ -156,11 +156,7 @@ impl EuropePMCAdapter {
                 .and_then(Value::as_str)
                 .and_then(iso_date);
             let published_date = match date {
-                Some(date) => Some(fixed_format(
-                    budget,
-                    10,
-                    format_args!("{}", date.format("%Y-%m-%d")),
-                )?),
+                Some(date) => Some(fixed_format(budget, 10, format_args!("{date}"))?),
                 None => None,
             };
             let null = &Value::Null;
@@ -246,7 +242,7 @@ impl SearchEngine for EuropePMCAdapter {
     }
 }
 /// urllib.parse.quote: slash is safe only for PubChem's name path.
-fn iso_date(value: &str) -> Option<chrono::NaiveDate> {
+fn iso_date(value: &str) -> Option<jiff::civil::Date> {
     let b = value.as_bytes();
     let digits = |bytes: &[u8]| bytes.iter().all(u8::is_ascii_digit);
     let year = b.len() >= 4 && digits(&b[..4]);
@@ -271,32 +267,29 @@ fn iso_date(value: &str) -> Option<chrono::NaiveDate> {
         return None;
     }
     let parsed = if value.len() == 10 && !value.contains('W') {
-        chrono::NaiveDate::parse_from_str(value, "%Y-%m-%d").ok()
+        jiff::civil::Date::strptime("%Y-%m-%d", value).ok()
     } else if value.len() == 8 && !value.contains('W') {
-        chrono::NaiveDate::parse_from_str(value, "%Y%m%d").ok()
+        jiff::civil::Date::strptime("%Y%m%d", value).ok()
     } else {
-        chrono::NaiveDate::parse_from_str(value, "%G-W%V-%u")
-            .or_else(|_| chrono::NaiveDate::parse_from_str(value, "%GW%V%u"))
+        jiff::civil::Date::strptime("%G-W%V-%u", value)
+            .or_else(|_| jiff::civil::Date::strptime("%GW%V%u", value))
             .or_else(|_| parse_week_default(value, "-1", "%G-W%V-%u"))
             .or_else(|_| parse_week_default(value, "1", "%GW%V%u"))
             .ok()
     };
-    parsed.filter(|d| (1..=9999).contains(&chrono::Datelike::year(d)))
+    parsed.filter(|d| (1..=9999).contains(&d.year()))
 }
 
 fn parse_week_default(
     value: &str,
     suffix: &str,
     format: &str,
-) -> std::result::Result<chrono::NaiveDate, chrono::ParseError> {
+) -> std::result::Result<jiff::civil::Date, jiff::Error> {
     let mut bytes = [0; 12];
     let length = value.len() + suffix.len();
     bytes[..value.len()].copy_from_slice(value.as_bytes());
     bytes[value.len()..length].copy_from_slice(suffix.as_bytes());
-    chrono::NaiveDate::parse_from_str(
-        std::str::from_utf8(&bytes[..length]).expect("ISO ASCII grammar"),
-        format,
-    )
+    jiff::civil::Date::strptime(format, &bytes[..length])
 }
 
 async fn med_id_digits(id: &str, context: Option<Instant>, observer: Observer<'_>) -> Result<bool> {

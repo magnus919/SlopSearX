@@ -351,7 +351,7 @@ fn physical(root: &Path, path: &str, expected_bytes: usize) -> Result<Vec<u8>> {
     )?;
     Ok(bytes)
 }
-pub(crate) fn controls(root: &Path) -> Result<()> {
+pub(crate) fn controls(root: &Path, admitted_lock: &[u8]) -> Result<()> {
     let runtime = physical(root, PATH, RAW.len())?;
     let doc = decode(&runtime)?;
     need(
@@ -359,7 +359,11 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         "altered capsule rejected",
     )?;
     for (index, pin) in PINS.iter().enumerate() {
-        let actual = physical(root, pin.path, pin.current_bytes)?;
+        let actual = if pin.path == "Cargo.lock" {
+            admitted_lock.to_vec()
+        } else {
+            physical(root, pin.path, pin.current_bytes)?
+        };
         let row = &doc["rows"][index];
         let prior = frame(pin.path, &actual, 0o644)?;
         let git = Command::new("git")
