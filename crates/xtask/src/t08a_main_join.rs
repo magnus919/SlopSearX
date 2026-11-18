@@ -467,6 +467,9 @@ fn pre_984_w07(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
 fn accepted_current(root: &Path, path: &str, physical: &[u8]) -> Result<Vec<u8>> {
     let upstream = if path == "crates/xtask/src/main.rs" {
         super::upstream_contracts_successor::frame(path, physical, 0o644)?
+    } else if path == "docs/rust-rewrite/a06/source-amendments/shared-successor.rs" {
+        super::rmcp_historical_operand(path, physical, "0644")?
+            .ok_or("RMCP shared source reader row absent")?
     } else {
         physical.to_vec()
     };

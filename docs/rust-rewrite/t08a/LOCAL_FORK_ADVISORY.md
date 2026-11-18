@@ -13,6 +13,7 @@ advisory identity:
 | `ssx-cli-hyper` | `hyper` 1.12.0 | `vendor/ssx-cli-hyper` |
 | `process-wrap` | `process-wrap` 10.0.1 | `vendor/ssx-cli-process-wrap` |
 | `libxml` | `libxml` 0.3.22 | `vendor/libxml` |
+| `rmcp` | `rmcp` 3.11.0 | `vendor/rmcp` |
 
 A green `cargo deny check all` on the physical graph cannot show that those
 copies were scanned, because the scan never saw them. `ssx-source-xml`
@@ -146,3 +147,19 @@ re-run both helpers. When upstream provenance is refreshed, keep the previous
 archive, patch, evidence and exact command output in history. Do not widen
 `project_owned_roots` to make a new unlisted vendor tree pass; classify it as a
 reviewed fork with real provenance instead.
+
+## RMCP patch
+
+SlopSearX carries the optional-Chrono patch from
+[RMCP #1474](https://github.com/modelcontextprotocol/rust-sdk/pull/1474) on
+the published RMCP 3.11.0 crate. The archive checksum, patch, and full vendor
+file hashes are pinned in the advisory mapping and
+[provenance record](rmcp-provenance.json). SlopSearX enables the existing
+Base64, macros, server, and transport features explicitly. The lock excludes
+Chrono and resolves the published 3.11.0 macro crate. The normalized manifest
+disables the upstream build script that installs Git hooks. The original script
+remains in the vendored source for provenance.
+
+Retire the vendored crate when a published RMCP package passes the same
+workspace dependency, advisory, and native MCP qualification checks with
+Chrono disabled. Remove the matching local-fork mapping at the same time.

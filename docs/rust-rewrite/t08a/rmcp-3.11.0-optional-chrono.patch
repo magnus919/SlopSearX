@@ -1,0 +1,952 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -88,0 +89 @@
++chrono = ["dep:chrono", "schemars?/chrono04"]
+@@ -90,0 +92 @@
++    "chrono",
+@@ -196,628 +197,0 @@
+-[[test]]
+-name = "test_abandoned_request_cancel"
+-path = "tests/test_abandoned_request_cancel.rs"
+-required-features = [
+-    "server",
+-    "client",
+-]
+-
+-[[test]]
+-name = "test_async_rw_max_line_length"
+-path = "tests/test_async_rw_max_line_length.rs"
+-
+-[[test]]
+-name = "test_auth_error_classification"
+-path = "tests/test_auth_error_classification.rs"
+-required-features = [
+-    "auth",
+-    "client",
+-    "transport-streamable-http-client",
+-]
+-
+-[[test]]
+-name = "test_cache_hints"
+-path = "tests/test_cache_hints.rs"
+-
+-[[test]]
+-name = "test_call_tool_contentless_reply"
+-path = "tests/test_call_tool_contentless_reply.rs"
+-required-features = ["client"]
+-
+-[[test]]
+-name = "test_cancelled_response"
+-path = "tests/test_cancelled_response.rs"
+-
+-[[test]]
+-name = "test_client_credentials"
+-path = "tests/test_client_credentials.rs"
+-required-features = ["auth"]
+-
+-[[test]]
+-name = "test_client_initialization"
+-path = "tests/test_client_initialization.rs"
+-
+-[[test]]
+-name = "test_client_lifecycle_modes"
+-path = "tests/test_client_lifecycle_modes.rs"
+-required-features = [
+-    "client",
+-    "server",
+-]
+-
+-[[test]]
+-name = "test_close_connection"
+-path = "tests/test_close_connection.rs"
+-required-features = [
+-    "server",
+-    "client",
+-]
+-
+-[[test]]
+-name = "test_completion"
+-path = "tests/test_completion.rs"
+-
+-[[test]]
+-name = "test_complex_schema"
+-path = "tests/test_complex_schema.rs"
+-
+-[[test]]
+-name = "test_custom_headers"
+-path = "tests/test_custom_headers.rs"
+-required-features = [
+-    "client",
+-    "server",
+-    "transport-streamable-http-client-reqwest",
+-    "transport-streamable-http-server",
+-]
+-
+-[[test]]
+-name = "test_custom_request"
+-path = "tests/test_custom_request.rs"
+-required-features = [
+-    "server",
+-    "client",
+-]
+-
+-[[test]]
+-name = "test_default_list_capabilities"
+-path = "tests/test_default_list_capabilities.rs"
+-
+-[[test]]
+-name = "test_deserialization"
+-path = "tests/test_deserialization.rs"
+-
+-[[test]]
+-name = "test_discover_http_client_startup"
+-path = "tests/test_discover_http_client_startup.rs"
+-required-features = [
+-    "client",
+-    "reqwest",
+-    "transport-streamable-http-client-reqwest",
+-    "transport-streamable-http-server",
+-]
+-
+-[[test]]
+-name = "test_elicitation"
+-path = "tests/test_elicitation.rs"
+-required-features = [
+-    "elicitation",
+-    "client",
+-    "server",
+-]
+-
+-[[test]]
+-name = "test_embedded_resource_meta"
+-path = "tests/test_embedded_resource_meta.rs"
+-
+-[[test]]
+-name = "test_handler_cache_hints"
+-path = "tests/test_handler_cache_hints.rs"
+-
+-[[test]]
+-name = "test_handler_wrappers"
+-path = "tests/test_handler_wrappers.rs"
+-
+-[[test]]
+-name = "test_inflight_response_drain"
+-path = "tests/test_inflight_response_drain.rs"
+-
+-[[test]]
+-name = "test_json_schema_detection"
+-path = "tests/test_json_schema_detection.rs"
+-
+-[[test]]
+-name = "test_list_tools_result"
+-path = "tests/test_list_tools_result.rs"
+-
+-[[test]]
+-name = "test_live_oauth_refresh"
+-path = "tests/test_live_oauth_refresh.rs"
+-
+-[[test]]
+-name = "test_local_client_handler"
+-path = "tests/test_local_client_handler.rs"
+-required-features = [
+-    "client",
+-    "local",
+-]
+-
+-[[test]]
+-name = "test_logging"
+-path = "tests/test_logging.rs"
+-required-features = [
+-    "server",
+-    "client",
+-]
+-
+-[[test]]
+-name = "test_message_protocol"
+-path = "tests/test_message_protocol.rs"
+-required-features = ["client"]
+-
+-[[test]]
+-name = "test_message_schema"
+-path = "tests/test_message_schema.rs"
+-required-features = [
+-    "server",
+-    "client",
+-    "schemars",
+-]
+-
+-[[test]]
+-name = "test_meta_helpers"
+-path = "tests/test_meta_helpers.rs"
+-
+-[[test]]
+-name = "test_mrtr_behavior"
+-path = "tests/test_mrtr_behavior.rs"
+-required-features = [
+-    "server",
+-    "client",
+-]
+-
+-[[test]]
+-name = "test_notification"
+-path = "tests/test_notification.rs"
+-required-features = [
+-    "server",
+-    "client",
+-]
+-
+-[[test]]
+-name = "test_progress_subscriber"
+-path = "tests/test_progress_subscriber.rs"
+-required-features = [
+-    "server",
+-    "client",
+-    "macros",
+-]
+-
+-[[test]]
+-name = "test_prompt_handler"
+-path = "tests/test_prompt_handler.rs"
+-
+-[[test]]
+-name = "test_prompt_macro_annotations"
+-path = "tests/test_prompt_macro_annotations.rs"
+-
+-[[test]]
+-name = "test_prompt_macros"
+-path = "tests/test_prompt_macros.rs"
+-required-features = [
+-    "server",
+-    "client",
+-]
+-
+-[[test]]
+-name = "test_prompt_routers"
+-path = "tests/test_prompt_routers.rs"
+-
+-[[test]]
+-name = "test_protocol_version_negotiation"
+-path = "tests/test_protocol_version_negotiation.rs"
+-required-features = [
+-    "server",
+-    "client",
+-]
+-
+-[[test]]
+-name = "test_request_timeout_progress"
+-path = "tests/test_request_timeout_progress.rs"
+-required-features = [
+-    "server",
+-    "client",
+-    "macros",
+-]
+-
+-[[test]]
+-name = "test_resource_link"
+-path = "tests/test_resource_link.rs"
+-
+-[[test]]
+-name = "test_resource_link_integration"
+-path = "tests/test_resource_link_integration.rs"
+-
+-[[test]]
+-name = "test_resource_not_found_version"
+-path = "tests/test_resource_not_found_version.rs"
+-
+-[[test]]
+-name = "test_result_type_version"
+-path = "tests/test_result_type_version.rs"
+-
+-[[test]]
+-name = "test_result_type_wire"
+-path = "tests/test_result_type_wire.rs"
+-
+-[[test]]
+-name = "test_sampling"
+-path = "tests/test_sampling.rs"
+-required-features = [
+-    "server",
+-    "client",
+-]
+-
+-[[test]]
+-name = "test_sep_2260_request_association"
+-path = "tests/test_sep_2260_request_association.rs"
+-
+-[[test]]
+-name = "test_sep_2260_stream_enforcement"
+-path = "tests/test_sep_2260_stream_enforcement.rs"
+-
+-[[test]]
+-name = "test_sep_2260_stream_routing"
+-path = "tests/test_sep_2260_stream_routing.rs"
+-required-features = [
+-    "server",
+-    "elicitation",
+-    "transport-streamable-http-server",
+-    "reqwest",
+-]
+-
+-[[test]]
+-name = "test_server_discover"
+-path = "tests/test_server_discover.rs"
+-
+-[[test]]
+-name = "test_server_discover_client"
+-path = "tests/test_server_discover_client.rs"
+-
+-[[test]]
+-name = "test_server_discover_http"
+-path = "tests/test_server_discover_http.rs"
+-
+-[[test]]
+-name = "test_server_initialization"
+-path = "tests/test_server_initialization.rs"
+-
+-[[test]]
+-name = "test_skill_catalog"
+-path = "tests/test_skill_catalog.rs"
+-
+-[[test]]
+-name = "test_skills"
+-path = "tests/test_skills.rs"
+-
+-[[test]]
+-name = "test_sse_concurrent_streams"
+-path = "tests/test_sse_concurrent_streams.rs"
+-required-features = [
+-    "server",
+-    "client",
+-    "transport-streamable-http-server",
+-    "transport-streamable-http-client",
+-    "reqwest",
+-]
+-
+-[[test]]
+-name = "test_stateless_http_server_requests"
+-path = "tests/test_stateless_http_server_requests.rs"
+-
+-[[test]]
+-name = "test_stateless_protocol_version"
+-path = "tests/test_stateless_protocol_version.rs"
+-required-features = [
+-    "server",
+-    "transport-streamable-http-server",
+-    "reqwest",
+-]
+-
+-[[test]]
+-name = "test_stateless_server_requests"
+-path = "tests/test_stateless_server_requests.rs"
+-required-features = [
+-    "client",
+-    "server",
+-]
+-
+-[[test]]
+-name = "test_stdio_response_concurrency"
+-path = "tests/test_stdio_response_concurrency.rs"
+-
+-[[test]]
+-name = "test_streamable_http_4xx_error_body"
+-path = "tests/test_streamable_http_4xx_error_body.rs"
+-required-features = [
+-    "transport-streamable-http-client",
+-    "transport-streamable-http-client-reqwest",
+-]
+-
+-[[test]]
+-name = "test_streamable_http_call_auth_challenge"
+-path = "tests/test_streamable_http_call_auth_challenge.rs"
+-required-features = [
+-    "client",
+-    "transport-streamable-http-client",
+-    "transport-streamable-http-client-reqwest",
+-]
+-
+-[[test]]
+-name = "test_streamable_http_client_concurrency"
+-path = "tests/test_streamable_http_client_concurrency.rs"
+-required-features = [
+-    "client",
+-    "transport-streamable-http-client",
+-]
+-
+-[[test]]
+-name = "test_streamable_http_connection_reuse"
+-path = "tests/test_streamable_http_connection_reuse.rs"
+-required-features = [
+-    "server",
+-    "client",
+-    "macros",
+-    "schemars",
+-    "transport-streamable-http-server",
+-    "transport-streamable-http-client",
+-    "transport-streamable-http-client-reqwest",
+-]
+-
+-[[test]]
+-name = "test_streamable_http_default_error_limit"
+-path = "tests/test_streamable_http_default_error_limit.rs"
+-
+-[[test]]
+-name = "test_streamable_http_disconnect_cancel"
+-path = "tests/test_streamable_http_disconnect_cancel.rs"
+-required-features = [
+-    "server",
+-    "transport-streamable-http-server",
+-    "reqwest",
+-]
+-
+-[[test]]
+-name = "test_streamable_http_empty_2xx_notification"
+-path = "tests/test_streamable_http_empty_2xx_notification.rs"
+-
+-[[test]]
+-name = "test_streamable_http_event_store"
+-path = "tests/test_streamable_http_event_store.rs"
+-required-features = [
+-    "client",
+-    "server",
+-    "transport-streamable-http-client-reqwest",
+-    "transport-streamable-http-server",
+-]
+-
+-[[test]]
+-name = "test_streamable_http_get_stream_auth_challenge"
+-path = "tests/test_streamable_http_get_stream_auth_challenge.rs"
+-
+-[[test]]
+-name = "test_streamable_http_idle_timeout_log"
+-path = "tests/test_streamable_http_idle_timeout_log.rs"
+-
+-[[test]]
+-name = "test_streamable_http_init_timeout"
+-path = "tests/test_streamable_http_init_timeout.rs"
+-
+-[[test]]
+-name = "test_streamable_http_initialize_error"
+-path = "tests/test_streamable_http_initialize_error.rs"
+-required-features = [
+-    "client",
+-    "transport-streamable-http-client",
+-    "transport-streamable-http-client-reqwest",
+-]
+-
+-[[test]]
+-name = "test_streamable_http_json_response"
+-path = "tests/test_streamable_http_json_response.rs"
+-required-features = [
+-    "server",
+-    "client",
+-    "transport-streamable-http-server",
+-    "reqwest",
+-]
+-
+-[[test]]
+-name = "test_streamable_http_limit_lifecycle"
+-path = "tests/test_streamable_http_limit_lifecycle.rs"
+-
+-[[test]]
+-name = "test_streamable_http_malformed_json_request"
+-path = "tests/test_streamable_http_malformed_json_request.rs"
+-required-features = [
+-    "client",
+-    "transport-streamable-http-client",
+-    "transport-streamable-http-client-reqwest",
+-]
+-
+-[[test]]
+-name = "test_streamable_http_priming"
+-path = "tests/test_streamable_http_priming.rs"
+-required-features = [
+-    "server",
+-    "client",
+-    "transport-streamable-http-server",
+-    "reqwest",
+-]
+-
+-[[test]]
+-name = "test_streamable_http_protocol_version"
+-path = "tests/test_streamable_http_protocol_version.rs"
+-required-features = [
+-    "server",
+-    "client",
+-    "transport-streamable-http-server",
+-    "reqwest",
+-]
+-
+-[[test]]
+-name = "test_streamable_http_reconnect_classification"
+-path = "tests/test_streamable_http_reconnect_classification.rs"
+-
+-[[test]]
+-name = "test_streamable_http_response_limits"
+-path = "tests/test_streamable_http_response_limits.rs"
+-required-features = ["transport-streamable-http-client-reqwest"]
+-
+-[[test]]
+-name = "test_streamable_http_session_isolation"
+-path = "tests/test_streamable_http_session_isolation.rs"
+-
+-[[test]]
+-name = "test_streamable_http_session_store"
+-path = "tests/test_streamable_http_session_store.rs"
+-required-features = [
+-    "client",
+-    "server",
+-    "transport-streamable-http-client-reqwest",
+-    "transport-streamable-http-server",
+-]
+-
+-[[test]]
+-name = "test_streamable_http_stale_session"
+-path = "tests/test_streamable_http_stale_session.rs"
+-required-features = [
+-    "server",
+-    "client",
+-    "transport-streamable-http-server",
+-    "transport-streamable-http-client",
+-    "transport-streamable-http-client-reqwest",
+-]
+-
+-[[test]]
+-name = "test_streamable_http_standard_headers"
+-path = "tests/test_streamable_http_standard_headers.rs"
+-required-features = [
+-    "server",
+-    "client",
+-    "transport-streamable-http-server",
+-    "reqwest",
+-]
+-
+-[[test]]
+-name = "test_streamable_http_status_metadata"
+-path = "tests/test_streamable_http_status_metadata.rs"
+-required-features = [
+-    "transport-streamable-http-client",
+-    "transport-streamable-http-client-reqwest",
+-]
+-
+-[[test]]
+-name = "test_structured_output"
+-path = "tests/test_structured_output.rs"
+-
+-[[test]]
+-name = "test_structured_output_version"
+-path = "tests/test_structured_output_version.rs"
+-
+-[[test]]
+-name = "test_subscriptions"
+-path = "tests/test_subscriptions.rs"
+-
+-[[test]]
+-name = "test_subscriptions_model"
+-path = "tests/test_subscriptions_model.rs"
+-
+-[[test]]
+-name = "test_subscriptions_streamable_http"
+-path = "tests/test_subscriptions_streamable_http.rs"
+-
+-[[test]]
+-name = "test_task"
+-path = "tests/test_task.rs"
+-required-features = [
+-    "server",
+-    "client",
+-    "macros",
+-]
+-
+-[[test]]
+-name = "test_tool_builder_methods"
+-path = "tests/test_tool_builder_methods.rs"
+-
+-[[test]]
+-name = "test_tool_disable_notification"
+-path = "tests/test_tool_disable_notification.rs"
+-
+-[[test]]
+-name = "test_tool_handler"
+-path = "tests/test_tool_handler.rs"
+-
+-[[test]]
+-name = "test_tool_macro_annotations"
+-path = "tests/test_tool_macro_annotations.rs"
+-
+-[[test]]
+-name = "test_tool_macros"
+-path = "tests/test_tool_macros.rs"
+-required-features = [
+-    "server",
+-    "client",
+-]
+-
+-[[test]]
+-name = "test_tool_result_meta"
+-path = "tests/test_tool_result_meta.rs"
+-
+-[[test]]
+-name = "test_tool_routers"
+-path = "tests/test_tool_routers.rs"
+-
+-[[test]]
+-name = "test_trace_context"
+-path = "tests/test_trace_context.rs"
+-required-features = [
+-    "server",
+-    "client",
+-]
+-
+-[[test]]
+-name = "test_unix_socket_response_limits"
+-path = "tests/test_unix_socket_response_limits.rs"
+-required-features = ["transport-streamable-http-client-unix-socket"]
+-
+-[[test]]
+-name = "test_unix_socket_transport"
+-path = "tests/test_unix_socket_transport.rs"
+-required-features = [
+-    "client",
+-    "server",
+-    "transport-streamable-http-client-unix-socket",
+-]
+-
+-[[test]]
+-name = "test_with_js"
+-path = "tests/test_with_js.rs"
+-required-features = [
+-    "server",
+-    "client",
+-    "transport-child-process",
+-    "transport-streamable-http-server",
+-    "transport-streamable-http-client",
+-    "__reqwest",
+-]
+-
+-[[test]]
+-name = "test_with_python"
+-path = "tests/test_with_python.rs"
+-required-features = [
+-    "reqwest",
+-    "server",
+-    "client",
+-    "transport-child-process",
+-]
+-
+@@ -921,2 +295,13 @@
+-version = "3.11.0"
+-optional = true
++version = "=3.11.0"
++optional = true
++
++[dependencies.chrono]
++version = "0.4.38"
++features = ["alloc"]
++optional = true
++default-features = false
++
++[dependencies.jiff]
++version = "1"
++features = ["std"]
++default-features = false
+@@ -926 +310,0 @@
+-features = ["chrono04"]
+@@ -1000,78 +383,0 @@
+-[dev-dependencies.anyhow]
+-version = "1.0"
+-
+-[dev-dependencies.async-trait]
+-version = "0.1"
+-
+-[dev-dependencies.axum]
+-version = "0.8"
+-features = [
+-    "http1",
+-    "tokio",
+-]
+-default-features = false
+-
+-[dev-dependencies.hyper]
+-version = "1"
+-features = [
+-    "server",
+-    "http1",
+-]
+-
+-[dev-dependencies.hyper-util]
+-version = "0.1"
+-features = ["tokio"]
+-
+-[dev-dependencies.rstest]
+-version = "0.28.0"
+-
+-[dev-dependencies.schemars]
+-version = "1.1.0"
+-features = ["chrono04"]
+-
+-[dev-dependencies.serde_json]
+-version = "1.0"
+-features = ["arbitrary_precision"]
+-
+-[dev-dependencies.tempfile]
+-version = "3"
+-
+-[dev-dependencies.tokio]
+-version = "1"
+-features = [
+-    "full",
+-    "test-util",
+-]
+-
+-[dev-dependencies.tower-service]
+-version = "0.3"
+-
+-[dev-dependencies.tracing-subscriber]
+-version = "0.3"
+-features = [
+-    "env-filter",
+-    "std",
+-    "fmt",
+-]
+-
+-[dev-dependencies.url]
+-version = "2.4"
+-
+-[target.'cfg(all(target_family = "wasm", target_os = "unknown"))'.dependencies.chrono]
+-version = "0.4.38"
+-features = [
+-    "serde",
+-    "clock",
+-    "std",
+-    "oldtime",
+-]
+-default-features = false
+-
+-[target.'cfg(not(all(target_family = "wasm", target_os = "unknown")))'.dependencies.chrono]
+-version = "0.4.38"
+-features = [
+-    "serde",
+-    "now",
+-]
+-default-features = false
+-
+--- a/README.md
++++ b/README.md
+@@ -25,0 +26 @@
++| `chrono` | `chrono::DateTime` arguments for `Annotations::for_resource` and `with_timestamp`, and schemars' `chrono04` support | ✅ |
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -6,0 +7 @@
++mod time;
+--- a/src/model/annotated.rs
++++ b/src/model/annotated.rs
+@@ -5,0 +6 @@
++#[cfg(feature = "chrono")]
+@@ -35,0 +37,2 @@
++    #[cfg(feature = "chrono")]
++    #[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
+@@ -58,0 +62,2 @@
++    #[cfg(feature = "chrono")]
++    #[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
+@@ -65,2 +70,3 @@
+-    pub fn with_timestamp_now(self) -> Self {
+-        self.with_timestamp(Utc::now())
++    pub fn with_timestamp_now(mut self) -> Self {
++        self.last_modified = Some(crate::time::now_rfc3339());
++        self
+@@ -72 +77,0 @@
+-    use chrono::TimeZone;
+@@ -112,0 +118,11 @@
++    fn timestamp_now_is_rfc3339_in_utc() {
++        let annotations = Annotations::default().with_timestamp_now();
++        let value = annotations.last_modified.expect("lastModified is set");
++        assert!(value.ends_with("+00:00"), "{value}");
++        value
++            .parse::<jiff::Timestamp>()
++            .expect("RFC 3339 timestamp");
++    }
++
++    #[cfg(feature = "chrono")]
++    #[test]
+@@ -113,0 +130,2 @@
++        use chrono::TimeZone;
++
+--- a/src/model/request_state.rs
++++ b/src/model/request_state.rs
+@@ -785 +785 @@
+-        chrono::Utc::now().timestamp_millis()
++        crate::time::now_unix_millis()
+--- a/src/service.rs
++++ b/src/service.rs
+@@ -92 +92 @@
+-    #[error("request timeout after {}", chrono::Duration::from_std(*timeout).unwrap_or_default())]
++    #[error("request timeout after {}", crate::time::Iso8601Duration(*timeout))]
+--- a/src/task_manager.rs
++++ b/src/task_manager.rs
+@@ -46 +46 @@
+-    chrono::Utc::now().to_rfc3339()
++    crate::time::now_rfc3339()
+--- /dev/null
++++ b/src/time.rs
+@@ -0,0 +1,151 @@
++//! Clock and formatting helpers.
++//!
++//! These keep the exact output that rmcp has always produced, so switching the
++//! underlying date-time library does not change any timestamp or message text.
++
++use jiff::{Timestamp, fmt::temporal::DateTimePrinter, tz::Offset};
++
++/// The current time as an RFC 3339 string, for example
++/// `2025-01-12T15:00:58.123+00:00`.
++pub(crate) fn now_rfc3339() -> String {
++    rfc3339(Timestamp::now())
++}
++
++/// Milliseconds since the Unix epoch.
++#[cfg(feature = "request-state")]
++pub(crate) fn now_unix_millis() -> i64 {
++    Timestamp::now().as_millisecond()
++}
++
++/// Formats `timestamp` in UTC with a `+00:00` offset and 0, 3, 6 or 9
++/// fractional digits, whichever is the shortest that is exact.
++fn rfc3339(timestamp: Timestamp) -> String {
++    let nanos = timestamp.subsec_nanosecond();
++    let digits = if nanos == 0 {
++        0
++    } else if nanos % 1_000_000 == 0 {
++        3
++    } else if nanos % 1_000 == 0 {
++        6
++    } else {
++        9
++    };
++    DateTimePrinter::new()
++        .precision(Some(digits))
++        .timestamp_with_offset_to_string(&timestamp, Offset::UTC)
++}
++
++/// Displays a duration in ISO 8601 form, such as `PT30S` or `PT1.5S`.
++///
++/// A zero duration displays as `P0D`, as do durations longer than
++/// `i64::MAX` milliseconds.
++#[cfg(any(feature = "client", feature = "server"))]
++pub(crate) struct Iso8601Duration(pub(crate) std::time::Duration);
++
++#[cfg(any(feature = "client", feature = "server"))]
++impl std::fmt::Display for Iso8601Duration {
++    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
++        const MAX_SECS: u64 = (i64::MAX / 1_000) as u64;
++        const MAX_SUBSEC_NANOS: u32 = (i64::MAX % 1_000) as u32 * 1_000_000;
++
++        let secs = self.0.as_secs();
++        let nanos = self.0.subsec_nanos();
++        let too_long = secs > MAX_SECS || (secs == MAX_SECS && nanos > MAX_SUBSEC_NANOS);
++        if self.0.is_zero() || too_long {
++            return f.write_str("P0D");
++        }
++        write!(f, "PT{secs}")?;
++        if nanos > 0 {
++            let mut fraction = nanos;
++            let mut digits = 9;
++            while fraction.is_multiple_of(10) {
++                fraction /= 10;
++                digits -= 1;
++            }
++            write!(f, ".{fraction:0digits$}")?;
++        }
++        f.write_str("S")
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    fn at(second: i64, nanosecond: i32) -> String {
++        rfc3339(Timestamp::new(second, nanosecond).unwrap())
++    }
++
++    // Expected strings are the output of chrono's `DateTime<Utc>::to_rfc3339`,
++    // which rmcp used before.
++    #[test]
++    fn rfc3339_matches_previous_output() {
++        assert_eq!(at(1_736_694_058, 0), "2025-01-12T15:00:58+00:00");
++        assert_eq!(
++            at(1_736_694_058, 123_000_000),
++            "2025-01-12T15:00:58.123+00:00"
++        );
++        assert_eq!(
++            at(1_736_694_058, 100_000_000),
++            "2025-01-12T15:00:58.100+00:00"
++        );
++        assert_eq!(
++            at(1_736_694_058, 123_456_000),
++            "2025-01-12T15:00:58.123456+00:00"
++        );
++        assert_eq!(
++            at(1_736_694_058, 123_456_789),
++            "2025-01-12T15:00:58.123456789+00:00"
++        );
++        assert_eq!(at(1_736_694_058, 1), "2025-01-12T15:00:58.000000001+00:00");
++        assert_eq!(at(0, 0), "1970-01-01T00:00:00+00:00");
++        assert_eq!(at(0, -500_000_000), "1969-12-31T23:59:59.500+00:00");
++    }
++
++    #[test]
++    fn now_rfc3339_round_trips() {
++        let before = Timestamp::now();
++        let now: Timestamp = now_rfc3339().parse().unwrap();
++        assert!(now >= before);
++        assert!(now_rfc3339().ends_with("+00:00"));
++    }
++
++    #[cfg(feature = "request-state")]
++    #[test]
++    fn now_unix_millis_is_after_2025() {
++        assert!(now_unix_millis() > 1_735_689_600_000);
++    }
++
++    // Expected strings are the output of chrono's `TimeDelta` `Display`.
++    #[cfg(any(feature = "client", feature = "server"))]
++    #[test]
++    fn iso8601_duration_matches_previous_output() {
++        use std::time::Duration;
++
++        let show = |d: Duration| Iso8601Duration(d).to_string();
++        assert_eq!(show(Duration::ZERO), "P0D");
++        assert_eq!(show(Duration::from_secs(30)), "PT30S");
++        assert_eq!(show(Duration::from_millis(1500)), "PT1.5S");
++        assert_eq!(show(Duration::from_nanos(1)), "PT0.000000001S");
++        assert_eq!(show(Duration::from_secs(5400)), "PT5400S");
++        assert_eq!(show(Duration::new(1, 10)), "PT1.00000001S");
++        assert_eq!(
++            show(Duration::new(9_223_372_036_854_775, 807_000_000)),
++            "PT9223372036854775.807S"
++        );
++        assert_eq!(
++            show(Duration::new(9_223_372_036_854_775, 807_000_001)),
++            "P0D"
++        );
++        assert_eq!(show(Duration::MAX), "P0D");
++    }
++
++    #[cfg(any(feature = "client", feature = "server"))]
++    #[test]
++    fn timeout_error_message_is_unchanged() {
++        let error = crate::service::ServiceError::Timeout {
++            timeout: std::time::Duration::from_millis(1500),
++        };
++        assert_eq!(error.to_string(), "request timeout after PT1.5S");
++    }
++}
+--- a/.cargo_vcs_info.json
++++ b/.cargo_vcs_info.json
+@@ -6 +6 @@
+-}
+\ No newline at end of file
++}
+--- a/src/handler/server/resource.rs
++++ b/src/handler/server/resource.rs
+@@ -1 +0,0 @@
+-

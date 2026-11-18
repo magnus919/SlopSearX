@@ -95,6 +95,36 @@
       "note": "Canonical-name private FFI fork of the upstream libxml binding crate."
     },
     {
+      "kind": "third_party_fork",
+      "local_name": "rmcp",
+      "local_version": "3.11.0",
+      "manifest": {
+        "path": "vendor/rmcp/Cargo.toml",
+        "bytes": 7064,
+        "sha256": "9089320c7f1f6d9229e4f056ee5036b5fef3f105df815e8c0e59681c0b3bb530"
+      },
+      "license": "Apache-2.0",
+      "upstream_name": "rmcp",
+      "upstream_version": "3.11.0",
+      "upstream_source": "registry+https://github.com/rust-lang/crates.io-index",
+      "archive": {
+        "path": "docs/rust-rewrite/t08a/rmcp-3.11.0.crate",
+        "bytes": 728233,
+        "sha256": "391f153431ab68664d946513ea0cb3edbca78eaf99c5a983036cacab6220d85b"
+      },
+      "provenance": {
+        "path": "docs/rust-rewrite/t08a/rmcp-provenance.json",
+        "bytes": 9714,
+        "sha256": "70ac69cdb418a8be8d426724c263710e844ccb227218299abee10f7b2a036d4e"
+      },
+      "patch": {
+        "path": "docs/rust-rewrite/t08a/rmcp-3.11.0-optional-chrono.patch",
+        "bytes": 23412,
+        "sha256": "02e004f2f50db6f3d38e126252814dd9023a7a61ac03b5b07d7814baa662642a"
+      },
+      "note": "RMCP 3.11.0 with upstream PR #1474 applied. SlopSearX disables the optional Chrono feature."
+    },
+    {
       "kind": "project_owned",
       "local_name": "ssx-source-xml",
       "local_version": "0.1.0",

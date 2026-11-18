@@ -160,8 +160,81 @@ const RMCP_SECURITY_CAPSULE: &str =
     include_str!("../../../docs/rust-rewrite/t08a/rmcp-security-successor.json");
 const RMCP_SECURITY_CAPSULE_SHA: &str =
     "b348258e03bc90feafc68b721d583e5f977d660a90062bff20b8c0f8521aec09";
-pub(crate) const CURRENT_LOCK_SHA: &str = upstream_contracts_successor::LOCK_SHA;
-pub(crate) const CURRENT_LOCK_BYTES: usize = upstream_contracts_successor::LOCK_BYTES;
+#[path = "../../../docs/rust-rewrite/t08a/rmcp-source-afterimage.rs"]
+#[allow(
+    dead_code,
+    clippy::duplicate_mod,
+    reason = "Independent proof roots use different entry points of the stateless inverse"
+)]
+mod rmcp_source_afterimage;
+const RMCP_RUNTIME_SOURCES: &str =
+    include_str!("../../../docs/rust-rewrite/t08a/rmcp-runtime-afterimages.json");
+const RMCP_RUNTIME_SHA: &str = "562478fd0d40d0cfae8a2b93e1958d0e80b41feb44359caca9a79c15b899c402";
+
+pub(crate) fn rmcp_historical_operand(
+    path: &str,
+    physical: &[u8],
+    mode: &str,
+) -> Result<Option<Vec<u8>>> {
+    let mode = u32::from_str_radix(mode, 8).map_err(|error| error.to_string())?;
+    rmcp_source_afterimage::runtime_prior(
+        RMCP_RUNTIME_SOURCES,
+        RMCP_RUNTIME_SHA,
+        path,
+        physical,
+        mode,
+    )
+}
+
+const OPTIONAL_CHRONO: &str =
+    include_str!("../../../docs/rust-rewrite/t08a/rmcp-optional-chrono-successor.json");
+const OPTIONAL_CHRONO_SHA: &str =
+    "c41515772cde7d4c726a3aaa4eb854c24a3be878b3764653748b802e98d7ef11";
+const OPTIONAL_CHRONO_ROWS: [(&str, usize); 3] = [
+    ("Cargo.lock", 23),
+    ("Cargo.toml", 2),
+    ("crates/ssx-infra/Cargo.toml", 1),
+];
+pub(crate) const CURRENT_LOCK_SHA: &str =
+    "fd04cdf3d534a04be379d067583ff2dfb383fd98e6982092e922a00d56d4e7c9";
+pub(crate) const CURRENT_LOCK_BYTES: usize = 96180;
+
+fn optional_chrono_prior(path: &str, current: &[u8], mode: &str) -> Result<Vec<u8>> {
+    need(
+        digest(OPTIONAL_CHRONO.as_bytes()) == OPTIONAL_CHRONO_SHA,
+        "compiled RMCP optional Chrono transition",
+    )?;
+    let doc: Value = serde_json::from_str(OPTIONAL_CHRONO).map_err(|e| e.to_string())?;
+    need(
+        doc["schema"] == "RMCP_OPTIONAL_CHRONO_SUCCESSOR_V1"
+            && doc["rows"]
+                .as_array()
+                .is_some_and(|rows| rows.len() == OPTIONAL_CHRONO_ROWS.len()),
+        "closed RMCP optional Chrono source set",
+    )?;
+    let (idx, (_, count)) = OPTIONAL_CHRONO_ROWS
+        .iter()
+        .enumerate()
+        .find(|(_, (owned, _))| *owned == path)
+        .ok_or("unowned RMCP optional Chrono source")?;
+    let row = &doc["rows"][idx];
+    need(
+        row["path"] == path,
+        "exact RMCP optional Chrono source path",
+    )?;
+    inverse(row, current, mode, *count)
+}
+
+#[allow(dead_code, reason = "A08 caller is compiled only in xtask")]
+pub(crate) fn prior_infra_manifest(root: &Path, supplied: &[u8]) -> Result<Vec<u8>> {
+    const PATH: &str = "crates/ssx-infra/Cargo.toml";
+    let physical = regular(root, PATH)?;
+    need(
+        physical == supplied,
+        "RMCP infrastructure manifest must be physical current",
+    )?;
+    optional_chrono_prior(PATH, &physical, source_mode(root, PATH)?)
+}
 const RMCP_ROWS: [(&str, usize); 2] = [("Cargo.toml", 1), ("Cargo.lock", 6)];
 fn rmcp_security_capsule(raw: &str) -> Result<Value> {
     need(
@@ -215,7 +288,8 @@ pub(crate) fn portal_health_lock_frame(current: &[u8]) -> Result<Vec<u8>> {
         current.len() == CURRENT_LOCK_BYTES && digest(current) == CURRENT_LOCK_SHA,
         "security exact current lock",
     )?;
-    let security = upstream_contracts_successor::frame("Cargo.lock", current, 0o644)?;
+    let accepted = optional_chrono_prior("Cargo.lock", current, "0644")?;
+    let security = upstream_contracts_successor::frame("Cargo.lock", &accepted, 0o644)?;
     let portal = rmcp_security_prior("Cargo.lock", &security)?;
     let physical = portal.as_slice();
     need(
@@ -283,7 +357,8 @@ fn cli_logical_input(root: &Path, path: &str, physical: &[u8]) -> Result<Vec<u8>
         return native_health_lock_prior(&portal_health_lock_frame(physical)?);
     }
     if path == "Cargo.toml" {
-        return rmcp_security_prior(path, physical);
+        let accepted = optional_chrono_prior(path, physical, source_mode(root, path)?)?;
+        return rmcp_security_prior(path, &accepted);
     }
     if accepted_main_join::owns(path) {
         accepted_main_join::project(root, path, physical, accepted_main_join::Parent::Cli)
@@ -542,9 +617,10 @@ pub(crate) fn test_dependency_prior(
     Ok(prior)
 }
 pub(crate) fn controls(root: &Path) -> Result<()> {
-    upstream_contracts_successor::controls(root)?;
-    rmcp_security_controls(root)?;
     let actual = regular(root, "Cargo.lock")?;
+    let accepted = optional_chrono_prior("Cargo.lock", &actual, source_mode(root, "Cargo.lock")?)?;
+    upstream_contracts_successor::controls(root, &accepted)?;
+    rmcp_security_controls(root)?;
     let health = portal_health_lock_frame(&actual)?;
     need(
         portal_health_lock_frame(&health).is_err(),
@@ -625,11 +701,11 @@ fn rmcp_security_controls(root: &Path) -> Result<()> {
     )?;
     for (index, (path, count)) in RMCP_ROWS.iter().enumerate() {
         let physical = regular(root, path)?;
-        source_mode(root, path)?;
+        let accepted = optional_chrono_prior(path, &physical, source_mode(root, path)?)?;
         let actual = if *path == "Cargo.lock" {
-            upstream_contracts_successor::frame(path, &physical, 0o644)?
+            upstream_contracts_successor::frame(path, &accepted, 0o644)?
         } else {
-            physical
+            accepted
         };
         let prior = rmcp_security_prior(path, &actual)?;
         let git = Command::new("git")
