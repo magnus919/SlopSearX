@@ -183,7 +183,7 @@ const NATIVE_CANCEL_CAPSULE: &str =
     "docs/rust-rewrite/a06/source-amendments/native-cancel-fixture-v1.json";
 const NATIVE_CANCEL_CAPSULE_SHA: &str =
     "863fcb998aae337c6246adbf619d8e8d65046c65ddb53796bec430861b9c689c";
-fn bounded_regular_material(root: &Path, path: &str, bound: usize) -> Result<Vec<u8>> {
+pub(super) fn bounded_regular_material(root: &Path, path: &str, bound: usize) -> Result<Vec<u8>> {
     use std::io::Read as _;
     let path = root.join(path);
     let before = fs::symlink_metadata(&path).map_err(|e| e.to_string())?;
