@@ -665,6 +665,7 @@ pub(crate) fn test_dependency_prior(
     )?;
     Ok(prior)
 }
+#[cfg(any(all(test, unix), windows))]
 fn configured_control_scratch_root() -> Result<std::path::PathBuf> {
     fn checked_root(value: std::ffi::OsString) -> Result<std::path::PathBuf> {
         let path = std::path::PathBuf::from(value);
