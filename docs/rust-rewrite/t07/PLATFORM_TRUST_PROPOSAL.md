@@ -1,143 +1,65 @@
-# T07 macOS platform-trust: route proposal
+# T07 macOS platform-trust route assessment
 
-Status: **proposal only — nothing in this document has been executed.** Issued
-for the owner decision that #1073 asks for. No trust store, authorization
-policy, SIP setting or runner image was changed to produce it.
+This assessment records the remaining decision for
+[#1073](https://github.com/magnus919/SlopSearX/issues/1073). Route qualification and
+authorization are pending. The Windows investigation in
+[#1075](https://github.com/magnus919/SlopSearX/issues/1075) is independent.
 
-## What fails today
+## Observed boundary
 
-The dedicated macOS witness must reject a unique private CA, establish real
-default-platform trust for that CA, prove an unrelated additive bundle does not
-replace independently trusted platform roots, reject the wrong hostname, remove
-the owned trust and reject again, then restore the keychain search list and
-retire every owned process, file and trust record.
+The retained hosted Intel and ARM evidence records UID 501, an Aqua bootstrap manager
+and manager UID 501. The owned `security` process logged preauthorization with flags
+`0x13`. A `trustd` request followed with flags `0x03`, and the operation reached its
+deadline before a completed grant or denial was captured. Cleanup and the finalizer also
+failed, leaving the marker. The stored authorization rule describes a possible decision
+path. The effective authorization outcome and whether trust settings were committed or
+fully removed remain unproven. [Authenticated evidence and
+correction](https://github.com/magnus919/SlopSearX/issues/1073#issuecomment-6711361956)
 
-At the author head recorded in #1073 the witness times out inside the
-establishment step. The measured sequence is:
+The fixture used a dynamically owned user keychain and requested a user-domain trust
+setting. Apple's API reference describes GUI authentication for per-user trust settings
+and retains older wording about root privileges. Apple's Big Sur security release notes
+explicitly require administrator authentication for admin-domain changes even when the
+caller runs as root. A visible session and passwordless elevation establish different
+prerequisites. The fixture still needs an observed, authorized path for both
+establishment and removal. [Apple trust-settings
+API](https://developer.apple.com/documentation/security/sectrustsettingssettrustsettings%28_%3A_%3A_%3A%29?changes=__7)
+· [Apple security release
+notes](https://developer.apple.com/documentation/macos-release-notes/macos-big-sur-11_0_1-release-notes?changes=_9)
 
-1. the owned `security` client requests the right with flags `0x13` and logs
-   **preauthorization**;
-2. `trustd` immediately requests the same right with flags `0x03`;
-3. no completed grant or denial is captured before the 15-second operation
-   deadline;
-4. cleanup and finalizer also fail, so the marker is retained.
+## Candidate environments
 
-The branch helper (`crates/ssx-gateway/tests/platform_support/mac_trust.rs` on
-`codex/preview-1056-t07-source-integration-20261027`) issues exactly:
+| Environment | Evidence or authority needed |
+| --- | --- |
+| Hosted macOS with admin-domain trust | Establish a supported administrator authorization path for both adding and removing the unique test CA. Record what authorization the runner can supply. Keep this route on hold while those prerequisites are unproven. |
+| Disposable runner with a pre-provisioned image | Show initial rejection and per-run establishment using a unique CA. A fixed anchor baked into the image supplies boot-time trust only. |
+| Managed disposable macOS hosts with a per-run certificate profile | Apple documents deployment of root-certificate payloads to managed Macs. A candidate still needs a reviewed qualification environment, a unique test CA and profile per run, authenticated install and removal of that profile, verification that the same installed client returns to rejection, and proof of exact cleanup. The owner must review compatibility with the selected trust contract and authorize device-management changes. [Apple deployment guide](https://support.apple.com/en-mide/guide/deployment/dep91d2eb26/web) · [Apple Developer Technical Support](https://developer.apple.com/forums/thread/820374) |
+| Dedicated disposable test hosts with an operator session | Identify exact supported Intel and ARM environments, an operator who can authorize establishment and removal, and a procedure to isolate and restore both hosts. Review the environment and harness before requesting a test window. |
+| Acceptance-scope amendment | Record the exact platform claim being removed or narrowed and obtain maintainer approval in a separate reviewed decision. Explicit CA-bundle success has a different scope from platform-default trust. A failed attempt on any one route leaves the remaining routes open for evaluation. |
 
-```
-security create-keychain -p <owned> <path>
-security unlock-keychain -p <owned> <path>
-security list-keychains -s <owned> <previous…>
-security add-trusted-cert -r trustRoot -k <owned user keychain> <ca.der>
-```
+## Evidence required for an authorized route
 
-The absence of `-d` means the trust is written to the **user** domain, which on
-modern macOS requires an interactive session-owner credential. The stored rule
-`entitled-session-owner-or-authenticate-session-owner` is what surfaces as the
-`0x03` request; preauthorization (`0x13`) does not imply the credential was
-obtained. A hosted runner has no interactive session, so the request cannot
-complete.
+1. Identify the exact candidate commit, installed client artifacts, macOS releases and
+   architecture, user identity, selected trust domain, and unique per-run CA
+   fingerprint.
+2. Run the installed client against the same HTTPS fixture with the default platform
+   store. Record initial rejection, acceptance after the owned trust setting is added,
+   and rejection for a wrong hostname while the CA is trusted. Record wrong-hostname
+   rejection before and after the trust cycle as well. Confirm that adding an unrelated
+   explicit CA bundle preserves an independently trusted platform root.
+3. Remove the exact test CA trust record and any fixture certificate import. Verify
+   removal in the selected domain, record rejection again with the installed client, and
+   verify restoration of the original keychain search list.
+4. Reap the owned process tree and retire the fixture and marker only after verified
+   cleanup. Retain diagnostic evidence for a deadline, an incomplete authorization trace
+   or incomplete cleanup.
+5. Run the exact sequence on supported Intel and ARM environments. Before either run,
+   independently review source and fake-command evidence for install, removal,
+   restoration, timeout, and cleanup paths. Obtain explicit authorization for the
+   selected environment and trust operation.
 
-## Candidate routes
-
-Every route below changes something the routine rewrite mandate does **not**
-cover. That is the decision being requested.
-
-### A. System trust domain under passwordless `sudo` on the ephemeral runner
-
-Write the same owned certificate into the system keychain instead of a user
-keychain, from the same bounded Rust owner, and remove it the same way:
-
-```
-sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain <ca.pem>
-sudo security remove-trusted-cert -d <ca.pem>
-```
-
-- **Proves:** real default-platform trust for the unique CA (system domain is the
-  platform default, not a process-local override), plus the negative controls and
-  removal.
-- **Authority needed:** permission to mutate the trust store of a disposable
-  hosted macOS runner. GitHub-hosted macOS runners run as an admin user with
-  passwordless `sudo`; the job is already ephemeral, and the same fixture already
-  performs the equivalent privileged mutation on the Linux lane through
-  `sudo cp` + `sudo update-ca-certificates`.
-- **Risks:** the shared system keychain is wider than an owned user keychain, so
-  the finalizer must prove removal and that no unrelated root was disturbed; a
-  failed run leaves trust on a VM that is destroyed moments later.
-- **Unresolved:** whether `trustd` still requires a session for the *system*
-  domain on recent macOS versions. This is the one fact that decides A, and it
-  can only be established by an authorized run.
-
-### B. Disposable macOS image with the CA pre-provisioned
-
-Bake the trust anchor into the runner image and rotate the image per release.
-
-- **Proves:** trust exists at boot, removal can be exercised separately.
-- **Authority needed:** runner image provisioning.
-- **Rejected as stated:** the contract requires a **unique** CA per run; a fixed
-  per-image anchor is not unique, and rotating images per job is disproportionate.
-
-### C. Dedicated trust host outside the hosted runner
-
-Run the witness on an owned macOS host with a real logged-in session and explicit
-authorization to install a test root.
-
-- **Proves:** the full sequence including the interactive authorization path.
-- **Authority needed:** a dedicated host, credentials, and an operator present or
-  a pre-authorized session.
-- **Cost:** permanent infrastructure for a one-off qualification claim.
-
-### D. Amend the T07 contract for the macOS leg
-
-Keep the automated establish/remove witness on Linux (where `update-ca-certificates`
-already proves real system-store trust and removal), and record macOS as an
-explicit-CA boundary plus a documented manual trust exercise by a named operator,
-with retained screenshots and `security verify-cert` output.
-
-- **Proves:** less. It converts a platform claim into a scoped, honest boundary.
-- **Authority needed:** a contract amendment accepted by the owner, not new
-  credentials.
-- **Cost:** permanent reduction of the macOS acceptance claim.
-
-## Recommendation
-
-**Attempt A first, with D as the fallback.** A keeps the witness real and keeps
-every existing negative control; if a single authorized run shows `trustd` still
-requires a session for the system domain, that result is decisive and D becomes
-the only honest remaining option.
-
-A is deliberately proposed rather than attempted: it mutates a trust store and
-touches the platform contract, and #1073 requires a proposal plus independent
-review before any new authority is exercised.
-
-## Review and negative controls required before the first real run
-
-The route must be reviewed and exercised with fakes before any authorized
-execution, and the run must retain:
-
-1. a fake-command harness proving install, unlock, list, add, remove and
-   restore failures each surface as named errors, plus timeout and reap paths;
-2. proof the certificate is absent after removal (`security verify-cert`, and a
-   dump of the trust settings), not merely that the removal command exited 0;
-3. proof an unrelated additive CA bundle does not replace independently trusted
-   platform roots;
-4. wrong-hostname rejection before and after the establish/remove cycle;
-5. restoration of the original keychain search list, with the pre-run list
-   recorded;
-6. retirement of every owned process and file, and absence of the marker;
-7. exact Intel and ARM evidence from the same commit, since the two runners are
-   different images.
-
-## Decision requested
-
-Authorize **A** (system-domain trust under `sudo` on the ephemeral macOS runner),
-or state that macOS should move to **D** and amend the contract. Anything else —
-repeating the user-domain timeout, raising the deadline, switching domains without
-review, or activating a personal trust store — stays out of scope by the issue's
-own terms.
-
-The Windows counterpart (#1075) has the same shape: its fixture already reaches
-the certificate-load boundary and needs the same class of decision about
-CurrentUser Root and `certutil` execution on the hosted image. Whichever route is
-chosen for macOS should be applied consistently there.
+The owner decision is to identify an environment that can support authorized
+establishment and verified removal for both architectures. Pending that decision and
+review, #1073 remains open. On Windows, the last authenticated marker precedes
+completion of the certificate-load expression. Continue localizing that boundary under
+the independently scoped CurrentUser Root contract.

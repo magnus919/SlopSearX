@@ -102,11 +102,10 @@ evidence. No combination of automated changes can close any of the 23.
 1. **#1073 / #1075** — authorise a supported trust establishment *and* removal
    route for the qualification environment, or amend the T07 platform contract
    to a scope the hosted runner can actually evidence.
-   [T07 platform-trust proposal](../t07/PLATFORM_TRUST_PROPOSAL.md) sets out the
-   four candidate routes, the exact commands, the authority each needs and a
-   recommendation (system-domain trust under `sudo` on the ephemeral macOS
-   runner, with a contract amendment as fallback). Nothing in it has been
-   executed.
+   November 18 follow-up. The [macOS route assessment](t07/PLATFORM_TRUST_PROPOSAL.md) records the
+   observed authorization boundary and the evidence needed for supported
+   establishment and removal. Windows retains its separate certificate-load
+   investigation and CurrentUser Root contract.
 2. **#902** — decide whether the gateway branch lands once (1) is settled, and
    who owns the rebase of 110 commits across 64 commits of `main` drift.
 3. **#903 / #921** — name the owner of production native server assembly and
