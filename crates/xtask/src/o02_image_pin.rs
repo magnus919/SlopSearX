@@ -2487,20 +2487,43 @@ mod tests {
     #[test]
     #[cfg(unix)]
     fn inert_initialization_and_full_root_scan_do_not_block_recovery() {
+        use promotion_files::{ApplyPoint, PinSnapshot};
         let root = promotion_fixture("inert-init-scan");
+        let snapshot = PinSnapshot::read(&root).unwrap();
+        let plan = snapshot
+            .plan(&format!("sha256:{}", "f".repeat(64)))
+            .unwrap();
+        snapshot
+            .apply_with_test_hook(&plan, |point, index, _, _| {
+                if (point == ApplyPoint::BeforeRename && index == 1)
+                    || point == ApplyPoint::BeforeRollback
+                {
+                    return Err(std::io::Error::other("injected interruption"));
+                }
+                Ok(())
+            })
+            .unwrap_err();
+        drop(snapshot);
+        let journal = root.join(".ssx-image-promotion/journal.json");
+        assert!(journal.is_file());
         let inert = root.join(".ssx-image-promotion-init-inert");
         fs::create_dir(&inert).unwrap();
         for index in 0..=4096 {
             fs::write(root.join(format!("unrelated-{index}")), b"").unwrap();
         }
 
-        recover_promotion(&root).unwrap();
-
+        let recovered = recover_promotion(&root);
         assert!(
             inert.is_dir(),
             "an empty initialization has no journal authority"
         );
-        assert_eq!(fs::read(root.join("unrelated-4096")).unwrap(), b"");
+        for index in 0..=4096 {
+            let unrelated = root.join(format!("unrelated-{index}"));
+            assert_eq!(fs::read(&unrelated).unwrap(), b"");
+            fs::remove_file(unrelated).unwrap();
+        }
+        recovered.unwrap();
+        assert!(!journal.exists());
         assert_eq!(
             extract_pinned_digest(&root).unwrap(),
             FROZEN_TEST_PIN_DIGEST
