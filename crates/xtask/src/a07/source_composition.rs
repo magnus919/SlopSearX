@@ -122,6 +122,14 @@ fn composition_material(root: &Path, path: &str) -> Result<Material> {
             )?
             .ok_or("A07 page source operand not selected")?;
         }
+        if path == "crates/ssx-infra/src/adapters/europepmc.rs" {
+            physical.bytes = crate::t08a::source_custody::rmcp_historical_operand(
+                path,
+                &physical.bytes,
+                &format!("{:04o}", physical.mode),
+            )?
+            .ok_or("A07 RMCP Europe PMC source row absent")?;
+        }
         Ok(physical)
     }
 }

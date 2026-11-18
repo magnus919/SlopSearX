@@ -183,17 +183,24 @@ const NATIVE_CANCEL_CAPSULE: &str =
     "docs/rust-rewrite/a06/source-amendments/native-cancel-fixture-v1.json";
 const NATIVE_CANCEL_CAPSULE_SHA: &str =
     "863fcb998aae337c6246adbf619d8e8d65046c65ddb53796bec430861b9c689c";
-fn native_cancel_material(root: &Path, path: &str, bound: usize) -> Result<Vec<u8>> {
+pub(super) fn bounded_regular_material(root: &Path, path: &str, bound: usize) -> Result<Vec<u8>> {
     use std::io::Read as _;
     let path = root.join(path);
     let before = fs::symlink_metadata(&path).map_err(|e| e.to_string())?;
     if !before.is_file() {
-        return Err("A06 native cancellation requires regular source".into());
+        return Err("A06 requires regular source".into());
     }
-    let file = fs::File::open(path).map_err(|e| e.to_string())?;
+    let mut options = fs::OpenOptions::new();
+    options.read(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt as _;
+        options.custom_flags(nix::libc::O_NOFOLLOW | nix::libc::O_NONBLOCK);
+    }
+    let file = options.open(path).map_err(|e| e.to_string())?;
     let opened = file.metadata().map_err(|e| e.to_string())?;
     if !opened.is_file() {
-        return Err("A06 native cancellation source changed kind".into());
+        return Err("A06 source changed kind".into());
     }
     #[cfg(unix)]
     {
@@ -203,7 +210,7 @@ fn native_cancel_material(root: &Path, path: &str, bound: usize) -> Result<Vec<u
             || before.permissions().mode() & 0o7777 != 0o644
             || opened.permissions().mode() & 0o7777 != 0o644
         {
-            return Err("A06 native cancellation source custody differs".into());
+            return Err("A06 source custody differs".into());
         }
     }
     let mut raw = Vec::new();
@@ -211,12 +218,12 @@ fn native_cancel_material(root: &Path, path: &str, bound: usize) -> Result<Vec<u
         .read_to_end(&mut raw)
         .map_err(|e| e.to_string())?;
     if raw.len() > bound || opened.len() != raw.len() as u64 {
-        return Err("A06 native cancellation bounded source changed".into());
+        return Err("A06 bounded source changed".into());
     }
     Ok(raw)
 }
 fn native_cancel_capsule(root: &Path) -> Result<Value> {
-    let raw = native_cancel_material(root, NATIVE_CANCEL_CAPSULE, 9811)?;
+    let raw = bounded_regular_material(root, NATIVE_CANCEL_CAPSULE, 9811)?;
     if digest(&raw) != NATIVE_CANCEL_CAPSULE_SHA {
         return Err("A06 native cancellation capsule changed".into());
     }
@@ -234,7 +241,7 @@ fn verify_artifact(root: &Path, row: &Value) -> Result<()> {
             return Err("A06 native cancellation frozen caller differs".into());
         }
         let capsule = native_cancel_capsule(root)?;
-        let raw = native_cancel_material(root, path, 18095)?;
+        let raw = bounded_regular_material(root, path, 18095)?;
         return admission_bytes(&raw, expected, &capsule);
     }
     if crate::snapshot_fixture_amendment::a06(root, row)?.is_some() {
@@ -267,7 +274,15 @@ fn verify_artifact(root: &Path, row: &Value) -> Result<()> {
     ) {
         return result;
     }
-    if digest(&fs::read(root.join(path)).map_err(|e| e.to_string())?) != expected {
+    let historical = if path == "crates/ssx-infra/src/adapters/scholarly_frame.rs" {
+        // The calendar backend changed, but coverage still binds the original frame.
+        let physical = bounded_regular_material(root, path, 32 * 1024)?;
+        crate::t08a::source_custody::rmcp_historical_operand(path, &physical, "0644")?
+            .ok_or("A06 scholarly frame source transition absent")?
+    } else {
+        fs::read(root.join(path)).map_err(|e| e.to_string())?
+    };
+    if digest(&historical) != expected {
         return Err(format!("A06 artifact changed: {path}"));
     }
     Ok(())
@@ -684,7 +699,7 @@ mod tests {
         fs::remove_dir_all(dir).unwrap();
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
         crate::a13::a06_source_successor::artifact_controls(&root).unwrap();
-        let current = native_cancel_material(&root, NATIVE_CANCEL_SOURCE, 18095).unwrap();
+        let current = bounded_regular_material(&root, NATIVE_CANCEL_SOURCE, 18095).unwrap();
         let capsule = native_cancel_capsule(&root).unwrap();
         let caller = json!({"path":NATIVE_CANCEL_SOURCE,"sha256":NATIVE_CANCEL_PRIOR});
         verify_artifact(&root, &caller).unwrap();
@@ -738,6 +753,29 @@ mod tests {
             assert!(admission_bytes(&changed, expected, &rehashed).is_err());
         }
     }
+    #[test]
+    fn scholarly_frame_admits_only_the_bound_calendar_transition() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let path = "crates/ssx-infra/src/adapters/scholarly_frame.rs";
+        let coverage: Value =
+            serde_json::from_str(include_str!("../../../docs/rust-rewrite/a06/coverage.json"))
+                .unwrap();
+        let row = coverage["artifacts"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|row| row["path"] == path)
+            .unwrap();
+        verify_artifact(&root, row).unwrap();
+        let physical = bounded_regular_material(&root, path, 32 * 1024).unwrap();
+        assert!(verify_artifact(&root, &json!({"path":path,"sha256":digest(&physical)})).is_err());
+        let mut tampered = physical;
+        tampered[0] ^= 1;
+        assert!(
+            crate::t08a::source_custody::rmcp_historical_operand(path, &tampered, "0644").is_err()
+        );
+    }
+
     #[test]
     fn snapshot_fixture_amendment_actual_artifact_consumer() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
