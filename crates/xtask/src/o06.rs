@@ -229,6 +229,26 @@ fn manifest(v: &Value) -> Result<()> {
         "invalid immutable manifest digest",
     )
 }
+fn published_manifest(v: &Value, amd64: &str, arm64: &str) -> Result<()> {
+    ensure(
+        digest(amd64) && digest(arm64) && amd64 != arm64,
+        "expected two distinct tested image digests",
+    )?;
+    manifest(v)?;
+    let rows = v["manifests"].as_array().ok_or("missing manifests")?;
+    ensure(rows.len() == 2, "expected exactly two published platforms")?;
+    for (arch, expected) in [("amd64", amd64), ("arm64", arm64)] {
+        ensure(
+            rows.iter().any(|row| {
+                row["platform"]["os"] == "linux"
+                    && row["platform"]["architecture"] == arch
+                    && row["digest"] == expected
+            }),
+            &format!("published linux/{arch} digest differs from the tested image"),
+        )?;
+    }
+    Ok(())
+}
 fn bootstrap(root: &Path, p: &Value, dest: &Path) -> Result<Value> {
     validate_policy(p)?;
     ensure(
@@ -681,6 +701,7 @@ pub fn helper(root: &Path, args: &[String]) -> Result<()> {
         Some("inventory") if args.len()==1 => {println!("{}",serde_json::to_string_pretty(&inventory(root)?).map_err(|e|e.to_string())?);Ok(())}
         Some("mirror-config") if args.len()==2 => {println!("{}",serde_json::to_string_pretty(&mirror(&fs::read(&args[1]).map_err(|e|e.to_string())?)?).map_err(|e|e.to_string())?);Ok(())}
         Some("manifest") if args.len()==2 => manifest(&load_json(Path::new(&args[1]))?),
+        Some("manifest") if args.len()==4 => published_manifest(&load_json(Path::new(&args[1]))?, &args[2], &args[3]),
         Some("review-bootstrap-plan") if args.len()==2 => {println!("{}",bootstrap(root,&load_json(&root.join(".github/pr-review-publisher-policy.json"))?,Path::new(&args[1]))?);Ok(())}
         Some("image-pin-verify-base" | "image-pin-promote") => o02_image_pin::cli(root, args),
         Some("portal-release-smoke") => o02_portal_smoke::cli(&args[1..]),
@@ -694,7 +715,7 @@ pub fn helper(root: &Path, args: &[String]) -> Result<()> {
             println!("{}", serde_json::to_string_pretty(&local_fork_advisory::fixtures(root)?).map_err(|e| e.to_string())?);
             Ok(())
         }
-        _ => Err("usage: cargo xtask ci-helper {inventory|source-hygiene|mirror-config FILE|manifest FILE|review-bootstrap-plan ABS_DEST|review-bootstrap ABS_DEST|local-fork-advisory|local-fork-advisory-fixtures|portal-release-smoke [--base-url URL] [--query TEXT] [--expected-theme dark|darker]}".into())
+        _ => Err("usage: cargo xtask ci-helper {inventory|source-hygiene|mirror-config FILE|manifest FILE [AMD64_DIGEST ARM64_DIGEST]|review-bootstrap-plan ABS_DEST|review-bootstrap ABS_DEST|local-fork-advisory|local-fork-advisory-fixtures|portal-release-smoke [--base-url URL] [--query TEXT] [--expected-theme dark|darker]}".into())
     }
 }
 pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
@@ -1321,6 +1342,35 @@ mod tests {
         }
         assert!(!digest("sha256:abc"));
         assert!(!digest(&format!("sha256:{}", "A".repeat(64))));
+    }
+    #[test]
+    fn published_manifest_requires_exact_tested_platform_digests() {
+        let amd64 = format!("sha256:{}", "a".repeat(64));
+        let arm64 = format!("sha256:{}", "b".repeat(64));
+        let index = json!({
+            "schemaVersion": 2,
+            "mediaType": "application/vnd.oci.image.index.v1+json",
+            "manifests": [
+                {"digest": arm64, "platform": {"os": "linux", "architecture": "arm64"}},
+                {"digest": amd64, "platform": {"os": "linux", "architecture": "amd64"}}
+            ]
+        });
+        published_manifest(&index, &amd64, &arm64).unwrap();
+        assert!(published_manifest(&index, &arm64, &amd64).is_err());
+        assert!(published_manifest(&index, &amd64, &amd64).is_err());
+        assert!(published_manifest(&index, "latest", &arm64).is_err());
+
+        let mut extra = index.clone();
+        extra["manifests"].as_array_mut().unwrap().push(json!({
+            "digest": format!("sha256:{}", "c".repeat(64)),
+            "platform": {"os": "unknown", "architecture": "unknown"}
+        }));
+        manifest(&extra).unwrap();
+        assert!(published_manifest(&extra, &amd64, &arm64).is_err());
+
+        let mut mismatched = index;
+        mismatched["manifests"][0]["digest"] = json!(format!("sha256:{}", "d".repeat(64)));
+        assert!(published_manifest(&mismatched, &amd64, &arm64).is_err());
     }
     #[test]
     fn permissions_cannot_expand() {
