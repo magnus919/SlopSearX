@@ -195,7 +195,48 @@ fn inverse(pin: &Pin, row: &Value, current: &[u8], mode: u32) -> Result<Vec<u8>>
     need(forward == current, "complete forward reconstruction")?;
     Ok(prior)
 }
+const QUALIFICATION_MAIN_BYTES: usize = 45996;
+const QUALIFICATION_MAIN_SHA: &str =
+    "15123e0c22a41d3cfaf3a7be88e3bdff56332fbab69e08f19d17df6f3679fbcb";
+
+fn qualification_prior(current: &[u8], mode: u32) -> Result<Vec<u8>> {
+    need(
+        mode == 0o644
+            && current.len() == QUALIFICATION_MAIN_BYTES
+            && digest(current) == QUALIFICATION_MAIN_SHA,
+        "exact O02 qualification main bytes/hash/mode",
+    )?;
+    let mut prior = std::str::from_utf8(current)
+        .map_err(|e| e.to_string())?
+        .to_owned();
+    for insertion in [
+        r#"        "O02" => o06::check_operations(root, records),"#,
+        r#"    } else if id == "O02" {
+        "offline native health, portal smoke, upstream replay, OCI digest and promotion transaction checks; shipping assembly, registry observation and deployment remain separate""#,
+    ] {
+        let insertion = format!("{insertion}\n");
+        need(
+            prior.matches(&insertion).count() == 1,
+            "exact O02 registration span",
+        )?;
+        prior = prior.replacen(&insertion, "", 1);
+    }
+    let pin = &PINS[1];
+    need(
+        prior.len() == pin.current_bytes && digest(prior.as_bytes()) == pin.current_sha,
+        "O02 registration reconstructs the existing main frame",
+    )?;
+    Ok(prior.into_bytes())
+}
+
 pub(crate) fn frame(path: &str, current: &[u8], mode: u32) -> Result<Vec<u8>> {
+    if path == "crates/xtask/src/main.rs" {
+        return historical_frame(path, &qualification_prior(current, mode)?, mode);
+    }
+    historical_frame(path, current, mode)
+}
+
+fn historical_frame(path: &str, current: &[u8], mode: u32) -> Result<Vec<u8>> {
     let index = PINS
         .iter()
         .position(|pin| pin.path == path)
@@ -362,10 +403,20 @@ pub(crate) fn controls(root: &Path, admitted_lock: &[u8]) -> Result<()> {
         let actual = if pin.path == "Cargo.lock" {
             admitted_lock.to_vec()
         } else {
-            physical(root, pin.path, pin.current_bytes)?
+            let current = physical(root, pin.path, QUALIFICATION_MAIN_BYTES)?;
+            let prior = qualification_prior(&current, 0o644)?;
+            let mut changed = current.clone();
+            changed[0] ^= 1;
+            need(
+                qualification_prior(&changed, 0o644).is_err()
+                    && qualification_prior(&prior, 0o644).is_err()
+                    && qualification_prior(&current, 0o755).is_err(),
+                "O02 registration rejects altered and historical main material",
+            )?;
+            prior
         };
         let row = &doc["rows"][index];
-        let prior = frame(pin.path, &actual, 0o644)?;
+        let prior = historical_frame(pin.path, &actual, 0o644)?;
         let git = Command::new("git")
             .args(["show", &format!("{BASE}:{}", pin.path)])
             .current_dir(root)
@@ -385,12 +436,12 @@ pub(crate) fn controls(root: &Path, admitted_lock: &[u8]) -> Result<()> {
             "exact predecessor Git bytes/mode/blob",
         )?;
         need(
-            frame(pin.path, &prior, 0o644).is_err(),
+            historical_frame(pin.path, &prior, 0o644).is_err(),
             "historical predecessor rejected as current",
         )?;
         for mode in [0o600, 0o755, 0o4644] {
             need(
-                frame(pin.path, &actual, mode).is_err(),
+                historical_frame(pin.path, &actual, mode).is_err(),
                 "wrong source mode rejected",
             )?;
         }
@@ -411,7 +462,7 @@ pub(crate) fn controls(root: &Path, admitted_lock: &[u8]) -> Result<()> {
                 }
             }
             need(
-                frame(pin.path, &bad, 0o644).is_err(),
+                historical_frame(pin.path, &bad, 0o644).is_err(),
                 "changed/truncated/appended current rejected",
             )?;
         }
@@ -430,19 +481,19 @@ pub(crate) fn controls(root: &Path, admitted_lock: &[u8]) -> Result<()> {
             let mut missing = actual.clone();
             missing.drain(start..end);
             need(
-                frame(pin.path, &missing, 0o644).is_err(),
+                historical_frame(pin.path, &missing, 0o644).is_err(),
                 "missing physical insertion rejected",
             )?;
             let mut duplicate = actual.clone();
             duplicate.splice(start..start, inserted.iter().copied());
             need(
-                frame(pin.path, &duplicate, 0o644).is_err(),
+                historical_frame(pin.path, &duplicate, 0o644).is_err(),
                 "duplicate physical insertion rejected",
             )?;
             let mut changed = actual.clone();
             changed[start] ^= 1;
             need(
-                frame(pin.path, &changed, 0o644).is_err(),
+                historical_frame(pin.path, &changed, 0o644).is_err(),
                 "changed physical insertion rejected",
             )?;
             shift = shift
@@ -512,7 +563,7 @@ pub(crate) fn controls(root: &Path, admitted_lock: &[u8]) -> Result<()> {
         need(scope(&bad).is_err(), "closed scope mutation rejected")?;
     }
     need(
-        frame("unowned", b"", 0o644).is_err(),
+        historical_frame("unowned", b"", 0o644).is_err(),
         "unowned path rejected",
     )
 }
