@@ -1,6 +1,8 @@
 //! Two-path CLI successor. Physical current bytes precede historical interpretation.
 #[path = "t08a_main_join.rs"]
 pub(crate) mod accepted_main_join;
+#[path = "../../../docs/rust-rewrite/t08a/issue903-config-edge-successor.rs"]
+mod issue903_config_successor;
 #[allow(
     dead_code,
     clippy::duplicate_mod,
@@ -8,9 +10,11 @@ pub(crate) mod accepted_main_join;
 )]
 #[path = "../../../docs/rust-rewrite/o02/upstream-contracts-source-successor-v1.rs"]
 pub(crate) mod upstream_contracts_successor;
+#[path = "../../../docs/rust-rewrite/t08a/w07-test-dependency-source-successor-v1.rs"]
+mod w07_test_dependency_source_successor;
 use serde_json::Value;
 use sha2::{Digest, Sha256};
-use std::{fs, path::Path, process::Command};
+use std::{path::Path, process::Command};
 type Result<T> = std::result::Result<T, String>;
 const CAPSULE: &str = "docs/rust-rewrite/t08a/shared-source-successor.json";
 const CAPSULE_SHA: &str = "bb6ae04922975769b8baa8fc0b1f1751326a9c2c15fb9b2052239493e5c98c38";
@@ -28,49 +32,74 @@ fn digest(bytes: &[u8]) -> String {
         .map(|b| format!("{b:02x}"))
         .collect()
 }
-fn regular(root: &Path, path: &str) -> Result<Vec<u8>> {
-    let full = root.join(path);
-    let m = fs::symlink_metadata(&full).map_err(|e| e.to_string())?;
-    need(
-        m.is_file() && !m.file_type().is_symlink() && m.len() <= 1048576,
-        "regular bounded source leaf",
-    )?;
-    need(
-        full.canonicalize()
-            .map_err(|e| e.to_string())?
-            .starts_with(root.canonicalize().map_err(|e| e.to_string())?),
-        "source stays within root",
-    )?;
-    fs::read(full).map_err(|e| e.to_string())
+#[allow(
+    clippy::duplicate_mod,
+    reason = "Shared standalone reader is independently included by sealed Rust source gates"
+)]
+#[path = "../../../docs/rust-rewrite/t08a/bounded_source_reader.rs"]
+mod bounded_source_reader;
+pub(crate) use bounded_source_reader::bounded_read;
+
+fn regular_material(root: &Path, path: &str) -> Result<(Vec<u8>, u32)> {
+    bounded_read(root, path, 1048576)
 }
-fn source_mode(root: &Path, path: &str) -> Result<&'static str> {
+fn regular(root: &Path, path: &str) -> Result<Vec<u8>> {
+    regular_material(root, path).map(|(bytes, _)| bytes)
+}
+pub(crate) fn opened_source_mode(root: &Path, path: &str, mode: u32) -> Result<&'static str> {
     #[cfg(unix)]
     {
-        use std::os::unix::fs::PermissionsExt;
-        need(
-            fs::symlink_metadata(root.join(path))
-                .map_err(|e| e.to_string())?
-                .permissions()
-                .mode()
-                & 0o7777
-                == 0o644,
-            "physical source requires regular0644",
-        )?;
+        let _ = (root, path);
+        need(mode == 0o644, "opened physical source requires regular0644")?;
+        Ok("0644")
     }
     #[cfg(not(unix))]
     {
-        // Windows does not expose Unix permission bits. Preserve the committed
-        // source mode through the current index and independently reject links.
-        let out = Command::new("git")
-            .args(["ls-files", "--stage", "--", path])
-            .current_dir(root)
-            .output()
-            .map_err(|e| e.to_string())?;
-        need(
-            out.status.success() && String::from_utf8_lossy(&out.stdout).starts_with("100644 "),
-            "Windows current source index requires100644",
-        )?;
+        let _ = mode;
+        source_mode(root, path)
     }
+}
+
+pub(crate) fn project_issue903_config(
+    root: &Path,
+    path: &str,
+    current: &[u8],
+    opened_mode: u32,
+) -> Result<Vec<u8>> {
+    opened_source_mode(root, path, opened_mode)?;
+    issue903_config_successor::prior(root, path, current, opened_mode)
+}
+#[allow(
+    dead_code,
+    reason = "W07/O02 consumers use the identity; the standalone checker compiles this module as well"
+)]
+pub(crate) fn current_lock_identity() -> Result<(usize, String)> {
+    issue903_config_successor::current_lock_identity()
+}
+
+pub(crate) fn issue903_config_controls(root: &Path) -> Result<()> {
+    issue903_config_successor::controls(root)
+}
+
+#[cfg(not(unix))]
+fn source_mode(root: &Path, path: &str) -> Result<&'static str> {
+    // Windows does not expose Unix permission bits. Preserve the committed
+    // source mode through the current index and independently reject links.
+    let out = Command::new("git")
+        .args(["ls-files", "--stage", "--", path])
+        .current_dir(root)
+        .output()
+        .map_err(|e| e.to_string())?;
+    let index = std::str::from_utf8(&out.stdout).map_err(|error| error.to_string())?;
+    let mut entries = index.lines();
+    need(
+        out.status.success()
+            && entries.next().is_some_and(|entry| {
+                entry.starts_with("100644 ") && entry.ends_with(&format!(" 0\t{path}"))
+            })
+            && entries.next().is_none(),
+        "Windows current source index requires one stage-zero file with mode100644",
+    )?;
     Ok("0644")
 }
 fn capsule(root: &Path) -> Result<Value> {
@@ -177,11 +206,16 @@ pub(crate) fn rmcp_historical_operand(
     mode: &str,
 ) -> Result<Option<Vec<u8>>> {
     let mode = u32::from_str_radix(mode, 8).map_err(|error| error.to_string())?;
+    let projected = if path == "crates/ssx-infra/Cargo.toml" {
+        Some(issue903_config_successor::project_current(path, physical)?)
+    } else {
+        None
+    };
     rmcp_source_afterimage::runtime_prior(
         RMCP_RUNTIME_SOURCES,
         RMCP_RUNTIME_SHA,
         path,
-        physical,
+        projected.as_deref().unwrap_or(physical),
         mode,
     )
 }
@@ -199,7 +233,7 @@ pub(crate) const CURRENT_LOCK_SHA: &str =
     "fd04cdf3d534a04be379d067583ff2dfb383fd98e6982092e922a00d56d4e7c9";
 pub(crate) const CURRENT_LOCK_BYTES: usize = 96180;
 
-fn optional_chrono_prior(path: &str, current: &[u8], mode: &str) -> Result<Vec<u8>> {
+pub(crate) fn optional_chrono_prior(path: &str, current: &[u8], mode: &str) -> Result<Vec<u8>> {
     need(
         digest(OPTIONAL_CHRONO.as_bytes()) == OPTIONAL_CHRONO_SHA,
         "compiled RMCP optional Chrono transition",
@@ -228,12 +262,13 @@ fn optional_chrono_prior(path: &str, current: &[u8], mode: &str) -> Result<Vec<u
 #[allow(dead_code, reason = "A08 caller is compiled only in xtask")]
 pub(crate) fn prior_infra_manifest(root: &Path, supplied: &[u8]) -> Result<Vec<u8>> {
     const PATH: &str = "crates/ssx-infra/Cargo.toml";
-    let physical = regular(root, PATH)?;
+    let (physical, opened_mode) = regular_material(root, PATH)?;
     need(
         physical == supplied,
         "RMCP infrastructure manifest must be physical current",
     )?;
-    optional_chrono_prior(PATH, &physical, source_mode(root, PATH)?)
+    let projected = project_issue903_config(root, PATH, &physical, opened_mode)?;
+    optional_chrono_prior(PATH, &projected, "0644")
 }
 const RMCP_ROWS: [(&str, usize); 2] = [("Cargo.toml", 1), ("Cargo.lock", 6)];
 fn rmcp_security_capsule(raw: &str) -> Result<Value> {
@@ -283,10 +318,20 @@ const PORTAL_LOCK_EDITS: [(usize, &[u8]); 3] = [
     (66903, b" \"scraper\",\n"),
     (91635, b" \"url\",\n"),
 ];
-pub(crate) fn portal_health_lock_frame(current: &[u8]) -> Result<Vec<u8>> {
+pub(crate) fn portal_health_lock_frame(root: &Path, current: &[u8]) -> Result<Vec<u8>> {
+    let (physical, opened_mode) = regular_material(root, "Cargo.lock")?;
+    need(current == physical, "issue903 exact physical current lock")?;
+    portal_health_lock_from_admitted(root, &physical, opened_mode)
+}
+
+fn portal_health_lock_from_admitted(root: &Path, physical: &[u8], mode: u32) -> Result<Vec<u8>> {
+    let prior = project_issue903_config(root, "Cargo.lock", physical, mode)?;
+    portal_health_lock_frame_prior(&prior)
+}
+fn portal_health_lock_frame_prior(current: &[u8]) -> Result<Vec<u8>> {
     need(
         current.len() == CURRENT_LOCK_BYTES && digest(current) == CURRENT_LOCK_SHA,
-        "security exact current lock",
+        "security exact projected prior lock",
     )?;
     let accepted = optional_chrono_prior("Cargo.lock", current, "0644")?;
     let security = upstream_contracts_successor::frame("Cargo.lock", &accepted, 0o644)?;
@@ -352,13 +397,26 @@ fn native_health_lock_prior(physical: &[u8]) -> Result<Vec<u8>> {
     )?;
     Ok(prior)
 }
-fn cli_logical_input(root: &Path, path: &str, physical: &[u8]) -> Result<Vec<u8>> {
+fn cli_logical_input(
+    root: &Path,
+    path: &str,
+    physical: &[u8],
+    opened_mode: u32,
+) -> Result<Vec<u8>> {
     if path == "Cargo.lock" {
-        return native_health_lock_prior(&portal_health_lock_frame(physical)?);
+        return native_health_lock_prior(&portal_health_lock_from_admitted(
+            root,
+            physical,
+            opened_mode,
+        )?);
     }
     if path == "Cargo.toml" {
-        let accepted = optional_chrono_prior(path, physical, source_mode(root, path)?)?;
+        let accepted =
+            optional_chrono_prior(path, physical, opened_source_mode(root, path, opened_mode)?)?;
         return rmcp_security_prior(path, &accepted);
+    }
+    if w07_test_dependency_source_successor::owns(path) {
+        return w07_test_dependency_source_successor::prior(root, path, physical, opened_mode);
     }
     if accepted_main_join::owns(path) {
         accepted_main_join::project(root, path, physical, accepted_main_join::Parent::Cli)
@@ -373,17 +431,17 @@ pub(crate) fn prior(root: &Path, path: &str, supplied: &[u8]) -> Result<Vec<u8>>
         .iter()
         .position(|r| r.0 == path)
         .ok_or("unowned CLI successor path")?;
-    let current = regular(root, path)?;
+    let (current, mode) = regular_material(root, path)?;
     need(
         current == supplied,
         "supplied bytes are not physical current",
     )?;
-    let logical = cli_logical_input(root, path, &current)?;
+    let logical = cli_logical_input(root, path, &current, mode)?;
     let doc = capsule(root)?;
     inverse(
         &doc["rows"][index],
         &logical,
-        source_mode(root, path)?,
+        opened_source_mode(root, path, mode)?,
         ROWS[index].1,
     )
 }
@@ -409,17 +467,13 @@ pub(crate) fn w07_lock_prior_from_physical(
         path == "Cargo.lock" && expected_prior == W07_PRIOR_SHA,
         "exact W07 lock caller tuple",
     )?;
-    need(
-        mode == "0644"
-            && supplied.len() == CURRENT_LOCK_BYTES
-            && digest(supplied) == CURRENT_LOCK_SHA,
-        "authenticated physical current lock bytes/mode",
-    )?;
+    need(mode == "0644", "authenticated physical current lock mode")?;
     let index = ROWS
         .iter()
         .position(|row| row.0 == path)
         .ok_or("unowned W07 Cargo.lock successor path")?;
-    let logical = cli_logical_input(root, path, supplied)?;
+    let mode_bits = if cfg!(windows) { 0 } else { 0o644 };
+    let logical = cli_logical_input(root, path, supplied, mode_bits)?;
     let doc = capsule(root)?;
     let prior = inverse(&doc["rows"][index], &logical, mode, ROWS[index].1)?;
     need(
@@ -457,11 +511,12 @@ fn controls_for(
 ) -> Result<()> {
     for (index, (path, count)) in rows.iter().enumerate() {
         let row = &doc["rows"][index];
-        let actual = regular(root, path)?;
+        let (actual, opened_mode) = regular_material(root, path)?;
+        let accepted_mode = opened_source_mode(root, path, opened_mode)?;
         let old = normalize(root, path, &actual)?;
-        let logical = cli_logical_input(root, path, &actual)?;
+        let logical = cli_logical_input(root, path, &actual, opened_mode)?;
         need(
-            inverse(row, &logical, "0644", *count)? == old,
+            inverse(row, &logical, accepted_mode, *count)? == old,
             "original pure positive after physical outer admission",
         )?;
         let commit = text(&row["prior"], "commit")?;
@@ -576,17 +631,17 @@ pub(crate) fn legacy_prior(root: &Path, path: &str, supplied: &[u8]) -> Result<V
         .iter()
         .position(|row| row.0 == path)
         .ok_or("unowned legacy successor path")?;
-    let physical = regular(root, path)?;
+    let (physical, mode) = regular_material(root, path)?;
     need(
         physical == supplied,
         "legacy supplied is not physical current",
     )?;
-    let logical = cli_logical_input(root, path, &physical)?;
+    let logical = cli_logical_input(root, path, &physical, mode)?;
     let doc = legacy_capsule(root)?;
     inverse(
         &doc["rows"][index],
         &logical,
-        source_mode(root, path)?,
+        opened_source_mode(root, path, mode)?,
         LEGACY_ROWS[index].1,
     )
 }
@@ -608,22 +663,60 @@ pub(crate) fn test_dependency_prior(
         "closed W07 dependency caller path/hash",
     )?;
     let prior = legacy_prior(root, path, supplied)?;
-    let archive = regular(root, TEST_DEPENDENCY_ARCHIVE)?;
-    source_mode(root, TEST_DEPENDENCY_ARCHIVE)?;
+    let (archive, archive_mode) = regular_material(root, TEST_DEPENDENCY_ARCHIVE)?;
+    opened_source_mode(root, TEST_DEPENDENCY_ARCHIVE, archive_mode)?;
     need(
         digest(&archive) == TEST_DEPENDENCY_PRIOR_SHA && archive == prior,
         "exact immutable W07 dependency archive",
     )?;
     Ok(prior)
 }
+#[cfg(any(all(test, unix), windows))]
+fn configured_control_scratch_root() -> Result<std::path::PathBuf> {
+    fn checked_root(value: std::ffi::OsString) -> Result<std::path::PathBuf> {
+        let path = std::path::PathBuf::from(value);
+        need(
+            path.is_absolute(),
+            "T08A control scratch root must be absolute",
+        )?;
+        let metadata = std::fs::symlink_metadata(&path).map_err(|error| error.to_string())?;
+        need(
+            metadata.is_dir() && !metadata.file_type().is_symlink(),
+            "T08A control scratch root must be an existing non-symlink directory",
+        )?;
+        path.canonicalize().map_err(|error| error.to_string())
+    }
+    let scratch = match std::env::var_os("TMPDIR") {
+        Some(path) => path,
+        // Foundation's T06 job already has a runner-owned scratch directory.
+        // Each custody control creates and retires its own child there.
+        None if std::env::var("GITHUB_ACTIONS").as_deref() == Ok("true") => {
+            std::env::var_os("RUNNER_TEMP").ok_or("RUNNER_TEMP is missing in GitHub Actions")?
+        }
+        None => return Err("TMPDIR must be configured for T08A controls".into()),
+    };
+    let owned = checked_root(scratch)?;
+    if let Some(value) = std::env::var_os("SLOPSEARX_TEST_TEMP_ROOT") {
+        need(
+            owned == checked_root(value)?,
+            "TMPDIR and SLOPSEARX_TEST_TEMP_ROOT must resolve to one registered scratch root",
+        )?;
+    }
+    Ok(owned)
+}
 pub(crate) fn controls(root: &Path) -> Result<()> {
-    let actual = regular(root, "Cargo.lock")?;
-    let accepted = optional_chrono_prior("Cargo.lock", &actual, source_mode(root, "Cargo.lock")?)?;
-    upstream_contracts_successor::controls(root, &accepted)?;
+    #[cfg(any(all(test, unix), windows))]
+    bounded_source_reader::controls(&configured_control_scratch_root()?);
+    issue903_config_controls(root)?;
+    w07_test_dependency_source_successor::controls(root)?;
     rmcp_security_controls(root)?;
-    let health = portal_health_lock_frame(&actual)?;
+    let (actual, mode) = regular_material(root, "Cargo.lock")?;
+    let projected_prior_lock = project_issue903_config(root, "Cargo.lock", &actual, mode)?;
+    let accepted = optional_chrono_prior("Cargo.lock", &projected_prior_lock, "0644")?;
+    upstream_contracts_successor::controls(root, &accepted)?;
+    let health = portal_health_lock_frame(root, &actual)?;
     need(
-        portal_health_lock_frame(&health).is_err(),
+        portal_health_lock_frame_prior(&health).is_err(),
         "portal historical health lock is not current",
     )?;
     for (at, inserted) in PORTAL_LOCK_EDITS {
@@ -633,29 +726,29 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
                 .filter(|edit| edit.0 < at)
                 .map(|edit| edit.1.len())
                 .sum::<usize>();
-        let mut missing = actual.clone();
+        let mut missing = projected_prior_lock.clone();
         missing.drain(shifted..shifted + inserted.len());
         need(
-            portal_health_lock_frame(&missing).is_err(),
+            portal_health_lock_frame_prior(&missing).is_err(),
             "portal missing dependency edge rejected",
         )?;
-        let mut duplicate = actual.clone();
+        let mut duplicate = projected_prior_lock.clone();
         duplicate.splice(shifted..shifted, inserted.iter().copied());
         need(
-            portal_health_lock_frame(&duplicate).is_err(),
+            portal_health_lock_frame_prior(&duplicate).is_err(),
             "portal duplicate dependency edge rejected",
         )?;
     }
-    let mut unrelated = actual.clone();
+    let mut unrelated = projected_prior_lock.clone();
     unrelated[0] ^= 1;
     need(
-        portal_health_lock_frame(&unrelated).is_err(),
+        portal_health_lock_frame_prior(&unrelated).is_err(),
         "portal unrelated lock mutation rejected",
     )?;
-    let mut appended = actual.clone();
+    let mut appended = projected_prior_lock.clone();
     appended.push(b'\n');
     need(
-        portal_health_lock_frame(&appended).is_err(),
+        portal_health_lock_frame_prior(&appended).is_err(),
         "portal appended lock bytes rejected",
     )?;
     let prior_lock = native_health_lock_prior(&health)?;
@@ -700,8 +793,14 @@ fn rmcp_security_controls(root: &Path) -> Result<()> {
         "altered security capsule rejected",
     )?;
     for (index, (path, count)) in RMCP_ROWS.iter().enumerate() {
-        let physical = regular(root, path)?;
-        let accepted = optional_chrono_prior(path, &physical, source_mode(root, path)?)?;
+        let (physical, opened_mode) = regular_material(root, path)?;
+        let mode = opened_source_mode(root, path, opened_mode)?;
+        let projected = if *path == "Cargo.lock" {
+            project_issue903_config(root, path, &physical, opened_mode)?
+        } else {
+            physical
+        };
+        let accepted = optional_chrono_prior(path, &projected, mode)?;
         let actual = if *path == "Cargo.lock" {
             upstream_contracts_successor::frame(path, &accepted, 0o644)?
         } else {

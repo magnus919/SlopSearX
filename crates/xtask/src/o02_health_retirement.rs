@@ -1,7 +1,6 @@
 //! One authenticated O02 retirement; historical inventory bytes remain unchanged.
 use crate::cli_source_custody::{
-    CURRENT_LOCK_BYTES, CURRENT_LOCK_SHA, HEALTH_LOCK_BYTES, HEALTH_LOCK_SHA,
-    portal_health_lock_frame,
+    HEALTH_LOCK_BYTES, HEALTH_LOCK_SHA, current_lock_identity, portal_health_lock_frame,
 };
 use sha2::{Digest, Sha256};
 #[cfg(unix)]
@@ -13,7 +12,7 @@ pub(crate) mod image_pin_custody;
 use std::io::Read;
 use std::{collections::BTreeSet, fs, path::Path};
 #[cfg(test)]
-use std::{ffi::OsString, path::PathBuf};
+use std::{ffi::OsString, path::PathBuf, process::Command};
 type Result<T> = std::result::Result<T, String>;
 pub(crate) const PATH: &str = "docker/healthcheck.py";
 const BLOB: &str = "39bcbc736bed7e441531ab00f3e6d540e4b3af65";
@@ -253,8 +252,9 @@ pub(crate) fn authenticate(root: &Path, fixture: &[u8], tracked: &BTreeSet<Strin
     ] {
         material(root, path, size, sha)?;
     }
-    let current = material(root, "Cargo.lock", CURRENT_LOCK_BYTES, CURRENT_LOCK_SHA)?;
-    let health = portal_health_lock_frame(&current)?;
+    let (current_bytes, current_sha) = current_lock_identity()?;
+    let current = material(root, "Cargo.lock", current_bytes, &current_sha)?;
+    let health = portal_health_lock_frame(root, &current)?;
     need(
         health.len() == HEALTH_LOCK_BYTES && digest(&health) == HEALTH_LOCK_SHA,
         "exact accepted health lock after authenticated portal frame",
@@ -410,6 +410,21 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
                 .map_err(|e| e.to_string())?;
             fs::copy(root.join(path), destination).map_err(|e| e.to_string())?;
         }
+        let git_dir = Command::new("git")
+            .args(["rev-parse", "--absolute-git-dir"])
+            .current_dir(root)
+            .output()
+            .map_err(|error| error.to_string())?;
+        need(
+            git_dir.status.success(),
+            "control fixture Git directory lookup",
+        )?;
+        let git_dir = String::from_utf8(git_dir.stdout)
+            .map_err(|error| error.to_string())?
+            .trim()
+            .to_owned();
+        fs::write(owned.join(".git"), format!("gitdir: {git_dir}\n"))
+            .map_err(|error| error.to_string())?;
         authenticate(&owned, &fixture, &BTreeSet::new())?;
         let lock = owned.join("Cargo.lock");
         let original_lock = fs::read(&lock).map_err(|e| e.to_string())?;

@@ -506,50 +506,42 @@ fn page_search_controls(root: &Path) -> Result<()> {
 }
 
 fn read(root: &Path, row: &Row) -> Result<(Vec<u8>, u32)> {
-    let full = root.join(row.path);
-    let meta = fs::symlink_metadata(&full).map_err(|e| e.to_string())?;
-    need(
-        meta.is_file() && !meta.file_type().is_symlink(),
-        "regular non-symlink source",
-    )?;
+    let (bytes, mode) = cli_source_custody::bounded_read(root, row.path, 1_048_576)?;
     #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        Ok((
-            fs::read(full).map_err(|e| e.to_string())?,
-            meta.permissions().mode() & 0o7777,
-        ))
-    }
+    need(mode == 0o644, "opened regular source mode0644")?;
     #[cfg(not(unix))]
-    {
-        Err("W07/T02 source mode proof requires Unix".into())
-    }
+    return Err("W07/T02 source mode proof requires Unix".into());
+    #[cfg(unix)]
+    Ok((bytes, mode))
 }
+
 /// The direct dev edge belongs to one exact physical MCP manifest on every lock route.
-fn paired_manifest(root: &Path) -> Result<()> {
-    let path = root.join("crates/ssx-mcp/Cargo.toml");
-    let meta = fs::symlink_metadata(&path).map_err(|e| e.to_string())?;
-    need(
-        meta.is_file() && !meta.file_type().is_symlink(),
-        "regular non-symlink paired MCP manifest",
-    )?;
+fn paired_manifest(physical_root: &Path, trusted_source_root: &Path) -> Result<()> {
+    let (current, mode) =
+        cli_source_custody::bounded_read(physical_root, "crates/ssx-mcp/Cargo.toml", 1_048_576)?;
     #[cfg(unix)]
     {
-        use std::os::unix::fs::PermissionsExt;
-        let bytes = fs::read(path).map_err(|e| e.to_string())?;
+        need(mode == 0o644, "opened paired manifest mode0644")?;
+        let prior = cli_source_custody::project_issue903_config(
+            trusted_source_root,
+            "crates/ssx-mcp/Cargo.toml",
+            &current,
+            mode,
+        )?;
         need(
-            meta.permissions().mode() & 0o7777 == 0o644
-                && bytes.len() == 1234
-                && sha(&bytes)
+            prior.len() == 1234
+                && sha(&prior)
                     == "9a077866f6c72e8513d727c4f81928777ee985ae5742ace152bc61875775727b",
-            "exact paired MCP manifest bytes/mode",
+            "exact paired MCP manifest predecessor bytes/mode/Git identity",
         )
     }
     #[cfg(not(unix))]
     {
+        let _ = (current, mode, trusted_source_root);
         Err("W07/T02 paired manifest source mode proof requires Unix".into())
     }
 }
+
 /// Only the five exact physical afterimages can yield either sealed parent.
 /// A parent supplied in place of actual current bytes is always rejected.
 pub(crate) fn parent(root: &Path, path: &str, supplied: &[u8], parent: Parent) -> Result<Vec<u8>> {
@@ -616,7 +608,7 @@ fn parent_at_physical_root(
     )?;
     let actual = canonical_input(trusted_source_root, path, &actual, mode)?;
     if path == "Cargo.lock" {
-        paired_manifest(physical_root)?;
+        paired_manifest(physical_root, trusted_source_root)?;
     }
     let w07 = inverse(r, &actual, mode, &r.w07)?;
     let t02 = inverse(r, &actual, mode, &r.t02)?;
@@ -669,6 +661,7 @@ pub(crate) fn parent_git_blob(
 /// Real Git parents and both exact inverses, plus rejection controls. No new test identity.
 pub(crate) fn controls(root: &Path) -> Result<()> {
     cli_source_custody::controls(root)?;
+    cli_source_custody::issue903_config_controls(root)?;
     #[cfg(test)]
     snapshot_helper_amendment::controls(root)?;
     page_search_controls(root)?;
@@ -808,7 +801,12 @@ fn filesystem_controls(root: &Path) -> Result<()> {
     let manifest_path = owned.physical_root.join("crates/ssx-mcp/Cargo.toml");
     fs::create_dir_all(manifest_path.parent().ok_or("paired manifest parent")?)
         .map_err(|e| e.to_string())?;
-    let manifest = fs::read(root.join("crates/ssx-mcp/Cargo.toml")).map_err(|e| e.to_string())?;
+    let (manifest, manifest_mode) =
+        cli_source_custody::bounded_read(root, "crates/ssx-mcp/Cargo.toml", 1_048_576)?;
+    need(
+        manifest_mode == 0o644,
+        "opened paired manifest source mode0644",
+    )?;
     fs::write(&manifest_path, &manifest).map_err(|e| e.to_string())?;
     fs::set_permissions(&manifest_path, fs::Permissions::from_mode(0o644))
         .map_err(|e| e.to_string())?;
@@ -878,7 +876,9 @@ fn filesystem_controls(root: &Path) -> Result<()> {
         fs::remove_dir(&path).map_err(|e| e.to_string())?;
         fs::rename(backup, path).map_err(|e| e.to_string())?;
     }
-    let lock = fs::read(owned.physical_root.join("Cargo.lock")).map_err(|e| e.to_string())?;
+    let (lock, lock_mode) =
+        cli_source_custody::bounded_read(&owned.physical_root, "Cargo.lock", 1_048_576)?;
+    need(lock_mode == 0o644, "opened fixture lock mode0644")?;
     for kind in [Parent::W07, Parent::T02] {
         let mut changed = manifest.clone();
         changed[0] ^= 1;

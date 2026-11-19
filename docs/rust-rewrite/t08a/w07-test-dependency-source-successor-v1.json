@@ -1,0 +1,70 @@
+{
+  "schema": "T08A_W07_TEST_DEPENDENCY_SOURCE_SUCCESSOR_V1",
+  "baseline_commit": "cebf0f8c701d2fde2c8b22ae3da39386e874bcae",
+  "row": {
+    "path": "docs/rust-rewrite/w07/source-amendments/test_dependency_successor.rs",
+    "prior": {
+      "bytes": 12158,
+      "sha256": "5dd1fc5bd429e413a9dac90402ec322d5d1cb4894ea3b8d63f958074b76aaf15",
+      "mode": "0644",
+      "git_blob": "2fe4c3acf212bcffb6546219e9d102f88c4a4e3a"
+    },
+    "current": {
+      "bytes": 13215,
+      "sha256": "fb8725bff7cbe82719db5076fae73979bf7f81ab4445ae8a5354b98db7e0b664",
+      "mode": "0644"
+    },
+    "edits": [
+      {
+        "offset": 104,
+        "remove_utf8": "use std::{fs, path::Path};\n",
+        "insert_utf8": "use std::{fs, path::Path, process::Command};\n"
+      },
+      {
+        "offset": 2067,
+        "remove_utf8": "#[cfg(unix)]\nfn mode(stat: &fs::Metadata) -> Result<u32> {\n    use std::os::unix::fs::PermissionsExt;\n    Ok(stat.permissions().mode() & 0o777)\n}\n#[cfg(not(unix))]\nfn mode(_: &fs::Metadata) -> Result<u32> {\n    Err(\"W07 dependency source mode proof requires Unix\".into())\n",
+        "insert_utf8": "fn read_material(root: &Path, path: &str) -> Result<(Vec<u8>, u32)> {\n    let (bytes, opened_mode) =\n        super::w07_t02_joint::cli_source_custody::bounded_read(root, path, 1_048_576)?;\n    super::w07_t02_joint::cli_source_custody::opened_source_mode(root, path, opened_mode)?;\n    Ok((bytes, opened_mode))\n"
+      },
+      {
+        "offset": 2395,
+        "remove_utf8": "    let path = root.join(path);\n    let stat = fs::symlink_metadata(&path).map_err(|e| e.to_string())?;\n    need(\n        stat.is_file() && !stat.file_type().is_symlink() && mode(&stat)? == 0o644,\n        \"W07 dependency source must be a regular non-symlink0644 file\",\n    )?;\n    fs::read(path).map_err(|e| e.to_string())\n",
+        "insert_utf8": "    read_material(root, path).map(|(bytes, _)| bytes)\n}\nfn project_current_manifest(root: &Path, bytes: &[u8], opened_mode: u32) -> Result<Vec<u8>> {\n    super::w07_t02_joint::cli_source_custody::project_issue903_config(\n        root,\n        \"crates/ssx-mcp/Cargo.toml\",\n        bytes,\n        opened_mode,\n    )\n"
+      },
+      {
+        "offset": 3414,
+        "remove_utf8": "    let manifest = read(root, \"crates/ssx-mcp/Cargo.toml\")?;\n",
+        "insert_utf8": "    let (physical_manifest, manifest_mode) = read_material(root, \"crates/ssx-mcp/Cargo.toml\")?;\n"
+      },
+      {
+        "offset": 3513,
+        "remove_utf8": "        let old = pair(&lock, &manifest)?;\n",
+        "insert_utf8": "        let old = pair(&lock, &physical_manifest)?;\n"
+      },
+      {
+        "offset": 3659,
+        "remove_utf8": "",
+        "insert_utf8": "    let manifest = project_current_manifest(root, &physical_manifest, manifest_mode)?;\n"
+      },
+      {
+        "offset": 4024,
+        "remove_utf8": "    let manifest = read(root, \"crates/ssx-mcp/Cargo.toml\")?;\n    // Physical current is authenticated before comparing its accepted joint frame.\n    // Keep the raw physical lock for parent(), which independently checks supplied==actual.\n",
+        "insert_utf8": "    let (physical_manifest, manifest_mode) = read_material(root, \"crates/ssx-mcp/Cargo.toml\")?;\n    // The newest issue #903 config edge is authenticated and projected before the\n    // unchanged W07 direct-dev-edge profile is compared. Keep the raw lock for\n    // prior(), which independently checks supplied==physical current.\n    let manifest = project_current_manifest(root, &physical_manifest, manifest_mode)?;\n"
+      },
+      {
+        "offset": 5099,
+        "remove_utf8": "    let manifest = read(root, \"crates/ssx-mcp/Cargo.toml\")?;\n",
+        "insert_utf8": "    let (physical_manifest, manifest_mode) = read_material(root, \"crates/ssx-mcp/Cargo.toml\")?;\n    let manifest = project_current_manifest(root, &physical_manifest, manifest_mode)?;\n"
+      },
+      {
+        "offset": 7107,
+        "remove_utf8": "    filesystem_controls(root, &physical_lock, &manifest, &old_lock, &old_manifest)\n",
+        "insert_utf8": "    filesystem_controls(\n        root,\n        &physical_lock,\n        &physical_manifest,\n        &old_lock,\n        &old_manifest,\n    )\n"
+      },
+      {
+        "offset": 9266,
+        "remove_utf8": "",
+        "insert_utf8": "    let git_dir = Command::new(\"git\")\n        .args([\"rev-parse\", \"--absolute-git-dir\"])\n        .current_dir(source_root)\n        .output()\n        .map_err(|error| error.to_string())?;\n    need(\n        git_dir.status.success(),\n        \"W07 control fixture Git directory lookup\",\n    )?;\n    let git_dir = String::from_utf8(git_dir.stdout)\n        .map_err(|error| error.to_string())?\n        .trim()\n        .to_owned();\n    fs::write(owned.0.join(\".git\"), format!(\"gitdir: {git_dir}\\n\")).map_err(|e| e.to_string())?;\n"
+      }
+    ]
+  }
+}

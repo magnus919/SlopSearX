@@ -3,10 +3,24 @@
 #[allow(
     dead_code,
     clippy::duplicate_mod,
+    reason = "T08 bounded source reader shared with independent custody roots"
+)]
+#[path = "../../t08a/bounded_source_reader.rs"]
+mod bounded_source_reader;
+#[allow(
+    dead_code,
+    clippy::duplicate_mod,
     reason = "Independent qualification roots share this stateless dependency audit proof"
 )]
 #[path = "python-dependency-audit-current-main-v1.rs"]
 pub(crate) mod dependency_audit_outer;
+#[allow(
+    dead_code,
+    clippy::duplicate_mod,
+    reason = "Exact T08 source layer precedes unchanged T06 historical inverses"
+)]
+#[path = "../../t08a/issue903-config-edge-successor.rs"]
+mod issue903_config_successor;
 #[allow(
     dead_code,
     clippy::duplicate_mod,
@@ -92,30 +106,50 @@ fn physical_operand(
     proof_root: &Path,
     path: &str,
     expected_bytes: usize,
-) -> Result<Vec<u8>> {
-    if let Some(current) = dependency_audit_outer::current_at(physical_root, proof_root, path)? {
-        Ok(current)
+) -> Result<(Vec<u8>, u32)> {
+    if issue903_config_successor::owns(path) {
+        bounded_source_reader::bounded_read(physical_root, path, LIMIT)
+    } else if dependency_audit_outer::owns(path) {
+        let (physical, opened_mode) =
+            bounded_source_reader::bounded_read(physical_root, path, LIMIT)?;
+        dependency_audit_outer::admit_opened_mode(proof_root, path, opened_mode)?;
+        Ok((physical, opened_mode))
     } else if path == o02_upstream_outer::GATES_PATH {
-        o02_upstream_outer::gates_current_at(physical_root, proof_root)
+        Ok((
+            o02_upstream_outer::gates_current_at(physical_root, proof_root)?,
+            0o644,
+        ))
     } else if path == RMCP_T03_PATH {
-        regular(physical_root, path, RMCP_T03_BYTES)
+        Ok((regular(physical_root, path, RMCP_T03_BYTES)?, 0o644))
     } else {
-        regular(physical_root, path, expected_bytes)
+        Ok((regular(physical_root, path, expected_bytes)?, 0o644))
     }
 }
-fn logical_operand(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
-    let accepted = if dependency_audit_outer::owns(path) {
-        dependency_audit_outer::frame(path, physical, 0o644)?
+fn logical_operand(
+    proof_root: &Path,
+    path: &str,
+    physical: &[u8],
+    opened_mode: u32,
+) -> Result<Vec<u8>> {
+    let projected = if issue903_config_successor::owns(path) {
+        issue903_config_successor::prior(proof_root, path, physical, opened_mode)?
     } else {
         physical.to_vec()
     };
-    if path == o02_upstream_outer::GATES_PATH {
-        o02_upstream_outer::gates_frame(physical, 0o644)
-    } else if path == RMCP_T03_PATH {
-        rmcp_source_afterimage::prior(RMCP_T03_SOURCE, RMCP_T03_SHA, path, physical, 0o644)
+    let projected = if path == RMCP_T03_PATH {
+        rmcp_source_afterimage::prior(RMCP_T03_SOURCE, RMCP_T03_SHA, path, &projected, 0o644)?
     } else {
-        Ok(accepted)
-    }
+        projected
+    };
+    let accepted = if path == o02_upstream_outer::GATES_PATH {
+        o02_upstream_outer::gates_frame(&projected, 0o644)?
+    } else if dependency_audit_outer::owns(path) {
+        dependency_audit_outer::admit_opened_mode(proof_root, path, opened_mode)?;
+        dependency_audit_outer::frame(path, &projected, 0o644)?
+    } else {
+        projected
+    };
+    Ok(accepted)
 }
 fn current_at(physical_root: &Path, proof_root: &Path, path: &str) -> Result<Option<Vec<u8>>> {
     if !owns(path) {
@@ -124,8 +158,9 @@ fn current_at(physical_root: &Path, proof_root: &Path, path: &str) -> Result<Opt
     let capsule = regular(physical_root, CAPSULE_PATH, CAPSULE.len())?;
     let doc = decode(&capsule)?;
     let selected = pin(&doc, path)?;
-    let physical = physical_operand(physical_root, proof_root, path, selected.current_bytes)?;
-    let logical = logical_operand(path, &physical)?;
+    let (physical, opened_mode) =
+        physical_operand(physical_root, proof_root, path, selected.current_bytes)?;
+    let logical = logical_operand(proof_root, path, &physical, opened_mode)?;
     let prior = inverse(&selected, row(&doc, path)?, &logical, 0o644)?;
     git_prior(proof_root, &selected, &prior)?;
     Ok(Some(physical))
@@ -386,10 +421,33 @@ fn inverse(pin: &Pin<'_>, row: &Value, actual: &[u8], mode: u32) -> Result<Vec<u
 /// Pure exact-byte inverse/forward check. This does not claim filesystem or Git custody.
 #[cfg(test)]
 pub(crate) fn frame(path: &str, physical: &[u8], mode: u32) -> Result<Vec<u8>> {
+    need(
+        mode == 0o644,
+        "pure dependency-audit source frame requires canonical mode0644",
+    )?;
     let doc = decode(CAPSULE)?;
     let pin = pin(&doc, path)?;
-    let logical = logical_operand(path, physical)?;
-    inverse(&pin, row(&doc, path)?, &logical, mode)
+    let (projected, inverse_mode) = if issue903_config_successor::owns(path) {
+        (
+            issue903_config_successor::project_current(path, physical)?,
+            0o644,
+        )
+    } else {
+        (physical.to_vec(), mode)
+    };
+    let projected = if path == RMCP_T03_PATH {
+        rmcp_source_afterimage::prior(RMCP_T03_SOURCE, RMCP_T03_SHA, path, &projected, 0o644)?
+    } else {
+        projected
+    };
+    let logical = if path == o02_upstream_outer::GATES_PATH {
+        o02_upstream_outer::gates_frame(&projected, mode)?
+    } else if dependency_audit_outer::owns(path) {
+        dependency_audit_outer::frame(path, &projected, 0o644)?
+    } else {
+        projected
+    };
+    inverse(&pin, row(&doc, path)?, &logical, inverse_mode)
 }
 fn confined(root: &Path, path: &str) -> Result<std::path::PathBuf> {
     need(!Path::new(path).is_absolute(), "relative material path")?;
@@ -580,12 +638,13 @@ fn prior_at(
     let capsule = regular(physical_root, CAPSULE_PATH, CAPSULE.len())?;
     let doc = decode(&capsule)?;
     let pin = pin(&doc, path)?;
-    let physical = physical_operand(physical_root, proof_root, path, pin.current_bytes)?;
+    let (physical, opened_mode) =
+        physical_operand(physical_root, proof_root, path, pin.current_bytes)?;
     need(
         supplied.is_none_or(|bytes| physical == bytes),
         "supplied bytes are physical current",
     )?;
-    let logical = logical_operand(path, &physical)?;
+    let logical = logical_operand(proof_root, path, &physical, opened_mode)?;
     let prior = inverse(&pin, row(&doc, path)?, &logical, 0o644)?;
     git_prior(proof_root, &pin, &prior)?;
     Ok(prior)
@@ -593,6 +652,7 @@ fn prior_at(
 /// Additive controls for existing owning test identities. No historical test names change.
 #[cfg(test)]
 pub(crate) fn controls(root: &Path) -> Result<()> {
+    issue903_config_successor::controls(root)?;
     dependency_audit_outer::controls(root)?;
     o02_upstream_outer::gates_controls(root)?;
     let doc = decode(CAPSULE)?;
@@ -613,8 +673,8 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
     )?;
     let all_pins = pins(&doc)?;
     for pin in &all_pins {
-        let physical = physical_operand(root, root, pin.path, pin.current_bytes)?;
-        let logical = logical_operand(pin.path, &physical)?;
+        let (physical, opened_mode) = physical_operand(root, root, pin.path, pin.current_bytes)?;
+        let logical = logical_operand(root, pin.path, &physical, opened_mode)?;
         let prior_bytes = prior(root, pin.path, &physical)?;
         need(
             current_operand(root, pin.path)? == Some(physical.clone()),
@@ -637,6 +697,17 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
             frame(pin.path, &physical, 0o644)? == prior_bytes,
             "same pure frame as full custody",
         )?;
+        need(
+            frame(pin.path, &physical, 0o600).is_err(),
+            "dependency-audit source pure frame rejects wrong caller mode",
+        )?;
+        #[cfg(windows)]
+        if issue903_config_successor::owns(pin.path) || dependency_audit_outer::owns(pin.path) {
+            need(
+                frame(pin.path, &physical, 0).is_err(),
+                "pure dependency-audit frame rejects physical Windows mode-zero metadata",
+            )?;
+        }
         need(
             prior(root, pin.path, &prior_bytes).is_err()
                 && frame(pin.path, &prior_bytes, 0o644).is_err(),
@@ -725,7 +796,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         ),
     ] {
         let selected = pin(&doc, path)?;
-        let physical = physical_operand(root, root, path, selected.current_bytes)?;
+        let (physical, _) = physical_operand(root, root, path, selected.current_bytes)?;
         let text = std::str::from_utf8(&physical).map_err(|e| e.to_string())?;
         need(
             text.matches(before).count() == 1,
@@ -775,7 +846,7 @@ fn physical_controls(proof_root: &Path) -> Result<()> {
         let path = "pyproject.toml";
         let doc = decode(CAPSULE)?;
         let selected = pin(&doc, path)?;
-        let physical = physical_operand(proof_root, proof_root, path, selected.current_bytes)?;
+        let (physical, _) = physical_operand(proof_root, proof_root, path, selected.current_bytes)?;
         let full = owned.0.join(path);
         fs::write(&full, &physical).map_err(|e| e.to_string())?;
         fs::set_permissions(&full, fs::Permissions::from_mode(0o644)).map_err(|e| e.to_string())?;
@@ -846,7 +917,7 @@ fn physical_controls(proof_root: &Path) -> Result<()> {
         )?;
         let ci_path = ".github/workflows/ci.yml";
         let selected = pin(&doc, ci_path)?;
-        let ci = physical_operand(proof_root, proof_root, ci_path, selected.current_bytes)?;
+        let (ci, _) = physical_operand(proof_root, proof_root, ci_path, selected.current_bytes)?;
         fs::create_dir_all(owned.0.join("shadow/workflows")).map_err(|e| e.to_string())?;
         fs::write(owned.0.join("shadow/workflows/ci.yml"), &ci).map_err(|e| e.to_string())?;
         symlink(owned.0.join("shadow"), owned.0.join(".github")).map_err(|e| e.to_string())?;

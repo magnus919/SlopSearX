@@ -128,8 +128,11 @@ fn ensure(ok: bool, msg: &str) -> Result<()> {
 }
 fn sources(root: &Path) -> Result<Value> {
     let embedded: Value = serde_json::from_str(BINDINGS).map_err(|e| e.to_string())?;
-    let current =
-        fs::read(root.join("docs/rust-rewrite/t08a/bindings.json")).map_err(|e| e.to_string())?;
+    let (current, _) = source_custody::bounded_read(
+        root,
+        "docs/rust-rewrite/t08a/bindings.json",
+        BINDINGS.len() as u64,
+    )?;
     ensure(
         current == BINDINGS.as_bytes(),
         "T08A runtime bindings differ from compiled gate",
@@ -143,29 +146,26 @@ fn sources(root: &Path) -> Result<Value> {
             !Path::new(path).is_absolute() && !path.split('/').any(|p| p == ".."),
             "T08A source path escape",
         )?;
-        let full = root.join(path);
-        let metadata = fs::symlink_metadata(&full).map_err(|e| e.to_string())?;
+        let expected_bytes = row["bytes"].as_u64().ok_or("source byte count")?;
+        let (bytes, actual_mode) = source_custody::bounded_read(root, path, expected_bytes)
+            .map_err(|error| format!("T08A source {path}: {error}"))?;
         ensure(
-            metadata.file_type().is_file()
-                && metadata.len() == row["bytes"].as_u64().ok_or("source byte count")?
-                && full
-                    .canonicalize()
-                    .map_err(|e| e.to_string())?
-                    .starts_with(root.canonicalize().map_err(|e| e.to_string())?),
-            "T08A regular exact-size source within root",
+            bytes.len() as u64 == expected_bytes,
+            "T08A opened regular source has exact size",
         )?;
         #[cfg(unix)]
         {
-            use std::os::unix::fs::PermissionsExt;
             ensure(
                 row["unix_modes"].as_array().is_some_and(|allowed| {
-                    allowed.iter().any(|mode| {
-                        mode.as_u64() == Some(u64::from(metadata.permissions().mode() & 0o7777))
-                    })
+                    allowed
+                        .iter()
+                        .any(|mode| mode.as_u64() == Some(u64::from(actual_mode)))
                 }),
                 "T08A physical Unix source mode",
             )?;
         }
+        #[cfg(not(unix))]
+        let _ = actual_mode;
         #[cfg(windows)]
         {
             let expected = if row["mode"].as_u64() == Some(0o755) {
@@ -186,7 +186,6 @@ fn sources(root: &Path) -> Result<Value> {
                 "T08A Windows source index mode",
             )?;
         }
-        let bytes = fs::read(full).map_err(|e| e.to_string())?;
         ensure(
             hash(&bytes) == row["sha256"],
             &format!("T08A source changed: {path}"),

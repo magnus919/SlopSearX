@@ -1,7 +1,7 @@
 //! Closed accepted-CLI/W08-main join. No calls into either historical reader.
 use serde_json::Value;
 use sha2::{Digest, Sha256};
-use std::{fs, path::Path, process::Command};
+use std::{path::Path, process::Command};
 #[allow(
     dead_code,
     clippy::duplicate_mod,
@@ -49,49 +49,19 @@ fn digest(bytes: &[u8]) -> String {
         .map(|b| format!("{b:02x}"))
         .collect()
 }
-fn regular(root: &Path, path: &str) -> Result<Vec<u8>> {
-    let full = root.join(path);
-    let m = fs::symlink_metadata(&full).map_err(|e| e.to_string())?;
-    need(
-        m.is_file() && !m.file_type().is_symlink() && m.len() <= 1048576,
-        "regular bounded source leaf",
-    )?;
-    need(
-        full.canonicalize()
-            .map_err(|e| e.to_string())?
-            .starts_with(root.canonicalize().map_err(|e| e.to_string())?),
-        "source stays within root",
-    )?;
-    fs::read(full).map_err(|e| e.to_string())
-}
+#[cfg(not(unix))]
 fn source_mode(root: &Path, path: &str) -> Result<&'static str> {
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        need(
-            fs::symlink_metadata(root.join(path))
-                .map_err(|e| e.to_string())?
-                .permissions()
-                .mode()
-                & 0o7777
-                == 0o644,
-            "physical source requires regular0644",
-        )?;
-    }
-    #[cfg(not(unix))]
-    {
-        // Windows does not expose Unix permission bits. Preserve the committed
-        // source mode through the current index and independently reject links.
-        let out = Command::new("git")
-            .args(["ls-files", "--stage", "--", path])
-            .current_dir(root)
-            .output()
-            .map_err(|e| e.to_string())?;
-        need(
-            out.status.success() && String::from_utf8_lossy(&out.stdout).starts_with("100644 "),
-            "Windows current source index requires100644",
-        )?;
-    }
+    // Windows does not expose Unix permission bits. Preserve the committed
+    // source mode through the current index and independently reject links.
+    let out = Command::new("git")
+        .args(["ls-files", "--stage", "--", path])
+        .current_dir(root)
+        .output()
+        .map_err(|e| e.to_string())?;
+    need(
+        out.status.success() && String::from_utf8_lossy(&out.stdout).starts_with("100644 "),
+        "Windows current source index requires100644",
+    )?;
     Ok("0644")
 }
 fn scope(doc: &Value) -> Result<()> {
@@ -133,8 +103,14 @@ fn scope(doc: &Value) -> Result<()> {
     Ok(())
 }
 fn capsule(root: &Path) -> Result<Value> {
-    source_mode(root, CAPSULE_PATH)?;
-    let raw = regular(root, CAPSULE_PATH)?;
+    let (raw, mode) = super::bounded_read(root, CAPSULE_PATH, 1048576)?;
+    #[cfg(unix)]
+    need(mode == 0o644, "opened capsule mode must be regular0644")?;
+    #[cfg(not(unix))]
+    {
+        let _ = mode;
+        source_mode(root, CAPSULE_PATH)?;
+    }
     need(
         digest(&raw) == CAPSULE_SHA,
         "compiled outer capsule identity",
@@ -464,14 +440,19 @@ fn pre_984_w07(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
     inverse(&inverse_row, physical, "0644", 3)
 }
 
-fn accepted_current(root: &Path, path: &str, physical: &[u8]) -> Result<Vec<u8>> {
-    let upstream = if path == "crates/xtask/src/main.rs" {
-        super::upstream_contracts_successor::frame(path, physical, 0o644)?
-    } else if path == "docs/rust-rewrite/a06/source-amendments/shared-successor.rs" {
-        super::rmcp_historical_operand(path, physical, "0644")?
-            .ok_or("RMCP shared source reader row absent")?
+fn accepted_current(root: &Path, path: &str, physical: &[u8], opened_mode: u32) -> Result<Vec<u8>> {
+    let issue903 = if path == "docs/rust-rewrite/a06/source-amendments/shared-successor.rs" {
+        super::issue903_config_successor::prior(root, path, physical, opened_mode)?
     } else {
         physical.to_vec()
+    };
+    let upstream = if path == "crates/xtask/src/main.rs" {
+        super::upstream_contracts_successor::frame(path, &issue903, 0o644)?
+    } else if path == "docs/rust-rewrite/a06/source-amendments/shared-successor.rs" {
+        super::rmcp_historical_operand(path, &issue903, "0644")?
+            .ok_or("RMCP shared source reader row absent")?
+    } else {
+        issue903
     };
     let registered = pre_t03_registration(path, &upstream)?;
     let logical = if portal_source_successor::owns(path) {
@@ -543,10 +524,11 @@ fn interpret(
     proof_root: &Path,
     path: &str,
     physical: &[u8],
+    opened_mode: u32,
     mode: &str,
     parent: Parent,
 ) -> Result<Vec<u8>> {
-    let logical = accepted_current(proof_root, path, physical)?;
+    let logical = accepted_current(proof_root, path, physical, opened_mode)?;
     let physical = logical.as_slice();
     scope(doc)?;
     let index = ROWS
@@ -575,8 +557,20 @@ pub(crate) fn project_at(
     parent: Parent,
 ) -> Result<Vec<u8>> {
     need(owns(path), "unlisted physical join path")?;
-    let mode = source_mode(physical_root, path)?;
-    let physical = regular(physical_root, path)?;
+    let (physical, opened_mode) = super::bounded_read(physical_root, path, 1048576)?;
+    #[cfg(unix)]
+    let mode = {
+        need(
+            opened_mode == 0o644,
+            "opened source mode must be regular0644",
+        )?;
+        "0644"
+    };
+    #[cfg(not(unix))]
+    let mode = {
+        let _ = opened_mode;
+        source_mode(physical_root, path)?
+    };
     need(
         physical == supplied,
         "join supplied buffer is not physical current",
@@ -586,6 +580,7 @@ pub(crate) fn project_at(
         proof_root,
         path,
         &physical,
+        opened_mode,
         mode,
         parent,
     )
@@ -594,8 +589,13 @@ pub(crate) fn project_at(
 pub(crate) fn controls(root: &Path) -> Result<()> {
     let doc = capsule(root)?;
     for (index, (path, cli_count, main_count)) in ROWS.iter().enumerate() {
-        let physical = regular(root, path)?;
-        let logical = accepted_current(root, path, &physical)?;
+        let (physical, opened_mode) = super::bounded_read(root, path, 1048576)?;
+        #[cfg(unix)]
+        need(
+            opened_mode == 0o644,
+            "opened source mode must be regular0644",
+        )?;
+        let logical = accepted_current(root, path, &physical, opened_mode)?;
         if *path == "crates/xtask/src/main.rs" {
             let upstream = super::upstream_contracts_successor::frame(path, &physical, 0o644)?;
             let registered = pre_t03_registration(path, &upstream)?;
@@ -613,7 +613,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
                 "pre-health frame substituted as physical registration",
             )?;
             need(
-                accepted_current(root, path, &logical).is_err(),
+                accepted_current(root, path, &logical, opened_mode).is_err(),
                 "pre-T08 frame substituted as physical registration",
             )?;
         }
@@ -659,7 +659,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
             )?;
             for mode in ["0600", "0755", "4644"] {
                 need(
-                    interpret(&doc, root, path, &physical, mode, parent).is_err(),
+                    interpret(&doc, root, path, &physical, opened_mode, mode, parent).is_err(),
                     "outer wrong mode",
                 )?;
             }
@@ -679,14 +679,23 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
                     _ => edits[0]["insert_utf8"] = serde_json::json!("changed"),
                 }
                 need(
-                    interpret(&bad, root, path, &physical, "0644", parent).is_err(),
+                    interpret(&bad, root, path, &physical, opened_mode, "0644", parent).is_err(),
                     "outer missing/duplicate/moved/changed span",
                 )?;
             }
             let mut unselected = doc.clone();
             unselected["rows"][index][other]["prior"]["sha256"] = serde_json::json!("changed");
             need(
-                interpret(&unselected, root, path, &physical, "0644", parent).is_err(),
+                interpret(
+                    &unselected,
+                    root,
+                    path,
+                    &physical,
+                    opened_mode,
+                    "0644",
+                    parent,
+                )
+                .is_err(),
                 "unselected endpoint must also authenticate",
             )?;
         }

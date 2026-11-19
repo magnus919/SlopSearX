@@ -1,19 +1,14 @@
 //! Exact #1129 runtime/dev audit successor over accepted main.
 //! Current physical source is authenticated before reconstructing the fixed predecessor.
+#[allow(
+    dead_code,
+    clippy::duplicate_mod,
+    reason = "T08 bounded physical source reader shared with T08A and T06 custody roots"
+)]
+#[path = "../../t08a/bounded_source_reader.rs"]
+mod bounded_source_reader;
 #[path = "../../../../crates/xtask/src/o02_image_gate_successor.rs"]
 mod o02_image_gate_successor;
-#[path = "../../t08a/rmcp-source-afterimage.rs"]
-#[allow(
-    clippy::duplicate_mod,
-    reason = "Independent proof roots share the same stateless inverse"
-)]
-mod rmcp_source_afterimage;
-const RMCP_READER_PATH: &str =
-    "docs/rust-rewrite/t06/source-amendments/python-dependency-audit-source-reader-v1.rs";
-const RMCP_READER_BYTES: usize = 32524;
-const RMCP_READER_BLOB: &str = "bb1c7208045b1f9b4e5132cb1b34917f0669c090";
-const RMCP_READER_SOURCE: &str = include_str!("../../t08a/rmcp-t06-reader-afterimage.json");
-const RMCP_READER_SHA: &str = "35ecf64f2769ca579f90a206dff11c0e62acb99e8033d91140fcfe472708c15b";
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{
@@ -27,8 +22,18 @@ pub(crate) const CAPSULE_PATH: &str =
     "docs/rust-rewrite/t06/source-amendments/python-dependency-audit-current-main-v1/capsule.json";
 const CAPSULE: &[u8] = include_bytes!("python-dependency-audit-current-main-v1/capsule.json");
 const CAPSULE_SHA: &str = "04bbd43240f0d0663ec4e8fd993ddf7c616aeabcfa64e04df429751027b2b4e0";
+const SOURCE_READER_OUTER: &[u8] =
+    include_bytes!("python-dependency-audit-current-main-v1/source-reader-successor-v1.json");
+const SOURCE_READER_OUTER_SHA: &str =
+    "9a874473ee7a2956636fccb4abfe2141d3b5e69a6cd88cf5758b5f587c31be64";
 const BASE: &str = "6cd400c2af9ec77613caf9ecab27a7264acac79f";
 const LIMIT: u64 = 1_048_576;
+const SOURCE_READER_PATH: &str =
+    "docs/rust-rewrite/t06/source-amendments/python-dependency-audit-source-reader-v1.rs";
+const SOURCE_READER_OLD_BYTES: usize = 31_817;
+const SOURCE_READER_OLD_SHA: &str =
+    "e66d91525c9b50a26d1fabd1eb2bf137d83e2fc9ed8c7cbe5a6e71dda8edfca9";
+const SOURCE_READER_OLD_BLOB: &str = "40f336a08289b7324b464c4f65436ab09200488a";
 const ROWS: [(&str, usize); 8] = [
     (".github/workflows/ci.yml", 3),
     (".github/workflows/nightly.yml", 1),
@@ -77,6 +82,39 @@ fn digest(raw: &[u8]) -> String {
 pub(crate) fn owns(path: &str) -> bool {
     ROWS.iter().any(|row| row.0 == path)
 }
+/// Validate the mode from the caller's bounded open before pure projection.
+pub(crate) fn admit_opened_mode(root: &Path, path: &str, opened_mode: u32) -> Result<()> {
+    need(
+        owns(path),
+        "opened mode path is outside the finite source set",
+    )?;
+    #[cfg(unix)]
+    {
+        let _ = root;
+        need(opened_mode == 0o644, "opened source mode0644")?;
+    }
+    #[cfg(windows)]
+    {
+        need(
+            opened_mode == 0,
+            "Windows handle mode has no Unix permission bits",
+        )?;
+        let index = git(root, &["ls-files", "--stage", "--", path])?;
+        let index = std::str::from_utf8(&index).map_err(|error| error.to_string())?;
+        need(
+            index.lines().count() == 1
+                && index.starts_with("100644 ")
+                && index.ends_with(&format!(" 0\t{path}")),
+            "Windows source mode from stage-zero index",
+        )?;
+    }
+    #[cfg(not(any(unix, windows)))]
+    {
+        let _ = (root, opened_mode);
+        need(false, "source mode proof requires Unix or Windows")?;
+    }
+    Ok(())
+}
 /// Every owned source must be physical current before any caller hash shortcut.
 #[allow(
     dead_code,
@@ -85,30 +123,190 @@ pub(crate) fn owns(path: &str) -> bool {
 pub(crate) fn current_operand(root: &Path, path: &str) -> Result<Option<Vec<u8>>> {
     current_at(root, root, path)
 }
+/// Pure exact-byte outer projection for the updated bounded source reader.
+pub(crate) fn project_source_reader(path: &str, current: &[u8]) -> Result<Vec<u8>> {
+    project_source_reader_capsule(path, current, SOURCE_READER_OUTER)
+}
+fn project_source_reader_capsule(path: &str, current: &[u8], capsule: &[u8]) -> Result<Vec<u8>> {
+    need(path == SOURCE_READER_PATH, "outer source-reader path")?;
+    need(
+        digest(capsule) == SOURCE_READER_OUTER_SHA,
+        "outer source-reader capsule digest",
+    )?;
+    let doc: Value = serde_json::from_slice(capsule).map_err(|error| error.to_string())?;
+    need(
+        keys(&doc, &["schema", "baseline", "row"])
+            && doc["schema"] == "PYTHON_DEPENDENCY_AUDIT_SOURCE_READER_SUCCESSOR_V1"
+            && doc["baseline"] == BASE,
+        "outer source-reader capsule header",
+    )?;
+    let row = &doc["row"];
+    need(
+        keys(row, &["path", "current", "prior", "edits"])
+            && row["path"] == SOURCE_READER_PATH
+            && keys(&row["current"], &["bytes", "sha256", "mode"])
+            && keys(&row["prior"], &["bytes", "sha256", "mode", "git_blob"])
+            && row["current"]["mode"] == "0644"
+            && row["prior"]["mode"] == "0644"
+            && row["prior"]["bytes"] == SOURCE_READER_OLD_BYTES
+            && row["prior"]["sha256"] == SOURCE_READER_OLD_SHA
+            && row["prior"]["git_blob"] == SOURCE_READER_OLD_BLOB,
+        "outer source-reader exact endpoint metadata",
+    )?;
+    let current_bytes = row["current"]["bytes"]
+        .as_u64()
+        .and_then(|value| usize::try_from(value).ok())
+        .ok_or("outer source-reader current byte count")?;
+    let current_sha = row["current"]["sha256"]
+        .as_str()
+        .ok_or("outer source-reader current digest")?;
+    need(
+        current.len() == current_bytes && digest(current) == current_sha,
+        "outer source-reader physical bytes",
+    )?;
+    let edits = row["edits"]
+        .as_array()
+        .filter(|edits| !edits.is_empty())
+        .ok_or("outer source-reader exact edit list")?;
+    let mut prior = Vec::with_capacity(SOURCE_READER_OLD_BYTES);
+    let mut current_cursor = 0usize;
+    let mut prior_cursor = 0usize;
+    for edit in edits {
+        need(
+            keys(edit, &["at", "remove_utf8", "insert_utf8"]),
+            "outer source-reader edit shape",
+        )?;
+        let at = edit["at"]
+            .as_u64()
+            .and_then(|value| usize::try_from(value).ok())
+            .ok_or("outer source-reader edit offset")?;
+        let remove = edit["remove_utf8"]
+            .as_str()
+            .ok_or("outer source-reader removed span")?
+            .as_bytes();
+        let insert = edit["insert_utf8"]
+            .as_str()
+            .ok_or("outer source-reader inserted span")?
+            .as_bytes();
+        let unchanged = at
+            .checked_sub(prior_cursor)
+            .ok_or("outer source-reader edit order")?;
+        let end = current_cursor
+            .checked_add(unchanged)
+            .ok_or("outer source-reader current cursor overflow")?;
+        prior.extend_from_slice(
+            current
+                .get(current_cursor..end)
+                .ok_or("outer source-reader unchanged current bytes")?,
+        );
+        let inserted_end = end
+            .checked_add(insert.len())
+            .ok_or("outer source-reader inserted span overflow")?;
+        need(
+            current.get(end..inserted_end) == Some(insert),
+            "outer source-reader exact inserted bytes",
+        )?;
+        prior.extend_from_slice(remove);
+        current_cursor = inserted_end;
+        prior_cursor = at
+            .checked_add(remove.len())
+            .ok_or("outer source-reader prior cursor overflow")?;
+    }
+    prior.extend_from_slice(
+        current
+            .get(current_cursor..)
+            .ok_or("outer source-reader current suffix")?,
+    );
+    need(
+        prior.len() == SOURCE_READER_OLD_BYTES && digest(&prior) == SOURCE_READER_OLD_SHA,
+        "outer source-reader exact historical current bytes",
+    )?;
+    let mut forward = Vec::with_capacity(current.len());
+    let mut prior_cursor = 0usize;
+    for edit in edits {
+        let at = edit["at"]
+            .as_u64()
+            .and_then(|value| usize::try_from(value).ok())
+            .ok_or("outer source-reader forward offset")?;
+        let remove = edit["remove_utf8"]
+            .as_str()
+            .ok_or("outer source-reader forward removed span")?
+            .as_bytes();
+        let insert = edit["insert_utf8"]
+            .as_str()
+            .ok_or("outer source-reader forward inserted span")?
+            .as_bytes();
+        let end = at
+            .checked_add(remove.len())
+            .ok_or("outer source-reader forward span overflow")?;
+        need(
+            at >= prior_cursor && prior.get(at..end) == Some(remove),
+            "outer source-reader exact prior bytes",
+        )?;
+        forward.extend_from_slice(&prior[prior_cursor..at]);
+        forward.extend_from_slice(insert);
+        prior_cursor = end;
+    }
+    forward.extend_from_slice(&prior[prior_cursor..]);
+    need(
+        forward == current,
+        "outer source-reader full forward reconstruction",
+    )?;
+    Ok(prior)
+}
+fn admit_source_reader(
+    root: &Path,
+    path: &str,
+    current: &[u8],
+    opened_mode: u32,
+) -> Result<Vec<u8>> {
+    #[cfg(unix)]
+    need(opened_mode == 0o644, "outer source-reader opened Unix mode")?;
+    #[cfg(windows)]
+    {
+        need(opened_mode == 0, "outer source-reader Windows handle mode")?;
+        let staged = git(root, &["ls-files", "--stage", "--", path])?;
+        let staged = std::str::from_utf8(&staged).map_err(|error| error.to_string())?;
+        need(
+            staged.lines().count() == 1
+                && staged.starts_with("100644 ")
+                && staged.ends_with(&format!(" 0\t{path}")),
+            "outer source-reader Windows index mode",
+        )?;
+    }
+    #[cfg(not(any(unix, windows)))]
+    need(
+        false,
+        "outer source-reader mode proof requires Unix or Windows",
+    )?;
+    let prior = project_source_reader(path, current)?;
+    let historical_doc = decode(CAPSULE)?;
+    let historical = pin(&historical_doc, path)?;
+    need(
+        historical.current_bytes == SOURCE_READER_OLD_BYTES
+            && historical.current_sha == SOURCE_READER_OLD_SHA
+            && historical.current_blob == SOURCE_READER_OLD_BLOB
+            && git(root, &["cat-file", "blob", SOURCE_READER_OLD_BLOB])? == prior,
+        "outer source-reader historical accepted capsule bytes/blob",
+    )?;
+    Ok(prior)
+}
 fn physical_operand(
     physical_root: &Path,
-    _proof_root: &Path,
+    proof_root: &Path,
     path: &str,
     expected_bytes: usize,
-) -> Result<Vec<u8>> {
-    let physical_bytes = if path == RMCP_READER_PATH {
-        RMCP_READER_BYTES
+) -> Result<(Vec<u8>, Vec<u8>)> {
+    if path == SOURCE_READER_PATH {
+        let (physical, mode) = bounded_source_reader::bounded_read(physical_root, path, LIMIT)?;
+        let logical = admit_source_reader(proof_root, path, &physical, mode)?;
+        Ok((physical, logical))
     } else {
-        o02_image_gate_successor::physical_bytes(path, expected_bytes)
-    };
-    regular(physical_root, path, physical_bytes)
-}
-fn logical_operand(path: &str, expected_bytes: usize, physical: &[u8]) -> Result<Vec<u8>> {
-    if path == RMCP_READER_PATH {
-        return rmcp_source_afterimage::prior(
-            RMCP_READER_SOURCE,
-            RMCP_READER_SHA,
-            path,
-            physical,
-            0o644,
-        );
+        let physical_bytes = o02_image_gate_successor::physical_bytes(path, expected_bytes);
+        let physical = regular(physical_root, path, physical_bytes)?;
+        let logical = o02_image_gate_successor::project(path, expected_bytes, physical.clone())?;
+        Ok((physical, logical))
     }
-    o02_image_gate_successor::project(path, expected_bytes, physical.to_vec())
 }
 pub(crate) fn current_at(
     physical_root: &Path,
@@ -121,8 +319,8 @@ pub(crate) fn current_at(
     let capsule = regular(physical_root, CAPSULE_PATH, CAPSULE.len())?;
     let doc = decode(&capsule)?;
     let selected = pin(&doc, path)?;
-    let physical = physical_operand(physical_root, proof_root, path, selected.current_bytes)?;
-    let logical = logical_operand(path, selected.current_bytes, &physical)?;
+    let (physical, logical) =
+        physical_operand(physical_root, proof_root, path, selected.current_bytes)?;
     let prior = inverse(&selected, row(&doc, path)?, &logical, 0o644)?;
     git_prior(proof_root, &selected, &prior)?;
     Ok(Some(physical))
@@ -149,9 +347,6 @@ pub(crate) fn frozen_operand(
     prior(root, path, supplied).map(Some)
 }
 pub(crate) fn current_git_blob(path: &str) -> Result<String> {
-    if path == RMCP_READER_PATH {
-        return Ok(RMCP_READER_BLOB.to_owned());
-    }
     let doc = decode(CAPSULE)?;
     Ok(pin(&doc, path)?.current_blob.to_owned())
 }
@@ -401,10 +596,20 @@ fn inverse(pin: &Pin<'_>, row: &Value, actual: &[u8], mode: u32) -> Result<Vec<u
 }
 /// Pure exact-byte inverse/forward check. This does not claim filesystem or Git custody.
 pub(crate) fn frame(path: &str, physical: &[u8], mode: u32) -> Result<Vec<u8>> {
+    need(
+        mode == 0o644,
+        "pure dependency-audit frame requires canonical mode0644",
+    )?;
     let doc = decode(CAPSULE)?;
     let pin = pin(&doc, path)?;
-    let logical = logical_operand(path, pin.current_bytes, physical)?;
-    inverse(&pin, row(&doc, path)?, &logical, mode)
+    if path == SOURCE_READER_PATH {
+        let logical = project_source_reader(path, physical)?;
+        inverse(&pin, row(&doc, path)?, &logical, 0o644)
+    } else {
+        let logical =
+            o02_image_gate_successor::project(path, pin.current_bytes, physical.to_vec())?;
+        inverse(&pin, row(&doc, path)?, &logical, mode)
+    }
 }
 fn confined(root: &Path, path: &str) -> Result<std::path::PathBuf> {
     need(!Path::new(path).is_absolute(), "relative material path")?;
@@ -595,12 +800,11 @@ fn prior_at(
     let capsule = regular(physical_root, CAPSULE_PATH, CAPSULE.len())?;
     let doc = decode(&capsule)?;
     let pin = pin(&doc, path)?;
-    let physical = physical_operand(physical_root, proof_root, path, pin.current_bytes)?;
+    let (physical, logical) = physical_operand(physical_root, proof_root, path, pin.current_bytes)?;
     need(
         supplied.is_none_or(|bytes| physical == bytes),
         "supplied bytes are physical current",
     )?;
-    let logical = logical_operand(path, pin.current_bytes, &physical)?;
     let prior = inverse(&pin, row(&doc, path)?, &logical, 0o644)?;
     git_prior(proof_root, &pin, &prior)?;
     Ok(prior)
@@ -608,7 +812,6 @@ fn prior_at(
 /// Additive controls for existing owning test identities. No historical test names change.
 #[cfg(test)]
 pub(crate) fn controls(root: &Path) -> Result<()> {
-    o02_image_gate_successor::controls(root);
     let doc = decode(CAPSULE)?;
     let mut capsule_mutant = CAPSULE.to_vec();
     capsule_mutant.push(b' ');
@@ -627,8 +830,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
     )?;
     let all_pins = pins(&doc)?;
     for pin in &all_pins {
-        let physical = physical_operand(root, root, pin.path, pin.current_bytes)?;
-        let logical = logical_operand(pin.path, pin.current_bytes, &physical)?;
+        let (physical, logical) = physical_operand(root, root, pin.path, pin.current_bytes)?;
         let prior_bytes = prior(root, pin.path, &physical)?;
         need(
             current_operand(root, pin.path)? == Some(physical.clone()),
@@ -651,6 +853,38 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
             frame(pin.path, &physical, 0o644)? == prior_bytes,
             "same pure frame as full custody",
         )?;
+        need(
+            frame(pin.path, &physical, 0o600).is_err(),
+            "outer source-reader pure frame rejects wrong caller mode",
+        )?;
+        if pin.path == SOURCE_READER_PATH {
+            need(
+                admit_source_reader(root, pin.path, &physical, 0o600).is_err(),
+                "outer source-reader changed opened mode rejected",
+            )?;
+            let mut altered = physical.clone();
+            altered[0] ^= 1;
+            need(
+                project_source_reader(pin.path, &altered).is_err()
+                    && admit_source_reader(root, pin.path, &altered, 0o644).is_err(),
+                "outer source-reader changed current bytes rejected",
+            )?;
+            need(
+                project_source_reader("unlisted-source-reader.rs", &physical).is_err(),
+                "outer source-reader wrong path rejected",
+            )?;
+            let mut altered_capsule = SOURCE_READER_OUTER.to_vec();
+            altered_capsule.push(b' ');
+            need(
+                project_source_reader_capsule(pin.path, &physical, &altered_capsule).is_err(),
+                "outer source-reader changed capsule rejected",
+            )?;
+            #[cfg(windows)]
+            need(
+                frame(pin.path, &physical, 0).is_err(),
+                "pure source-reader frame rejects physical Windows mode-zero metadata",
+            )?;
+        }
         need(
             prior(root, pin.path, &prior_bytes).is_err()
                 && frame(pin.path, &prior_bytes, 0o644).is_err(),

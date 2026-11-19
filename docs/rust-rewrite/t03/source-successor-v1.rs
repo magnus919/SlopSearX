@@ -1,5 +1,12 @@
 //! Closed T03 source-only successor. Historical capsules and qualification stay fixed.
 //! `prior` owns physical/capsule/Git admission; `frame` is a pure byte proof only.
+#[allow(
+    dead_code,
+    clippy::duplicate_mod,
+    reason = "T08 bounded physical admission shared with the custody roots"
+)]
+#[path = "../t08a/bounded_source_reader.rs"]
+mod bounded_source_reader;
 #[path = "../t06/source-amendments/dnspython-security-current-main-v1.rs"]
 #[allow(
     dead_code,
@@ -7,6 +14,16 @@
     reason = "Independent qualification roots intentionally compile this stateless T03 proof leaf"
 )]
 mod dnspython_security_outer;
+#[allow(
+    dead_code,
+    clippy::duplicate_mod,
+    reason = "Exact issue903 source layer is shared by T08A custody and T03 admission"
+)]
+#[path = "../t08a/issue903-config-edge-successor.rs"]
+mod issue903_config_successor;
+const ISSUE903_JOINT_SOURCE: &str = "docs/rust-rewrite/a06/source-amendments/w07-t02-joint.rs";
+const ISSUE903_NATIVE_SOURCE: &str =
+    "docs/rust-rewrite/a06/source-amendments/native-search-reader.rs";
 #[path = "../t08a/rmcp-source-afterimage.rs"]
 #[allow(
     clippy::duplicate_mod,
@@ -846,16 +863,23 @@ fn decode_w07_main(raw: &[u8]) -> Result<Value> {
     }
     Ok(doc)
 }
-fn w07_main_current_frame(root: &Path, path: &str) -> Result<(Vec<u8>, Vec<u8>)> {
+fn w07_main_current_frame(root: &Path, path: &str) -> Result<(Vec<u8>, Vec<u8>, Vec<u8>)> {
     let capsule = regular(root, W07_MAIN_CAPSULE_PATH, W07_MAIN_CAPSULE.len())?;
     let doc = decode_w07_main(&capsule)?;
     let source = pin(&doc, path)?;
     let source_row = row(&doc, path)?;
-    let physical = regular(root, path, source.current_bytes)?;
-    let prior = inverse(&source, source_row, &physical, 0o644)?;
+    let (physical, logical) = if path == ISSUE903_NATIVE_SOURCE {
+        let (physical, mode) = bounded_source_reader::bounded_read(root, path, LIMIT)?;
+        let logical = issue903_config_successor::prior(root, path, &physical, mode)?;
+        (physical, logical)
+    } else {
+        let physical = regular(root, path, source.current_bytes)?;
+        (physical.clone(), physical)
+    };
+    let prior = inverse(&source, source_row, &logical, 0o644)?;
     let current_blob = source.current_blob.ok_or("W07 current Git blob missing")?;
     need(
-        git(root, &["show", &format!("{W07_MAIN_BASE}:{path}")])? == physical,
+        git(root, &["show", &format!("{W07_MAIN_BASE}:{path}")])? == logical,
         "W07 exact current baseline Git source bytes",
     )?;
     need(
@@ -878,7 +902,7 @@ fn w07_main_current_frame(root: &Path, path: &str) -> Result<(Vec<u8>, Vec<u8>)>
         ancestry.success(),
         "W07 predecessor baseline is an ancestor of current baseline",
     )?;
-    Ok((physical, prior))
+    Ok((physical, logical, prior))
 }
 fn w07_main_controls(root: &Path) -> Result<()> {
     let mut changed_capsule = W07_MAIN_CAPSULE.to_vec();
@@ -895,9 +919,9 @@ fn w07_main_controls(root: &Path) -> Result<()> {
     )?;
     for source in pins(&doc)? {
         let source_row = row(&doc, source.path)?;
-        let (physical, prior_bytes) = w07_main_current_frame(root, source.path)?;
+        let (physical, logical, prior_bytes) = w07_main_current_frame(root, source.path)?;
         need(
-            inverse(&source, source_row, &physical, 0o644)? == prior_bytes
+            inverse(&source, source_row, &logical, 0o644)? == prior_bytes
                 && prior(root, source.path, &physical)? == prior_bytes,
             "W07 current-source positive exact inverse",
         )?;
@@ -907,7 +931,7 @@ fn w07_main_controls(root: &Path) -> Result<()> {
         )?;
         for mode in [0o600, 0o755, 0o4644] {
             need(
-                inverse(&source, source_row, &physical, mode).is_err(),
+                inverse(&source, source_row, &logical, mode).is_err(),
                 "changed W07 current-source mode rejected",
             )?;
         }
@@ -934,7 +958,7 @@ fn w07_main_controls(root: &Path) -> Result<()> {
                 _ => edits[0]["extra"] = json!(true),
             }
             need(
-                inverse(&source, &bad, &physical, 0o644).is_err(),
+                inverse(&source, &bad, &logical, 0o644).is_err(),
                 "missing, duplicate, moved, malformed, or changed W07 source span rejected",
             )?;
         }
@@ -945,13 +969,13 @@ fn w07_main_controls(root: &Path) -> Result<()> {
                 .ok_or("W07 source edit controls")?
                 .swap(0, 1);
             need(
-                inverse(&source, &reordered, &physical, 0o644).is_err(),
+                inverse(&source, &reordered, &logical, 0o644).is_err(),
                 "reordered W07 current-source spans rejected",
             )?;
             let mut duplicate = source_row.clone();
             duplicate["edits"][1] = duplicate["edits"][0].clone();
             need(
-                inverse(&source, &duplicate, &physical, 0o644).is_err(),
+                inverse(&source, &duplicate, &logical, 0o644).is_err(),
                 "duplicate W07 current-source spans rejected",
             )?;
         }
@@ -972,23 +996,30 @@ pub(crate) fn prior(root: &Path, path: &str, supplied: &[u8]) -> Result<Vec<u8>>
         return Ok(predecessor);
     }
     if W07_MAIN_SOURCES.contains(&path) {
-        let (physical, predecessor) = w07_main_current_frame(root, path)?;
+        let (physical, _logical, predecessor) = w07_main_current_frame(root, path)?;
         need(physical == supplied, "supplied bytes are physical current")?;
         return Ok(predecessor);
     }
     let capsule = regular(root, CAPSULE_PATH, CAPSULE.len())?;
     let doc = decode(&capsule)?;
     let pin = pin(&doc, path)?;
-    let physical = regular(root, path, current_source_size(&pin))?;
-    need(physical == supplied, "supplied bytes are physical current")?;
-    let logical = logical_material(path, &physical, 0o644)?;
-    let prior = inverse(&pin, row(&doc, path)?, logical.as_ref(), 0o644)?;
+    let logical = if path == ISSUE903_JOINT_SOURCE {
+        let (physical, mode) = bounded_source_reader::bounded_read(root, path, LIMIT)?;
+        need(physical == supplied, "supplied bytes are physical current")?;
+        issue903_config_successor::prior(root, path, &physical, mode)?
+    } else {
+        let physical = regular(root, path, current_source_size(&pin))?;
+        need(physical == supplied, "supplied bytes are physical current")?;
+        logical_material(path, &physical, 0o644)?.into_owned()
+    };
+    let prior = inverse(&pin, row(&doc, path)?, &logical, 0o644)?;
     git_prior(root, &pin, &prior)?;
     Ok(prior)
 }
 /// Additive controls for existing owning test identities. No historical test names change.
 pub(crate) fn controls(root: &Path) -> Result<()> {
     let doc = decode(CAPSULE)?;
+    issue903_config_successor::controls(root)?;
     w07_controls(root)?;
     w07_main_controls(root)?;
     w07_outer_controls(root)?;
@@ -1003,6 +1034,10 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
     for pin in &all_pins {
         let (physical, logical) = if pin.path == W07_SOURCE {
             w07_physical_current_frame(root)?
+        } else if pin.path == ISSUE903_JOINT_SOURCE {
+            let (physical, mode) = bounded_source_reader::bounded_read(root, pin.path, LIMIT)?;
+            let logical = issue903_config_successor::prior(root, pin.path, &physical, mode)?;
+            (physical, logical)
         } else {
             let physical = regular(root, pin.path, current_source_size(pin))?;
             let logical = logical_material(pin.path, &physical, 0o644)?.into_owned();
