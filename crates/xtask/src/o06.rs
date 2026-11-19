@@ -1373,6 +1373,57 @@ mod tests {
         assert!(published_manifest(&mismatched, &amd64, &arm64).is_err());
     }
     #[test]
+    #[cfg(unix)]
+    fn publication_workflow_rejects_invalid_tested_image_refs() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let workflow = yaml(&root.join(".github/workflows/docker.yml")).unwrap();
+        let command = workflow["jobs"]["publish-manifest"]["steps"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|step| step["name"] == "Publish manifest from tested digests")
+            .and_then(|step| step["run"].as_str())
+            .unwrap();
+        let script = format!("docker() {{ exit 91; }}\n{command}");
+        let image = "ghcr.io/example/slopsearx";
+        let fixture = AssetFixture::new();
+        let valid_amd64 = format!("{image}@sha256:{}", "b".repeat(64));
+        let valid_arm64 = format!("{image}@sha256:{}", "c".repeat(64));
+        let invalid_refs = [
+            format!("ghcr.io/example/foreign@sha256:{}", "a".repeat(64)),
+            format!("{image}:latest"),
+            format!("{image}@sha256:bad"),
+        ];
+        for (arch, other_arch, valid_other) in [
+            ("amd64", "arm64", &valid_arm64),
+            ("arm64", "amd64", &valid_amd64),
+        ] {
+            fixture.write(&format!("digests/{other_arch}"), valid_other.as_bytes());
+            for invalid in &invalid_refs {
+                fixture.write(&format!("digests/{arch}"), invalid.as_bytes());
+                let output = Command::new("/bin/bash")
+                    .args(["-c", &script])
+                    .env_clear()
+                    .env("PATH", "/usr/bin:/bin")
+                    .env("IMAGE_NAME", image)
+                    .env("IMAGE_TAGS", format!("{image}:latest"))
+                    .current_dir(&fixture.0)
+                    .output()
+                    .unwrap();
+                assert_eq!(
+                    output.status.code(),
+                    Some(1),
+                    "{arch}: {invalid}; {output:?}"
+                );
+                assert!(
+                    String::from_utf8_lossy(&output.stdout)
+                        .contains("::error::Expected immutable tested digests"),
+                    "{arch}: {invalid}; {output:?}"
+                );
+            }
+        }
+    }
+    #[test]
     fn permissions_cannot_expand() {
         permissions(
             &json!({"actions":"read","contents":"read","pull-requests":"write"}),
