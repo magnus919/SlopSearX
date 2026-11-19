@@ -71,14 +71,29 @@ static workflow/catalog plus shell exit-code controls. Registered command receip
 retain exact source/head, toolchain, commands, exits and measured build footprint.
 These checks do not establish registry availability or production readiness.
 
+## Offline native O02 qualification
+
+On a native Unix host, set `SLOPSEARX_TEST_TEMP_ROOT` and `TMPDIR` to the same
+registered absolute scratch directory. Run:
+
+```sh
+cargo xtask check O02 --output "$O02_EVIDENCE_ROOT/O02.json"
+```
+
+Use an existing Cargo cache containing the locked dependencies. The gate runs the
+native health status, portal smoke, upstream replay, image pin and recovery
+suites offline. It also requires the tested-digest publication controls. The
+report binds the commands and outcomes to the checked source. Scheduled
+promotion, registry readback, and final Python-free shipping assembly each need
+their own evidence.
+
 ## Remaining O02 scope
 
 - Retire `scripts/portal_release_smoke.py` and its source-bound Python deployment-test oracle only through the reviewed F01/G08 successor. The Docker jobs now use the native smoke helper; the historical source remains byte-identical until that retirement is accepted.
 - The CI and Docker workflows now call `scripts/configure_ci_dockerhub_mirror.sh`,
   with deterministic fake-Docker tests in the O02-owned `monitoring-rules`
-  workflow step and matching CI/F03 workflow catalog entry. This does not add
-  `cargo xtask check O02`; the new test runs through that workflow/catalog gate
-  only. This is a partial O02 mirror-helper slice: the historical Python helper
+  workflow step and matching CI/F03 workflow catalog entry. Its shell test runs
+  through that workflow/catalog gate. This is a partial O02 mirror-helper slice: the historical Python helper
   and its test remain byte-identical under F01/W03 custody, and O02 is not
   complete. After a configuration change, the helper bounds the Docker restart
   to 60 seconds, then waits for Docker info readiness with at most 20 probes of

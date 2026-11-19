@@ -718,6 +718,70 @@ pub fn helper(root: &Path, args: &[String]) -> Result<()> {
         _ => Err("usage: cargo xtask ci-helper {inventory|source-hygiene|mirror-config FILE|manifest FILE [AMD64_DIGEST ARM64_DIGEST]|review-bootstrap-plan ABS_DEST|review-bootstrap ABS_DEST|local-fork-advisory|local-fork-advisory-fixtures|portal-release-smoke [--base-url URL] [--query TEXT] [--expected-theme dark|darker]}".into())
     }
 }
+pub(crate) fn check_operations(root: &Path, records: &mut Vec<Value>) -> Result<()> {
+    ensure(cfg!(unix), "O02 qualification requires a native Unix host")?;
+    let health = [
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "ssx-healthcheck",
+        "--lib",
+    ];
+    let base = [
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "xtask",
+        "--bin",
+        "xtask",
+    ];
+    let operations = [base.as_slice(), &["o02_"]].concat();
+    let publication_cases = [
+        "o06::tests::published_manifest_requires_exact_tested_platform_digests",
+        "o06::tests::publication_workflow_rejects_invalid_tested_image_refs",
+    ];
+    let health_cases = [
+        "tests::real_socket_status_only_accepts_200_without_reading_or_decoding_body",
+        "tests::real_socket_rejects_non_200_redirect_and_malformed_or_oversized_headers",
+    ];
+    let operations_cases = [
+        "o06::o02_portal_smoke::tests::loopback_smoke_preserves_encoded_query_and_accepts_unavailable_search",
+        "o02_upstream_contracts::tests::captured_fixtures_run_through_the_native_adapters_offline",
+        "o06::o02_image_pin::tests::native_write_updates_only_digest_slots_and_is_idempotent",
+        "o06::o02_image_pin::tests::promotion_rolls_back_every_rename_boundary_and_retains_failed_rollback",
+    ];
+    for (args, required) in [
+        (health.as_slice(), health_cases.as_slice()),
+        (operations.as_slice(), operations_cases.as_slice()),
+    ] {
+        let args = [args, &["--", "--color", "never"]].concat();
+        let output = command(root, "cargo", &args, records)?;
+        require_operation_cases(&output, required)?;
+    }
+    for case in publication_cases {
+        let args = [
+            base.as_slice(),
+            &[case, "--", "--exact", "--color", "never"],
+        ]
+        .concat();
+        let output = command(root, "cargo", &args, records)?;
+        require_operation_cases(&output, &[case])?;
+    }
+    Ok(())
+}
+
+fn require_operation_cases(output: &str, required: &[&str]) -> Result<()> {
+    for case in required {
+        let passed = format!("test {case} ... ok");
+        if !output.lines().any(|line| line == passed) {
+            return Err(format!("O02 expected test did not pass: {case}"));
+        }
+    }
+    Ok(())
+}
+
 pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     hygiene(root)?;
     let actual = inventory(root)?;
