@@ -324,3 +324,5 @@ EXP-119 readout:not-supported at development. Metadata-conditioned selector nP@5
 - [PREREQ-1111](PREREQ-1111-permission-readback.md), 2026-11-09: finite permission-input diagnostic qualified21/21 immediate readbacks; writes cleared setuid/setgid bits. Actual Rust custody failure remains unproven by this probe; no product uplift or sealed-source change.
 
 - [PREREQ-1111 Rust boundary](PREREQ-1111-rust-boundary.md), 2026-11-10: unchanged extracted leaf checker produced12/12 expected permission decisions; full-suite context remains unresolved. Prerequisite only, no implementation change.
+
+- [PREREQ-1137 baseline](PREREQ-1137-baseline.md), 2026-11-19: normal offline search/snapshot/read replay exposes1/2 retained source markers on merged fresh/cache reads versus1/1 single-source. Disclosure defect reproduced; no candidate implemented or product uplift measured.

@@ -1,0 +1,25 @@
+import asyncio,runpy,json
+from unittest.mock import patch
+from slopsearx.adapter import SearchResult,AdapterResponse,EngineStatus
+from slopsearx.payload import build_payload
+from slopsearx.mcp import tools as t
+from slopsearx.mcp.state import set_state
+mod=runpy.run_path('tests/test_mcp_tools.py')
+async def response(self,query,params=None):
+ self.calls+=1
+ return AdapterResponse(results=[SearchResult(url='https://'+self.name+'.test/paper',title='Public diagnostic paper',content='Public snippet',engine=self.name,payload=build_payload('science','publication',{'doi':'10.1234/probe','diagnostic_marker':self.name+'-retained','conflicting_field':self.name},engine=self.name))],status=EngineStatus.OK,latency_ms=1.0)
+async def main():
+ state=mod['_build_state'](['arxiv','openalex']);set_state(state)
+ try:
+  with patch.object(mod['_MockEngine'],'search',response):
+   for engines in [['arxiv'],['arxiv','openalex'],['arxiv','openalex']]:
+    card=await t.slopsearx_search('public diagnostic paper',engines=engines)
+    assert 'error' not in card,card
+    cursor=card['meta']['cursor']
+    record=await t.slopsearx_read_result(cursor+':0')
+    assert 'error' not in record,record
+    lookup=await state.snapshots.read(cursor)
+    group=lookup.snapshot.results[0].work_group
+    print(json.dumps({'engines':engines,'cards':len(card['results']),'record':record,'retained_group':group,'adapter_calls':{n:e.calls for n,e in state.ctx.active_engines.items()}},sort_keys=True))
+ finally:set_state(None)
+asyncio.run(main())
