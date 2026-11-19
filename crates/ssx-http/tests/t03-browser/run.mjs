@@ -911,7 +911,11 @@ async function runContract() {
     assert.equal(strict.status(), 400);
     assert(await page.getByRole('alert').isVisible());
     assert.equal(await page.locator('body').innerText().then((text) => text.includes('must-not-render')), false);
-    assert.equal(await page.locator('select[name="safesearch"]').getAttribute('aria-invalid'), 'true');
+    const safeSearch = page.locator('select[name="safesearch"]');
+    assert.equal(await safeSearch.getAttribute('aria-invalid'), 'true');
+    assert.deepEqual((await safeSearch.getAttribute('aria-describedby')).match(/\S+/g), [
+      'portal-error', 'strict-safesearch-note',
+    ]);
     const sensitive = await searchByQuery(page, 'restricted', { engines: 'hibp' });
     assert.equal(sensitive.status(), 403);
     assert.equal(await page.locator('select[name="engines"]').count(), 0);

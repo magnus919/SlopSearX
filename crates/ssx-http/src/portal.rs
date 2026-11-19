@@ -295,6 +295,13 @@ impl PublicPortal {
                 ""
             }
         };
+        let date_description = |name: &str| {
+            if invalid_field == Some(name) {
+                r#" aria-invalid="true" aria-describedby="portal-error publication-date-note""#
+            } else {
+                r#" aria-describedby="publication-date-note""#
+            }
+        };
         let mut note = String::new();
         if !state.get("engines").is_empty() {
             let _ = write!(
@@ -315,7 +322,7 @@ impl PublicPortal {
             }
         }
         format!(
-            "<details class=\"scope-panel\" open><summary><span>Scope and filters</span><span class=\"scope-summary\">{}</span></summary>{opening}{}<div class=\"scope-grid\"><label class=\"scope-field\">Scope<select name=\"categories\"{}>{category_options}</select></label><label class=\"scope-field\">Time range<select name=\"time_range\"{}>{time}</select></label><label class=\"scope-field\">SafeSearch<select name=\"safesearch\" aria-describedby=\"strict-safesearch-note\"{}>{safe}</select></label><label class=\"scope-field\">Published from<input name=\"date_from\" type=\"{}\" value=\"{}\"{}></label><label class=\"scope-field\">Published through<input name=\"date_to\" type=\"{}\" value=\"{}\"{}></label>{correction}<button class=\"scope-apply\" type=\"submit\">Apply filters</button></div>{note}<div class=\"scope-status\" aria-live=\"polite\">{statuses}</div>{closing}</details>",
+            "<details class=\"scope-panel\" open><summary><span>Scope and filters</span><span class=\"scope-summary\">{}</span></summary>{opening}{}<div class=\"scope-grid\"><label class=\"scope-field\">Scope<select name=\"categories\"{}>{category_options}</select></label><label class=\"scope-field\">Time range<select name=\"time_range\"{}>{time}</select></label><label class=\"scope-field\">SafeSearch<select name=\"safesearch\" aria-describedby=\"strict-safesearch-note\"{}>{safe}</select></label><label class=\"scope-field\">Published from<input name=\"date_from\" type=\"{}\" value=\"{}\"{}></label><label class=\"scope-field\">Published through<input name=\"date_to\" type=\"{}\" value=\"{}\"{}></label>{correction}<button class=\"scope-apply\" type=\"submit\">Apply filters</button></div><p class=\"scope-note\" id=\"publication-date-note\">Dates are optional. Your browser may show today as a placeholder. Only dates you enter are applied.</p>{note}<div class=\"scope-status\" aria-live=\"polite\">{statuses}</div>{closing}</details>",
             escape(if selected.is_empty() {
                 "All sources"
             } else {
@@ -341,14 +348,14 @@ impl PublicPortal {
                 "date"
             },
             escape(state.get("date_from")),
-            invalid("date_from"),
+            date_description("date_from"),
             if invalid_field == Some("date_to") {
                 "text"
             } else {
                 "date"
             },
             escape(state.get("date_to")),
-            invalid("date_to")
+            date_description("date_to")
         )
     }
     fn publication_date_proof(&self, response: &SearchResponse) -> String {

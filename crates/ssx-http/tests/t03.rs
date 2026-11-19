@@ -679,6 +679,12 @@ async fn invalid_and_sensitive_submissions_keep_only_escaped_public_fields_witho
         }
         if id == "date" {
             assert!(body.contains("type=\"text\" value=\"&lt;img src=x&gt;\""));
+            let document = scraper::Html::parse_document(&body);
+            let repair = scraper::Selector::parse(
+                r#"input[name="date_from"][aria-invalid="true"][aria-describedby="portal-error publication-date-note"]"#,
+            )
+            .unwrap();
+            assert_eq!(document.select(&repair).count(), 1);
         }
         if id == "strict" {
             assert!(body.contains("value=\"&lt;query&gt;\""));
@@ -772,6 +778,21 @@ async fn blank_optional_html_bounds_are_absent_and_machine_blanks_stay_rejected(
                 if format == "html" {
                     assert_eq!(status, 200);
                     assert_eq!(p.calls() - before, engines);
+                    let document = scraper::Html::parse_document(&body);
+                    let hint = scraper::Selector::parse("#publication-date-note").unwrap();
+                    let hint = document.select(&hint).next().unwrap();
+                    assert!(
+                        hint.text()
+                            .any(|text| text.contains("Only dates you enter are applied."))
+                    );
+                    for (name, value) in [("date_from", from), ("date_to", to)] {
+                        let selector = scraper::Selector::parse(&format!(
+                            r#"input[type="date"][name="{name}"][aria-describedby="publication-date-note"]"#,
+                        ))
+                        .unwrap();
+                        let control = document.select(&selector).next().unwrap();
+                        assert_eq!(control.value().attr("value"), Some(value));
+                    }
                     if case == "both-empty" {
                         assert!(
                             !body.contains("published from (")

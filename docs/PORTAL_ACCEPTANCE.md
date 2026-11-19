@@ -17,6 +17,11 @@ are available; unavailable environments are recorded as a validation gap.
 - WCAG 2.2 AA: keyboard-only search, scope selection, pagination, external
   links, and theme toggle.
 - Every form control has a visible label or an equivalent accessible name.
+- Both publication-date fields share visible help explaining that dates are
+  optional and a browser may display today as a placeholder. Untouched date
+  fields submit empty bounds. An invalid date keeps its error association and
+  remains editable. Safari's native placeholder behavior is documented in
+  [WebKit issue 219216](https://bugs.webkit.org/show_bug.cgi?id=219216).
 - Result/state changes are announced through a restrained live region; focus is
   moved only when the user needs to recover from invalid input.
 - Text contrast is at least 4.5:1 for normal text; focus/non-text indicators
