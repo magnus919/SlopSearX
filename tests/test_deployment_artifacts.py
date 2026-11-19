@@ -265,8 +265,13 @@ def test_container_publication_requires_both_native_architectures() -> None:
     command = next(
         step["run"] for step in publish["steps"] if step.get("name") == "Publish manifest from tested digests"
     )
-    assert '"$(cat digests/amd64)" "$(cat digests/arm64)"' in command
-    assert 'assert platforms == {("linux", "amd64"), ("linux", "arm64")}' in command
+    assert "amd64=$(cat digests/amd64)" in command
+    assert "arm64=$(cat digests/arm64)" in command
+    assert 'docker buildx imagetools create "${tags[@]}" "$amd64" "$arm64"' in command
+    verifier = 'target/debug/xtask ci-helper manifest manifest.json "$amd64_digest" "$arm64_digest"'
+    assert command.count(verifier) == 2
+    assert command.index("--dry-run") < command.index(verifier) < command.index('create "${tags[@]}"')
+    assert "python3" not in command
 
 
 def test_architecture_tags_follow_commit_retention_instead_of_each_run() -> None:

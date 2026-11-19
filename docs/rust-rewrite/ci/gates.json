@@ -767,6 +767,16 @@
           "runs-on": "ubuntu-latest",
           "steps": [
             {
+              "uses": "actions/checkout@v7",
+              "with": {
+                "persist-credentials": false
+              }
+            },
+            {
+              "name": "Build the native manifest verifier",
+              "run": "cargo build --locked --package xtask"
+            },
+            {
               "uses": "docker/setup-buildx-action@v4"
             },
             {
@@ -799,7 +809,7 @@
                 "IMAGE_TAGS": "${{ steps.meta.outputs.tags }}"
               },
               "name": "Publish manifest from tested digests",
-              "run": "set -euo pipefail\ntags=()\nwhile IFS= read -r tag; do\n  tags+=(--tag \"$tag\")\ndone <<< \"$IMAGE_TAGS\"\ndocker buildx imagetools create \"${tags[@]}\" \"$(cat digests/amd64)\" \"$(cat digests/arm64)\"\nwhile IFS= read -r tag; do\n  docker buildx imagetools inspect \"$tag\" --raw > manifest.json\n  python3 - <<'PYTHON'\nimport json\nwith open(\"manifest.json\") as manifest_file:\n    manifest = json.load(manifest_file)\nplatforms = {(item[\"platform\"][\"os\"], item[\"platform\"][\"architecture\"]) for item in manifest[\"manifests\"]}\nassert platforms == {(\"linux\", \"amd64\"), (\"linux\", \"arm64\")}, platforms\nPYTHON\ndone <<< \"$IMAGE_TAGS\"\n"
+              "run": "set -euo pipefail\ntags=()\nwhile IFS= read -r tag; do\n  tags+=(--tag \"$tag\")\ndone <<< \"$IMAGE_TAGS\"\namd64=$(cat digests/amd64)\narm64=$(cat digests/arm64)\namd64_digest=${amd64#\"$IMAGE_NAME@\"}\narm64_digest=${arm64#\"$IMAGE_NAME@\"}\ndigest_pattern='^sha256:[0-9a-f]{64}$'\nif [[ \"$amd64\" != \"$IMAGE_NAME@$amd64_digest\" ||\n      \"$arm64\" != \"$IMAGE_NAME@$arm64_digest\" ||\n      ! \"$amd64_digest\" =~ $digest_pattern ||\n      ! \"$arm64_digest\" =~ $digest_pattern ]]; then\n  echo \"::error::Expected immutable tested digests for $IMAGE_NAME\"\n  exit 1\nfi\ndocker buildx imagetools create --dry-run \"$amd64\" \"$arm64\" > manifest.json\ntarget/debug/xtask ci-helper manifest manifest.json \"$amd64_digest\" \"$arm64_digest\"\ndocker buildx imagetools create \"${tags[@]}\" \"$amd64\" \"$arm64\"\nwhile IFS= read -r tag; do\n  docker buildx imagetools inspect \"$tag\" --raw > manifest.json\n  target/debug/xtask ci-helper manifest manifest.json \"$amd64_digest\" \"$arm64_digest\"\ndone <<< \"$IMAGE_TAGS\"\n"
             },
             {
               "env": {
@@ -844,7 +854,7 @@
       },
       "owner": "O04,O02",
       "state": "pending-owner",
-      "successor": "cargo xtask check O04 and O02; buildx native multiarch shipping images; native immutable OCI-index validation (ci-helper manifest); OCI registry base verification/promotion and exact native portal smoke required before O09 activation"
+      "successor": "cargo xtask check O04 and O02; buildx native multiarch shipping images; native OCI-index validation binds the pre-publication plan and every published tag to both tested child digests; registry digest promotion and exact native portal smoke required before O09 activation"
     },
     "droid-review.yml:droid-review": {
       "source": {

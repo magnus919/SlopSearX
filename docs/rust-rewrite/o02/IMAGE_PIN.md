@@ -103,3 +103,11 @@ gate catalog together, and records both current native invocations in
 and tooling inventories unchanged because they are historical evidence. The
 Python source and source-bound deployment test remain until a separately
 reviewed G08 retirement amendment. This increment does not complete O02.
+
+## Native publication verification
+
+The manifest publication job builds the repository-pinned Rust verifier. It
+checks the Buildx dry-run index before pushing tags, then checks the actual
+index behind each tag. Both checks require one Linux amd64 descriptor and one
+Linux arm64 descriptor, with the exact child digests emitted by the tested
+architecture jobs. The scope is index contents and tested child identity.
