@@ -87,7 +87,11 @@ report binds the commands and outcomes to the checked source. Scheduled
 promotion, registry readback, and final Python-free shipping assembly each need
 their own evidence.
 
-## Remaining O02 scope
+## Migration handoff
+
+The [O02 operations handoff](HANDOFF.md) records the merged qualification, rollback rehearsal, and first scheduled promotion. The notes below describe the implementation increments and their source-retirement boundaries.
+
+### Implementation and retirement notes
 
 - Retire `scripts/portal_release_smoke.py` and its source-bound Python deployment-test oracle only through the reviewed F01/G08 successor. The Docker jobs now use the native smoke helper; the historical source remains byte-identical until that retirement is accepted.
 - The CI and Docker workflows now call `scripts/configure_ci_dockerhub_mirror.sh`,
