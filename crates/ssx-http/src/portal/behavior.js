@@ -70,7 +70,11 @@
     });
     if (control) {
       control.setAttribute("aria-invalid", "true");
-      control.setAttribute("aria-describedby", "portal-error");
+      const descriptions = (control.getAttribute("aria-describedby") || "").match(/\S+/g) || [];
+      if (!descriptions.includes("portal-error")) {
+        descriptions.unshift("portal-error");
+        control.setAttribute("aria-describedby", descriptions.join(" "));
+      }
       const panel = control.closest("details");
       if (panel) panel.open = true;
       control.focus();
