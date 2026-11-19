@@ -1,6 +1,6 @@
 # T08 qualification snapshot
 
-Status: **The historical local T08/T08A and earlier hosted runs remain bound to their recorded revisions. Current origin/main 64e3c47f315d480507a03f7e2761c49f9ce06384 passed the source-bound T08A corpus on all five supported client targets and the T08 17-case default/installed runtime on x86_64 and ARM64. The selected GitHub Actions artifact ZIP digests and embedded source/report/receipt identities were independently verified; see [the hosted evidence manifest](HOSTED_EVIDENCE-2026-11-13.json). Independent final acceptance, O04 handoff review/owner acceptance, and post-merge cleanup remain pending. No production activation or release/deployment acceptance is claimed.**
+The latest reproduced source is merged commit `ebc21c8177f4b95f3016fd05a7dfea1bb862ff21`. The five hosted T08A standalone targets and both hosted Linux T08 integration targets passed on that commit. Independent final client acceptance and release-owner acceptance of the O04 handoffs are pending. The November 13 and earlier evidence below remains tied to its original revisions.
 
 The case inventory at docs/rust-rewrite/t08/inventory.json is a frozen T08 gate input: crates/xtask/src/t08.rs embeds its bytes at compile time and compares the working copy byte-for-byte. Its status and pending fields describe the gate-authoring snapshot, not current qualification status. Use this qualification snapshot and HOSTED_EVIDENCE-2026-11-13.json for current status; changing the inventory requires coordinated gate-owner changes.
 
@@ -119,9 +119,24 @@ All seven selected ZIP archives were SHA-256 checked against GitHub’s artifact
 
 This hosted evidence does not establish production startup, package signing, release promotion, installation/upgrade/uninstall, deployment, or cutover. O04/#921 owns those release obligations. No production activation occurred.
 
+## Merged-main evidence verified November 19, 2026
+
+The [standalone CLI run](https://github.com/magnus919/SlopSearX/actions/runs/44619120709) and both Linux runtime jobs in the [Foundation run](https://github.com/magnus919/SlopSearX/actions/runs/44619120621) used Git tree `3211cff4089c802ea5d6828aae605d6e1d0496aa` at `ebc21c8177f4b95f3016fd05a7dfea1bb862ff21`. The selected archives matched GitHub's SHA-256 digests before inspection.
+
+Each standalone archive matched 8,839 stage-zero Git index paths and 297 installed CLI receipt files. The archived installed executable matched the digest in the T08A report. The protected review returned APPROVE with complete coverage and zero findings for the bounded-reader repair in [PR #1160](https://github.com/magnus919/SlopSearX/pull/1160).
+
+| Linux target | O04 handoff SHA-256 | Evidence |
+| --- | --- | --- |
+| `x86_64-unknown-linux-gnu` | `2640fba8a245e6cc1f3b2d8c58cdad35a22d09ce4faa5c207054c234f5efd0a5` | [Runtime archive](https://github.com/magnus919/SlopSearX/actions/runs/44619120621/artifacts/14579540907) |
+| `aarch64-unknown-linux-gnu` | `ba2a6dcddde18dd9b1fc3c709d00f96b1dd7e27dff43a4a42fe4c5068e8b1800` | [Runtime archive](https://github.com/magnus919/SlopSearX/actions/runs/44619120621/artifacts/14579258849) |
+
+Each handoff matched the embedded report and the two retained phase receipts. The default and independently installed CLI each passed 17 ordered cases per target. The records preserve both exact large-page values, first-miss and repeat-hit observations, the recorded SIGKILL exits, process waits, upstream joins, private socket cleanup, and `production_activation=false`.
+
+The #1160 worktree and generated caches were retired after exact-tree verification. Measured logical storage fell by 916,660 KiB. The shared Cargo target, registry and source-bound evidence remain available for review.
+
 ## Remaining acceptance
 
-- **PASSED on current origin/main 64e3c47:** source-bound T08A on all five supported CLI targets and T08 on Linux x86_64/ARM64, with exact artifact and receipt provenance recorded above.
+- **Passed on merged `ebc21c81`:** T08A on all five standalone CLI targets and T08 on Linux x86_64 and ARM64. The November 13 audit remains historical.
 - **PENDING for #903:** independent final acceptance, reviewed O04 handoff/owner acceptance, and measured post-merge cleanup.
 - **REMAINS O04/#921 scope:** release archives, signing/promotion, installation/upgrade/uninstall, deployment and any separately authorized production cutover.
 
