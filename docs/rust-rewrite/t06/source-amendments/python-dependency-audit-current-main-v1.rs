@@ -7,6 +7,8 @@
 )]
 #[path = "../../t08a/bounded_source_reader.rs"]
 mod bounded_source_reader;
+#[path = "../../../../crates/xtask/src/o02_image_gate_successor.rs"]
+mod o02_image_gate_successor;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{
@@ -300,13 +302,11 @@ fn physical_operand(
         let logical = admit_source_reader(proof_root, path, &physical, mode)?;
         Ok((physical, logical))
     } else {
-        let physical = regular(physical_root, path, expected_bytes)?;
-        let logical = logical_operand(path, &physical)?;
+        let physical_bytes = o02_image_gate_successor::physical_bytes(path, expected_bytes);
+        let physical = regular(physical_root, path, physical_bytes)?;
+        let logical = o02_image_gate_successor::project(path, expected_bytes, physical.clone())?;
         Ok((physical, logical))
     }
-}
-fn logical_operand(_path: &str, physical: &[u8]) -> Result<Vec<u8>> {
-    Ok(physical.to_vec())
 }
 pub(crate) fn current_at(
     physical_root: &Path,
@@ -606,7 +606,9 @@ pub(crate) fn frame(path: &str, physical: &[u8], mode: u32) -> Result<Vec<u8>> {
         let logical = project_source_reader(path, physical)?;
         inverse(&pin, row(&doc, path)?, &logical, 0o644)
     } else {
-        inverse(&pin, row(&doc, path)?, physical, mode)
+        let logical =
+            o02_image_gate_successor::project(path, pin.current_bytes, physical.to_vec())?;
+        inverse(&pin, row(&doc, path)?, &logical, mode)
     }
 }
 fn confined(root: &Path, path: &str) -> Result<std::path::PathBuf> {
