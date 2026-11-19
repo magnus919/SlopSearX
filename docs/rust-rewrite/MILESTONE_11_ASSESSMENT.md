@@ -70,14 +70,13 @@ evidence. No combination of automated changes can close any of the 23.
 
 ## Two structural problems worth an owner decision
 
-1. **The critical path runs through a closed pull request.** #902's
-   implementation is a 110-commit branch whose platform-trust qualification
-   cannot pass on hosted runners. #1073/#1075 protect that qualification
-   correctly — they refuse to weaken the witness — but they need authority that
-   the routine rewrite mandate does not carry. Until someone decides how trust
-   is established and removed in the qualification environment, or formally
-   amends the T07 acceptance contract, the gateway cannot land and 17 of the 23
-   open issues cannot start.
+1. **The critical path runs through a closed pull request.** The #902
+   implementation is on a 110-commit branch. The hosted macOS user-domain
+   attempt did not complete trust establishment. Hosted macOS with admin-domain
+   trust remains a candidate pending supported authorization for both adding
+   and removing the test CA. Windows qualification has its own investigation
+   under #1075. The gateway remains blocked until both platform qualifications
+   are accepted or the maintainer formally amends the T07 acceptance contract.
 
 2. **#903 and #921 are mutually dependent in substance.** #921 is listed as
    blocked by #903, but the production server assembly that #903 needs lives in
@@ -102,11 +101,10 @@ evidence. No combination of automated changes can close any of the 23.
 1. **#1073 / #1075** — authorise a supported trust establishment *and* removal
    route for the qualification environment, or amend the T07 platform contract
    to a scope the hosted runner can actually evidence.
-   [T07 platform-trust proposal](../t07/PLATFORM_TRUST_PROPOSAL.md) sets out the
-   four candidate routes, the exact commands, the authority each needs and a
-   recommendation (system-domain trust under `sudo` on the ephemeral macOS
-   runner, with a contract amendment as fallback). Nothing in it has been
-   executed.
+   November 18 follow-up. The [macOS route assessment](t07/PLATFORM_TRUST_PROPOSAL.md) records the
+   observed authorization boundary and the evidence needed for supported
+   establishment and removal. Windows retains its separate certificate-load
+   investigation and CurrentUser Root contract.
 2. **#902** — decide whether the gateway branch lands once (1) is settled, and
    who owns the rebase of 110 commits across 64 commits of `main` drift.
 3. **#903 / #921** — name the owner of production native server assembly and
