@@ -310,6 +310,173 @@ fn formatter_completion(base: &Path, process_dir: &Path, stdout: &str) -> Result
         .to_owned();
     Ok((receipt, digest))
 }
+const COMPACT_FORMATTER_FILE: &str = "formatter-compact-results.json";
+
+fn compact_formatter_completion(base: &Path, directory: &Path, stdout: &str) -> Result<Value> {
+    let markers = completion_lines(stdout, "T03_COMPACT_FORMATTER_RECEIPT ")?;
+    need(
+        markers.len() == 1,
+        "compact formatter receipt must appear once",
+    )?;
+    let marker = &markers[0];
+    exact_keys(marker, &["path", "sha256"], "compact formatter completion")?;
+    let (path, receipt) = read_completion(base, marker, "path", "sha256")?;
+    let expected_dir = directory
+        .canonicalize()
+        .map_err(|error| error.to_string())?;
+    need(
+        path.parent() == Some(expected_dir.as_path())
+            && path.file_name().and_then(|name| name.to_str()) == Some(COMPACT_FORMATTER_FILE),
+        "compact formatter receipt escaped its source-availability process directory",
+    )?;
+    validate_compact_formatter_fixture(&receipt)?;
+    Ok(json!({"binding":marker,"receipt":receipt}))
+}
+
+fn validate_compact_formatter_fixture(receipt: &Value) -> Result<&str> {
+    exact_keys(
+        receipt,
+        &["schema", "input", "html"],
+        "compact formatter receipt",
+    )?;
+    need(
+        receipt["schema"] == "T03_COMPACT_FORMATTER_RECEIPT_V1"
+            && receipt["input"]
+                == json!({
+                    "query":"query",
+                    "results":[{
+                        "url":"https://example.com",
+                        "title":"A result",
+                        "content":"A compact explanation fixture",
+                        "engine":"brave",
+                        "engines":[],
+                        "score":1.0,
+                        "position":1,
+                        "category":"general",
+                        "published_date":null,
+                        "thumbnail":null,
+                        "img_src":null,
+                        "tier":1,
+                        "has_media":false,
+                        "payload":null,
+                        "work_group":null
+                    }],
+                    "meta":null
+                }),
+        "compact formatter input differs from the original size fixture",
+    )?;
+    let html = receipt["html"]
+        .as_str()
+        .ok_or("T03 compact formatter output missing")?;
+    need(
+        html.starts_with("<!doctype html>")
+            && html.matches("<article ").count() == 1
+            && html.contains(r#"href="https://example.com""#)
+            && html.contains("A compact explanation fixture"),
+        "compact formatter output lacks the single original result",
+    )?;
+    Ok(html)
+}
+
+fn compact_formatter_budgets(
+    root: &Path,
+    manifest: &Value,
+    compact: &Value,
+    records: &mut Vec<Value>,
+) -> Result<Value> {
+    let html = validate_compact_formatter_fixture(&compact["receipt"])?;
+    let raw = html.as_bytes();
+    need(
+        raw.len() <= 50 * 1024,
+        "compact results exceeded 50 KiB uncompressed",
+    )?;
+    let path = compact["binding"]["path"]
+        .as_str()
+        .ok_or("T03 compact receipt path missing")?;
+    let mut command = Command::new("node");
+    command.args([
+        "--input-type=module",
+        "-e",
+        r#"import { readFileSync } from 'node:fs';
+            import { gzipSync } from 'node:zlib';
+            import { createHash } from 'node:crypto';
+            const receipt = readFileSync(process.argv[1]);
+            const html = Buffer.from(JSON.parse(receipt).html, 'utf8');
+            const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
+            console.log(JSON.stringify({ receipt_sha256: sha256(receipt),
+              html_sha256: sha256(html), gzip_bytes: gzipSync(html, {level: 9}).length }));"#,
+        "--",
+        path,
+    ]);
+    let output = capture(root, command, Duration::from_secs(30), records)?;
+    let measured: Value = serde_json::from_str(&output).map_err(|error| error.to_string())?;
+    exact_keys(
+        &measured,
+        &["receipt_sha256", "html_sha256", "gzip_bytes"],
+        "compact gzip measurements",
+    )?;
+    let gzip_bytes = measured["gzip_bytes"]
+        .as_u64()
+        .ok_or("T03 compact gzip size missing")?;
+    need(
+        measured["receipt_sha256"] == compact["binding"]["sha256"]
+            && measured["html_sha256"] == hash(raw)
+            && gzip_bytes > 0,
+        "compact gzip measurement does not bind the checked HTML",
+    )?;
+    need(
+        gzip_bytes <= 15 * 1024,
+        "compact results exceeded 15 KiB gzip",
+    )?;
+    let rows = manifest["rows"]
+        .as_array()
+        .ok_or("T03 source-assertion rows missing")?;
+    let mut comparisons = Vec::new();
+    for (id, line, predicate, subject, limit, observed) in [
+        (
+            "F:L802",
+            802,
+            "len(output) <= 50 * 1024",
+            "len(output)",
+            50 * 1024,
+            raw.len() as u64,
+        ),
+        (
+            "F:L803",
+            803,
+            "len(gzip.compress(output)) <= 15 * 1024",
+            "len(gzip.compress(output))",
+            15 * 1024,
+            gzip_bytes,
+        ),
+    ] {
+        let row = rows
+            .iter()
+            .find(|row| row["id"] == id)
+            .ok_or_else(|| format!("T03 {id} source row missing"))?;
+        let assertion = format!("assert {predicate}");
+        need(
+            row["source"]["path"] == "tests/test_formatter.py"
+                && row["source"]["baseline_commit"] == "20109f9083babd014971951e8c02565ae51c2326"
+                && row["source"]["git_blob"] == "012c9365c62fa4523c3cac67081024995975bdc3"
+                && row["source"]["line"] == line
+                && row["source"]["assertion"] == assertion
+                && row["source"]["assertion_sha256"] == hash(assertion.as_bytes())
+                && row["expectation"] == json!({"kind":"maximum","subject":subject,"value":limit}),
+            &format!("{id} frozen compact-results predicate differs"),
+        )?;
+        comparisons.push(
+            json!({"id":id,"source":row["source"],"limit_bytes":limit,"actual_bytes":observed}),
+        );
+    }
+    Ok(json!({
+        "binding":compact["binding"],
+        "html_sha256":hash(raw),
+        "gzip_level":9,
+        "assertions":comparisons
+    }))
+}
+
 fn completion_lines(stdout: &str, marker: &str) -> Result<Vec<Value>> {
     stdout
         .lines()
@@ -669,10 +836,14 @@ fn validate_http(base: &Path, stdout: &str, binary: &Path, binary_sha: &str) -> 
         "original two-node/16-assertion handoff differs",
     )?;
     let assertions = assertion_evidence(&nodes, &wire)?;
+    let source_manifest: Value = serde_json::from_slice(SOURCE_ASSERTIONS)
+        .map_err(|error| format!("T03 source-assertion manifest JSON: {error}"))?;
+    let retained_formatter_assertions = retained_formatter_comparisons(&source_manifest, &wire)?;
     let formatter_dir = process_dirs
         .get("source-availability")
         .ok_or("T03 source-availability process directory missing")?;
     let (formatter_receipt, formatter_sha256) = formatter_completion(base, formatter_dir, stdout)?;
+    let compact_formatter = compact_formatter_completion(base, formatter_dir, stdout)?;
     let source_availability_assertions = source_availability_evidence(
         SOURCE_ASSERTIONS,
         &wire,
@@ -699,6 +870,7 @@ fn validate_http(base: &Path, stdout: &str, binary: &Path, binary_sha: &str) -> 
         }
         if group == "source-availability" {
             wanted_files.insert("formatter-source-availability.json".into());
+            wanted_files.insert(COMPACT_FORMATTER_FILE.into());
         }
         let mut actual_files = BTreeSet::new();
         for entry in fs::read_dir(directory).map_err(|e| e.to_string())? {
@@ -733,9 +905,132 @@ fn validate_http(base: &Path, stdout: &str, binary: &Path, binary_sha: &str) -> 
         }
     }
     Ok(
-        json!({"http_receipts":wire,"processes":processes,"source_assertions":assertions,"source_availability_assertions":source_availability_assertions,"child_joined":true,"child_exit_success":true}),
+        json!({"http_receipts":wire,"processes":processes,"source_assertions":assertions,"retained_formatter_assertions":retained_formatter_assertions,"source_availability_assertions":source_availability_assertions,"compact_formatter":compact_formatter,"child_joined":true,"child_exit_success":true}),
     )
 }
+// Literal checks against the named deterministic HTTP responses. The
+// historical formatter fixtures and their acceptance status stay in the source inventory.
+type FormatterPredicate = (usize, bool, &'static str);
+const RETAINED_FORMATTER_CHECKS: &[(&str, &str, &[FormatterPredicate])] = &[
+    (
+        "landing-form",
+        "landing-form-source",
+        &[
+            (532, true, "data-default-theme=\"darker\""),
+            (535, true, "Search <em>SlopSearX.</em>"),
+            (536, true, "let stored = null"),
+            (537, true, "storage is optional"),
+        ],
+    ),
+    (
+        "states",
+        "state-malicious",
+        &[(551, false, "javascript:"), (747, true, "not eligible")],
+    ),
+    (
+        "inherited",
+        "inherited-scope",
+        &[
+            (643, true, "name=\"time_range\""),
+            (648, true, "pageno=3"),
+            (662, true, "Matched 2 sources"),
+            (
+                663,
+                true,
+                "title=\"Same result or identified work found by 2 configured engines\"",
+            ),
+            (666, true, "Open result ↗"),
+            (667, true, "Open JSON view ↗"),
+            (669, true, "Source status"),
+            (735, true, "has not been fetched or verified"),
+        ],
+    ),
+    (
+        "states",
+        "state-missing",
+        &[(670, true, "Page 1 · more may be available")],
+    ),
+    (
+        "denials",
+        "deny-strict",
+        &[
+            (809, true, "Field: safesearch"),
+            (810, true, "Return to search"),
+        ],
+    ),
+];
+
+fn retained_formatter_comparisons(manifest: &Value, wire: &[Value]) -> Result<Value> {
+    let rows = manifest["rows"]
+        .as_array()
+        .ok_or("T03 source-assertion rows missing")?;
+    let mut comparisons = Vec::new();
+    for &(group, binding, predicates) in RETAINED_FORMATTER_CHECKS {
+        let mut receipts = wire
+            .iter()
+            .filter(|receipt| receipt["group"] == group && receipt["binding"]["id"] == binding);
+        let receipt = receipts
+            .next()
+            .ok_or_else(|| format!("T03 {binding} receipt missing"))?;
+        need(
+            receipts.next().is_none(),
+            &format!("duplicate {binding} receipt"),
+        )?;
+        let body = receipt["observation"]["body"]
+            .as_str()
+            .ok_or_else(|| format!("T03 {binding} response body missing"))?;
+        for &(line, present, literal) in predicates {
+            let id = format!("F:L{line}");
+            let mut matching = rows.iter().filter(|row| row["id"] == id);
+            let row = matching
+                .next()
+                .ok_or_else(|| format!("T03 {id} source row missing"))?;
+            let kind = if present {
+                "contains"
+            } else {
+                "does_not_contain"
+            };
+            let quote = if literal.contains('"') { "'" } else { "\"" };
+            let operator = if present { "in" } else { "not in" };
+            let predicate = format!("{quote}{literal}{quote} {operator} output");
+            let assertion = format!("assert {predicate}");
+            need(
+                matching.next().is_none()
+                    && row["scope"] == "formatter_html"
+                    && row["source"]["path"] == "tests/test_formatter.py"
+                    && row["source"]["baseline_commit"]
+                        == "20109f9083babd014971951e8c02565ae51c2326"
+                    && row["source"]["git_blob"] == "012c9365c62fa4523c3cac67081024995975bdc3"
+                    && row["source"]["line"] == line
+                    && row["source"]["end_line"] == line
+                    && row["source"]["file_sha256"]
+                        == "28de731a81090067f90eabf2d37c28e92c026da38e0d95007d116f9fe60929b6"
+                    && row["source"]["predicate"] == predicate
+                    && row["source"]["assertion"] == assertion
+                    && row["source"]["assertion_sha256"] == hash(assertion.as_bytes())
+                    && row["expectation"]
+                        == json!({"kind":kind,"subject":"output","value":literal})
+                    && row["expected_predicate_result"] == true
+                    && row["original_assertion_accepted"] == false,
+                &format!("{id} frozen formatter predicate differs"),
+            )?;
+            need(
+                body.contains(literal) == present,
+                &format!("{id} formatter comparison failed for {binding}"),
+            )?;
+            comparisons.push(json!({
+                "id":id,
+                "source":row["source"],
+                "receipt":receipt["binding"],
+                "comparison":row["expectation"],
+                "result":true,
+                "fixture_equivalence_reviewed":false
+            }));
+        }
+    }
+    Ok(Value::Array(comparisons))
+}
+
 fn assertion_evidence(nodes: &[Value], wire: &[Value]) -> Result<Value> {
     let mut assertions = Vec::new();
     for (index, (id, literals)) in [
@@ -2983,6 +3278,9 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     let output = capture(root, command, Duration::from_secs(600), records)?;
     completed_tests(&output)?;
     let http = validate_http(&http_dir, &output, &binary, &binary_sha)?;
+    let compact_budgets =
+        compact_formatter_budgets(root, &manifest, &http["compact_formatter"], records)?;
+    records.push(json!({"plan":"T03","role":"compact-formatter-budgets","source_sha256":source_sha,"evidence":compact_budgets}));
     records.push(json!({"plan":"T03","role":"actual-http-inventory","source_sha256":source_sha,"evidence":http}));
     let client_sha = hash(SOURCES[8].1);
     let mut browser_rows = Vec::new();
@@ -3089,7 +3387,8 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::{
-        SOURCE_ASSERTIONS, formatter_completion, hash, roundtrip_controls, roundtrip_html_proof,
+        RETAINED_FORMATTER_CHECKS, SOURCE_ASSERTIONS, formatter_completion, hash,
+        retained_formatter_comparisons, roundtrip_controls, roundtrip_html_proof,
         roundtrip_machine_document, roundtrip_request_key, source_availability_evidence,
         validate_budgets, validate_date_roundtrip_call_log, validate_date_roundtrip_machine_proof,
         validate_engine_call, validate_http_error_evidence, validate_source_assertion_inventory,
@@ -3102,6 +3401,82 @@ mod tests {
         time::{SystemTime, UNIX_EPOCH},
     };
     use url::Url;
+
+    #[test]
+    fn retained_formatter_predicates_reject_response_and_mapping_drift() {
+        let manifest: Value = serde_json::from_slice(SOURCE_ASSERTIONS).unwrap();
+        let mut wire: Vec<_> = RETAINED_FORMATTER_CHECKS
+            .iter()
+            .map(|(group, binding, predicates)| {
+                let body = predicates
+                    .iter()
+                    .filter_map(|(_, present, literal)| present.then_some(*literal))
+                    .collect::<Vec<_>>()
+                    .join("\n");
+                json!({"group":group,"binding":{"id":binding},"observation":{"body":body}})
+            })
+            .collect();
+        let comparisons = retained_formatter_comparisons(&manifest, &wire).unwrap();
+        assert_eq!(comparisons.as_array().unwrap().len(), 17);
+        let good = wire.clone();
+        let target = wire
+            .iter_mut()
+            .find(|receipt| receipt["binding"]["id"] == "state-malicious")
+            .unwrap();
+        let unsafe_body = format!(
+            "{} javascript:",
+            target["observation"]["body"].as_str().unwrap()
+        );
+        target["observation"]["body"] = json!(unsafe_body);
+        assert!(
+            retained_formatter_comparisons(&manifest, &wire)
+                .unwrap_err()
+                .contains("F:L551")
+        );
+        wire = good.clone();
+        wire[0]["observation"]["body"] =
+            json!(wire[0]["observation"]["body"].as_str().unwrap().replace(
+                "data-default-theme=\"darker\"",
+                "data-default-theme=\"dark\""
+            ));
+        assert!(
+            retained_formatter_comparisons(&manifest, &wire)
+                .unwrap_err()
+                .contains("F:L532")
+        );
+        wire = good.clone();
+        wire[0]["observation"]["body"] = json!(
+            wire[0]["observation"]["body"]
+                .as_str()
+                .unwrap()
+                .replace("Search <em>SlopSearX.</em>", "")
+        );
+        assert!(
+            retained_formatter_comparisons(&manifest, &wire)
+                .unwrap_err()
+                .contains("F:L535")
+        );
+        wire = good.clone();
+        wire.push(good[0].clone());
+        assert!(
+            retained_formatter_comparisons(&manifest, &wire)
+                .unwrap_err()
+                .contains("duplicate landing-form-source")
+        );
+        let mut manifest = manifest;
+        let row = manifest["rows"]
+            .as_array_mut()
+            .unwrap()
+            .iter_mut()
+            .find(|row| row["id"] == "F:L535")
+            .unwrap();
+        row["expectation"]["value"] = json!("weakened predicate");
+        assert!(
+            retained_formatter_comparisons(&manifest, &good)
+                .unwrap_err()
+                .contains("frozen formatter predicate differs")
+        );
+    }
 
     #[test]
     fn source_assertion_inventory_counts_every_row_without_claiming_acceptance() {

@@ -69,6 +69,10 @@ impl Drop for Process {
 }
 impl Process {
     pub fn start(name: &str, scenario: &str) -> Self {
+        Self::start_with_theme(name, scenario, "dark")
+    }
+
+    pub fn start_with_theme(name: &str, scenario: &str, theme: &str) -> Self {
         let out = directory(name);
         let binary = binary();
         assert!(
@@ -82,7 +86,7 @@ impl Process {
             .unwrap();
         let child = Command::new(&binary)
             .arg(out.join("calls.jsonl"))
-            .arg("dark")
+            .arg(theme)
             .arg(scenario)
             .env_clear()
             .env("TZ", "UTC")

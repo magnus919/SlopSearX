@@ -439,6 +439,7 @@ async fn malicious_optional_empty_partial_and_unavailable_states_are_truthful() 
     p.stop().await;
 
     let mut p = Process::start("source-availability", "source-availability");
+    compact_formatter_receipt(&p.out);
     let formatter_receipt = json!({
         "schema": "T03_DIRECT_FORMATTER_INPUT_RECEIPT_V1",
         "renderer": "PublicPortal::search",
@@ -567,6 +568,71 @@ async fn unavailable_machine_format_keeps_the_legacy_unknown_scope_summary() {
     );
     assert_eq!(p.calls(), 0);
     p.stop().await;
+}
+
+fn compact_formatter_receipt(directory: &std::path::Path) {
+    use ssx_domain::{FiniteF64, SearchRequest, SearchResponse, SearchResult};
+
+    // The original compact fixture has one ordinary result and no supported
+    // entity identifier. Native grouping derives its state from that result.
+    let result = SearchResult {
+        url: "https://example.com".into(),
+        title: "A result".into(),
+        content: "A compact explanation fixture".into(),
+        engine: "brave".into(),
+        score: FiniteF64::new(1.0).unwrap(),
+        position: 1,
+        ..Default::default()
+    };
+    let request = SearchRequest {
+        query: "query".into(),
+        ..Default::default()
+    };
+    let input = json!({
+        "query": request.query,
+        "results": [{
+            "url": result.url,
+            "title": result.title,
+            "content": result.content,
+            "engine": result.engine,
+            "engines": result.engines,
+            "score": result.score,
+            "position": result.position,
+            "category": result.category,
+            "published_date": result.published_date,
+            "thumbnail": result.thumbnail,
+            "img_src": result.img_src,
+            "tier": result.tier,
+            "has_media": result.media.is_some(),
+            "payload": result.payload,
+            "work_group": result.work_group
+        }],
+        "meta": null
+    });
+    let response = SearchResponse {
+        query: request.query.clone(),
+        results: vec![result],
+        ..Default::default()
+    };
+    let html = PublicPortal::default().search(&response, &Value::Null, &request);
+    assert!(html.contains("A compact explanation fixture"));
+    assert!(html.len() <= 50 * 1024);
+    let receipt = json!({
+        "schema": "T03_COMPACT_FORMATTER_RECEIPT_V1",
+        "input": input,
+        "html": html
+    });
+    let path = directory.join("formatter-compact-results.json");
+    let raw = ssx_json::to_string(&receipt).unwrap();
+    fs::write(&path, raw.as_bytes()).unwrap();
+    let sha256 = Sha256::digest(raw.as_bytes())
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect::<String>();
+    println!(
+        "T03_COMPACT_FORMATTER_RECEIPT {}",
+        json!({"path":path.canonicalize().unwrap().to_string_lossy(),"sha256":sha256})
+    );
 }
 
 #[tokio::test]
@@ -745,7 +811,7 @@ async fn blank_optional_html_bounds_are_absent_and_machine_blanks_stay_rejected(
 
 #[tokio::test]
 async fn landing_native_form_submits_query_and_scope_together_from_both_buttons() {
-    let mut process = Process::start("landing-form", "contract");
+    let mut process = Process::start_with_theme("landing-form", "contract", "darker");
     let (status, body) = process.get("/", "landing-form-source").await;
     assert_eq!(status, 200);
     let document = scraper::Html::parse_document(&body);

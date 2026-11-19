@@ -77,6 +77,22 @@ assertions still require their original acceptance evidence. Current-main date
 roundtrip and profiling controls remain alongside the empty-date-control journey
 and source/media evidence in this candidate.
 
+The HTTP receipt validator applies 17 frozen formatter literal predicates to
+named native responses for landing, result, malformed-content and error paths.
+The landing-form fixture starts with the darker theme and checks that the
+response declares that default. Each result includes its original source row and
+current HTTP receipt binding under `retained_formatter_assertions`. The browser
+theme journey also checks that switching to the darker theme exposes a visible
+button named “Use dark mode”. The check covers the entire
+malformed-content response for the forbidden URL scheme and rejects missing,
+duplicate or mismatched evidence. Source-owner review of fixture equivalence
+remains pending. The historical inventory and its acceptance states are
+preserved. The compact-results budget uses the original query and single ordinary result
+in a direct native formatter fixture. The native renderer derives grouping
+from the result. The gate measures that receipt’s exact UTF-8 bytes and its
+level-nine gzip representation against the original 50 KiB and 15 KiB caps.
+The browser landing-page budgets run separately.
+
 The fast and slow trusted-click controls first record a bounded pre-input readiness
 phase: the target is brought forward, a trial click proves Playwright actionability
 without dispatching input, and snapshots taken before and during two sampled browser
