@@ -9,12 +9,14 @@ COPY contracts contracts
 COPY vendor vendor
 COPY docs/rust-rewrite docs/rust-rewrite
 ENV CARGO_BUILD_JOBS=2 CARGO_INCREMENTAL=0
-RUN cargo build --locked --release -p ssx-http --example t02_fixture --example t02_image_smoke
+RUN cargo build --locked --release -p ssx-http --example t02_fixture --example t02_image_smoke \
+ && cargo build --locked --release -p ssx-healthcheck
 
 FROM debian:bookworm-slim AS runtime
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates libgcc-s1 && rm -rf /var/lib/apt/lists/*
 COPY --from=build /src/target/release/examples/t02_fixture /usr/local/bin/ssx-t02-http
 COPY --from=build /src/target/release/examples/t02_image_smoke /usr/local/bin/ssx-t02-image-smoke
+COPY --from=build /src/target/release/ssx-healthcheck /usr/local/bin/ssx-healthcheck
 # Both vendor libxml2's Python support and all backend/interpreter fallbacks are absent.
 USER 65532:65532
 ENTRYPOINT ["/usr/local/bin/ssx-t02-image-smoke"]

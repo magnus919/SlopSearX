@@ -1,5 +1,7 @@
 //! Exact three-source repair after 6120 qualification. Frozen HTTP oracles stay unchanged.
 use super::{Inputs, Result, Transition, git, need, read, reconstruct, sha};
+#[path = "native-health-image-v1.rs"]
+mod health_image;
 use serde::Deserialize;
 use std::path::Path;
 const CAPSULE: &str = "docs/rust-rewrite/t02/source-amendments/yaml-break-successor-v1.json";
@@ -90,14 +92,22 @@ fn inputs(root: &Path, c: &Capsule) -> Result<Vec<Inputs>> {
     c.transitions
         .iter()
         .map(|t| {
+            let mut current = read(root, &t.path)?;
+            let current_blob = if t.path == health_image::FIXTURE {
+                current.bytes =
+                    health_image::prior(root, &t.path, &t.current_sha256, Some(&t.current_blob))?;
+                format!("{}\n", t.current_blob)
+            } else {
+                String::from_utf8(git(root, &["hash-object", "--", &t.path])?)
+                    .map_err(|e| e.to_string())?
+            };
             Ok(Inputs {
                 archive: read(root, &t.archive)?,
-                current: read(root, &t.path)?,
+                current,
                 git_archive: git(root, &["show", &format!("{BASE}:{}", t.path)])?,
                 git_tree: String::from_utf8(git(root, &["ls-tree", BASE, "--", &t.path])?)
                     .map_err(|e| e.to_string())?,
-                current_blob: String::from_utf8(git(root, &["hash-object", "--", &t.path])?)
-                    .map_err(|e| e.to_string())?,
+                current_blob,
             })
         })
         .collect()
@@ -126,6 +136,15 @@ fn materials(c: &Capsule, items: &[Inputs]) -> Result<()> {
     Ok(())
 }
 pub(super) fn verify(root: &Path, path: &str, old: &str, coverage: &str) -> Option<Result<()>> {
+    if path != health_image::FIXTURE && health_image::contains(path) {
+        return Some((|| {
+            need(
+                coverage == super::COVERAGE_SHA,
+                "T02 health image exact coverage caller",
+            )?;
+            health_image::prior(root, path, old, None).map(|_| ())
+        })());
+    }
     let (_, pin) = ROWS.iter().find(|(p, _)| *p == path)?;
     Some((|| {
         need(
@@ -137,6 +156,7 @@ pub(super) fn verify(root: &Path, path: &str, old: &str, coverage: &str) -> Opti
     })())
 }
 pub(super) fn controls(root: &Path) -> Result<()> {
+    health_image::controls(root)?;
     let c = load(root)?;
     let good = inputs(root, &c)?;
     materials(&c, &good)?;
