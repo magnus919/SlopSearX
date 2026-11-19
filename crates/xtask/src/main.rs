@@ -516,6 +516,7 @@ fn execute(root: &Path, id: &str, records: &mut Vec<Value>) -> Result<()> {
         "A02" => a02::check(root, records),
         "A05" => a05::check(root, records),
         "O01" => o01::check(root, records),
+        "O02" => o06::check_operations(root, records),
         "O03" => o03::check(root, records),
         "O06" => o06::check(root, records),
         "F01" | "F02" => source_check(root, id, records),
@@ -772,6 +773,8 @@ fn main() {
         "native bounded dossiers and read-only composition with actual research worker/private Valkey/loopback; final workflow transports W09 and protected portal W10 remain separate"
     } else if id == "W07" {
         "exact native receipt/record/lineage/composition/MCP execution and measured frozen Python wire subset; no providers, production activation, startup or complete rewrite certification"
+    } else if id == "O02" {
+        "offline native health, portal smoke, upstream replay, OCI digest and promotion transaction checks; shipping assembly, registry observation and deployment remain separate"
     } else if id == "O03" {
         "active tooling inventory and prospective evidence contracts only; no experiment, provider call, receipt issuance or historical evidence mutation"
     } else if id == "T01" {
