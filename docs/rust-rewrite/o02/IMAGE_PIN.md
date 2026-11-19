@@ -2,24 +2,22 @@
 
 ## What landed
 
-`crates/xtask/src/o02_image_pin.rs` implements the two operational helpers that
-the release jobs used to run as Python, exposed through the existing reviewed
-`ci-helper` seam:
+The native `ci-helper` commands are:
 
-| command | replaces |
+| command | behavior |
 | --- | --- |
-| `cargo xtask ci-helper image-pin-promote --check [--root DIR]` | `scripts/promote_image_digest.py --check` |
-| `cargo xtask ci-helper image-pin-promote --write [--root DIR]` | guarded no-op when current; exits `2` rather than partially writing on digest drift |
-| `cargo xtask ci-helper image-pin-verify-base [--dockerfile PATH]` | `scripts/verify_docker_base_digest.py` |
+| `cargo xtask ci-helper image-pin-promote --check [--root DIR]` | compare only; 0 current, 1 drift, 2 error; pending transactions fail without mutation |
+| `cargo xtask ci-helper image-pin-promote --write [--root DIR]` | validate/stage/write digest pins with rollback; 0 current, 10 updated, 2 error |
+| `cargo xtask ci-helper image-pin-promote --recover [--root DIR]` | explicit offline transaction rollback/cleanup; 0 clean/recovered, 2 error |
+| `cargo xtask ci-helper image-pin-verify-base [--dockerfile PATH]` | verify both Docker base digests |
 
-Base verification preserves the prior registry behavior. Promotion checks the
-unique image digest across `docker-compose.yml`, `k8s/deployment.yaml`, and the
-fixture-bound Python test oracle. Native `--write` is fail-closed while that
-oracle's source hash is fixed: on digest drift it refuses the write before
-changing either manifest, preventing a split pin. Until a separately reviewed
-F01/W03 source-custody work defines an atomic promotion path; the existing
-image-promotion workflow currently uses the Python writer. Updating its generated
-source successor is outside this bounded Docker-verifier wiring PR.
+The [native writer and source-custody transition](image-promotion-write-v1/README.md)
+defines the exact digest-slot successor of the existing literal test oracle,
+semantic active-field validation, durable originals, compensating rollback,
+interrupted-transaction recovery, current source bindings and offline controls.
+The scheduled workflow invokes native recover/check/write; the historical Python
+helper/source inventories remain preserved for G08. No promotion workflow or
+registry write was executed while implementing this transition.
 
 Base verifier policy:
 - retains the allowlisted hosts (`auth.docker.io`, `registry-1.docker.io`,
@@ -37,79 +35,41 @@ Base verifier policy:
 The transport is `curl`, which the release runners already provide. This is the
 "Rust or portable shell client" path the O02 issue allows; parsing, read-only
 verification, registry retry classification and base-check behavior are native
-Rust. Thirty active tests cover the sealed source contract; no legacy scanner
-or ignored scanner tests remain. They cover both-base match/drift verification, failure
-classification and non-mutation, injected-transport retry, permanent failure,
-unusable digests, explicit promotion modes, bounded Dockerfile and manifest
-reads, active-field decoys, symlinked-parent refusal, and drift refusal without
-modifying manifests or the test oracle. The non-custodied parser accepts only a
-single sealed assignment, not arbitrary Python. The real checkout oracle takes
-a separate exact-byte path authenticated against the F01/W03 custody successor,
-including the expected module pin. Native write remains no-op on current digest;
-digest transitions stay on the existing Python promotion path until source
-custody is amended.
+Rust. Focused offline tests cover native parsing, registry behavior and the new
+transaction/custody failure controls. See the additive transition for the exact
+controls and registered run evidence. The non-custodied parser remains a sealed
+literal-only grammar; a real source successor must preserve every non-digest byte.
 
-## Evidence
+## Evidence and trust boundaries
 
 The CI/release environment must provide a trusted `curl` in PATH and trusted
-curl configuration and environment. The transport inherits HOME/CURL_HOME
-configuration and proxy variables as well as executable lookup; this slice does
-not isolate those caller-controlled settings.
+curl configuration/environment. The transport inherits HOME/CURL_HOME, proxy
+variables and executable lookup. This transition does not isolate those inputs.
 
-Historical local production checks (from the image-promotion increment, not
-repeated in this bounded wiring slice):
+The writer updates four operands together: `docker-compose.yml`,
+`k8s/deployment.yaml`, the literal digest in
+`tests/test_deployment_artifacts.py`, and exactly two active YAML examples in
+`spec.md`. It uses a durable journal, per-file atomic replacement, compensating
+rollback and explicit offline recovery. Checks refuse pending recovery state
+without mutation. The scheduled job uses native commands and records only these
+four paths in its generated PR; no workflow dispatch, registry write or
+production deployment was performed for local validation.
 
-- `image-pin-verify-base` — exit `0`; both `library/rust:1.99.0-bookworm` and
-  `library/python:3.14.7-slim-trixie` matched their recorded registry digests.
-- `image-pin-promote --check` — exit `1` on a recorded mismatch, exercising
-  drift detection and exclusive pin extraction. No credentials or promotion
-  write were used here.
+The historical Python helpers remain tracked until G08 retirement. The deployment
+test is a bounded current-source successor: one exact assertion replacement
+requires native workflow wiring, and a unique digest slot may vary; every other
+byte remains fixed. Existing historical F01/W03 and builder-v2 proofs reconstruct
+the original authenticated source. The native parser still rejects arbitrary
+Python instead of interpreting it. Current source bindings and their finite audit
+are part of the additive transition; historical inventories remain unchanged.
 
-Current candidate checks are offline/unit-only:
-`SLOPSEARX_TEST_TEMP_ROOT=$SLOPSEARX_BUILD_RUN/tmp cargo test --locked --offline -p xtask o02_image_pin -- --test-threads=8` — 30 passed, none ignored. The passing frozen-source path verifies the exact source SHA-256 and unique expected literal, then checks a compiled text fragment for the W03 successor row's path, historical Git blob, current/predecessor byte counts, and SHA-256 values. This source-fragment check does not execute the row's inverse transform or validate its replacement spans, and it does not check Git status. A separate T08A test exercises the W03 inverse control. The registry transport also launches `curl` by PATH lookup and relies on the caller's toolchain PATH; substituting a hostile `curl` is outside the current verifier's trust boundary. The synthetic parser rejects CR/CRLF line endings, backslash escapes, extra statements, and executable suffixes; it accepts only a single double-quoted digest assignment. Full xtask and the scoped T08A source-binding control were rerun after these parser guards.
-`cargo clippy --locked --offline -p xtask --all-targets -- -D warnings` — clean.
-
-## CI wiring and the one behaviour fix
-
-`image-promotion.yml` now runs the native `--check` as a parity cross-check
-before the Python `--write`, so the native implementation is exercised against
-the real registry on every scheduled run. `docker.yml` now invokes `cargo xtask
-ci-helper image-pin-verify-base` after installing and confirming the
-repository-pinned Rust toolchain. The Python verifier and test module remain
-tracked and source-preserved in the historical fixture; this wiring does not
-claim Python-file retirement.
-
-While touching the promotion job we fixed a latent defect: GitHub Actions runs
-`run:` blocks under `bash -e`, so the pre-existing `python3
-scripts/promote_image_digest.py --write` step aborted on its own documented
-non-zero exits (`10` = pins updated, `2` = error) before the `if [ "$code" = 2 ]`
-guard could run. Both commands are now wrapped in `set +e` / `set -e`.
-
-## Why the Python twins remain tracked
-
-Every tracked `.py` file and every file under `docs/rust-rewrite/inventory/` is
-authenticated by F01's source inventory. The active deployment-test oracle is
-also listed in the W03/O02 finite current-source successor and historical inverse:
-
-- `crates/xtask/fixtures/F01.json` lists each path with its `git_blob`;
-- `source_check("F01")` requires that set to equal the tracked `.py`/`.pyi`/
-  `.pyw`/`ssx` set (minus the retired `docker/healthcheck.py`), and requires the
-  Python-disposition inventory to equal the tracked Python set;
-- `docs/rust-rewrite/snapshot-fixture-amendment/validator.rs` is sealed by a
-  compiled-in capsule SHA, pins `tests/test_coverage_pipeline_inputs.py` as its
-  only amendment source, and hard-codes the exact bytes of
-  `python-disposition.json`.
-
-`tests/test_deployment_artifacts.py` now asserts that the Docker workflow invokes
-the native base verifier and does not invoke the Python verifier. An offline xtask
-source regression control also checks the native invocation and ordering. The test
-module is an authenticated successor of its retained historical source bytes. The O02 verifier additionally checks the active checkout source SHA-256 against its fixed W03/O02 successor constant and pins its expected digest line; it does not execute the inverse transformation at this runtime boundary. The source-fragment linkage and standalone W03 inverse tests are separate controls.
-
-The current bounded Docker verifier wiring does not delete the Python source or
-the test module. It leaves the historical invocation row in the existing F01
-inventory; this increment does not change the frozen source fixture, disposition,
-or invocation inventory. This is not a claim of G08 source retirement or overall
-O02 completion.
+Historical live registry observations in earlier image/base-verifier increments
+were not repeated for this writer. Current validation is offline: injected
+registry transport, semantic pin parsing, exact-source projection, rollback at
+every replacement boundary, interrupted/failed recovery, journal ownership and
+static workflow/catalog plus shell exit-code controls. Registered command receipts
+retain exact source/head, toolchain, commands, exits and measured build footprint.
+These checks do not establish registry availability or production readiness.
 
 ## Remaining O02 scope
 

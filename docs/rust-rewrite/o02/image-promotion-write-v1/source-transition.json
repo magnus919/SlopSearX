@@ -1,0 +1,28 @@
+{
+  "schema": "O02_IMAGE_PROMOTION_SOURCE_SUCCESSOR_V1",
+  "baseline": "88314a23079333e185d96cdcdb973554a9500182",
+  "path": "tests/test_deployment_artifacts.py",
+  "prior": {
+    "bytes": 13732,
+    "sha256": "e9d53620f211325296cea8f3723c11a013621a8eb7fc642e077f06bf235035b8",
+    "mode": "0644"
+  },
+  "current_normalized_digest": {
+    "bytes": 13810,
+    "sha256": "ecdf9ce063dc0086287e7d9bc22dfc85e5b4f1d523c6914b799191041d71c8dd",
+    "mode": "0644"
+  },
+  "finite_assertion_edit": {
+    "at": 5356,
+    "remove_utf8": "    assert \"scripts/promote_image_digest.py --write\" in step_text\n",
+    "insert_utf8": "    assert \"cargo xtask ci-helper image-pin-promote --write\" in step_text\n    assert \"scripts/promote_image_digest.py --write\" not in step_text\n"
+  },
+  "parameterized_digest_slot": {
+    "at": 3032,
+    "bytes": 64,
+    "grammar": "lowercase hexadecimal only",
+    "normalization_utf8": "91194d146d205b1cf4688c1989da8f5f6b599a9627be23fd1ee7a4e488fda5b7"
+  },
+  "inverse": "Normalize only the digest slot and verify exact current size/hash, invert only the unique assertion edit, verify exact prior size/hash, then execute unchanged builder-v2 and W03 historical inverses.",
+  "historical_seals": "No frozen fixture, inventory or builder capsule is rewritten."
+}

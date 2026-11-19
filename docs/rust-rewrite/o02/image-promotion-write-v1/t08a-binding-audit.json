@@ -1,0 +1,191 @@
+{
+  "schema": "O02_IMAGE_PROMOTION_WRITE_BINDINGS_V1",
+  "baseline": "145f6da8fadd2deb7de5e1cfa9ee48464ffd1031",
+  "prior_sha256": "b4a6cbc5fbe5cfa652c5e2f296e59dd887594807e9db823e82f207448333d7f4",
+  "current_sha256": "6cfd79ee7ad7371c2e5adb10c97eaae49e31adf660d720d858d785c756246c1b",
+  "changed_rows": [
+    {
+      "path": "crates/xtask/src/o02_image_gate_successor.rs",
+      "prior": null,
+      "current": {
+        "path": "crates/xtask/src/o02_image_gate_successor.rs",
+        "bytes": 9740,
+        "sha256": "1464ca77d9eddc328dd5c21b5d84408768bd52079ee1d22670c4793dc6ac9a56",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ]
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/ci/gates.json",
+      "prior": {
+        "path": "docs/rust-rewrite/ci/gates.json",
+        "bytes": 181677,
+        "sha256": "9bf6b0a3ac823b90fae1f545417cb0f130a567130d0ed32ba41bfb06b9d6bdea",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ]
+      },
+      "current": {
+        "path": "docs/rust-rewrite/ci/gates.json",
+        "bytes": 182931,
+        "sha256": "fd4850294b053195a0dfc6d53422b5c718dfecd1609f58241e1378347730f73e",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ]
+      }
+    },
+    {
+      "path": ".github/workflows/image-promotion.yml",
+      "prior": null,
+      "current": {
+        "path": ".github/workflows/image-promotion.yml",
+        "bytes": 3287,
+        "sha256": "7f7798b883fd70dfa8824e52ee8c04f7e02bb72afa85d4d5871f12bd1c2c9d87",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ]
+      }
+    },
+    {
+      "path": "crates/xtask/Cargo.toml",
+      "prior": {
+        "path": "crates/xtask/Cargo.toml",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ],
+        "bytes": 1018,
+        "sha256": "39ee6ddaee21e38e7174b2a84e6abefced166b0d7f175fcefaf4601808b8305e"
+      },
+      "current": {
+        "path": "crates/xtask/Cargo.toml",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ],
+        "bytes": 1024,
+        "sha256": "c13d53e4f1d97ec68d120dbc5efd907ce0e35e126aca8ab5bf591c10cc22b481"
+      }
+    },
+    {
+      "path": "crates/xtask/src/o02_builder_patch.rs",
+      "prior": {
+        "path": "crates/xtask/src/o02_builder_patch.rs",
+        "bytes": 7996,
+        "sha256": "bcf40cebc32e7733215b8b81c9ae423f3cfb1deb871220986262f5c890299b57",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ]
+      },
+      "current": {
+        "path": "crates/xtask/src/o02_builder_patch.rs",
+        "bytes": 8306,
+        "sha256": "cd8bedc92c8a5adafdd4eefacee6f0a15d1cebd73346fa6a518ebf977b889417",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ]
+      }
+    },
+    {
+      "path": "crates/xtask/src/o02_health_retirement.rs",
+      "prior": {
+        "path": "crates/xtask/src/o02_health_retirement.rs",
+        "bytes": 34776,
+        "sha256": "491d8507394464a7e37c9d5cd077bf9dedd147d7f1be4f6192727e2045996097",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ]
+      },
+      "current": {
+        "path": "crates/xtask/src/o02_health_retirement.rs",
+        "bytes": 35616,
+        "sha256": "adcda1c13f4b6d7274fb883d1f188f01c2cf9d21790dd003134f3e26a4299e50",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ]
+      }
+    },
+    {
+      "path": "crates/xtask/src/o02_image_custody.rs",
+      "prior": null,
+      "current": {
+        "path": "crates/xtask/src/o02_image_custody.rs",
+        "bytes": 3105,
+        "sha256": "9b15a69623a398a517e697205cc81b432fa4edbe8e811fa42697ca0b44438dd2",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ]
+      }
+    },
+    {
+      "path": "crates/xtask/src/o02_image_pin.rs",
+      "prior": null,
+      "current": {
+        "path": "crates/xtask/src/o02_image_pin.rs",
+        "bytes": 121747,
+        "sha256": "96912967f5407571a68b77751481789ee790f1d5763243fcbfbd4613f222507d",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ]
+      }
+    },
+    {
+      "path": "crates/xtask/src/o02_image_files.rs",
+      "prior": null,
+      "current": {
+        "path": "crates/xtask/src/o02_image_files.rs",
+        "bytes": 18696,
+        "sha256": "8622e676d3d50fd98a13b349db6901c1523c56ffed200a1a84ee8d1dcdd91fa9",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ]
+      }
+    },
+    {
+      "path": "crates/xtask/src/o02_image_transaction.rs",
+      "prior": null,
+      "current": {
+        "path": "crates/xtask/src/o02_image_transaction.rs",
+        "bytes": 31483,
+        "sha256": "03140c14932699f1b6e1616f7aca352b1c22b570dfe7d1965af1b1aca2995fae",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ]
+      }
+    },
+    {
+      "path": "docs/rust-rewrite/t06/source-amendments/python-dependency-audit-current-main-v1.rs",
+      "prior": {
+        "path": "docs/rust-rewrite/t06/source-amendments/python-dependency-audit-current-main-v1.rs",
+        "bytes": 33304,
+        "sha256": "601db89119579110deed38d3b76c1128b9756019d8933926c57b0a2226144ca4",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ]
+      },
+      "current": {
+        "path": "docs/rust-rewrite/t06/source-amendments/python-dependency-audit-current-main-v1.rs",
+        "bytes": 34750,
+        "sha256": "f6c7fd2d0fa6e6d44218aebaf01c7a44a9d04c2cc7a30c9ae87f808fe548aab8",
+        "mode": 420,
+        "unix_modes": [
+          420
+        ]
+      }
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 //! Exact #1129 runtime/dev audit successor over accepted main.
 //! Current physical source is authenticated before reconstructing the fixed predecessor.
+#[path = "../../../../crates/xtask/src/o02_image_gate_successor.rs"]
+mod o02_image_gate_successor;
 #[path = "../../t08a/rmcp-source-afterimage.rs"]
 #[allow(
     clippy::duplicate_mod,
@@ -89,14 +91,14 @@ fn physical_operand(
     path: &str,
     expected_bytes: usize,
 ) -> Result<Vec<u8>> {
-    let size = if path == RMCP_READER_PATH {
+    let physical_bytes = if path == RMCP_READER_PATH {
         RMCP_READER_BYTES
     } else {
-        expected_bytes
+        o02_image_gate_successor::physical_bytes(path, expected_bytes)
     };
-    regular(physical_root, path, size)
+    regular(physical_root, path, physical_bytes)
 }
-fn logical_operand(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
+fn logical_operand(path: &str, expected_bytes: usize, physical: &[u8]) -> Result<Vec<u8>> {
     if path == RMCP_READER_PATH {
         return rmcp_source_afterimage::prior(
             RMCP_READER_SOURCE,
@@ -106,7 +108,7 @@ fn logical_operand(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
             0o644,
         );
     }
-    Ok(physical.to_vec())
+    o02_image_gate_successor::project(path, expected_bytes, physical.to_vec())
 }
 pub(crate) fn current_at(
     physical_root: &Path,
@@ -120,7 +122,7 @@ pub(crate) fn current_at(
     let doc = decode(&capsule)?;
     let selected = pin(&doc, path)?;
     let physical = physical_operand(physical_root, proof_root, path, selected.current_bytes)?;
-    let logical = logical_operand(path, &physical)?;
+    let logical = logical_operand(path, selected.current_bytes, &physical)?;
     let prior = inverse(&selected, row(&doc, path)?, &logical, 0o644)?;
     git_prior(proof_root, &selected, &prior)?;
     Ok(Some(physical))
@@ -401,7 +403,7 @@ fn inverse(pin: &Pin<'_>, row: &Value, actual: &[u8], mode: u32) -> Result<Vec<u
 pub(crate) fn frame(path: &str, physical: &[u8], mode: u32) -> Result<Vec<u8>> {
     let doc = decode(CAPSULE)?;
     let pin = pin(&doc, path)?;
-    let logical = logical_operand(path, physical)?;
+    let logical = logical_operand(path, pin.current_bytes, physical)?;
     inverse(&pin, row(&doc, path)?, &logical, mode)
 }
 fn confined(root: &Path, path: &str) -> Result<std::path::PathBuf> {
@@ -598,7 +600,7 @@ fn prior_at(
         supplied.is_none_or(|bytes| physical == bytes),
         "supplied bytes are physical current",
     )?;
-    let logical = logical_operand(path, &physical)?;
+    let logical = logical_operand(path, pin.current_bytes, &physical)?;
     let prior = inverse(&pin, row(&doc, path)?, &logical, 0o644)?;
     git_prior(proof_root, &pin, &prior)?;
     Ok(prior)
@@ -606,6 +608,7 @@ fn prior_at(
 /// Additive controls for existing owning test identities. No historical test names change.
 #[cfg(test)]
 pub(crate) fn controls(root: &Path) -> Result<()> {
+    o02_image_gate_successor::controls(root);
     let doc = decode(CAPSULE)?;
     let mut capsule_mutant = CAPSULE.to_vec();
     capsule_mutant.push(b' ');
@@ -625,7 +628,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
     let all_pins = pins(&doc)?;
     for pin in &all_pins {
         let physical = physical_operand(root, root, pin.path, pin.current_bytes)?;
-        let logical = logical_operand(pin.path, &physical)?;
+        let logical = logical_operand(pin.path, pin.current_bytes, &physical)?;
         let prior_bytes = prior(root, pin.path, &physical)?;
         need(
             current_operand(root, pin.path)? == Some(physical.clone()),
