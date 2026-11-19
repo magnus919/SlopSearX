@@ -1997,6 +1997,11 @@
               "run": "mkdir -p target/rust-evidence\ndocker image inspect ssx-t02-http:${{ github.sha }} > target/rust-evidence/T02-image-identity.json\ndocker run --rm --network none --cap-drop ALL --security-opt no-new-privileges --read-only --tmpfs /tmp:rw,noexec,nosuid,size=32m ssx-t02-http:${{ github.sha }} > target/rust-evidence/T02-image-smoke.json\n"
             },
             {
+              "name": "Rehearse native deployment rejection and rollback",
+              "timeout-minutes": 5,
+              "run": "prior=$(docker image inspect --format '{{.Id}}' \"ssx-t02-http:${GITHUB_SHA}\")\ncandidate_tag=\"ssx-t02-http:negative-${GITHUB_SHA}\"\ndocker build --file crates/ssx-http/Dockerfile.t02 \\\n  --label org.slopsearx.rehearsal=negative-health --tag \"$candidate_tag\" .\ncandidate=$(docker image inspect --format '{{.Id}}' \"$candidate_tag\")\nbash scripts/rust-native-rollback-rehearsal.sh \"$prior\" \"$candidate\" \\\n  > target/rust-evidence/T02-image-rollback.json\n"
+            },
+            {
               "name": "Retain image identity and actual independent-client evidence",
               "if": "always()",
               "uses": "actions/upload-artifact@v7",
@@ -2009,9 +2014,9 @@
           ]
         }
       },
-      "owner": "T02",
+      "owner": "T02,O02",
       "state": "additive",
-      "successor": "Actual offline Rust HTTP service image and independent Rust client; no Python executable/libpython/backend fallback; network-none process and wire checks. Production assembly/cutover remains O04/W09/O09."
+      "successor": "Actual offline Rust HTTP service image and independent Rust client; no Python executable/libpython/backend fallback; network-none process and wire checks. Production assembly/cutover remains O04/W09/O09. Rehearse deployment rejection and restoration by local immutable image ID."
     },
     "ci.yml:native-portal-theme-browser": {
       "source": {
