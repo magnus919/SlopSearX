@@ -176,12 +176,6 @@ fn bounded_read_with_hooks(
             )
             .map_err(|e| e.to_string())?,
         );
-        let mut current = Vec::new();
-        (&named_file)
-            .take(limit.saturating_add(1))
-            .read_to_end(&mut current)
-            .map_err(|e| e.to_string())?;
-        let named_meta = named_file.metadata().map_err(|e| e.to_string())?;
         let times = |meta: &fs::Metadata| {
             (
                 meta.mtime(),
@@ -190,6 +184,24 @@ fn bounded_read_with_hooks(
                 meta.ctime_nsec(),
             )
         };
+        let matches_opened = |meta: &fs::Metadata| {
+            meta.is_file()
+                && meta.len() == opened.len()
+                && meta.dev() == opened.dev()
+                && meta.ino() == opened.ino()
+                && meta.permissions().mode() & 0o7777 == mode
+                && times(meta) == times(&opened)
+        };
+        need(
+            matches_opened(&named_file.metadata().map_err(|e| e.to_string())?),
+            "reopened source identity or size changed before verification read",
+        )?;
+        let mut current = Vec::new();
+        (&named_file)
+            .take(limit.saturating_add(1))
+            .read_to_end(&mut current)
+            .map_err(|e| e.to_string())?;
+        let named_meta = named_file.metadata().map_err(|e| e.to_string())?;
         let named_root = unix_root(root)?.metadata().map_err(|e| e.to_string())?;
         need(
             root_identity.dev() == named_root.dev() && root_identity.ino() == named_root.ino(),
@@ -198,18 +210,8 @@ fn bounded_read_with_hooks(
         need(
             bytes.len() as u64 == opened.len()
                 && current == bytes
-                && times(&after) == times(&opened)
-                && times(&named_meta) == times(&after)
-                && after.is_file()
-                && after.len() == opened.len()
-                && after.dev() == opened.dev()
-                && after.ino() == opened.ino()
-                && after.permissions().mode() & 0o7777 == mode
-                && named_meta.is_file()
-                && named_meta.len() == after.len()
-                && named_meta.permissions().mode() & 0o7777 == mode
-                && named_meta.dev() == after.dev()
-                && named_meta.ino() == after.ino(),
+                && matches_opened(&after)
+                && matches_opened(&named_meta),
             "source identity or size changed during bounded read",
         )?;
         Ok((current, mode))
@@ -550,6 +552,22 @@ mod bounded_read_tests {
             })
             .is_err(),
             "parent replacement after open rejected by no-follow root-relative recheck"
+        );
+
+        let reopened = dir.join("reopened");
+        let next = dir.join("next-parent");
+        fs::create_dir(&reopened).unwrap();
+        fs::create_dir(&next).unwrap();
+        fs::write(reopened.join("leaf"), b"same bytes").unwrap();
+        fs::write(next.join("leaf"), b"same bytes").unwrap();
+        let error = bounded_read_inner(&dir, "reopened/leaf", 64, || {
+            fs::rename(&reopened, dir.join("old-parent")).unwrap();
+            fs::rename(&next, &reopened).unwrap();
+        })
+        .unwrap_err();
+        assert_eq!(
+            error,
+            "reopened source identity or size changed before verification read"
         );
 
         let checkout = dir.join("checkout");
