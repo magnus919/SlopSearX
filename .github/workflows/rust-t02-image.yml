@@ -25,6 +25,16 @@ jobs:
           mkdir -p target/rust-evidence
           docker image inspect ssx-t02-http:${{ github.sha }} > target/rust-evidence/T02-image-identity.json
           docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges --read-only --tmpfs /tmp:rw,noexec,nosuid,size=32m ssx-t02-http:${{ github.sha }} > target/rust-evidence/T02-image-smoke.json
+      - name: Rehearse native deployment rejection and rollback
+        timeout-minutes: 5
+        run: |
+          prior=$(docker image inspect --format '{{.Id}}' "ssx-t02-http:${GITHUB_SHA}")
+          candidate_tag="ssx-t02-http:negative-${GITHUB_SHA}"
+          docker build --file crates/ssx-http/Dockerfile.t02 \
+            --label org.slopsearx.rehearsal=negative-health --tag "$candidate_tag" .
+          candidate=$(docker image inspect --format '{{.Id}}' "$candidate_tag")
+          bash scripts/rust-native-rollback-rehearsal.sh "$prior" "$candidate" \
+            > target/rust-evidence/T02-image-rollback.json
       - name: Retain image identity and actual independent-client evidence
         if: always()
         uses: actions/upload-artifact@v7
