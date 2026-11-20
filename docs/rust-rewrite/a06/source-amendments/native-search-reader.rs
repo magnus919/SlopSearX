@@ -4,6 +4,12 @@ use sha2::{Digest, Sha256};
 use std::{path::Path, process::Command};
 #[allow(
     clippy::duplicate_mod,
+    reason = "Independent proof roots share this exact inverse"
+)]
+#[path = "../../a11/replay-scheduling-source.rs"]
+mod a11_replay_source;
+#[allow(
+    clippy::duplicate_mod,
     reason = "Independent source gates include the same std-only bounded reader"
 )]
 #[path = "../../t08a/bounded_source_reader.rs"]
@@ -763,6 +769,14 @@ fn a12_readiness_controls(root: &Path) -> Result<()> {
     }
     Ok(())
 }
+fn a11_replay_prior(physical: Material) -> Result<Material> {
+    need(physical.mode == 0o644, "A11 current replay mode")?;
+    Ok(Material {
+        bytes: a11_replay_source::prior(a11_replay_source::REPLAY, &physical.bytes)?,
+        mode: physical.mode,
+    })
+}
+
 /// Recover only these twenty exact e127 proof operands from authenticated physical
 /// page successors. A supplied buffer is always compared to physical bytes first.
 pub(crate) fn page_prior(
@@ -803,6 +817,8 @@ pub(crate) fn page_prior(
             bytes: super::w07_t02_joint::page_current(root, path, &physical.bytes)?,
             mode: physical.mode,
         }
+    } else if path == a11_replay_source::REPLAY {
+        a11_replay_prior(physical)?
     } else if path == A10_CLOCK_PATH {
         a10_clock_prior(root, physical)?
     } else if path == "crates/ssx-infra/tests/a12_security.rs" {
@@ -887,6 +903,8 @@ pub(crate) fn page_controls(root: &Path) -> Result<()> {
                 bytes: super::w07_t02_joint::page_current(root, path, &physical.bytes)?,
                 mode: physical.mode,
             }
+        } else if path == a11_replay_source::REPLAY {
+            a11_replay_prior(physical)?
         } else if path == A10_CLOCK_PATH {
             a10_clock_prior(root, physical)?
         } else if path == A12_READINESS_PATH {

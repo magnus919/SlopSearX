@@ -1,0 +1,120 @@
+[
+  {
+    "path": "crates/ssx-infra/tests/a11_replay.rs",
+    "current_bytes": 27823,
+    "current_sha256": "a33a64eb4a36e6f19f1922595f031ec5a7acfb9945f6cc906957caeb12a5abf3",
+    "prior_bytes": 23155,
+    "prior_sha256": "64ef92f372a462f6c278e18ca4df554e6e8676a8f162cb4f1f3923d9a5d3acc8",
+    "inverse": [
+      {
+        "offset": 6994,
+        "remove": "async fn observe_search(row: &Value, id: &str, name: &str) -> Observation {\n    let config = settings(name, &row[\"config\"]);\n    let timeout = match name {\n        \"abuseipdb\" => &config.abuseipdb.timeout_ms,\n        \"greynoise\" => &config.greynoise.timeout_ms,\n        \"otx\" => &config.otx.timeout_ms,\n        _ => &config.urlhaus.timeout_ms,\n    };\n    let millis = match timeout {\n        ConfigScalar::Integer(n) => *n as f64,\n        ConfigScalar::Boolean(v) => {\n            if *v {\n                1.\n            } else {\n                0.\n            }\n        }\n        ConfigScalar::Float(v) => *v,\n        ConfigScalar::Text(_) => 0.,\n    };\n    let queue = Arc::new(Queue {\n        exchanges: Mutex::new(\n            row[\"exchanges\"]\n                .as_array()\n                .unwrap()\n                .iter()\n                .cloned()\n                .collect(),\n        ),\n        requests: Mutex::new(Vec::new()),\n    });\n    let http = Arc::new(AdapterHttp::default());\n    http.set_transport(queue.clone()).unwrap();\n    let mut registry = Registry::builtins().unwrap();\n    let admission = Arc::new(Admission {\n        deny: id.contains(\"admission-denied\"),\n        calls: Mutex::new(Vec::new()),\n    });\n    register_threat_intelligence(&mut registry, http.clone(), admission.clone(), config).unwrap();\n    let adapter = registry\n        .instantiate(name)\n        .expect(\"actual registered factory\");\n    let mut request = SearchRequest {\n        query: row[\"query\"].as_str().unwrap().into(),\n        ..Default::default()\n    };\n    let params = &row[\"params\"];\n    if let Some(p) = params.get(\"page\").and_then(Value::as_u64) {\n        request.page = ssx_domain::SearchPage::from_u64(p).expect(\"positive source fixture page\")\n    }\n    if let Some(s) = params.get(\"language\").and_then(Value::as_str) {\n        request.language = s.into()\n    }\n    if let Some(s) = params.get(\"time_range\").and_then(Value::as_str) {\n        request.time_range = Some(s.into())\n    }\n    if let Some(s) = params.get(\"safesearch\").and_then(Value::as_u64) {\n        request.safesearch = s as u8\n    }\n    let floor = Duration::try_from_secs_f64(millis / 1000.)\n        .ok()\n        .and_then(|duration| Instant::now().checked_add(duration));\n    let response = adapter.search(&request).await;\n    let completed = floor.is_some_and(|d| Instant::now() <= d);\n    let actual = normalized(&response);\n    http.shutdown_and_wait().await;\n    let requests = queue.requests.lock().unwrap().clone();\n    let unused = queue.exchanges.lock().unwrap().len();\n    let admission_calls = admission.calls.lock().unwrap().clone();\n    Observation {\n        id: id.into(),\n        native_output: actual,\n        requests,\n        unused_exchanges: unused,\n        admission_calls,\n        completed_before_configured_deadline_floor: completed,\n    }\n}\n\nfn one_millisecond_exchange_overran(\n    row: &Value,\n    expected_requests: &[Value],\n    observed: &Observation,\n) -> bool {\n    matches!(\n        observed.id.as_str(),\n        \"a11-boundary/abuseipdb/timeout-True\"\n            | \"a11-boundary/greynoise/timeout-True\"\n            | \"a11-boundary/otx/timeout-True\"\n            | \"a11-boundary/urlhaus/timeout-True\"\n    ) && row[\"config\"][\"timeout_ms\"] == Value::Bool(true)\n        && row[\"output\"][\"status\"].as_str() == Some(\"ok\")\n        && expected_requests.len() == 1\n        && (observed.requests == expected_requests && observed.unused_exchanges == 0\n            || observed.requests.is_empty() && observed.unused_exchanges == 1)\n        && observed.native_output[\"status\"].as_str() == Some(\"timeout\")\n        && !observed.completed_before_configured_deadline_floor\n}\n\n",
+        "restore": ""
+      },
+      {
+        "offset": 12140,
+        "remove": "    let boundary_ledger = (profile == \"boundary250\").then(|| approved(profile));\n",
+        "restore": ""
+      },
+      {
+        "offset": 12456,
+        "remove": "        let expected_requests = row[\"exchanges\"]\n            .as_array()\n            .unwrap()\n            .iter()\n            .map(|x| x[\"request\"].clone())\n            .collect::<Vec<_>>();\n        let mut observed = observe_search(row, id, name).await;\n        // The source's one-millisecond success cases use a scripted exchange.\n        // The deadline may expire before dispatch or after consuming the one\n        // approved native exchange. Persistent timeouts still fail the exact ledger.\n        let native_requests = boundary_ledger\n            .as_ref()\n            .and_then(|ledger| {\n                ledger\n",
+        "restore": "        let config = settings(name, &row[\"config\"]);\n        let timeout = match name {\n            \"abuseipdb\" => &config.abuseipdb.timeout_ms,\n            \"greynoise\" => &config.greynoise.timeout_ms,\n            \"otx\" => &config.otx.timeout_ms,\n            _ => &config.urlhaus.timeout_ms,\n        };\n        let millis = match timeout {\n            ConfigScalar::Integer(n) => *n as f64,\n            ConfigScalar::Boolean(v) => {\n                if *v {\n                    1.\n                } else {\n                    0.\n                }\n            }\n            ConfigScalar::Float(v) => *v,\n            ConfigScalar::Text(_) => 0.,\n        };\n        let queue = Arc::new(Queue {\n            exchanges: Mutex::new(\n                row[\"exchanges\"]\n                    .as_array()\n                    .unwrap()\n"
+      },
+      {
+        "offset": 13107,
+        "remove": "                    .find(|entry| entry.id == id && entry.kind == \"outbound\")\n            })\n            .and_then(|entry| entry.actual.as_array())\n            .map_or(expected_requests.as_slice(), Vec::as_slice);\n        for attempt in 2..=4 {\n            if !one_millisecond_exchange_overran(row, native_requests, &observed) {\n                break;\n            }\n            eprintln!(\"A11 clock overrun: {id}; replay attempt {attempt}\");\n            observed = observe_search(row, id, name).await;\n",
+        "restore": "                    .cloned()\n                    .collect(),\n            ),\n            requests: Mutex::new(Vec::new()),\n        });\n        let http = Arc::new(AdapterHttp::default());\n        http.set_transport(queue.clone()).unwrap();\n        let mut registry = Registry::builtins().unwrap();\n        let admission = Arc::new(Admission {\n            deny: id.contains(\"admission-denied\"),\n            calls: Mutex::new(Vec::new()),\n        });\n        register_threat_intelligence(&mut registry, http.clone(), admission.clone(), config)\n            .unwrap();\n        let adapter = registry\n            .instantiate(name)\n            .expect(\"actual registered factory\");\n        let mut request = SearchRequest {\n            query: row[\"query\"].as_str().unwrap().into(),\n            ..Default::default()\n        };\n        let params = &row[\"params\"];\n        if let Some(p) = params.get(\"page\").and_then(Value::as_u64) {\n            request.page =\n                ssx_domain::SearchPage::from_u64(p).expect(\"positive source fixture page\")\n"
+      },
+      {
+        "offset": 13619,
+        "remove": "",
+        "restore": "        if let Some(s) = params.get(\"language\").and_then(Value::as_str) {\n            request.language = s.into()\n        }\n        if let Some(s) = params.get(\"time_range\").and_then(Value::as_str) {\n            request.time_range = Some(s.into())\n        }\n        if let Some(s) = params.get(\"safesearch\").and_then(Value::as_u64) {\n            request.safesearch = s as u8\n        }\n        let floor = Duration::try_from_secs_f64(millis / 1000.)\n            .ok()\n            .and_then(|duration| Instant::now().checked_add(duration));\n        let response = adapter.search(&request).await;\n        let completed = floor.is_some_and(|d| Instant::now() <= d);\n        let actual = normalized(&response);\n        http.shutdown_and_wait().await;\n        let requests = queue.requests.lock().unwrap().clone();\n        let unused = queue.exchanges.lock().unwrap().len();\n        let expected_requests = Value::Array(\n            row[\"exchanges\"]\n                .as_array()\n                .unwrap()\n                .iter()\n                .map(|x| x[\"request\"].clone())\n                .collect(),\n        );\n"
+      },
+      {
+        "offset": 13845,
+        "remove": "            observed.native_output.clone(),\n",
+        "restore": "            actual.clone(),\n"
+      },
+      {
+        "offset": 13998,
+        "remove": "            Value::Array(expected_requests),\n            Value::Array(observed.requests.clone()),\n",
+        "restore": "            expected_requests,\n            Value::Array(requests.clone()),\n"
+      },
+      {
+        "offset": 14144,
+        "remove": "        if observed.unused_exchanges != 0 {\n",
+        "restore": "        if unused != 0 {\n"
+      },
+      {
+        "offset": 14382,
+        "remove": "                actual: ssx_json::to_value(observed.unused_exchanges).unwrap(),\n",
+        "restore": "                actual: ssx_json::to_value(unused).unwrap(),\n"
+      },
+      {
+        "offset": 14654,
+        "remove": "                ssx_json::to_value(&observed.admission_calls).unwrap(),\n",
+        "restore": "                ssx_json::to_value(admission.calls.lock().unwrap().clone()).unwrap(),\n"
+      },
+      {
+        "offset": 14868,
+        "remove": "            parent.insert(\n                (test.to_owned(), name.to_owned()),\n                observed.native_output.clone(),\n            );\n",
+        "restore": "            parent.insert((test.to_owned(), name.to_owned()), actual.clone());\n"
+      },
+      {
+        "offset": 15020,
+        "remove": "        output.records.push(observed);\n",
+        "restore": "        output.records.push(Observation {\n            id: id.into(),\n            native_output: actual,\n            requests,\n            unused_exchanges: unused,\n            admission_calls: admission.calls.lock().unwrap().clone(),\n            completed_before_configured_deadline_floor: completed,\n        });\n"
+      },
+      {
+        "offset": 17714,
+        "remove": "fn unmatched_tuples(\n    side: &BTreeMap<String, usize>,\n    counterpart: &BTreeMap<String, usize>,\n) -> Vec<(String, String, Option<String>, usize)> {\n    side.iter()\n        .filter_map(|(tuple, count)| {\n            let unmatched = count.saturating_sub(counterpart.get(tuple).copied().unwrap_or(0));\n            if unmatched == 0 {\n                return None;\n            }\n            let row: Difference = ssx_json::from_str(tuple).unwrap();\n            let status = row\n                .actual\n                .get(\"status\")\n                .and_then(Value::as_str)\n                .map(str::to_owned);\n            Some((row.id, row.kind, status, unmatched))\n        })\n        .collect()\n}\n",
+        "restore": ""
+      },
+      {
+        "offset": 20704,
+        "remove": "    let synthetic_source =\n        ssx_json::from_str(r#\"{\"config\":{\"timeout_ms\":true},\"output\":{\"status\":\"ok\"}}\"#).unwrap();\n    let request: Value = ssx_json::from_str(r#\"{\"method\":\"GET\"}\"#).unwrap();\n    let expected = [request];\n    let mut overrun = Observation {\n        id: \"a11-boundary/urlhaus/timeout-True\".into(),\n        native_output: ssx_json::from_str(r#\"{\"status\":\"timeout\"}\"#).unwrap(),\n        requests: expected.to_vec(),\n        unused_exchanges: 0,\n        admission_calls: Vec::new(),\n        completed_before_configured_deadline_floor: false,\n    };\n    assert!(one_millisecond_exchange_overran(\n        &synthetic_source,\n        &expected,\n        &overrun\n    ));\n    overrun.unused_exchanges = 1;\n    assert!(!one_millisecond_exchange_overran(\n        &synthetic_source,\n        &expected,\n        &overrun\n    ));\n    overrun.requests.clear();\n    assert!(one_millisecond_exchange_overran(\n        &synthetic_source,\n        &expected,\n        &overrun\n    ));\n    overrun.unused_exchanges = 0;\n    overrun.requests = expected.to_vec();\n    assert!(!one_millisecond_exchange_overran(\n        &synthetic_source,\n        &[Value::Null],\n        &overrun\n    ));\n    overrun.id = \"a11-boundary/urlhaus/network-timeout\".into();\n    assert!(!one_millisecond_exchange_overran(\n        &synthetic_source,\n        &expected,\n        &overrun\n    ));\n\n",
+        "restore": ""
+      },
+      {
+        "offset": 22585,
+        "remove": "        let duplicated = &expected[0];\n        assert_eq!(\n            unmatched_tuples(&counter(&duplicate), &counter(&expected)),\n            vec![(\n                duplicated.id.clone(),\n                duplicated.kind.clone(),\n                duplicated.actual[\"status\"].as_str().map(str::to_owned),\n                1,\n            )]\n        );\n        assert!(unmatched_tuples(&counter(&expected), &counter(&duplicate)).is_empty());\n",
+        "restore": ""
+      },
+      {
+        "offset": 26911,
+        "remove": "        if !reviewed(profile.profile, &profile.differences) {\n            let expected = counter(&approved(profile.profile));\n            let observed = counter(&profile.differences);\n            // Report case identities and statuses without copying fixture payloads or headers.\n            panic!(\n                \"unreviewed full identity-bound source differences: {} (id, kind, status, count)\nmissing: {:?}\nunexpected: {:?}\",\n                profile.profile,\n                unmatched_tuples(&expected, &observed),\n                unmatched_tuples(&observed, &expected)\n            );\n        }\n",
+        "restore": "        assert!(\n            reviewed(profile.profile, &profile.differences),\n            \"unreviewed full identity-bound source differences: {}\",\n            profile.profile\n        );\n"
+      }
+    ]
+  },
+  {
+    "path": "docs/rust-rewrite/a06/source-amendments/native-search-reader.rs",
+    "current_bytes": 40489,
+    "current_sha256": "1eb823051b8f517ab2cb52d4fc88dcf739950ef564bd9a120d1a310ca3b94afa",
+    "prior_bytes": 39866,
+    "prior_sha256": "489873046d41019cf1e01567e9bbe0b78fae5e2712e07585a46aa7a33e3387b3",
+    "inverse": [
+      {
+        "offset": 178,
+        "remove": "#[allow(\n    clippy::duplicate_mod,\n    reason = \"Independent proof roots share this exact inverse\"\n)]\n#[path = \"../../a11/replay-scheduling-source.rs\"]\nmod a11_replay_source;\n",
+        "restore": ""
+      },
+      {
+        "offset": 28821,
+        "remove": "fn a11_replay_prior(physical: Material) -> Result<Material> {\n    need(physical.mode == 0o644, \"A11 current replay mode\")?;\n    Ok(Material {\n        bytes: a11_replay_source::prior(a11_replay_source::REPLAY, &physical.bytes)?,\n        mode: physical.mode,\n    })\n}\n\n",
+        "restore": ""
+      },
+      {
+        "offset": 30519,
+        "remove": "    } else if path == a11_replay_source::REPLAY {\n        a11_replay_prior(physical)?\n",
+        "restore": ""
+      },
+      {
+        "offset": 33494,
+        "remove": "        } else if path == a11_replay_source::REPLAY {\n            a11_replay_prior(physical)?\n",
+        "restore": ""
+      }
+    ]
+  }
+]
