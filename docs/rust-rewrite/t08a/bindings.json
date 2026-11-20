@@ -239,6 +239,51 @@
       ]
     },
     {
+      "path": "crates/ssx-infra/src/adapters/clinicaltrials.rs",
+      "bytes": 42903,
+      "sha256": "23ec1930e20708bb3d516403557fb80e4164f5b03432070cd9d80a893a94d6f6",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/src/adapters/threat_intel.rs",
+      "bytes": 25349,
+      "sha256": "bdd75bca29ef2961a5bdbddfb0e26eb1d62cc1ed0842b8bffcd3e066ae2ec3f9",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/src/http.rs",
+      "bytes": 92881,
+      "sha256": "c060079818cdb3bf3291efaed1361061c9b3daae5d38aa6174e1fcce7fa9db36",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/src/http/monotonic.rs",
+      "bytes": 5223,
+      "sha256": "620bfa335a8295ff2884a7846711bfba7076eb2b91dc22b34d7f0b31551b7a91",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
+      "path": "crates/ssx-infra/tests/a11_replay.rs",
+      "bytes": 27054,
+      "sha256": "b888af39b764cfb7aa847c9e4cb96018473351731008210e23a9a1384b9217e1",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
       "path": "crates/ssx-infra/tests/a12_security.rs",
       "bytes": 63526,
       "sha256": "485213883050542a5d4d3d388ff0a0cd7a6f08d022f0747c31cbb70ffb1ec499",
@@ -267,8 +312,8 @@
     },
     {
       "path": "crates/xtask/src/a07/source_composition.rs",
-      "bytes": 25069,
-      "sha256": "5b20f6b5dd0222e53376dac76fe976bbc04feec6a44711b63a7dda8e285ae1fc",
+      "bytes": 25226,
+      "sha256": "0b332ab9fb92fed4e89935786d11de600b434b92dcc22b3cf155c38b4298ddfd",
       "mode": 420,
       "unix_modes": [
         420
@@ -528,8 +573,8 @@
     },
     {
       "path": "docs/rust-rewrite/a04/source-amendments/scoped-successor.rs",
-      "bytes": 81234,
-      "sha256": "933b470cae6ba9e031ce7f0166f1e0aa6a9e31a61003d4fd3196de5004d9692b",
+      "bytes": 81493,
+      "sha256": "d1a46df62475e3be1c4dce294176aed10e87fed13ccf6e96b02ef985a9bc8cd5",
       "mode": 420,
       "unix_modes": [
         420
@@ -537,8 +582,8 @@
     },
     {
       "path": "docs/rust-rewrite/a06/source-amendments/native-search-reader.rs",
-      "bytes": 39866,
-      "sha256": "489873046d41019cf1e01567e9bbe0b78fae5e2712e07585a46aa7a33e3387b3",
+      "bytes": 40606,
+      "sha256": "b4171602d832bb1d5da2469fee0ce7547405d9dafd4d9e79f1ef974670927b71",
       "mode": 420,
       "unix_modes": [
         420
@@ -546,8 +591,8 @@
     },
     {
       "path": "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
-      "bytes": 91016,
-      "sha256": "9c19bf9db372eb79be08cacffe8c426e37f6eb43f7b6c3c2260cad0841c234c2",
+      "bytes": 95430,
+      "sha256": "2253598a7772b68d8657d4aaed313c8ca6c5405b013dc914f2956e81597a92c2",
       "mode": 420,
       "unix_modes": [
         420
@@ -570,6 +615,24 @@
       ],
       "bytes": 1514,
       "sha256": "93cc50f1f3154e45e33ee1245037a6566f339a1cf6d97b01e19638dffcf88702"
+    },
+    {
+      "path": "docs/rust-rewrite/a11/replay-scheduling-source-v1.json",
+      "bytes": 25442,
+      "sha256": "45b51a9b68c0c6ab405e3942af69a9205c14df42578cd10bebcf7ea8aecd1f87",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
+    },
+    {
+      "path": "docs/rust-rewrite/a11/replay-scheduling-source.rs",
+      "bytes": 3585,
+      "sha256": "86778db15b1ef5c5133bec616631eae21a35827d6f60e30e79c3e0d4ad749e23",
+      "mode": 420,
+      "unix_modes": [
+        420
+      ]
     },
     {
       "path": "docs/rust-rewrite/a12/readiness-clock-successor-v1.json",
@@ -690,8 +753,8 @@
     },
     {
       "path": "docs/rust-rewrite/t02/source-amendments/f09-inventory-composition-v1.rs",
-      "bytes": 41026,
-      "sha256": "396e779b2ea680a3487f2496905a8fa3d59cb54b6aef87e4a2015f9ce3f6208f",
+      "bytes": 41512,
+      "sha256": "d1bb2d558a33943a907f19af37a51ae74bc0972a5a61ef03ec7378147aa0c5b5",
       "mode": 420,
       "unix_modes": [
         420
@@ -1189,8 +1252,8 @@
       "unix_modes": [
         420
       ],
-      "bytes": 12560,
-      "sha256": "d8d88cd56d25c58eab149ead0be7b6145e698a5904bedfb0f8e800ef1a90eedb"
+      "bytes": 13009,
+      "sha256": "f03647473dc01f66c8f68857efa75643e848642a30c0928244c3439e16ed9c7e"
     },
     {
       "path": "docs/rust-rewrite/t08a/legacy-input-successor-v2.json",

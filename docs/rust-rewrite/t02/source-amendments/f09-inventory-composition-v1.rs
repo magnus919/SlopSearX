@@ -699,6 +699,8 @@ fn page_row(root: &Path, row: &PageRow) -> Result<Vec<u8>> {
         crate::a13::a06_source_successor::w07_t02_joint::t03_source_successor::prior(
             root, &row.path, &current,
         )?
+    } else if row.path == "crates/ssx-infra/tests/a11_replay.rs" {
+        crate::a13::a06_source_successor::native_search::a11_replay_page_current(&current)?
     } else if row.path == "crates/ssx-infra/tests/a10_factories.rs" {
         crate::a13::a06_source_successor::native_search::a10_clock_current(
             root, &row.path, &current,
@@ -765,6 +767,12 @@ fn page_controls(root: &Path) -> Result<()> {
             crate::a13::a06_source_successor::w07_t02_joint::t03_source_successor::prior(
                 root, &row.path, &current,
             )?
+        } else if row.path == "crates/ssx-infra/tests/a11_replay.rs" {
+            need(
+                page_inverse(row, &current).is_err(),
+                "A11 replay successor is not a frozen Page afterimage",
+            )?;
+            crate::a13::a06_source_successor::native_search::a11_replay_page_current(&current)?
         } else if row.path == "crates/ssx-infra/tests/a10_factories.rs" {
             need(
                 page_inverse(row, &current).is_err(),

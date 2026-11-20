@@ -1,8 +1,9 @@
-//! One HTTP owner's deadline clock. Production has only the zero-sized System form.
+//! The monotonic clock used for an HTTP owner's deadlines.
 use std::time::Instant;
 
 #[derive(Clone, Default)]
 pub(crate) struct Clock {
+    runtime: bool,
     #[cfg(test)]
     manual: Option<std::sync::Arc<Manual>>,
     #[cfg(test)]
@@ -11,12 +12,28 @@ pub(crate) struct Clock {
     pending_only: bool,
 }
 impl Clock {
+    pub(crate) fn runtime() -> Self {
+        Self {
+            runtime: true,
+            #[cfg(test)]
+            manual: None,
+            #[cfg(test)]
+            trace: None,
+            #[cfg(test)]
+            pending_only: false,
+        }
+    }
+
     pub(crate) fn now(&self) -> Instant {
         #[cfg(test)]
         if let Some(manual) = &self.manual {
             return *manual.now.borrow();
         }
-        Instant::now()
+        if self.runtime {
+            tokio::time::Instant::now().into_std()
+        } else {
+            Instant::now()
+        }
     }
     pub(crate) async fn sleep_until(&self, deadline: Instant) {
         #[cfg(test)]
@@ -49,6 +66,7 @@ impl Clock {
         });
         (
             Self {
+                runtime: false,
                 manual: Some(manual.clone()),
                 trace: None,
                 pending_only: false,
