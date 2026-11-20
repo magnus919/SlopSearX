@@ -601,6 +601,8 @@ async function runContract() {
   let resultsMetric = null;
   await check('viewport-desktop', async () => {
     await navigate(page, '/');
+    assert(await page.getByRole('heading', { name: 'Search SlopSearX.', exact: true }).isVisible());
+    assert(await page.getByRole('searchbox', { name: 'Search SlopSearX', exact: true }).isVisible());
     await page.waitForFunction(() => performance.getEntriesByName('first-contentful-paint').length > 0, null, { timeout: 2000 });
     assert.equal(await viewportObservation(page, 'desktop-1440x900'), true);
     assert.equal((await page.locator('meta[name="viewport"]').getAttribute('content')), 'width=device-width, initial-scale=1');
@@ -651,7 +653,10 @@ async function runContract() {
     assert.equal(machineView.searchParams.get('format'), 'json');
     assert.equal(machineView.searchParams.get('q'), 'valkey');
     assert.equal(machineView.searchParams.get('categories'), 'general');
-    assert.equal(await page.locator('details.scope-panel select[name="categories"]').inputValue(), 'general');
+    const scope = page.getByRole('combobox', { name: 'Scope', exact: true });
+    assert(await scope.isVisible());
+    assert.equal(await scope.inputValue(), 'general');
+    assert(await page.getByRole('button', { name: 'Apply filters', exact: true }).isVisible());
     await screenshot(page, 'contract-desktop-results.png');
     await settleLayout(page);
     resultsMetric = await pageMetric(page);
@@ -1002,6 +1007,10 @@ async function runContract() {
       };
     });
     assert.equal(landingFocus.focused, true, `landing searchbox autofocus: ${JSON.stringify(landingFocus)}`);
+    await input.blur();
+    assert.equal(await input.evaluate((element) => document.activeElement === element), false);
+    await page.keyboard.press('/');
+    assert.equal(await input.evaluate((element) => document.activeElement === element), true);
     await page.keyboard.type('keyboard');
     await page.keyboard.press('Tab');
     const tabFocus = await page.evaluate(() => {
