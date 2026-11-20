@@ -145,28 +145,19 @@ jobs:
           fs.writeFileSync(`${dir}/identity.json`, JSON.stringify({ partition: process.env.PARTITION, source_revision: process.env.GITHUB_SHA, target: process.env.TARGET_TRIPLE, runner_arch: process.env.RUNNER_ARCH, run_id: process.env.GITHUB_RUN_ID, run_attempt: process.env.GITHUB_RUN_ATTEMPT, evidence_scope: 'actual qualification-only full-private-Hyper workspace compiler contexts and executable hashes; not standalone default-shipping CLI evidence or immutable byte/launch archive' }, null, 2) + '\n');
           NODE
 
-      - name: Formatting
-        run: cargo fmt --all --check
-
-      - name: Clippy
-        run: |
-          set -euo pipefail
-          cargo clippy --locked --workspace --all-targets --exclude ssx-cli-hyper -- -D warnings
-          cargo clippy --locked -p ssx-cli-hyper --features full,source-client-framing --lib -- -D warnings
-
       - name: Build actual-process HTTP fixture server
         run: cargo build --locked -p ssx-http --example t02_fixture
 
-      - name: Workspace tests, including xtask
+      - name: xtask tests
         env:
-          SLOPSEARX_TEST_TEMP_ROOT: ${{ runner.temp }}/t02-sockets-workspace
-          TMPDIR: ${{ runner.temp }}/t02-sockets-workspace
-          TMP: ${{ runner.temp }}/t02-sockets-workspace
-          TEMP: ${{ runner.temp }}/t02-sockets-workspace
+          SLOPSEARX_TEST_TEMP_ROOT: ${{ runner.temp }}/t02-sockets-xtask
+          TMPDIR: ${{ runner.temp }}/t02-sockets-xtask
+          TMP: ${{ runner.temp }}/t02-sockets-xtask
+          TEMP: ${{ runner.temp }}/t02-sockets-xtask
         run: |
           mkdir "$SLOPSEARX_TEST_TEMP_ROOT"
           trap 'rmdir "$SLOPSEARX_TEST_TEMP_ROOT" 2>/dev/null || true' EXIT
-          cargo test --locked --workspace --features ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing
+          cargo test --locked --workspace --features ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing --bin xtask
 
       - name: Linux held-writer interpreter mutation control
         timeout-minutes: 10

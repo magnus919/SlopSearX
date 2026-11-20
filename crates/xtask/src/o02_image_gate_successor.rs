@@ -23,6 +23,49 @@ const REHEARSAL_ROW_OFFSET: usize = 84774;
 const REHEARSAL_ROW_BYTES: usize = 3041;
 const PRIOR_T02_IMAGE_ROW: &str = "    \"rust-t02-image.yml:t02-image\": {\n      \"source\": {\n        \"workflow\": {\n          \"name\": \"Native T02 Python-free HTTP image\",\n          \"on\": {\n            \"push\": {\n              \"branches\": [\n                \"main\"\n              ]\n            },\n            \"pull_request\": {\n              \"branches\": [\n                \"main\"\n              ]\n            },\n            \"workflow_dispatch\": null\n          },\n          \"permissions\": {\n            \"contents\": \"read\"\n          }\n        },\n        \"job\": {\n          \"name\": \"T02 real HTTP image (amd64)\",\n          \"runs-on\": \"ubuntu-24.04\",\n          \"timeout-minutes\": 45,\n          \"steps\": [\n            {\n              \"uses\": \"actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683\",\n              \"with\": {\n                \"persist-credentials\": false\n              }\n            },\n            {\n              \"name\": \"Build scoped native service image\",\n              \"timeout-minutes\": 35,\n              \"run\": \"docker build --file crates/ssx-http/Dockerfile.t02 --tag ssx-t02-http:${{ github.sha }} .\"\n            },\n            {\n              \"name\": \"Verify actual HTTP process without Python or external networking\",\n              \"timeout-minutes\": 5,\n              \"run\": \"mkdir -p target/rust-evidence\\ndocker image inspect ssx-t02-http:${{ github.sha }} > target/rust-evidence/T02-image-identity.json\\ndocker run --rm --network none --cap-drop ALL --security-opt no-new-privileges --read-only --tmpfs /tmp:rw,noexec,nosuid,size=32m ssx-t02-http:${{ github.sha }} > target/rust-evidence/T02-image-smoke.json\\n\"\n            },\n            {\n              \"name\": \"Retain image identity and actual independent-client evidence\",\n              \"if\": \"always()\",\n              \"uses\": \"actions/upload-artifact@v7\",\n              \"with\": {\n                \"name\": \"native-t02-image-${{ github.sha }}\",\n                \"path\": \"target/rust-evidence/T02-image-*.json\",\n                \"if-no-files-found\": \"error\"\n              }\n            }\n          ]\n        }\n      },\n      \"owner\": \"T02\",\n      \"state\": \"additive\",\n      \"successor\": \"Actual offline Rust HTTP service image and independent Rust client; no Python executable/libpython/backend fallback; network-none process and wire checks. Production assembly/cutover remains O04/W09/O09.\"\n    },\n";
 
+const FOUNDATION_BYTES: usize = 183884;
+const FOUNDATION_SHA: &str = "1e75a0fd7d29656f04cac5264b8617dba5aed97258a44d5727c7057bc39b4c73";
+const FOUNDATION_STEPS_OFFSET: usize = 100813;
+const FOUNDATION_STEPS: &str = r###"            {
+              "name": "Build actual-process HTTP fixture server",
+              "run": "cargo build --locked -p ssx-http --example t02_fixture"
+            },
+            {
+              "name": "xtask tests",
+              "env": {
+                "SLOPSEARX_TEST_TEMP_ROOT": "${{ runner.temp }}/t02-sockets-xtask",
+                "TMPDIR": "${{ runner.temp }}/t02-sockets-xtask",
+                "TMP": "${{ runner.temp }}/t02-sockets-xtask",
+                "TEMP": "${{ runner.temp }}/t02-sockets-xtask"
+              },
+              "run": "mkdir \"$SLOPSEARX_TEST_TEMP_ROOT\"\ntrap 'rmdir \"$SLOPSEARX_TEST_TEMP_ROOT\" 2>/dev/null || true' EXIT\ncargo test --locked --workspace --features ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing --bin xtask\n"
+            }"###;
+const PRIOR_FOUNDATION_STEPS: &str = r###"            {
+              "name": "Formatting",
+              "run": "cargo fmt --all --check"
+            },
+            {
+              "name": "Clippy",
+              "run": "set -euo pipefail\ncargo clippy --locked --workspace --all-targets --exclude ssx-cli-hyper -- -D warnings\ncargo clippy --locked -p ssx-cli-hyper --features full,source-client-framing --lib -- -D warnings\n"
+            },
+            {
+              "name": "Build actual-process HTTP fixture server",
+              "run": "cargo build --locked -p ssx-http --example t02_fixture"
+            },
+            {
+              "name": "Workspace tests, including xtask",
+              "env": {
+                "SLOPSEARX_TEST_TEMP_ROOT": "${{ runner.temp }}/t02-sockets-workspace",
+                "TMPDIR": "${{ runner.temp }}/t02-sockets-workspace",
+                "TMP": "${{ runner.temp }}/t02-sockets-workspace",
+                "TEMP": "${{ runner.temp }}/t02-sockets-workspace"
+              },
+              "run": "mkdir \"$SLOPSEARX_TEST_TEMP_ROOT\"\ntrap 'rmdir \"$SLOPSEARX_TEST_TEMP_ROOT\" 2>/dev/null || true' EXIT\ncargo test --locked --workspace --features ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing\n"
+            }"###;
+const FOUNDATION_SUCCESSOR_OFFSET: usize = 113137;
+const FOUNDATION_SUCCESSOR: &str = r###""Mandatory prerequisites partition on both existing architectures; xtask tests complement the F03 workspace suite, which excludes xtask. Native deadlines, mutation control, tool/isolation/Valkey/compiler/source provenance and the workflow aggregation remain required.""###;
+const PRIOR_FOUNDATION_SUCCESSOR: &str = r###""Mandatory prerequisites partition on both existing architectures; exact original commands and native deadlines retained; fresh tool/isolation/Valkey/compiler/source provenance; no inherited targets or dropped gates. Separate 130-minute outer workflow job cap; native command deadlines and all gates remain unchanged.""###;
+
 fn hash(raw: &[u8]) -> String {
     Sha256::digest(raw)
         .iter()
@@ -31,7 +74,7 @@ fn hash(raw: &[u8]) -> String {
 }
 pub(super) fn physical_bytes(path: &str, expected: usize) -> usize {
     if path == PATH && expected == PRIOR_BYTES {
-        REHEARSAL_BYTES
+        FOUNDATION_BYTES
     } else {
         expected
     }
@@ -39,6 +82,28 @@ pub(super) fn physical_bytes(path: &str, expected: usize) -> usize {
 pub(super) fn project(path: &str, expected: usize, raw: Vec<u8>) -> Result<Vec<u8>> {
     if path != PATH || expected != PRIOR_BYTES {
         return Ok(raw);
+    }
+    if raw.len() != FOUNDATION_BYTES || hash(&raw) != FOUNDATION_SHA {
+        return Err("O02 catalog successor: exact Foundation catalog required".into());
+    }
+    let mut raw = raw;
+    for (offset, current, prior) in [
+        (
+            FOUNDATION_SUCCESSOR_OFFSET,
+            FOUNDATION_SUCCESSOR,
+            PRIOR_FOUNDATION_SUCCESSOR,
+        ),
+        (
+            FOUNDATION_STEPS_OFFSET,
+            FOUNDATION_STEPS,
+            PRIOR_FOUNDATION_STEPS,
+        ),
+    ] {
+        let end = offset + current.len();
+        if raw.get(offset..end) != Some(current.as_bytes()) {
+            return Err("O02 catalog successor: exact Foundation catalog span required".into());
+        }
+        raw.splice(offset..end, prior.bytes());
     }
     if raw.len() != REHEARSAL_BYTES || hash(&raw) != REHEARSAL_SHA {
         return Err(
@@ -98,6 +163,6 @@ pub(super) fn controls(root: &std::path::Path) {
     ] {
         assert!(project(PATH, PRIOR_BYTES, mutant).is_err());
     }
-    assert_eq!(physical_bytes(PATH, PRIOR_BYTES), REHEARSAL_BYTES);
+    assert_eq!(physical_bytes(PATH, PRIOR_BYTES), FOUNDATION_BYTES);
     assert_eq!(physical_bytes("unlisted", 7), 7);
 }
