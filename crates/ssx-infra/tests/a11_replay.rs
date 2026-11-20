@@ -13,7 +13,7 @@ use ssx_registry::Registry;
 use std::{
     collections::{BTreeMap, VecDeque},
     sync::{Arc, Mutex},
-    time::{Duration, Instant},
+    time::Duration,
 };
 #[derive(Deserialize)]
 struct Capture {
@@ -219,6 +219,103 @@ fn normalized(response: &ssx_domain::AdapterResponse) -> Value {
     })
     .unwrap()
 }
+async fn observe_search(row: &Value, id: &str, name: &str) -> Observation {
+    let config = settings(name, &row["config"]);
+    let timeout = match name {
+        "abuseipdb" => &config.abuseipdb.timeout_ms,
+        "greynoise" => &config.greynoise.timeout_ms,
+        "otx" => &config.otx.timeout_ms,
+        _ => &config.urlhaus.timeout_ms,
+    };
+    let millis = match timeout {
+        ConfigScalar::Integer(n) => *n as f64,
+        ConfigScalar::Boolean(v) => {
+            if *v {
+                1.
+            } else {
+                0.
+            }
+        }
+        ConfigScalar::Float(v) => *v,
+        ConfigScalar::Text(_) => 0.,
+    };
+    let queue = Arc::new(Queue {
+        exchanges: Mutex::new(
+            row["exchanges"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .cloned()
+                .collect(),
+        ),
+        requests: Mutex::new(Vec::new()),
+    });
+    let http = Arc::new(AdapterHttp::default());
+    http.set_transport(queue.clone()).unwrap();
+    let mut registry = Registry::builtins().unwrap();
+    let admission = Arc::new(Admission {
+        deny: id.contains("admission-denied"),
+        calls: Mutex::new(Vec::new()),
+    });
+    register_threat_intelligence(&mut registry, http.clone(), admission.clone(), config).unwrap();
+    let adapter = registry
+        .instantiate(name)
+        .expect("actual registered factory");
+    let mut request = SearchRequest {
+        query: row["query"].as_str().unwrap().into(),
+        ..Default::default()
+    };
+    let params = &row["params"];
+    if let Some(p) = params.get("page").and_then(Value::as_u64) {
+        request.page = ssx_domain::SearchPage::from_u64(p).expect("positive source fixture page")
+    }
+    if let Some(s) = params.get("language").and_then(Value::as_str) {
+        request.language = s.into()
+    }
+    if let Some(s) = params.get("time_range").and_then(Value::as_str) {
+        request.time_range = Some(s.into())
+    }
+    if let Some(s) = params.get("safesearch").and_then(Value::as_u64) {
+        request.safesearch = s as u8
+    }
+    let pause_clock = is_one_millisecond_success_fixture(id, row);
+    if pause_clock {
+        tokio::time::pause();
+    }
+    let floor = Duration::try_from_secs_f64(millis / 1000.)
+        .ok()
+        .and_then(|duration| tokio::time::Instant::now().checked_add(duration));
+    let response = adapter.search(&request).await;
+    let completed = floor.is_some_and(|d| tokio::time::Instant::now() <= d);
+    if pause_clock {
+        tokio::time::resume();
+    }
+    let actual = normalized(&response);
+    http.shutdown_and_wait().await;
+    let requests = queue.requests.lock().unwrap().clone();
+    let unused = queue.exchanges.lock().unwrap().len();
+    let admission_calls = admission.calls.lock().unwrap().clone();
+    Observation {
+        id: id.into(),
+        native_output: actual,
+        requests,
+        unused_exchanges: unused,
+        admission_calls,
+        completed_before_configured_deadline_floor: completed,
+    }
+}
+
+fn is_one_millisecond_success_fixture(id: &str, row: &Value) -> bool {
+    matches!(
+        id,
+        "a11-boundary/abuseipdb/timeout-True"
+            | "a11-boundary/greynoise/timeout-True"
+            | "a11-boundary/otx/timeout-True"
+            | "a11-boundary/urlhaus/timeout-True"
+    ) && row["config"]["timeout_ms"] == Value::Bool(true)
+        && row["output"]["status"].as_str() == Some("ok")
+}
+
 async fn run(profile: &'static str, source: &str) -> Discovery {
     let capture: Capture = serde_json::from_str(source).unwrap();
     let records: Vec<Value> = capture
@@ -260,83 +357,13 @@ async fn run(profile: &'static str, source: &str) -> Discovery {
     }) {
         let id = row["id"].as_str().unwrap();
         let name = row["engine"].as_str().unwrap();
-        let config = settings(name, &row["config"]);
-        let timeout = match name {
-            "abuseipdb" => &config.abuseipdb.timeout_ms,
-            "greynoise" => &config.greynoise.timeout_ms,
-            "otx" => &config.otx.timeout_ms,
-            _ => &config.urlhaus.timeout_ms,
-        };
-        let millis = match timeout {
-            ConfigScalar::Integer(n) => *n as f64,
-            ConfigScalar::Boolean(v) => {
-                if *v {
-                    1.
-                } else {
-                    0.
-                }
-            }
-            ConfigScalar::Float(v) => *v,
-            ConfigScalar::Text(_) => 0.,
-        };
-        let queue = Arc::new(Queue {
-            exchanges: Mutex::new(
-                row["exchanges"]
-                    .as_array()
-                    .unwrap()
-                    .iter()
-                    .cloned()
-                    .collect(),
-            ),
-            requests: Mutex::new(Vec::new()),
-        });
-        let http = Arc::new(AdapterHttp::default());
-        http.set_transport(queue.clone()).unwrap();
-        let mut registry = Registry::builtins().unwrap();
-        let admission = Arc::new(Admission {
-            deny: id.contains("admission-denied"),
-            calls: Mutex::new(Vec::new()),
-        });
-        register_threat_intelligence(&mut registry, http.clone(), admission.clone(), config)
-            .unwrap();
-        let adapter = registry
-            .instantiate(name)
-            .expect("actual registered factory");
-        let mut request = SearchRequest {
-            query: row["query"].as_str().unwrap().into(),
-            ..Default::default()
-        };
-        let params = &row["params"];
-        if let Some(p) = params.get("page").and_then(Value::as_u64) {
-            request.page =
-                ssx_domain::SearchPage::from_u64(p).expect("positive source fixture page")
-        }
-        if let Some(s) = params.get("language").and_then(Value::as_str) {
-            request.language = s.into()
-        }
-        if let Some(s) = params.get("time_range").and_then(Value::as_str) {
-            request.time_range = Some(s.into())
-        }
-        if let Some(s) = params.get("safesearch").and_then(Value::as_u64) {
-            request.safesearch = s as u8
-        }
-        let floor = Duration::try_from_secs_f64(millis / 1000.)
-            .ok()
-            .and_then(|duration| Instant::now().checked_add(duration));
-        let response = adapter.search(&request).await;
-        let completed = floor.is_some_and(|d| Instant::now() <= d);
-        let actual = normalized(&response);
-        http.shutdown_and_wait().await;
-        let requests = queue.requests.lock().unwrap().clone();
-        let unused = queue.exchanges.lock().unwrap().len();
-        let expected_requests = Value::Array(
-            row["exchanges"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .map(|x| x["request"].clone())
-                .collect(),
-        );
+        let expected_requests = row["exchanges"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|x| x["request"].clone())
+            .collect::<Vec<_>>();
+        let observed = observe_search(row, id, name).await;
         differences(
             id,
             if profile == "representation10" {
@@ -345,22 +372,22 @@ async fn run(profile: &'static str, source: &str) -> Discovery {
                 "output"
             },
             row["output"].clone(),
-            actual.clone(),
+            observed.native_output.clone(),
             &mut output.differences,
         );
         differences(
             id,
             "outbound",
-            expected_requests,
-            Value::Array(requests.clone()),
+            Value::Array(expected_requests),
+            Value::Array(observed.requests.clone()),
             &mut output.differences,
         );
-        if unused != 0 {
+        if observed.unused_exchanges != 0 {
             output.differences.push(Difference {
                 id: id.into(),
                 kind: "unused_source_exchanges".into(),
                 expected: ssx_json::to_value(0).unwrap(),
-                actual: ssx_json::to_value(unused).unwrap(),
+                actual: ssx_json::to_value(observed.unused_exchanges).unwrap(),
             })
         }
         if id.contains("admission-denied") {
@@ -368,21 +395,17 @@ async fn run(profile: &'static str, source: &str) -> Discovery {
                 id,
                 "admission",
                 row["admission_calls"].clone(),
-                ssx_json::to_value(admission.calls.lock().unwrap().clone()).unwrap(),
+                ssx_json::to_value(&observed.admission_calls).unwrap(),
                 &mut output.differences,
             )
         }
         if let Some(test) = row.get("source_test").and_then(Value::as_str) {
-            parent.insert((test.to_owned(), name.to_owned()), actual.clone());
+            parent.insert(
+                (test.to_owned(), name.to_owned()),
+                observed.native_output.clone(),
+            );
         }
-        output.records.push(Observation {
-            id: id.into(),
-            native_output: actual,
-            requests,
-            unused_exchanges: unused,
-            admission_calls: admission.calls.lock().unwrap().clone(),
-            completed_before_configured_deadline_floor: completed,
-        });
+        output.records.push(observed);
     }
     for row in records.iter().filter(|r| {
         r.get("operation")
@@ -468,6 +491,26 @@ fn reviewed(profile: &str, actual: &[Difference]) -> bool {
     let expected = approved(profile);
     !expected.is_empty() && counter(&expected) == counter(actual)
 }
+fn unmatched_tuples(
+    side: &BTreeMap<String, usize>,
+    counterpart: &BTreeMap<String, usize>,
+) -> Vec<(String, String, Option<String>, usize)> {
+    side.iter()
+        .filter_map(|(tuple, count)| {
+            let unmatched = count.saturating_sub(counterpart.get(tuple).copied().unwrap_or(0));
+            if unmatched == 0 {
+                return None;
+            }
+            let row: Difference = ssx_json::from_str(tuple).unwrap();
+            let status = row
+                .actual
+                .get("status")
+                .and_then(Value::as_str)
+                .map(str::to_owned);
+            Some((row.id, row.kind, status, unmatched))
+        })
+        .collect()
+}
 fn helper_parents(baseline: &Discovery) {
     let source: Capture = serde_json::from_str(include_str!(
         "../../../docs/rust-rewrite/a11/source-regressions-v1.json"
@@ -542,6 +585,17 @@ fn exact_difference_checker_refuses_missing_extra_duplicate_and_unbound_tuple_ch
         let mut duplicate = expected.clone();
         duplicate.push(expected[0].clone());
         assert!(!reviewed(profile, &duplicate));
+        let duplicated = &expected[0];
+        assert_eq!(
+            unmatched_tuples(&counter(&duplicate), &counter(&expected)),
+            vec![(
+                duplicated.id.clone(),
+                duplicated.kind.clone(),
+                duplicated.actual["status"].as_str().map(str::to_owned),
+                1,
+            )]
+        );
+        assert!(unmatched_tuples(&counter(&expected), &counter(&duplicate)).is_empty());
         let mut wrong = expected.clone();
         let row = wrong
             .iter_mut()
@@ -599,6 +653,56 @@ fn exact_difference_checker_refuses_missing_extra_duplicate_and_unbound_tuple_ch
     assert!(!reviewed("unknown", &[]));
     println!("A11_CHECKER_COMPLETE finite-positive-negative-exact-tuples");
 }
+async fn pending_boolean_timeout_still_expires() {
+    struct PendingExchange(Arc<tokio::sync::Notify>);
+    impl Transport for PendingExchange {
+        fn exchange(&self, _: Request) -> ExchangeFuture<'_> {
+            self.0.notify_one();
+            Box::pin(std::future::pending())
+        }
+    }
+
+    let entered = Arc::new(tokio::sync::Notify::new());
+    let http = Arc::new(AdapterHttp::default());
+    http.set_transport(Arc::new(PendingExchange(entered.clone())))
+        .unwrap();
+    let config = settings(
+        "abuseipdb",
+        &ssx_json::from_str(r#"{"api_key":"fixture","timeout_ms":true}"#).unwrap(),
+    );
+    let mut registry = Registry::builtins().unwrap();
+    let admission = Arc::new(Admission {
+        deny: false,
+        calls: Mutex::new(Vec::new()),
+    });
+    register_threat_intelligence(&mut registry, http.clone(), admission, config).unwrap();
+    let adapter = registry.instantiate("abuseipdb").unwrap();
+    tokio::time::pause();
+    let search = tokio::spawn(async move {
+        adapter
+            .search(&SearchRequest {
+                query: "192.0.2.1".into(),
+                ..Default::default()
+            })
+            .await
+    });
+    tokio::time::timeout(Duration::from_millis(10), entered.notified())
+        .await
+        .expect("scripted exchange entered");
+    assert!(!search.is_finished(), "in-flight scripted exchange");
+    tokio::time::advance(Duration::from_millis(2)).await;
+    assert_eq!(
+        tokio::time::timeout(Duration::from_millis(10), search)
+            .await
+            .expect("bounded configured deadline")
+            .unwrap()
+            .status,
+        ssx_domain::EngineStatus::Timeout
+    );
+    tokio::time::resume();
+    http.shutdown_and_wait().await;
+}
+
 #[tokio::test]
 async fn all_original_observations_full_boundaries_and_supplement_exact() {
     let baseline = run(
@@ -639,12 +743,21 @@ async fn all_original_observations_full_boundaries_and_supplement_exact() {
             .unwrap();
     }
     helper_parents(&baseline);
+    pending_boolean_timeout_still_expires().await;
     for profile in [&baseline, &boundary, &supplement, &representation] {
-        assert!(
-            reviewed(profile.profile, &profile.differences),
-            "unreviewed full identity-bound source differences: {}",
-            profile.profile
-        );
+        if !reviewed(profile.profile, &profile.differences) {
+            let expected = counter(&approved(profile.profile));
+            let observed = counter(&profile.differences);
+            // Report case identities and statuses without copying fixture payloads or headers.
+            panic!(
+                "unreviewed full identity-bound source differences: {} (id, kind, status, count)
+missing: {:?}
+unexpected: {:?}",
+                profile.profile,
+                unmatched_tuples(&expected, &observed),
+                unmatched_tuples(&observed, &expected)
+            );
+        }
     }
     // All request/output/helper-ledger assertions and all engine/HTTP cleanup precede markers.
     for profile in [&baseline, &boundary, &supplement, &representation] {
