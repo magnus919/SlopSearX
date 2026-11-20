@@ -836,7 +836,7 @@ spec:
       containers:
         - name: slopsearx
           # CI-built, Trivy-scanned artifact pinned by digest (issue #210).
-          image: ghcr.io/magnus919/slopsearx@sha256:91194d146d205b1cf4688c1989da8f5f6b599a9627be23fd1ee7a4e488fda5b7
+          image: ghcr.io/magnus919/slopsearx@sha256:78ac5d406e183eca1fac4618887575f97d104b15f3df139e96fbf6e517c378ce
           env:
             - name: VALKEY_URL
               value: redis://valkey-cluster:6379
@@ -893,7 +893,7 @@ Replace the current SearXNG service in `docker-compose.yml`:
 
 # New (SlopSearX):
 slopsearx:
-  image: ghcr.io/magnus919/slopsearx@sha256:91194d146d205b1cf4688c1989da8f5f6b599a9627be23fd1ee7a4e488fda5b7
+  image: ghcr.io/magnus919/slopsearx@sha256:78ac5d406e183eca1fac4618887575f97d104b15f3df139e96fbf6e517c378ce
   environment:
     - VALKEY_URL=redis://valkey:6379
     - ENGINE_BRAVE_API_KEY=${BRAVE_API_KEY}
