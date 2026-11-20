@@ -13,7 +13,7 @@ use ssx_registry::Registry;
 use std::{
     collections::{BTreeMap, VecDeque},
     sync::{Arc, Mutex},
-    time::{Duration, Instant},
+    time::Duration,
 };
 #[derive(Deserialize)]
 struct Capture {
@@ -278,11 +278,18 @@ async fn observe_search(row: &Value, id: &str, name: &str) -> Observation {
     if let Some(s) = params.get("safesearch").and_then(Value::as_u64) {
         request.safesearch = s as u8
     }
+    let pause_clock = is_one_millisecond_success_fixture(id, row);
+    if pause_clock {
+        tokio::time::pause();
+    }
     let floor = Duration::try_from_secs_f64(millis / 1000.)
         .ok()
-        .and_then(|duration| Instant::now().checked_add(duration));
+        .and_then(|duration| tokio::time::Instant::now().checked_add(duration));
     let response = adapter.search(&request).await;
-    let completed = floor.is_some_and(|d| Instant::now() <= d);
+    let completed = floor.is_some_and(|d| tokio::time::Instant::now() <= d);
+    if pause_clock {
+        tokio::time::resume();
+    }
     let actual = normalized(&response);
     http.shutdown_and_wait().await;
     let requests = queue.requests.lock().unwrap().clone();
@@ -298,24 +305,15 @@ async fn observe_search(row: &Value, id: &str, name: &str) -> Observation {
     }
 }
 
-fn one_millisecond_exchange_overran(
-    row: &Value,
-    expected_requests: &[Value],
-    observed: &Observation,
-) -> bool {
+fn is_one_millisecond_success_fixture(id: &str, row: &Value) -> bool {
     matches!(
-        observed.id.as_str(),
+        id,
         "a11-boundary/abuseipdb/timeout-True"
             | "a11-boundary/greynoise/timeout-True"
             | "a11-boundary/otx/timeout-True"
             | "a11-boundary/urlhaus/timeout-True"
     ) && row["config"]["timeout_ms"] == Value::Bool(true)
         && row["output"]["status"].as_str() == Some("ok")
-        && expected_requests.len() == 1
-        && (observed.requests == expected_requests && observed.unused_exchanges == 0
-            || observed.requests.is_empty() && observed.unused_exchanges == 1)
-        && observed.native_output["status"].as_str() == Some("timeout")
-        && !observed.completed_before_configured_deadline_floor
 }
 
 async fn run(profile: &'static str, source: &str) -> Discovery {
@@ -353,7 +351,6 @@ async fn run(profile: &'static str, source: &str) -> Discovery {
         differences: Vec::new(),
     };
     let mut parent = BTreeMap::new();
-    let boundary_ledger = (profile == "boundary250").then(|| approved(profile));
     for row in records.iter().filter(|r| {
         r.get("operation")
             .is_none_or(|v| v.as_str() == Some("search"))
@@ -366,26 +363,7 @@ async fn run(profile: &'static str, source: &str) -> Discovery {
             .iter()
             .map(|x| x["request"].clone())
             .collect::<Vec<_>>();
-        let mut observed = observe_search(row, id, name).await;
-        // The source's one-millisecond success cases use a scripted exchange.
-        // The deadline may expire before dispatch or after consuming the one
-        // approved native exchange. Persistent timeouts still fail the exact ledger.
-        let native_requests = boundary_ledger
-            .as_ref()
-            .and_then(|ledger| {
-                ledger
-                    .iter()
-                    .find(|entry| entry.id == id && entry.kind == "outbound")
-            })
-            .and_then(|entry| entry.actual.as_array())
-            .map_or(expected_requests.as_slice(), Vec::as_slice);
-        for attempt in 2..=4 {
-            if !one_millisecond_exchange_overran(row, native_requests, &observed) {
-                break;
-            }
-            eprintln!("A11 clock overrun: {id}; replay attempt {attempt}");
-            observed = observe_search(row, id, name).await;
-        }
+        let observed = observe_search(row, id, name).await;
         differences(
             id,
             if profile == "representation10" {
@@ -592,49 +570,6 @@ fn helper_parents(baseline: &Discovery) {
 }
 #[test]
 fn exact_difference_checker_refuses_missing_extra_duplicate_and_unbound_tuple_changes() {
-    let synthetic_source =
-        ssx_json::from_str(r#"{"config":{"timeout_ms":true},"output":{"status":"ok"}}"#).unwrap();
-    let request: Value = ssx_json::from_str(r#"{"method":"GET"}"#).unwrap();
-    let expected = [request];
-    let mut overrun = Observation {
-        id: "a11-boundary/urlhaus/timeout-True".into(),
-        native_output: ssx_json::from_str(r#"{"status":"timeout"}"#).unwrap(),
-        requests: expected.to_vec(),
-        unused_exchanges: 0,
-        admission_calls: Vec::new(),
-        completed_before_configured_deadline_floor: false,
-    };
-    assert!(one_millisecond_exchange_overran(
-        &synthetic_source,
-        &expected,
-        &overrun
-    ));
-    overrun.unused_exchanges = 1;
-    assert!(!one_millisecond_exchange_overran(
-        &synthetic_source,
-        &expected,
-        &overrun
-    ));
-    overrun.requests.clear();
-    assert!(one_millisecond_exchange_overran(
-        &synthetic_source,
-        &expected,
-        &overrun
-    ));
-    overrun.unused_exchanges = 0;
-    overrun.requests = expected.to_vec();
-    assert!(!one_millisecond_exchange_overran(
-        &synthetic_source,
-        &[Value::Null],
-        &overrun
-    ));
-    overrun.id = "a11-boundary/urlhaus/network-timeout".into();
-    assert!(!one_millisecond_exchange_overran(
-        &synthetic_source,
-        &expected,
-        &overrun
-    ));
-
     for profile in [
         "baseline58",
         "boundary250",
@@ -718,6 +653,56 @@ fn exact_difference_checker_refuses_missing_extra_duplicate_and_unbound_tuple_ch
     assert!(!reviewed("unknown", &[]));
     println!("A11_CHECKER_COMPLETE finite-positive-negative-exact-tuples");
 }
+async fn pending_boolean_timeout_still_expires() {
+    struct PendingExchange(Arc<tokio::sync::Notify>);
+    impl Transport for PendingExchange {
+        fn exchange(&self, _: Request) -> ExchangeFuture<'_> {
+            self.0.notify_one();
+            Box::pin(std::future::pending())
+        }
+    }
+
+    let entered = Arc::new(tokio::sync::Notify::new());
+    let http = Arc::new(AdapterHttp::default());
+    http.set_transport(Arc::new(PendingExchange(entered.clone())))
+        .unwrap();
+    let config = settings(
+        "abuseipdb",
+        &ssx_json::from_str(r#"{"api_key":"fixture","timeout_ms":true}"#).unwrap(),
+    );
+    let mut registry = Registry::builtins().unwrap();
+    let admission = Arc::new(Admission {
+        deny: false,
+        calls: Mutex::new(Vec::new()),
+    });
+    register_threat_intelligence(&mut registry, http.clone(), admission, config).unwrap();
+    let adapter = registry.instantiate("abuseipdb").unwrap();
+    tokio::time::pause();
+    let search = tokio::spawn(async move {
+        adapter
+            .search(&SearchRequest {
+                query: "192.0.2.1".into(),
+                ..Default::default()
+            })
+            .await
+    });
+    tokio::time::timeout(Duration::from_millis(10), entered.notified())
+        .await
+        .expect("scripted exchange entered");
+    assert!(!search.is_finished(), "in-flight scripted exchange");
+    tokio::time::advance(Duration::from_millis(2)).await;
+    assert_eq!(
+        tokio::time::timeout(Duration::from_millis(10), search)
+            .await
+            .expect("bounded configured deadline")
+            .unwrap()
+            .status,
+        ssx_domain::EngineStatus::Timeout
+    );
+    tokio::time::resume();
+    http.shutdown_and_wait().await;
+}
+
 #[tokio::test]
 async fn all_original_observations_full_boundaries_and_supplement_exact() {
     let baseline = run(
@@ -758,6 +743,7 @@ async fn all_original_observations_full_boundaries_and_supplement_exact() {
             .unwrap();
     }
     helper_parents(&baseline);
+    pending_boolean_timeout_still_expires().await;
     for profile in [&baseline, &boundary, &supplement, &representation] {
         if !reviewed(profile.profile, &profile.differences) {
             let expected = counter(&approved(profile.profile));

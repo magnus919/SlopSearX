@@ -97,6 +97,10 @@ fn composition_material(root: &Path, path: &str) -> Result<Material> {
         })
     } else {
         let mut physical = load(root, path)?;
+        if let Some(prior) = crate::a13::a06_source_successor::replay_clock_predecessor(root, path)?
+        {
+            physical.bytes = prior;
+        }
         // Only the three source operands in the sealed A07 composition capsule.
         let page = match path {
             "crates/ssx-infra/tests/a07_biomedical.rs" => Some((

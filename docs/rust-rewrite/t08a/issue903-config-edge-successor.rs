@@ -131,9 +131,12 @@ pub(crate) fn owns(path: &str) -> bool {
     )
 }
 fn project_row(row: &Row, current: &[u8]) -> Result<Vec<u8>> {
-    let preceding = (row.path == a11_replay_source::NATIVE_READER)
-        .then(|| a11_replay_source::prior(&row.path, current))
-        .transpose()?;
+    let preceding = matches!(
+        row.path.as_str(),
+        a11_replay_source::NATIVE_READER | a11_replay_source::SHARED_READER
+    )
+    .then(|| a11_replay_source::prior(&row.path, current))
+    .transpose()?;
     let current = preceding.as_deref().unwrap_or(current);
     need(
         current.len() == row.current.bytes,

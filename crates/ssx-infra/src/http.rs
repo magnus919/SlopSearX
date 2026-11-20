@@ -1076,6 +1076,11 @@ impl Session {
     pub fn set_deadline(&mut self, deadline: tokio::time::Instant) {
         self.deadline = deadline;
     }
+    /// Use Tokio's clock throughout a session with a runtime-created deadline.
+    pub(crate) fn use_runtime_deadline_clock(&mut self) {
+        self.clock = DeadlineClock::runtime();
+    }
+
     pub async fn execute(&mut self, mut request: Request) -> Result<Response> {
         if *self.stop.0.borrow() {
             return Err(Error::Closed);

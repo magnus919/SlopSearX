@@ -769,10 +769,14 @@ fn a12_readiness_controls(root: &Path) -> Result<()> {
     }
     Ok(())
 }
+pub(crate) fn a11_replay_page_current(physical: &[u8]) -> Result<Vec<u8>> {
+    a11_replay_source::prior(a11_replay_source::REPLAY, physical)
+}
+
 fn a11_replay_prior(physical: Material) -> Result<Material> {
     need(physical.mode == 0o644, "A11 current replay mode")?;
     Ok(Material {
-        bytes: a11_replay_source::prior(a11_replay_source::REPLAY, &physical.bytes)?,
+        bytes: a11_replay_page_current(&physical.bytes)?,
         mode: physical.mode,
     })
 }

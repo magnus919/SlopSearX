@@ -3,6 +3,12 @@ use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{fs, path::Path};
 use w07_t02_joint::w08_source_successor;
+#[allow(
+    clippy::duplicate_mod,
+    reason = "Independent proof roots share this exact inverse"
+)]
+#[path = "../../a11/replay-scheduling-source.rs"]
+mod a11_replay_source;
 #[path = "a13-header-layout-successor.rs"]
 mod a13_header_layout_successor;
 #[path = "post-a06-generation.rs"]
@@ -605,7 +611,37 @@ fn issue903_infra_manifest_prior(
     material(row, &prior, "0644")?;
     Ok(prior)
 }
+struct ReplayClockFrames {
+    #[cfg(test)]
+    physical: Vec<u8>,
+    predecessor: Vec<u8>,
+}
+
+fn replay_clock_frames(root: &Path, path: &str) -> Result<Option<ReplayClockFrames>, String> {
+    if !a11_replay_source::CLOCK_SOURCES.contains(&path) {
+        return Ok(None);
+    }
+    let (bytes, mode) = w07_t02_joint::cli_source_custody::bounded_read(root, path, 1_048_576)?;
+    need(
+        mode == if cfg!(windows) { 0 } else { 0o644 },
+        "A11 replay clock physical source mode",
+    )?;
+    let prior = a11_replay_source::prior(path, &bytes)?;
+    Ok(Some(ReplayClockFrames {
+        #[cfg(test)]
+        physical: bytes,
+        predecessor: prior,
+    }))
+}
+pub(crate) fn replay_clock_predecessor(root: &Path, path: &str) -> Result<Option<Vec<u8>>, String> {
+    Ok(replay_clock_frames(root, path)?.map(|frames| frames.predecessor))
+}
+
 fn read_exact(root: &Path, row: &Value) -> Result<Vec<u8>, String> {
+    if let Some(prior) = replay_clock_predecessor(root, text(row, "path")?)? {
+        material(row, &prior, &permissions(&root.join(text(row, "path")?))?)?;
+        return Ok(prior);
+    }
     if let Some(prior) = default_ca_fixture_operand(
         root,
         text(row, "path")?,
@@ -1077,6 +1113,41 @@ pub(crate) fn try_verify(
     if let Some(result) = try_a06_artifact(root, container, container_sha, path, expected, bytes) {
         return Some(result);
     }
+    if path == a11_replay_source::THREAT_INTEL {
+        let section = match container {
+            "docs/rust-rewrite/a11/qualification.json" => "owned_sources",
+            "docs/rust-rewrite/a13/qualification-v1.json"
+            | "docs/rust-rewrite/a13/dehashed-source-map-v1.json"
+            | "docs/rust-rewrite/a13/remaining/source-map.json" => "sources",
+            _ => return None,
+        };
+        return Some((|| {
+            let (caller, mode) =
+                w07_t02_joint::cli_source_custody::bounded_read(root, container, 1_048_576)?;
+            need(
+                digest(&caller) == container_sha && mode == if cfg!(windows) { 0 } else { 0o644 },
+                "A11 replay clock exact source caller",
+            )?;
+            let doc: Value = serde_json::from_slice(&caller).map_err(|error| error.to_string())?;
+            let rows = doc[section]
+                .as_array()
+                .ok_or("A11 replay clock caller rows")?;
+            let mut selected = rows.iter().filter(|row| row["path"] == path);
+            let row = selected.next().ok_or("A11 replay clock caller row")?;
+            need(
+                selected.next().is_none()
+                    && row["sha256"] == expected
+                    && row["bytes"].as_u64().map(|n| n as usize) == bytes,
+                "A11 replay clock exact caller tuple",
+            )?;
+            let original = replay_clock_predecessor(root, path)?
+                .ok_or("A11 replay clock source not selected")?;
+            need(
+                digest(&original) == expected && bytes.is_none_or(|n| original.len() == n),
+                "A11 replay clock retained predecessor tuple",
+            )
+        })());
+    }
     if !selected(container, path) {
         return None;
     }
@@ -1153,8 +1224,13 @@ where
         } else {
             row["current"].clone()
         };
+        let current_matches = if a11_replay_source::CLOCK_SOURCES.contains(&path) {
+            a11_replay_source::current_blob(path)? == actual_blob
+        } else {
+            current["git_blob"] == actual_blob
+        };
         need(
-            archived_blob.trim() == expected && current["git_blob"] == actual_blob,
+            archived_blob.trim() == expected && current_matches,
             "A06 exact accepted/current Git blob differs",
         )?;
         Ok(())
@@ -1316,7 +1392,16 @@ pub(crate) fn legacy_control_operand(
     )?;
     let doc = load(root)?;
     let row = source(&doc, path)?;
-    let (before, actual) = verify_transition(root, row)?;
+    let (before, accepted) = verify_transition(root, row)?;
+    let actual = if let Some(frames) = replay_clock_frames(root, path)? {
+        need(
+            frames.predecessor == accepted,
+            "A06 replay clock control predecessor differs",
+        )?;
+        frames.physical
+    } else {
+        accepted
+    };
     need(
         supplied_current == actual,
         "A06 control operand differs from actual current",
@@ -1338,7 +1423,14 @@ pub(crate) fn current_http(root: &Path, actual: &[u8]) -> Result<bool, String> {
         &row["current"],
         real_clock_successor::Role::SharedCurrent,
     )?;
-    Ok(read(root, &current)? == actual)
+    let accepted = read(root, &current)?;
+    let frames = replay_clock_frames(root, text(&current, "path")?)?
+        .ok_or("A11 HTTP predecessor not selected")?;
+    need(
+        frames.predecessor == accepted,
+        "A11 HTTP control predecessor differs",
+    )?;
+    Ok(frames.physical == actual)
 }
 #[cfg(test)]
 pub(crate) fn controls(root: &Path) -> Result<(), String> {
@@ -1558,7 +1650,8 @@ pub(crate) fn controls(root: &Path) -> Result<(), String> {
         "crates/ssx-infra/src/adapters/mod.rs",
     ] {
         let row = source(&doc, path)?;
-        let (before, actual) = verify_transition(root, row)?;
+        let (before, accepted) = verify_transition(root, row)?;
+        let actual = replay_clock_frames(root, path)?.map_or(accepted, |frames| frames.physical);
         let accepted = legacy_control_operand(root, path, &row["baseline"], &actual)?;
         need(
             accepted == before,

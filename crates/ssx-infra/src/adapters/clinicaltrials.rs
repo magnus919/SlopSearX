@@ -196,6 +196,15 @@ pub(super) fn network_deadline_for_http(
     http.assert_direct_replay_context(context);
     network_deadline_using(config, false, context, || http.deadline_now())
 }
+/// Create a non-PubMed deadline for a session using Tokio's runtime clock.
+pub(super) fn network_deadline_on_runtime(
+    config: &BiomedicalConfig,
+    context: Option<Instant>,
+) -> Result<Instant> {
+    network_deadline_using(config, false, context, || {
+        tokio::time::Instant::now().into_std()
+    })
+}
 pub(super) fn scalar_text(v: &ConfigScalar) -> String {
     match v {
         ConfigScalar::Boolean(v) => if *v { "true" } else { "false" }.into(),
