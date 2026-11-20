@@ -8,14 +8,15 @@ pub(crate) const NATIVE_READER: &str =
 pub(crate) const SHARED_READER: &str =
     "docs/rust-rewrite/a06/source-amendments/shared-successor.rs";
 pub(crate) const THREAT_INTEL: &str = "crates/ssx-infra/src/adapters/threat_intel.rs";
+pub(crate) const MONOTONIC: &str = "crates/ssx-infra/src/http/monotonic.rs";
 pub(crate) const CLOCK_SOURCES: [&str; 4] = [
     "crates/ssx-infra/src/adapters/clinicaltrials.rs",
     "crates/ssx-infra/src/http.rs",
-    "crates/ssx-infra/src/http/monotonic.rs",
+    MONOTONIC,
     THREAT_INTEL,
 ];
 const CAPSULE: &[u8] = include_bytes!("replay-scheduling-source-v1.json");
-const CAPSULE_SHA256: &str = "00a39d101d6c05a5152db0163186bea548c4c1a9f1f81c8df902bf9acf12cf01";
+const CAPSULE_SHA256: &str = "45b51a9b68c0c6ab405e3942af69a9205c14df42578cd10bebcf7ea8aecd1f87";
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]

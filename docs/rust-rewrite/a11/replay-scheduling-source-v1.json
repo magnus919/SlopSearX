@@ -116,9 +116,9 @@
   },
   {
     "path": "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
-    "current_bytes": 94787,
-    "current_sha256": "e8c66683aa7cbfc9ba01365e60189a05a3a4cd11f2b605c83e80514eae8a547b",
-    "current_blob": "f3995244624d149ff95fd221075a8cabd353e80c",
+    "current_bytes": 95430,
+    "current_sha256": "2253598a7772b68d8657d4aaed313c8ca6c5405b013dc914f2956e81597a92c2",
+    "current_blob": "c6b6b3fcae59331144da672e3b343e2baf6e2102",
     "prior_bytes": 91016,
     "prior_sha256": "9c19bf9db372eb79be08cacffe8c426e37f6eb43f7b6c3c2260cad0841c234c2",
     "inverse": [
@@ -139,33 +139,38 @@
       },
       {
         "offset": 41864,
-        "remove": "    if path == a11_replay_source::THREAT_INTEL {\n        let section = match container {\n            \"docs/rust-rewrite/a11/qualification.json\" => \"owned_sources\",\n            \"docs/rust-rewrite/a13/qualification-v1.json\"\n            | \"docs/rust-rewrite/a13/dehashed-source-map-v1.json\"\n            | \"docs/rust-rewrite/a13/remaining/source-map.json\" => \"sources\",\n            _ => return None,\n        };\n        return Some((|| {\n            let (caller, mode) =\n                w07_t02_joint::cli_source_custody::bounded_read(root, container, 1_048_576)?;\n            need(\n                digest(&caller) == container_sha && mode == if cfg!(windows) { 0 } else { 0o644 },\n                \"A11 replay clock exact source caller\",\n            )?;\n            let doc: Value = serde_json::from_slice(&caller).map_err(|error| error.to_string())?;\n            let rows = doc[section]\n                .as_array()\n                .ok_or(\"A11 replay clock caller rows\")?;\n            let mut selected = rows.iter().filter(|row| row[\"path\"] == path);\n            let row = selected.next().ok_or(\"A11 replay clock caller row\")?;\n            need(\n                selected.next().is_none()\n                    && row[\"sha256\"] == expected\n                    && row[\"bytes\"].as_u64().map(|n| n as usize) == bytes,\n                \"A11 replay clock exact caller tuple\",\n            )?;\n            let original = replay_clock_predecessor(root, path)?\n                .ok_or(\"A11 replay clock source not selected\")?;\n            need(\n                digest(&original) == expected && bytes.is_none_or(|n| original.len() == n),\n                \"A11 replay clock retained predecessor tuple\",\n            )\n        })());\n    }\n",
+        "remove": "    let replay_clock_section = match (container, path) {\n        (ARTIFACT_COVERAGE, a11_replay_source::MONOTONIC) => Some(\"artifacts\"),\n        (\"docs/rust-rewrite/a11/qualification.json\", a11_replay_source::THREAT_INTEL) => {\n            Some(\"owned_sources\")\n        }\n        (\n            \"docs/rust-rewrite/a13/qualification-v1.json\"\n            | \"docs/rust-rewrite/a13/dehashed-source-map-v1.json\"\n            | \"docs/rust-rewrite/a13/remaining/source-map.json\",\n            a11_replay_source::THREAT_INTEL,\n        ) => Some(\"sources\"),\n        _ => None,\n    };\n    if let Some(section) = replay_clock_section {\n        return Some((|| {\n            let limit = if container == ARTIFACT_COVERAGE {\n                ARTIFACT_COVERAGE_BYTES\n            } else {\n                1_048_576\n            };\n            let (caller, mode) =\n                w07_t02_joint::cli_source_custody::bounded_read(root, container, limit)?;\n            need(\n                digest(&caller) == container_sha\n                    && mode == if cfg!(windows) { 0 } else { 0o644 }\n                    && (container != ARTIFACT_COVERAGE\n                        || (caller.len() as u64 == ARTIFACT_COVERAGE_BYTES\n                            && container_sha == ARTIFACT_COVERAGE_SHA)),\n                \"A11 replay clock exact source caller\",\n            )?;\n            let doc: Value = serde_json::from_slice(&caller).map_err(|error| error.to_string())?;\n            let rows = doc[section]\n                .as_array()\n                .ok_or(\"A11 replay clock caller rows\")?;\n            let mut selected = rows.iter().filter(|row| row[\"path\"] == path);\n            let row = selected.next().ok_or(\"A11 replay clock caller row\")?;\n            need(\n                selected.next().is_none()\n                    && row[\"sha256\"] == expected\n                    && row[\"bytes\"].as_u64().map(|n| n as usize) == bytes,\n                \"A11 replay clock exact caller tuple\",\n            )?;\n            let original = replay_clock_predecessor(root, path)?\n                .ok_or(\"A11 replay clock source not selected\")?;\n            need(\n                digest(&original) == expected && bytes.is_none_or(|n| original.len() == n),\n                \"A11 replay clock retained predecessor tuple\",\n            )\n        })());\n    }\n",
         "restore": ""
       },
       {
-        "offset": 45959,
+        "offset": 46554,
         "remove": "        let current_matches = if a11_replay_source::CLOCK_SOURCES.contains(&path) {\n            a11_replay_source::current_blob(path)? == actual_blob\n        } else {\n            current[\"git_blob\"] == actual_blob\n        };\n",
         "restore": ""
       },
       {
-        "offset": 46198,
+        "offset": 46793,
         "remove": "            archived_blob.trim() == expected && current_matches,\n",
         "restore": "            archived_blob.trim() == expected && current[\"git_blob\"] == actual_blob,\n"
       },
       {
-        "offset": 52535,
+        "offset": 53130,
         "remove": "    let (before, accepted) = verify_transition(root, row)?;\n    let actual = if let Some(frames) = replay_clock_frames(root, path)? {\n        need(\n            frames.predecessor == accepted,\n            \"A06 replay clock control predecessor differs\",\n        )?;\n        frames.physical\n    } else {\n        accepted\n    };\n",
         "restore": "    let (before, actual) = verify_transition(root, row)?;\n"
       },
       {
-        "offset": 53505,
+        "offset": 54100,
         "remove": "    let accepted = read(root, &current)?;\n    let frames = replay_clock_frames(root, text(&current, \"path\")?)?\n        .ok_or(\"A11 HTTP predecessor not selected\")?;\n    need(\n        frames.predecessor == accepted,\n        \"A11 HTTP control predecessor differs\",\n    )?;\n    Ok(frames.physical == actual)\n",
         "restore": "    Ok(read(root, &current)? == actual)\n"
       },
       {
-        "offset": 61976,
+        "offset": 62571,
         "remove": "        let (before, accepted) = verify_transition(root, row)?;\n        let actual = replay_clock_frames(root, path)?.map_or(accepted, |frames| frames.physical);\n",
         "restore": "        let (before, actual) = verify_transition(root, row)?;\n"
+      },
+      {
+        "offset": 64310,
+        "remove": "const ARTIFACT_COVERAGE_BYTES: u64 = 1_201_634;\n",
+        "restore": ""
       }
     ]
   },

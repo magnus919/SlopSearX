@@ -1113,19 +1113,34 @@ pub(crate) fn try_verify(
     if let Some(result) = try_a06_artifact(root, container, container_sha, path, expected, bytes) {
         return Some(result);
     }
-    if path == a11_replay_source::THREAT_INTEL {
-        let section = match container {
-            "docs/rust-rewrite/a11/qualification.json" => "owned_sources",
+    let replay_clock_section = match (container, path) {
+        (ARTIFACT_COVERAGE, a11_replay_source::MONOTONIC) => Some("artifacts"),
+        ("docs/rust-rewrite/a11/qualification.json", a11_replay_source::THREAT_INTEL) => {
+            Some("owned_sources")
+        }
+        (
             "docs/rust-rewrite/a13/qualification-v1.json"
             | "docs/rust-rewrite/a13/dehashed-source-map-v1.json"
-            | "docs/rust-rewrite/a13/remaining/source-map.json" => "sources",
-            _ => return None,
-        };
+            | "docs/rust-rewrite/a13/remaining/source-map.json",
+            a11_replay_source::THREAT_INTEL,
+        ) => Some("sources"),
+        _ => None,
+    };
+    if let Some(section) = replay_clock_section {
         return Some((|| {
+            let limit = if container == ARTIFACT_COVERAGE {
+                ARTIFACT_COVERAGE_BYTES
+            } else {
+                1_048_576
+            };
             let (caller, mode) =
-                w07_t02_joint::cli_source_custody::bounded_read(root, container, 1_048_576)?;
+                w07_t02_joint::cli_source_custody::bounded_read(root, container, limit)?;
             need(
-                digest(&caller) == container_sha && mode == if cfg!(windows) { 0 } else { 0o644 },
+                digest(&caller) == container_sha
+                    && mode == if cfg!(windows) { 0 } else { 0o644 }
+                    && (container != ARTIFACT_COVERAGE
+                        || (caller.len() as u64 == ARTIFACT_COVERAGE_BYTES
+                            && container_sha == ARTIFACT_COVERAGE_SHA)),
                 "A11 replay clock exact source caller",
             )?;
             let doc: Value = serde_json::from_slice(&caller).map_err(|error| error.to_string())?;
@@ -1690,6 +1705,7 @@ const ARTIFACT_MANIFEST_SHA: &str =
     "dd452bd28cbfdd9b79bcd20eba7dd39322b392696450939ee592e7a44d335f24";
 const ARTIFACT_MANIFEST_BYTES: usize = 94620;
 const ARTIFACT_COVERAGE: &str = "docs/rust-rewrite/a06/coverage.json";
+const ARTIFACT_COVERAGE_BYTES: u64 = 1_201_634;
 const ARTIFACT_COVERAGE_SHA: &str =
     "92686ed70979a698b0dab3414cad813198b720fe586421062db8a4cef5102d9b";
 const ARTIFACT_PAIRS: &[(&str, &str)] = &[
