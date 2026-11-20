@@ -468,6 +468,26 @@ fn reviewed(profile: &str, actual: &[Difference]) -> bool {
     let expected = approved(profile);
     !expected.is_empty() && counter(&expected) == counter(actual)
 }
+fn unmatched_tuples(
+    side: &BTreeMap<String, usize>,
+    counterpart: &BTreeMap<String, usize>,
+) -> Vec<(String, String, Option<String>, usize)> {
+    side.iter()
+        .filter_map(|(tuple, count)| {
+            let unmatched = count.saturating_sub(counterpart.get(tuple).copied().unwrap_or(0));
+            if unmatched == 0 {
+                return None;
+            }
+            let row: Difference = ssx_json::from_str(tuple).unwrap();
+            let status = row
+                .actual
+                .get("status")
+                .and_then(Value::as_str)
+                .map(str::to_owned);
+            Some((row.id, row.kind, status, unmatched))
+        })
+        .collect()
+}
 fn helper_parents(baseline: &Discovery) {
     let source: Capture = serde_json::from_str(include_str!(
         "../../../docs/rust-rewrite/a11/source-regressions-v1.json"
@@ -542,6 +562,17 @@ fn exact_difference_checker_refuses_missing_extra_duplicate_and_unbound_tuple_ch
         let mut duplicate = expected.clone();
         duplicate.push(expected[0].clone());
         assert!(!reviewed(profile, &duplicate));
+        let duplicated = &expected[0];
+        assert_eq!(
+            unmatched_tuples(&counter(&duplicate), &counter(&expected)),
+            vec![(
+                duplicated.id.clone(),
+                duplicated.kind.clone(),
+                duplicated.actual["status"].as_str().map(str::to_owned),
+                1,
+            )]
+        );
+        assert!(unmatched_tuples(&counter(&expected), &counter(&duplicate)).is_empty());
         let mut wrong = expected.clone();
         let row = wrong
             .iter_mut()
@@ -640,11 +671,19 @@ async fn all_original_observations_full_boundaries_and_supplement_exact() {
     }
     helper_parents(&baseline);
     for profile in [&baseline, &boundary, &supplement, &representation] {
-        assert!(
-            reviewed(profile.profile, &profile.differences),
-            "unreviewed full identity-bound source differences: {}",
-            profile.profile
-        );
+        if !reviewed(profile.profile, &profile.differences) {
+            let expected = counter(&approved(profile.profile));
+            let observed = counter(&profile.differences);
+            // Report case identities and statuses without copying fixture payloads or headers.
+            panic!(
+                "unreviewed full identity-bound source differences: {} (id, kind, status, count)
+missing: {:?}
+unexpected: {:?}",
+                profile.profile,
+                unmatched_tuples(&expected, &observed),
+                unmatched_tuples(&observed, &expected)
+            );
+        }
     }
     // All request/output/helper-ledger assertions and all engine/HTTP cleanup precede markers.
     for profile in [&baseline, &boundary, &supplement, &representation] {
