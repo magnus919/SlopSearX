@@ -12,6 +12,7 @@ use peer::{Process, params, yaml};
 #[test]
 fn static_assets_and_highlight_boundary_preserve_safe_progressive_rendering() {
     renderer_pagination_context_preserves_original_three_state_contract();
+    renderer_omits_json_links_when_json_is_disabled();
     let html = PublicPortal::default().landing();
     assert!(html.len() <= 50 * 1024);
     assert!(STYLE.len() + SCRIPT.len() <= 30 * 1024);
@@ -31,6 +32,37 @@ fn static_assets_and_highlight_boundary_preserve_safe_progressive_rendering() {
         content_markup("<strong>unclosed <em>safe</em>"),
         "&lt;strong&gt;unclosed <em>safe</em>"
     );
+}
+
+fn renderer_omits_json_links_when_json_is_disabled() {
+    let request = ssx_domain::SearchRequest {
+        query: "climate".into(),
+        ..Default::default()
+    };
+    let response = ssx_domain::SearchResponse {
+        query: request.query.clone(),
+        results: vec![ssx_domain::SearchResult {
+            url: "https://docs.example.com/guide".into(),
+            title: "A useful guide".into(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    let mut formats = std::collections::BTreeSet::from(["html".into(), "yaml".into()]);
+    let disabled = PublicPortal::new(&Value::Null, &formats, "dark");
+    formats.insert("json".into());
+    let enabled = PublicPortal::new(&Value::Null, &formats, "dark");
+
+    let enabled_html = enabled.search(&response, &Value::Null, &request);
+    assert!(enabled_html.contains("Open JSON view ↗"));
+    assert!(enabled_html.contains("format=json"));
+
+    // Preserve the original formatter assertions F:L696 and F:L697.
+    let disabled_html = disabled.search(&response, &Value::Null, &request);
+    assert!(disabled_html.contains("A useful guide"));
+    assert!(disabled_html.contains("Open YAML view ↗"));
+    assert!(!disabled_html.contains("Open JSON view ↗"));
+    assert!(!disabled_html.contains("format=json"));
 }
 
 // Keep the established top-level HTTP inventory; execute the pure formatter
