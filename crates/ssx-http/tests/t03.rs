@@ -13,6 +13,7 @@ use peer::{Process, params, yaml};
 fn static_assets_and_highlight_boundary_preserve_safe_progressive_rendering() {
     renderer_pagination_context_preserves_original_three_state_contract();
     renderer_omits_json_links_when_json_is_disabled();
+    renderer_explains_the_configured_ranking_strategy();
     let html = PublicPortal::default().landing();
     assert!(html.len() <= 50 * 1024);
     assert!(STYLE.len() + SCRIPT.len() <= 30 * 1024);
@@ -32,6 +33,43 @@ fn static_assets_and_highlight_boundary_preserve_safe_progressive_rendering() {
         content_markup("<strong>unclosed <em>safe</em>"),
         "&lt;strong&gt;unclosed <em>safe</em>"
     );
+}
+
+fn renderer_explains_the_configured_ranking_strategy() {
+    let portal = PublicPortal::default();
+    let request = ssx_domain::SearchRequest {
+        query: "climate".into(),
+        ..Default::default()
+    };
+    let mut response = ssx_domain::SearchResponse {
+        query: request.query.clone(),
+        results: vec![ssx_domain::SearchResult {
+            url: "https://docs.example.com/guide".into(),
+            title: "A useful guide".into(),
+            engine: "brave".into(),
+            engines: ["brave".into(), "wikipedia".into()].into(),
+            tier: 1,
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    let explanation = scraper::Selector::parse("details.result-explanation").unwrap();
+    let explanation_text = |response: &ssx_domain::SearchResponse| {
+        let html = portal.search(response, &Value::Null, &request);
+        let document = scraper::Html::parse_document(&html);
+        let details = document.select(&explanation).next().unwrap();
+        details.text().collect::<String>()
+    };
+
+    let presence = explanation_text(&response);
+    assert!(presence.contains("Cross-source presence"));
+    assert!(!presence.contains("Reciprocal rank fusion (k=60)"));
+
+    response.ranking_explanation = "tier_then_reciprocal_rank_fusion_k60".into();
+    let reciprocal_rank_fusion = explanation_text(&response);
+    assert!(reciprocal_rank_fusion.contains("Reciprocal rank fusion (k=60)"));
+    assert!(reciprocal_rank_fusion.contains("it is not confidence"));
+    assert!(!reciprocal_rank_fusion.contains("Cross-source presence"));
 }
 
 fn renderer_omits_json_links_when_json_is_disabled() {
