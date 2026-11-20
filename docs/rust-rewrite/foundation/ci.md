@@ -62,8 +62,9 @@ check. It does not edit or disable Python gates. On both Linux architectures,
 the core job runs F03, which owns formatting, Clippy, the workspace tests that
 exclude `xtask`, and the native server readiness check. The prerequisites job
 uses the same workspace features and selects only the `xtask` test binary.
-The Foundation summary requires both jobs. The supply-chain job checks the complete
-workspace against the pinned cargo-deny version. Future Rust issues should
+The Foundation summary requires both jobs and validates the F03 command
+results against the run revision and architecture. The supply-chain job checks
+the complete workspace against the pinned cargo-deny version. Future Rust issues should
 extend this workflow with their explicit evidence gates; removing Python gates
 belongs to the separately planned cutover work after replacement suites are
 accepted.

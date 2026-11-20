@@ -148,6 +148,8 @@ jobs:
       - name: Build actual-process HTTP fixture server
         run: cargo build --locked -p ssx-http --example t02_fixture
 
+      # F03 reports workspace formatting, Clippy, and tests excluding xtask.
+      # The Foundation summary verifies those command results and requires both jobs.
       - name: xtask tests
         env:
           SLOPSEARX_TEST_TEMP_ROOT: ${{ runner.temp }}/t02-sockets-xtask
