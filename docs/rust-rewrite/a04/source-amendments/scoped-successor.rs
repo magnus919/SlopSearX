@@ -75,6 +75,12 @@ fn check_material(row: &Value, raw: &[u8], actual_mode: &str, stage: &str) -> Re
     )
 }
 fn read_material(root: &Path, row: &Value, stage: &str) -> Result<Vec<u8>, String> {
+    if text(row, "path")? == HTTP {
+        let prior = a06_source_successor::replay_clock_predecessor(root, HTTP)?
+            .ok_or("A11 HTTP predecessor not selected")?;
+        check_material(row, &prior, "0644", stage)?;
+        return Ok(prior);
+    }
     if text(row, "path")? == "crates/ssx-infra/tests/a09_factories.rs" {
         let prior = a06_source_successor::default_ca_fixture_operand(
             root,

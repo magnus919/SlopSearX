@@ -49,14 +49,13 @@ impl ThreatIntelConfig {
         self.api_key.expose().unwrap_or("")
     }
     pub(super) fn network(&self, context: Option<Instant>) -> Result<Instant> {
-        c::network_deadline(
+        c::network_deadline_on_runtime(
             &c::BiomedicalConfig {
                 base_url: String::new(),
                 timeout_ms: self.timeout_ms.clone(),
                 max_results: ConfigScalar::Integer(0),
                 aggregate_timeout_ms: None,
             },
-            false,
             context,
         )
         .map_err(Into::into)
@@ -222,7 +221,10 @@ pub(super) async fn fetch(
     urlhaus: bool,
 ) -> Result<Option<Value>> {
     let mut session = c::session(http, deadline)?;
-    c::check(deadline)?;
+    if tokio::time::Instant::now().into_std() >= deadline {
+        return Err(classified(EngineStatus::Timeout, None));
+    }
+    session.use_runtime_deadline_clock();
     let response = session.execute(req).await.map_err(|e| {
         if matches!(e, crate::http::Error::Deadline) {
             classified(EngineStatus::Timeout, None)

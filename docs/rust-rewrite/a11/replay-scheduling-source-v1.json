@@ -1,0 +1,267 @@
+[
+  {
+    "path": "crates/ssx-infra/tests/a11_replay.rs",
+    "current_bytes": 27054,
+    "current_sha256": "b888af39b764cfb7aa847c9e4cb96018473351731008210e23a9a1384b9217e1",
+    "current_blob": "a08effa5012bebb89d4de28b2710fbcf2b805d01",
+    "prior_bytes": 23155,
+    "prior_sha256": "64ef92f372a462f6c278e18ca4df554e6e8676a8f162cb4f1f3923d9a5d3acc8",
+    "inverse": [
+      {
+        "offset": 624,
+        "remove": "    time::Duration,\n",
+        "restore": "    time::{Duration, Instant},\n"
+      },
+      {
+        "offset": 6983,
+        "remove": "async fn observe_search(row: &Value, id: &str, name: &str) -> Observation {\n    let config = settings(name, &row[\"config\"]);\n    let timeout = match name {\n        \"abuseipdb\" => &config.abuseipdb.timeout_ms,\n        \"greynoise\" => &config.greynoise.timeout_ms,\n        \"otx\" => &config.otx.timeout_ms,\n        _ => &config.urlhaus.timeout_ms,\n    };\n    let millis = match timeout {\n        ConfigScalar::Integer(n) => *n as f64,\n        ConfigScalar::Boolean(v) => {\n            if *v {\n                1.\n            } else {\n                0.\n            }\n        }\n        ConfigScalar::Float(v) => *v,\n        ConfigScalar::Text(_) => 0.,\n    };\n    let queue = Arc::new(Queue {\n        exchanges: Mutex::new(\n            row[\"exchanges\"]\n                .as_array()\n                .unwrap()\n                .iter()\n                .cloned()\n                .collect(),\n        ),\n        requests: Mutex::new(Vec::new()),\n    });\n    let http = Arc::new(AdapterHttp::default());\n    http.set_transport(queue.clone()).unwrap();\n    let mut registry = Registry::builtins().unwrap();\n    let admission = Arc::new(Admission {\n        deny: id.contains(\"admission-denied\"),\n        calls: Mutex::new(Vec::new()),\n    });\n    register_threat_intelligence(&mut registry, http.clone(), admission.clone(), config).unwrap();\n    let adapter = registry\n        .instantiate(name)\n        .expect(\"actual registered factory\");\n    let mut request = SearchRequest {\n        query: row[\"query\"].as_str().unwrap().into(),\n        ..Default::default()\n    };\n    let params = &row[\"params\"];\n    if let Some(p) = params.get(\"page\").and_then(Value::as_u64) {\n        request.page = ssx_domain::SearchPage::from_u64(p).expect(\"positive source fixture page\")\n    }\n    if let Some(s) = params.get(\"language\").and_then(Value::as_str) {\n        request.language = s.into()\n    }\n    if let Some(s) = params.get(\"time_range\").and_then(Value::as_str) {\n        request.time_range = Some(s.into())\n    }\n    if let Some(s) = params.get(\"safesearch\").and_then(Value::as_u64) {\n        request.safesearch = s as u8\n    }\n    let pause_clock = is_one_millisecond_success_fixture(id, row);\n    if pause_clock {\n        tokio::time::pause();\n    }\n    let floor = Duration::try_from_secs_f64(millis / 1000.)\n        .ok()\n        .and_then(|duration| tokio::time::Instant::now().checked_add(duration));\n    let response = adapter.search(&request).await;\n    let completed = floor.is_some_and(|d| tokio::time::Instant::now() <= d);\n    if pause_clock {\n        tokio::time::resume();\n    }\n    let actual = normalized(&response);\n    http.shutdown_and_wait().await;\n    let requests = queue.requests.lock().unwrap().clone();\n    let unused = queue.exchanges.lock().unwrap().len();\n    let admission_calls = admission.calls.lock().unwrap().clone();\n    Observation {\n        id: id.into(),\n        native_output: actual,\n        requests,\n        unused_exchanges: unused,\n        admission_calls,\n        completed_before_configured_deadline_floor: completed,\n    }\n}\n\nfn is_one_millisecond_success_fixture(id: &str, row: &Value) -> bool {\n    matches!(\n        id,\n        \"a11-boundary/abuseipdb/timeout-True\"\n            | \"a11-boundary/greynoise/timeout-True\"\n            | \"a11-boundary/otx/timeout-True\"\n            | \"a11-boundary/urlhaus/timeout-True\"\n    ) && row[\"config\"][\"timeout_ms\"] == Value::Bool(true)\n        && row[\"output\"][\"status\"].as_str() == Some(\"ok\")\n}\n\n",
+        "restore": ""
+      },
+      {
+        "offset": 12158,
+        "remove": "        let expected_requests = row[\"exchanges\"]\n            .as_array()\n            .unwrap()\n            .iter()\n            .map(|x| x[\"request\"].clone())\n            .collect::<Vec<_>>();\n        let observed = observe_search(row, id, name).await;\n",
+        "restore": "        let config = settings(name, &row[\"config\"]);\n        let timeout = match name {\n            \"abuseipdb\" => &config.abuseipdb.timeout_ms,\n            \"greynoise\" => &config.greynoise.timeout_ms,\n            \"otx\" => &config.otx.timeout_ms,\n            _ => &config.urlhaus.timeout_ms,\n        };\n        let millis = match timeout {\n            ConfigScalar::Integer(n) => *n as f64,\n            ConfigScalar::Boolean(v) => {\n                if *v {\n                    1.\n                } else {\n                    0.\n                }\n            }\n            ConfigScalar::Float(v) => *v,\n            ConfigScalar::Text(_) => 0.,\n        };\n        let queue = Arc::new(Queue {\n            exchanges: Mutex::new(\n                row[\"exchanges\"]\n                    .as_array()\n                    .unwrap()\n                    .iter()\n                    .cloned()\n                    .collect(),\n            ),\n            requests: Mutex::new(Vec::new()),\n        });\n        let http = Arc::new(AdapterHttp::default());\n        http.set_transport(queue.clone()).unwrap();\n        let mut registry = Registry::builtins().unwrap();\n        let admission = Arc::new(Admission {\n            deny: id.contains(\"admission-denied\"),\n            calls: Mutex::new(Vec::new()),\n        });\n        register_threat_intelligence(&mut registry, http.clone(), admission.clone(), config)\n            .unwrap();\n        let adapter = registry\n            .instantiate(name)\n            .expect(\"actual registered factory\");\n        let mut request = SearchRequest {\n            query: row[\"query\"].as_str().unwrap().into(),\n            ..Default::default()\n        };\n        let params = &row[\"params\"];\n        if let Some(p) = params.get(\"page\").and_then(Value::as_u64) {\n            request.page =\n                ssx_domain::SearchPage::from_u64(p).expect(\"positive source fixture page\")\n        }\n        if let Some(s) = params.get(\"language\").and_then(Value::as_str) {\n            request.language = s.into()\n        }\n        if let Some(s) = params.get(\"time_range\").and_then(Value::as_str) {\n            request.time_range = Some(s.into())\n        }\n        if let Some(s) = params.get(\"safesearch\").and_then(Value::as_u64) {\n            request.safesearch = s as u8\n        }\n        let floor = Duration::try_from_secs_f64(millis / 1000.)\n            .ok()\n            .and_then(|duration| Instant::now().checked_add(duration));\n        let response = adapter.search(&request).await;\n        let completed = floor.is_some_and(|d| Instant::now() <= d);\n        let actual = normalized(&response);\n        http.shutdown_and_wait().await;\n        let requests = queue.requests.lock().unwrap().clone();\n        let unused = queue.exchanges.lock().unwrap().len();\n        let expected_requests = Value::Array(\n            row[\"exchanges\"]\n                .as_array()\n                .unwrap()\n                .iter()\n                .map(|x| x[\"request\"].clone())\n                .collect(),\n        );\n"
+      },
+      {
+        "offset": 12636,
+        "remove": "            observed.native_output.clone(),\n",
+        "restore": "            actual.clone(),\n"
+      },
+      {
+        "offset": 12789,
+        "remove": "            Value::Array(expected_requests),\n            Value::Array(observed.requests.clone()),\n",
+        "restore": "            expected_requests,\n            Value::Array(requests.clone()),\n"
+      },
+      {
+        "offset": 12935,
+        "remove": "        if observed.unused_exchanges != 0 {\n",
+        "restore": "        if unused != 0 {\n"
+      },
+      {
+        "offset": 13173,
+        "remove": "                actual: ssx_json::to_value(observed.unused_exchanges).unwrap(),\n",
+        "restore": "                actual: ssx_json::to_value(unused).unwrap(),\n"
+      },
+      {
+        "offset": 13445,
+        "remove": "                ssx_json::to_value(&observed.admission_calls).unwrap(),\n",
+        "restore": "                ssx_json::to_value(admission.calls.lock().unwrap().clone()).unwrap(),\n"
+      },
+      {
+        "offset": 13659,
+        "remove": "            parent.insert(\n                (test.to_owned(), name.to_owned()),\n                observed.native_output.clone(),\n            );\n",
+        "restore": "            parent.insert((test.to_owned(), name.to_owned()), actual.clone());\n"
+      },
+      {
+        "offset": 13811,
+        "remove": "        output.records.push(observed);\n",
+        "restore": "        output.records.push(Observation {\n            id: id.into(),\n            native_output: actual,\n            requests,\n            unused_exchanges: unused,\n            admission_calls: admission.calls.lock().unwrap().clone(),\n            completed_before_configured_deadline_floor: completed,\n        });\n"
+      },
+      {
+        "offset": 16505,
+        "remove": "fn unmatched_tuples(\n    side: &BTreeMap<String, usize>,\n    counterpart: &BTreeMap<String, usize>,\n) -> Vec<(String, String, Option<String>, usize)> {\n    side.iter()\n        .filter_map(|(tuple, count)| {\n            let unmatched = count.saturating_sub(counterpart.get(tuple).copied().unwrap_or(0));\n            if unmatched == 0 {\n                return None;\n            }\n            let row: Difference = ssx_json::from_str(tuple).unwrap();\n            let status = row\n                .actual\n                .get(\"status\")\n                .and_then(Value::as_str)\n                .map(str::to_owned);\n            Some((row.id, row.kind, status, unmatched))\n        })\n        .collect()\n}\n",
+        "restore": ""
+      },
+      {
+        "offset": 20005,
+        "remove": "        let duplicated = &expected[0];\n        assert_eq!(\n            unmatched_tuples(&counter(&duplicate), &counter(&expected)),\n            vec![(\n                duplicated.id.clone(),\n                duplicated.kind.clone(),\n                duplicated.actual[\"status\"].as_str().map(str::to_owned),\n                1,\n            )]\n        );\n        assert!(unmatched_tuples(&counter(&expected), &counter(&duplicate)).is_empty());\n",
+        "restore": ""
+      },
+      {
+        "offset": 22915,
+        "remove": "async fn pending_boolean_timeout_still_expires() {\n    struct PendingExchange(Arc<tokio::sync::Notify>);\n    impl Transport for PendingExchange {\n        fn exchange(&self, _: Request) -> ExchangeFuture<'_> {\n            self.0.notify_one();\n            Box::pin(std::future::pending())\n        }\n    }\n\n    let entered = Arc::new(tokio::sync::Notify::new());\n    let http = Arc::new(AdapterHttp::default());\n    http.set_transport(Arc::new(PendingExchange(entered.clone())))\n        .unwrap();\n    let config = settings(\n        \"abuseipdb\",\n        &ssx_json::from_str(r#\"{\"api_key\":\"fixture\",\"timeout_ms\":true}\"#).unwrap(),\n    );\n    let mut registry = Registry::builtins().unwrap();\n    let admission = Arc::new(Admission {\n        deny: false,\n        calls: Mutex::new(Vec::new()),\n    });\n    register_threat_intelligence(&mut registry, http.clone(), admission, config).unwrap();\n    let adapter = registry.instantiate(\"abuseipdb\").unwrap();\n    tokio::time::pause();\n    let search = tokio::spawn(async move {\n        adapter\n            .search(&SearchRequest {\n                query: \"192.0.2.1\".into(),\n                ..Default::default()\n            })\n            .await\n    });\n    tokio::time::timeout(Duration::from_millis(10), entered.notified())\n        .await\n        .expect(\"scripted exchange entered\");\n    assert!(!search.is_finished(), \"in-flight scripted exchange\");\n    tokio::time::advance(Duration::from_millis(2)).await;\n    assert_eq!(\n        tokio::time::timeout(Duration::from_millis(10), search)\n            .await\n            .expect(\"bounded configured deadline\")\n            .unwrap()\n            .status,\n        ssx_domain::EngineStatus::Timeout\n    );\n    tokio::time::resume();\n    http.shutdown_and_wait().await;\n}\n\n",
+        "restore": ""
+      },
+      {
+        "offset": 26017,
+        "remove": "    pending_boolean_timeout_still_expires().await;\n",
+        "restore": ""
+      },
+      {
+        "offset": 26142,
+        "remove": "        if !reviewed(profile.profile, &profile.differences) {\n            let expected = counter(&approved(profile.profile));\n            let observed = counter(&profile.differences);\n            // Report case identities and statuses without copying fixture payloads or headers.\n            panic!(\n                \"unreviewed full identity-bound source differences: {} (id, kind, status, count)\nmissing: {:?}\nunexpected: {:?}\",\n                profile.profile,\n                unmatched_tuples(&expected, &observed),\n                unmatched_tuples(&observed, &expected)\n            );\n        }\n",
+        "restore": "        assert!(\n            reviewed(profile.profile, &profile.differences),\n            \"unreviewed full identity-bound source differences: {}\",\n            profile.profile\n        );\n"
+      }
+    ]
+  },
+  {
+    "path": "docs/rust-rewrite/a06/source-amendments/native-search-reader.rs",
+    "current_bytes": 40606,
+    "current_sha256": "b4171602d832bb1d5da2469fee0ce7547405d9dafd4d9e79f1ef974670927b71",
+    "current_blob": "2817e663a96f5a12b9e8c1a902109b5d14e223bf",
+    "prior_bytes": 39866,
+    "prior_sha256": "489873046d41019cf1e01567e9bbe0b78fae5e2712e07585a46aa7a33e3387b3",
+    "inverse": [
+      {
+        "offset": 178,
+        "remove": "#[allow(\n    clippy::duplicate_mod,\n    reason = \"Independent proof roots share this exact inverse\"\n)]\n#[path = \"../../a11/replay-scheduling-source.rs\"]\nmod a11_replay_source;\n",
+        "restore": ""
+      },
+      {
+        "offset": 28821,
+        "remove": "pub(crate) fn a11_replay_page_current(physical: &[u8]) -> Result<Vec<u8>> {\n    a11_replay_source::prior(a11_replay_source::REPLAY, physical)\n}\n\nfn a11_replay_prior(physical: Material) -> Result<Material> {\n    need(physical.mode == 0o644, \"A11 current replay mode\")?;\n    Ok(Material {\n        bytes: a11_replay_page_current(&physical.bytes)?,\n        mode: physical.mode,\n    })\n}\n\n",
+        "restore": ""
+      },
+      {
+        "offset": 30636,
+        "remove": "    } else if path == a11_replay_source::REPLAY {\n        a11_replay_prior(physical)?\n",
+        "restore": ""
+      },
+      {
+        "offset": 33611,
+        "remove": "        } else if path == a11_replay_source::REPLAY {\n            a11_replay_prior(physical)?\n",
+        "restore": ""
+      }
+    ]
+  },
+  {
+    "path": "docs/rust-rewrite/a06/source-amendments/shared-successor.rs",
+    "current_bytes": 95430,
+    "current_sha256": "2253598a7772b68d8657d4aaed313c8ca6c5405b013dc914f2956e81597a92c2",
+    "current_blob": "c6b6b3fcae59331144da672e3b343e2baf6e2102",
+    "prior_bytes": 91016,
+    "prior_sha256": "9c19bf9db372eb79be08cacffe8c426e37f6eb43f7b6c3c2260cad0841c234c2",
+    "inverse": [
+      {
+        "offset": 213,
+        "remove": "#[allow(\n    clippy::duplicate_mod,\n    reason = \"Independent proof roots share this exact inverse\"\n)]\n#[path = \"../../a11/replay-scheduling-source.rs\"]\nmod a11_replay_source;\n",
+        "restore": ""
+      },
+      {
+        "offset": 22783,
+        "remove": "struct ReplayClockFrames {\n    #[cfg(test)]\n    physical: Vec<u8>,\n    predecessor: Vec<u8>,\n}\n\nfn replay_clock_frames(root: &Path, path: &str) -> Result<Option<ReplayClockFrames>, String> {\n    if !a11_replay_source::CLOCK_SOURCES.contains(&path) {\n        return Ok(None);\n    }\n    let (bytes, mode) = w07_t02_joint::cli_source_custody::bounded_read(root, path, 1_048_576)?;\n    need(\n        mode == if cfg!(windows) { 0 } else { 0o644 },\n        \"A11 replay clock physical source mode\",\n    )?;\n    let prior = a11_replay_source::prior(path, &bytes)?;\n    Ok(Some(ReplayClockFrames {\n        #[cfg(test)]\n        physical: bytes,\n        predecessor: prior,\n    }))\n}\npub(crate) fn replay_clock_predecessor(root: &Path, path: &str) -> Result<Option<Vec<u8>>, String> {\n    Ok(replay_clock_frames(root, path)?.map(|frames| frames.predecessor))\n}\n\n",
+        "restore": ""
+      },
+      {
+        "offset": 23703,
+        "remove": "    if let Some(prior) = replay_clock_predecessor(root, text(row, \"path\")?)? {\n        material(row, &prior, &permissions(&root.join(text(row, \"path\")?))?)?;\n        return Ok(prior);\n    }\n",
+        "restore": ""
+      },
+      {
+        "offset": 41864,
+        "remove": "    let replay_clock_section = match (container, path) {\n        (ARTIFACT_COVERAGE, a11_replay_source::MONOTONIC) => Some(\"artifacts\"),\n        (\"docs/rust-rewrite/a11/qualification.json\", a11_replay_source::THREAT_INTEL) => {\n            Some(\"owned_sources\")\n        }\n        (\n            \"docs/rust-rewrite/a13/qualification-v1.json\"\n            | \"docs/rust-rewrite/a13/dehashed-source-map-v1.json\"\n            | \"docs/rust-rewrite/a13/remaining/source-map.json\",\n            a11_replay_source::THREAT_INTEL,\n        ) => Some(\"sources\"),\n        _ => None,\n    };\n    if let Some(section) = replay_clock_section {\n        return Some((|| {\n            let limit = if container == ARTIFACT_COVERAGE {\n                ARTIFACT_COVERAGE_BYTES\n            } else {\n                1_048_576\n            };\n            let (caller, mode) =\n                w07_t02_joint::cli_source_custody::bounded_read(root, container, limit)?;\n            need(\n                digest(&caller) == container_sha\n                    && mode == if cfg!(windows) { 0 } else { 0o644 }\n                    && (container != ARTIFACT_COVERAGE\n                        || (caller.len() as u64 == ARTIFACT_COVERAGE_BYTES\n                            && container_sha == ARTIFACT_COVERAGE_SHA)),\n                \"A11 replay clock exact source caller\",\n            )?;\n            let doc: Value = serde_json::from_slice(&caller).map_err(|error| error.to_string())?;\n            let rows = doc[section]\n                .as_array()\n                .ok_or(\"A11 replay clock caller rows\")?;\n            let mut selected = rows.iter().filter(|row| row[\"path\"] == path);\n            let row = selected.next().ok_or(\"A11 replay clock caller row\")?;\n            need(\n                selected.next().is_none()\n                    && row[\"sha256\"] == expected\n                    && row[\"bytes\"].as_u64().map(|n| n as usize) == bytes,\n                \"A11 replay clock exact caller tuple\",\n            )?;\n            let original = replay_clock_predecessor(root, path)?\n                .ok_or(\"A11 replay clock source not selected\")?;\n            need(\n                digest(&original) == expected && bytes.is_none_or(|n| original.len() == n),\n                \"A11 replay clock retained predecessor tuple\",\n            )\n        })());\n    }\n",
+        "restore": ""
+      },
+      {
+        "offset": 46554,
+        "remove": "        let current_matches = if a11_replay_source::CLOCK_SOURCES.contains(&path) {\n            a11_replay_source::current_blob(path)? == actual_blob\n        } else {\n            current[\"git_blob\"] == actual_blob\n        };\n",
+        "restore": ""
+      },
+      {
+        "offset": 46793,
+        "remove": "            archived_blob.trim() == expected && current_matches,\n",
+        "restore": "            archived_blob.trim() == expected && current[\"git_blob\"] == actual_blob,\n"
+      },
+      {
+        "offset": 53130,
+        "remove": "    let (before, accepted) = verify_transition(root, row)?;\n    let actual = if let Some(frames) = replay_clock_frames(root, path)? {\n        need(\n            frames.predecessor == accepted,\n            \"A06 replay clock control predecessor differs\",\n        )?;\n        frames.physical\n    } else {\n        accepted\n    };\n",
+        "restore": "    let (before, actual) = verify_transition(root, row)?;\n"
+      },
+      {
+        "offset": 54100,
+        "remove": "    let accepted = read(root, &current)?;\n    let frames = replay_clock_frames(root, text(&current, \"path\")?)?\n        .ok_or(\"A11 HTTP predecessor not selected\")?;\n    need(\n        frames.predecessor == accepted,\n        \"A11 HTTP control predecessor differs\",\n    )?;\n    Ok(frames.physical == actual)\n",
+        "restore": "    Ok(read(root, &current)? == actual)\n"
+      },
+      {
+        "offset": 62571,
+        "remove": "        let (before, accepted) = verify_transition(root, row)?;\n        let actual = replay_clock_frames(root, path)?.map_or(accepted, |frames| frames.physical);\n",
+        "restore": "        let (before, actual) = verify_transition(root, row)?;\n"
+      },
+      {
+        "offset": 64310,
+        "remove": "const ARTIFACT_COVERAGE_BYTES: u64 = 1_201_634;\n",
+        "restore": ""
+      }
+    ]
+  },
+  {
+    "path": "crates/ssx-infra/src/adapters/clinicaltrials.rs",
+    "current_bytes": 42903,
+    "current_sha256": "23ec1930e20708bb3d516403557fb80e4164f5b03432070cd9d80a893a94d6f6",
+    "current_blob": "1edfd12e69c7c8c4eac01b5ede82fb61552668f1",
+    "prior_bytes": 42588,
+    "prior_sha256": "c3f8d666fa93b8ddd792ab50e2557a20b73d49c86ab3960c67b751bc08629120",
+    "inverse": [
+      {
+        "offset": 6590,
+        "remove": "}\n/// Create a non-PubMed deadline for a session using Tokio's runtime clock.\npub(super) fn network_deadline_on_runtime(\n    config: &BiomedicalConfig,\n    context: Option<Instant>,\n) -> Result<Instant> {\n    network_deadline_using(config, false, context, || {\n        tokio::time::Instant::now().into_std()\n    })\n",
+        "restore": ""
+      }
+    ]
+  },
+  {
+    "path": "crates/ssx-infra/src/http.rs",
+    "current_bytes": 92881,
+    "current_sha256": "c060079818cdb3bf3291efaed1361061c9b3daae5d38aa6174e1fcce7fa9db36",
+    "current_blob": "e2e7afd38d213be7462427004b9c9dffe0e06cf8",
+    "prior_bytes": 92689,
+    "prior_sha256": "2d3cf9d17cd6cca2cb05abaa9d1c4b8aa7cd0cbc5935b85102b4068ecb79b576",
+    "inverse": [
+      {
+        "offset": 37985,
+        "remove": "    /// Use Tokio's clock throughout a session with a runtime-created deadline.\n    pub(crate) fn use_runtime_deadline_clock(&mut self) {\n        self.clock = DeadlineClock::runtime();\n    }\n\n",
+        "restore": ""
+      }
+    ]
+  },
+  {
+    "path": "crates/ssx-infra/src/http/monotonic.rs",
+    "current_bytes": 5223,
+    "current_sha256": "620bfa335a8295ff2884a7846711bfba7076eb2b91dc22b34d7f0b31551b7a91",
+    "current_blob": "7c96c75f4ce043926dbc06a7331ae8b011ec1f57",
+    "prior_bytes": 4833,
+    "prior_sha256": "6ea309356076a9dda8f7a313f2dd5f476c624ff28663c91b104bbf86bde63ec6",
+    "inverse": [
+      {
+        "offset": 0,
+        "remove": "//! The monotonic clock used for an HTTP owner's deadlines.\n",
+        "restore": "//! One HTTP owner's deadline clock. Production has only the zero-sized System form.\n"
+      },
+      {
+        "offset": 137,
+        "remove": "    runtime: bool,\n",
+        "restore": ""
+      },
+      {
+        "offset": 332,
+        "remove": "    pub(crate) fn runtime() -> Self {\n        Self {\n            runtime: true,\n            #[cfg(test)]\n            manual: None,\n            #[cfg(test)]\n            trace: None,\n            #[cfg(test)]\n            pending_only: false,\n        }\n    }\n\n",
+        "restore": ""
+      },
+      {
+        "offset": 747,
+        "remove": "        if self.runtime {\n            tokio::time::Instant::now().into_std()\n        } else {\n            Instant::now()\n        }\n",
+        "restore": "        Instant::now()\n"
+      },
+      {
+        "offset": 1948,
+        "remove": "                runtime: false,\n",
+        "restore": ""
+      }
+    ]
+  },
+  {
+    "path": "crates/ssx-infra/src/adapters/threat_intel.rs",
+    "current_bytes": 25349,
+    "current_sha256": "bdd75bca29ef2961a5bdbddfb0e26eb1d62cc1ed0842b8bffcd3e066ae2ec3f9",
+    "current_blob": "fa87bc13d938154baf75d544adbe89f5d623da6b",
+    "prior_bytes": 25213,
+    "prior_sha256": "dde2a34576051a820a48d1b422956443f726a600970cb5868b5318c7b74619f8",
+    "inverse": [
+      {
+        "offset": 1957,
+        "remove": "        c::network_deadline_on_runtime(\n",
+        "restore": "        c::network_deadline(\n"
+      },
+      {
+        "offset": 2240,
+        "remove": "",
+        "restore": "            false,\n"
+      },
+      {
+        "offset": 7400,
+        "remove": "    if tokio::time::Instant::now().into_std() >= deadline {\n        return Err(classified(EngineStatus::Timeout, None));\n    }\n    session.use_runtime_deadline_clock();\n",
+        "restore": "    c::check(deadline)?;\n"
+      }
+    ]
+  }
+]

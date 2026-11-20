@@ -1,4 +1,10 @@
 //! Exact T08 dependency and source successor edges; historical endpoints remain fixed.
+#[allow(
+    clippy::duplicate_mod,
+    reason = "Independent proof roots share this exact inverse"
+)]
+#[path = "../a11/replay-scheduling-source.rs"]
+mod a11_replay_source;
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use std::{path::Path, process::Command};
@@ -125,6 +131,13 @@ pub(crate) fn owns(path: &str) -> bool {
     )
 }
 fn project_row(row: &Row, current: &[u8]) -> Result<Vec<u8>> {
+    let preceding = matches!(
+        row.path.as_str(),
+        a11_replay_source::NATIVE_READER | a11_replay_source::SHARED_READER
+    )
+    .then(|| a11_replay_source::prior(&row.path, current))
+    .transpose()?;
+    let current = preceding.as_deref().unwrap_or(current);
     need(
         current.len() == row.current.bytes,
         &format!("opened current byte length for {}", row.path),
