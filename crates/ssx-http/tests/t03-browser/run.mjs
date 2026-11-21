@@ -1191,7 +1191,7 @@ async function runSourceAvailability() {
     assert(await explanation.isVisible());
     assert.equal(await explanation.innerText(), 'Specialists added by Jev: PubMed');
 
-    const scoped = await searchByQuery(page, 'jev-specialist-routing', { categories: 'general' });
+    const scoped = await searchByQuery(page, 'jev-specialist-routing', { engines: 'wikipedia' });
     assert.equal(scoped.status(), 200);
     assert.equal(await explanation.count(), 0);
   });

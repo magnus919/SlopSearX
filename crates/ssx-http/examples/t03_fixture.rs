@@ -36,7 +36,16 @@ struct FixtureEngine {
 impl SearchEngine for FixtureEngine {
     fn search<'a>(&'a self, request: &'a SearchRequest) -> PortFuture<'a, AdapterResponse> {
         Box::pin(async move {
-            writeln!(self.calls.lock().unwrap(),"{}",json!({"engine":self.name,"query":request.query,"page":request.page,"date_from":request.date_from,"date_to":request.date_to,"time_range":request.time_range})).unwrap();
+            let call = json!({
+                "engine": self.name,
+                "query": request.query,
+                "engines": request.engines,
+                "page": request.page,
+                "date_from": request.date_from,
+                "date_to": request.date_to,
+                "time_range": request.time_range,
+            });
+            writeln!(self.calls.lock().unwrap(), "{call}").unwrap();
             let mut response = AdapterResponse {
                 latency_ms: FiniteF64::new(1.0).unwrap(),
                 ..Default::default()

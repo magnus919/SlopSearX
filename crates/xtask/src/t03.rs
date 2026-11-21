@@ -1458,7 +1458,9 @@ fn validate_engine_call(line: &str, group: &str, error: &str) -> Result<()> {
         matches!(
             engine,
             Some("google" | "reddit" | "duckduckgo" | "wikipedia")
-        ) || (engine == Some("pubmed") && call["query"] == "jev-specialist-routing")
+        ) || (engine == Some("pubmed")
+            && call["query"] == "jev-specialist-routing"
+            && call.get("engines") == Some(&ssx_json::Value::Null))
     } else {
         matches!(engine, Some("alpha" | "beta" | "openalex"))
     };
@@ -4277,16 +4279,26 @@ mod tests {
                 validate_engine_call(&line, "source-availability", "unexpected engine").is_ok()
             );
         }
-        for (query, allowed) in [
-            ("jev-specialist-routing", true),
-            ("source-availability", false),
+        for (query, engines, allowed) in [
+            ("jev-specialist-routing", json!(null), true),
+            ("jev-specialist-routing", json!(["wikipedia"]), false),
+            ("source-availability", json!(null), false),
         ] {
-            let line = json!({"engine": "pubmed", "query": query, "page": 1}).to_string();
+            let line = json!({"engine": "pubmed", "query": query, "engines": engines, "page": 1})
+                .to_string();
             assert_eq!(
                 validate_engine_call(&line, "source-availability", "unexpected engine").is_ok(),
                 allowed,
             );
         }
+        assert!(
+            validate_engine_call(
+                r#"{"engine":"pubmed","query":"jev-specialist-routing","page":1}"#,
+                "source-availability",
+                "missing explicit-engine evidence",
+            )
+            .is_err()
+        );
         assert!(
             validate_engine_call(
                 r#"{"engine":"alpha","page":1}"#,
