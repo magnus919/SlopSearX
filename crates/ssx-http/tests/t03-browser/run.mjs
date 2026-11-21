@@ -1183,6 +1183,17 @@ async function runSourceAvailability() {
     );
     assert.equal(await page.locator('script').count(), 1);
     await screenshot(page, 'source-availability.png');
+
+    const explanation = page.getByText(/^Specialists added by Jev:/);
+    assert.equal(await explanation.count(), 0);
+    const routed = await searchByQuery(page, 'jev-specialist-routing');
+    assert.equal(routed.status(), 200);
+    assert(await explanation.isVisible());
+    assert.equal(await explanation.innerText(), 'Specialists added by Jev: PubMed');
+
+    const scoped = await searchByQuery(page, 'jev-specialist-routing', { categories: 'general' });
+    assert.equal(scoped.status(), 200);
+    assert.equal(await explanation.count(), 0);
   });
   await context.close();
 }

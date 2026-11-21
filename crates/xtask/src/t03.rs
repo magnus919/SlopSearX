@@ -1458,7 +1458,7 @@ fn validate_engine_call(line: &str, group: &str, error: &str) -> Result<()> {
         matches!(
             engine,
             Some("google" | "reddit" | "duckduckgo" | "wikipedia")
-        )
+        ) || (engine == Some("pubmed") && call["query"] == "jev-specialist-routing")
     } else {
         matches!(engine, Some("alpha" | "beta" | "openalex"))
     };
@@ -4275,6 +4275,16 @@ mod tests {
             let line = format!(r#"{{"engine":"{engine}","page":1}}"#);
             assert!(
                 validate_engine_call(&line, "source-availability", "unexpected engine").is_ok()
+            );
+        }
+        for (query, allowed) in [
+            ("jev-specialist-routing", true),
+            ("source-availability", false),
+        ] {
+            let line = json!({"engine": "pubmed", "query": query, "page": 1}).to_string();
+            assert_eq!(
+                validate_engine_call(&line, "source-availability", "unexpected engine").is_ok(),
+                allowed,
             );
         }
         assert!(

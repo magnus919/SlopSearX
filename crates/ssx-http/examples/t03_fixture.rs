@@ -13,6 +13,7 @@ use ssx_domain::{
 };
 use ssx_http::{HttpState, html::PublicHtml};
 use ssx_infra::{
+    jev::{JevConfig, JevRouter, MODEL},
     observability::{Options, Telemetry},
     search::{
         ClientAdmission, EngineBinding, SearchConfig, SearchDependencies, SearchService,
@@ -176,7 +177,7 @@ fn capability(name: &str, available: bool) -> EngineCapability {
         active: true,
         available,
         categories: vec![
-            if name == "openalex" {
+            if matches!(name, "openalex" | "pubmed") {
                 "science"
             } else {
                 "general"
@@ -200,6 +201,25 @@ fn capability(name: &str, available: bool) -> EngineCapability {
         },
     }
 }
+async fn specialist_advice(body: axum::body::Bytes) -> axum::response::Response {
+    use axum::{http::StatusCode, response::IntoResponse};
+
+    let Ok(request) = ssx_json::from_slice::<Value>(&body) else {
+        return StatusCode::BAD_REQUEST.into_response();
+    };
+    if request["model"] != MODEL
+        || request["state"]["user_query"] != "jev-specialist-routing"
+        || request["questions"]["pubmed"]["type"] != "noul"
+    {
+        return StatusCode::BAD_REQUEST.into_response();
+    }
+    (
+        [("content-type", "application/json")],
+        json!({"model": MODEL, "answers": {"pubmed": {"noul": 0.9}}}).to_string(),
+    )
+        .into_response()
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = std::env::args().skip(1);
@@ -225,9 +245,33 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .open(calls_path)?,
     ));
     let names: &[&str] = if scenario == "source-availability" {
-        &["google", "reddit", "duckduckgo", "wikipedia"]
+        &["google", "reddit", "duckduckgo", "wikipedia", "pubmed"]
     } else {
         &["alpha", "beta", "openalex", "hibp"]
+    };
+    let (jev, advice_server) = if scenario == "source-availability" {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
+        let endpoint = format!("http://{}/advice", listener.local_addr()?);
+        let config = JevConfig::from_environment(&BTreeMap::from([(
+            "TYPESAFE_API_KEY".into(),
+            "t03-synthetic-key".into(),
+        )]))
+        .unwrap();
+        let router =
+            JevRouter::with_endpoint(config, ssx_registry::Registry::builtins()?, endpoint);
+        let (stop, stopped) = tokio::sync::oneshot::channel();
+        let server = tokio::spawn(async move {
+            let routes =
+                axum::Router::new().route("/advice", axum::routing::post(specialist_advice));
+            axum::serve(listener, routes)
+                .with_graceful_shutdown(async {
+                    let _ = stopped.await;
+                })
+                .await
+        });
+        (Some(Arc::new(router)), Some((stop, server)))
+    } else {
+        (None, None)
     };
     let policy = SearchPolicy::default();
     let policy_arc = Arc::new(policy.clone());
@@ -256,6 +300,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 )?,
                 resolver: ScopeResolver {
                     catalog_routing: false,
+                    topics: (scenario == "source-availability").then(Vec::new),
                     ..Default::default()
                 },
             },
@@ -296,7 +341,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             client_admission: (scenario == "rate-limited")
                 .then(|| Arc::new(Denied) as Arc<dyn ClientAdmission>),
             suggestions: Some(Arc::new(FixtureSuggestions)),
-            jev: None,
+            jev,
             routing_cache: None,
             metrics: telemetry.clone(),
             supervisor: telemetry.clone(),
@@ -310,11 +355,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )
     .map_err(|e| format!("fixture service: {e:?}"))?;
     let category_engines = if scenario == "source-availability" {
-        json!({"general":["google","reddit","duckduckgo","wikipedia"],"science":[],"sensitive-only":[]})
+        json!({"general":["google","reddit","duckduckgo","wikipedia"],"science":["pubmed"],"sensitive-only":[]})
     } else {
         json!({"general":["alpha","beta"],"science":["openalex"],"sensitive-only":["hibp"]})
     };
-    let discovery = json!({"categories":["general","science","sensitive-only"],"category_engines":category_engines,"engines":names.iter().map(|name|{let available = !(scenario == "unavailable" && *name == "alpha");let c=capability(name,available);let display_name=match *name{"beta"=>"Beta <source>","google"=>"Google","reddit"=>"Reddit","duckduckgo"=>"Duckduckgo","wikipedia"=>"Wikipedia",_=>*name};json!({"name":name,"display_name":display_name,"enabled":true,"available":available,"sensitive":*name=="hibp","categories":if *name=="hibp"{vec!["sensitive-only".to_string()]}else{c.categories},"enforced_filters":c.enforced_filters})}).collect::<Vec<Value>>()});
+    let discovery = json!({"categories":["general","science","sensitive-only"],"category_engines":category_engines,"engines":names.iter().map(|name|{let available = !(scenario == "unavailable" && *name == "alpha");let c=capability(name,available);let display_name=match *name{"beta"=>"Beta <source>","google"=>"Google","reddit"=>"Reddit","duckduckgo"=>"Duckduckgo","wikipedia"=>"Wikipedia","pubmed"=>"PubMed",_=>*name};json!({"name":name,"display_name":display_name,"enabled":true,"available":available,"sensitive":*name=="hibp","categories":if *name=="hibp"{vec!["sensitive-only".to_string()]}else{c.categories},"enforced_filters":c.enforced_filters})}).collect::<Vec<Value>>()});
     let state = HttpState {
         search: service,
         policy: policy_arc,
@@ -347,10 +392,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let _ = tx.send(());
         }
     });
-    ssx_http::native::serve_with_shutdown(listener, state, async {
+    let serving = ssx_http::native::serve_with_shutdown(listener, state, async {
         let _ = rx.await;
     })
-    .await?;
+    .await;
+    if let Some((stop, server)) = advice_server {
+        let _ = stop.send(());
+        server.await??;
+    }
+    serving?;
     input.join().map_err(|_| "fixture stdin thread failed")?;
     Ok(())
 }
