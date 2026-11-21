@@ -33,6 +33,27 @@ fn static_assets_and_highlight_boundary_preserve_safe_progressive_rendering() {
         content_markup("<strong>unclosed <em>safe</em>"),
         "&lt;strong&gt;unclosed <em>safe</em>"
     );
+
+    let request = ssx_domain::SearchRequest {
+        query: "<query>".into(),
+        ..Default::default()
+    };
+    let response = ssx_domain::SearchResponse {
+        query: request.query.clone(),
+        results: vec![ssx_domain::SearchResult {
+            url: "javascript:alert(1)".into(),
+            title: r#"<script>alert("x")</script>"#.into(),
+            content: "<img src=x onerror=alert(1)>".into(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+
+    let result_html = PublicPortal::default().search(&response, &Value::Null, &request);
+    // Preserve the original title, snippet, and URL checks (F:L548, F:L549, F:L551).
+    assert!(result_html.contains("&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;"));
+    assert!(result_html.contains("&lt;img src=x onerror=alert(1)&gt;"));
+    assert!(!result_html.contains("javascript:"));
 }
 
 fn renderer_explains_the_configured_ranking_strategy() {
