@@ -327,4 +327,4 @@ EXP-119 readout:not-supported at development. Metadata-conditioned selector nP@5
 
 - [PREREQ-1137 baseline](PREREQ-1137-baseline.md), 2026-11-19: normal offline search/snapshot/read replay exposes1/2 retained source markers on merged fresh/cache reads versus1/1 single-source. Disclosure defect reproduced; no candidate implemented or product uplift measured.
 
-- [EXP-124](EXP-124-scholarly-member-disclosure.md): registered2026-11-20; current baseline confirms1/2 contributor marker coverage on expanded merged reads. Candidate unimplemented; resume this frozen plan before new work.
+- [EXP-124](EXP-124-scholarly-member-disclosure.md): registered2026-11-20; current baseline confirms1/2 contributor marker coverage on expanded merged reads. Candidate locally restores2/2 contributor coverage on fresh/cache reads with315 regression tests passing; implementation delivery pending exact-head CI/review.
