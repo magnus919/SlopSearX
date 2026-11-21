@@ -14,7 +14,6 @@ fn static_assets_and_highlight_boundary_preserve_safe_progressive_rendering() {
     renderer_pagination_context_preserves_original_three_state_contract();
     renderer_omits_json_links_when_json_is_disabled();
     renderer_explains_the_configured_ranking_strategy();
-    renderer_escapes_legacy_result_fields();
     let html = PublicPortal::default().landing();
     assert!(html.len() <= 50 * 1024);
     assert!(STYLE.len() + SCRIPT.len() <= 30 * 1024);
@@ -34,9 +33,7 @@ fn static_assets_and_highlight_boundary_preserve_safe_progressive_rendering() {
         content_markup("<strong>unclosed <em>safe</em>"),
         "&lt;strong&gt;unclosed <em>safe</em>"
     );
-}
 
-fn renderer_escapes_legacy_result_fields() {
     let request = ssx_domain::SearchRequest {
         query: "<query>".into(),
         ..Default::default()
@@ -52,11 +49,11 @@ fn renderer_escapes_legacy_result_fields() {
         ..Default::default()
     };
 
-    let html = PublicPortal::default().search(&response, &Value::Null, &request);
+    let result_html = PublicPortal::default().search(&response, &Value::Null, &request);
     // Preserve the original title, snippet, and URL checks (F:L548, F:L549, F:L551).
-    assert!(html.contains("&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;"));
-    assert!(html.contains("&lt;img src=x onerror=alert(1)&gt;"));
-    assert!(!html.contains("javascript:"));
+    assert!(result_html.contains("&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;"));
+    assert!(result_html.contains("&lt;img src=x onerror=alert(1)&gt;"));
+    assert!(!result_html.contains("javascript:"));
 }
 
 fn renderer_explains_the_configured_ranking_strategy() {
