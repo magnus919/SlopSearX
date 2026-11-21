@@ -3,9 +3,22 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { REQUIRED_PARTITIONS, validateControlEvidence, validateFoundationEvidence, validatePartitionIdentities } from '../foundation-aggregation.mjs';
+import { REQUIRED_PARTITIONS, validateControlEvidence, validateCoreWorkspaceChecks, validateFoundationEvidence, validatePartitionIdentities } from '../foundation-aggregation.mjs';
 
 const expected = Object.freeze({ sourceRevision: '0123456789abcdef', target: 'x86_64-unknown-linux-gnu', runId: '41515893105', runAttempt: 2, runnerArch: 'X64' });
+const coreReport = () => ({
+  plan_id: 'F03',
+  status: 'passed',
+  error: null,
+  source: { head: expected.sourceRevision, diff: '', working_tree: '' },
+  toolchain: `rustc 1.99.0 (fixture)\nhost: ${expected.target}\n`,
+  commands: [
+    ['fmt', '--all', '--check'],
+    ['clippy', '--locked', '--workspace', '--all-targets', '--exclude', 'ssx-cli-hyper', '--', '-D', 'warnings'],
+    ['clippy', '--locked', '-p', 'ssx-cli-hyper', '--features', 'full,source-client-framing', '--lib', '--', '-D', 'warnings'],
+    ['test', '--locked', '--workspace', '--exclude', 'xtask', '--features', 'ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing'],
+  ].map((args) => ({ program: 'cargo', args, exit_code: 0 })),
+});
 const partitions = (attempt = '1') => REQUIRED_PARTITIONS.map((partition) => ({
   partition,
   source_revision: expected.sourceRevision,
@@ -81,6 +94,8 @@ test('validates real evidence directories assembled from retained and rerun arti
     for (const name of controlProducerFiles.filter((name) => !['control-identity.json', 'control-result.txt', 'identity.txt'].includes(name))) {
       fs.writeFileSync(path.join(controlDirectory, name), 'producer evidence fixture\n');
     }
+    assert.throws(() => validateFoundationEvidence(root, expected), /F03\.json/);
+    fs.writeFileSync(path.join(root, 'F03.json'), JSON.stringify(coreReport()));
     const attempts = validateFoundationEvidence(root, expected);
     assert.deepEqual([...attempts.values()], [1, 2, 1, 1]);
 
@@ -102,6 +117,24 @@ test('validates real evidence directories assembled from retained and rerun arti
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
+});
+
+test('requires all workspace coverage owned by F03 on the expected revision and architecture', () => {
+  validateCoreWorkspaceChecks(coreReport(), expected);
+  const wrongSource = coreReport(); wrongSource.source.head = 'different';
+  assert.throws(() => validateCoreWorkspaceChecks(wrongSource, expected), /source mismatch/);
+  const wrongTarget = coreReport(); wrongTarget.toolchain = 'host: aarch64-unknown-linux-gnu';
+  assert.throws(() => validateCoreWorkspaceChecks(wrongTarget, expected), /target mismatch/);
+  for (const index of [0, 1, 2, 3]) {
+    const missing = coreReport(); missing.commands.splice(index, 1);
+    assert.throws(() => validateCoreWorkspaceChecks(missing, expected), /one successful cargo/);
+    const failed = coreReport(); failed.commands[index].exit_code = 1;
+    assert.throws(() => validateCoreWorkspaceChecks(failed, expected), /one successful cargo/);
+  }
+  const narrowed = coreReport(); narrowed.commands[3].args.push('--bin', 'xtask');
+  assert.throws(() => validateCoreWorkspaceChecks(narrowed, expected), /one successful cargo test/);
+  const duplicated = coreReport(); duplicated.commands.push(duplicated.commands[3]);
+  assert.throws(() => validateCoreWorkspaceChecks(duplicated, expected), /one successful cargo test/);
 });
 
 test('rejects missing, duplicate, or unexpected partition identities', () => {

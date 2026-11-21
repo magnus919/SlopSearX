@@ -3,6 +3,12 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 export const REQUIRED_PARTITIONS = Object.freeze(['prerequisites', 'core', 'runtime', 'adapters']);
+const REQUIRED_F03_COMMANDS = Object.freeze([
+  ['fmt', '--all', '--check'],
+  ['clippy', '--locked', '--workspace', '--all-targets', '--exclude', 'ssx-cli-hyper', '--', '-D', 'warnings'],
+  ['clippy', '--locked', '-p', 'ssx-cli-hyper', '--features', 'full,source-client-framing', '--lib', '--', '-D', 'warnings'],
+  ['test', '--locked', '--workspace', '--exclude', 'xtask', '--features', 'ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing'],
+]);
 const EXPECTED_CONTROL_RESULT = 'EXPECTED_SEMANTIC_FAILURE_CONFIRMED\n';
 const CONTROL_EVIDENCE_FILES = Object.freeze([
   'archive.sha256',
@@ -86,6 +92,17 @@ export function validateControlEvidence(entries, expected, prerequisiteAttempt) 
   return attempt;
 }
 
+export function validateCoreWorkspaceChecks(report, expected) {
+  requireValue(report?.plan_id === 'F03' && report.status === 'passed' && report.error === null, 'F03 workspace evidence did not pass');
+  requireValue(report.source?.head === expected.sourceRevision && report.source.diff === '' && report.source.working_tree === '', 'F03 workspace evidence source mismatch');
+  requireValue(typeof report.toolchain === 'string' && report.toolchain.split('\n').includes(`host: ${expected.target}`), 'F03 workspace evidence target mismatch');
+  requireValue(Array.isArray(report.commands), 'F03 workspace command evidence missing');
+  for (const args of REQUIRED_F03_COMMANDS) {
+    const matches = report.commands.filter((record) => record?.program === 'cargo' && JSON.stringify(record.args) === JSON.stringify(args));
+    requireValue(matches.length === 1 && matches[0].exit_code === 0, `F03 did not record one successful cargo ${args.join(' ')}`);
+  }
+}
+
 function readRegularFile(file) {
   const info = fs.lstatSync(file);
   requireValue(info.isFile() && !info.isSymbolicLink(), `expected a regular file: ${file}`);
@@ -100,6 +117,7 @@ export function validateFoundationEvidence(evidenceRoot, expected) {
     return identity;
   });
   const attempts = validatePartitionIdentities(identities, expected);
+  validateCoreWorkspaceChecks(JSON.parse(readRegularFile(path.join(evidenceRoot, 'F03.json'))), expected);
   const controlRoot = path.join(evidenceRoot, 'A10-linux-control');
   const entries = fs.readdirSync(controlRoot, { withFileTypes: true }).map((directory) => {
     requireValue(directory.isDirectory() && !directory.isSymbolicLink(), 'unexpected semantic-control artifact entry');

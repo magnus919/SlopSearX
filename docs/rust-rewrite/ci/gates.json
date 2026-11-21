@@ -2155,26 +2155,18 @@
               "run": "set -euo pipefail\numask 077\nevidence=\"target/rust-evidence/partitions/prerequisites\"\nmkdir -p \"$evidence\"\ngit ls-files -z | LC_ALL=C sort -z | xargs -0 sha256sum --zero > \"$evidence/source-before.sha256z\"\ngit ls-files --stage -z > \"$evidence/stage-before.z\"\n[ \"$(git rev-parse HEAD)\" = \"$GITHUB_SHA\" ]\n[ -z \"$(git status --porcelain)\" ]\nrustc --version --verbose > \"$evidence/rustc.txt\"\ncargo --version --verbose > \"$evidence/cargo.txt\"\nsha256sum Cargo.toml Cargo.lock rust-toolchain.toml > \"$evidence/build-inputs.sha256\"\ncargo build --locked --workspace --all-targets --features ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing --message-format=json-render-diagnostics > \"$evidence/workspace.jsonl\"\nPARTITION=prerequisites TARGET_TRIPLE=\"${{ matrix.target }}\" node <<'NODE'\nconst fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');\nconst root = fs.realpathSync(process.cwd()), dir = `target/rust-evidence/partitions/${process.env.PARTITION}`;\nconst rows = fs.readFileSync(`${dir}/workspace.jsonl`, 'utf8').trim().split('\\n').map(JSON.parse);\nconst need = (v, s) => { if (!v) throw Error(s); };\nneed(rows.at(-1)?.reason === 'build-finished' && rows.at(-1).success === true, 'compiler completion');\nconst privateUnit = rows.filter(r => r.reason === 'compiler-artifact' && r.manifest_path === path.join(root, 'vendor/ssx-cli-hyper/Cargo.toml') && r.profile.test);\nneed(privateUnit.some(r => ['full', 'http1', 'http2', 'client', 'server', 'source-client-framing'].every(f => r.features.includes(f))), 'qualification private unit feature closure');\nconst selected = rows.filter(r => r.reason === 'compiler-artifact' && r.executable);\nneed(selected.length > 0, 'actual executable contexts');\nconst images = selected.map(artifact => {\n  const exe = path.resolve(artifact.executable), rel = path.relative(path.join(root, 'target'), exe);\n  need(rel && !rel.startsWith('..') && !path.isAbsolute(rel), 'compiler target confinement');\n  need(artifact.filenames.includes(artifact.executable), 'declared executable filename');\n  const info = fs.lstatSync(exe); need(info.isFile() && !info.isSymbolicLink(), 'regular compiler executable');\n  return { artifact, sha256: crypto.createHash('sha256').update(fs.readFileSync(exe)).digest('hex'), bytes: info.size, mode: info.mode & 0o777 };\n});\nfs.writeFileSync(`${dir}/compiler-images.json`, JSON.stringify(images, null, 2) + '\\n');\nfs.writeFileSync(`${dir}/identity.json`, JSON.stringify({ partition: process.env.PARTITION, source_revision: process.env.GITHUB_SHA, target: process.env.TARGET_TRIPLE, runner_arch: process.env.RUNNER_ARCH, run_id: process.env.GITHUB_RUN_ID, run_attempt: process.env.GITHUB_RUN_ATTEMPT, evidence_scope: 'actual qualification-only full-private-Hyper workspace compiler contexts and executable hashes; not standalone default-shipping CLI evidence or immutable byte/launch archive' }, null, 2) + '\\n');\nNODE\n"
             },
             {
-              "name": "Formatting",
-              "run": "cargo fmt --all --check"
-            },
-            {
-              "name": "Clippy",
-              "run": "set -euo pipefail\ncargo clippy --locked --workspace --all-targets --exclude ssx-cli-hyper -- -D warnings\ncargo clippy --locked -p ssx-cli-hyper --features full,source-client-framing --lib -- -D warnings\n"
-            },
-            {
               "name": "Build actual-process HTTP fixture server",
               "run": "cargo build --locked -p ssx-http --example t02_fixture"
             },
             {
-              "name": "Workspace tests, including xtask",
+              "name": "xtask tests",
               "env": {
-                "SLOPSEARX_TEST_TEMP_ROOT": "${{ runner.temp }}/t02-sockets-workspace",
-                "TMPDIR": "${{ runner.temp }}/t02-sockets-workspace",
-                "TMP": "${{ runner.temp }}/t02-sockets-workspace",
-                "TEMP": "${{ runner.temp }}/t02-sockets-workspace"
+                "SLOPSEARX_TEST_TEMP_ROOT": "${{ runner.temp }}/t02-sockets-xtask",
+                "TMPDIR": "${{ runner.temp }}/t02-sockets-xtask",
+                "TMP": "${{ runner.temp }}/t02-sockets-xtask",
+                "TEMP": "${{ runner.temp }}/t02-sockets-xtask"
               },
-              "run": "mkdir \"$SLOPSEARX_TEST_TEMP_ROOT\"\ntrap 'rmdir \"$SLOPSEARX_TEST_TEMP_ROOT\" 2>/dev/null || true' EXIT\ncargo test --locked --workspace --features ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing\n"
+              "run": "mkdir \"$SLOPSEARX_TEST_TEMP_ROOT\"\ntrap 'rmdir \"$SLOPSEARX_TEST_TEMP_ROOT\" 2>/dev/null || true' EXIT\ncargo test --locked --workspace --features ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing --bin xtask\n"
             },
             {
               "name": "Linux held-writer interpreter mutation control",
@@ -2212,7 +2204,7 @@
       },
       "owner": "F03",
       "state": "additive",
-      "successor": "Mandatory prerequisites partition on both existing architectures; exact original commands and native deadlines retained; fresh tool/isolation/Valkey/compiler/source provenance; no inherited targets or dropped gates. Separate 130-minute outer workflow job cap; native command deadlines and all gates remain unchanged."
+      "successor": "Mandatory prerequisites partition on both existing architectures; xtask tests complement the F03 workspace suite, which excludes xtask. Native deadlines, mutation control, tool/isolation/Valkey/compiler/source provenance and the workflow aggregation remain required."
     },
     "rust.yml:foundation-runtime": {
       "source": {
