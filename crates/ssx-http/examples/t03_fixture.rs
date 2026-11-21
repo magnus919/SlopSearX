@@ -83,6 +83,11 @@ impl SearchEngine for FixtureEngine {
                 ..Default::default()
             };
             match request.query.as_str() {
+                "source-availability" => {
+                    result.url = "https://example.com/result".into();
+                    result.title = r#"A <script>alert("x")</script>"#.into();
+                    result.category = "science".into();
+                }
                 "malicious" => {
                     result.url = "javascript:alert('unsafe')".into();
                     result.title = "<img src=x onerror=alert(1)> & source".into();

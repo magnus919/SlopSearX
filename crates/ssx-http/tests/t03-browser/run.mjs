@@ -1170,7 +1170,18 @@ async function runSourceAvailability() {
     assert.equal(await emptyRow.locator('.rail-source-name').innerText(), 'Duckduckgo');
     assert.equal(await emptyRow.locator('.rail-source-count').innerText(), 'no results');
     assert((await page.locator('body').innerText()).split('Google').length - 1 >= 2);
-    assert(await page.locator('article[data-result-card]').count() > 0);
+    const article = page.getByRole('article');
+    assert.equal(await article.count(), 1);
+    const title = 'A <script>alert("x")</script>';
+    assert(await article.getByRole('heading', { name: title, exact: true }).isVisible());
+    assert(await article.getByText('Research', { exact: true }).isVisible());
+    const attribution = article.locator('.result-meta');
+    assert(await attribution.getByText('Wikipedia', { exact: true }).isVisible());
+    assert.equal(
+      await article.getByRole('link', { name: title, exact: true }).getAttribute('href'),
+      'https://example.com/result',
+    );
+    assert.equal(await page.locator('script').count(), 1);
     await screenshot(page, 'source-availability.png');
   });
   await context.close();
