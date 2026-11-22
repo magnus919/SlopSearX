@@ -1448,7 +1448,7 @@ fn validate_t03_dom_snapshot(snapshot: &Value) -> Result<()> {
     )
 }
 
-fn validate_engine_call(line: &str, group: &str, error: &str) -> Result<()> {
+fn validate_engine_call(line: &str, group: &str, error: &str) -> Result<ssx_json::Value> {
     // Engine-call query parameters are raw request evidence. The T03 page-limit
     // case intentionally includes a 4,300-digit page token, so parse through the
     // lossless JSON profile instead of serde_json's bounded integer representation.
@@ -1458,11 +1458,43 @@ fn validate_engine_call(line: &str, group: &str, error: &str) -> Result<()> {
         matches!(
             engine,
             Some("google" | "reddit" | "duckduckgo" | "wikipedia")
-        )
+        ) || (engine == Some("pubmed")
+            && call["query"] == "jev-specialist-routing"
+            && call.get("engines") == Some(&ssx_json::Value::Null))
     } else {
         matches!(engine, Some("alpha" | "beta" | "openalex"))
     };
-    need(allowed, error)
+    need(allowed, error)?;
+    Ok(call)
+}
+
+fn validate_browser_engine_calls(calls: &str, scenario: &str) -> Result<()> {
+    let mut pubmed = 0;
+    let mut scoped_wikipedia = 0;
+    for line in calls.lines() {
+        let call = validate_engine_call(
+            line,
+            scenario,
+            "browser fixture reached an unexpected engine",
+        )?;
+        pubmed += usize::from(call["engine"] == "pubmed");
+        scoped_wikipedia += usize::from(
+            call["engine"] == "wikipedia"
+                && call["query"] == "jev-specialist-routing"
+                && call["engines"] == ssx_json::json!(["wikipedia"]),
+        );
+    }
+    if scenario == "source-availability" {
+        need(
+            pubmed == 1,
+            "browser fixture must dispatch to PubMed exactly once",
+        )?;
+        need(
+            scoped_wikipedia == 1,
+            "browser fixture must dispatch the scoped Wikipedia request exactly once",
+        )?;
+    }
+    Ok(())
 }
 
 fn journey_ids(scenario: &str) -> Result<&'static [&'static str]> {
@@ -3320,13 +3352,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             let calls = terminal["calls_jsonl"]
                 .as_str()
                 .ok_or("T03 browser engine-call observations missing")?;
-            for line in calls.lines() {
-                validate_engine_call(
-                    line,
-                    scenario,
-                    "browser fixture reached an unexpected engine",
-                )?;
-            }
+            validate_browser_engine_calls(calls, scenario)?;
             let mut browser = validate_browser(
                 &browser_dir,
                 &browser?,
@@ -3390,9 +3416,9 @@ mod tests {
         RETAINED_FORMATTER_CHECKS, SOURCE_ASSERTIONS, formatter_completion, hash,
         retained_formatter_comparisons, roundtrip_controls, roundtrip_html_proof,
         roundtrip_machine_document, roundtrip_request_key, source_availability_evidence,
-        validate_budgets, validate_date_roundtrip_call_log, validate_date_roundtrip_machine_proof,
-        validate_engine_call, validate_http_error_evidence, validate_source_assertion_inventory,
-        validate_synthetic_media_response,
+        validate_browser_engine_calls, validate_budgets, validate_date_roundtrip_call_log,
+        validate_date_roundtrip_machine_proof, validate_engine_call, validate_http_error_evidence,
+        validate_source_assertion_inventory, validate_synthetic_media_response,
     };
     use serde_json::{Value, json};
     use std::{
@@ -4277,6 +4303,26 @@ mod tests {
                 validate_engine_call(&line, "source-availability", "unexpected engine").is_ok()
             );
         }
+        for (query, engines, allowed) in [
+            ("jev-specialist-routing", json!(null), true),
+            ("jev-specialist-routing", json!(["wikipedia"]), false),
+            ("source-availability", json!(null), false),
+        ] {
+            let line = json!({"engine": "pubmed", "query": query, "engines": engines, "page": 1})
+                .to_string();
+            assert_eq!(
+                validate_engine_call(&line, "source-availability", "unexpected engine").is_ok(),
+                allowed,
+            );
+        }
+        assert!(
+            validate_engine_call(
+                r#"{"engine":"pubmed","query":"jev-specialist-routing","page":1}"#,
+                "source-availability",
+                "missing explicit-engine evidence",
+            )
+            .is_err()
+        );
         assert!(
             validate_engine_call(
                 r#"{"engine":"alpha","page":1}"#,
@@ -4285,6 +4331,20 @@ mod tests {
             )
             .is_err()
         );
+        let automatic = r#"{"engine":"pubmed","query":"jev-specialist-routing","engines":null}"#;
+        let scoped =
+            r#"{"engine":"wikipedia","query":"jev-specialist-routing","engines":["wikipedia"]}"#;
+        for (log, allowed) in [
+            (format!("{automatic}\n{scoped}"), true),
+            (format!("{automatic}\n{automatic}\n{scoped}"), false),
+            (scoped.into(), false),
+            (automatic.into(), false),
+        ] {
+            assert_eq!(
+                validate_browser_engine_calls(&log, "source-availability").is_ok(),
+                allowed,
+            );
+        }
     }
 
     #[test]
