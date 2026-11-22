@@ -338,6 +338,13 @@ fn run_driver(
     )?;
     let raw = fs::read(output.join("completed.json")).map_err(|e| e.to_string())?;
     let receipt: Value = serde_json::from_slice(&raw).map_err(|e| e.to_string())?;
+    let adapter_log =
+        fs::read_to_string(output.join("adapter-calls.jsonl")).map_err(|e| e.to_string())?;
+    need(
+        receipt.get("adapter_calls").is_none()
+            && receipt["adapter_calls_raw"].as_str() == Some(adapter_log.as_str()),
+        "T08 receipt must retain only the exact adapter log",
+    )?;
     need(
         receipt["valkey_sha256"] == valkey_sha,
         "T08 actual private Valkey image differs",
