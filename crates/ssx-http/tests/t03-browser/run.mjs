@@ -1215,6 +1215,16 @@ async function runSourceAvailability() {
     const scoped = await searchByQuery(page, 'jev-specialist-routing', { engines: 'wikipedia' });
     assert.equal(scoped.status(), 200);
     assert.equal(await explanation.count(), 0);
+
+    // F:L615–F:L617 cover a successful empty scrape alongside a usable result.
+    const emptyScrape = await searchByQuery(page, 'source-availability', {
+      engines: 'duckduckgo,wikipedia',
+    });
+    assert.equal(emptyScrape.status(), 200);
+    assert(await notice.getByText('No results from some sources.', { exact: true }).isVisible());
+    assert((await notice.innerText()).includes('Duckduckgo (successful scrape returned no results)'));
+    assert.equal(await page.getByText('Some sources could not answer this search.', { exact: true }).count(), 0);
+    assert(await article.getByRole('heading', { name: title, exact: true }).isVisible());
   });
   await context.close();
 }
