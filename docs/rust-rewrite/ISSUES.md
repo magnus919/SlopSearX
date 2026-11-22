@@ -84,21 +84,30 @@ Dependencies are hard finish-to-start: accepted/merged predecessor work and its 
 
 ## Live follow-up blockers that are not plan work packages
 
-Two follow-up issues gate the critical path and are deliberately not rows in the
-plan table above, because they are qualification subtasks of T07 rather than plan
-work packages:
+Two platform follow-ups track native gateway qualification in
+[#902 — T07](https://github.com/magnus919/SlopSearX/issues/902).
 
 | Issue | Effect |
 | --- | --- |
-| [#1073 — macOS platform trust](https://github.com/magnus919/SlopSearX/issues/1073) | Native blocker of [#902 — T07](https://github.com/magnus919/SlopSearX/issues/902). |
-| [#1075 — Windows platform trust](https://github.com/magnus919/SlopSearX/issues/1075) | Native blocker of [#902 — T07](https://github.com/magnus919/SlopSearX/issues/902). |
+| [#1073 — macOS platform trust](https://github.com/magnus919/SlopSearX/issues/1073) | Hard predecessor of T07. Require a complete user-domain trust and cleanup witness on disposable Intel and ARM macOS. |
+| [#1075 — Windows platform trust](https://github.com/magnus919/SlopSearX/issues/1075) | Open best-effort follow-up. The full Windows CurrentUser Root witness is outside the T07 release gate. |
 
-Both require a supported trust establishment *and* removal route. Neither is
-authorised by the routine rewrite mandate, and both name fixture paths
-(`crates/ssx-gateway/tests/platform_support/`, `.github/workflows/rust-client-platforms.yml`)
-that exist only on the unmerged `codex/preview-1056-t07-source-integration-20261027`
-branch. Until they resolve, T07 cannot land and W09, W10, O04, O09 and every
-G-series qualification package behind them cannot start.
+The maintainer set Windows support to best effort on 2026-11-22. Keep the
+GitHub-hosted Windows x64 build, install, ordinary loopback TLS, and runtime
+coverage. Report the full CurrentUser Root install and removal sequence as
+unverified until it passes on an authorized disposable Windows environment.
+Retain previous failure and cleanup receipts. The ordinary TLS tests cover
+explicit CA configuration. Only the independent store witness can qualify
+the default platform trust path.
+
+The macOS gate still requires a supported establishment and removal route.
+Preserve per-run CA identity, default trust and wrong-hostname controls, exact
+removal, rejection after removal, and restoration and cleanup evidence. The
+gateway fixture paths (`crates/ssx-gateway/tests/platform_support/` and
+`.github/workflows/rust-client-platforms.yml`) remain on the unmerged
+`codex/preview-1056-t07-source-integration-20261027` branch. The matching
+GitHub dependency update removes the #1075 edge after this decision lands
+and keeps #1075 open.
 
 Where a native GitHub `blocked_by` edge differs from the plan table, the native
 edge is authoritative for start decisions; this table records plan intent, not
