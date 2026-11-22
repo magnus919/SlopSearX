@@ -444,7 +444,6 @@ mod unix {
             records.push(record);
         }
         let adapter_calls_raw = fs::read_to_string(out.join("adapter-calls.jsonl")).unwrap();
-        let calls = lines(&out.join("adapter-calls.jsonl"));
         native.0.kill().unwrap();
         let native_exit = wait(&mut native, 5);
         assert!(native.0.try_wait().unwrap().is_some());
@@ -500,7 +499,7 @@ mod unix {
         let mut upstream = upstream;
         upstream.thread.take().unwrap().join().unwrap();
         drop(upstream);
-        fs::write(out.join("completed.json"),serde_json::to_vec_pretty(&json!({"scope":"native production-component composition, not production startup/distribution","cli_binary":image,"cli_sha256":sha(&image),"server_binary":server,"server_sha256":sha(&server),"valkey_sha256":sha(&valkey),"records":records,"adapter_calls":calls,"adapter_calls_raw":adapter_calls_raw,"upstream_requests":requests,"server_exit":native_exit.to_string(),"valkey_exit":valkey_exit.to_string(),"private_socket_retired":!socket.exists(),"server_and_valkey_waited":true,"upstream_joined":true,"upstream_page_support":false})).unwrap()).unwrap();
+        fs::write(out.join("completed.json"),serde_json::to_vec_pretty(&json!({"scope":"native production-component composition, not production startup/distribution","cli_binary":image,"cli_sha256":sha(&image),"server_binary":server,"server_sha256":sha(&server),"valkey_sha256":sha(&valkey),"records":records,"adapter_calls_raw":adapter_calls_raw,"upstream_requests":requests,"server_exit":native_exit.to_string(),"valkey_exit":valkey_exit.to_string(),"private_socket_retired":!socket.exists(),"server_and_valkey_waited":true,"upstream_joined":true,"upstream_page_support":false})).unwrap()).unwrap();
     }
 }
 #[cfg(unix)]
