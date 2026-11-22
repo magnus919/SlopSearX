@@ -1091,6 +1091,10 @@ async function runContract() {
     assert.equal(longResponse.status(), 200);
     assert.equal(await viewportObservation(page, 'long-content-320css'), true);
     await screenshot(page, 'contract-long-content-320css.png');
+    // A classic scrollbar can leave 305 CSS pixels available in a 320-pixel viewport.
+    await page.setViewportSize({ width: 305, height: 640 });
+    assert.equal(await viewportObservation(page, 'long-content-with-scrollbar-space'), true);
+    await page.setViewportSize({ width: 320, height: 640 });
   });
 
   await check('reduced-motion', async () => {
