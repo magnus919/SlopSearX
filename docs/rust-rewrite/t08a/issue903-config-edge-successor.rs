@@ -11,7 +11,7 @@ use std::{path::Path, process::Command};
 type Result<T> = std::result::Result<T, String>;
 const BASE: &str = "7d904b9d46f4c4ba8c59dc1ba09828f9e7ea204d";
 const CAPSULE: &[u8] = include_bytes!("issue903-config-edge-successor-v1.json");
-const CAPSULE_SHA: &str = "3199e5ec4c56ef21659446cd244198240e8d932ec67c180dcdb70f40af402ca2";
+const CAPSULE_SHA: &str = "cb14aa29ce11f27c883d63343ef2396aedc8dca7b1c456a1a78b87e519e7b82b";
 const MAX_PHYSICAL_BYTES: u64 = 1_048_576;
 
 #[derive(Deserialize)]
@@ -303,16 +303,16 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         )?;
     }
     need(
-        capsule.rows[0].edits.len() == 3
-            && capsule.rows[0].edits[0].offset == 67341
-            && capsule.rows[0].edits[0].remove_utf8.is_empty()
-            && capsule.rows[0].edits[0].insert_utf8 == " \"serde\",\n"
-            && capsule.rows[0].edits[1].offset == 68937
-            && capsule.rows[0].edits[1].remove_utf8.is_empty()
-            && capsule.rows[0].edits[1].insert_utf8 == " \"nix\",\n"
-            && capsule.rows[0].edits[2].offset == 69483
+        capsule.rows[0].edits.len() == 7
+            && capsule.rows[0].edits[2].offset == 67341
             && capsule.rows[0].edits[2].remove_utf8.is_empty()
-            && capsule.rows[0].edits[2].insert_utf8 == " \"nix\",\n"
+            && capsule.rows[0].edits[2].insert_utf8 == " \"serde\",\n"
+            && capsule.rows[0].edits[3].offset == 68937
+            && capsule.rows[0].edits[3].remove_utf8.is_empty()
+            && capsule.rows[0].edits[3].insert_utf8 == " \"nix\",\n"
+            && capsule.rows[0].edits[4].offset == 69483
+            && capsule.rows[0].edits[4].remove_utf8.is_empty()
+            && capsule.rows[0].edits[4].insert_utf8 == " \"nix\",\n"
             && capsule.rows[1].edits.len() == 2
             && capsule.rows[1].edits[0].offset == 205
             && capsule.rows[1].edits[0].remove_utf8.is_empty()
