@@ -943,7 +943,20 @@ async function runContract() {
     assert.equal(new URL(page.url()).searchParams.get('pageno'), '2');
     assert.equal(new URL(page.url()).searchParams.get('q'), 'valkey');
     assert.equal(await page.getByRole('heading', { level: 1 }).innerText(), 'valkey');
-    await navigateBy(page, () => page.getByRole('link', { name: 'Previous result page' }).click());
+    const previous = page.getByRole('link', { name: 'Previous result page', exact: true });
+    const next = page.getByRole('link', { name: 'Try next result page', exact: true });
+    for (const [link, expectedPage] of [[previous, '1'], [next, '3']]) {
+      assert(await link.isVisible());
+      const href = await link.getAttribute('href');
+      assert(href);
+      const target = new URL(href, page.url());
+      assert.equal(target.origin, new URL(page.url()).origin);
+      assert.equal(target.pathname, '/search');
+      assert.equal(target.searchParams.get('q'), 'valkey');
+      assert.equal(target.searchParams.get('categories'), 'general');
+      assert.equal(target.searchParams.get('pageno'), expectedPage);
+    }
+    await navigateBy(page, () => previous.click());
     assert.equal(new URL(page.url()).searchParams.get('pageno'), '1');
     const input = page.getByRole('searchbox', { name: 'Search SlopSearX' });
     await input.fill('history');
@@ -1061,7 +1074,11 @@ async function runContract() {
 
   await check('viewport-narrow', async () => {
     await searchByQuery(page, 'valkey', { categories: 'general' });
+    const explanation = page.locator('details.result-explanation');
+    await explanation.getByText('Why this result appeared', { exact: true }).click();
     await page.setViewportSize({ width: 390, height: 844 });
+    assert(await explanation.getByText('Cross-source presence').isVisible());
+    assert(await explanation.getByText('structurally eligible', { exact: true }).isVisible());
     assert.equal(await viewportObservation(page, 'narrow-390x844'), true);
     await screenshot(page, 'contract-narrow-390x844.png');
   });
