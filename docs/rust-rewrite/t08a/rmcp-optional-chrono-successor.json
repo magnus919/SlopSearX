@@ -141,7 +141,7 @@
       },
       "current": {
         "bytes": 2146,
-        "sha256": "c5fd53795e64fec53ff995459d0f141d14a89949a7fcb58b5c69e914285ec958",
+        "sha256": "fb454e6cd46ce2abaa68c058541390a44e286a0cdd6e678bc5a3a9f052480f4b",
         "mode": "0644"
       },
       "edits": [
@@ -154,6 +154,11 @@
           "at": 712,
           "remove_utf8": "rmcp = { version = \"=3.9.0\" }\n",
           "insert_utf8": "rmcp = { path = \"vendor/rmcp\", version = \"=3.11.0\", default-features = false, features = [\"base64\", \"macros\", \"server\"] }\n"
+        },
+        {
+          "at": 1287,
+          "remove_utf8": "url = { version = \"=2.5.8\" }\n",
+          "insert_utf8": "url = { version = \"=2.5.9\" }\n"
         }
       ]
     },

@@ -223,10 +223,10 @@ pub(crate) fn rmcp_historical_operand(
 const OPTIONAL_CHRONO: &str =
     include_str!("../../../docs/rust-rewrite/t08a/rmcp-optional-chrono-successor.json");
 const OPTIONAL_CHRONO_SHA: &str =
-    "c41515772cde7d4c726a3aaa4eb854c24a3be878b3764653748b802e98d7ef11";
+    "648bb813290fa1757c5ab48cc8b85a21e8deb418d3ce9f74424a0d6febf82471";
 const OPTIONAL_CHRONO_ROWS: [(&str, usize); 3] = [
     ("Cargo.lock", 23),
-    ("Cargo.toml", 2),
+    ("Cargo.toml", 3),
     ("crates/ssx-infra/Cargo.toml", 1),
 ];
 pub(crate) const CURRENT_LOCK_SHA: &str =

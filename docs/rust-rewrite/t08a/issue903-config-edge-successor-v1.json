@@ -12,10 +12,20 @@
       },
       "current": {
         "bytes": 96206,
-        "sha256": "c4cac865449f9e8b424ed16698bdf2daf5cb601bda7f096ae7765da8d838e6a1",
+        "sha256": "12d99213f00473646d05ca2c34299ad0d98d9dc0618ec763265aa30914600ea6",
         "mode": "0644"
       },
       "edits": [
+        {
+          "offset": 20509,
+          "remove_utf8": "version = \"1.2.2\"\n",
+          "insert_utf8": "version = \"1.2.3\"\n"
+        },
+        {
+          "offset": 20592,
+          "remove_utf8": "checksum = \"cb4cb245038516f5f85277875cdaa4f7d2c9a0fa0468de06ed190163b1581fcf\"\n",
+          "insert_utf8": "checksum = \"afa489199eaffb1211795df1c6236ce1ad0d41a6fa45250add73e3b02420f06e\"\n"
+        },
         {
           "offset": 67341,
           "remove_utf8": "",
@@ -30,6 +40,16 @@
           "offset": 69483,
           "remove_utf8": "",
           "insert_utf8": " \"nix\",\n"
+        },
+        {
+          "offset": 82081,
+          "remove_utf8": "version = \"2.5.8\"\n",
+          "insert_utf8": "version = \"2.5.9\"\n"
+        },
+        {
+          "offset": 82164,
+          "remove_utf8": "checksum = \"ff67a8a4397373c3ef660812acab3268222035010ab8680ec4215f38ba3d0eed\"\n",
+          "insert_utf8": "checksum = \"f00cd2407bb42c0ef17be88d4cf020f5cceffd121665bac9b8b9493a369b3b1a\"\n"
         }
       ]
     },
