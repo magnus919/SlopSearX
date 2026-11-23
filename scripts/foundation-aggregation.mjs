@@ -9,6 +9,20 @@ const REQUIRED_F03_COMMANDS = Object.freeze([
   ['clippy', '--locked', '-p', 'ssx-cli-hyper', '--features', 'full,source-client-framing', '--lib', '--', '-D', 'warnings'],
   ['test', '--locked', '--workspace', '--exclude', 'xtask', '--features', 'ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing'],
 ]);
+const A13_INVENTORY_SELECTORS = Object.freeze([
+  {
+    target: 'a13_dehashed',
+    name: 'source_inventory_is_closed_and_bound_without_original_execution',
+    marker: 'A13_DEHASHED_CASE_COMPLETE source-bindings-closed',
+    flags: ['--show-output', '--test-threads=1'],
+  },
+  ...['hibp', 'intelx'].map((engine) => ({
+    target: `a13_${engine}`,
+    name: `${engine}_static_source_inventory_closed`,
+    marker: `A13_REMAINING_CASE_COMPLETE ${engine}_static_source_inventory_closed`,
+    flags: ['--nocapture'],
+  })),
+]);
 const EXPECTED_CONTROL_RESULT = 'EXPECTED_SEMANTIC_FAILURE_CONFIRMED\n';
 const CONTROL_EVIDENCE_FILES = Object.freeze([
   'archive.sha256',
@@ -103,6 +117,32 @@ export function validateCoreWorkspaceChecks(report, expected) {
   }
 }
 
+export function validateA13InventoryChecks(report, expected) {
+  requireValue(report?.plan_id === 'A13' && report.status === 'passed' && report.error === null, 'A13 inventory evidence did not pass');
+  requireValue(report.source?.head === expected.sourceRevision && report.source.diff === '' && report.source.working_tree === '', 'A13 inventory evidence source mismatch');
+  requireValue(typeof report.toolchain === 'string' && report.toolchain.split('\n').includes(`host: ${expected.target}`), 'A13 inventory evidence target mismatch');
+  requireValue(Array.isArray(report.commands), 'A13 inventory command evidence missing');
+
+  for (const { target, name, marker, flags } of A13_INVENTORY_SELECTORS) {
+    const completions = report.commands
+      .map((record, index) => record?.A13_native_completion === name ? index : -1)
+      .filter((index) => index >= 0);
+    requireValue(completions.length === 1, `A13 must record one validated completion for ${name}`);
+    const completion = report.commands[completions[0]];
+    requireValue(completion.original_execution === false && completion.provider_calls === 0
+      && Array.isArray(completion.parent_markers) && completion.parent_markers.includes(marker),
+    `A13 inventory completion is incomplete for ${name}`);
+
+    const command = report.commands[completions[0] - 1];
+    const cargoFlags = target === 'a13_dehashed' ? ['--locked', '--offline'] : ['--offline', '--locked'];
+    const args = ['test', ...cargoFlags, '-p', 'ssx-infra', '--test', target, name, '--', '--exact', ...flags];
+    requireValue(command?.program === 'cargo' && JSON.stringify(command.args) === JSON.stringify(args)
+      && command.exit_code === 0 && typeof command.stdout === 'string'
+      && command.stdout.split('\n').filter((line) => line === `test ${name} ... ok`).length === 1,
+    `A13 must run and pass the exact inventory selector for ${name}`);
+  }
+}
+
 function readRegularFile(file) {
   const info = fs.lstatSync(file);
   requireValue(info.isFile() && !info.isSymbolicLink(), `expected a regular file: ${file}`);
@@ -118,6 +158,7 @@ export function validateFoundationEvidence(evidenceRoot, expected) {
   });
   const attempts = validatePartitionIdentities(identities, expected);
   validateCoreWorkspaceChecks(JSON.parse(readRegularFile(path.join(evidenceRoot, 'F03.json'))), expected);
+  validateA13InventoryChecks(JSON.parse(readRegularFile(path.join(evidenceRoot, 'A13.json'))), expected);
   const controlRoot = path.join(evidenceRoot, 'A10-linux-control');
   const entries = fs.readdirSync(controlRoot, { withFileTypes: true }).map((directory) => {
     requireValue(directory.isDirectory() && !directory.isSymbolicLink(), 'unexpected semantic-control artifact entry');

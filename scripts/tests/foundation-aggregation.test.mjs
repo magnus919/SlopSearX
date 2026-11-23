@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { REQUIRED_PARTITIONS, validateControlEvidence, validateCoreWorkspaceChecks, validateFoundationEvidence, validatePartitionIdentities } from '../foundation-aggregation.mjs';
+import { REQUIRED_PARTITIONS, validateA13InventoryChecks, validateControlEvidence, validateCoreWorkspaceChecks, validateFoundationEvidence, validatePartitionIdentities } from '../foundation-aggregation.mjs';
 
 const expected = Object.freeze({ sourceRevision: '0123456789abcdef', target: 'x86_64-unknown-linux-gnu', runId: '41515893105', runAttempt: 2, runnerArch: 'X64' });
 const coreReport = () => ({
@@ -18,6 +18,23 @@ const coreReport = () => ({
     ['clippy', '--locked', '-p', 'ssx-cli-hyper', '--features', 'full,source-client-framing', '--lib', '--', '-D', 'warnings'],
     ['test', '--locked', '--workspace', '--exclude', 'xtask', '--features', 'ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing'],
   ].map((args) => ({ program: 'cargo', args, exit_code: 0 })),
+});
+const a13InventoryNames = [
+  'source_inventory_is_closed_and_bound_without_original_execution',
+  'hibp_static_source_inventory_closed',
+  'intelx_static_source_inventory_closed',
+];
+const frozenA13 = JSON.parse(fs.readFileSync(new URL('../../docs/rust-rewrite/a13/qualification-v1.json', import.meta.url), 'utf8'));
+const a13Report = () => ({
+  ...coreReport(),
+  plan_id: 'A13',
+  commands: a13InventoryNames.flatMap((name) => {
+    const selector = frozenA13.selectors.find((candidate) => candidate.name === name);
+    return [
+      { program: 'cargo', args: [...selector.argv], exit_code: 0, stdout: `test ${name} ... ok\n` },
+      { A13_native_completion: name, parent_markers: [...selector.markers], original_execution: false, provider_calls: 0 },
+    ];
+  }),
 });
 const partitions = (attempt = '1') => REQUIRED_PARTITIONS.map((partition) => ({
   partition,
@@ -96,6 +113,8 @@ test('validates real evidence directories assembled from retained and rerun arti
     }
     assert.throws(() => validateFoundationEvidence(root, expected), /F03\.json/);
     fs.writeFileSync(path.join(root, 'F03.json'), JSON.stringify(coreReport()));
+    assert.throws(() => validateFoundationEvidence(root, expected), /A13\.json/);
+    fs.writeFileSync(path.join(root, 'A13.json'), JSON.stringify(a13Report()));
     const attempts = validateFoundationEvidence(root, expected);
     assert.deepEqual([...attempts.values()], [1, 2, 1, 1]);
 
@@ -135,6 +154,29 @@ test('requires all workspace coverage owned by F03 on the expected revision and 
   assert.throws(() => validateCoreWorkspaceChecks(narrowed, expected), /one successful cargo test/);
   const duplicated = coreReport(); duplicated.commands.push(duplicated.commands[3]);
   assert.throws(() => validateCoreWorkspaceChecks(duplicated, expected), /one successful cargo test/);
+});
+
+test('requires exact, successful A13 source-inventory completions on the expected revision and target', () => {
+  validateA13InventoryChecks(a13Report(), expected);
+
+  const wrongSource = a13Report(); wrongSource.source.head = 'different';
+  assert.throws(() => validateA13InventoryChecks(wrongSource, expected), /source mismatch/);
+  const wrongTarget = a13Report(); wrongTarget.toolchain = 'host: aarch64-unknown-linux-gnu';
+  assert.throws(() => validateA13InventoryChecks(wrongTarget, expected), /target mismatch/);
+  const failed = a13Report(); failed.status = 'failed';
+  assert.throws(() => validateA13InventoryChecks(failed, expected), /did not pass/);
+  const missing = a13Report(); missing.commands.splice(3, 1);
+  assert.throws(() => validateA13InventoryChecks(missing, expected), /one validated completion/);
+  const duplicate = a13Report(); duplicate.commands.push(duplicate.commands[1]);
+  assert.throws(() => validateA13InventoryChecks(duplicate, expected), /one validated completion/);
+  const noMarker = a13Report(); noMarker.commands[1].parent_markers = [];
+  assert.throws(() => validateA13InventoryChecks(noMarker, expected), /completion is incomplete/);
+  const wrongSuite = a13Report(); wrongSuite.commands[0].args[6] = 'a13_intelx';
+  assert.throws(() => validateA13InventoryChecks(wrongSuite, expected), /exact inventory selector/);
+  const ignored = a13Report(); ignored.commands[2].stdout = `test ${a13InventoryNames[1]} ... ignored\n`;
+  assert.throws(() => validateA13InventoryChecks(ignored, expected), /exact inventory selector/);
+  const failedCommand = a13Report(); failedCommand.commands[4].exit_code = 101;
+  assert.throws(() => validateA13InventoryChecks(failedCommand, expected), /exact inventory selector/);
 });
 
 test('rejects missing, duplicate, or unexpected partition identities', () => {
