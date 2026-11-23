@@ -455,8 +455,33 @@ async fn inherited_scope_and_date_journeys_cover_all_16_literal_assertions() {
     p.stop().await;
 }
 
+fn yaml_preserves_jev_routing_metadata() {
+    let response = ssx_domain::SearchResponse {
+        query: "query".into(),
+        results: vec![ssx_domain::SearchResult {
+            url: "https://example.com".into(),
+            title: "A result".into(),
+            ..Default::default()
+        }],
+        scope: ssx_domain::ScopeDecision {
+            jev_added_engines: vec!["pubmed".into()],
+            jev_scores: [("pubmed".into(), ssx_domain::FiniteF64::new(0.91).unwrap())].into(),
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    let meta = ssx_http::formats::meta(&response, &[]);
+    let body = ssx_http::formats::yaml_document(&response, &meta);
+    // Preserve the original YAML metadata contract (F:L569).
+    assert_eq!(
+        yaml(&body)["meta"]["jev_routing"],
+        json!({"added_engines": ["pubmed"], "scores": {"pubmed": 0.91}})
+    );
+}
+
 #[tokio::test]
 async fn browser_enforcement_uses_capture_without_changing_machine_contract() {
+    yaml_preserves_jev_routing_metadata();
     let mut p = Process::start("metadata", "contract");
     let query = "q=climate&engines=openalex&date_from=2024-02-29&date_to=2024-03-01&language=fr&pageno=18446744073709551617&safesearch=1";
     let (status, html) = p.get(&format!("/search?{query}"), "metadata-html").await;
