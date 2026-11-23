@@ -13,6 +13,7 @@ use peer::{Process, params, yaml};
 fn static_assets_and_highlight_boundary_preserve_safe_progressive_rendering() {
     renderer_pagination_context_preserves_original_three_state_contract();
     renderer_omits_json_links_when_json_is_disabled();
+    renderer_preserves_packages_scope_with_one_response();
     renderer_explains_the_configured_ranking_strategy();
     renderer_explains_publication_entities_and_group_members();
     let html = PublicPortal::default().landing();
@@ -55,6 +56,59 @@ fn static_assets_and_highlight_boundary_preserve_safe_progressive_rendering() {
     assert!(result_html.contains("&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;"));
     assert!(result_html.contains("&lt;img src=x onerror=alert(1)&gt;"));
     assert!(!result_html.contains("javascript:"));
+}
+
+fn renderer_preserves_packages_scope_with_one_response() {
+    use ssx_domain::{EngineOutcome, ScopeDecision, SearchRequest, SearchResponse, SearchResult};
+
+    let portal = PublicPortal::new(
+        &json!({"engines": [
+            {"name": "npm", "categories": ["packages"]},
+            {"name": "crates", "categories": ["packages"]},
+            {"name": "wikipedia", "categories": ["general"]},
+        ]}),
+        &["html".into(), "json".into()].into(),
+        "dark",
+    );
+    let request = SearchRequest {
+        query: "valkey".into(),
+        categories: Some(vec!["packages".into()]),
+        ..Default::default()
+    };
+    let response = SearchResponse {
+        query: request.query.clone(),
+        results: vec![SearchResult {
+            url: "https://example.com".into(),
+            title: "A result".into(),
+            engine: "npm".into(),
+            ..Default::default()
+        }],
+        scope: ScopeDecision {
+            selected_engines: vec!["npm".into(), "crates".into()],
+            resolved_categories: vec!["packages".into()],
+            ..Default::default()
+        },
+        engine_outcomes: vec![
+            EngineOutcome {
+                engine: "npm".into(),
+                status: "ok".into(),
+                result_count: 1,
+                ..Default::default()
+            },
+            EngineOutcome {
+                engine: "crates".into(),
+                status: "timeout".into(),
+                ..Default::default()
+            },
+        ],
+        partial: true,
+        ..Default::default()
+    };
+
+    let html = portal.search(&response, &Value::Null, &request);
+    // F:L642 and F:L645 apply to the same rendered Packages response.
+    assert!(html.contains(r#"option value="packages" selected"#));
+    assert!(html.contains("packages · 1 of 2 sources answered"));
 }
 
 fn renderer_explains_the_configured_ranking_strategy() {
