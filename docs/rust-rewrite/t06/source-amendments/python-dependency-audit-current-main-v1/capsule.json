@@ -344,11 +344,11 @@
     {
       "path": "pyproject.toml",
       "current": {
-        "bytes": 5828,
-        "sha256": "da2a8787b2a186f914b77f24f646415d99049e50bced9a2c7fdd1117a8c64316",
+        "bytes": 5831,
+        "sha256": "ace26d7837c13700d4ccb1874f826cbb2b0073dba2a2b392b0151d21a1a00705",
         "mode": "0644"
       },
-      "current_git_blob": "fbdcd7f06874798ff20e77d1fe36ef37907cd29c",
+      "current_git_blob": "b8bb30c73ea6aa72536a8525ead0f1c1925272be",
       "prior": {
         "bytes": 5425,
         "sha256": "d8b7a42dfcaf4963bc22e072f044bafe676cd90cba6f0194fbc8b87c32a187a0",
@@ -363,22 +363,27 @@
           "insert_utf8": "requires = [\"setuptools>=68.0\"]\n"
         },
         {
-          "at": 592,
+          "at": 589,
+          "remove_utf8": ",<3",
+          "insert_utf8": ""
+        },
+        {
+          "at": 595,
           "remove_utf8": "    \"fastmcp>=4.1.2,<5\",\n",
           "insert_utf8": "    \"fastmcp>=2.0,<5\",\n"
         },
         {
-          "at": 663,
+          "at": 666,
           "remove_utf8": "    # Patched runtime floors also apply to fresh installs outside the uv lock.\n    \"anyio>=4.14.2\",\n    \"authlib>=1.9.1\",\n    \"certifi>=2026.10.18\",\n    \"joserfc>=1.7.6\",\n    \"opentelemetry-api>=1.45.2\",\n    \"starlette>=1.3.1\",\n",
           "insert_utf8": ""
         },
         {
-          "at": 1146,
+          "at": 1149,
           "remove_utf8": "    \"pip>=26.2\",\n    \"setuptools>=84.1.0\",\n",
           "insert_utf8": ""
         },
         {
-          "at": 3959,
+          "at": 3962,
           "remove_utf8": "# These direct security floors protect transitively consumed runtime packages;\n# pip/setuptools are development and build tools rather than application imports.\nper_rule_ignores = {DEP002 = [\"lxml\", \"uvicorn\", \"pytest\", \"pytest-asyncio\", \"ruff\", \"cssselect\", \"mypy\", \"pytest-cov\", \"pip-tools\", \"pre-commit\", \"radon\", \"vulture\", \"import-linter\", \"deptry\", \"pip-audit\", \"fastmcp\", \"prometheus-client\", \"dnspython\", \"anyio\", \"authlib\", \"certifi\", \"joserfc\", \"opentelemetry-api\", \"pip\", \"setuptools\"]}\n",
           "insert_utf8": "# dnspython is a direct security floor for FastMCP's transitive email-validation dependency.\nper_rule_ignores = {DEP002 = [\"lxml\", \"uvicorn\", \"pytest\", \"pytest-asyncio\", \"ruff\", \"cssselect\", \"mypy\", \"pytest-cov\", \"pip-tools\", \"pre-commit\", \"radon\", \"vulture\", \"import-linter\", \"deptry\", \"pip-audit\", \"fastmcp\", \"prometheus-client\", \"dnspython\"], DEP003 = [\"starlette\"]}\n"
         }
@@ -387,11 +392,11 @@
     {
       "path": "uv.lock",
       "current": {
-        "bytes": 471652,
-        "sha256": "5b305fbd0fe7cd339dd6c638006d0fe10138208cebfd33e2256956ac679e5ee8",
+        "bytes": 471655,
+        "sha256": "9665cc8d40efa70122efe53473187f236260f22fc7c85556a28e0e9b220da6cf",
         "mode": "0644"
       },
-      "current_git_blob": "7d5addc2e0f0f2e81bfac6c895b247b087e8671b",
+      "current_git_blob": "33c4ebdeb26709a7c83d03f65b3065afb60c5aa2",
       "prior": {
         "bytes": 470840,
         "sha256": "b56c01276cfe649d85f40827388b43789672854f3fb5af3c408650748abc01a6",
@@ -616,22 +621,27 @@
           "insert_utf8": ""
         },
         {
-          "at": 396403,
+          "at": 396398,
+          "remove_utf8": ",<3",
+          "insert_utf8": ""
+        },
+        {
+          "at": 396406,
           "remove_utf8": "    { name = \"setuptools\", marker = \"extra == 'dev'\", specifier = \">=84.1.0\" },\n    { name = \"starlette\", specifier = \">=1.3.1\" },\n",
           "insert_utf8": ""
         },
         {
-          "at": 398338,
+          "at": 398341,
           "remove_utf8": "version = \"1.3.1\"\n",
           "insert_utf8": "version = \"1.2.1\"\n"
         },
         {
-          "at": 398526,
+          "at": 398529,
           "remove_utf8": "sdist = { url = \"https://files.pythonhosted.org/packages/eb/e3/7c1dc7381d9f8ab7d854328ebfa884e62cb3f3d8549ddfd37c7814f42afa/starlette-1.3.1.tar.gz\", hash = \"sha256:05d0213193f2fbaae60e2ecb593b4add4262ad4e46536b54abe36f11a71724e0\", size = 2703240, upload-time = \"2026-06-12T09:23:11.602Z\" }\n",
           "insert_utf8": "sdist = { url = \"https://files.pythonhosted.org/packages/25/44/ec35f1b6e83094b997da438a02c8c9b0ade2b1e84cfc48bd4656780760a6/starlette-1.2.1.tar.gz\", hash = \"sha256:9b9b5ebb992e67d6093741e63c2f59e4f6fff986f81163c087867bd7b924b3f6\", size = 2701854, upload-time = \"2026-05-31T01:07:51.847Z\" }\n"
         },
         {
-          "at": 398827,
+          "at": 398830,
           "remove_utf8": "    { url = \"https://files.pythonhosted.org/packages/ec/bb/2799cc2ede3ed41131f8975621e7213dfc7ef4acbbaadfa440f32500c370/starlette-1.3.1-py3-none-any.whl\", hash = \"sha256:c7372aae11c3c3f26a42df7bd626cec2f47d03483d261d369516a615a53714c6\", size = 73632, upload-time = \"2026-06-12T09:23:10.017Z\" },\n",
           "insert_utf8": "    { url = \"https://files.pythonhosted.org/packages/1c/54/196d0c1db10af76baa4f64894448505d60d3cdf70ef92cbb35f46a4e4c71/starlette-1.2.1-py3-none-any.whl\", hash = \"sha256:4de0082d08c8f6764a85a54cf1120d6939507a19905c7768acad2a9f875d2b89\", size = 73350, upload-time = \"2026-05-31T01:07:50.09Z\" },\n"
         }
