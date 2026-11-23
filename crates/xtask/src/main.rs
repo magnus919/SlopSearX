@@ -588,21 +588,33 @@ fn execute(root: &Path, id: &str, records: &mut Vec<Value>) -> Result<()> {
                 ],
                 records,
             )?;
-            // xtask unit tests are run by the outer workspace gate; excluding this package prevents recursive invocation.
-            command(
-                root,
-                "cargo",
-                &[
-                    "test",
-                    "--locked",
-                    "--workspace",
-                    "--exclude",
-                    "xtask",
-                    "--features",
-                    "ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing",
-                ],
-                records,
-            )?;
+            // The prerequisites partition owns the xtask tests.
+            let mut test_args = vec![
+                "test",
+                "--locked",
+                "--workspace",
+                "--exclude",
+                "xtask",
+                "--features",
+                "ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing",
+            ];
+            if let Some(mode) = std::env::var_os("SSX_FOUNDATION_A13_HANDOFF") {
+                if mode != "1" || std::env::var("GITHUB_ACTIONS").as_deref() != Ok("true") {
+                    return Err("A13 handoff requires the hosted Foundation workflow".into());
+                }
+                // The Foundation aggregate requires the matching A13 receipts.
+                test_args.extend([
+                    "--",
+                    "--exact",
+                    "--skip",
+                    "source_inventory_is_closed_and_bound_without_original_execution",
+                    "--skip",
+                    "hibp_static_source_inventory_closed",
+                    "--skip",
+                    "intelx_static_source_inventory_closed",
+                ]);
+            }
+            command(root, "cargo", &test_args, records)?;
             command(
                 root,
                 "cargo",

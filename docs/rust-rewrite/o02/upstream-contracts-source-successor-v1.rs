@@ -195,9 +195,56 @@ fn inverse(pin: &Pin, row: &Value, current: &[u8], mode: u32) -> Result<Vec<u8>>
     need(forward == current, "complete forward reconstruction")?;
     Ok(prior)
 }
-const QUALIFICATION_MAIN_BYTES: usize = 45996;
+const QUALIFICATION_MAIN_BYTES: usize = 46663;
 const QUALIFICATION_MAIN_SHA: &str =
+    "0eae1d6ada27e01be97bcf41c71b2206e499e27ed932d1259a304de4c9c6efb6";
+const PRIOR_QUALIFICATION_MAIN_BYTES: usize = 45996;
+const PRIOR_QUALIFICATION_MAIN_SHA: &str =
     "15123e0c22a41d3cfaf3a7be88e3bdff56332fbab69e08f19d17df6f3679fbcb";
+const FOUNDATION_HANDOFF: &str = r###"            // The prerequisites partition owns the xtask tests.
+            let mut test_args = vec![
+                "test",
+                "--locked",
+                "--workspace",
+                "--exclude",
+                "xtask",
+                "--features",
+                "ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing",
+            ];
+            if let Some(mode) = std::env::var_os("SSX_FOUNDATION_A13_HANDOFF") {
+                if mode != "1" || std::env::var("GITHUB_ACTIONS").as_deref() != Ok("true") {
+                    return Err("A13 handoff requires the hosted Foundation workflow".into());
+                }
+                // The Foundation aggregate requires the matching A13 receipts.
+                test_args.extend([
+                    "--",
+                    "--exact",
+                    "--skip",
+                    "source_inventory_is_closed_and_bound_without_original_execution",
+                    "--skip",
+                    "hibp_static_source_inventory_closed",
+                    "--skip",
+                    "intelx_static_source_inventory_closed",
+                ]);
+            }
+            command(root, "cargo", &test_args, records)?;
+"###;
+const PRIOR_FOUNDATION_TEST: &str = r###"            // xtask unit tests are run by the outer workspace gate; excluding this package prevents recursive invocation.
+            command(
+                root,
+                "cargo",
+                &[
+                    "test",
+                    "--locked",
+                    "--workspace",
+                    "--exclude",
+                    "xtask",
+                    "--features",
+                    "ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing",
+                ],
+                records,
+            )?;
+"###;
 
 fn qualification_prior(current: &[u8], mode: u32) -> Result<Vec<u8>> {
     need(
@@ -209,6 +256,16 @@ fn qualification_prior(current: &[u8], mode: u32) -> Result<Vec<u8>> {
     let mut prior = std::str::from_utf8(current)
         .map_err(|e| e.to_string())?
         .to_owned();
+    need(
+        prior.matches(FOUNDATION_HANDOFF).count() == 1,
+        "exact Foundation handoff span",
+    )?;
+    prior = prior.replacen(FOUNDATION_HANDOFF, PRIOR_FOUNDATION_TEST, 1);
+    need(
+        prior.len() == PRIOR_QUALIFICATION_MAIN_BYTES
+            && digest(prior.as_bytes()) == PRIOR_QUALIFICATION_MAIN_SHA,
+        "Foundation handoff reconstructs the exact O02 qualification main",
+    )?;
     for insertion in [
         r#"        "O02" => o06::check_operations(root, records),"#,
         r#"    } else if id == "O02" {
