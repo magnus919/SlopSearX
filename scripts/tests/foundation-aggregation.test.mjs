@@ -169,6 +169,8 @@ test('requires exact, successful A13 source-inventory completions on the expecte
   assert.throws(() => validateA13InventoryChecks(missing, expected), /one validated completion/);
   const duplicate = a13Report(); duplicate.commands.push(duplicate.commands[1]);
   assert.throws(() => validateA13InventoryChecks(duplicate, expected), /one validated completion/);
+  const duplicateCommand = a13Report(); duplicateCommand.commands.push({ ...duplicateCommand.commands[0] });
+  assert.throws(() => validateA13InventoryChecks(duplicateCommand, expected), /exact inventory selector/);
   const noMarker = a13Report(); noMarker.commands[1].parent_markers = [];
   assert.throws(() => validateA13InventoryChecks(noMarker, expected), /completion is incomplete/);
   const wrongSuite = a13Report(); wrongSuite.commands[0].args[6] = 'a13_intelx';

@@ -136,7 +136,9 @@ export function validateA13InventoryChecks(report, expected) {
     const command = report.commands[completions[0] - 1];
     const cargoFlags = target === 'a13_dehashed' ? ['--locked', '--offline'] : ['--offline', '--locked'];
     const args = ['test', ...cargoFlags, '-p', 'ssx-infra', '--test', target, name, '--', '--exact', ...flags];
-    requireValue(command?.program === 'cargo' && JSON.stringify(command.args) === JSON.stringify(args)
+    const exactCommands = report.commands.filter((record) => record?.program === 'cargo'
+      && JSON.stringify(record.args) === JSON.stringify(args));
+    requireValue(exactCommands.length === 1 && exactCommands[0] === command
       && command.exit_code === 0 && typeof command.stdout === 'string'
       && command.stdout.split('\n').filter((line) => line === `test ${name} ... ok`).length === 1,
     `A13 must run and pass the exact inventory selector for ${name}`);
