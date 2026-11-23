@@ -21,7 +21,7 @@ type Result<T> = std::result::Result<T, String>;
 pub(crate) const CAPSULE_PATH: &str =
     "docs/rust-rewrite/t06/source-amendments/python-dependency-audit-current-main-v1/capsule.json";
 const CAPSULE: &[u8] = include_bytes!("python-dependency-audit-current-main-v1/capsule.json");
-const CAPSULE_SHA: &str = "04bbd43240f0d0663ec4e8fd993ddf7c616aeabcfa64e04df429751027b2b4e0";
+const CAPSULE_SHA: &str = "82cfcdff2931137cb8bde28e7e51aacce99361473cfcb8ce21468400f912a46e";
 const SOURCE_READER_OUTER: &[u8] =
     include_bytes!("python-dependency-audit-current-main-v1/source-reader-successor-v1.json");
 const SOURCE_READER_OUTER_SHA: &str =
@@ -50,8 +50,8 @@ const ROWS: [(&str, usize); 8] = [
         "docs/rust-rewrite/t06/source-amendments/python-dependency-audit-source-reader-v1.rs",
         27,
     ),
-    ("pyproject.toml", 5),
-    ("uv.lock", 47),
+    ("pyproject.toml", 6),
+    ("uv.lock", 48),
 ];
 struct Pin<'a> {
     path: &'a str,

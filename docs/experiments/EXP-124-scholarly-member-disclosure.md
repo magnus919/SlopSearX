@@ -31,3 +31,26 @@ Cycle started2026-11-22T13:58:09Z. Fresh main a37776e232b463aa41cc68967f0f174a15
 Both Foundation prerequisite jobs failed. The [AMD64 failure log](https://github.com/magnus919/SlopSearX/actions/runs/44915607604/job/136880435970) reports276 passed and3 failed: snapshot_fixture_amendment_actual_f01_source_consumer and missing_empty_malformed_stale_and_incomplete_fail reject incomplete/unexpected source fixture coverage; snapshot_fixture_amendment_actual_w03_original_source_consumer rejects an original-source hash mismatch (actual347336f96e3ccfeab9dac48651a002b454c57061f9d0a5e99f76c2dd713f67b0; expected170d358b3d0b7da2b5aa61c18736ca424b3764f82c8d81d8e0d54329066fe669). These are source-custody qualification failures, not evidence that the registered disclosure behavior regressed. Their cause and proper reviewed successor accounting still need investigation; no sealed hash or fixture inventory was relaxed. Do not rerun unchanged CI as a repair.
 
 Droid supplied no usable review (job skipped). A [substantive runner review of exact head77a51743](https://github.com/magnus919/SlopSearX/pull/1169#issuecomment-7064357795) found no blocking projection findings; required CI still blocks delivery. The candidate and reproduction evidence are retained. State: locally measured correction, delivery blocked; full supported acceptance remains pending. Next work is repair of the current candidate's source-custody qualification through the normal reviewed workflow, followed by exact-head checks. No new experiment, tests, builds, provider requests or provider charges this cycle. Subscription cost unknown; release/deployment unverified.
+
+## Source binding diagnosis — 2026-11-23
+
+This cycle started at 14:03:52 UTC. It resumed [PR #1169](https://github.com/magnus919/SlopSearX/pull/1169) at `77a517433d14ef3990e3830afb91fd7ff9b4e1d1` and verified main at `3325a0547811e8cd990f6802d3b46218fd256609`. The candidate branch is one commit ahead and 26 behind. The intervening main commits did not change Python runtime or test files. The newly merged Foundation changes organize A13 inventory execution. They leave the source bindings below in place, and the PR still shows both prerequisite jobs failing on its existing head.
+
+The original offline search → snapshot → expanded-read replay still reproduces the gap on current main. Both commands exited 0.
+
+| Registered case | Current main | Existing candidate |
+| --- | --- | --- |
+| Single arXiv source | 1 of 1 | 1 of 1 |
+| Fresh merged search | 1 of 2 | 2 of 2 |
+| Cached merged search | 1 of 2 | 2 of 2 |
+
+Each case returned one card. Both sides made two arXiv calls and one OpenAlex call cumulatively, with no extra calls on the cached repeat. The inputs were injected offline through the frozen replay. These are exact counts for those cases. The [November 21 guard results](evidence/EXP-124/20261121-final-tests.txt) remain evidence for the existing candidate. Release status remains unverified.
+
+The observed prerequisite failures trace to two separate inputs:
+
+- **F01 coverage.** The candidate adds `tests/test_mcp_scholarly_disclosure.py` (Git blob `abb82ba7e507856c73960bc36d7b985ce19be811`). It is included by the tracked Python file filter and absent from both the frozen F01 fixture and the Python disposition inventory. Both failing prerequisite tests call the same F01 coverage checker. Resolving the added path would still leave two changed F01 Git-blob bindings.
+- **W03 bytes.** The failed SHA-256 pair identifies `slopsearx/mcp/result_serialization.py` exactly. Current main and the oracle have `170d358b3d0b7da2b5aa61c18736ca424b3764f82c8d81d8e0d54329066fe669`. The candidate has `347336f96e3ccfeab9dac48651a002b454c57061f9d0a5e99f76c2dd713f67b0`. The oracle also pins `tests/test_mcp_tools.py` at `f503f109d706f7808132baf9a1cdd5975f27202604524937953b5aa212d89549`, while the candidate has `d526bab5f3e4ec535775a47141a16cdc3be8c3df8e84a91daaef00e9b179b4a1`.
+
+The source readers for W06 (both files), T06 (serializer), and A06 (existing test file) also compare current source to the historical digests. These are predicted downstream failures based on the readers and the matching manifest rows. CI stopped at the prerequisite stage, so their execution outcomes are unknown. The W07 wire reference also records the serializer's prior digest and needs review in any successor change.
+
+Keep the observed F01 and W03 repairs together with accounting for the downstream readers. In particular, use one reviewed proof of the exact current and prior bytes for each changed historical operand, preserve the historical receipts, and explicitly account for any retained new Python path. Verify the real source readers accept the reviewed successor and reject drift before starting the complete CI suite. Diagnose any remaining readers before reusing prior qualification. The existing candidate stays open for delivery. No source pins or implementation changed during this cycle. No Rust builds, hosted CI reruns, or paid provider calls. Provider cost was zero. Subscription usage is unknown.
