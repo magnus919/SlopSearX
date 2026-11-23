@@ -12,10 +12,20 @@
       },
       "current": {
         "bytes": 96206,
-        "sha256": "12d99213f00473646d05ca2c34299ad0d98d9dc0618ec763265aa30914600ea6",
+        "sha256": "5f4d339df70efcfa71a6ad6d878d4078c6250cd1a54279c8716123f2276e0c99",
         "mode": "0644"
       },
       "edits": [
+        {
+          "offset": 11040,
+          "remove_utf8": "version = \"0.18.2\"\n",
+          "insert_utf8": "version = \"0.18.3\"\n"
+        },
+        {
+          "offset": 11124,
+          "remove_utf8": "checksum = \"1a373e3602691c3cdea496d2f0ee5935151e6168fe87739483c463db1b2f2f87\"\n",
+          "insert_utf8": "checksum = \"d55f2d6c30eeec7d5c6f98bd4395d4abb1895629eab97ee6522d340623615f8a\"\n"
+        },
         {
           "offset": 20509,
           "remove_utf8": "version = \"1.2.2\"\n",
