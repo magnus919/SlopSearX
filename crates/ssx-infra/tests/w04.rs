@@ -745,15 +745,16 @@ fn killed_worker_probe() {
             .await
             .unwrap()
             .unwrap();
-        fs::write(
-            std::env::var("SSX_W04_CHILD_READY").unwrap(),
-            claim
-                .definition()
-                .slot(store.now().await.unwrap())
-                .unwrap()
-                .run_id,
-        )
-        .unwrap();
+        let ready = PathBuf::from(std::env::var_os("SSX_W04_CHILD_READY").unwrap());
+        let pending = ready.with_extension("pending");
+        let run_id = claim
+            .definition()
+            .slot(store.now().await.unwrap())
+            .unwrap()
+            .run_id;
+        fs::write(&pending, run_id).unwrap();
+        // The parent treats the marker's existence as a complete run ID.
+        fs::rename(pending, ready).unwrap();
         std::future::pending::<()>().await;
     });
 }
