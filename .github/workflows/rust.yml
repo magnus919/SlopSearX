@@ -542,6 +542,7 @@ jobs:
 
       - name: Foundation lane evidence
         env:
+          SSX_FOUNDATION_A13_HANDOFF: "1"
           SLOPSEARX_TEST_TEMP_ROOT: ${{ runner.temp }}/t02-sockets-f03
           TMPDIR: ${{ runner.temp }}/t02-sockets-f03
           TMP: ${{ runner.temp }}/t02-sockets-f03

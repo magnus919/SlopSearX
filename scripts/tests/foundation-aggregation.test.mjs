@@ -6,6 +6,11 @@ import path from 'node:path';
 import { REQUIRED_PARTITIONS, validateA13InventoryChecks, validateControlEvidence, validateCoreWorkspaceChecks, validateFoundationEvidence, validatePartitionIdentities } from '../foundation-aggregation.mjs';
 
 const expected = Object.freeze({ sourceRevision: '0123456789abcdef', target: 'x86_64-unknown-linux-gnu', runId: '41515893105', runAttempt: 2, runnerArch: 'X64' });
+const a13InventoryNames = [
+  'source_inventory_is_closed_and_bound_without_original_execution',
+  'hibp_static_source_inventory_closed',
+  'intelx_static_source_inventory_closed',
+];
 const coreReport = () => ({
   plan_id: 'F03',
   status: 'passed',
@@ -16,14 +21,11 @@ const coreReport = () => ({
     ['fmt', '--all', '--check'],
     ['clippy', '--locked', '--workspace', '--all-targets', '--exclude', 'ssx-cli-hyper', '--', '-D', 'warnings'],
     ['clippy', '--locked', '-p', 'ssx-cli-hyper', '--features', 'full,source-client-framing', '--lib', '--', '-D', 'warnings'],
-    ['test', '--locked', '--workspace', '--exclude', 'xtask', '--features', 'ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing'],
+    ['test', '--locked', '--workspace', '--exclude', 'xtask', '--features',
+      'ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing', '--', '--exact',
+      ...a13InventoryNames.flatMap((name) => ['--skip', name])],
   ].map((args) => ({ program: 'cargo', args, exit_code: 0 })),
 });
-const a13InventoryNames = [
-  'source_inventory_is_closed_and_bound_without_original_execution',
-  'hibp_static_source_inventory_closed',
-  'intelx_static_source_inventory_closed',
-];
 const frozenA13 = JSON.parse(fs.readFileSync(new URL('../../docs/rust-rewrite/a13/qualification-v1.json', import.meta.url), 'utf8'));
 const a13Report = () => ({
   ...coreReport(),
@@ -152,6 +154,10 @@ test('requires all workspace coverage owned by F03 on the expected revision and 
   }
   const narrowed = coreReport(); narrowed.commands[3].args.push('--bin', 'xtask');
   assert.throws(() => validateCoreWorkspaceChecks(narrowed, expected), /one successful cargo test/);
+  const unfiltered = coreReport(); unfiltered.commands[3].args.splice(7);
+  assert.throws(() => validateCoreWorkspaceChecks(unfiltered, expected), /one successful cargo test/);
+  const extraSkip = coreReport(); extraSkip.commands[3].args.push('--skip', 'other_test');
+  assert.throws(() => validateCoreWorkspaceChecks(extraSkip, expected), /one successful cargo test/);
   const duplicated = coreReport(); duplicated.commands.push(duplicated.commands[3]);
   assert.throws(() => validateCoreWorkspaceChecks(duplicated, expected), /one successful cargo test/);
 });

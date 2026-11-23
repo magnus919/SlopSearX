@@ -7,7 +7,6 @@ const REQUIRED_F03_COMMANDS = Object.freeze([
   ['fmt', '--all', '--check'],
   ['clippy', '--locked', '--workspace', '--all-targets', '--exclude', 'ssx-cli-hyper', '--', '-D', 'warnings'],
   ['clippy', '--locked', '-p', 'ssx-cli-hyper', '--features', 'full,source-client-framing', '--lib', '--', '-D', 'warnings'],
-  ['test', '--locked', '--workspace', '--exclude', 'xtask', '--features', 'ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing'],
 ]);
 const A13_INVENTORY_SELECTORS = Object.freeze([
   {
@@ -23,6 +22,11 @@ const A13_INVENTORY_SELECTORS = Object.freeze([
     flags: ['--nocapture'],
   })),
 ]);
+const F03_HOSTED_TEST = [
+  'test', '--locked', '--workspace', '--exclude', 'xtask', '--features',
+  'ssx-cli-hyper/full,ssx-cli-hyper/source-client-framing', '--', '--exact',
+  ...A13_INVENTORY_SELECTORS.flatMap(({ name }) => ['--skip', name]),
+];
 const EXPECTED_CONTROL_RESULT = 'EXPECTED_SEMANTIC_FAILURE_CONFIRMED\n';
 const CONTROL_EVIDENCE_FILES = Object.freeze([
   'archive.sha256',
@@ -111,7 +115,7 @@ export function validateCoreWorkspaceChecks(report, expected) {
   requireValue(report.source?.head === expected.sourceRevision && report.source.diff === '' && report.source.working_tree === '', 'F03 workspace evidence source mismatch');
   requireValue(typeof report.toolchain === 'string' && report.toolchain.split('\n').includes(`host: ${expected.target}`), 'F03 workspace evidence target mismatch');
   requireValue(Array.isArray(report.commands), 'F03 workspace command evidence missing');
-  for (const args of REQUIRED_F03_COMMANDS) {
+  for (const args of [...REQUIRED_F03_COMMANDS, F03_HOSTED_TEST]) {
     const matches = report.commands.filter((record) => record?.program === 'cargo' && JSON.stringify(record.args) === JSON.stringify(args));
     requireValue(matches.length === 1 && matches[0].exit_code === 0, `F03 did not record one successful cargo ${args.join(' ')}`);
   }
