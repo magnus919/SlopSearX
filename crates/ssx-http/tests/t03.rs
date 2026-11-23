@@ -68,6 +68,7 @@ fn renderer_explains_the_configured_ranking_strategy() {
         results: vec![ssx_domain::SearchResult {
             url: "https://docs.example.com/guide".into(),
             title: "A useful guide".into(),
+            category: "science".into(),
             engine: "brave".into(),
             engines: ["brave".into(), "wikipedia".into()].into(),
             tier: 1,
@@ -76,19 +77,29 @@ fn renderer_explains_the_configured_ranking_strategy() {
         ..Default::default()
     };
     let explanation = scraper::Selector::parse("details.result-explanation").unwrap();
-    let explanation_text = |response: &ssx_domain::SearchResponse| {
-        let html = portal.search(response, &Value::Null, &request);
-        let document = scraper::Html::parse_document(&html);
+    let render = |response: &ssx_domain::SearchResponse| {
+        scraper::Html::parse_document(&portal.search(response, &Value::Null, &request))
+    };
+    let explanation_text = |document: &scraper::Html| {
         let details = document.select(&explanation).next().unwrap();
         details.text().collect::<String>()
     };
 
-    let presence = explanation_text(&response);
+    let document = render(&response);
+    let source_pills = scraper::Selector::parse("#result-1 .result-meta .result-pill").unwrap();
+    let labels: Vec<String> = document
+        .select(&source_pills)
+        .map(|pill| pill.text().collect())
+        .collect();
+    // F:L665 requires both source labels on the same result.
+    assert_eq!(labels, ["Brave", "Wikipedia"]);
+
+    let presence = explanation_text(&document);
     assert!(presence.contains("Cross-source presence"));
     assert!(!presence.contains("Reciprocal rank fusion (k=60)"));
 
     response.ranking_explanation = "tier_then_reciprocal_rank_fusion_k60".into();
-    let reciprocal_rank_fusion = explanation_text(&response);
+    let reciprocal_rank_fusion = explanation_text(&render(&response));
     assert!(reciprocal_rank_fusion.contains("Reciprocal rank fusion (k=60)"));
     assert!(reciprocal_rank_fusion.contains("it is not confidence"));
     assert!(!reciprocal_rank_fusion.contains("Cross-source presence"));
