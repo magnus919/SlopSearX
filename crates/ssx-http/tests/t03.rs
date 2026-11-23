@@ -14,6 +14,7 @@ fn static_assets_and_highlight_boundary_preserve_safe_progressive_rendering() {
     renderer_pagination_context_preserves_original_three_state_contract();
     renderer_omits_json_links_when_json_is_disabled();
     renderer_explains_the_configured_ranking_strategy();
+    renderer_explains_publication_entities_and_group_members();
     let html = PublicPortal::default().landing();
     assert!(html.len() <= 50 * 1024);
     assert!(STYLE.len() + SCRIPT.len() <= 30 * 1024);
@@ -91,6 +92,73 @@ fn renderer_explains_the_configured_ranking_strategy() {
     assert!(reciprocal_rank_fusion.contains("Reciprocal rank fusion (k=60)"));
     assert!(reciprocal_rank_fusion.contains("it is not confidence"));
     assert!(!reciprocal_rank_fusion.contains("Cross-source presence"));
+}
+
+fn renderer_explains_publication_entities_and_group_members() {
+    let publication = |engine: &str, url: &str, title: &str, data: Value, fields: &[&str]| {
+        ssx_domain::SearchResult {
+            url: url.into(),
+            title: title.into(),
+            engine: engine.into(),
+            category: "science".into(),
+            payload: Some(json!({
+                "schema_version": 1,
+                "domain": "science",
+                "type": "publication",
+                "data": data,
+                "provenance": {
+                    "engine": engine,
+                    "adapter_fields": fields,
+                    "inferred_fields": [],
+                },
+            })),
+            ..Default::default()
+        }
+    };
+    let request = ssx_domain::SearchRequest {
+        query: "paper".into(),
+        ..Default::default()
+    };
+    let response = ssx_domain::SearchResponse {
+        query: request.query.clone(),
+        results: vec![
+            publication(
+                "pubmed",
+                "https://pubmed.ncbi.nlm.nih.gov/123456/",
+                "Paper",
+                json!({"doi":"10.1000/example","pmid":"123456","title":"Paper"}),
+                &["doi", "pmid", "title"],
+            ),
+            ssx_domain::SearchResult {
+                url: "https://example.com/unrelated".into(),
+                title: "Unrelated result".into(),
+                ..Default::default()
+            },
+            publication(
+                "openalex",
+                "https://doi.org/10.1000/example",
+                "Alternate title",
+                json!({"doi":"10.1000/example","title":"Alternate title"}),
+                &["doi", "title"],
+            ),
+        ],
+        ..Default::default()
+    };
+    let html = PublicPortal::default().search(&response, &Value::Null, &request);
+    let document = scraper::Html::parse_document(&html);
+    let explanation = scraper::Selector::parse("#result-1 details.result-explanation").unwrap();
+    let details = document.select(&explanation).next().unwrap();
+    let text = details.text().collect::<String>();
+    // The original publication labels and nonadjacent member links (F:L778–F:L779, F:L733).
+    assert!(text.contains("doi — doi: 10.1000/example"));
+    assert!(text.contains("pmid — pmid: 123456"));
+    assert!(text.contains("Source-reported conflicts: title"));
+    let links = scraper::Selector::parse("a.explanation-link").unwrap();
+    let member_links: Vec<_> = details
+        .select(&links)
+        .map(|link| link.value().attr("href").unwrap())
+        .collect();
+    assert_eq!(member_links, ["#result-1", "#result-3"]);
 }
 
 fn renderer_omits_json_links_when_json_is_disabled() {
