@@ -124,36 +124,47 @@ try {
     join(evidence, name + '.png'), Buffer.from(await call('/screenshot'), 'base64'),
   );
 
+  async function resultsPage(query, page) {
+    let observation;
+    for (let attempt = 0; attempt < 30; attempt += 1) {
+      observation = await execute(`
+        return {
+          href: location.href,
+          title: document.querySelector('#results-title')?.textContent.trim(),
+          page: document.querySelector('[aria-current="page"]')?.textContent.trim(),
+        };
+      `);
+      const url = new URL(observation.href);
+      if (url.origin === fixtureUrl.origin && url.pathname === '/search'
+          && url.searchParams.get('q') === query && observation.title === query
+          && observation.page?.split(' ')[1] === String(page)) return url;
+      await delay(200);
+    }
+    assert.fail('Safari did not render the expected results page: ' + JSON.stringify(observation));
+  }
+
   await navigate('/');
   const query = await element('#portal-query');
   assert.equal(await execute('return document.activeElement.id'), 'portal-query');
   await call('/element/' + query + '/value', 'POST', { text: 'keyboard\uE007' });
-  for (let attempt = 0; attempt < 30; attempt += 1) {
-    if (new URL(await call('/url')).pathname === '/search') break;
-    await delay(200);
-  }
-  const submitted = new URL(await call('/url'));
-  assert.equal(submitted.origin, fixtureUrl.origin);
-  assert.equal(submitted.pathname, '/search');
-  assert.equal(submitted.searchParams.get('q'), 'keyboard');
-  assert.equal(await execute('return document.querySelector("h1").textContent.trim()'), 'keyboard');
+  await resultsPage('keyboard', 1);
   await screenshot('keyboard-search');
   receipt.cases.push('keyboard-search');
 
   await navigate('/search?q=valkey&categories=general');
+  await resultsPage('valkey', 1);
   const next = await element('a[aria-label="Try next result page"]');
   await call('/element/' + next + '/click', 'POST', {});
-  const pageTwo = new URL(await call('/url'));
-  assert.equal(pageTwo.searchParams.get('q'), 'valkey');
+  const pageTwo = await resultsPage('valkey', 2);
   assert.equal(pageTwo.searchParams.get('categories'), 'general');
   assert.equal(pageTwo.searchParams.get('pageno'), '2');
   await element('a[aria-label="Previous result page"]');
   await element('a[aria-label="Try next result page"]');
   await screenshot('pagination-page-two');
   await call('/back', 'POST', {});
-  assert.equal(new URL(await call('/url')).searchParams.get('pageno'), null);
+  assert.equal((await resultsPage('valkey', 1)).searchParams.get('pageno'), null);
   await call('/forward', 'POST', {});
-  assert.equal(new URL(await call('/url')).searchParams.get('pageno'), '2');
+  assert.equal((await resultsPage('valkey', 2)).searchParams.get('pageno'), '2');
   receipt.cases.push('pagination-history');
 } catch (error) {
   receipt.error = error.message;
