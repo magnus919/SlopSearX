@@ -137,6 +137,28 @@ fn renderer_preserves_packages_scope_with_one_response() {
     // F:L642 and F:L645 apply to the same rendered Packages response.
     assert!(html.contains(r#"option value="packages" selected"#));
     assert!(html.contains("packages · 1 of 2 sources answered"));
+
+    // F:L646 exercises a supplied formatter status with no adapter dispatch.
+    let moderate = SearchRequest {
+        safesearch: 1,
+        ..request
+    };
+    let meta = json!({"enforcement": {"safesearch": {
+        "requested": 1, "status": "partially_enforced", "reason": "one source"
+    }}});
+    let output = portal.search(&response, &meta, &moderate);
+    let document = scraper::Html::parse_document(&output);
+    let selector = scraper::Selector::parse(
+        r#"p.enforcement[data-filter="safesearch"][data-status="partially_enforced"]"#,
+    )
+    .unwrap();
+    let status = document.select(&selector).next().unwrap();
+    assert!(
+        status
+            .text()
+            .collect::<String>()
+            .contains("partially enforced")
+    );
 }
 
 fn renderer_explains_the_configured_ranking_strategy() {
