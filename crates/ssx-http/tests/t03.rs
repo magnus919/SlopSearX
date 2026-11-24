@@ -217,8 +217,13 @@ fn renderer_explains_publication_entities_and_group_members() {
                 "pubmed",
                 "https://pubmed.ncbi.nlm.nih.gov/123456/",
                 "Paper",
-                json!({"doi":"10.1000/example","pmid":"123456","title":"Paper"}),
-                &["doi", "pmid", "title"],
+                json!({
+                    "doi": "10.1000/example",
+                    "pmid": "123456",
+                    "title": "Paper",
+                    "description<img>": "Original description",
+                }),
+                &["doi", "pmid", "title", "description<img>"],
             ),
             ssx_domain::SearchResult {
                 url: "http://127.0.0.1/private".into(),
@@ -229,8 +234,12 @@ fn renderer_explains_publication_entities_and_group_members() {
                 "openalex",
                 "https://doi.org/10.1000/example",
                 "Alternate title",
-                json!({"doi":"10.1000/example","title":"Alternate title"}),
-                &["doi", "title"],
+                json!({
+                    "doi": "10.1000/example",
+                    "title": "Alternate title",
+                    "description<img>": "Alternate description",
+                }),
+                &["doi", "title", "description<img>"],
             ),
         ],
         ..Default::default()
@@ -243,7 +252,11 @@ fn renderer_explains_publication_entities_and_group_members() {
     // The original publication labels and nonadjacent member links (F:L778–F:L779, F:L733).
     assert!(text.contains("doi — doi: 10.1000/example"));
     assert!(text.contains("pmid — pmid: 123456"));
-    assert!(text.contains("Source-reported conflicts: title"));
+    // F:L732 keeps the source conflict label as text within the disclosure.
+    assert!(text.contains("Source-reported conflicts: description<img>, title"));
+    assert!(details.html().contains("description&lt;img&gt;"));
+    let image = scraper::Selector::parse("img").unwrap();
+    assert!(details.select(&image).next().is_none());
     let links = scraper::Selector::parse("a.explanation-link").unwrap();
     let member_links: Vec<_> = details
         .select(&links)
