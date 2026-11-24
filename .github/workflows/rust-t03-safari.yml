@@ -1,8 +1,14 @@
 name: Native portal Safari journeys
 
 on:
-  push:
-    branches: [codex/t03-safari-journeys]
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/rust-t03-safari.yml'
+      - 'crates/ssx-http/examples/t03_fixture.rs'
+      - 'crates/ssx-http/src/portal.rs'
+      - 'crates/ssx-http/src/portal/**'
+      - 'crates/ssx-http/tests/t03-browser/safari.mjs'
   workflow_dispatch:
 
 permissions:
@@ -47,4 +53,6 @@ jobs:
           if-no-files-found: error
       - name: Retire runner build and browser artifacts
         if: always()
-        run: rm -rf -- "$RUNNER_TEMP/ssx-safari-target" "$RUNNER_TEMP/ssx-safari-evidence"
+        run: |
+          set -euo pipefail
+          rm -rf -- "$RUNNER_TEMP/ssx-safari-target" "$RUNNER_TEMP/ssx-safari-evidence"
