@@ -1,0 +1,158 @@
+{
+    "rust-cli.yml:native-cli": {
+      "source": {
+        "job": {
+          "defaults": {
+            "run": {
+              "shell": "bash"
+            }
+          },
+          "env": {
+            "CARGO_BUILD_JOBS": 2,
+            "CARGO_INCREMENTAL": 0,
+            "CARGO_PROFILE_DEV_DEBUG": 0,
+            "CARGO_TERM_COLOR": "always",
+            "EXPECTED_TARGET": "${{ matrix.target }}",
+            "OPENSSL_NO_ASM": "1",
+            "OPENSSL_NO_VENDOR": "0",
+            "OPENSSL_STATIC": "1"
+          },
+          "name": "Native CLI (${{ matrix.target }})",
+          "runs-on": "${{ matrix.runner }}",
+          "steps": [
+            {
+              "if": "${{ runner.os == 'Windows' }}",
+              "name": "Preserve literal source bytes on Windows",
+              "run": "git config --global core.autocrlf false",
+              "shell": "bash"
+            },
+            {
+              "uses": "actions/checkout@v7",
+              "with": {
+                "fetch-depth": 0,
+                "persist-credentials": false
+              }
+            },
+            {
+              "name": "Confirm native bootstrap and source identity",
+              "run": "set -euo pipefail\nexport CARGO_TARGET_DIR=\"$RUNNER_TEMP/ssx-cli-target\"\nexport TMPDIR=\"$RUNNER_TEMP/ssx-cli-tmp\"\nexport TMP=\"$TMPDIR\" TEMP=\"$TMPDIR\"\n{\n  printf 'CARGO_TARGET_DIR=%s\\n' \"$CARGO_TARGET_DIR\"\n  printf 'TMPDIR=%s\\n' \"$TMPDIR\"\n  printf 'TMP=%s\\n' \"$TMP\"\n  printf 'TEMP=%s\\n' \"$TEMP\"\n} >> \"$GITHUB_ENV\"\nmkdir -p \"$TMPDIR\" \"$CARGO_TARGET_DIR/rust-evidence\"\nrustc --version --verbose | tee \"$CARGO_TARGET_DIR/rust-evidence/rustc.txt\"\ngrep -Fx \"host: $EXPECTED_TARGET\" \"$CARGO_TARGET_DIR/rust-evidence/rustc.txt\"\ncargo --version --verbose | tee \"$CARGO_TARGET_DIR/rust-evidence/cargo.txt\"\nif [ \"$RUNNER_OS\" = Windows ]; then\n  export OPENSSL_SRC_PERL='C:/Strawberry/perl/bin/perl.exe'\n  \"$OPENSSL_SRC_PERL\" -MIPC::Cmd -MLocale::Maketext::Simple -e 'die \"native Windows Perl required\\n\" unless $^O eq \"MSWin32\"; printf \"OpenSSL native Perl: %s (%s)\\n\", $^X, $^V;' | tee \"$CARGO_TARGET_DIR/rust-evidence/perl-selected.txt\"\n  \"$OPENSSL_SRC_PERL\" -V > \"$CARGO_TARGET_DIR/rust-evidence/perl.txt\"\n  printf 'OPENSSL_SRC_PERL=%s\\n' \"$OPENSSL_SRC_PERL\" >> \"$GITHUB_ENV\"\nelse\n  perl -V > \"$CARGO_TARGET_DIR/rust-evidence/perl.txt\"\nfi\ngit rev-parse HEAD > \"$CARGO_TARGET_DIR/rust-evidence/head.txt\"\ngit ls-files --stage > \"$CARGO_TARGET_DIR/rust-evidence/index-before.txt\"\ngit status --porcelain=v1 --untracked-files=all > \"$CARGO_TARGET_DIR/rust-evidence/status-before.txt\"\ntest ! -s \"$CARGO_TARGET_DIR/rust-evidence/status-before.txt\"\n"
+            },
+            {
+              "name": "Locked format and strict standalone client lint",
+              "run": "set -euo pipefail\ncargo fmt --all --check\ncargo clippy --locked -p ssx-cli -p ssx-cli-check -p ssx-cli-openssl-store -p ssx-source-codecs --all-targets -- -D warnings\n"
+            },
+            {
+              "name": "Native external-child corpus and source installation",
+              "run": "set -euo pipefail\nif [ \"$RUNNER_OS\" = Windows ]; then\n  mkdir -p \"$CARGO_TARGET_DIR/w07-windows-compile\"\n  rustc \\\n    --edition=2024 \\\n    --crate-name ssx_w07_windows_reader \\\n    --crate-type=lib \\\n    --emit=metadata \\\n    -D warnings \\\n    --target \"$EXPECTED_TARGET\" \\\n    crates/xtask/src/w07_windows_reader.rs \\\n    -o \"$CARGO_TARGET_DIR/w07-windows-compile/reader.rmeta\" \\\n    2>&1 | tee \"$CARGO_TARGET_DIR/rust-evidence/w07-windows-reader-check.log\"\n  test -s \"$CARGO_TARGET_DIR/w07-windows-compile/reader.rmeta\"\n  cargo run --locked -p ssx-cli-check -- check T08A --output \"$CARGO_TARGET_DIR/rust-evidence/T08A.json\"\nelse\n  cargo xtask check T08A --output \"$CARGO_TARGET_DIR/rust-evidence/T08A.json\"\nfi\nif [ ! -s \"$CARGO_TARGET_DIR/rust-evidence/T08A.json\" ]; then\n  echo \"::error::T08A gate exited zero without writing $CARGO_TARGET_DIR/rust-evidence/T08A.json\"\n  exit 1\nfi\ngit ls-files --stage > \"$CARGO_TARGET_DIR/rust-evidence/index-after.txt\"\nif ! cmp \"$CARGO_TARGET_DIR/rust-evidence/index-before.txt\" \"$CARGO_TARGET_DIR/rust-evidence/index-after.txt\"; then\n  echo \"::error::T08A gate changed the Git index\"\n  exit 1\nfi\ndirty=\"$(git status --porcelain=v1 --untracked-files=all)\"\nif [ -n \"$dirty\" ]; then\n  echo \"::error::T08A gate left the worktree dirty\"\n  echo \"$dirty\"\n  exit 1\nfi\n"
+            },
+            {
+              "if": "${{ always() }}",
+              "name": "Retain native CLI evidence",
+              "uses": "actions/upload-artifact@v7",
+              "with": {
+                "if-no-files-found": "error",
+                "name": "native-cli-${{ matrix.target }}-${{ github.sha }}",
+                "path": "${{ runner.temp }}/ssx-cli-target/rust-evidence/"
+              }
+            },
+            {
+              "if": "${{ always() }}",
+              "name": "Retire reproducible native artifacts",
+              "run": "set -euo pipefail\nrm -rf \"$CARGO_TARGET_DIR\" \"$TMPDIR\"\n"
+            }
+          ],
+          "strategy": {
+            "fail-fast": false,
+            "matrix": {
+              "include": [
+                {
+                  "runner": "ubuntu-24.04",
+                  "target": "x86_64-unknown-linux-gnu"
+                },
+                {
+                  "runner": "ubuntu-24.04-arm",
+                  "target": "aarch64-unknown-linux-gnu"
+                },
+                {
+                  "runner": "macos-15-intel",
+                  "target": "x86_64-apple-darwin"
+                },
+                {
+                  "runner": "macos-15",
+                  "target": "aarch64-apple-darwin"
+                },
+                {
+                  "runner": "windows-2025",
+                  "target": "x86_64-pc-windows-msvc"
+                }
+              ]
+            }
+          },
+          "timeout-minutes": 60
+        },
+        "workflow": {
+          "name": "Native CLI component",
+          "on": {
+            "pull_request": {
+              "branches": [
+                "main"
+              ]
+            },
+            "push": {
+              "branches": [
+                "main"
+              ]
+            }
+          },
+          "permissions": {
+            "contents": "read"
+          }
+        }
+      },
+      "owner": "T08A",
+      "state": "additive",
+      "successor": "Direct native rustc compilation of the exact std-only W07 Windows reader on the matching Windows host, then T08A and native client evidence on five targets; this does not qualify full xtask or backend execution on Windows."
+    },
+    "rust-cli.yml:native-cli-acceptance": {
+      "source": {
+        "job": {
+          "if": "${{ always() }}",
+          "name": "Native CLI component acceptance",
+          "needs": [
+            "native-cli"
+          ],
+          "runs-on": "ubuntu-24.04",
+          "steps": [
+            {
+              "env": {
+                "MATRIX_RESULT": "${{ needs.native-cli.result }}"
+              },
+              "name": "Require every supported native client target",
+              "run": "if [ \"$MATRIX_RESULT\" != success ]; then\n  echo \"::error::native-cli matrix did not succeed ($MATRIX_RESULT)\"\n  exit 1\nfi\n"
+            }
+          ]
+        },
+        "workflow": {
+          "name": "Native CLI component",
+          "on": {
+            "pull_request": {
+              "branches": [
+                "main"
+              ]
+            },
+            "push": {
+              "branches": [
+                "main"
+              ]
+            }
+          },
+          "permissions": {
+            "contents": "read"
+          }
+        }
+      },
+      "owner": "T08A",
+      "state": "additive",
+      "successor": "cargo xtask check T08A; real native external-child CLI/TLS/proxy corpus and source install on five supported client targets; fail closed aggregate, no Python runtime/backend fallback"
+    }
+}
