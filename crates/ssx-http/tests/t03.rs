@@ -18,6 +18,7 @@ fn static_assets_and_highlight_boundary_preserve_safe_progressive_rendering() {
     renderer_escapes_jev_specialist_labels();
     renderer_explains_publication_entities_and_group_members();
     renderer_preserves_only_safe_highlight_tags();
+    renderer_uses_only_normalized_repository_identity();
     let html = PublicPortal::default().landing();
     assert!(html.len() <= 50 * 1024);
     assert!(STYLE.len() + SCRIPT.len() <= 30 * 1024);
@@ -322,6 +323,52 @@ fn renderer_escapes_jev_specialist_labels() {
     assert!(notice.html().contains("&lt;script&gt;bad&lt;/script&gt;"));
     let script = scraper::Selector::parse("script").unwrap();
     assert!(notice.select(&script).next().is_none());
+}
+
+fn renderer_uses_only_normalized_repository_identity() {
+    let repository = |name: &str, url: &str| ssx_domain::SearchResult {
+        url: url.into(),
+        title: "Search repository".into(),
+        engine: "github".into(),
+        payload: Some(json!({
+            "schema_version": 1,
+            "domain": "code",
+            "type": "repository",
+            "data": { "repository": name, "namespace": "repository_override" },
+            "provenance": {
+                "engine": "github",
+                "adapter_fields": ["repository", "namespace"],
+                "inferred_fields": [],
+            },
+        })),
+        ..Default::default()
+    };
+    let request = ssx_domain::SearchRequest {
+        query: "search".into(),
+        ..Default::default()
+    };
+    let response = ssx_domain::SearchResponse {
+        query: request.query.clone(),
+        results: vec![
+            repository("example-co/search", "https://github.com/example-co/search"),
+            repository("example&co/search", "https://github.com/example-co/other"),
+        ],
+        ..Default::default()
+    };
+    let html = PublicPortal::default().search(&response, &Value::Null, &request);
+    let document = scraper::Html::parse_document(&html);
+    let explanations = scraper::Selector::parse("details.result-explanation").unwrap();
+    let mut details = document.select(&explanations);
+    let valid = details.next().unwrap().text().collect::<String>();
+    let invalid = details.next().unwrap().text().collect::<String>();
+    assert!(valid.contains("github_repository — repository: example-co/search"));
+    assert!(!valid.contains("repository_override"));
+    assert!(
+        invalid
+            .contains("unsupported for this result (invalid inferred or conflicting identifier)")
+    );
+    assert!(!invalid.contains("example&co/search"));
+    assert!(!invalid.contains("repository_override"));
 }
 
 fn renderer_omits_json_links_when_json_is_disabled() {
