@@ -268,8 +268,7 @@ fn source_snapshot(root: &Path, records: &mut Vec<Value>) -> Result<Vec<Value>> 
         ],
         records,
     )?;
-    let mut sources = Vec::new();
-    for path in paths.split('\0').filter(|p| !p.is_empty()).filter(|p| {
+    let in_scope = |p: &&str| {
         p.starts_with("contracts/")
             || p.starts_with("crates/")
             || p.starts_with(".cargo/")
@@ -291,9 +290,45 @@ fn source_snapshot(root: &Path, records: &mut Vec<Value>) -> Result<Vec<Value>> 
             )
             || p.starts_with("docs/rust-rewrite/")
             || p.starts_with("docs/adr/")
-    }) {
-        let hash = command(root, "git", &["hash-object", "--", path], records)?;
-        sources.push(json!({"path":path,"git_blob":hash.trim()}));
+    };
+    let mut paths = paths
+        .split('\0')
+        .filter(|p| !p.is_empty())
+        .filter(in_scope)
+        .peekable();
+
+    const MAX_PATHS: usize = 128;
+    // Leave room for Git arguments and platform command-line quoting.
+    const MAX_PATH_BYTES: usize = 12 * 1024;
+    let mut sources = Vec::new();
+    while let Some(path) = paths.next() {
+        let mut args = vec!["hash-object", "--", path];
+        let mut path_bytes = path.len() + 1;
+        while args.len() - 2 < MAX_PATHS {
+            let Some(path) = paths.next_if(|path| path_bytes + path.len() < MAX_PATH_BYTES) else {
+                break;
+            };
+            path_bytes += path.len() + 1;
+            args.push(path);
+        }
+
+        let output = command(root, "git", &args, records)?;
+        let mut hashes = output.lines();
+        for path in &args[2..] {
+            let hash = hashes
+                .next()
+                .filter(|hash| {
+                    matches!(hash.len(), 40 | 64)
+                        && hash
+                            .bytes()
+                            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+                })
+                .ok_or("source snapshot Git hash missing or malformed")?;
+            sources.push(json!({"path":path,"git_blob":hash}));
+        }
+        if hashes.next().is_some() {
+            return Err("source snapshot Git returned extra hashes".into());
+        }
     }
     if sources.is_empty() {
         return Err("empty source snapshot".into());
