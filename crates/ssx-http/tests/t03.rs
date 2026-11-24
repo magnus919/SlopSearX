@@ -16,6 +16,7 @@ fn static_assets_and_highlight_boundary_preserve_safe_progressive_rendering() {
     renderer_preserves_packages_scope_with_one_response();
     renderer_explains_the_configured_ranking_strategy();
     renderer_explains_publication_entities_and_group_members();
+    renderer_preserves_only_safe_highlight_tags();
     let html = PublicPortal::default().landing();
     assert!(html.len() <= 50 * 1024);
     assert!(STYLE.len() + SCRIPT.len() <= 30 * 1024);
@@ -56,6 +57,31 @@ fn static_assets_and_highlight_boundary_preserve_safe_progressive_rendering() {
     assert!(result_html.contains("&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;"));
     assert!(result_html.contains("&lt;img src=x onerror=alert(1)&gt;"));
     assert!(!result_html.contains("javascript:"));
+}
+
+fn renderer_preserves_only_safe_highlight_tags() {
+    let request = ssx_domain::SearchRequest {
+        query: "match".into(),
+        ..Default::default()
+    };
+    let response = ssx_domain::SearchResponse {
+        query: request.query.clone(),
+        results: vec![ssx_domain::SearchResult {
+            url: "https://example.com".into(),
+            title: "Highlighted result".into(),
+            content: r#"<strong>match</strong> <em>context</em> <strong onclick="alert(1)">unsafe</strong>"#
+                .into(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+
+    let html = PublicPortal::default().search(&response, &Value::Null, &request);
+    // Preserve the original fixture and highlight predicates (F:L583–F:L585).
+    assert!(html.contains("<strong>match</strong>"));
+    assert!(html.contains("<em>context</em>"));
+    assert!(html.contains("&lt;strong onclick=&quot;alert(1)&quot;&gt;unsafe&lt;/strong&gt;"));
+    assert!(!html.contains("<strong onclick="));
 }
 
 fn renderer_preserves_packages_scope_with_one_response() {
