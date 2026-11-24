@@ -23,6 +23,14 @@ const REHEARSAL_ROW_OFFSET: usize = 84774;
 const REHEARSAL_ROW_BYTES: usize = 3041;
 const PRIOR_T02_IMAGE_ROW: &str = "    \"rust-t02-image.yml:t02-image\": {\n      \"source\": {\n        \"workflow\": {\n          \"name\": \"Native T02 Python-free HTTP image\",\n          \"on\": {\n            \"push\": {\n              \"branches\": [\n                \"main\"\n              ]\n            },\n            \"pull_request\": {\n              \"branches\": [\n                \"main\"\n              ]\n            },\n            \"workflow_dispatch\": null\n          },\n          \"permissions\": {\n            \"contents\": \"read\"\n          }\n        },\n        \"job\": {\n          \"name\": \"T02 real HTTP image (amd64)\",\n          \"runs-on\": \"ubuntu-24.04\",\n          \"timeout-minutes\": 45,\n          \"steps\": [\n            {\n              \"uses\": \"actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683\",\n              \"with\": {\n                \"persist-credentials\": false\n              }\n            },\n            {\n              \"name\": \"Build scoped native service image\",\n              \"timeout-minutes\": 35,\n              \"run\": \"docker build --file crates/ssx-http/Dockerfile.t02 --tag ssx-t02-http:${{ github.sha }} .\"\n            },\n            {\n              \"name\": \"Verify actual HTTP process without Python or external networking\",\n              \"timeout-minutes\": 5,\n              \"run\": \"mkdir -p target/rust-evidence\\ndocker image inspect ssx-t02-http:${{ github.sha }} > target/rust-evidence/T02-image-identity.json\\ndocker run --rm --network none --cap-drop ALL --security-opt no-new-privileges --read-only --tmpfs /tmp:rw,noexec,nosuid,size=32m ssx-t02-http:${{ github.sha }} > target/rust-evidence/T02-image-smoke.json\\n\"\n            },\n            {\n              \"name\": \"Retain image identity and actual independent-client evidence\",\n              \"if\": \"always()\",\n              \"uses\": \"actions/upload-artifact@v7\",\n              \"with\": {\n                \"name\": \"native-t02-image-${{ github.sha }}\",\n                \"path\": \"target/rust-evidence/T02-image-*.json\",\n                \"if-no-files-found\": \"error\"\n              }\n            }\n          ]\n        }\n      },\n      \"owner\": \"T02\",\n      \"state\": \"additive\",\n      \"successor\": \"Actual offline Rust HTTP service image and independent Rust client; no Python executable/libpython/backend fallback; network-none process and wire checks. Production assembly/cutover remains O04/W09/O09.\"\n    },\n";
 
+const WINDOWS_CLI_CATALOG_BYTES: usize = 185863;
+const WINDOWS_CLI_CATALOG_SHA: &str =
+    "5ba8ea91e438090103ed0542e2999b93babb7d34ff8c069b26619b9506e5032d";
+const WINDOWS_CLI_CATALOG_OFFSET: usize = 145861;
+const WINDOWS_CLI_CATALOG_SPAN_BYTES: usize = 9983;
+const PRIOR_CLI_CATALOG: &str =
+    include_str!("../../../docs/rust-rewrite/o02/windows-cli-gates-predecessor.json");
+
 const A13_HANDOFF_CATALOG_BYTES: usize = 183935;
 const A13_HANDOFF_CATALOG_SHA: &str =
     "1fb68733853cd45edba4397cc7f724efa5b840a79864b2fb079a52951fccc57d";
@@ -80,7 +88,7 @@ fn hash(raw: &[u8]) -> String {
 }
 pub(super) fn physical_bytes(path: &str, expected: usize) -> usize {
     if path == PATH && expected == PRIOR_BYTES {
-        A13_HANDOFF_CATALOG_BYTES
+        WINDOWS_CLI_CATALOG_BYTES
     } else {
         expected
     }
@@ -89,7 +97,19 @@ pub(super) fn project(path: &str, expected: usize, raw: Vec<u8>) -> Result<Vec<u
     if path != PATH || expected != PRIOR_BYTES {
         return Ok(raw);
     }
+    if raw.len() != WINDOWS_CLI_CATALOG_BYTES || hash(&raw) != WINDOWS_CLI_CATALOG_SHA {
+        return Err("O02 catalog successor: exact Windows CLI catalog required".into());
+    }
+    let prior_cli = PRIOR_CLI_CATALOG
+        .strip_prefix("{\n")
+        .and_then(|rows| rows.strip_suffix("\n}\n"))
+        .ok_or("O02 catalog successor: prior CLI rows framing")?;
     let mut raw = raw;
+    let windows_end = WINDOWS_CLI_CATALOG_OFFSET + WINDOWS_CLI_CATALOG_SPAN_BYTES;
+    raw.splice(
+        WINDOWS_CLI_CATALOG_OFFSET..windows_end,
+        prior_cli.bytes().chain(b",\n".iter().copied()),
+    );
     let end = A13_HANDOFF_CATALOG_OFFSET + A13_HANDOFF_CATALOG_SPAN.len();
     if raw.len() != A13_HANDOFF_CATALOG_BYTES
         || hash(&raw) != A13_HANDOFF_CATALOG_SHA
@@ -177,6 +197,6 @@ pub(super) fn controls(root: &std::path::Path) {
     ] {
         assert!(project(PATH, PRIOR_BYTES, mutant).is_err());
     }
-    assert_eq!(physical_bytes(PATH, PRIOR_BYTES), A13_HANDOFF_CATALOG_BYTES);
+    assert_eq!(physical_bytes(PATH, PRIOR_BYTES), WINDOWS_CLI_CATALOG_BYTES);
     assert_eq!(physical_bytes("unlisted", 7), 7);
 }
