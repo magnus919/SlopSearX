@@ -1948,6 +1948,12 @@
               ],
               "paths": [
                 ".github/workflows/rust-t03-safari.yml",
+                ".cargo/**",
+                "Cargo.lock",
+                "Cargo.toml",
+                "rust-toolchain.toml",
+                "crates/**/Cargo.toml",
+                "vendor/**/Cargo.toml",
                 "crates/ssx-http/examples/t03_fixture.rs",
                 "crates/ssx-http/src/portal.rs",
                 "crates/ssx-http/src/portal/**",
