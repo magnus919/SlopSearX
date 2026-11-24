@@ -15,6 +15,7 @@ fn static_assets_and_highlight_boundary_preserve_safe_progressive_rendering() {
     renderer_omits_json_links_when_json_is_disabled();
     renderer_preserves_packages_scope_with_one_response();
     renderer_explains_the_configured_ranking_strategy();
+    renderer_escapes_jev_specialist_labels();
     renderer_explains_publication_entities_and_group_members();
     renderer_preserves_only_safe_highlight_tags();
     let html = PublicPortal::default().landing();
@@ -278,6 +279,49 @@ fn renderer_explains_publication_entities_and_group_members() {
             .collect::<String>()
             .contains("non-global literal IP address")
     );
+}
+
+fn renderer_escapes_jev_specialist_labels() {
+    let request = ssx_domain::SearchRequest {
+        query: "query".into(),
+        ..Default::default()
+    };
+    let response = ssx_domain::SearchResponse {
+        query: request.query.clone(),
+        results: vec![ssx_domain::SearchResult {
+            url: "https://example.com".into(),
+            title: "A result".into(),
+            ..Default::default()
+        }],
+        scope: ssx_domain::ScopeDecision {
+            jev_added_engines: vec!["pubmed".into(), "<script>bad</script>".into()],
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    let discovery = json!({ "engines": [{ "name": "pubmed", "display_name": "PubMed" }] });
+    let formats = std::collections::BTreeSet::from(["html".into(), "json".into()]);
+    let portal = PublicPortal::new(&discovery, &formats, "dark");
+    let html = portal.search(&response, &Value::Null, &request);
+    let document = scraper::Html::parse_document(&html);
+    let notes = scraper::Selector::parse("p.scope-note").unwrap();
+    let notice = document
+        .select(&notes)
+        .find(|note| {
+            note.text()
+                .collect::<String>()
+                .starts_with("Specialists added by Jev:")
+        })
+        .unwrap();
+
+    // F:L560–F:L561 preserve the fallback label as text and use the configured PubMed name.
+    assert_eq!(
+        notice.text().collect::<String>(),
+        "Specialists added by Jev: PubMed, <script>bad</script>",
+    );
+    assert!(notice.html().contains("&lt;script&gt;bad&lt;/script&gt;"));
+    let script = scraper::Selector::parse("script").unwrap();
+    assert!(notice.select(&script).next().is_none());
 }
 
 fn renderer_omits_json_links_when_json_is_disabled() {
