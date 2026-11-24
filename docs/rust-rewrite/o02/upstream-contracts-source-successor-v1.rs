@@ -246,6 +246,103 @@ const PRIOR_FOUNDATION_TEST: &str = r###"            // xtask unit tests are run
             )?;
 "###;
 
+const SNAPSHOT_BATCH_MAIN_BYTES: usize = 47891;
+const SNAPSHOT_BATCH_MAIN_SHA: &str =
+    "ef43b2a464d30c17f4e73f89b5ae85f25a6cb382cc2a3f5db21c6d79b3d650d0";
+const SNAPSHOT_BATCH_SPANS: [(&str, &str); 2] = [
+    (
+        r###"    let mut sources = Vec::new();
+    for path in paths.split('\0').filter(|p| !p.is_empty()).filter(|p| {
+"###,
+        r###"    let in_scope = |p: &&str| {
+"###,
+    ),
+    (
+        r###"    }) {
+        let hash = command(root, "git", &["hash-object", "--", path], records)?;
+        sources.push(json!({"path":path,"git_blob":hash.trim()}));
+"###,
+        r###"    };
+    let mut paths = paths
+        .split('\0')
+        .filter(|p| !p.is_empty())
+        .filter(in_scope)
+        .peekable();
+
+    const MAX_PATHS: usize = 128;
+    // Leave room for Git arguments and platform command-line quoting.
+    const MAX_PATH_BYTES: usize = 12 * 1024;
+    let mut sources = Vec::new();
+    while let Some(path) = paths.next() {
+        let mut args = vec!["hash-object", "--", path];
+        let mut path_bytes = path.len() + 1;
+        while args.len() - 2 < MAX_PATHS {
+            let Some(path) = paths.next_if(|path| path_bytes + path.len() + 1 <= MAX_PATH_BYTES)
+            else {
+                break;
+            };
+            path_bytes += path.len() + 1;
+            args.push(path);
+        }
+
+        let output = command(root, "git", &args, records)?;
+        let mut hashes = output.lines();
+        for path in &args[2..] {
+            let hash = hashes
+                .next()
+                .filter(|hash| {
+                    matches!(hash.len(), 40 | 64)
+                        && hash
+                            .bytes()
+                            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+                })
+                .ok_or("source snapshot Git hash missing or malformed")?;
+            sources.push(json!({"path":path,"git_blob":hash}));
+        }
+        if hashes.next().is_some() {
+            return Err("source snapshot Git returned extra hashes".into());
+        }
+"###,
+    ),
+];
+
+fn snapshot_batch_prior(current: &[u8], mode: u32) -> Result<Vec<u8>> {
+    need(
+        mode == 0o644
+            && current.len() == SNAPSHOT_BATCH_MAIN_BYTES
+            && digest(current) == SNAPSHOT_BATCH_MAIN_SHA,
+        "exact source snapshot batching main bytes/hash/mode",
+    )?;
+    let mut prior = std::str::from_utf8(current)
+        .map_err(|e| e.to_string())?
+        .to_owned();
+    for (before, after) in SNAPSHOT_BATCH_SPANS {
+        need(
+            prior.matches(after).count() == 1,
+            "exact snapshot batching span",
+        )?;
+        prior = prior.replacen(after, before, 1);
+    }
+    need(
+        prior.len() == QUALIFICATION_MAIN_BYTES
+            && digest(prior.as_bytes()) == QUALIFICATION_MAIN_SHA,
+        "snapshot batching reconstructs the exact Foundation qualification main",
+    )?;
+    let mut forward = prior.clone();
+    for (before, after) in SNAPSHOT_BATCH_SPANS {
+        need(
+            forward.matches(before).count() == 1,
+            "exact serial snapshot span",
+        )?;
+        forward = forward.replacen(before, after, 1);
+    }
+    need(
+        forward.as_bytes() == current,
+        "complete snapshot batching reconstruction",
+    )?;
+    Ok(prior.into_bytes())
+}
+
 fn qualification_prior(current: &[u8], mode: u32) -> Result<Vec<u8>> {
     need(
         mode == 0o644
@@ -288,7 +385,8 @@ fn qualification_prior(current: &[u8], mode: u32) -> Result<Vec<u8>> {
 
 pub(crate) fn frame(path: &str, current: &[u8], mode: u32) -> Result<Vec<u8>> {
     if path == "crates/xtask/src/main.rs" {
-        return historical_frame(path, &qualification_prior(current, mode)?, mode);
+        let predecessor = snapshot_batch_prior(current, mode)?;
+        return historical_frame(path, &qualification_prior(&predecessor, mode)?, mode);
     }
     historical_frame(path, current, mode)
 }
@@ -460,7 +558,17 @@ pub(crate) fn controls(root: &Path, admitted_lock: &[u8]) -> Result<()> {
         let actual = if pin.path == "Cargo.lock" {
             admitted_lock.to_vec()
         } else {
-            let current = physical(root, pin.path, QUALIFICATION_MAIN_BYTES)?;
+            let current = physical(root, pin.path, SNAPSHOT_BATCH_MAIN_BYTES)?;
+            let serial = snapshot_batch_prior(&current, 0o644)?;
+            let mut changed_snapshot = current.clone();
+            changed_snapshot[0] ^= 1;
+            need(
+                snapshot_batch_prior(&changed_snapshot, 0o644).is_err()
+                    && snapshot_batch_prior(&serial, 0o644).is_err()
+                    && snapshot_batch_prior(&current, 0o755).is_err(),
+                "snapshot batching rejects altered, historical and executable main material",
+            )?;
+            let current = serial;
             let prior = qualification_prior(&current, 0o644)?;
             let mut changed = current.clone();
             changed[0] ^= 1;
