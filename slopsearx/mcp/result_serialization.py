@@ -12,12 +12,14 @@ from slopsearx.artifacts import artifact_ref
 from slopsearx.payload import (
     PAYLOAD_INLINE_BYTES,
     is_valid_payload,
+    payload_for_persistence,
     payload_max_persist_bytes,
     payload_serialized_size,
     payload_to_dict,
 )
 from slopsearx.publication_metadata import projected_paper
 from slopsearx.retrieval_url import RETRIEVAL_URL_STATUS_OK, _retrieval_url
+from slopsearx.scholarly import MAX_MEMBERS, MAX_RECORD_BYTES
 from slopsearx.snapshot import SearchSnapshot
 
 RANKING_EXPLANATION = "tier_then_cross_engine_presence"
@@ -210,6 +212,18 @@ def _payload_for_record(payload: dict[str, Any] | None) -> dict[str, Any] | None
     return payload
 
 
+def _work_group_for_record(group: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Copy a bounded attributed scholarly group for expanded disclosure."""
+    if not isinstance(group, dict) or group.get("schema_version") != 1:
+        return None
+    members = group.get("members")
+    if not isinstance(members, list) or not 1 <= len(members) <= MAX_MEMBERS:
+        return None
+    if any(not isinstance(member, dict) or not isinstance(member.get("engine"), str) for member in members):
+        return None
+    return payload_for_persistence(group, max_bytes=MAX_RECORD_BYTES)
+
+
 def _result_record(result: SearchResult, snapshot: SearchSnapshot, result_id: str) -> dict[str, Any]:
     """Build the full result record for ``slopsearx_read_result``.
 
@@ -259,5 +273,8 @@ def _result_record(result: SearchResult, snapshot: SearchSnapshot, result_id: st
     }
     if not content_available:
         record["content_unavailable_note"] = CONTENT_UNAVAILABLE_NOTE
+    group = _work_group_for_record(result.work_group)
+    if group is not None:
+        record["work_group"] = group
     record.update(projected_paper(result))
     return record
