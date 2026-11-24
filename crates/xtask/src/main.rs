@@ -305,8 +305,7 @@ fn source_snapshot(root: &Path, records: &mut Vec<Value>) -> Result<Vec<Value>> 
         let mut args = vec!["hash-object", "--", path];
         let mut path_bytes = path.len() + 1;
         while args.len() - 2 < MAX_PATHS {
-            let Some(path) = paths.next_if(|path| path_bytes + path.len() + 1 <= MAX_PATH_BYTES)
-            else {
+            let Some(path) = paths.next_if(|path| path_bytes + path.len() < MAX_PATH_BYTES) else {
                 break;
             };
             path_bytes += path.len() + 1;

@@ -246,9 +246,9 @@ const PRIOR_FOUNDATION_TEST: &str = r###"            // xtask unit tests are run
             )?;
 "###;
 
-const SNAPSHOT_BATCH_MAIN_BYTES: usize = 47891;
+const SNAPSHOT_BATCH_MAIN_BYTES: usize = 47874;
 const SNAPSHOT_BATCH_MAIN_SHA: &str =
-    "ef43b2a464d30c17f4e73f89b5ae85f25a6cb382cc2a3f5db21c6d79b3d650d0";
+    "dab6a82ff6f6d0c85112eda05e13ca46c640825a9b0a9d274d2f5eccf24adc53";
 const SNAPSHOT_BATCH_SPANS: [(&str, &str); 2] = [
     (
         r###"    let mut sources = Vec::new();
@@ -277,8 +277,7 @@ const SNAPSHOT_BATCH_SPANS: [(&str, &str); 2] = [
         let mut args = vec!["hash-object", "--", path];
         let mut path_bytes = path.len() + 1;
         while args.len() - 2 < MAX_PATHS {
-            let Some(path) = paths.next_if(|path| path_bytes + path.len() + 1 <= MAX_PATH_BYTES)
-            else {
+            let Some(path) = paths.next_if(|path| path_bytes + path.len() < MAX_PATH_BYTES) else {
                 break;
             };
             path_bytes += path.len() + 1;
