@@ -13,7 +13,7 @@
 //! does not match exactly one live local package, a live local package that is
 //! neither mapped nor inside a declared project-owned root, or any file whose
 //! digest drifted fails the whole run closed.
-use crate::{Result, command};
+use crate::Result;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{
@@ -419,33 +419,37 @@ pub fn transform_metadata(
     Ok((derived, evidence))
 }
 
-fn write_json(root: &Path, relative: &str, value: &Value) -> Result<Vec<u8>> {
-    let bytes = serde_json::to_vec_pretty(value).map_err(|e| e.to_string())?;
+fn write_artifact(root: &Path, relative: &str, bytes: &[u8]) -> Result<()> {
     let output = root.join(relative);
     if let Some(parent) = output.parent() {
         fs::create_dir_all(parent).map_err(|e| e.to_string())?;
     }
-    fs::write(&output, &bytes).map_err(|e| e.to_string())?;
+    fs::write(&output, bytes).map_err(|e| e.to_string())
+}
+
+fn write_json(root: &Path, relative: &str, value: &Value) -> Result<Vec<u8>> {
+    let bytes = serde_json::to_vec_pretty(value).map_err(|e| e.to_string())?;
+    write_artifact(root, relative, &bytes)?;
     Ok(bytes)
 }
 
 /// Derives the labelled advisory view and retains both metadata documents.
 pub fn derive(root: &Path) -> Result<Value> {
     let mappings = load_mappings(root)?;
-    let mut records = Vec::new();
-    let physical = command(
-        root,
-        "cargo",
-        &["metadata", "--locked", "--format-version", "1"],
-        &mut records,
-    )?;
-    let physical_sha = digest(physical.as_bytes());
-    let metadata: Value = serde_json::from_str(&physical).map_err(|e| e.to_string())?;
-    let _ = write_json(
-        root,
-        PHYSICAL,
-        &serde_json::from_str(&physical).map_err(|e| e.to_string())?,
-    )?;
+    let metadata_output = Command::new("cargo")
+        .args(["metadata", "--locked", "--format-version", "1"])
+        .current_dir(root)
+        .output()
+        .map_err(|error| format!("cargo metadata: {error}"))?;
+    if !metadata_output.status.success() {
+        return Err(format!(
+            "cargo metadata failed: {}",
+            String::from_utf8_lossy(&metadata_output.stderr)
+        ));
+    }
+    let physical = metadata_output.stdout;
+    let metadata: Value = serde_json::from_slice(&physical).map_err(|e| e.to_string())?;
+    write_artifact(root, PHYSICAL, &physical)?;
     let (derived, entries) = transform_metadata(root, &metadata, &mappings)?;
     let derived_bytes = write_json(root, DERIVED, &derived)?;
     Ok(json!({
@@ -455,7 +459,7 @@ pub fn derive(root: &Path) -> Result<Value> {
         "mappings_sha256": mappings.sha256,
         "project_owned_roots": mappings.project_owned_roots,
         "physical_metadata_path": PHYSICAL,
-        "physical_metadata_sha256": physical_sha,
+        "physical_metadata_sha256": digest(&physical),
         "derived_metadata_path": DERIVED,
         "derived_metadata_sha256": digest(&derived_bytes),
         "derived_metadata_bytes": derived_bytes.len(),
