@@ -221,8 +221,8 @@ fn renderer_explains_publication_entities_and_group_members() {
                 &["doi", "pmid", "title"],
             ),
             ssx_domain::SearchResult {
-                url: "https://example.com/unrelated".into(),
-                title: "Unrelated result".into(),
+                url: "http://127.0.0.1/private".into(),
+                title: "Local result".into(),
                 ..Default::default()
             },
             publication(
@@ -250,6 +250,21 @@ fn renderer_explains_publication_entities_and_group_members() {
         .map(|link| link.value().attr("href").unwrap())
         .collect();
     assert_eq!(member_links, ["#result-1", "#result-3"]);
+
+    // F:L748 binds the legacy reason to the local result's handoff disclosure.
+    let local_handoff = scraper::Selector::parse(
+        r#"#result-2 details.result-explanation [data-status="ineligible"]"#,
+    )
+    .unwrap();
+    let status = document.select(&local_handoff).next().unwrap();
+    assert_eq!(status.text().collect::<String>(), "not eligible");
+    let handoff = scraper::ElementRef::wrap(status.parent().unwrap()).unwrap();
+    assert!(
+        handoff
+            .text()
+            .collect::<String>()
+            .contains("non-global literal IP address")
+    );
 }
 
 fn renderer_omits_json_links_when_json_is_disabled() {
