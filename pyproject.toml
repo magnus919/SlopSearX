@@ -50,6 +50,7 @@ dev = [
     "pip>=26.2",
     "setuptools>=84.1.0",
     "pre-commit>=4.0",
+    "virtualenv>=21.14.13",
     "radon>=6.0",
     "vulture>=2.11",
     "import-linter>=2.3",
@@ -135,7 +136,7 @@ known_first_party = ["export"]
 extend_exclude = ["tests", "engines"]
 # These direct security floors protect transitively consumed runtime packages;
 # pip/setuptools are development and build tools rather than application imports.
-per_rule_ignores = {DEP002 = ["lxml", "uvicorn", "pytest", "pytest-asyncio", "ruff", "cssselect", "mypy", "pytest-cov", "pip-tools", "pre-commit", "radon", "vulture", "import-linter", "deptry", "pip-audit", "fastmcp", "prometheus-client", "dnspython", "anyio", "authlib", "certifi", "joserfc", "opentelemetry-api", "pip", "setuptools"]}
+per_rule_ignores = {DEP002 = ["lxml", "uvicorn", "pytest", "pytest-asyncio", "ruff", "cssselect", "mypy", "pytest-cov", "pip-tools", "pre-commit", "virtualenv", "radon", "vulture", "import-linter", "deptry", "pip-audit", "fastmcp", "prometheus-client", "dnspython", "anyio", "authlib", "certifi", "joserfc", "opentelemetry-api", "pip", "setuptools"]}
 
 [tool.importlinter]
 root_package = "slopsearx"
