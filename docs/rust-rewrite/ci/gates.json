@@ -1894,6 +1894,83 @@
       "state": "additive",
       "successor": "cargo fmt --all --check; cargo clippy --locked --workspace --all-targets -- -D warnings; cargo test/build --locked --workspace; cargo deny --locked --workspace check all; F03 smoke"
     },
+    "rust-t03-safari.yml:safari": {
+      "source": {
+        "job": {
+          "env": {
+            "CARGO_BUILD_JOBS": 2,
+            "CARGO_INCREMENTAL": 0,
+            "CARGO_PROFILE_DEV_DEBUG": 0
+          },
+          "runs-on": "macos-15",
+          "steps": [
+            {
+              "uses": "actions/checkout@v7",
+              "with": {
+                "persist-credentials": false
+              }
+            },
+            {
+              "env": {
+                "CARGO_TARGET_DIR": "${{ runner.temp }}/ssx-safari-target"
+              },
+              "name": "Build only the offline Rust portal fixture",
+              "run": "set -euo pipefail\ntest \"$(git rev-parse HEAD)\" = \"$GITHUB_SHA\"\nrustc --version --verbose\ncargo --version --verbose\ncargo build --locked -p ssx-http --example t03_fixture\n"
+            },
+            {
+              "name": "Verify native Safari keyboard search and pagination",
+              "run": "set -euo pipefail\n/usr/bin/sw_vers\n/usr/bin/safaridriver --version\nsudo -n /usr/bin/safaridriver --enable\nnode crates/ssx-http/tests/t03-browser/safari.mjs \\\n  \"$RUNNER_TEMP/ssx-safari-target/debug/examples/t03_fixture\" \\\n  \"$RUNNER_TEMP/ssx-safari-evidence\"\n"
+            },
+            {
+              "if": "always()",
+              "name": "Retain native Safari evidence",
+              "uses": "actions/upload-artifact@v7",
+              "with": {
+                "if-no-files-found": "error",
+                "name": "t03-native-safari-${{ github.sha }}",
+                "path": "${{ runner.temp }}/ssx-safari-evidence"
+              }
+            },
+            {
+              "if": "always()",
+              "name": "Retire runner build and browser artifacts",
+              "run": "set -euo pipefail\nrm -rf -- \"$RUNNER_TEMP/ssx-safari-target\" \"$RUNNER_TEMP/ssx-safari-evidence\"\n"
+            }
+          ],
+          "timeout-minutes": 30
+        },
+        "workflow": {
+          "name": "Native portal Safari journeys",
+          "on": {
+            "pull_request": {
+              "branches": [
+                "main"
+              ],
+              "paths": [
+                ".github/workflows/rust-t03-safari.yml",
+                ".cargo/**",
+                "Cargo.lock",
+                "Cargo.toml",
+                "rust-toolchain.toml",
+                "crates/**/Cargo.toml",
+                "vendor/**/Cargo.toml",
+                "crates/ssx-http/examples/t03_fixture.rs",
+                "crates/ssx-http/src/portal.rs",
+                "crates/ssx-http/src/portal/**",
+                "crates/ssx-http/tests/t03-browser/safari.mjs"
+              ]
+            },
+            "workflow_dispatch": null
+          },
+          "permissions": {
+            "contents": "read"
+          }
+        }
+      },
+      "owner": "T03,O06",
+      "state": "additive",
+      "successor": "Real Apple Safari keyboard search and scoped pagination history against the offline native T03 fixture. Preserve screenshots, adapter calls and process cleanup; manual accessibility and visual acceptance remain separate T03 evidence."
+    },
     "upstream-contracts.yml:live-contracts": {
       "source": {
         "job": {
