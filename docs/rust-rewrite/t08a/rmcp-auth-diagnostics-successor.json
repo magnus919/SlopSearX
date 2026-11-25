@@ -1,0 +1,182 @@
+{
+  "schema": "RMCP_AUTH_DIAGNOSTICS_SUCCESSOR_V1",
+  "scope": "Replace data-bearing SDK OAuth diagnostics with fixed messages. Keep returned values, errors and OAuth behavior intact.",
+  "prior_provenance_sha256": "70ac69cdb418a8be8d426724c263710e844ccb227218299abee10f7b2a036d4e",
+  "rows": [
+    {
+      "path": "vendor/rmcp/src/transport/auth.rs",
+      "prior": {
+        "bytes": 439211,
+        "sha256": "fdb25ca4ac3dc9e288ced710a1afb6db8074548fc6140ab8bc435b352f7ffd11",
+        "mode": "0644"
+      },
+      "current": {
+        "bytes": 438243,
+        "sha256": "9fa3833fc687d6194994796afb0d5ccbc5e9729e214193469e5600e9e0c83397",
+        "mode": "0644"
+      },
+      "edits": [
+        {
+          "at": 6005,
+          "remove_utf8": "                warn!(\"{error}\");\n",
+          "insert_utf8": "                warn!(\"OAuth redirect rejected by address policy\");\n"
+        },
+        {
+          "at": 7364,
+          "remove_utf8": "                warn!(\"{error}\");\n",
+          "insert_utf8": "                warn!(\"OAuth request rejected by address policy\");\n"
+        },
+        {
+          "at": 52752,
+          "remove_utf8": "            Err(error) => {\n                debug!(\"failed to parse resource metadata value `{value}` as URL: {error}\");\n",
+          "insert_utf8": "            Err(_) => {\n                debug!(\"failed to parse resource metadata URL\");\n"
+        },
+        {
+          "at": 53114,
+          "remove_utf8": "            warn!(\"rejecting resource metadata URL `{url}`: downgrades `{base_url}` from https\");\n",
+          "insert_utf8": "            warn!(\"rejecting resource metadata URL that downgrades HTTPS\");\n"
+        },
+        {
+          "at": 53360,
+          "remove_utf8": "            warn!(\n                \"rejecting resource metadata URL `{url}`: not same-origin with `{base_url}` and not an allowed metadata host\"\n            );\n",
+          "insert_utf8": "            warn!(\"rejecting cross-origin resource metadata URL for a disallowed host\");\n"
+        },
+        {
+          "at": 62408,
+          "remove_utf8": "                            stored_issuer,\n                            current_issuer,\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 63312,
+          "remove_utf8": "                        stored_issuer,\n                        current_issuer,\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 69521,
+          "remove_utf8": "        debug!(\"WWW-Authenticate challenge contains scope: {scope}\");\n",
+          "insert_utf8": "        debug!(\"WWW-Authenticate challenge contains scope\");\n"
+        },
+        {
+          "at": 90466,
+          "remove_utf8": "        debug!(\n            \"Requesting scope upgrade: current={:?}, required={}, union={:?}\",\n            current_scopes, required_scope, upgraded_scopes\n        );\n",
+          "insert_utf8": "        debug!(\"Requesting scope upgrade\");\n"
+        },
+        {
+          "at": 93367,
+          "remove_utf8": "        debug!(\"start exchange code for token: {:?}\", code);\n",
+          "insert_utf8": "        debug!(\"start exchange code for token\");\n"
+        },
+        {
+          "at": 94499,
+          "remove_utf8": "        debug!(\"client_id: {:?}\", oauth_client.client_id());\n",
+          "insert_utf8": "        debug!(\"configured OAuth client for code exchange\");\n"
+        },
+        {
+          "at": 95768,
+          "remove_utf8": "        debug!(\"exchange token result: {:?}\", token_result);\n",
+          "insert_utf8": "        debug!(\"code token exchange completed\");\n"
+        },
+        {
+          "at": 100263,
+          "remove_utf8": "            Err(e @ (AuthError::AuthorizationRequired | AuthError::TokenRefreshRejected(_))) => {\n                tracing::warn!(error = %e, \"Token refresh not possible, re-authorization required.\");\n",
+          "insert_utf8": "            Err(AuthError::AuthorizationRequired | AuthError::TokenRefreshRejected(_)) => {\n                tracing::warn!(\"Token refresh not possible, re-authorization required.\");\n"
+        },
+        {
+          "at": 101459,
+          "remove_utf8": "                stored_client_id = stored_credentials.client_id.as_str(),\n                configured_client_id = oauth_client.client_id().as_str(),\n",
+          "insert_utf8": ""
+        },
+        {
+          "at": 103906,
+          "remove_utf8": "                    if let Err(store_error) = self\n",
+          "insert_utf8": "                    if self\n"
+        },
+        {
+          "at": 104102,
+          "remove_utf8": "",
+          "insert_utf8": "                        .is_err()\n"
+        },
+        {
+          "at": 104124,
+          "remove_utf8": "                        tracing::warn!(\n                            error = %store_error,\n                            \"Failed to handle rejected refresh token\"\n                        );\n",
+          "insert_utf8": "                        tracing::warn!(\"Failed to handle rejected refresh token\");\n"
+        },
+        {
+          "at": 110182,
+          "remove_utf8": "        debug!(\"discovery url: {:?}\", discovery_url);\n",
+          "insert_utf8": "        debug!(\"fetching authorization server metadata\");\n"
+        },
+        {
+          "at": 110909,
+          "remove_utf8": "            Err(err) => {\n                debug!(\"Failed to parse metadata for {}: {}\", discovery_url, err);\n",
+          "insert_utf8": "            Err(_) => {\n                debug!(\"failed to parse authorization server metadata\");\n"
+        },
+        {
+          "at": 117256,
+          "remove_utf8": "            debug!(\n                \"protected resource metadata at {resource_metadata_url} names no authorization server\"\n            );\n",
+          "insert_utf8": "            debug!(\"protected resource metadata names no authorization server\");\n"
+        },
+        {
+          "at": 117675,
+          "remove_utf8": "                    Err(e) => {\n                        debug!(\"Failed to resolve authorization server URL `{candidate}`: {e}\");\n",
+          "insert_utf8": "                    Err(_) => {\n                        debug!(\"failed to resolve authorization server metadata URL\");\n"
+        },
+        {
+          "at": 118328,
+          "remove_utf8": "                warn!(\"rejecting authorization server metadata URL `{candidate_url}`\");\n",
+          "insert_utf8": "                warn!(\"rejecting authorization server metadata URL\");\n"
+        },
+        {
+          "at": 127749,
+          "remove_utf8": "        debug!(\n            \"resource metadata discovery url: {:?}\",\n            resource_metadata_url\n        );\n",
+          "insert_utf8": "        debug!(\"fetching protected resource metadata\");\n"
+        },
+        {
+          "at": 128942,
+          "remove_utf8": "            Err(e) => {\n                debug!(\"failed to parse resource metadata as JSON: {}\", e);\n",
+          "insert_utf8": "            Err(_) => {\n                debug!(\"failed to parse resource metadata as JSON\");\n"
+        },
+        {
+          "at": 130456,
+          "remove_utf8": "                    debug!(\n                        \"response at {resource_metadata_url} is not a protected resource metadata document\"\n                    );\n",
+          "insert_utf8": "                    debug!(\"response is not a protected resource metadata document\");\n"
+        },
+        {
+          "at": 131346,
+          "remove_utf8": "                    debug!(\n                        \"document at {resource_metadata_url} is not this resource's metadata: {reason}\"\n                    );\n",
+          "insert_utf8": "                    debug!(\"document is not this resource's metadata\");\n"
+        },
+        {
+          "at": 146919,
+          "remove_utf8": "        debug!(\"client credentials token result: {:?}\", token_result);\n",
+          "insert_utf8": "        debug!(\"client credentials token exchange completed\");\n"
+        },
+        {
+          "at": 151637,
+          "remove_utf8": "        debug!(\"client credentials JWT token result: {:?}\", token_result);\n",
+          "insert_utf8": "        debug!(\"client credentials JWT token exchange completed\");\n"
+        }
+      ]
+    },
+    {
+      "path": "vendor/rmcp/src/transport/auth/metadata_resolver.rs",
+      "prior": {
+        "bytes": 26260,
+        "sha256": "07cea949b66fc0f370284212e93c97b8508417b5bad93f79eae712ea5feb2d62",
+        "mode": "0644"
+      },
+      "current": {
+        "bytes": 26256,
+        "sha256": "29ee6c448bd3300e3ba51538bd76e193e90a20ac81529d70b0dc2b4cd9f91a7b",
+        "mode": "0644"
+      },
+      "edits": [
+        {
+          "at": 6862,
+          "remove_utf8": "                warn!(\"rejecting every resolved address of `{host}` for OAuth requests\");\n",
+          "insert_utf8": "                warn!(\"rejecting every resolved address for the OAuth request host\");\n"
+        }
+      ]
+    }
+  ]
+}

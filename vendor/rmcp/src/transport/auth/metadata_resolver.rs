@@ -201,7 +201,7 @@ impl Resolve for MetadataAddressResolver {
                 .filter(|addr| Self::is_allowed(AddressClass::of(addr.ip()), &this.base_classes))
                 .collect();
             if allowed.is_empty() {
-                warn!("rejecting every resolved address of `{host}` for OAuth requests");
+                warn!("rejecting every resolved address for the OAuth request host");
                 return Err(format!(
                     "no address of `{host}` is allowed for OAuth requests from this resource"
                 )
