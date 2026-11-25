@@ -130,6 +130,22 @@ pub fn source(
         return Err(format!("historical source binding drift: {path}"));
     }
     let current = command(root, "git", &["hash-object", "--", path], records)?;
+    if let Some((_, _, reviewed)) = MAP.iter().find(|(p, a, _)| *p == path && *a == old_blob)
+        && path == "tests/test_mcp_tools.py"
+        && current.trim() != *reviewed
+    {
+        let proof = corpus(root, records)?;
+        let pin = &proof["source_files"][path];
+        if pin["git_blob"].as_str() != Some(*reviewed) {
+            return Err("EXP-124 date amendment intermediate Git blob differs".into());
+        }
+        let bytes = crate::snapshot_fixture_amendment::scholarly_prior_blob(root, path, reviewed)?
+            .ok_or("EXP-124 date amendment source missing")?;
+        if Some(digest(&bytes).as_str()) != pin["sha256"].as_str() {
+            return Err("EXP-124 date amendment intermediate source differs".into());
+        }
+        return Ok(());
+    }
     if !accepts(path, old_blob, current.trim()) {
         return Err(format!("unreviewed current source drift: {path}"));
     }

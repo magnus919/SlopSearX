@@ -212,7 +212,89 @@ fn prove(root: &Path, doc: &Value, kind: &str, claimed: &Value) -> Result<Vec<u8
     )?;
     source_payload(root, &doc["source"], &regular(root, SOURCE)?, "0644")
 }
+// EXP-124 changes two tracked Python files while these migration checks still
+// consume the historical versions. The current file must match the reviewed
+// successor before any historical bytes can be returned.
+struct ScholarlySuccessor {
+    path: &'static str,
+    old_blob: &'static str,
+    old_sha: &'static str,
+    old_size: usize,
+    new_sha: &'static str,
+    new_size: usize,
+}
+
+const SCHOLARLY_SUCCESSORS: [ScholarlySuccessor; 2] = [
+    ScholarlySuccessor {
+        path: "slopsearx/mcp/result_serialization.py",
+        old_blob: "d4b3b42b9a08caafd09d946dcae05fba59374ec1",
+        old_sha: "170d358b3d0b7da2b5aa61c18736ca424b3764f82c8d81d8e0d54329066fe669",
+        old_size: 10729,
+        new_sha: "347336f96e3ccfeab9dac48651a002b454c57061f9d0a5e99f76c2dd713f67b0",
+        new_size: 11523,
+    },
+    ScholarlySuccessor {
+        path: "tests/test_mcp_tools.py",
+        old_blob: "9804b31ace1575fc1253dd82549d4f3a17bcebda",
+        old_sha: "f503f109d706f7808132baf9a1cdd5975f27202604524937953b5aa212d89549",
+        old_size: 46334,
+        new_sha: "7f1630f069c5969fc7c73f8f70d3ae77522d955cb740f2ff42b1e08fc6d91793",
+        new_size: 49296,
+    },
+];
+
+fn scholarly_successor(path: &str) -> Option<&'static ScholarlySuccessor> {
+    SCHOLARLY_SUCCESSORS
+        .iter()
+        .find(|source| source.path == path)
+}
+
+fn scholarly_prior(root: &Path, source: &ScholarlySuccessor) -> Result<Vec<u8>> {
+    let current = regular_with_bound(root, source.path, source.new_size)?;
+    need(
+        current.len() == source.new_size && digest(&current) == source.new_sha,
+        "EXP-124 current source differs from its reviewed successor",
+    )?;
+    let old = Command::new("git")
+        .args(["cat-file", "blob", source.old_blob])
+        .current_dir(root)
+        .output()
+        .map_err(|error| error.to_string())?;
+    need(
+        old.status.success()
+            && old.stdout.len() == source.old_size
+            && digest(&old.stdout) == source.old_sha,
+        "EXP-124 historical Git object differs from its pinned source",
+    )?;
+    Ok(old.stdout)
+}
+
+pub(crate) fn scholarly_prior_sha(root: &Path, path: &str, sha: &str) -> Result<Option<Vec<u8>>> {
+    let Some(source) = scholarly_successor(path) else {
+        return Ok(None);
+    };
+    need(
+        sha == source.old_sha,
+        "EXP-124 historical source SHA differs",
+    )?;
+    scholarly_prior(root, source).map(Some)
+}
+
+pub(crate) fn scholarly_prior_blob(root: &Path, path: &str, blob: &str) -> Result<Option<Vec<u8>>> {
+    let Some(source) = scholarly_successor(path) else {
+        return Ok(None);
+    };
+    need(
+        blob == source.old_blob,
+        "EXP-124 historical Git blob differs",
+    )?;
+    scholarly_prior(root, source).map(Some)
+}
+
 pub(crate) fn f01(root: &Path, path: &str, blob: &str) -> Result<Option<()>> {
+    if scholarly_prior_blob(root, path, blob)?.is_some() {
+        return Ok(Some(()));
+    }
     if path != SOURCE {
         return Ok(None);
     }
@@ -229,6 +311,17 @@ pub(crate) fn a06(root: &Path, row: &Value) -> Result<Option<()>> {
     Ok(Some(()))
 }
 pub(crate) fn w03(root: &Path, row: &Value) -> Result<Option<Vec<u8>>> {
+    if let Some(path) = row["path"].as_str()
+        && scholarly_successor(path).is_some()
+    {
+        return scholarly_prior_sha(
+            root,
+            path,
+            row["sha256"]
+                .as_str()
+                .ok_or("EXP-124 W03 source SHA absent")?,
+        );
+    }
     if row["path"] != SOURCE {
         return Ok(None);
     }
@@ -241,6 +334,32 @@ mod tests {
     fn root() -> std::path::PathBuf {
         Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
     }
+    #[test]
+    fn scholarly_successor_rejects_wrong_pin_and_unreviewed_source() {
+        let root = root();
+        for source in &SCHOLARLY_SUCCESSORS {
+            let prior = scholarly_prior_sha(&root, source.path, source.old_sha)
+                .unwrap()
+                .unwrap();
+            assert_eq!(git_blob(&root, &prior).unwrap(), source.old_blob);
+            assert!(scholarly_prior_sha(&root, source.path, "wrong").is_err());
+            assert!(scholarly_prior_blob(&root, source.path, "wrong").is_err());
+            let mut invalid_successor = ScholarlySuccessor {
+                new_sha: source.old_sha,
+                ..*source
+            };
+            assert!(scholarly_prior(&root, &invalid_successor).is_err());
+            invalid_successor.new_sha = source.new_sha;
+            invalid_successor.new_size -= 1;
+            assert!(scholarly_prior(&root, &invalid_successor).is_err());
+        }
+        assert!(
+            scholarly_prior_blob(&root, "unlisted.py", "wrong")
+                .unwrap()
+                .is_none()
+        );
+    }
+
     #[test]
     fn snapshot_fixture_amendment_finite_container_and_source_read_bounds() {
         let root = root();
