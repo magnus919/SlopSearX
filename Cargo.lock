@@ -3010,7 +3010,9 @@ name = "ssx-source-codecs"
 version = "0.1.0"
 dependencies = [
  "flate2",
+ "idna",
  "serde_json",
+ "ssx-json",
  "ssx-owned-budget",
 ]
 

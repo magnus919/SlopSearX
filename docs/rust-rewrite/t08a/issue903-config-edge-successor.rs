@@ -13,6 +13,11 @@ const BASE: &str = "7d904b9d46f4c4ba8c59dc1ba09828f9e7ea204d";
 const CAPSULE: &[u8] = include_bytes!("issue903-config-edge-successor-v1.json");
 const CAPSULE_SHA: &str = "35d67057cfc0ce960706f5b19ca473116d9ae2eac2f2a5e0c6d4466363f554c6";
 const MAX_PHYSICAL_BYTES: u64 = 1_048_576;
+// The gateway codec adds two edges to packages already present in Cargo.lock.
+const T07_LOCK_BYTES: usize = 96228;
+const T07_LOCK_SHA: &str = "d6ae7d6cfee09ca6cfdbffa6faaa7eb955d38d6de38b7d8d7c858c2491b2019f";
+const T07_IDNA_EDGE: usize = 70349;
+const T07_TEXT_EDGE: usize = 70373;
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -104,7 +109,13 @@ pub(crate) fn current_lock_identity() -> Result<(usize, String)> {
         .into_iter()
         .next()
         .ok_or("missing Cargo.lock row")?;
-    Ok((row.current.bytes, row.current.sha256))
+    need(
+        row.current.bytes == 96206
+            && row.current.sha256
+                == "5f4d339df70efcfa71a6ad6d878d4078c6250cd1a54279c8716123f2276e0c99",
+        "T07 lock predecessor identity",
+    )?;
+    Ok((T07_LOCK_BYTES, T07_LOCK_SHA.to_owned()))
 }
 
 fn git(root: &Path, args: &[&str]) -> Result<Vec<u8>> {
@@ -130,7 +141,33 @@ pub(crate) fn owns(path: &str) -> bool {
             | "crates/xtask/src/w07.rs"
     )
 }
+fn t07_codec_lock_prior(current: &[u8]) -> Result<Vec<u8>> {
+    need(
+        current.len() == T07_LOCK_BYTES && sha(current) == T07_LOCK_SHA,
+        "T07 exact current lock identity",
+    )?;
+    const IDNA: &[u8] = b" \"idna\",\n";
+    const TEXT: &[u8] = b" \"ssx-json\",\n";
+    let idna_end = T07_IDNA_EDGE + IDNA.len();
+    let text_end = T07_TEXT_EDGE + TEXT.len();
+    need(
+        current.get(T07_IDNA_EDGE..idna_end) == Some(IDNA)
+            && current.get(T07_TEXT_EDGE..text_end) == Some(TEXT),
+        "T07 exact codec edges",
+    )?;
+    Ok([
+        &current[..T07_IDNA_EDGE],
+        &current[idna_end..T07_TEXT_EDGE],
+        &current[text_end..],
+    ]
+    .concat())
+}
+
 fn project_row(row: &Row, current: &[u8]) -> Result<Vec<u8>> {
+    let lock_prior = (row.path == "Cargo.lock")
+        .then(|| t07_codec_lock_prior(current))
+        .transpose()?;
+    let current = lock_prior.as_deref().unwrap_or(current);
     let preceding = matches!(
         row.path.as_str(),
         a11_replay_source::NATIVE_READER | a11_replay_source::SHARED_READER
