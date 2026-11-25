@@ -612,11 +612,16 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     if expected_codec_tests.len() != 71 {
         return Err("A05 codec test inventory incomplete".into());
     }
-    // Keep the A05 manifest frozen and require the later T07 guard explicitly.
-    if !expected_codec_tests
-        .insert("url_join::tests::url_join_delimiter_guard_matches_unicode16_decomposition_closure")
-    {
-        return Err("A05 codec inventory already includes the T07 guard".into());
+    // Keep the A05 manifest frozen and require the later T07 cases explicitly.
+    for test in [
+        "url_join::tests::url_join_delimiter_guard_matches_unicode16_decomposition_closure",
+        "url_reference::tests::raw_parse_preserves_case_userinfo_and_only_strips_final_params_for_table_schemes",
+        "url_reference::tests::raw_join_preserves_early_returns_empty_delimiters_and_unknown_scheme_rules",
+        "url_reference::tests::public_unsplit_empty_delimiters_are_distinct_from_private_join",
+    ] {
+        if !expected_codec_tests.insert(test) {
+            return Err(format!("A05 codec inventory already includes {test}"));
+        }
     }
     let codec_list = command(
         root,
