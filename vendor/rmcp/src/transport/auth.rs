@@ -51,6 +51,10 @@ pub enum OAuthHttpRedirectPolicy {
     Follow,
     /// Return the redirect response without following its location.
     Stop,
+    /// Require the injected client to preserve the request method and follow at most
+    /// five redirects within the origin, allowing its default-port HTTPS upgrade.
+    /// An adapter that cannot enforce this policy must reject the request.
+    SourceWithinOrigin,
 }
 
 /// A complete outbound HTTP operation requested by the OAuth implementation.
@@ -80,6 +84,8 @@ pub type OAuthHttpClientError = Box<dyn std::error::Error + Send + Sync>;
 
 #[derive(Debug, Error)]
 enum OAuthHttpError {
+    #[error("the source OAuth redirect policy requires a compatible injected client")]
+    UnsupportedSourceRedirectPolicy,
     #[error("OAuth HTTP response body exceeds {0} bytes")]
     ResponseBodyTooLarge(usize),
     #[error("unexpected HTTP status {0}")]
@@ -186,6 +192,10 @@ impl OAuthHttpClient for ReqwestOAuthHttpClient {
             let client = match redirect_policy {
                 OAuthHttpRedirectPolicy::Follow => &self.follow_redirects,
                 OAuthHttpRedirectPolicy::Stop => &self.stop_redirects,
+                OAuthHttpRedirectPolicy::SourceWithinOrigin => {
+                    return Err(Box::new(OAuthHttpError::UnsupportedSourceRedirectPolicy)
+                        as OAuthHttpClientError);
+                }
             };
             let request = reqwest::Request::try_from(request)
                 .map_err(|error| Box::new(error) as OAuthHttpClientError)?;
@@ -1245,7 +1255,7 @@ struct InitialScopeState {
 /// oauth2 auth manager
 pub struct AuthorizationManager {
     http_client: Arc<dyn OAuthHttpClient>,
-    // Preserve legacy reqwest refresh behavior without weakening custom clients.
+    // The legacy refresh policy also carries the explicit source profile across state transitions.
     refresh_redirect_policy: OAuthHttpRedirectPolicy,
     metadata: Option<AuthorizationMetadata>,
     oauth_client: Option<OAuthClient>,
@@ -1584,6 +1594,23 @@ impl AuthorizationManager {
         Ok(manager)
     }
 
+    /// Request the source redirect profile on every OAuth operation using this manager.
+    ///
+    /// Configure an injected [`OAuthHttpClient`] that implements
+    /// [`OAuthHttpRedirectPolicy::SourceWithinOrigin`] before starting OAuth.
+    /// The built-in reqwest adapter rejects this profile before sending a request.
+    pub fn use_source_within_origin_redirects(&mut self) {
+        self.refresh_redirect_policy = OAuthHttpRedirectPolicy::SourceWithinOrigin;
+    }
+
+    fn oauth_redirect_policy(&self, default: OAuthHttpRedirectPolicy) -> OAuthHttpRedirectPolicy {
+        if self.refresh_redirect_policy == OAuthHttpRedirectPolicy::SourceWithinOrigin {
+            self.refresh_redirect_policy
+        } else {
+            default
+        }
+    }
+
     /// Set the scope upgrade configuration
     pub fn set_scope_upgrade_config(&mut self, config: ScopeUpgradeConfig) {
         self.scope_upgrade_config = config;
@@ -1723,7 +1750,7 @@ impl AuthorizationManager {
             stop_redirects: http_client,
             address_policy: None,
         });
-        self.refresh_redirect_policy = OAuthHttpRedirectPolicy::Follow;
+        self.refresh_redirect_policy = self.oauth_redirect_policy(OAuthHttpRedirectPolicy::Follow);
         Ok(())
     }
 
@@ -2002,7 +2029,7 @@ impl AuthorizationManager {
             .http_client
             .execute(OAuthHttpRequest::new(
                 request,
-                OAuthHttpRedirectPolicy::Follow,
+                self.oauth_redirect_policy(OAuthHttpRedirectPolicy::Follow),
             ))
             .await
         {
@@ -2454,7 +2481,7 @@ impl AuthorizationManager {
             .add_extra_param("resource", self.oauth_resource().await)
             .request_async(&OAuth2HttpClient {
                 client: self.http_client.as_ref(),
-                redirect_policy: OAuthHttpRedirectPolicy::Stop,
+                redirect_policy: self.oauth_redirect_policy(OAuthHttpRedirectPolicy::Stop),
             })
             .await
         {
@@ -3362,6 +3389,7 @@ impl AuthorizationManager {
     }
 
     async fn discovery_get(&self, url: &Url) -> Result<HttpResponse, OAuthHttpClientError> {
+        let redirect_policy = self.oauth_redirect_policy(OAuthHttpRedirectPolicy::Stop);
         let mut current_url = url.clone();
         for _ in 0..MAX_OAUTH_REDIRECTS {
             let request = oauth2::http::Request::builder()
@@ -3371,13 +3399,12 @@ impl AuthorizationManager {
                 .body(Vec::new())
                 .map_err(|error| Box::new(error) as OAuthHttpClientError)?;
             let response = self
-                .discovery_request(OAuthHttpRequest::new(
-                    request,
-                    OAuthHttpRedirectPolicy::Stop,
-                ))
+                .discovery_request(OAuthHttpRequest::new(request, redirect_policy))
                 .await?;
 
-            if !response.status().is_redirection() {
+            if redirect_policy == OAuthHttpRedirectPolicy::SourceWithinOrigin
+                || !response.status().is_redirection()
+            {
                 return Ok(response);
             }
 
@@ -3678,7 +3705,7 @@ impl AuthorizationManager {
         let token_result = match request
             .request_async(&OAuth2HttpClient {
                 client: self.http_client.as_ref(),
-                redirect_policy: OAuthHttpRedirectPolicy::Stop,
+                redirect_policy: self.oauth_redirect_policy(OAuthHttpRedirectPolicy::Stop),
             })
             .await
         {
@@ -3801,7 +3828,7 @@ impl AuthorizationManager {
             .http_client
             .execute(OAuthHttpRequest::new(
                 request,
-                OAuthHttpRedirectPolicy::Stop,
+                self.oauth_redirect_policy(OAuthHttpRedirectPolicy::Stop),
             ))
             .await
             .map_err(|e| {
