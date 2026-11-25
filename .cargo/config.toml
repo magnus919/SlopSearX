@@ -1,2 +1,6 @@
 [alias]
 xtask = "run --locked --package xtask --"
+
+# Source qualification repeatedly hashes current and archived evidence.
+[profile.test.package.sha2]
+opt-level = 3

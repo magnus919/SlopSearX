@@ -9,6 +9,13 @@
 mod bounded_source_reader;
 #[path = "../../../../crates/xtask/src/o02_image_gate_successor.rs"]
 mod o02_image_gate_successor;
+#[allow(
+    dead_code,
+    clippy::duplicate_mod,
+    reason = "The dependency floor uses the shared stateless exact-byte inverse"
+)]
+#[path = "../../t08a/rmcp-source-afterimage.rs"]
+mod source_afterimage;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{
@@ -28,6 +35,9 @@ const SOURCE_READER_OUTER_SHA: &str =
     "9a874473ee7a2956636fccb4abfe2141d3b5e69a6cd88cf5758b5f587c31be64";
 const BASE: &str = "6cd400c2af9ec77613caf9ecab27a7264acac79f";
 const LIMIT: u64 = 1_048_576;
+const VIRTUALENV_SOURCE: &str = include_str!("virtualenv-audit-successor.json");
+const VIRTUALENV_SOURCE_SHA: &str =
+    "1636a6d9cc77e1d5601408e027e2d369f307937612ff122de99ca97304bbe860";
 const SOURCE_READER_PATH: &str =
     "docs/rust-rewrite/t06/source-amendments/python-dependency-audit-source-reader-v1.rs";
 const SOURCE_READER_OLD_BYTES: usize = 31_817;
@@ -291,6 +301,27 @@ fn admit_source_reader(
     )?;
     Ok(prior)
 }
+fn physical_source_bytes(path: &str, expected: usize) -> usize {
+    match path {
+        "pyproject.toml" => 5_873,
+        "uv.lock" => 471_766,
+        _ => o02_image_gate_successor::physical_bytes(path, expected),
+    }
+}
+fn project_physical(path: &str, expected: usize, physical: Vec<u8>) -> Result<Vec<u8>> {
+    if matches!(path, "pyproject.toml" | "uv.lock") {
+        source_afterimage::runtime_prior(
+            VIRTUALENV_SOURCE,
+            VIRTUALENV_SOURCE_SHA,
+            path,
+            &physical,
+            0o644,
+        )?
+        .ok_or_else(|| "Virtualenv source successor path is missing".into())
+    } else {
+        o02_image_gate_successor::project(path, expected, physical)
+    }
+}
 fn physical_operand(
     physical_root: &Path,
     proof_root: &Path,
@@ -302,9 +333,9 @@ fn physical_operand(
         let logical = admit_source_reader(proof_root, path, &physical, mode)?;
         Ok((physical, logical))
     } else {
-        let physical_bytes = o02_image_gate_successor::physical_bytes(path, expected_bytes);
+        let physical_bytes = physical_source_bytes(path, expected_bytes);
         let physical = regular(physical_root, path, physical_bytes)?;
-        let logical = o02_image_gate_successor::project(path, expected_bytes, physical.clone())?;
+        let logical = project_physical(path, expected_bytes, physical.clone())?;
         Ok((physical, logical))
     }
 }
@@ -347,8 +378,14 @@ pub(crate) fn frozen_operand(
     prior(root, path, supplied).map(Some)
 }
 pub(crate) fn current_git_blob(path: &str) -> Result<String> {
-    let doc = decode(CAPSULE)?;
-    Ok(pin(&doc, path)?.current_blob.to_owned())
+    match path {
+        "pyproject.toml" => Ok("4dc94f08b4dc78375b35a1e2f73ae2c8a43799e0".into()),
+        "uv.lock" => Ok("d88f6de407924fe255960712033332c5cf5f1702".into()),
+        _ => {
+            let doc = decode(CAPSULE)?;
+            Ok(pin(&doc, path)?.current_blob.to_owned())
+        }
+    }
 }
 fn pin<'a>(doc: &'a Value, path: &str) -> Result<Pin<'a>> {
     pins(doc)?
@@ -606,8 +643,7 @@ pub(crate) fn frame(path: &str, physical: &[u8], mode: u32) -> Result<Vec<u8>> {
         let logical = project_source_reader(path, physical)?;
         inverse(&pin, row(&doc, path)?, &logical, 0o644)
     } else {
-        let logical =
-            o02_image_gate_successor::project(path, pin.current_bytes, physical.to_vec())?;
+        let logical = project_physical(path, pin.current_bytes, physical.to_vec())?;
         inverse(&pin, row(&doc, path)?, &logical, mode)
     }
 }
@@ -969,7 +1005,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         ),
     ] {
         let selected = pin(&doc, path)?;
-        let physical = regular(root, path, selected.current_bytes)?;
+        let (physical, _) = physical_operand(root, root, path, selected.current_bytes)?;
         let text = std::str::from_utf8(&physical).map_err(|e| e.to_string())?;
         need(
             text.matches(before).count() == 1,
@@ -1019,7 +1055,8 @@ fn physical_controls(proof_root: &Path) -> Result<()> {
         let path = "pyproject.toml";
         let doc = decode(CAPSULE)?;
         let selected = pin(&doc, path)?;
-        let physical = regular(proof_root, path, selected.current_bytes)?;
+        let expected_bytes = physical_source_bytes(path, selected.current_bytes);
+        let physical = regular(proof_root, path, expected_bytes)?;
         let full = owned.0.join(path);
         fs::write(&full, &physical).map_err(|e| e.to_string())?;
         fs::set_permissions(&full, fs::Permissions::from_mode(0o644)).map_err(|e| e.to_string())?;
@@ -1029,7 +1066,7 @@ fn physical_controls(proof_root: &Path) -> Result<()> {
         let mut same_length_changed = physical.clone();
         same_length_changed[0] ^= 1;
         let mutation_established = std::cell::Cell::new(false);
-        let observed = regular_observed(&owned.0, path, selected.current_bytes, || {
+        let observed = regular_observed(&owned.0, path, expected_bytes, || {
             let writer = fs::OpenOptions::new()
                 .write(true)
                 .open(&full)

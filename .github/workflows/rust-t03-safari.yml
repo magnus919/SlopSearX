@@ -1,0 +1,64 @@
+name: Native portal Safari journeys
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/rust-t03-safari.yml'
+      - '.cargo/**'
+      - 'Cargo.lock'
+      - 'Cargo.toml'
+      - 'rust-toolchain.toml'
+      - 'crates/**/Cargo.toml'
+      - 'vendor/**/Cargo.toml'
+      - 'crates/ssx-http/examples/t03_fixture.rs'
+      - 'crates/ssx-http/src/portal.rs'
+      - 'crates/ssx-http/src/portal/**'
+      - 'crates/ssx-http/tests/t03-browser/safari.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  safari:
+    runs-on: macos-15
+    timeout-minutes: 30
+    env:
+      CARGO_BUILD_JOBS: 2
+      CARGO_INCREMENTAL: 0
+      CARGO_PROFILE_DEV_DEBUG: 0
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Build only the offline Rust portal fixture
+        env:
+          CARGO_TARGET_DIR: ${{ runner.temp }}/ssx-safari-target
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          rustc --version --verbose
+          cargo --version --verbose
+          cargo build --locked -p ssx-http --example t03_fixture
+      - name: Verify native Safari keyboard search and pagination
+        run: |
+          set -euo pipefail
+          /usr/bin/sw_vers
+          /usr/bin/safaridriver --version
+          sudo -n /usr/bin/safaridriver --enable
+          node crates/ssx-http/tests/t03-browser/safari.mjs \
+            "$RUNNER_TEMP/ssx-safari-target/debug/examples/t03_fixture" \
+            "$RUNNER_TEMP/ssx-safari-evidence"
+      - name: Retain native Safari evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: t03-native-safari-${{ github.sha }}
+          path: ${{ runner.temp }}/ssx-safari-evidence
+          if-no-files-found: error
+      - name: Retire runner build and browser artifacts
+        if: always()
+        run: |
+          set -euo pipefail
+          rm -rf -- "$RUNNER_TEMP/ssx-safari-target" "$RUNNER_TEMP/ssx-safari-evidence"

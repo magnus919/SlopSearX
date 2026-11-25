@@ -270,7 +270,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             "--test",
             "a05_html",
             "--",
-            "--nocapture",
+            "--show-output",
         ],
         records,
     )?;

@@ -15,8 +15,10 @@ fn static_assets_and_highlight_boundary_preserve_safe_progressive_rendering() {
     renderer_omits_json_links_when_json_is_disabled();
     renderer_preserves_packages_scope_with_one_response();
     renderer_explains_the_configured_ranking_strategy();
+    renderer_escapes_jev_specialist_labels();
     renderer_explains_publication_entities_and_group_members();
     renderer_preserves_only_safe_highlight_tags();
+    renderer_uses_only_normalized_repository_identity();
     let html = PublicPortal::default().landing();
     assert!(html.len() <= 50 * 1024);
     assert!(STYLE.len() + SCRIPT.len() <= 30 * 1024);
@@ -135,6 +137,28 @@ fn renderer_preserves_packages_scope_with_one_response() {
     // F:L642 and F:L645 apply to the same rendered Packages response.
     assert!(html.contains(r#"option value="packages" selected"#));
     assert!(html.contains("packages · 1 of 2 sources answered"));
+
+    // F:L646 exercises a supplied formatter status with no adapter dispatch.
+    let moderate = SearchRequest {
+        safesearch: 1,
+        ..request
+    };
+    let meta = json!({"enforcement": {"safesearch": {
+        "requested": 1, "status": "partially_enforced", "reason": "one source"
+    }}});
+    let output = portal.search(&response, &meta, &moderate);
+    let document = scraper::Html::parse_document(&output);
+    let selector = scraper::Selector::parse(
+        r#"p.enforcement[data-filter="safesearch"][data-status="partially_enforced"]"#,
+    )
+    .unwrap();
+    let status = document.select(&selector).next().unwrap();
+    assert!(
+        status
+            .text()
+            .collect::<String>()
+            .contains("partially enforced")
+    );
 }
 
 fn renderer_explains_the_configured_ranking_strategy() {
@@ -217,8 +241,13 @@ fn renderer_explains_publication_entities_and_group_members() {
                 "pubmed",
                 "https://pubmed.ncbi.nlm.nih.gov/123456/",
                 "Paper",
-                json!({"doi":"10.1000/example","pmid":"123456","title":"Paper"}),
-                &["doi", "pmid", "title"],
+                json!({
+                    "doi": "10.1000/example",
+                    "pmid": "123456",
+                    "title": "Paper",
+                    "description<img>": "Original description",
+                }),
+                &["doi", "pmid", "title", "description<img>"],
             ),
             ssx_domain::SearchResult {
                 url: "http://127.0.0.1/private".into(),
@@ -229,8 +258,12 @@ fn renderer_explains_publication_entities_and_group_members() {
                 "openalex",
                 "https://doi.org/10.1000/example",
                 "Alternate title",
-                json!({"doi":"10.1000/example","title":"Alternate title"}),
-                &["doi", "title"],
+                json!({
+                    "doi": "10.1000/example",
+                    "title": "Alternate title",
+                    "description<img>": "Alternate description",
+                }),
+                &["doi", "title", "description<img>"],
             ),
         ],
         ..Default::default()
@@ -243,7 +276,11 @@ fn renderer_explains_publication_entities_and_group_members() {
     // The original publication labels and nonadjacent member links (F:L778–F:L779, F:L733).
     assert!(text.contains("doi — doi: 10.1000/example"));
     assert!(text.contains("pmid — pmid: 123456"));
-    assert!(text.contains("Source-reported conflicts: title"));
+    // F:L732 keeps the source conflict label as text within the disclosure.
+    assert!(text.contains("Source-reported conflicts: description<img>, title"));
+    assert!(details.html().contains("description&lt;img&gt;"));
+    let image = scraper::Selector::parse("img").unwrap();
+    assert!(details.select(&image).next().is_none());
     let links = scraper::Selector::parse("a.explanation-link").unwrap();
     let member_links: Vec<_> = details
         .select(&links)
@@ -265,6 +302,95 @@ fn renderer_explains_publication_entities_and_group_members() {
             .collect::<String>()
             .contains("non-global literal IP address")
     );
+}
+
+fn renderer_escapes_jev_specialist_labels() {
+    let request = ssx_domain::SearchRequest {
+        query: "query".into(),
+        ..Default::default()
+    };
+    let response = ssx_domain::SearchResponse {
+        query: request.query.clone(),
+        results: vec![ssx_domain::SearchResult {
+            url: "https://example.com".into(),
+            title: "A result".into(),
+            ..Default::default()
+        }],
+        scope: ssx_domain::ScopeDecision {
+            jev_added_engines: vec!["pubmed".into(), "<script>bad</script>".into()],
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    let discovery = json!({ "engines": [{ "name": "pubmed", "display_name": "PubMed" }] });
+    let formats = std::collections::BTreeSet::from(["html".into(), "json".into()]);
+    let portal = PublicPortal::new(&discovery, &formats, "dark");
+    let html = portal.search(&response, &Value::Null, &request);
+    let document = scraper::Html::parse_document(&html);
+    let notes = scraper::Selector::parse("p.scope-note").unwrap();
+    let notice = document
+        .select(&notes)
+        .find(|note| {
+            note.text()
+                .collect::<String>()
+                .starts_with("Specialists added by Jev:")
+        })
+        .unwrap();
+
+    // F:L560–F:L561 preserve the fallback label as text and use the configured PubMed name.
+    assert_eq!(
+        notice.text().collect::<String>(),
+        "Specialists added by Jev: PubMed, <script>bad</script>",
+    );
+    assert!(notice.html().contains("&lt;script&gt;bad&lt;/script&gt;"));
+    let script = scraper::Selector::parse("script").unwrap();
+    assert!(notice.select(&script).next().is_none());
+}
+
+fn renderer_uses_only_normalized_repository_identity() {
+    let repository = |name: &str, url: &str| ssx_domain::SearchResult {
+        url: url.into(),
+        title: "Search repository".into(),
+        engine: "github".into(),
+        payload: Some(json!({
+            "schema_version": 1,
+            "domain": "code",
+            "type": "repository",
+            "data": { "repository": name, "namespace": "repository_override" },
+            "provenance": {
+                "engine": "github",
+                "adapter_fields": ["repository", "namespace"],
+                "inferred_fields": [],
+            },
+        })),
+        ..Default::default()
+    };
+    let request = ssx_domain::SearchRequest {
+        query: "search".into(),
+        ..Default::default()
+    };
+    let response = ssx_domain::SearchResponse {
+        query: request.query.clone(),
+        results: vec![
+            repository("example-co/search", "https://github.com/example-co/search"),
+            repository("example&co/search", "https://github.com/example-co/other"),
+        ],
+        ..Default::default()
+    };
+    let html = PublicPortal::default().search(&response, &Value::Null, &request);
+    let document = scraper::Html::parse_document(&html);
+    let explanations = scraper::Selector::parse("details.result-explanation").unwrap();
+    let mut details = document.select(&explanations);
+    let valid = details.next().unwrap().text().collect::<String>();
+    let invalid = details.next().unwrap().text().collect::<String>();
+    assert!(valid.contains("github_repository — repository: example-co/search"));
+    assert!(!valid.contains("repository_override"));
+    assert!(
+        invalid
+            .contains("unsupported for this result (invalid inferred or conflicting identifier)")
+    );
+    assert!(!invalid.contains("example&co/search"));
+    assert!(!invalid.contains("repository_override"));
 }
 
 fn renderer_omits_json_links_when_json_is_disabled() {

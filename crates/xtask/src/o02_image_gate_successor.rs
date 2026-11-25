@@ -80,6 +80,11 @@ const FOUNDATION_SUCCESSOR_OFFSET: usize = 113137;
 const FOUNDATION_SUCCESSOR: &str = r###""Mandatory prerequisites partition on both existing architectures; xtask tests complement the F03 workspace suite, which excludes xtask. Native deadlines, mutation control, tool/isolation/Valkey/compiler/source provenance and the workflow aggregation remain required.""###;
 const PRIOR_FOUNDATION_SUCCESSOR: &str = r###""Mandatory prerequisites partition on both existing architectures; exact original commands and native deadlines retained; fresh tool/isolation/Valkey/compiler/source provenance; no inherited targets or dropped gates. Separate 130-minute outer workflow job cap; native command deadlines and all gates remain unchanged.""###;
 
+const SAFARI_CATALOG_BYTES: usize = 188984;
+const SAFARI_CATALOG_SHA: &str = "b3664f64c669d2e0b5417e0667152d381ca59d23c68f25a85ad237ade289fb62";
+const SAFARI_ROW_OFFSET: usize = 82295;
+const SAFARI_ROW_BYTES: usize = 3121;
+
 fn hash(raw: &[u8]) -> String {
     Sha256::digest(raw)
         .iter()
@@ -88,7 +93,7 @@ fn hash(raw: &[u8]) -> String {
 }
 pub(super) fn physical_bytes(path: &str, expected: usize) -> usize {
     if path == PATH && expected == PRIOR_BYTES {
-        WINDOWS_CLI_CATALOG_BYTES
+        SAFARI_CATALOG_BYTES
     } else {
         expected
     }
@@ -97,6 +102,11 @@ pub(super) fn project(path: &str, expected: usize, raw: Vec<u8>) -> Result<Vec<u
     if path != PATH || expected != PRIOR_BYTES {
         return Ok(raw);
     }
+    if raw.len() != SAFARI_CATALOG_BYTES || hash(&raw) != SAFARI_CATALOG_SHA {
+        return Err("O02 catalog successor: exact Safari catalog required".into());
+    }
+    let mut raw = raw;
+    raw.drain(SAFARI_ROW_OFFSET..SAFARI_ROW_OFFSET + SAFARI_ROW_BYTES);
     if raw.len() != WINDOWS_CLI_CATALOG_BYTES || hash(&raw) != WINDOWS_CLI_CATALOG_SHA {
         return Err("O02 catalog successor: exact Windows CLI catalog required".into());
     }
@@ -104,7 +114,6 @@ pub(super) fn project(path: &str, expected: usize, raw: Vec<u8>) -> Result<Vec<u
         .strip_prefix("{\n")
         .and_then(|rows| rows.strip_suffix("\n}\n"))
         .ok_or("O02 catalog successor: prior CLI rows framing")?;
-    let mut raw = raw;
     let windows_end = WINDOWS_CLI_CATALOG_OFFSET + WINDOWS_CLI_CATALOG_SPAN_BYTES;
     raw.splice(
         WINDOWS_CLI_CATALOG_OFFSET..windows_end,
@@ -197,6 +206,6 @@ pub(super) fn controls(root: &std::path::Path) {
     ] {
         assert!(project(PATH, PRIOR_BYTES, mutant).is_err());
     }
-    assert_eq!(physical_bytes(PATH, PRIOR_BYTES), WINDOWS_CLI_CATALOG_BYTES);
+    assert_eq!(physical_bytes(PATH, PRIOR_BYTES), SAFARI_CATALOG_BYTES);
     assert_eq!(physical_bytes("unlisted", 7), 7);
 }
