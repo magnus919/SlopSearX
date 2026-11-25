@@ -559,7 +559,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             return Err(format!("A05 codec evidence drift: {path}"));
         }
     }
-    let expected_codec_tests: BTreeSet<_> = coverage["codec_native_tests"]
+    let mut expected_codec_tests: BTreeSet<_> = coverage["codec_native_tests"]
         .as_array()
         .ok_or("missing codec native tests")?
         .iter()
@@ -567,6 +567,12 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         .collect();
     if expected_codec_tests.len() != 71 {
         return Err("A05 codec test inventory incomplete".into());
+    }
+    // Keep the A05 manifest frozen and require the later T07 guard explicitly.
+    if !expected_codec_tests
+        .insert("url_join::tests::url_join_delimiter_guard_matches_unicode16_decomposition_closure")
+    {
+        return Err("A05 codec inventory already includes the T07 guard".into());
     }
     let codec_list = command(
         root,
