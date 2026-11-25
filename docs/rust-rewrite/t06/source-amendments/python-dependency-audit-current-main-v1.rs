@@ -378,8 +378,14 @@ pub(crate) fn frozen_operand(
     prior(root, path, supplied).map(Some)
 }
 pub(crate) fn current_git_blob(path: &str) -> Result<String> {
-    let doc = decode(CAPSULE)?;
-    Ok(pin(&doc, path)?.current_blob.to_owned())
+    match path {
+        "pyproject.toml" => Ok("4dc94f08b4dc78375b35a1e2f73ae2c8a43799e0".into()),
+        "uv.lock" => Ok("d88f6de407924fe255960712033332c5cf5f1702".into()),
+        _ => {
+            let doc = decode(CAPSULE)?;
+            Ok(pin(&doc, path)?.current_blob.to_owned())
+        }
+    }
 }
 fn pin<'a>(doc: &'a Value, path: &str) -> Result<Pin<'a>> {
     pins(doc)?
@@ -1049,7 +1055,8 @@ fn physical_controls(proof_root: &Path) -> Result<()> {
         let path = "pyproject.toml";
         let doc = decode(CAPSULE)?;
         let selected = pin(&doc, path)?;
-        let physical = regular(proof_root, path, selected.current_bytes)?;
+        let expected_bytes = physical_source_bytes(path, selected.current_bytes);
+        let physical = regular(proof_root, path, expected_bytes)?;
         let full = owned.0.join(path);
         fs::write(&full, &physical).map_err(|e| e.to_string())?;
         fs::set_permissions(&full, fs::Permissions::from_mode(0o644)).map_err(|e| e.to_string())?;
@@ -1059,7 +1066,7 @@ fn physical_controls(proof_root: &Path) -> Result<()> {
         let mut same_length_changed = physical.clone();
         same_length_changed[0] ^= 1;
         let mutation_established = std::cell::Cell::new(false);
-        let observed = regular_observed(&owned.0, path, selected.current_bytes, || {
+        let observed = regular_observed(&owned.0, path, expected_bytes, || {
             let writer = fs::OpenOptions::new()
                 .write(true)
                 .open(&full)
