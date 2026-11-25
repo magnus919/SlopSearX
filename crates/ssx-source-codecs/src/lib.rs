@@ -86,6 +86,7 @@ mod unicode;
 mod unicode_escape;
 mod unicode_name_ranges;
 mod unicode_names;
+pub mod url_join;
 mod utf7;
 pub use text::{Text, contains_ascii_lower_with_scratch};
 /// Native source codec registry. None denotes an internal registry omission,
