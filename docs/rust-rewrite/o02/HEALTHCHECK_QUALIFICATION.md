@@ -1,6 +1,8 @@
-# Native healthcheck qualification — partial O02
+# Native healthcheck qualification
 
-Read the [case study](../CASE_STUDY.md), [healthcheck contract](HEALTHCHECK.md) and [O02 #919](https://github.com/magnus919/SlopSearX/issues/919). Local acceptance passed on 2026-11-01. Hosted amd64/ARM64 image acceptance remains pending. This document adds no runtime change and does not close O02.
+Read the [case study](../CASE_STUDY.md), [healthcheck contract](HEALTHCHECK.md) and [O02 #919](https://github.com/magnus919/SlopSearX/issues/919). Local acceptance passed on November 1, 2026. Later hosted checks passed on amd64 and ARM64. The [O02 handoff](HANDOFF.md) records the wider operations evidence and the boundaries of the Python-free fixture.
+
+## Local qualification
 
 The qualified source is `fff50a1634b283a1c5f49b7d0a5cc5fae06716ee`. Health package bytes were unchanged from `1339abea4a723a508b822482895f0930d7396094`; their successful native results retain that producer revision. The successor corrected a local name shadowing the historical custody-reader function and its exact mutable binding. The original compiler failure remains retained; no historical oracle or lock span was rewritten.
 
@@ -25,6 +27,10 @@ The retained native evidence root is `/Volumes/tank01/magnus/rust-builds/slopsea
 
 Source checks: 24 deployment-artifact tests passed with `--no-cov`; the earlier subset invocation also passed all 24 tests but failed the inherited whole-backend 80% coverage threshold. Its original output is retained, and no full-backend coverage claim is made. Scoped hooks passed. Full-file hooks report the known unrelated Ruff-format baseline in `tests/test_coverage_saved_method_materials.py`; the AST-equivalent rewrite was restored exactly. DCO commits ran the installed AST graph hook. The final documentation successor is checked separately; native results retain the producer revisions above.
 
-Local Docker/Podman are unavailable. Fixed-port shipping-main execution, interpreter-absent runtime execution and the actual amd64/ARM64 Docker image witness remain unrun locally. Existing Docker CI must build/test the helper and run its actual shipped binary against the server with hostile proxy settings, then require silent exit 1 in an otherwise empty container. Exact published-head CI/review acceptance remains required before merge.
+## Hosted qualification
 
-The image still contains the Python backend and its uvicorn entrypoint. Base verification is invoked natively in Docker CI, although its historical Python source remains frozen. The upstream-probe workflow invocation is transitioned to native Rust with offline fixtures by default and explicit live authorization; see [the transition receipt](UPSTREAM_CONTRACTS_TRANSITION.json). Digest promotion still has an active Python writer. Portal smoke and mirror configuration have native invocations, while their historical Python sources remain pending G08 retirement. Final native packaging and backend retirement remain O04/G08 responsibilities. No full O02 gate, completed Python-free server, production activation, live-provider result, performance improvement or retrieval-quality improvement is claimed.
+The local run did not use Docker or Podman. The Docker image jobs for [#1159](https://github.com/magnus919/SlopSearX/pull/1159) built the release image and ran its installed `ssx-healthcheck` against the server with hostile proxy settings. Both also required silent exit 1 when the server was absent. [amd64 job](https://github.com/magnus919/SlopSearX/actions/runs/44564247699/job/135701535891) · [ARM64 job](https://github.com/magnus919/SlopSearX/actions/runs/44564247699/job/135701536523)
+
+The shipping image uses the Python backend and its uvicorn entrypoint. The separate native HTTP fixture passed startup, health, and rollback checks in a Python-free image on Linux amd64. Digest promotion now uses the Rust writer. [Native HTTP fixture job](https://github.com/magnus919/SlopSearX/actions/runs/44564247125/job/135701531979) · [Image promotion contract](IMAGE_PIN.md)
+
+[O04](https://github.com/magnus919/SlopSearX/issues/921) owns assembled release-image qualification, and [G08](https://github.com/magnus919/SlopSearX/issues/946) owns historical backend Python source retirement.
